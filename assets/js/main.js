@@ -6,7 +6,7 @@
 import { getData } from "./busca.js";
 import { pageStandartStructure } from "./estruturas.js";
 import { SELECTORS } from "./definicoes.js";
-import { renderStandartPage, renderRevista } from "./renderizadores.js";
+import { buildStandartPage, buildRevista } from "./construtores.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
     
@@ -18,14 +18,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     
     const startRevista = (data) => {
-        // Renderize a estrutura padrão da página
-        // Chama apenas a função de renderização informando onde deve ser renderizado. Essa função consultará a estrutura, construirá o HTML e renderizará na página.
+        
         if (!SELECTORS.root) return;
-        renderStandartPage(document.querySelector(SELECTORS.root));
+        buildStandartPage({
+            seletor: document.querySelector(SELECTORS.root), 
+            position: 'afterbegin'
+        });
         // Depois de renderizar a estrutura, constrói o conteúdo da revista
-        renderRevista(data, document.querySelector(SELECTORS.revistaContent));
+        buildRevista(data, document.querySelector(SELECTORS.revistaContent));
     }
 
     init();
 
 });
+
