@@ -1,0 +1,111 @@
+[
+  {
+    "id": 1,
+    "created_at": "2025-10-31T21:10:17.812557+00:00",
+    "revista_id": "rev-i-uf_BWJa7QH",
+    "fasciculo_id": "fas-i-bKNae8G0_h",
+    "fasciculo_conteudo": {
+      "TITLE": "O CURRÍCULO E A AVALIAÇÃO DE LÍNGUA PORTUGUESA",
+      "BLOCOS": [
+        {
+          "name": "TEXTO DE ABERTURA",
+          "type": "texto",
+          "content": "<p>A Base Nacional Comum Curricular (BNCC) funciona como a principal diretriz da educação básica brasileira. Com caráter normativo e referencial, ela estabelece as competências gerais e as específicas de cada área do conhecimento, bem como define os conteúdos indispensáveis a serem trabalhados em cada etapa de escolarização. A partir da BNCC, &nbsp;são criados os referenciais curriculares dos estados e municípios brasileiros. Esses documentos detalham e adaptam as orientações nacionais, incorporando as especificidades culturais e regionais de cada sistema de ensino. </p><p>Quando falamos em avaliação externa em larga escala, é comum ter dúvidas sobre o processo de elaboração da Matriz de Referência. Resumidamente, podemos entender a Matriz de Referência como um recorte do currículo, que reúne as habilidades essenciais e que conseguimos avaliar por meio de um teste padronizado.</p><p>Assim, conhecer o referencial curricular e as especificidades relacionadas ao componente curricular é fundamental para fazer uma boa análise pedagógica dos resultados das avaliações externas em larga escala, visto a forte correlação entre esses documentos e a importância do currículo como foco da prática pedagógica. </p><p>Diante disso, este fascículo tem como objetivo destacar essa relação entre currículo e avaliação, apresentando a correlação entre habilidades curriculares e habilidades da matriz de referência, a sua progressão ao longo da educação básica, trazendo exemplos de tarefas relacionadas a essas habilidades e apresentando alguns indicadores derivados das avaliações externas em larga escala. Para tanto, organizamos essas informações em um infográfico. Em seguida, apresentamos sugestões de práticas para sala de aula, objetivando o desenvolvimento das habilidades destacadas.</p>"
+        },
+        {
+          "name": "DESTAQUE",
+          "type": "texto",
+          "content": "<p><strong>Acesse aqui as matrizes da Avaliação Somativa 2025.</strong></p>"
+        },
+        { "name": "LINK DESTAQUE ", "type": "link", "content": "<p></p>" },
+        {
+          "name": "Avaliação e currículo",
+          "type": "infografico",
+          "nodes": [
+            {
+              "id": "titulo-revista",
+              "type": "title-node",
+              "title": "Avaliação e Currículo"
+            },
+            {
+              "id": "descritor-destaque",
+              "type": "central-node",
+              "title": "Resolver problema envolvendo o cálculo de área de figuras planas."
+            },
+            {
+              "id": "legenda-progressao",
+              "type": "caption-node",
+              "title": "",
+              "content": "<div id=\"legenda-progressao\" class=\"legenda-progressao\">\n  <div class=\"legenda-progressao-container\">\n    <div class=\"legenda-progressao-item l1\">\n  <span class=\"square\"></span><span class=\"letter\">I</span><span class=\"line\"></span><span\n    class=\"description\">Introduzir</span>\n</div><div class=\"legenda-progressao-item l2\">\n  <span class=\"square\"></span><span class=\"letter\">A</span><span class=\"line\"></span><span\n    class=\"description\">Aprofundar</span>\n</div><div class=\"legenda-progressao-item l3\">\n  <span class=\"square\"></span><span class=\"letter\">C</span><span class=\"line\"></span><span\n    class=\"description\">Consolidar</span>\n</div><div class=\"legenda-progressao-item l4\">\n  <span class=\"square\"></span><span class=\"letter\">R</span><span class=\"line\"></span><span\n    class=\"description\">Retomar</span>\n</div>\n  </div>\n</div>",
+              "captionData": [
+                {
+                  "text": "I",
+                  "color": "#b9f6fb",
+                  "description": "Introduzir"
+                },
+                {
+                  "text": "A",
+                  "color": "#82eef9",
+                  "description": "Aprofundar"
+                },
+                {
+                  "text": "C",
+                  "color": "#08c5d9",
+                  "description": "Consolidar"
+                },
+                { "text": "R", "color": "#06a3b5", "description": "Retomar" }
+              ],
+              "captionType": "1",
+              "orientation": "vertical"
+            },
+            {
+              "id": "legenda-acerto",
+              "type": "caption-node",
+              "title": "",
+              "content": "<div id=\"legenda-acerto\" class=\"legenda-acerto\">\n  <div class=\"box-legenda\">\n    <div class=\"legenda-acerto-item l1\">\n  <span class=\"circle\"></span>\n  <span class=\"legenda-texto\">Até 40%</span>\n</div><div class=\"legenda-acerto-item l2\">\n  <span class=\"circle\"></span>\n  <span class=\"legenda-texto\">De 41% a 60%</span>\n</div><div class=\"legenda-acerto-item l3\">\n  <span class=\"circle\"></span>\n  <span class=\"legenda-texto\">De 61% a 80%</span>\n</div><div class=\"legenda-acerto-item l4\">\n  <span class=\"circle\"></span>\n  <span class=\"legenda-texto\">Acima de 81%</span>\n</div>\n  </div>\n</div>",
+              "captionData": [
+                { "text": "Até 40%", "color": "#e63946" },
+                { "text": "De 41% a 60%", "color": "#f6a623" },
+                { "text": "De 61% a 80%", "color": "#6ecfdb" },
+                { "text": "Acima de 81%", "color": "#1e88e5" }
+              ],
+              "captionType": "2",
+              "orientation": "horizontal"
+            },
+            {
+              "id": "descricao-habilidades",
+              "type": "table-node",
+              "title": "DESCRIÇÃO DAS HABILIDADES NO REFERENCIAL CURRICULAR DO ESTADO",
+              "content": "<div><div><table><tbody><tr><td>1EF | 2EF</td><td>I</td><td>(EF12LP04) Ler e compreender, em colaboração com os colegas e com a ajuda do professor ou já com certa autonomia, listas, agendas, calendários, avisos, convites, receitas, instruções de montagem (digitais ou impressos), dentre outros gêneros do campo da vida cotidiana, considerando a situação comunicativa e o tema/assunto do texto e relacionando sua forma de organização à sua finalidade.</td></tr><tr><td>3EF </td><td>A</td><td>(EF03LP12) Ler e compreender, com autonomia, cartas pessoais e diários, com expressão de sentimentos e opiniões, dentre outros gêneros do campo da vida cotidiana, de acordo com as convenções do gênero carta e considerando a situação comunicativa e o tema/assunto do texto.</td></tr><tr><td>4EF </td><td>A</td><td>(EF04LP10) Ler e compreender, com autonomia, cartas pessoais de reclamação, dentre outros gêneros do campo da vida cotidiana, de acordo com as convenções do gênero carta e considerando a situação comunicativa e o tema/assunto/finalidade do texto.</td></tr><tr><td>5EF </td><td>A</td><td>(EF05LP10) Ler e compreender, com autonomia, anedotas, piadas e cartuns, dentre outros gêneros do campo da vida cotidiana, de acordo com as convenções do gênero e considerando a situação comunicativa e a finalidade do texto.</td></tr><tr><td>6EF ao 9EF</td><td>C</td><td>(EF69LP03) Identificar, em notícias, o fato central, suas principais circunstâncias e eventuais decorrências; em reportagens e fotorreportagens o fato ou a temática retratada e a perspectiva de abordagem, em entrevistas os principais temas/subtemas abordados, explicações dadas ou teses defendidas em relação a esses subtemas; em tirinhas, memes, charge, a crítica, ironia ou humor presente.</td></tr><tr><td>EM</td><td>R</td><td>(EM13LP45) Analisar, discutir, produzir e socializar, tendo em vista temas e acontecimentos de interesse local ou global, notícias, fotodenúncias, fotorreportagens, reportagens multimidiáticas, documentários, infográficos, podcasts noticiosos, artigos de opinião, críticas da mídia, vlogs de opinião, textos de apresentação e apreciação de produções culturais (resenhas, ensaios etc.) e outros gêneros próprios das formas de expressão das culturas juvenis (vlogs e podcasts culturais, gameplay etc.), em várias mídias, vivenciando de forma significativa o papel de repórter, analista, crítico, editorialista ou articulista, leitor, vlogueiro e booktuber, entre outros.</td></tr></tbody></table></div></div>"
+            },
+            {
+              "id": "progressao-habilidades",
+              "type": "table-node",
+              "title": "PROGRESSÃO DA HABILIDADE NO REFERENCIAL CURRICULAR DO ESTADO",
+              "content": "<div><div><table><tbody><tr><td>1EF</td><td>2EF</td><td>3EF</td><td>3F</td><td>5EF</td><td>6EF</td><td>7EF</td><td>8EF</td><td>9EF</td><td>1EM</td><td>2EM</td><td>3EM</td></tr><tr><td>I</td><td>I</td><td>A</td><td>A</td><td>A</td><td>A</td><td>A</td><td>A</td><td>C</td><td>R</td><td>R</td><td>R</td></tr></tbody></table></div></div>"
+            },
+            {
+              "id": "tarefas-nivel",
+              "type": "mixed-node",
+              "title": "TAREFAS POR NÍVEL DE COMPLEXIDADE (2EF)",
+              "content": "<div><div><table><tbody><tr><td>Muito fácil</td><td>Identificar a localização de uma pessoa em uma representação plano de espaço, com base nos conceitos de \\\"em cima\\\", \\\"embaixo\\\", \\\"mais próximo\\\", \\\"mais distante\\\".</td><td>1</td></tr><tr><td>Fácil</td><td>Identificar a localização de uma pessoa em uma representação plano de espaço, com base nos conceitos de lateralidade (direita/esquerda), com o mesmo referencial do estudante.</td><td>2</td></tr><tr><td>Difícil</td><td>Identificar a localização de uma pessoa a partir da descrição do seu deslocamento.</td><td>3</td></tr><tr><td>Muito difícil</td><td>Identificar a localização de uma pessoa em uma representação plano de espaço, com base nos conceitos de lateralidade (direita/esquerda), com referencial diferente do estudante.</td><td>4</td></tr></tbody></table></div></div>"
+            },
+            {
+              "id": "serie-historica",
+              "type": "table-node",
+              "title": "SÉRIE HISTÓRICA DA HABILIDADE (2EF) NA AVALIAÇÃO SOMATIVA",
+              "content": "<div><div><table><tbody><tr><td>2022</td><td>2023</td><td>2024</td><td>2025</td></tr><tr><td>58%</td><td>60%</td><td>60%</td><td>?</td></tr></tbody></table></div></div>"
+            },
+            {
+              "id": "percentual-acerto",
+              "type": "table-node",
+              "title": "PERCENTUAL DE ACERTO NA HABILIDADE — SOMATIVA 2024",
+              "content": "<div><div><table><tbody><tr><td>ETAPA</td><td>DESCRITOR</td><td>HABILIDADE</td><td>ACERTO</td></tr><tr><td>2EF</td><td>D06</td><td>Inferir o assunto de um texto.</td><td>60%</td></tr><tr><td>5EF</td><td>D06</td><td>Identificar o tema de um texto.</td><td>60%</td></tr><tr><td>9EF</td><td>D06</td><td>Identificar o tema de um texto.</td><td>73%</td></tr><tr><td>3EM</td><td>D06</td><td>Identificar o tema de um texto.</td><td>83%</td></tr></tbody></table></div></div>"
+            }
+          ],
+          "subject": "Língua Portuguesa"
+        }
+      ]
+    }
+  }
+]
