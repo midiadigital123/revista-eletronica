@@ -30,6 +30,9 @@
   height: 95vh;
   width: 95vw;
 }
+#container-revista{
+    display: grid;
+}
 
 .titulo1 { 
 grid-area: titulo1; 

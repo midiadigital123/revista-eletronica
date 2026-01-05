@@ -2,7 +2,9 @@
  * Esse arquivo concentras as funções responsáveis por construir cada parte da página.
  */
 
-import { pageStandartStructure, textStructure, destaqueStructure, linkStructure } from "./estruturas.js";
+import { pageStandartStructure, textStructure, destaqueStructure, linkStructure, titleNodeStructure, centralNodeStructure  } from "./estruturas.js";
+import { SELECTORS } from "./definicoes.js";
+import { renderTitleNode, renderCentralNode, renderLegendaProgressaoNode, renderLegendaAcertoNode, renderDescricaoHabilidadesNode, renderProgressaoHabilidadesNode, renderTarefasNivelNode, renderSerieHistoricaNode, renderPercentualAcertoNode } from "./renderizadores.js";
 
 const buildPageStandartStructure = () => {
     return pageStandartStructure();
@@ -39,7 +41,7 @@ const buildBloco = (bloco) => {
              blocoHTML = content ? buildLink(content) : ``;
             break;
         case "infografico":
-            // blocoHTML = buildInfografico(nodes);
+             blocoHTML = buildInfografico(nodes);
             break;
         default:
             blocoHTML = `<div>Unsupported content type</div>`;
@@ -59,5 +61,54 @@ const buildLink = (text) => {
     return linkStructure(text);
 }
 
+const buildInfografico = (nodes) => {
+
+    nodes.forEach(node => {
+        const { id, type, title, content } = node;
+        buildNode(id, type, title, content);
+    });
+    return ""
+}
+
+const buildNode = (id, type, title, content) => {
+    switch (id){
+        case "titulo-revista":
+            renderTitleNode(buildTitleNode(title), document.querySelector(SELECTORS[id]));
+            break;
+        case "descritor-destaque":
+            renderCentralNode(buildCentralNode(title), document.querySelector(SELECTORS[id]));
+            break;
+        case "legenda-progressao":
+            renderLegendaProgressaoNode(content, document.querySelector(SELECTORS[id]));
+            break;
+        case "legenda-acerto":
+            renderLegendaAcertoNode(content, document.querySelector(SELECTORS[id]));
+            break;
+        case "descricao-habilidades":
+             renderDescricaoHabilidadesNode(content, document.querySelector(SELECTORS[id]));
+            break;
+        case "progressao-habilidades":
+             renderProgressaoHabilidadesNode(content, document.querySelector(SELECTORS[id]));
+            break;
+        case "tarefas-nivel":
+             renderTarefasNivelNode(content, document.querySelector(SELECTORS[id]));
+            break;
+        case "serie-historica":
+             renderSerieHistoricaNode(content, document.querySelector(SELECTORS[id]));
+            break;
+        case "percentual-acerto":
+             renderPercentualAcertoNode(content, document.querySelector(SELECTORS[id]));
+            break;
+    }
+
+}
+
+const buildTitleNode = (title) => {
+    return titleNodeStructure(title);
+}
+
+const buildCentralNode = (title) => {
+    return centralNodeStructure (title);
+}
 
 export { buildPageStandartStructure, buildRevista };

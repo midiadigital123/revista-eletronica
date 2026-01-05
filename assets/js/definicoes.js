@@ -6,16 +6,16 @@
 const SELECTORS = {
     root: "#root",
     revistaContent: ".revista-content",
-  revistaContainer: "revista",
-  tituloRevista: '[data-node="titulo-revista"]',
-    descritorDestaque: '[data-node="descritor-destaque"]',
-    legendaProgresso: '[data-node="legenda-progressao"]',
-    legendaAcerto: '[data-node="legenda-acerto"]',
-    descricaoHabilidades: '[data-node="descricao-habilidades"]',
-    progressaoHabilidades: '[data-node="progressao-habilidades"]',
-    tarefasNivel: '[data-node="tarefas-nivel"]',
-    serieHistorica: '[data-node="serie-historica"]',
-    percentualAcerto: '[data-node="percentual-acerto"]',
+    revistaContainer: "revista",
+    'titulo-revista': '[data-node="titulo-revista"]',
+    'descritor-destaque': '[data-node="descritor-destaque"]',
+    'legenda-progressao': '[data-node="legenda-progressao"]',
+    'legenda-acerto': '[data-node="legenda-acerto"]',
+    'descricao-habilidades': '[data-node="descricao-habilidades"]',
+    'progressao-habilidades': '[data-node="progressao-habilidades"]',
+    'tarefas-nivel': '[data-node="tarefas-nivel"]',
+    'serie-historica': '[data-node="serie-historica"]',
+    'percentual-acerto': '[data-node="percentual-acerto"]',
 };
 
 export { SELECTORS };
