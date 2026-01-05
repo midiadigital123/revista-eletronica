@@ -4,7 +4,6 @@
  */
 
 import { getData } from "./busca.js";
-import { pageStandartStructure } from "./estruturas.js";
 import { SELECTORS } from "./definicoes.js";
 import { buildStandartPage, buildRevista } from "./construtores.js";
 

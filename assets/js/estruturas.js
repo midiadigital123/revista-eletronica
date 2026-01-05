@@ -13,7 +13,7 @@ export const pageStandartStructure = () => {
     return `
 <div class="revista-container">
     <div class="row">
-        <div class="col-10 revista-content mx-auto" >
+        <div class="col-8 revista-content mx-auto" >
         ${infograficoStructure()}
         </div>
     </div>
@@ -63,7 +63,7 @@ export const linkStructure = (text) => {
  * Define a estrutura do infográfico, com todas as divs necessárias para inserir os dados dinâmicos posteriormente.
  */
 export const infograficoStructure = () => {
-    return ` <div id="container-revista" class=" revista-bncc-tabela">
+    return ` <div id="container-revista" class="infografico revista-bncc-tabela">
       <div id="titulo-revista" class="titulo1" data-node="titulo-revista"></div>
 
       <div id="node0" class="centro" data-type="central-node" data-node="descritor-destaque"></div>

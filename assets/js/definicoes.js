@@ -5,6 +5,7 @@
 
 const SELECTORS = {
     root: "#root",
+    infografico: ".infografico",
     revistaContent: ".revista-content",
     revistaContainer: "revista",
     'titulo-revista': '[data-node="titulo-revista"]',
