@@ -175,6 +175,11 @@ const adicionaClassesAoInfografico = (BLOCOS) => {
     });
   };
 
+  const addSerieHistoricaClass = (selector) => {
+    const table = document.querySelector(selector);
+    if (!table) return;
+  } 
+
   const container = document.querySelector(SELECTORS.infografico);
   if (!container) return;
   BLOCOS.forEach((bloco) => {
@@ -192,7 +197,7 @@ const adicionaClassesAoInfografico = (BLOCOS) => {
             // Implementar se necessário
             break;
           case "serie-historica":
-            // Implementar se necessário
+             addSerieHistoricaClass(SELECTORS[id]);
             break;
           case "percentual-acerto":
             // Implementar se necessário

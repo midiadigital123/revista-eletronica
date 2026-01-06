@@ -6,6 +6,10 @@
     font-size: 10px;
 }
 
+.revista-container .row{
+  margin: 0!important;
+}
+
 :root {
   --font-xs: clamp(8px, 0.5vw, 16px);
   --font-sm: clamp(10px, 0.625vw, 20px);
