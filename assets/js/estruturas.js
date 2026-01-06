@@ -12,14 +12,24 @@
 export const pageStandartStructure = () => {
     return `
 <div class="revista-container">
-    <div class="row">
-        <div class="col-8 revista-content mx-auto" >
-        ${infograficoStructure()}
-        </div>
+    <div class="container">
+        
     </div>
 </div>
 ` 
 }
+
+// export const pageStandartStructure = () => {
+//     return `
+// <div class="revista-container">
+//     <div class="row">
+//         <div class="col-8 revista-content mx-auto" >
+//         ${infograficoStructure()}
+//         </div>
+//     </div>
+// </div>
+// ` 
+// };
 
 /**
  * Todos os textos simples da página vem do Coda já com as tags HTML apropriadas, então aqui só retornamos o texto como está.

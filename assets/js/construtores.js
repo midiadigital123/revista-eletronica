@@ -219,24 +219,67 @@ const adicionaClassesAoInfografico = (BLOCOS) => {
     });
   };
 
-  // const addSerieHistoricaClass = (selector) => {
-  //   const table = document.querySelector(selector);
-  //   if (!table) return;
+  const addSerieHistoricaClass = (selector) => {
+    const table = document.querySelector(selector);
+    if (!table) return;
 
-  //   const rows = table.querySelectorAll("tr");
+    const rows = table.querySelectorAll("tr");
 
-  //   rows.forEach((row, index) => {
-  //     if (index === 0) {
-  //       row.classList.add("header-row");
-  //     } else{
-  //       row.classList.add("data-row");
-  //       let cols = row.querySelectorAll("td");
-  //       cols.forEach((col) => {
-  //         col.classList.add("data-col");
-  //       });
-  //     }
-  //   });
-  // } 
+    rows.forEach((row, index) => {
+      if (index === 0) {
+        row.classList.add("header-row");
+      } else{
+        row.classList.add("data-row");
+        let cols = row.querySelectorAll("td");
+        cols.forEach((col) => {
+          col.classList.add("data-col");
+          if (col.textContent.includes("%")) {
+            let value = parseFloat(col.textContent.replace("%", ""));
+            if (value >= 81) {
+              col.classList.add("p4");
+            } else if (value >= 61) {
+              col.classList.add("p3");
+            } else if (value >= 41) {
+              col.classList.add("p2");
+            } else if (value >= 0) {
+              col.classList.add("p1");
+            }
+          }
+        });
+      }
+    });
+  } 
+
+  const addPercentualAcertoClass = (selector) => {
+    const table = document.querySelector(selector);
+    if (!table) return;
+
+    const rows = table.querySelectorAll("tr");
+
+    rows.forEach((row, index) => {
+      if (index === 0) {
+        row.classList.add("header-row");
+      } else{
+        row.classList.add("data-row");
+        let cols = row.querySelectorAll("td");
+        cols.forEach((col) => {
+          col.classList.add("data-col");
+          if (col.textContent.includes("%")) {
+            let value = parseFloat(col.textContent.replace("%", ""));
+            if (value >= 81) {
+              col.classList.add("p4");
+            } else if (value >= 61) {
+              col.classList.add("p3");
+            } else if (value >= 41) {
+              col.classList.add("p2");
+            } else if (value >= 0) {
+              col.classList.add("p1");
+            }
+          }
+        });
+      }
+    });
+  } 
 
   const container = document.querySelector(SELECTORS.infografico);
   if (!container) return;
@@ -255,10 +298,10 @@ const adicionaClassesAoInfografico = (BLOCOS) => {
             // Implementar se necessário
             break;
           case "serie-historica":
-            //  addSerieHistoricaClass(SELECTORS[id]);
+              addSerieHistoricaClass(SELECTORS[id]);
             break;
           case "percentual-acerto":
-            // Implementar se necessário
+             addPercentualAcertoClass(SELECTORS[id]);
             break;
           default:
             break;

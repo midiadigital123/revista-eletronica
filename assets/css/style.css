@@ -128,6 +128,23 @@ padding: var(--padding-md);
   flex-shrink: 0;
 }
 
+.legenda-progressao-item.l1 .square{
+  background-color: var(--l1-color1);
+}
+
+.legenda-progressao-item.l2 .square{
+  background-color: var(--l1-color2);
+}
+
+.legenda-progressao-item.l3 .square{
+  background-color: var(--l1-color3);
+}
+
+.legenda-progressao-item.l4 .square{
+  background-color: var(--l1-color4);
+}
+
+
 .legenda-progressao-item .letter {
   font-weight: bold;
   font-size: var(--font-md);
@@ -798,6 +815,27 @@ overflow: hidden;
    TABELA TIPO 2 - ANOS
    ======================================== */
 
+.serie-historica .p1{
+  background-color: var(--l2-color1);
+  color: black;
+}
+.serie-historica .p2{
+  background-color: var(--l2-color2);
+  color: black;
+}
+.serie-historica .p3{
+  background-color: var(--l2-color3);
+  color: black;
+}
+.serie-historica .p4{
+  background-color: var(--l2-color4);
+  color: black;
+}
+
+.serie-historica .header-row td{
+  background-color: #fff;
+}
+
 .serie-historica {
   border-collapse: collapse;
   font-size: var(--font-sm);
@@ -939,6 +977,23 @@ overflow: hidden;
   font-size: var(--font-sm);
 }
 
+.percentual-acerto .p1{
+  background-color: var(--l2-color1);
+  color: black;
+}
+.percentual-acerto .p2{
+  background-color: var(--l2-color2);
+  color: black;
+}
+.percentual-acerto .p3{
+  background-color: var(--l2-color3);
+  color: black;
+}
+.percentual-acerto .p4{
+  background-color: var(--l2-color4);
+  color: black;
+}
+
 .percentual-acerto table {
   width: 100%;
 }
@@ -977,15 +1032,36 @@ overflow: hidden;
 }
 
 
-.legenda-acerto .legenda-item {
+.legenda-acerto .legenda-acerto-item {
   display: flex;
   align-items: center;
   gap: var(--padding-sm);
 }
 
+.legenda-acerto .legenda-acerto-item .circle{
+  display: inline-block;
+  /* width: clamp(16px, 1.2vw, 32px);  */
+  width: clamp(12.8px, 0.96vw, 25.6px);
+  height: clamp(12.8px, 0.96vw, 25.6px);
+  border-radius: 50%;
+}
+
+.legenda-acerto .legenda-acerto-item.l1 .circle{
+  background-color: var(--l2-color1);
+}
+.legenda-acerto .legenda-acerto-item.l2 .circle{
+  background-color: var(--l2-color2);
+}
+.legenda-acerto .legenda-acerto-item.l3 .circle{
+  background-color: var(--l2-color3);
+}
+.legenda-acerto .legenda-acerto-item.l4 .circle{
+  background-color: var(--l2-color4);
+}
+
 .legenda-acerto .box-legenda{
   display: flex;
-  gap: 2rem;
+ gap: var(--padding-md);
 }
 
 
