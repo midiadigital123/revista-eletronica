@@ -752,22 +752,7 @@ overflow: hidden;
   border-left: 8px solid;
 }
 
-/* Cores da barra por linha */
-.tabela1 .col-letra.col-I::before {
-  border-left-color: var(--color1);
-}
 
-.tabela1 .col-letra.col-A::before {
-  border-left-color: var(--color2);
-}
-
-.tabela1 .col-letra.col-C::before {
-  border-left-color: var(--color3);
-}
-
-.tabela1 .col-letra.col-R::before {
-  border-left-color: var(--color4);
-}
 
 /* ========================================
    COLUNA DE DESCRIÇÃO
@@ -912,21 +897,6 @@ overflow: hidden;
   width: 100%;
 }
 
-.tabela2 td.col-I::before {
-  border-bottom: clamp(3px, 0.2vw, 6px) solid var(--color1);
-}
-
-.tabela2 td.col-A::before {
-  border-bottom: clamp(3px, 0.2vw, 6px) solid var(--color2);
-}
-
-.tabela2 td.col-C::before {
-  border-bottom: clamp(3px, 0.2vw, 6px) solid var(--color3);
-}
-
-.tabela2 td.col-R::before {
-  border-bottom: clamp(3px, 0.2vw, 6px) solid var(--color4);
-}
 
 
 .tabela5 {

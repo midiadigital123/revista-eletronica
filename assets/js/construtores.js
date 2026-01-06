@@ -9,6 +9,10 @@ import {
 } from "./estruturas.js";
 import { SELECTORS } from "./definicoes.js";
 
+let colorScheme = {
+  caption1: {},
+  caption2: {}
+};
 /**
  *
  * @param {Object} param0
@@ -53,16 +57,20 @@ export const buildRevista = (data, selector) => {
     content: data[0].fasciculo_conteudo.TITLE,
   }); // Constrói o título da revista
   pageContent += TITULO;
+
   let BLOCOS = data[0].fasciculo_conteudo.BLOCOS; // Armazena os blocos de conteúdo da revista
   BLOCOS.forEach((bloco) => {
     pageContent += renderBloco(bloco);
   });
   insertEl({ selector, html: pageContent });
+  // Adiciona classes específicas às tabelas do infográfico
   adicionaClassesAoInfografico(BLOCOS);
 };
 
+
+
 const renderBloco = (bloco, selector) => {
-  console.log(bloco);
+ // console.log(bloco);
   let blocoHTML = ``;
   const { type, content, nodes } = bloco;
   switch (type) {
@@ -92,31 +100,66 @@ const buildLink = (text) => {
   return linkStructure(text);
 };
 
+/**
+ * Atualiza o objeto colorScheme com base nos dados da legenda
+ */
+const updateColorScheme = (data, targetKey, prefix) => {
+  data.forEach((item, index) => {
+    // Ex: colorScheme.caption1['l1-color1'] = 'red'
+    colorScheme[targetKey][`${prefix}-color${index + 1}`] = item.color;
+  });
+};
+
 const buildInfografico = (nodes) => {
+  let shouldInjectStyles = false;
+
   nodes.forEach((node) => {
-    const { id, type, title, content } = node;
+    const { id, title, content, captionData } = node;
     const selector = document.querySelector(SELECTORS[id]);
 
-    // Casos especiais: criam um elemento <h1>
-    if (id === "titulo-revista" || id === "descritor-destaque") {
-      insertEl({
-        selector,
-        html: buildEl({
-          tag: "h1",
-          className: id, // A className no original era igual ao id
-          content: title,
-        }),
-      });
-      return;
-    }
+    if (!selector) return; // Segurança caso o seletor não exista
 
-    // Caso padrão: insere o conteúdo diretamente
-    insertEl({
-      selector,
-      html: content,
+    // --- Lógica de Inserção de HTML ---
+    const isSpecialCase = id === "titulo-revista" || id === "descritor-destaque";
+    const htmlToInsert = isSpecialCase
+      ? buildEl({ tag: "h1", className: id, content: title })
+      : content;
+
+    insertEl({ selector, html: htmlToInsert });
+
+    // --- Lógica de Cores (Caption) ---
+    if (captionData) {
+      if (id === "legenda-progressao") {
+        updateColorScheme(captionData, "caption1", "l1");
+        shouldInjectStyles = true;
+      } else if (id === "legenda-acerto") {
+        updateColorScheme(captionData, "caption2", "l2");
+        shouldInjectStyles = true;
+      }
+    }
+  });
+
+  // Otimização: Injeta as variáveis CSS apenas uma vez após processar todos os nós
+  if (shouldInjectStyles) {
+    injectCSSVariables();
+  }
+
+  return "";
+};
+
+/**
+ * Injeta CSS Variables dinamicamente no :root
+ * (Mantido a lógica original, removido apenas o log excessivo se desejado)
+ */
+const injectCSSVariables = () => {
+  const root = document.documentElement;
+  
+  Object.keys(colorScheme).forEach((captionKey) => {
+    const captionColors = colorScheme[captionKey];
+    Object.keys(captionColors).forEach((varName) => {
+      root.style.setProperty(`--${varName}`, captionColors[varName]);
     });
   });
-  return "";
 };
 
 const insertEl = ({ selector, position = "afterbegin", html }) => {
@@ -175,10 +218,24 @@ const adicionaClassesAoInfografico = (BLOCOS) => {
     });
   };
 
-  const addSerieHistoricaClass = (selector) => {
-    const table = document.querySelector(selector);
-    if (!table) return;
-  } 
+  // const addSerieHistoricaClass = (selector) => {
+  //   const table = document.querySelector(selector);
+  //   if (!table) return;
+
+  //   const rows = table.querySelectorAll("tr");
+
+  //   rows.forEach((row, index) => {
+  //     if (index === 0) {
+  //       row.classList.add("header-row");
+  //     } else{
+  //       row.classList.add("data-row");
+  //       let cols = row.querySelectorAll("td");
+  //       cols.forEach((col) => {
+  //         col.classList.add("data-col");
+  //       });
+  //     }
+  //   });
+  // } 
 
   const container = document.querySelector(SELECTORS.infografico);
   if (!container) return;
@@ -197,7 +254,7 @@ const adicionaClassesAoInfografico = (BLOCOS) => {
             // Implementar se necessário
             break;
           case "serie-historica":
-             addSerieHistoricaClass(SELECTORS[id]);
+            //  addSerieHistoricaClass(SELECTORS[id]);
             break;
           case "percentual-acerto":
             // Implementar se necessário

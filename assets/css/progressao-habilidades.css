@@ -1,0 +1,16 @@
+
+[data-node="progressao-habilidades"] td.col-letra.col-I::before {
+  border-bottom: clamp(3px, 0.2vw, 6px) solid var(--l1-color1);
+}
+
+[data-node="progressao-habilidades"] td.col-letra.col-A::before {
+  border-bottom: clamp(3px, 0.2vw, 6px) solid var(--l1-color2);
+}
+
+[data-node="progressao-habilidades"] td.col-letra.col-C::before {
+  border-bottom: clamp(3px, 0.2vw, 6px) solid var(--l1-color3);
+}
+
+[data-node="progressao-habilidades"] td.col-letra.col-R::before {
+  border-bottom: clamp(3px, 0.2vw, 6px) solid var(--l1-color4);
+}
