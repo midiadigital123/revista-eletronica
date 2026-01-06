@@ -1,0 +1,974 @@
+*{
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Proxima Nova', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    font-size: 10px;
+}
+
+.revista-container .row{
+  margin: 0!important;
+}
+
+:root {
+  --font-xs: clamp(8px, 0.5vw, 16px);
+  --font-sm: clamp(10px, 0.625vw, 20px);
+  --font-md: clamp(12px, 0.75vw, 24px);
+  --font-lg: clamp(14px, 0.875vw, 28px);
+  --font-xl: clamp(16px, 1vw, 32px);
+  --font-xxl: clamp(18px, 1.125vw, 36px);
+  
+  --padding-xs: clamp(2px, 0.125vw, 4px);
+  --padding-sm: clamp(4px, 0.25vw, 8px);
+  --padding-md: clamp(8px, 0.5vw, 16px);
+  --padding-lg: clamp(12px, 0.75vw, 24px);
+}
+
+
+.container {  
+  display: grid;
+  grid-template-columns:repeat(25, 1fr);
+  grid-template-rows: repeat(22, 1fr);
+  gap: 0px 0px;
+  grid-auto-flow: row;
+  height: 95vh;
+  width: 95vw;
+}
+#container-revista{
+    display: grid;
+}
+
+.titulo1 { 
+grid-area: titulo1; 
+background-color: rgb(112, 201, 53);
+grid-column-start: 2;
+grid-column-end: 12;
+grid-row-start: 2;
+grid-row-end: 4;
+overflow: hidden;
+}
+
+.tabela1 { 
+grid-area: tabela1; 
+grid-column-start: 2;
+grid-column-end: 10;
+grid-row-start: 5;
+grid-row-end: 17;
+overflow: hidden;
+display: flex;
+flex-direction: column;
+}
+
+/* ========================================
+   NODE 1 - TABELA DE HABILIDADES
+   ======================================== */
+
+.node1-header {
+  padding: var(--padding-sm) 0;
+  margin-bottom: var(--padding-sm);
+  flex-shrink: 0;
+}
+
+.node1-title {
+  font-size: var(--font-xs);
+  font-weight: bold;
+  color: #333333;
+  text-transform: uppercase;
+  margin: 0;
+  position: relative;
+  padding-left: var(--padding-lg);
+}
+
+.node1-title::before {
+  content: '■';
+  color: #ffd700;
+  position: absolute;
+  left: 0;
+  font-size: var(--font-sm);
+}
+
+.node1-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.legenda12 { 
+grid-area: legenda12; 
+grid-column-start: 2;
+grid-column-end: 6;
+grid-row-start: 18;
+grid-row-end: 21;
+overflow: hidden;
+display: flex;
+align-items: center;
+justify-content: center;
+padding: var(--padding-md);
+}
+
+/* ========================================
+   CAPTION 1 - LEGENDA I/A/C/R
+   ======================================== */
+
+.caption1-container {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 0.6vw, 16px);
+  width: 100%;
+}
+
+.caption1-item {
+  display: flex;
+  align-items: center;
+  gap: clamp(6px, 0.5vw, 12px);
+  font-size: var(--font-sm);
+}
+
+.caption1-square {
+  display: inline-block;
+  width: clamp(16px, 1.2vw, 32px);
+  height: clamp(16px, 1.2vw, 32px);
+  flex-shrink: 0;
+}
+
+.caption1-letter {
+  font-weight: bold;
+  font-size: var(--font-md);
+  color: #333333;
+  min-width: clamp(12px, 1vw, 24px);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.caption1-line {
+  width: clamp(20px, 1.5vw, 40px);
+  height: 1px;
+  background-color: #d0d0d0;
+  flex-shrink: 0;
+}
+
+.caption1-description {
+  color: #333333;
+  font-size: var(--font-sm);
+  line-height: 1.3;
+  flex: 1;
+}
+
+.centro { 
+grid-area: centro; 
+background-color: blue;
+grid-column-start: 11;
+grid-column-end: 16;
+grid-row-start: 6;
+grid-row-end: 12;
+overflow: hidden;
+}
+
+.tabela2 { 
+grid-area: tabela2;
+grid-column-start: 7;
+grid-column-end: 16;
+grid-row-start: 18;
+grid-row-end: 21;
+overflow: hidden;
+display: flex;
+flex-direction: column;
+}
+
+/* ========================================
+   NODE 2 - PROGRESSÃO DA HABILIDADE
+   ======================================== */
+
+.node2-header {
+  padding: var(--padding-sm) var(--padding-md);
+  border-bottom: 1px solid #000000;
+  flex-shrink: 0;
+}
+
+.node2-title {
+  font-size: var(--font-xs);
+  font-weight: bold;
+  color: #333333;
+  text-transform: uppercase;
+  margin: 0;
+  position: relative;
+  padding-left: var(--padding-lg);
+}
+
+.node2-title::before {
+  content: '■';
+  color: #ffd700;
+  position: absolute;
+  left: 0;
+  font-size: var(--font-sm);
+}
+
+.node2-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--padding-md);
+}
+
+.node2-content .linha{
+  text-align: center;
+}
+.node2-content table td{
+      padding: var(--padding-lg) var(--padding-sm)!important;
+}
+
+.tabela3 { 
+grid-area: tabela3;
+grid-column-start: 17;
+grid-column-end: 26;
+grid-row-start: 2;
+grid-row-end: 10;
+overflow: hidden;
+display: flex;
+flex-direction: column;
+}
+
+/* ========================================
+   NODE 3 - LISTA DE ITENS COM MODAL
+   ======================================== */
+
+.node3-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+
+}
+
+.node3-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--padding-md);
+}
+
+.node3-title-left,
+.node3-title-right {
+  font-size: var(--font-xs);
+  font-weight: bold;
+  color: #333333;
+  text-transform: uppercase;
+  margin: 0;
+  position: relative;
+  padding-left: var(--padding-lg);
+}
+
+.node3-title-left::before,
+.node3-title-right::before {
+  content: '■';
+  color: #ffd700;
+  position: absolute;
+  left: 0;
+  font-size: var(--font-sm);
+}
+
+.node3-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.node3-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--padding-md);
+  padding: var(--padding-md);
+  border-bottom: 1px solid #e0e0e0;
+  align-items: start;
+}
+
+.node3-row:last-child {
+  border-bottom: none;
+}
+
+.node3-left {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--padding-sm);
+  align-items: baseline;
+}
+
+.node3-bullet {
+  width: 6px;
+  height: 6px;
+  background-color: #333333;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: var(--padding-xs);
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+
+.node3-difficulty {
+  font-weight: bold;
+  font-size: var(--font-sm);
+  color: #333333;
+  white-space: nowrap;
+}
+
+.node3-separator {
+  width: clamp(20px, 1.5vw, 40px);
+  height: 1px;
+  background-color: #d0d0d0;
+  display: inline-block;
+  margin: 0 var(--padding-xs);
+  position: relative;
+  top: -3px;
+}
+
+.node3-description {
+  font-size: var(--font-xs);
+  color: #666666;
+  line-height: 1.4;
+  margin: 0;
+  flex: 1;
+}
+
+.node3-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.node3-item-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--padding-xs);
+  padding: var(--padding-sm);
+  min-width: clamp(60px, 4vw, 100px);
+  transition: all 0.2s ease;
+}
+
+.node3-item-box:hover {
+  transform: translateY(-2px);
+  opacity: 0.8;
+}
+
+.node3-item-label {
+  font-size: var(--font-xs);
+  font-weight: bold;
+  color: #999999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.node3-item-number {
+  font-size: var(--font-xl);
+  font-weight: bold;
+  color: #333333;
+}
+
+.node3-item-placeholder {
+  width: 100%;
+  height: clamp(40px, 3vw, 80px);
+  background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.node3-item-placeholder::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background-color: #cccccc;
+  top: 20%;
+}
+
+.node3-item-placeholder::before {
+  content: '';
+  position: absolute;
+  width: 80%;
+  height: 2px;
+  background-color: #cccccc;
+  top: 40%;
+}
+
+/* ========================================
+   MODAL
+   ======================================== */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+}
+
+.modal-overlay.modal-open {
+  display: flex;
+}
+
+.modal-dialog {
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--padding-lg);
+  border-bottom: 2px solid #e0e0e0;
+  background-color: #f8f8f8;
+}
+
+.modal-title {
+  font-size: var(--font-xl);
+  font-weight: bold;
+  color: #333333;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 32px;
+  font-weight: bold;
+  color: #999999;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background-color: #e0e0e0;
+  color: #333333;
+}
+
+.modal-body {
+  padding: var(--padding-lg);
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-text {
+  font-size: var(--font-md);
+  line-height: 1.6;
+  color: #333333;
+  margin-bottom: var(--padding-md);
+}
+
+.modal-text:last-child {
+  margin-bottom: 0;
+}
+
+.modal-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: var(--padding-md) 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tabela4 { grid-area: tabela4;
+grid-column-start: 17;
+grid-column-end: 26;
+grid-row-start: 11;
+grid-row-end: 14;
+overflow: hidden;
+display: flex;
+flex-direction: column;
+}
+
+/* ========================================
+   NODE 4 - SÉRIE HISTÓRICA
+   ======================================== */
+
+.node4-header {
+  padding: var(--padding-sm) var(--padding-md);
+  border-bottom: 1px solid #000000;
+  flex-shrink: 0;
+}
+
+.node4-title {
+  font-size: var(--font-xs);
+  font-weight: bold;
+  color: #333333;
+  text-transform: uppercase;
+  margin: 0;
+  position: relative;
+  padding-left: var(--padding-lg);
+}
+
+.node4-title::before {
+  content: '■';
+  color: #ffd700;
+  position: absolute;
+  left: 0;
+  font-size: var(--font-sm);
+}
+
+.node4-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--padding-md);
+}
+
+.tabela5 { 
+grid-area: tabela5; 
+grid-column-start: 17;
+grid-column-end: 26;
+grid-row-start: 15;
+grid-row-end: 19;
+overflow: hidden;
+display: flex;
+flex-direction: column;
+}
+
+/* ========================================
+   NODE 5 - PERCENTUAL DE ACERTO
+   ======================================== */
+
+.node5-header {
+  padding: var(--padding-sm) var(--padding-md);
+  border-bottom: 1px solid #000000;
+  flex-shrink: 0;
+}
+
+.node5-title {
+  font-size: var(--font-xs);
+  font-weight: bold;
+  color: #333333;
+  text-transform: uppercase;
+  margin: 0;
+  position: relative;
+  padding-left: var(--padding-lg);
+}
+
+.node5-title::before {
+  content: '■';
+  color: #ffd700;
+  position: absolute;
+  left: 0;
+  font-size: var(--font-sm);
+}
+
+.node5-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--padding-md);
+}
+
+/* ========================================
+   ESTRUTURA BASE DAS TABELAS
+   ======================================== */
+
+.node1-content table,
+.node2-content table,
+.node4-content table,
+.node5-content table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+
+.node1-content table tbody,
+.node2-content table tbody,
+.node4-content table tbody,
+.node5-content table tbody {
+  display: table-row-group;
+}
+
+.node1-content table thead,
+.node2-content table thead,
+.node4-content table thead,
+.node5-content table thead {
+  display: table-header-group;
+}
+
+.node1-content table tr,
+.node2-content table tr,
+.node4-content table tr,
+.node5-content table tr {
+  display: table-row;
+}
+
+.node1-content table th,
+.node1-content table td,
+.node2-content table th,
+.node2-content table td,
+.node4-content table th,
+.node4-content table td,
+.node5-content table th,
+.node5-content table td {
+  display: table-cell;
+  padding: var(--padding-xs) var(--padding-sm);
+}
+
+.legenda45 {
+grid-area: tabela5; 
+grid-column-start: 17;
+grid-column-end: 26;
+grid-row-start: 20;
+grid-row-end: 21;
+overflow: hidden;
+}
+
+/* ========================================
+   VARIÁVEIS CSS
+   ======================================== */
+
+.tabela1 {
+  --border-gray: 1px solid #e0e0e0;
+  overflow-y: auto;
+}
+
+/* ========================================
+   ESTRUTURA BASE DA TABELA
+   ======================================== */
+
+.tabela1 {
+  width: 100%;
+  border-collapse: collapse;
+  
+  line-height: 1.4;
+  color: #000;
+}
+
+.tabela1 tbody {
+  display: table-row-group;
+}
+
+.tabela1 tr {
+  display: table-row;
+  position: relative;
+}
+
+.tabela1 td {
+  display: table-cell;
+  padding: 4px 8px;
+}
+
+/* ========================================
+   LARGURAS DAS COLUNAS
+   ======================================== */
+
+.tabela1 .col-anos {
+  width: 12%;
+}
+
+.tabela1 .col-letra {
+  width: 6%;
+}
+
+.tabela1 .col-descricao {
+  width: 82%;
+}
+
+/* ========================================
+   ALINHAMENTOS
+   ======================================== */
+
+.tabela1 .col-anos,
+.tabela1 .col-letra {
+  vertical-align: middle;
+  text-align: center;
+}
+
+.tabela1 .col-descricao {
+  vertical-align: top;
+  text-align: justify;
+}
+
+/* ========================================
+   COLUNA DE ANOS
+   ======================================== */
+
+.tabela1 .col-anos {
+  padding-left: 8px;
+  font-weight: bold;
+  border-top: var(--border-gray);
+}
+
+.tabela1 tr:last-child .col-anos {
+  border-bottom: var(--border-gray);
+}
+
+/* ========================================
+   COLUNA DE LETRA (com barra colorida)
+   ======================================== */
+
+.tabela1 .col-letra {
+  position: relative;
+  padding-left: 20px;
+  font-weight: bold;
+  border-top: 1px solid #ffffff;
+}
+
+.tabela1 .col-letra::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 0;
+  width: 10px;
+  height: 100%;
+  border-left: 8px solid;
+}
+
+
+
+/* ========================================
+   COLUNA DE DESCRIÇÃO
+   ======================================== */
+
+.tabela1 .col-descricao {
+  padding: 12px 4px;
+  border-top: var(--border-gray);
+}
+
+.tabela1 tr:last-child .col-descricao {
+  border-bottom: var(--border-gray);
+}
+
+/* ========================================
+   AJUSTES FINOS
+   ======================================== */
+
+.tabela1 br {
+  display: block;
+  content: "";
+  margin: 2px 0;
+}
+
+
+/* ========================================
+   TABELA TIPO 2 - ANOS
+   ======================================== */
+
+.tabela4 {
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+  font-weight: bold;
+}
+
+.tabela4 table {
+  width: 100%;
+}
+
+.tabela4 thead {
+  display: table-header-group;
+}
+
+.tabela4 tbody {
+  display: table-row-group;
+}
+
+.tabela4 tr {
+  display: table-row;
+}
+
+.tabela4 th,
+.tabela4 td {
+  display: table-cell;
+  padding: var(--padding-xs) var(--padding-sm);
+}
+
+.tabela4 th {
+  background: #ffffff;
+  color: #333333;
+  border-left: 1px solid #d0d0d0;
+  border-right: 1px solid #d0d0d0;
+}
+
+.tabela4 td {
+  border-right: 1px solid white;
+  border-left: 1px solid white;
+}
+
+.tabela4 td {
+  background: #e0e0e0;
+  color: #666666;
+}
+
+
+
+/* ========================================
+   TABELA TIPO 3 - PROGRESSÃO
+   ======================================== */
+
+.tabela2 {
+  --border-gray: 1px solid #e0e0e0;
+}
+
+.tabela2 {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+  font-weight: bold;
+  overflow: hidden;
+}
+
+.tabela2 thead {
+  display: table-header-group;
+}
+
+.tabela2 tbody {
+  display: table-row-group;
+}
+
+.tabela2 tr {
+  display: table-row;
+}
+
+.tabela2 th {
+  display: table-cell;
+  padding: var(--padding-xs) var(--padding-xs) var(--padding-sm) var(--padding-xs);
+  border-right: var(--border-gray);
+  font-size: var(--font-sm);
+}
+
+.tabela2 td {
+  display: table-cell;
+  padding: clamp(8px, 0.5vw, 16px) var(--padding-xs);
+}
+
+.tabela2 th:last-child,
+.tabela2 td:last-child {
+  border-right: none;
+}
+
+.tabela2 th {
+  background: #ffffff;
+  color: black;
+}
+
+.tabela2 td {
+  background: #ffffff;
+  color: black;
+  font-size: var(--font-md);
+  position: relative;
+  padding-bottom: var(--padding-md);
+  border-top: clamp(2px, 0.15vw, 4px) solid white;
+}
+
+.tabela2 td::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: calc(var(--padding-xs) * -1);
+  height: clamp(2px, 0.15vw, 4px);
+  width: 100%;
+}
+
+
+
+.tabela5 {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+
+.tabela5 table {
+  width: 100%;
+}
+
+.tabela5 thead {
+  display: table-header-group;
+}
+
+.tabela5 tbody {
+  display: table-row-group;
+}
+
+.tabela5 tr {
+  display: table-row;
+}
+
+.tabela5 th,
+.tabela5 td {
+  display: table-cell;
+  padding: var(--padding-xs) var(--padding-sm);
+  text-align: left;
+  border-bottom: 1px solid #d0d0d0;
+}
+
+.tabela5 th {
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #333333;
+}
+
+.tabela5 td:last-child {
+  text-align: center;
+  font-weight: bold;
+  font-size: var(--font-md);
+  width: clamp(80px, 5vw, 160px);
+}
+
+
+
+.legenda45 .legenda-item {
+  display: flex;
+  align-items: center;
+  gap: var(--padding-sm);
+}
+
+.legenda45 .box-legenda{
+  display: flex;
+  gap: 2rem;
+}
+
+
+
+.legenda45 .legenda-texto {
+  display: inline;
+  font-size: var(--font-sm);
+  color: #333333;
+  font-weight: normal;
+}
+
+.legenda45 .p1,
+.legenda45 .p2,
+.legenda45 .p3,
+.legenda45 .p4 {
+  width: clamp(12px, 0.75vw, 24px);
+  height: clamp(12px, 0.75vw, 24px);
+  border-radius: 50%;
+}

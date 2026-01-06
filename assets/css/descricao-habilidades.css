@@ -1,0 +1,18 @@
+
+
+/* Cores da barra por linha */
+[data-node="descricao-habilidades"] .col-letra.col-I::before {
+  border-left-color: var(--l1-color1);
+}
+
+[data-node="descricao-habilidades"] .col-letra.col-A::before {
+  border-left-color: var(--l1-color2);
+}
+
+[data-node="descricao-habilidades"] .col-letra.col-C::before {
+  border-left-color: var(--l1-color3);
+}
+
+[data-node="descricao-habilidades"] .col-letra.col-R::before {
+  border-left-color: var(--l1-color4);
+}
