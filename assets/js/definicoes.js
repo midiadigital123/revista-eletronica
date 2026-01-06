@@ -8,7 +8,7 @@ const SELECTORS = {
     infografico: ".infografico",
     revistaContent: ".revista-content",
     revistaContainer: "revista",
-    'titulo-revista': '[data-node="titulo-revista"]',
+    'titulo-infografico': '[data-node="titulo-infografico"]',
     'descritor-destaque': '[data-node="descritor-destaque"]',
     'legenda-progressao': '[data-node="legenda-progressao"]',
     'legenda-acerto': '[data-node="legenda-acerto"]',

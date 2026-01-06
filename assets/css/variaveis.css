@@ -1,0 +1,121 @@
+/* ========================================
+   VARIÁVEIS GLOBAIS DO PROJETO
+   Todas as custom properties em um único lugar
+   ======================================== */
+
+:root {
+  /* ================================
+   * CORES - PRIMITIVAS
+   * Não use diretamente. Use os tokens semânticos abaixo.
+   * ================================ */
+  
+  --color-neutral-900: #000000;
+  --color-neutral-700: #555555;
+  --color-neutral-100: #ececec;
+  --color-neutral-50: #f5f5f5;
+  --color-neutral-40: #fafafa;
+  
+  --color-brand-green-500: #c3ec32;
+  --color-brand-green-50: #f2f6e3;
+  
+  --color-accent-yellow-500: #ffeb00;
+  
+  
+  /* ================================
+   * CORES - SEMÂNTICAS
+   * Use estas no código para comunicar intenção
+   * ================================ */
+  
+  /* --- Cores de Texto --- */
+  --color-text-primary: var(--color-neutral-900);
+  --color-text-secondary: #666666;
+  --color-text-on-brand: var(--color-neutral-900);
+  
+  /* --- Cores de Fundo --- */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: var(--color-neutral-100);
+  --color-bg-highlight: var(--color-brand-green-500);
+  --color-bg-highlight-subtle: var(--color-brand-green-50);
+  
+  /* --- Cores de Marca & Acento --- */
+  --color-brand-primary: var(--color-brand-green-500);
+  --color-brand-primary-subtle: var(--color-brand-green-50);
+  --color-accent-primary: var(--color-accent-yellow-500);
+  
+  /* --- Cores de Borda --- */
+  --color-border-default: #dddddd;
+  --color-border-strong: var(--color-neutral-900);
+  --color-border-accent: var(--color-accent-yellow-500);
+  
+  
+  /* ================================
+   * ELEVAÇÃO (Sombras)
+   * ================================ */
+  
+  --elevation-none: none;
+  --elevation-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --elevation-md: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+  --elevation-lg: 0 4px 8px 0 rgba(0, 0, 0, 0.15);
+  --elevation-xl: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+  
+  /* Sombras específicas de componentes */
+  --elevation-card: var(--elevation-md);
+  --elevation-button: 0 2px 4px 0 rgba(0, 0, 0, 0.25);
+  
+  
+  /* ================================
+   * BORDER RADIUS
+   * ================================ */
+  
+  --radius-none: 0;
+  --radius-sm: 0.25rem;    /* 4px */
+  --radius-md: 0.5rem;     /* 8px */
+  --radius-lg: 1rem;       /* 16px */
+  --radius-xl: 1.5rem;     /* 24px */
+  --radius-full: 9999px;   /* Círculo/pill completo */
+  
+  /* Aplicações específicas */
+  --radius-button: var(--radius-full);
+  --radius-card: var(--radius-md);
+  --radius-input: var(--radius-sm);
+  
+  
+  /* ================================
+   * SPACING SCALE (Grid 4px)
+   * Sistema unificado de espaçamento
+   * ================================ */
+  
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-7: 1.75rem;   /* 28px */
+  --space-8: 2rem;      /* 32px */
+  --space-9: 2.25rem;   /* 36px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-11: 2.75rem;  /* 44px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+  
+  
+  /* ================================
+   * TRANSITIONS
+   * ================================ */
+  
+  --transition-fast: 150ms ease-in-out;
+  --transition-base: 250ms ease-in-out;
+  --transition-slow: 350ms ease-in-out;
+  
+  
+  /* ================================
+   * FONT WEIGHTS
+   * ================================ */
+  
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+}
+

@@ -115,12 +115,13 @@ const buildInfografico = (nodes) => {
 
   nodes.forEach((node) => {
     const { id, title, content, captionData } = node;
+    console.log(id)
     const selector = document.querySelector(SELECTORS[id]);
 
     if (!selector) return; // Segurança caso o seletor não exista
 
     // --- Lógica de Inserção de HTML ---
-    const isSpecialCase = id === "titulo-revista" || id === "descritor-destaque";
+    const isSpecialCase = id === "titulo-infografico" || id === "descritor-destaque";
     const htmlToInsert = isSpecialCase
       ? buildEl({ tag: "h1", className: id, content: title })
       : content;

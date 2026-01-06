@@ -63,12 +63,12 @@ export const linkStructure = (text) => {
  * Define a estrutura do infográfico, com todas as divs necessárias para inserir os dados dinâmicos posteriormente.
  */
 export const infograficoStructure = () => {
-    return ` <div id="container-revista" class="infografico revista-bncc-tabela">
-      <div id="titulo-revista" class="titulo1" data-node="titulo-revista"></div>
+    return ` <div class="infografico revista-bncc-tabela">
+      <div id="titulo-infografico" class="titulo-infografico" data-node="titulo-infografico"></div>
 
       <div id="node0" class="descritor-destaque" data-node="descritor-destaque"></div>
 
-      <div id="node1" class="descricao-habilidades revista-bncc-tabela tp-1" data-node="descricao-habilidades"></div>
+      <div id="node1" class="descricao-habilidades" data-node="descricao-habilidades"></div>
 
       <div id="node2" class="progressao-habilidades"  data-node="progressao-habilidades"></div>
 

@@ -1,0 +1,156 @@
+
+@import "fonts.css";
+@import "variaveis.css";
+
+:root {
+
+  /* Texto pequeno (legendas, notas) */
+  --font-size-sm: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+  /* 12px → 14px */
+
+  /* Texto base (parágrafos) */
+  --font-size-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  /* 16px → 18px */
+
+  /* Texto médio (destaques, subtítulos) */
+  --font-size-md: clamp(1.125rem, 1rem + 0.625vw, 1.375rem);
+  /* 18px → 22px */
+
+  /* Título de seção (h3) */
+  --font-size-lg: clamp(1.25rem, 1.1rem + 0.75vw, 1.75rem);
+  /* 20px → 28px */
+
+  /* Título secundário (h2) */
+  --font-size-xl: clamp(1.5rem, 1.25rem + 1.25vw, 2.25rem);
+  /* 24px → 36px */
+
+  /* Título principal (h1) */
+  --font-size-2xl: clamp(2rem, 1.5rem + 2.5vw, 3.5rem);
+  /* 32px → 56px */
+
+  /* ================================
+   * LINE HEIGHTS
+   * Proporções fixas, não precisam escalar
+   * ================================ */
+
+  --line-height-tight: 1.2; /* Títulos grandes */
+  --line-height-snug: 1.3; /* Títulos médios */
+  --line-height-normal: 1.5; /* Texto base */
+  --line-height-relaxed: 1.75; /* Texto destacado, cards */
+
+  /* ================================
+   * LETTER SPACING
+   * Valores conservadores para legibilidade
+   * ================================ */
+
+  --letter-spacing-tight: -0.02em; /* Títulos grandes */
+  --letter-spacing-normal: 0em; /* Texto base */
+  --letter-spacing-wide: 0.01em; /* Texto pequeno */
+}
+
+@media (min-width: 1920px) {
+  .revista-container {
+    --font-size-sm: clamp(2.16rem , 0.504rem + 0.648vw, 4.32rem);
+    --font-size-base: clamp(2.88rem , 0.684rem + 2.16vw, 3rem);
+    --font-size-md: clamp(3.06rem, 0.612rem + 0.551vw, 3.672rem);
+    --font-size-lg: clamp(3.672rem, 0.673rem + 0.551vw, 4.284rem);
+    --font-size-xl: clamp(4.284rem, 0.765rem + 0.551vw, 4.896rem);
+    --font-size-2xl: clamp(4.896rem, 0.918rem + 0.551vw, 5.508rem);
+  }
+}
+
+.revista-container .row{
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* ================================
+ * ESTILOS BASE
+ * ================================ */
+
+.revista-container {
+  font-family: "Proxima Nova", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  letter-spacing: var(--letter-spacing-normal);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-primary);
+}
+
+/* ================================
+ * HEADINGS
+ * ================================ */
+
+.revista-container :is(h1, h2, h3, h4, h5, h6) {
+  font-family: "Proxima Nova", sans-serif;
+  font-weight: var(--font-weight-bold);
+  margin-top: var(--space-8);
+  margin-bottom: var(--space-4);
+  color: var(--color-text-primary);
+}
+
+.revista-container h1 {
+  font-size: var(--font-size-2xl);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-tight);
+  margin-bottom: var(--space-9);
+}
+
+.revista-container h2 {
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-snug);
+  letter-spacing: var(--letter-spacing-tight);
+  margin-bottom: var(--space-8);
+}
+
+.revista-container h3 {
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-snug);
+  letter-spacing: var(--letter-spacing-normal);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-7);
+}
+
+/* ================================
+ * BODY TEXT
+ * ================================ */
+
+.revista-container :is(p, ul, ol, li, span, a) {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  letter-spacing: var(--letter-spacing-normal);
+  margin-bottom: var(--space-4);
+}
+
+.revista-container p:last-child {
+  margin-bottom: 0;
+}
+
+/* ================================
+ * COMPONENTE: RÓTULO DE SEÇÃO
+ * Ex: "Na perspectiva"
+ * ================================ */
+
+.revista-container .revista__rotulo-secao {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  background-color: var(--color-neutral-50);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-sm);
+  position: relative;
+}
+
+.revista-container .revista__rotulo-secao::before {
+  content: "";
+  display: block;
+  width: var(--space-3);
+  height: var(--space-3);
+  background-color: var(--color-accent-primary);
+  border-radius: 0.125rem;
+  position: absolute;
+  left: calc(-1 * var(--space-8));
+}
