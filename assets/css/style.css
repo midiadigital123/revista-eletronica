@@ -48,8 +48,8 @@ grid-row-end: 4;
 overflow: hidden;
 }
 
-.tabela1 { 
-grid-area: tabela1; 
+.descricao-habilidades { 
+grid-area: descricao-habilidades; 
 grid-column-start: 2;
 grid-column-end: 10;
 grid-row-start: 5;
@@ -92,8 +92,8 @@ flex-direction: column;
   overflow-y: auto;
 }
 
-.legenda12 { 
-grid-area: legenda12; 
+.legenda-progressao { 
+grid-area: legenda-progressao; 
 grid-column-start: 2;
 grid-column-end: 6;
 grid-row-start: 18;
@@ -153,8 +153,8 @@ padding: var(--padding-md);
   flex: 1;
 }
 
-.centro { 
-grid-area: centro; 
+.descritor-destaque { 
+grid-area: descritor-destaque; 
 background-color: blue;
 grid-column-start: 11;
 grid-column-end: 16;
@@ -163,8 +163,8 @@ grid-row-end: 12;
 overflow: hidden;
 }
 
-.tabela2 { 
-grid-area: tabela2;
+.progressao-habilidades { 
+grid-area: progressao-habilidades;
 grid-column-start: 7;
 grid-column-end: 16;
 grid-row-start: 18;
@@ -215,8 +215,8 @@ flex-direction: column;
       padding: var(--padding-lg) var(--padding-sm)!important;
 }
 
-.tabela3 { 
-grid-area: tabela3;
+.tarefas-nivel { 
+grid-area: tarefas-nivel;
 grid-column-start: 17;
 grid-column-end: 26;
 grid-row-start: 2;
@@ -507,7 +507,7 @@ flex-direction: column;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.tabela4 { grid-area: tabela4;
+.serie-historica { grid-area: serie-historica;
 grid-column-start: 17;
 grid-column-end: 26;
 grid-row-start: 11;
@@ -551,8 +551,8 @@ flex-direction: column;
   padding: var(--padding-md);
 }
 
-.tabela5 { 
-grid-area: tabela5; 
+.percentual-acerto { 
+grid-area: percentual-acerto; 
 grid-column-start: 17;
 grid-column-end: 26;
 grid-row-start: 15;
@@ -642,8 +642,8 @@ flex-direction: column;
   padding: var(--padding-xs) var(--padding-sm);
 }
 
-.legenda45 {
-grid-area: tabela5; 
+.legenda-acerto {
+grid-area: percentual-acerto; 
 grid-column-start: 17;
 grid-column-end: 26;
 grid-row-start: 20;
@@ -655,7 +655,7 @@ overflow: hidden;
    VARIÁVEIS CSS
    ======================================== */
 
-.tabela1 {
+.descricao-habilidades {
   --border-gray: 1px solid #e0e0e0;
   overflow-y: auto;
 }
@@ -664,7 +664,7 @@ overflow: hidden;
    ESTRUTURA BASE DA TABELA
    ======================================== */
 
-.tabela1 {
+.descricao-habilidades {
   width: 100%;
   border-collapse: collapse;
   
@@ -672,16 +672,16 @@ overflow: hidden;
   color: #000;
 }
 
-.tabela1 tbody {
+.descricao-habilidades tbody {
   display: table-row-group;
 }
 
-.tabela1 tr {
+.descricao-habilidades tr {
   display: table-row;
   position: relative;
 }
 
-.tabela1 td {
+.descricao-habilidades td {
   display: table-cell;
   padding: 4px 8px;
 }
@@ -690,15 +690,15 @@ overflow: hidden;
    LARGURAS DAS COLUNAS
    ======================================== */
 
-.tabela1 .col-anos {
+.descricao-habilidades .col-anos {
   width: 12%;
 }
 
-.tabela1 .col-letra {
+.descricao-habilidades .col-letra {
   width: 6%;
 }
 
-.tabela1 .col-descricao {
+.descricao-habilidades .col-descricao {
   width: 82%;
 }
 
@@ -706,13 +706,13 @@ overflow: hidden;
    ALINHAMENTOS
    ======================================== */
 
-.tabela1 .col-anos,
-.tabela1 .col-letra {
+.descricao-habilidades .col-anos,
+.descricao-habilidades .col-letra {
   vertical-align: middle;
   text-align: center;
 }
 
-.tabela1 .col-descricao {
+.descricao-habilidades .col-descricao {
   vertical-align: top;
   text-align: justify;
 }
@@ -721,13 +721,13 @@ overflow: hidden;
    COLUNA DE ANOS
    ======================================== */
 
-.tabela1 .col-anos {
+.descricao-habilidades .col-anos {
   padding-left: 8px;
   font-weight: bold;
   border-top: var(--border-gray);
 }
 
-.tabela1 tr:last-child .col-anos {
+.descricao-habilidades tr:last-child .col-anos {
   border-bottom: var(--border-gray);
 }
 
@@ -735,14 +735,14 @@ overflow: hidden;
    COLUNA DE LETRA (com barra colorida)
    ======================================== */
 
-.tabela1 .col-letra {
+.descricao-habilidades .col-letra {
   position: relative;
   padding-left: 20px;
   font-weight: bold;
   border-top: 1px solid #ffffff;
 }
 
-.tabela1 .col-letra::before {
+.descricao-habilidades .col-letra::before {
   content: '';
   position: absolute;
   left: 4px;
@@ -758,12 +758,12 @@ overflow: hidden;
    COLUNA DE DESCRIÇÃO
    ======================================== */
 
-.tabela1 .col-descricao {
+.descricao-habilidades .col-descricao {
   padding: 12px 4px;
   border-top: var(--border-gray);
 }
 
-.tabela1 tr:last-child .col-descricao {
+.descricao-habilidades tr:last-child .col-descricao {
   border-bottom: var(--border-gray);
 }
 
@@ -771,7 +771,7 @@ overflow: hidden;
    AJUSTES FINOS
    ======================================== */
 
-.tabela1 br {
+.descricao-habilidades br {
   display: block;
   content: "";
   margin: 2px 0;
@@ -782,47 +782,47 @@ overflow: hidden;
    TABELA TIPO 2 - ANOS
    ======================================== */
 
-.tabela4 {
+.serie-historica {
   border-collapse: collapse;
   font-size: var(--font-sm);
   font-weight: bold;
 }
 
-.tabela4 table {
+.serie-historica table {
   width: 100%;
 }
 
-.tabela4 thead {
+.serie-historica thead {
   display: table-header-group;
 }
 
-.tabela4 tbody {
+.serie-historica tbody {
   display: table-row-group;
 }
 
-.tabela4 tr {
+.serie-historica tr {
   display: table-row;
 }
 
-.tabela4 th,
-.tabela4 td {
+.serie-historica th,
+.serie-historica td {
   display: table-cell;
   padding: var(--padding-xs) var(--padding-sm);
 }
 
-.tabela4 th {
+.serie-historica th {
   background: #ffffff;
   color: #333333;
   border-left: 1px solid #d0d0d0;
   border-right: 1px solid #d0d0d0;
 }
 
-.tabela4 td {
+.serie-historica td {
   border-right: 1px solid white;
   border-left: 1px solid white;
 }
 
-.tabela4 td {
+.serie-historica td {
   background: #e0e0e0;
   color: #666666;
 }
@@ -833,11 +833,11 @@ overflow: hidden;
    TABELA TIPO 3 - PROGRESSÃO
    ======================================== */
 
-.tabela2 {
+.progressao-habilidades {
   --border-gray: 1px solid #e0e0e0;
 }
 
-.tabela2 {
+.progressao-habilidades {
   width: 100%;
   border-collapse: collapse;
   font-size: var(--font-sm);
@@ -845,41 +845,41 @@ overflow: hidden;
   overflow: hidden;
 }
 
-.tabela2 thead {
+.progressao-habilidades thead {
   display: table-header-group;
 }
 
-.tabela2 tbody {
+.progressao-habilidades tbody {
   display: table-row-group;
 }
 
-.tabela2 tr {
+.progressao-habilidades tr {
   display: table-row;
 }
 
-.tabela2 th {
+.progressao-habilidades th {
   display: table-cell;
   padding: var(--padding-xs) var(--padding-xs) var(--padding-sm) var(--padding-xs);
   border-right: var(--border-gray);
   font-size: var(--font-sm);
 }
 
-.tabela2 td {
+.progressao-habilidades td {
   display: table-cell;
   padding: clamp(8px, 0.5vw, 16px) var(--padding-xs);
 }
 
-.tabela2 th:last-child,
-.tabela2 td:last-child {
+.progressao-habilidades th:last-child,
+.progressao-habilidades td:last-child {
   border-right: none;
 }
 
-.tabela2 th {
+.progressao-habilidades th {
   background: #ffffff;
   color: black;
 }
 
-.tabela2 td {
+.progressao-habilidades td {
   background: #ffffff;
   color: black;
   font-size: var(--font-md);
@@ -888,7 +888,7 @@ overflow: hidden;
   border-top: clamp(2px, 0.15vw, 4px) solid white;
 }
 
-.tabela2 td::before {
+.progressao-habilidades td::before {
   content: "";
   position: absolute;
   left: 0;
@@ -899,43 +899,43 @@ overflow: hidden;
 
 
 
-.tabela5 {
+.percentual-acerto {
   width: 100%;
   border-collapse: collapse;
   font-size: var(--font-sm);
 }
 
-.tabela5 table {
+.percentual-acerto table {
   width: 100%;
 }
 
-.tabela5 thead {
+.percentual-acerto thead {
   display: table-header-group;
 }
 
-.tabela5 tbody {
+.percentual-acerto tbody {
   display: table-row-group;
 }
 
-.tabela5 tr {
+.percentual-acerto tr {
   display: table-row;
 }
 
-.tabela5 th,
-.tabela5 td {
+.percentual-acerto th,
+.percentual-acerto td {
   display: table-cell;
   padding: var(--padding-xs) var(--padding-sm);
   text-align: left;
   border-bottom: 1px solid #d0d0d0;
 }
 
-.tabela5 th {
+.percentual-acerto th {
   font-weight: bold;
   text-transform: uppercase;
   color: #333333;
 }
 
-.tabela5 td:last-child {
+.percentual-acerto td:last-child {
   text-align: center;
   font-weight: bold;
   font-size: var(--font-md);
@@ -944,30 +944,30 @@ overflow: hidden;
 
 
 
-.legenda45 .legenda-item {
+.legenda-acerto .legenda-item {
   display: flex;
   align-items: center;
   gap: var(--padding-sm);
 }
 
-.legenda45 .box-legenda{
+.legenda-acerto .box-legenda{
   display: flex;
   gap: 2rem;
 }
 
 
 
-.legenda45 .legenda-texto {
+.legenda-acerto .legenda-texto {
   display: inline;
   font-size: var(--font-sm);
   color: #333333;
   font-weight: normal;
 }
 
-.legenda45 .p1,
-.legenda45 .p2,
-.legenda45 .p3,
-.legenda45 .p4 {
+.legenda-acerto .p1,
+.legenda-acerto .p2,
+.legenda-acerto .p3,
+.legenda-acerto .p4 {
   width: clamp(12px, 0.75vw, 24px);
   height: clamp(12px, 0.75vw, 24px);
   border-radius: 50%;

@@ -66,22 +66,22 @@ export const infograficoStructure = () => {
     return ` <div id="container-revista" class="infografico revista-bncc-tabela">
       <div id="titulo-revista" class="titulo1" data-node="titulo-revista"></div>
 
-      <div id="node0" class="centro" data-type="central-node" data-node="descritor-destaque"></div>
+      <div id="node0" class="descritor-destaque" data-node="descritor-destaque"></div>
 
-      <div id="node1" class="tabela1 revista-bncc-tabela tp-1" data-type="table-node" data-node="descricao-habilidades"></div>
+      <div id="node1" class="descricao-habilidades revista-bncc-tabela tp-1" data-node="descricao-habilidades"></div>
 
-      <div id="node2" class="tabela2" data-type="table-node" data-node="progressao-habilidades"></div>
+      <div id="node2" class="progressao-habilidades"  data-node="progressao-habilidades"></div>
 
-      <div id="caption1" class="legenda12" data-node="legenda-progressao">
+      <div id="caption1" class="legenda-progressao" data-node="legenda-progressao">
       </div>
       
-      <div id="node3" class="tabela3" data-type="table-node" data-node="tarefas-nivel">
+      <div id="node3" class="tarefas-nivel" data-node="tarefas-nivel">
       </div>
-      <div id="node4" class="tabela4" data-type="table-node" data-node="serie-historica">
+      <div id="node4" class="serie-historica" data-node="serie-historica">
       </div>
-      <div id="node5" class="tabela5" data-type="table-node" data-node="percentual-acerto">
+      <div id="node5" class="percentual-acerto" data-node="percentual-acerto">
       </div>
-      <div id="caption2" class="legenda45" data-node="legenda-acerto">
+      <div id="caption2" class="legenda-acerto" data-node="legenda-acerto">
       </div>
     </div>
     `
