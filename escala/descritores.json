@@ -1,0 +1,1057 @@
+{
+  "5ef": {
+    "scaleRange": { "min": 0, "max": 500 },
+    "D01": {
+      "topic": "TÓPICO I. PROCEDIMENTOS DE LEITURA",
+      "description": "Identificar a localização/movimentação de objetos em mapas, croquis e outras representações gráficas.",
+      "prerequisites": [
+        "Compreensão de espaço e lugar;",
+        "Noção de orientação espacial;",
+        "Noção de posição relativa;",
+        "Entendimento de símbolos e legendas;",
+        "Reconhecimento de pontos de referência",
+        "Ler e interpretar representações gráficas simples;",
+        "Usar coordenadas e eixos de referência;",
+        "Comparar diferentes tipos de representações;",
+        "Relacionar o espaço representado ao espaço real;",
+        "Seguir trajetos e indicar percursos."
+      ],
+      "bncc": {
+        "practices": "Leitura/escuta (compartilhada e autônoma)",
+        "knowledge": "Estratégia de leitura",
+        "skills": [
+          "EF15LP02, EF15LP03, EF15LP04",
+          "Leitura (compartilhada e autônoma)"
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          {
+            "level": 125,
+            "content": "sdasdasdLorem ipsum dolor sit amet consectetur. Morbi eget nunc in justo tempus nulla pellentesque."
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 225,
+            "content": "Lorem ipsum dolor sit amet consectetur. Morbi eget nunc in justo tempus nulla pellentesque."
+          },
+          {
+            "level": 200,
+            "content": "Lorem ipsum dolor sit amet consectetur. Morbi eget nunc in justo tempus nulla pellentesque."
+          },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          {
+            "level": 300,
+            "content": "Lorem ipsum dolor sit amet consectetur. Morbi eget nunc in justo tempus nulla pellentesque."
+          },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D02": {
+      "topic": "TÓPICO I. PROCEDIMENTOS DE LEITURA",
+      "description": "Descrição do D02.",
+      "prerequisites": ["Pré-requisito 1;", "Pré-requisito 2."],
+      "bncc": {
+        "practices": "Leitura/escuta (compartilhada e autônoma)",
+        "knowledge": "Estratégia de leitura",
+        "skills": ["EF15LP02"]
+      },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D03": {
+      "topic": "TÓPICO I. PROCEDIMENTOS DE LEITURA",
+      "description": "Descrição do D03.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D04": {
+      "topic": "TÓPICO I. PROCEDIMENTOS DE LEITURA",
+      "description": "Descrição do D04.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D05": {
+      "topic": "TÓPICO I. PROCEDIMENTOS DE LEITURA",
+      "description": "Descrição do D05.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D06": {
+      "topic": "TÓPICO II. IMPLICAÇÕES DO SUPORTE, DO GÊNERO E/OU DO ENUNCIADOR NA COMPREENSÃO DO TEXTO",
+      "description": "Descrição do D06.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D07": {
+      "topic": "TÓPICO II. IMPLICAÇÕES DO SUPORTE, DO GÊNERO E/OU DO ENUNCIADOR NA COMPREENSÃO DO TEXTO",
+      "description": "Descrição do D07.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D08": {
+      "topic": "TÓPICO III. RELAÇÃO ENTRE TEXTOS",
+      "description": "Descrição do D08.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D09": {
+      "topic": "TÓPICO IV. COERÊNCIA E COESÃO NO PROCESSAMENTO DO TEXTO",
+      "description": "Descrição do D09.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D10": {
+      "topic": "TÓPICO IV. COERÊNCIA E COESÃO NO PROCESSAMENTO DO TEXTO",
+      "description": "Descrição do D10.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D11": {
+      "topic": "TÓPICO IV. COERÊNCIA E COESÃO NO PROCESSAMENTO DO TEXTO",
+      "description": "Descrição do D11.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D12": {
+      "topic": "TÓPICO IV. COERÊNCIA E COESÃO NO PROCESSAMENTO DO TEXTO",
+      "description": "Descrição do D12.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D13": {
+      "topic": "TÓPICO IV. COERÊNCIA E COESÃO NO PROCESSAMENTO DO TEXTO",
+      "description": "Descrição do D13.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D14": {
+      "topic": "TÓPICO IV. COERÊNCIA E COESÃO NO PROCESSAMENTO DO TEXTO",
+      "description": "Descrição do D14.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D15": {
+      "topic": "TÓPICO V. RELAÇÕES ENTRE RECURSOS EXPRESSIVOS E EFEITOS DE SENTIDO",
+      "description": "Descrição do D15.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D16": {
+      "topic": "TÓPICO V. RELAÇÕES ENTRE RECURSOS EXPRESSIVOS E EFEITOS DE SENTIDO",
+      "description": "Descrição do D16.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D17": {
+      "topic": "TÓPICO V. RELAÇÕES ENTRE RECURSOS EXPRESSIVOS E EFEITOS DE SENTIDO",
+      "description": "Descrição do D17.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D18": {
+      "topic": "TÓPICO V. RELAÇÕES ENTRE RECURSOS EXPRESSIVOS E EFEITOS DE SENTIDO",
+      "description": "Descrição do D18.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D19": {
+      "topic": "TÓPICO V. RELAÇÕES ENTRE RECURSOS EXPRESSIVOS E EFEITOS DE SENTIDO",
+      "description": "Descrição do D19.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D20": {
+      "topic": "TÓPICO V. RELAÇÕES ENTRE RECURSOS EXPRESSIVOS E EFEITOS DE SENTIDO",
+      "description": "Descrição do D20.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D21": {
+      "topic": "TÓPICO VI. VARIAÇÃO LINGUÍSTICA",
+      "description": "Descrição do D21.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D22": {
+      "topic": "TÓPICO VI. VARIAÇÃO LINGUÍSTICA",
+      "description": "Descrição do D22.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D23": {
+      "topic": "TÓPICO VI. VARIAÇÃO LINGUÍSTICA",
+      "description": "Descrição do D23.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D24": {
+      "topic": "TÓPICO VI. VARIAÇÃO LINGUÍSTICA",
+      "description": "Descrição do D24.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D25": {
+      "topic": "TÓPICO VI. VARIAÇÃO LINGUÍSTICA",
+      "description": "Descrição do D25.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D26": {
+      "topic": "TÓPICO VI. VARIAÇÃO LINGUÍSTICA",
+      "description": "Descrição do D26.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D27": {
+      "topic": "TÓPICO VI. VARIAÇÃO LINGUÍSTICA",
+      "description": "Descrição do D27.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D28": {
+      "topic": "TÓPICO VI. VARIAÇÃO LINGUÍSTICA",
+      "description": "Descrição do D28.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D29": {
+      "topic": "TÓPICO VI. VARIAÇÃO LINGUÍSTICA",
+      "description": "Descrição do D29.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D30": {
+      "topic": "TÓPICO VI. VARIAÇÃO LINGUÍSTICA",
+      "description": "Descrição do D30.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D31": {
+      "topic": "TÓPICO VI. VARIAÇÃO LINGUÍSTICA",
+      "description": "Descrição do D31.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D32": {
+      "topic": "TÓPICO VI. VARIAÇÃO LINGUÍSTICA",
+      "description": "Descrição do D32.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D33": {
+      "topic": "TÓPICO VI. VARIAÇÃO LINGUÍSTICA",
+      "description": "Descrição do D33.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D34": {
+      "topic": "TÓPICO VI. VARIAÇÃO LINGUÍSTICA",
+      "description": "Descrição do D34.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D35": {
+      "topic": "TÓPICO VI. VARIAÇÃO LINGUÍSTICA",
+      "description": "Descrição do D35.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D36": {
+      "topic": "TÓPICO VI. VARIAÇÃO LINGUÍSTICA",
+      "description": "Descrição do D36.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D37": {
+      "topic": "TÓPICO VI. VARIAÇÃO LINGUÍSTICA",
+      "description": "Descrição do D37.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D38": {
+      "topic": "TÓPICO VI. VARIAÇÃO LINGUÍSTICA",
+      "description": "Descrição do D38.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D39": {
+      "topic": "TÓPICO VI. VARIAÇÃO LINGUÍSTICA",
+      "description": "Descrição do D39.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D40": {
+      "topic": "TÓPICO VI. VARIAÇÃO LINGUÍSTICA",
+      "description": "Descrição do D40.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    }
+  },
+  "9ef": {
+    "scaleRange": { "min": 0, "max": 500 },
+    "D01": {
+      "topic": "TÓPICO I. PROCEDIMENTOS DE LEITURA",
+      "description": "Descrição do D01 para 9º EF.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D02": {
+      "topic": "TÓPICO I. PROCEDIMENTOS DE LEITURA",
+      "description": "Descrição do D02 para 9º EF.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    }
+  },
+  "3em": {
+    "scaleRange": { "min": 0, "max": 500 },
+    "D01": {
+      "topic": "TÓPICO I. PROCEDIMENTOS DE LEITURA",
+      "description": "Descrição do D01 para 3ª EM.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    },
+    "D02": {
+      "topic": "TÓPICO I. PROCEDIMENTOS DE LEITURA",
+      "description": "Descrição do D02 para 3ª EM.",
+      "prerequisites": [],
+      "bncc": { "practices": "", "knowledge": "", "skills": [] },
+      "scale": {
+        "padrao-1": [
+          { "level": 150, "content": "---" },
+          { "level": 125, "content": "---" }
+        ],
+        "padrao-2": [
+          { "level": 225, "content": "---" },
+          { "level": 200, "content": "---" },
+          { "level": 175, "content": "---" }
+        ],
+        "padrao-3": [
+          { "level": 300, "content": "---" },
+          { "level": 275, "content": "---" },
+          { "level": 250, "content": "---" }
+        ],
+        "padrao-4": [{ "level": 325, "content": "---" }]
+      }
+    }
+  }
+}

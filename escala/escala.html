@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise dos Resultados para Intervenção Pedagógica</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1>ANÁLISE DOS RESULTADOS PARA INTERVENÇÃO PEDAGÓGICA</h1>
+            </div>
+            <div class="hero-image">
+                <img src="http://localhost:3845/assets/17639c1726c2af3a3de3530444b2e9e107726e4b.png" alt="Ilustração pedagógica">
+            </div>
+        </div>
+    </section>
+
+    <!-- Introdução -->
+    <section class="intro-section">
+        <div class="intro-content">
+            <p>Nesta seção, é apresentada a relação entre a Matriz de Referência e a Escala de Proficiência, a fim de possibilitar a compreensão de como ocorre a evolução das habilidades, conforme com o grau de complexidade das tarefas cognitivas demandadas por cada item que avalia essas habilidades. Desse modo, para cada descritor são apresentadas as diferentes tarefas referentes a cada habilidade e a proficiência necessária para que o estudante possa realizá-las com sucesso.</p>
+
+            <p>Além disso, são apresentados os pré-requisitos necessários para o desenvolvimento de cada descritor da Matriz de Referência. Essa informação é importante, pois permite que o professor identifique as possíveis defasagens dos estudantes. Dessa maneira, é possível traçar com mais clareza as estratégias de recomposição das aprendizagens.</p>
+
+            <p>Por fim, é apresentada a relação entre os descritores da Matriz de Referência e a Base Nacional Comum Curricular (BNCC). Para Língua Portuguesa, são destacadas as Práticas de linguagem (oralidade, leitura/escuta, produção (escrita e multissemiótica) e análise linguística/semiótica); os Objetos de conhecimento e as Habilidades relacionadas. A proposta aqui é reforçar a importância de entender a BNCC como um documento norteador para elaboração do Referencial Curricular e estreitar a relação entre a BNCC, o Referencial Curricular e as Matrizes de Referência.</p>
+        </div>
+    </section>
+
+    <!-- Área Interativa Principal -->
+    <section class="interactive-section">
+        <div class="interactive-container">
+            <!-- Área de Filtros e Descritores -->
+            <div class="descriptors-area">
+                <!-- Filtros -->
+                <div class="filtro">
+                    <button class="filtro-btn active" data-filter="5ef">5º EF</button>
+                    <button class="filtro-btn" data-filter="9ef">9º EF</button>
+                    <button class="filtro-btn" data-filter="3em">3ª EM</button>
+                </div>
+
+                <!-- Conteúdo dos Descritores -->
+                <div class="content-wrapper">
+                    <!-- Menu de Descritores (gerado dinamicamente via JS) -->
+                    <div class="descritores-section">
+                        <div class="menu">
+                            <div class="descritores-grid"></div>
+                        </div>
+                    </div>
+
+                    <!-- Título do Tópico -->
+                    <div class="titulo-topico">
+                        <h3></h3>
+                    </div>
+
+                    <!-- Descritor Detalhado -->
+                    <div class="descritor-detalhado">
+                        <p></p>
+                    </div>
+                </div>
+
+                <!-- Pré-requisitos Box -->
+                <div class="prerequisitos-box">
+                    <div class="prerequisitos-content">
+                        <p class="prerequisitos-title"><strong>Pré-requisitos necessários para o desenvolvimento desta habilidade:</strong></p>
+                        <ul></ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Escala de Proficiência -->
+            <div class="escala-proficiencia">
+                <div class="escala-header">
+                    <p class="escala-label-top"></p>
+                </div>
+
+                <!-- Padrões gerados dinamicamente via JS -->
+                <div class="escala-content"></div>
+
+                <div class="escala-footer">
+                    <p class="escala-label-bottom"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- BNCC Section -->
+        <div class="bncc-section">
+            <div class="bncc-header">
+                <div class="bncc-icon"></div>
+                <h2>BNCC</h2>
+            </div>
+            <div class="bncc-content">
+                <div class="bncc-row">
+                    <div class="bncc-label">Práticas de linguagem:</div>
+                    <div class="bncc-value"></div>
+                </div>
+                <div class="bncc-row">
+                    <div class="bncc-label">Objeto de conhecimento:</div>
+                    <div class="bncc-value"></div>
+                </div>
+                <div class="bncc-row">
+                    <div class="bncc-label">Habilidades relacionadas:</div>
+                    <div class="bncc-value"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="navigation-buttons">
+            <button class="nav-btn prev-btn">
+                <img src="http://localhost:3845/assets/ce2f3a0b0ee924a91a8da4a2b3235a6bf102cc13.svg" alt="Anterior">
+                <span>Descritor anterior</span>
+            </button>
+            <button class="nav-btn next-btn">
+                <span>Próximo descritor</span>
+                <img src="http://localhost:3845/assets/4bb291fb707d5b59629166635e4695c377cd1d8b.svg" alt="Próximo">
+            </button>
+        </div>
+    </section>
+
+    <!-- Menu Lateral Fixo -->
+    <aside class="menu-lateral">
+        <p class="menu-lateral-title">Descritores</p>
+        <!-- Botões gerados dinamicamente via JS -->
+        <div class="menu-lateral-grid"></div>
+    </aside>
+
+    <script src="script.js"></script>
+</body>
+</html>
