@@ -1,0 +1,1829 @@
+{
+  "2ef": {
+    "scaleRange": {
+      "min": 0,
+      "max": 1000
+    },
+    "cortes": {
+      "padrao-1": 350,
+      "padrao-2": 400,
+      "padrao-3": 500
+    },
+    "D01": {
+      "topic": "",
+      "description": "Relacionar elementos sonoros das palavras com sua representação escrita.",
+      "prerequisites": [
+        "Compreender e produzir frases oralmente.",
+        "Perceber diferenças e semelhanças sonoras entre palavras.",
+        "Identificar e segmentar palavras em sílabas.",
+        "Reconhecer rimas e aliterações.",
+        "Perceber sons iniciais e finais das palavras.",
+        "Identificar fonemas em palavras simples.",
+        "Reconhecer letras do alfabeto.",
+        "Diferenciar letras de números e outros símbolos.",
+        "Entender que a escrita representa a fala.",
+        "Conhecer a relação básica entre letras e sons.",
+        "Demonstrar tentativa de correspondência entre fala e escrita.",
+        "Ser capaz de produzir escritas espontâneas.",
+        "Traçar letras e palavras de forma legível."
+      ],
+      "bncc": {
+        "practices": "Análise linguística/semiótica (Alfabetização)",
+        "knowledge": "Construção do sistema alfabético e da ortografia",
+        "skills": [
+          "EF01LP05, EF01LP07, EF01LP07, EF02LP03, EF02LP04",
+          "(EF01LP08) Relacionar elementos sonoros (sílabas, fonemas, partes de palavras) com sua representação escrita."
+        ]
+      },
+      "scale": {
+        "padrao-1": [],
+        "padrao-2": [
+          {
+            "level": 390,
+            "content": "Reconhecer a sílaba inicial de palavras dissílabas (canônicas e nasais) a partir de ditado e imagens."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 446,
+            "content": "Identificar a letra inicial em palavras trissílabas complexas (com dígrafos) e relacioná-la a letras iniciais de outras palavras."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 782,
+            "content": "Reconhecer o som da letra \"C\" inicial em polissílabas, associando-o aos fonemas /s/ ou /k/ conforme o contexto."
+          },
+          {
+            "level": 732,
+            "content": "Reconhecer o som da letra \"N\" inicial ou em situações de nasalização de vogal e composição de dígrafo (nh)."
+          },
+          {
+            "level": 675,
+            "content": "Identificar o som da letra \"S\" intervocálica (fonema /z/) em diferentes posições na palavra."
+          },
+          {
+            "level": 616,
+            "content": "Reconhecer a sílaba medial em palavras trissílabas que contêm dígrafos (gu, nh) ou fonemas nasais."
+          },
+          {
+            "level": 556,
+            "content": "Identificar a sílaba final (com ditongos) em dissílabas e a sílaba medial em trissílabas com estruturas CVC ou dígrafos."
+          },
+          {
+            "level": 503,
+            "content": "Reconhecer o som da letra \"G\" inicial em palavras polissílabas, diferenciando os fonemas /ʒ/ e /g/."
+          }
+        ]
+      }
+    },
+    "D02": {
+      "topic": "",
+      "description": "Ler palavras.",
+      "prerequisites": [
+        "Identificar e segmentar palavras em sílabas.",
+        "Reconhecer sons iniciais, mediais e finais das palavras.",
+        "Relacionar fonemas aos grafemas correspondentes.",
+        "Reconhecer rimas e semelhanças sonoras.",
+        "Reconhecer e nomear letras do alfabeto.",
+        "Conhecer os valores sonoros das letras.",
+        "Compreender que a escrita representa a fala.",
+        "Reconhecer sílabas canônicas (CV) e outras estruturas frequentes (VC, CVC).",
+        "Realizar a correspondência grafema–fonema.",
+        "Juntar letras e sílabas para formar palavras."
+      ],
+      "bncc": {
+        "practices": "Leitura/escuta (compartilhada e autônoma)",
+        "knowledge": "Decodificação/Fluência de leitura",
+        "skills": [
+          "EF02LP03, EF02LP04, EF02LP05",
+          "(EF12LP01) Ler palavras novas com precisão na decodificação, no caso de palavras de uso frequente, ler globalmente, por memorização."
+        ]
+      },
+      "scale": {
+        "padrao-1": [],
+        "padrao-2": [
+          {
+            "level": 390,
+            "content": "Ler palavras dissílabas e trissílabas (canônicas e não canônicas) com fonemas simples."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 446,
+            "content": "Ler palavras de variada extensão (dissílabas a polissílabas) com oposições fonêmicas (/z/ e /s/; /k/ e /g/)."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 782,
+            "content": "---"
+          },
+          {
+            "level": 732,
+            "content": "---"
+          },
+          {
+            "level": 675,
+            "content": "Ler palavras com estruturas complexas, incluindo encontros consonantais, dígrafos e ditongos nasais."
+          },
+          {
+            "level": 556,
+            "content": "Ler palavras canônicas e não canônicas contendo ditongos e fonemas como /k/, /g/, /s/ e /∫/."
+          }
+        ]
+      }
+    },
+    "D03": {
+      "topic": "",
+      "description": "Ler frases.",
+      "prerequisites": [
+        "Reconhecer letras e seus sons.",
+        "Segmentar palavras em sílabas.",
+        "Reconhecer rimas e padrões sonoros.",
+        "Relacionar fonemas e grafemas com precisão.",
+        "Ler palavras frequentes e familiares.",
+        "Compreender que a leitura segue uma ordem (da esquerda para a direita, de cima para baixo).",
+        "Decodificar palavras com autonomia.",
+        "Ler palavras com ritmo adequado.",
+        "Reconhecer palavras automaticamente (sem soletrar).",
+        "Ter vocabulário compatível com a faixa etária."
+      ],
+      "bncc": {
+        "practices": "Leitura/escuta (compartilhada e autônoma)",
+        "knowledge": "Compreensão em leitura",
+        "skills": [
+          "EF01LP16, EF02LP12, EF12LP08, EF12LP09, EF12LP10 (EF12LP04) Ler e compreender, em colaboração com os colegas e com a ajuda do professor ou já com certa",
+          "autonomia, listas, agendas, calendários, avisos, convites, receitas, instruções de montagem (digitais ou impressos), dentre outros gêneros do campo da vida cotidiana, considerando a situação comunicativa e o tema/assunto do texto e relacionando sua forma de organização à sua finalidade."
+        ]
+      },
+      "scale": {
+        "padrao-1": [],
+        "padrao-2": [
+          {
+            "level": 390,
+            "content": "Relacionar frases em ordem direta (SVO) sobre cenas cotidianas às suas respectivas imagens."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 446,
+            "content": "Interpretar imagens de cenas comuns ou incomuns e associá-las a frases em ordem direta."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 782,
+            "content": "---"
+          },
+          {
+            "level": 732,
+            "content": "---"
+          },
+          {
+            "level": 675,
+            "content": "---"
+          },
+          {
+            "level": 616,
+            "content": "---"
+          },
+          {
+            "level": 556,
+            "content": "---"
+          },
+          {
+            "level": 503,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D04": {
+      "topic": "",
+      "description": "Localizar informações explícitas em textos.",
+      "prerequisites": [
+        "Ler palavras e frases com autonomia.",
+        "Ler pequenos textos com apoio ou de forma compartilhada.",
+        "Reconhecer a sequência lógica da leitura (da esquerda para direita, de cima para baixo).",
+        "Compreender o sentido global de textos curtos.",
+        "Identificar personagens, tempo e espaço em textos simples.",
+        "Reconhecer fatos narrados explicitamente.",
+        "Relacionar perguntas ao conteúdo do texto.",
+        "Compreender palavras e expressões frequentes nos textos.",
+        "Identificar informações visuais que ajudam na compreensão (título, imagens, subtítulos)."
+      ],
+      "bncc": {
+        "practices": "Leitura/escuta (compartilhada e autônoma)",
+        "knowledge": "Estratégia de leitura",
+        "skills": [
+          "EF15LP02, EF15LP16, EF12LP02",
+          "(EF15LP03) Localizar informações explícitas em textos."
+        ]
+      },
+      "scale": {
+        "padrao-1": [],
+        "padrao-2": [
+          {
+            "level": 390,
+            "content": "Localizar o título de uma história na capa de um livro."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 446,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 675,
+            "content": "---"
+          },
+          {
+            "level": 616,
+            "content": "Localizar informações em contos, convites, fábulas ou notícias de extensão média (até 12 linhas)."
+          },
+          {
+            "level": 556,
+            "content": "Identificar informações explícitas em receitas, curiosidades e letras de música (8 a 13 linhas)."
+          },
+          {
+            "level": 503,
+            "content": "Localizar dados literais em textos narrativos curtos (contos de até 5 linhas)."
+          }
+        ]
+      }
+    },
+    "D05": {
+      "topic": "",
+      "description": "Reconhecer a finalidade de um texto.",
+      "prerequisites": [
+        "Ler palavras, frases e textos curtos com autonomia.",
+        "Compreender o sentido geral do texto.",
+        "Reconhecer informações explícitas.",
+        "Perceber ideias principais em textos simples.",
+        "Reconhecer características básicas de cada gênero: narrativas, bilhetes, avisos, convites, receitas, listas.",
+        "Identificar elementos como título, ilustrações, formato e linguagem.",
+        "Conhecer as funções sociais da leitura (informar, avisar, divertir, ensinar)."
+      ],
+      "bncc": {
+        "practices": "Leitura/escuta (compartilhada e autônoma)",
+        "knowledge": "Compreensão em leitura",
+        "skills": [
+          "EF01LP16, EF02LP12 (EF12LP04) Ler e compreender, em colaboração com os colegas e com a ajuda do professor ou já com certa",
+          "autonomia, listas, agendas, calendários, avisos, convites, receitas, instruções de montagem (digitais ou impressos), dentre outros gêneros do campo da vida cotidiana, considerando a situação comunicativa e o tema/assunto do texto e relacionando sua forma de organização à sua finalidade."
+        ]
+      },
+      "scale": {
+        "padrao-1": [],
+        "padrao-2": [
+          {
+            "level": 390,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 446,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 675,
+            "content": "---"
+          },
+          {
+            "level": 616,
+            "content": "Identificar a finalidade de anúncios publicitários e outros textos do campo informativo."
+          },
+          {
+            "level": 556,
+            "content": "Reconhecer a finalidade de bilhetes, curiosidades e listas de compras."
+          },
+          {
+            "level": 503,
+            "content": "Identificar a função de convites, receitas e listas de tarefas com base em sua estrutura e leitura global."
+          }
+        ]
+      }
+    },
+    "D06": {
+      "topic": "",
+      "description": "Inferir o assunto de um texto.",
+      "prerequisites": [
+        "Ler palavras, frases e textos curtos com autonomia.",
+        "Compreender o sentido geral do texto.",
+        "Compreender que textos têm um tema central.",
+        "Identificar informações explícitas principais.",
+        "Relacionar informações dentro do texto.",
+        "Fazer antecipações a partir do título, imagens e palavras-chave.",
+        "Perceber pistas que indiquem sobre o que o texto trata.",
+        "Relacionar palavras novas ao contexto.",
+        "Observar repetições de palavras ou ideias.",
+        "Ter contato frequente com a leitura."
+      ],
+      "bncc": {
+        "practices": "Leitura/escuta (compartilhada e autônoma)",
+        "knowledge": "Compreensão em leitura",
+        "skills": [
+          "EF01LP16, EF02LP12 (EF12LP04) Ler e compreender, em colaboração com os colegas e com a ajuda do professor ou já com certa",
+          "autonomia, listas, agendas, calendários, avisos, convites, receitas, instruções de montagem (digitais ou impressos), dentre outros gêneros do campo da vida cotidiana, considerando a situação comunicativa e o tema/assunto do texto e relacionando sua forma de organização à sua finalidade."
+        ]
+      },
+      "scale": {
+        "padrao-1": [],
+        "padrao-2": [
+          {
+            "level": 390,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 446,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 675,
+            "content": "---"
+          },
+          {
+            "level": 616,
+            "content": "Identificar o tema de textos informativos mais longos (até 9 linhas) por meio da leitura integral."
+          },
+          {
+            "level": 556,
+            "content": "Inferir o assunto em textos de curiosidade ou relatos a partir de pistas textuais e leitura global."
+          },
+          {
+            "level": 503,
+            "content": "Inferir o tema principal de textos de curiosidade (5 a 8 linhas) usando o título ou a frase inicial."
+          }
+        ]
+      }
+    },
+    "D07": {
+      "topic": "",
+      "description": "Inferir informações em textos verbais.",
+      "prerequisites": [
+        "Ler palavras, frases e textos curtos com autonomia.",
+        "Compreender o sentido global do texto.",
+        "Identificar informações explícitas apresentadas no texto.",
+        "Estabelecer relação entre as informações do texto.",
+        "Perceber pistas linguísticas para compreender o que está implícito no texto.",
+        "Identificar elementos básicos do texto.",
+        "Entender a organização do texto verbal.",
+        "Retomar partes do texto para confirmar hipóteses.",
+        "Ter contato frequente com textos variados e contextualizados."
+      ],
+      "bncc": {
+        "practices": "Leitura/escuta (compartilhada e autônoma)",
+        "knowledge": "Compreensão em leitura",
+        "skills": [
+          "EF15LP03, EF01LP16, EF02LP12 (EF12LP04) Ler e compreender, em colaboração com os colegas e com a ajuda do professor ou já com certa",
+          "autonomia, listas, agendas, calendários, avisos, convites, receitas, instruções de montagem (digitais ou impressos), dentre outros gêneros do campo da vida cotidiana, considerando a situação comunicativa e o tema/assunto do texto e relacionando sua forma de organização à sua finalidade."
+        ]
+      },
+      "scale": {
+        "padrao-1": [],
+        "padrao-2": [
+          {
+            "level": 390,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 446,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 675,
+            "content": "---"
+          },
+          {
+            "level": 616,
+            "content": "Inferir informações implícitas baseando-se em falas ou dados específicos situados no final de textos narrativos."
+          },
+          {
+            "level": 556,
+            "content": "Deduzir traços de personagens por meio de suas ações ou falas em narrativas curtas."
+          },
+          {
+            "level": 503,
+            "content": "Inferir características de personagens ou causas de situações em contos e fábulas (8 a 13 linhas)."
+          }
+        ]
+      }
+    },
+    "D08": {
+      "topic": "",
+      "description": "Inferir informações em textos que articulam linguagem verbal e não verbal.",
+      "prerequisites": [
+        "Ler palavras, frases e textos curtos com autonomia.",
+        "Compreender o sentido geral do texto verbal.",
+        "Identificar informações explícitas no texto escrito.",
+        "Observar e interpretar imagens, ilustrações, símbolos e cores.",
+        "Reconhecer expressões faciais, gestos e cenários em imagens.",
+        "Compreender que imagens também comunicam informações.",
+        "Relacionar informações verbais e visuais.",
+        "Perceber pistas dadas pelo texto e pela imagem.",
+        "Formular hipóteses a partir da combinação de palavras e imagens.",
+        "Entender que algumas informações não estão ditas explicitamente.",
+        "Ter contato com textos que combinam palavras e imagens."
+      ],
+      "bncc": {
+        "practices": "Leitura/escuta (compartilhada e autônoma)",
+        "knowledge": "Formação do leitor literário/Leitura multissemiótica",
+        "skills": [
+          "EF15LP04, EF15LP02, EF15LP14",
+          "(EF15LP18) Relacionar texto com ilustrações e outros recursos gráficos."
+        ]
+      },
+      "scale": {
+        "padrao-1": [],
+        "padrao-2": [
+          {
+            "level": 390,
+            "content": "Inferir informações presentes no último quadro de tirinhas curtas."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 446,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 675,
+            "content": "---"
+          },
+          {
+            "level": 616,
+            "content": "Inferir o assunto ou causas a partir da articulação global de elementos em tirinhas de 3 a 4 quadros."
+          },
+          {
+            "level": 556,
+            "content": "Articular elementos verbais e visuais em tirinhas de cena única ou sequenciais para extrair sentidos implícitos."
+          },
+          {
+            "level": 503,
+            "content": "Deduzir causas ou fatos relacionando sequências de imagens e diálogos em histórias em quadrinhos."
+          }
+        ]
+      }
+    }
+  },
+  "5ef": {
+    "scaleRange": {
+      "min": 0,
+      "max": 500
+    },
+    "cortes": {
+      "padrao-1": 150,
+      "padrao-2": 200,
+      "padrao-3": 250
+    },
+    "D01": {
+      "topic": "",
+      "description": "Localizar informações explícitas em um texto.",
+      "prerequisites": [
+        "Identificação de elementos básicos do texto.",
+        "Reconhecimento da estrutura e do gênero textual.",
+        "Localização de informações literais em textos curtos.",
+        "Compreensão da sequência lógica das ideias."
+      ],
+      "bncc": {
+        "practices": "Leitura/escuta (compartilhada e autônoma)",
+        "knowledge": "Estratégia de leitura",
+        "skills": [
+          "EF15LP02, EF15LP04",
+          "(EF15LP03) Localizar informações explícitas em textos."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 125,
+            "content": "Localizar informações em poemas narrativos."
+          },
+          {
+            "level": 100,
+            "content": "Localizar informações em frases, em bilhetes curtos e em versos."
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 175,
+            "content": "Localizar informação explícita em contos, reportagens e fábulas. Localizar informação explícita em propagandas com ou sem apoio de recursos gráficos e em instruções de jogo."
+          },
+          {
+            "level": 150,
+            "content": "Localizar informação explícita em contos, em receitas e textos informativos curtos."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 225,
+            "content": "Identificar informação explícita em letras de música e contos."
+          },
+          {
+            "level": 200,
+            "content": "Identificar informação explícita em sinopses e receitas culinárias."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "---"
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "---"
+          },
+          {
+            "level": 250,
+            "content": "Identificar opinião em reportagens, biografias e informação explícita em fábulas, contos, crônicas e reportagens. Identificar informação explícita em reportagens com ou sem o auxílio de recursos gráficos."
+          }
+        ]
+      }
+    },
+    "D02": {
+      "topic": "",
+      "description": "Estabelecer relações entre partes de um texto, identificando repetições ou substituições que contribuem para a continuidade de um texto.",
+      "prerequisites": [
+        "Reconhecer sequência e repetição de palavras que mantêm o tema.",
+        "Perceber repetições e substituições simples (pronomes).",
+        "Compreender o papel da coesão referencial e conectivos simples.",
+        "Analisar substituições e conectivos que mantêm continuidade.",
+        "Consolidar o uso consciente dos recursos coesivos."
+      ],
+      "bncc": {
+        "practices": "Leitura/escuta (compartilhada e autônoma)",
+        "knowledge": "Estratégia de leitura",
+        "skills": [
+          "EF35LP08, EF35LP14, EF05LP27",
+          "(EF35LP06) Recuperar relações entre partes de um texto, identificando substituições lexicais (de substantivos por sinônimos) ou pronominais (uso de pronomes anafóricos – pessoais, possessivos, demonstrativos) que contribuem para a continuidade do texto."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 125,
+            "content": "---"
+          },
+          {
+            "level": 100,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 175,
+            "content": "---"
+          },
+          {
+            "level": 150,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 225,
+            "content": "Reconhecer relação de causa e consequência e relação entre pronome e seu referente em tirinhas, contos e reportagens."
+          },
+          {
+            "level": 200,
+            "content": "Reconhecer relação de causa e consequência e relação entre pronomes e seus referentes em fábulas, poemas, contos, tirinhas e textos didáticos, além de reconhecer o referente de expressão adverbial em contos."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "---"
+          },
+          {
+            "level": 300,
+            "content": "Reconhecer relação de causa e consequência e relação entre pronomes e seus referentes em fábulas e reportagens."
+          },
+          {
+            "level": 275,
+            "content": "Reconhecer relação de causa e consequência e relação entre pronomes e seus referentes em fábulas, contos, crônicas e em textos didáticos."
+          },
+          {
+            "level": 250,
+            "content": "Reconhecer relação de causa e consequência em reportagens e relação entre pronomes e seus referentes em poemas, fábulas e contos."
+          }
+        ]
+      }
+    },
+    "D03": {
+      "topic": "",
+      "description": "Inferir o sentido de uma palavra ou expressão.",
+      "prerequisites": [
+        "Decodificação e vocabulário básico.",
+        "Leitura fluente e contexto imediato.",
+        "Dedução simples de sentido.",
+        "Inferência por contexto e figura de linguagem simples.",
+        "Aplicação autônoma e compreensão figurada."
+      ],
+      "bncc": {
+        "practices": "Leitura/escuta (compartilhada e autônoma)",
+        "knowledge": "Estratégia de leitura",
+        "skills": [
+          "EF35LP12, EF04LP03, EF05LP02",
+          "(EF35LP05) Inferir o sentido de palavras ou expressões desconhecidas em textos, com base no contexto da frase ou do texto."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 125,
+            "content": "---"
+          },
+          {
+            "level": 100,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 175,
+            "content": "Inferir o sentido de palavra, o sentido de expressão ou o assunto em cartas, contos, poemas, tirinhas e histórias em quadrinhos com o apoio de linguagem verbal e não verbal."
+          },
+          {
+            "level": 150,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 225,
+            "content": "Inferir sentido de palavra ou expressão em reportagens."
+          },
+          {
+            "level": 200,
+            "content": "Inferir sentido decorrente da utilização de sinais de pontuação e sentido de expressões em poemas, fábulas e contos."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "---"
+          },
+          {
+            "level": 300,
+            "content": "Inferir informações e o sentido de expressão em poemas narrativos e em fábulas."
+          },
+          {
+            "level": 275,
+            "content": "---"
+          },
+          {
+            "level": 250,
+            "content": "Inferir assunto principal e sentido de expressão em poemas, fábulas, contos, crônicas, notícias, reportagens e tirinhas."
+          }
+        ]
+      }
+    },
+    "D04": {
+      "topic": "",
+      "description": "Inferir uma informação implícita em um texto.",
+      "prerequisites": [
+        "Identificação de informações explícitas.",
+        "Compreensão de sequência e causa simples.",
+        "Deduções diretas a partir de pistas.",
+        "Deduções sobre sentimentos e intenções.",
+        "Interpretação de sentido implícito, tema e intenção."
+      ],
+      "bncc": {
+        "practices": "Leitura/escuta (compartilhada e autônoma)",
+        "knowledge": "Estratégia de leitura",
+        "skills": [
+          "EF15LP16, EF15LP03",
+          "(EF35LP04) Inferir informações implícitas nos textos lidos."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 125,
+            "content": "---"
+          },
+          {
+            "level": 100,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 175,
+            "content": "---"
+          },
+          {
+            "level": 150,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 225,
+            "content": "Inferir informação em poemas, reportagens, cartas e fábulas."
+          },
+          {
+            "level": 200,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "Inferir informação sobre a ação de um personagem em lendas e tirinhas."
+          },
+          {
+            "level": 300,
+            "content": "Inferir informações e o sentido de expressão em poemas narrativos e em fábulas."
+          },
+          {
+            "level": 275,
+            "content": "Inferir informação em fábulas, efeito de sentido decorrente do uso de sinais gráficos em reportagens e em letras de música e o significado de palavra em textos didáticos."
+          },
+          {
+            "level": 250,
+            "content": "Inferir informação em contos e reportagens."
+          }
+        ]
+      }
+    },
+    "D05": {
+      "topic": "",
+      "description": "Interpretar texto com auxílio de material gráfico diverso (propagandas, quadrinhos, fotos etc.).",
+      "prerequisites": [
+        "Iniciar o contato com textos que combinam imagem e texto.",
+        "Compreender o sentido global de textos que utilizam recursos gráficos.",
+        "Aprofundar a leitura integrada de texto verbal e não verbal.",
+        "Desenvolver interpretação crítica e inferencial.",
+        "Consolidar a leitura e interpretação integrada de textos multimodais."
+      ],
+      "bncc": {
+        "practices": "Leitura/escuta (compartilhada e autônoma)",
+        "knowledge": "Leitura de imagens em narrativas visuais",
+        "skills": [
+          "EF03LP19, EF03LP21",
+          "(EF15LP14) Construir o sentido de histórias em quadrinhos e tirinhas, relacionando imagens e palavras e interpretando recursos gráficos (tipos de balões, de letras, onomatopeias)."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 125,
+            "content": "---"
+          },
+          {
+            "level": 100,
+            "content": "Interpretar textos curtos com auxílio de elementos não verbais, como tirinhas e cartuns."
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 175,
+            "content": "---"
+          },
+          {
+            "level": 150,
+            "content": "Interpretar linguagem verbal e não verbal em tirinhas e inferir o sentido de expressão em tirinhas."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 225,
+            "content": "---"
+          },
+          {
+            "level": 200,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "---"
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "Interpretar linguagem verbal e não verbal em histórias em quadrinhos."
+          },
+          {
+            "level": 250,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D06": {
+      "topic": "",
+      "description": "Identificar o tema de um texto.",
+      "prerequisites": [
+        "Identificar o assunto literal.",
+        "Relacionar informações ao mesmo assunto.",
+        "Perceber a ideia central.",
+        "Formular o tema com base nas ideias principais.",
+        "Identificar o tema de forma autônoma e crítica."
+      ],
+      "bncc": {
+        "practices": "Leitura/escuta (compartilhada e autônoma)",
+        "knowledge": "Compreensão em leitura",
+        "skills": [
+          "EF03LP18, EF03LP24, EF04LP19",
+          "(EF05LP15) Ler/assistir e compreender, com autonomia, notícias, reportagens, vídeos em vlogs argumentativos, dentre outros gêneros do campo político-cidadão, de acordo com as convenções dos gêneros e considerando a situação comunicativa e o tema/assunto do texto."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 125,
+            "content": "---"
+          },
+          {
+            "level": 100,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 175,
+            "content": "Inferir o sentido de palavra, o sentido de expressão ou o assunto em cartas, contos, poemas, tirinhas e histórias em quadrinhos com o apoio de linguagem verbal e não verbal."
+          },
+          {
+            "level": 150,
+            "content": "Identificar o assunto principal em reportagens e a personagem principal em fábulas."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 225,
+            "content": "Identificar assunto e informação principal em reportagens e contos. Identificar assunto comum a cartas e poemas e a poemas e notícias. Reconhecer assunto em poemas e tirinhas."
+          },
+          {
+            "level": 200,
+            "content": "Identificar assunto principal e personagem em contos e letras de música. Identificar assunto comum a duas reportagens."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "---"
+          },
+          {
+            "level": 300,
+            "content": "Identificar assunto principal em contos, textos informativos e cartas do leitor. Reconhecer assunto comum entre textos de gêneros diferentes."
+          },
+          {
+            "level": 275,
+            "content": "Identificar assunto principal em poemas, fábulas e letras de música. Reconhecer o assunto comum a duas reportagens."
+          },
+          {
+            "level": 250,
+            "content": "Inferir assunto principal em poemas, fábulas, contos, crônicas, notícias, reportagens e tirinhas"
+          }
+        ]
+      }
+    },
+    "D07": {
+      "topic": "",
+      "description": "Identificar o conflito gerador do enredo e os elementos que constroem a narrativa.",
+      "prerequisites": [
+        "Reconhecer sequência de fatos, personagens e cenário.",
+        "Identificar elementos básicos da narrativa.",
+        "Compreender o conflito e a estrutura narrativa.",
+        "Analisar o desenvolvimento e a resolução do conflito.",
+        "Relacionar o conflito ao tema e à construção da narrativa."
+      ],
+      "bncc": {
+        "practices": "Análise linguística/semiótica (Ortografização)",
+        "knowledge": "Formas de composição de narrativas",
+        "skills": [
+          "EF35LP26, EF35LP25, EF15LP16",
+          "(EF35LP29) Identificar, em narrativas, cenário, personagem central, conflito gerador, resolução e o ponto de vista com base no qual histórias são narradas, diferenciando narrativas em primeira e terceira pessoas."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 125,
+            "content": "Identificar o personagem principal em narrativas simples."
+          },
+          {
+            "level": 100,
+            "content": "Identificar o personagem principal em contos."
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 175,
+            "content": "---"
+          },
+          {
+            "level": 150,
+            "content": "Inferir características de personagem em fábulas. Inferir a causa do comportamento de um personagem em fragmentos de diários e em lendas."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 225,
+            "content": "Inferir elementos da narrativa em fábulas, contos e cartas."
+          },
+          {
+            "level": 200,
+            "content": "Identificar assunto principal e personagem em contos e letras de música. Reconhecer sentido de expressão, elementos da narrativa e opinião em reportagens, contos e poemas."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "Identificar o fato gerador do enredo em contos."
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "Reconhecer elementos da narrativa em fábulas e em contos."
+          },
+          {
+            "level": 250,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D08": {
+      "topic": "",
+      "description": "Estabelecer relação causa/consequência entre partes e elementos do texto.",
+      "prerequisites": [
+        "Compreender relações simples entre acontecimentos em narrativas curtas.",
+        "Estabelecer relações explícitas de causa e consequência em textos curtos.",
+        "Inferir causas e consequências mesmo quando não estão explícitas no texto.",
+        "Compreender relações mais complexas de causa e consequência entre partes do texto.",
+        "Analisar relações de causa e consequência de forma inferencial e crítica."
+      ],
+      "bncc": {
+        "practices": "Análise linguística/semiótica (Ortografização)",
+        "knowledge": "Morfologia",
+        "skills": [
+          "EF05LP27",
+          "(EF05LP07) Utilizar, ao produzir o texto, recursos de coesão pronominal (pronomes anafóricos) e articuladores de relações de sentido (tempo, causa, oposição, conclusão, comparação), com nível adequado de informatividade."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 125,
+            "content": "---"
+          },
+          {
+            "level": 100,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 175,
+            "content": "Reconhecer relação de causa e consequência em poemas, contos e tirinhas."
+          },
+          {
+            "level": 150,
+            "content": "Inferir a causa do comportamento de um personagem em fragmentos de diários e em lendas."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 225,
+            "content": "Reconhecer relação de causa e consequência e relação entre pronome e seu referente em tirinhas, contos e reportagens."
+          },
+          {
+            "level": 200,
+            "content": "Reconhecer relação de causa e consequência e relação entre pronomes e seus referentes em fábulas, poemas, contos, tirinhas e textos didáticos, além de reconhecer o referente de expressão adverbial em contos."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "---"
+          },
+          {
+            "level": 300,
+            "content": "Reconhecer relação de causa e consequência e relação entre pronomes e seus referentes em fábulas e reportagens."
+          },
+          {
+            "level": 275,
+            "content": "Reconhecer relação de causa e consequência e relação entre pronomes e seus referentes em fábulas, contos, crônicas e em textos didáticos."
+          },
+          {
+            "level": 250,
+            "content": "Reconhecer relação de causa e consequência em reportagens e relação entre pronomes e seus referentes em poemas, fábulas e contos."
+          }
+        ]
+      }
+    },
+    "D09": {
+      "topic": "",
+      "description": "Identificar a finalidade de textos de diferentes gêneros.",
+      "prerequisites": [
+        "Reconhecer que textos têm funções sociais diferentes.",
+        "Identificar a função em gêneros familiares.",
+        "Relacionar finalidade à linguagem e formato.",
+        "Comparar intenções comunicativas e contextos.",
+        "Analisar criticamente a finalidade e o público-alvo."
+      ],
+      "bncc": {
+        "practices": "Leitura/escuta (compartilhada e autônoma)",
+        "knowledge": "Compreensão em leitura",
+        "skills": [
+          "EF04LP09, EF04LP10, EF05LP10",
+          "(EF05LP09) Ler e compreender, com autonomia, textos instrucional de regras de jogo, dentre outros gêneros do campo da vida cotidiana, de acordo com as convenções do gênero e considerando a situação comunicativa e a finalidade do texto."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 125,
+            "content": "Reconhecer os gêneros receita e adivinha e a finalidade de textos informativos."
+          },
+          {
+            "level": 100,
+            "content": "Reconhecer gênero e finalidade de receitas."
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 175,
+            "content": "Identificar a finalidade de textos informativos."
+          },
+          {
+            "level": 150,
+            "content": "Reconhecer a finalidade de receitas, manuais e regulamentos."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 225,
+            "content": "Reconhecer finalidade de reportagens e cartazes. Inferir a finalidade de fábulas e de resenhas."
+          },
+          {
+            "level": 200,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "---"
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "Reconhecer a finalidade de textos didáticos."
+          },
+          {
+            "level": 250,
+            "content": "Reconhecer a finalidade de verbetes, fábulas, charges e reportagens."
+          }
+        ]
+      }
+    },
+    "D10": {
+      "topic": "",
+      "description": "Identificar as marcas linguísticas que evidenciam o locutor e o interlocutor de um texto.",
+      "prerequisites": [
+        "Reconhecer que há alguém que fala e alguém que escuta em situações comunicativas e em textos.",
+        "Identificar marcas explícitas do locutor e do interlocutor em textos simples.",
+        "Compreender como as marcas linguísticas revelam o ponto de vista do locutor e o papel do interlocutor.",
+        "Analisar como o locutor se posiciona e como constrói a relação com o interlocutor.",
+        "Analisar as marcas linguísticas que evidenciam o locutor e o interlocutor e compreender seus efeitos de sentido."
+      ],
+      "bncc": {
+        "practices": "Análise linguística/semiótica",
+        "knowledge": "Variação linguística",
+        "skills": [
+          "EF69LP56",
+          "(EF69LP55) Reconhecer as variedades da língua falada, o conceito de norma-padrão e o de preconceito linguístico."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 125,
+            "content": "Identificar expressões próprias da oralidade e marcas de informalidade na fala de personagem em histórias em quadrinhos."
+          },
+          {
+            "level": 100,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 175,
+            "content": "---"
+          },
+          {
+            "level": 150,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 225,
+            "content": "---"
+          },
+          {
+            "level": 200,
+            "content": "Identificar expressões próprias da oralidade e marcas de informalidade na fala de personagem em histórias em quadrinhos."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "Identificar marcas da linguagem informal em trecho de reportagens e de contos."
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "Identificar marcas da linguagem formal/padrão em reportagens e as marcas linguísticas que caracterizam o público-alvo de textos de orientação."
+          },
+          {
+            "level": 250,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D11": {
+      "topic": "",
+      "description": "Distinguir um fato da opinião relativa a esse fato.",
+      "prerequisites": [
+        "Compreender informações literais.",
+        "Reconhecer intenções comunicativas.",
+        "Distinguir informações e opiniões simples.",
+        "Diferenciar fato e opinião em textos simples.",
+        "Aplicar a distinção de forma autônoma e crítica."
+      ],
+      "bncc": {
+        "practices": "Leitura/escuta (compartilhada e autônoma)",
+        "knowledge": "Compreensão em leitura",
+        "skills": [
+          "EF04LP14, EF05LP19",
+          "(EF04LP15) Distinguir fatos de opiniões/sugestões em textos (informativos, jornalísticos, publicitários etc.)."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 125,
+            "content": "---"
+          },
+          {
+            "level": 100,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 175,
+            "content": "---"
+          },
+          {
+            "level": 150,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 225,
+            "content": "Diferenciar opinião de fato em reportagens e em contos."
+          },
+          {
+            "level": 200,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "Identificar o trecho que apresenta uma opinião em fábulas, resenhas e notícias."
+          },
+          {
+            "level": 300,
+            "content": "Identificar o trecho que apresenta uma opinião em reportagens. Identificar opinião em contos, textos informativos e cartas do leitor."
+          },
+          {
+            "level": 275,
+            "content": "Identificar opinião em poemas, crônicas, cartas pessoais e notícias."
+          },
+          {
+            "level": 250,
+            "content": "Identificar opinião em reportagens, biografias e informação explícita em fábulas, contos, crônicas e reportagens."
+          }
+        ]
+      }
+    },
+    "D12": {
+      "topic": "",
+      "description": "Estabelecer relações lógico-discursivas presentes no texto, marcadas por conjunções, advérbios etc.",
+      "prerequisites": [
+        "Compreender que as frases e ideias se organizam em sequência e têm relações lógicas básicas.",
+        "Identificar e utilizar conectivos simples que indicam relações entre as ideias.",
+        "Compreender as relações lógicas expressas por diferentes conectivos e advérbios.",
+        "Ampliar o uso e a compreensão das relações lógico- discursivas em textos variados.",
+        "Consolidar o reconhecimento e uso consciente das relações lógico-discursivas para garantir coesão e coerência textual."
+      ],
+      "bncc": {
+        "practices": "Análise linguística/semiótica (Ortografização)",
+        "knowledge": "Morfologia",
+        "skills": [
+          "EF35LP08, EF05LP27",
+          "(EF05LP07) Identificar, em textos, o uso de conjunções e a relação que estabelecem entre partes do texto: adição, oposição, tempo, causa, condição, finalidade."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 125,
+            "content": "---"
+          },
+          {
+            "level": 100,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 175,
+            "content": "---"
+          },
+          {
+            "level": 150,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 225,
+            "content": "Reconhecer sentido de conjunções e de locuções adverbiais em verbetes, lendas e contos."
+          },
+          {
+            "level": 200,
+            "content": "Estabelecer relação lógico-discursiva marcada por locução adverbial de lugar em textos didáticos e em contos."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "Reconhecer sentido de advérbios em cartas do leitor e textos didáticos."
+          },
+          {
+            "level": 300,
+            "content": "Reconhecer sentido de locução adverbial e conjunção aditiva em notícias e elementos da narrativa em fábulas e contos."
+          },
+          {
+            "level": 275,
+            "content": "---"
+          },
+          {
+            "level": 250,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D13": {
+      "topic": "",
+      "description": "Identificar efeitos de ironia ou humor em textos variados.",
+      "prerequisites": [
+        "Compreender o sentido literal e identificar elementos que causam surpresa ou diversão em histórias.",
+        "Perceber o uso de elementos de humor simples em textos narrativos e visuais.",
+        "Compreender como o humor é construído pela linguagem e pela situação.",
+        "Analisar o efeito de humor em textos variados e compreender suas intenções comunicativas.",
+        "Reconhecer e interpretar efeitos de ironia e humor com base na intenção comunicativa e no contexto."
+      ],
+      "bncc": {
+        "practices": "Leitura",
+        "knowledge": "Efeitos de sentido",
+        "skills": [
+          "EF69LP03",
+          "(EF69LP05) Inferir e justificar, em textos multissemióticos – tirinhas, charges, memes, gifs etc. –, o efeito de humor, ironia e/ou crítica pelo uso ambíguo de palavras, expressões ou imagens ambíguas, de clichês, de recursos iconográficos, de pontuação etc."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 125,
+            "content": "---"
+          },
+          {
+            "level": 100,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 175,
+            "content": "---"
+          },
+          {
+            "level": 150,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 225,
+            "content": "Interpretar efeito de humor e inferir sentido de palavra em piadas e tirinhas."
+          },
+          {
+            "level": 200,
+            "content": "Identificar o efeito de humor em piadas. Inferir efeito de humor em tirinhas e em histórias em quadrinhos."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "---"
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "Interpretar efeito de humor em piadas e contos."
+          },
+          {
+            "level": 250,
+            "content": "Inferir moral e efeito de humor em piadas, fábulas e em histórias em quadrinhos."
+          }
+        ]
+      }
+    },
+    "D14": {
+      "topic": "",
+      "description": "Identificar o efeito de sentido decorrente do uso da pontuação e de outras notações.",
+      "prerequisites": [
+        "Reconhecer e compreender o uso mais básico da pontuação na leitura e escrita.",
+        "Ampliar o reconhecimento dos sinais de pontuação e relacioná-los a efeitos de sentido na oralidade e escrita.",
+        "Compreender a função dos sinais de pontuação na organização e expressividade do texto.",
+        "Analisar o papel da pontuação e de notações gráficas na construção do sentido do texto.",
+        "Identificar e interpretar efeitos de sentido produzidos pela pontuação e notações gráficas diversas."
+      ],
+      "bncc": {
+        "practices": "Análise linguística/semiótica (Ortografização)",
+        "knowledge": "Pontuação",
+        "skills": [
+          "EF03LP07, EF04LP05",
+          "(EF05LP04) Diferenciar, na leitura de textos, vírgula, ponto e vírgula, dois-pontos e reconhecer, na leitura de textos, o efeito de sentido que decorre do uso de reticências, aspas, parênteses."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 125,
+            "content": "---"
+          },
+          {
+            "level": 100,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 175,
+            "content": "Depreender o efeito de sentido sugerido pelo ponto de exclamação em contos e pelo travessão em fábulas."
+          },
+          {
+            "level": 150,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 225,
+            "content": "Inferir o efeito de sentido decorrente do uso de pontuação e assunto em fábulas."
+          },
+          {
+            "level": 200,
+            "content": "Inferir sentido decorrente da utilização de sinais de pontuação e sentido de expressões em poemas, fábulas e contos."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "---"
+          },
+          {
+            "level": 300,
+            "content": "Inferir o efeito de sentido decorrente do uso de pontuação em fábulas, piadas e tirinhas."
+          },
+          {
+            "level": 275,
+            "content": "---"
+          },
+          {
+            "level": 250,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D15": {
+      "topic": "",
+      "description": "Reconhecer diferentes formas de tratar uma informação na comparação de textos que abordam o mesmo tema, em função das condições em que ele foi produzido e daquelas em que será recebido.",
+      "prerequisites": [
+        "Reconhecer que diferentes textos falam de temas diversos.",
+        "Perceber que um mesmo tema pode ser apresentado de modos distintos.",
+        "Comparar textos simples sobre o mesmo tema.",
+        "Relacionar forma de tratar o tema às intenções e ao público.",
+        "Analisar o tratamento da informação considerando contexto de produção e recepção."
+      ],
+      "bncc": {
+        "practices": "Leitura/escuta (compartilhada e autônoma)",
+        "knowledge": "Compreensão em leitura",
+        "skills": [
+          "EF05LP23, EF15LP13, EF05LP19, EF35LP21",
+          "(EF05LP16) Comparar informações sobre um mesmo fato veiculadas em diferentes mídias e concluir sobre qual é mais confiável e por quê."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 125,
+            "content": "---"
+          },
+          {
+            "level": 100,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 175,
+            "content": "---"
+          },
+          {
+            "level": 150,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 225,
+            "content": "Identificar assunto comum a cartas e poemas e a poemas e notícias."
+          },
+          {
+            "level": 200,
+            "content": "Identificar assunto comum a duas reportagens."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "Reconhecer a informação comum em duas reportagens."
+          },
+          {
+            "level": 300,
+            "content": "Reconhecer assunto comum entre textos de gêneros diferentes."
+          },
+          {
+            "level": 275,
+            "content": "Reconhecer o gênero textual a partir da comparação entre textos e o assunto comum a duas reportagens. Inferir informação comum na comparação entre reportagens e charges."
+          },
+          {
+            "level": 250,
+            "content": "---"
+          }
+        ]
+      }
+    }
+  }
+}
