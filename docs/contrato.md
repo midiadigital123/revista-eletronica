@@ -80,21 +80,23 @@ Usuário inativo não loga (401). O login regenera a sessão.
 
 O identificador na URL é o **`slug`**: minúsculas, números e hífen, até 60 caracteres.
 
+**Cadernos:** um projeto tem N cadernos (`Projeto.cadernos: {id, anos: AnoProjeto[]}[]`, na ordem de `CADERNOS`). Ids fixos: `lingua-portuguesa`, `matematica`, `alfabetizacao-lp`, `alfabetizacao-mat` (rótulos por `rotuloCaderno`). Na criação o usuário marca **disciplinas** (`DISCIPLINAS`, rótulos por `rotuloDisciplina`): `lingua-portuguesa` → 1 caderno, `matematica` → 1 caderno, `alfabetizacao` → `alfabetizacao-lp` + `alfabetizacao-mat` (`cadernosDasDisciplinas`). A página (textos/imagens) é uma só por projeto. `ProjetoResumo.cadernos: {id, anos: Ano[]}[]`.
+
 ### Projeto
 
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|
 | GET | `/projetos` | — | 200 `ProjetoResumo[]` (ordem por nome) |
-| POST | `/projetos` | `CriarProjetoEntrada` `{slug, nome, origem}` | 201 `Projeto` (com bloqueio do criador) · 404 origem · 409 slug |
+| POST | `/projetos` | `CriarProjetoEntrada` `{slug, nome, disciplinas: Disciplina[] (≥1), origem}` | 201 `Projeto` (com bloqueio do criador) · 400 caderno faltando · 404 origem · 409 slug |
 | GET | `/projetos/:slug` | — | 200 `Projeto` |
 | PATCH 🔒 | `/projetos/:slug` | `AtualizarProjetoEntrada` `{slug?, nome?}` | 200 `Projeto` · 409 slug |
 | DELETE 🔒 | `/projetos/:slug` | — | 204 |
-| GET | `/projetos/:slug/revista` | — | 200 `Revista` (Exportar JSON) |
+| GET | `/projetos/:slug/cadernos/:caderno/revista` | — | 200 `Revista` do caderno (Exportar JSON) · 404 caderno |
 
-**`origem`:**
-- `{tipo: "vazio", anos?: Ano[]}`: anos sem descritores, faixa 0–500 e cortes 125/250/375. Sem `anos`, cria `ANOS_PADRAO` (5ef, 9ef e 3em).
-- `{tipo: "importar", revista: Revista}`: aceita o `descritores.json` antigo (sem `cortes`/`pagina`). `Revista.pagina` usa `PaginaTextos`: só textos, sem `null`.
-- `{tipo: "copiar", de: slug}`: copia página, anos **e imagens**.
+**`origem`** (sempre só os cadernos das `disciplinas` marcadas):
+- `{tipo: "vazio", anos?: Ano[]}`: cada caderno recebe esses anos sem descritores, faixa 0–500 e cortes 125/250/375. Sem `anos`, cria `ANOS_PADRAO` (5ef, 9ef e 3em).
+- `{tipo: "importar", cadernos: {[caderno]?: Revista}}`: uma `Revista` por caderno marcado; faltando → 400 `campo: "origem.cadernos.<caderno>"`. Aceita o `descritores.json` antigo e a saída do extrator (sem `cortes`/`pagina`). A página vem da primeira revista (na ordem de `CADERNOS`) que tiver `pagina` (`PaginaTextos`: só textos, sem `null`). Problemas de domínio → 400 com `campo` prefixado `<caderno>.<ano>.`.
+- `{tipo: "copiar", de: slug}`: copia página, imagens e os cadernos marcados; se a origem não tem um deles → 400 `campo: "disciplinas"`.
 
 **Exclusão:** é lógica (`excluidoEm`) e libera o slug para reuso. Os dados continuam no banco.
 
@@ -112,21 +114,23 @@ O identificador na URL é o **`slug`**: minúsculas, números e hífen, até 60 
 - **`PaginaPatch`:** valor `null`, `""` ou `[]` remove o campo, e a revista volta ao texto padrão do template. Itens vazios em parágrafos são descartados.
 - **Imagem:** PNG, JPEG ou WebP, até 5 MB; SVG é recusado. Uma nova substitui a anterior (o arquivo antigo é removido do GridFS). Fica no GridFS; em `Pagina` aparece como `{nome, mime, tamanho}`, onde `nome = nomeArquivoImagem(chave, mime)` (ex.: `heroImagem.png`; JPEG vira `.jpg`). No zip e no preview, o arquivo fica em `arquivos/<nome>`.
 
-### Anos (etapas)
+### Anos (etapas) — por caderno
+
+Todas as rotas de ano, descritor e escala ficam sob `/projetos/:slug/cadernos/:caderno` (`ParamsCaderno`). Caderno fora de `CADERNOS` → 400; caderno que o projeto não tem → 404.
 
 Chave `<n>ef` (1 a 9) ou `<n>em` (1 a 3), ex.: `2ef`, `5ef`, `3em`. Rótulos gerados por `rotuloAno` (`2º EF`, `3ª EM`) e `rotuloAnoLongo` (`2º Ano do Ensino Fundamental`, `3ª Série do Ensino Médio`); ordem por `compararAnos` (EF antes de EM, depois o número). A revista importada/exportada aceita qualquer etapa válida como chave.
 
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|
-| POST 🔒 | `/projetos/:slug/anos` | `CriarAnoEntrada` `{ano, scaleRange?, cortes?}` | 201 `AnoProjeto` · 409 |
-| PATCH 🔒 | `/projetos/:slug/anos/:ano` | `AtualizarAnoEntrada` `{scaleRange?, cortes?}` | 200 `AnoProjeto` · 400 |
-| DELETE 🔒 | `/projetos/:slug/anos/:ano` | — | 204 · 400 se for o último ano |
+| POST 🔒 | `/projetos/:slug/cadernos/:caderno/anos` | `CriarAnoEntrada` `{ano, scaleRange?, cortes?}` | 201 `AnoProjeto` · 409 |
+| PATCH 🔒 | `/projetos/:slug/cadernos/:caderno/anos/:ano` | `AtualizarAnoEntrada` `{scaleRange?, cortes?}` | 200 `AnoProjeto` · 400 |
+| DELETE 🔒 | `/projetos/:slug/cadernos/:caderno/anos/:ano` | — | 204 · 400 se for o último ano do caderno |
 
 ### Descritores
 
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|
-| POST 🔒 | `/projetos/:slug/anos/:ano/descritores` | `CriarDescritorEntrada` (`codigo` + campos opcionais, inclusive `scale`) | 201 `Descritor` · 409 |
+| POST 🔒 | `/projetos/:slug/cadernos/:caderno/anos/:ano/descritores` | `CriarDescritorEntrada` (`codigo` + campos opcionais, inclusive `scale`) | 201 `Descritor` · 409 |
 | PATCH 🔒 | `…/descritores/:codigo` | `AtualizarDescritorEntrada` `{codigo?, topic?, description?, prerequisites?, bncc?: parcial}` | 200 `Descritor` · 409 código |
 | DELETE 🔒 | `…/descritores/:codigo` | — | 204 |
 | PUT 🔒 | `…/descritores/:codigo/escala/:padrao` | `LinhaEscala[]` (o padrão inteiro) | 200 `LinhaEscala[]` ordenadas · 404 padrão |
@@ -149,11 +153,24 @@ Chave `<n>ef` (1 a 9) ou `<n>em` (1 a 3), ex.: `2ef`, `5ef`, `3em`. Rótulos ger
 
 | Método | Rota | Resposta |
 |---|---|---|
-| GET | `/projetos/:slug/preview/` | 200 `text/html` (index.html renderizado) |
-| GET | `/projetos/:slug/preview/styles.css` · `/preview/script.js` · `/preview/assets/:nome` · `/preview/arquivos/:nome` | 200 arquivo |
+| GET | `/projetos/:slug/preview/` | 200 `text/html` (índice raiz: um link por caderno) |
+| GET | `/projetos/:slug/preview/<caderno>/index.html` | 200 `text/html` (revista do caderno) |
+| GET | `/projetos/:slug/preview/<caderno>/styles.css` · `…/script.js` · `…/assets/:nome` · `…/arquivos/:nome` | 200 arquivo |
 | GET | `/projetos/:slug/pacote.zip` | 200 `application/zip`, `Content-Disposition: attachment; filename="<slug>.zip"` |
 
-Conteúdo do zip: `index.html`, `styles.css`, `script.js`, `assets/` (setas SVG fixas do template) e `arquivos/<imagens>`. Abre com duplo clique (`file://`), sem servidor.
+Conteúdo do zip: `index.html` (índice com `<a href="<caderno>/index.html">rotuloCaderno</a>`) e uma pasta por caderno com `index.html`, `styles.css`, `script.js`, `assets/` (setas SVG fixas do template) e `arquivos/<imagens>`. Mesmo com 1 caderno a estrutura é a mesma. A página (textos/imagens) é repetida em cada pasta. Abre com duplo clique (`file://`), sem servidor.
+
+## Extração de PDF — `/api/extracao`
+
+| Método | Rota | Corpo | Resposta |
+|---|---|---|---|
+| POST | `/extracao` | multipart, campo **`arquivo`** (PDF, até `PDF_MAX_BYTES` = 50 MB) | 200 `ResultadoExtracao` · 400 sem arquivo/não é PDF · 413 · 422 extrator falhou |
+
+- Não exige bloqueio nem grava nada. Confere os bytes `%PDF-`, roda `python3 scripts/extrair_descritores.py <pdf> --stdout` (timeout 60 s) e valida cada disciplina com `Revista`.
+- **`ResultadoExtracao`:** `{disciplinas: {"lingua-portuguesa"?: Revista, matematica?: Revista}, avisos: string[]}`. As revistas vêm sem `pagina`. `avisos` são as linhas `aviso: …` do extrator.
+- **422:** erro do script (`"Não foi possível ler o PDF: <última linha do stderr>"`), saída inválida ou nenhum descritor encontrado.
+- O editor mapeia: LP → `lingua-portuguesa`, MT → `matematica`, Alfabetização → `alfabetizacao-lp` + `alfabetizacao-mat`, e envia em `origem: {tipo: "importar", cadernos}`.
+- Docker: a imagem da API instala `python3` e `poppler-utils` e copia o script para `/app/scripts/` (caminho sobrescrevível por `EXTRATOR_PDF`).
 
 ---
 

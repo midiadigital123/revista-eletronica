@@ -4,3 +4,4 @@
 menu-funcionalidade/
 .env
 .playwright-mcp/
+__pycache__/

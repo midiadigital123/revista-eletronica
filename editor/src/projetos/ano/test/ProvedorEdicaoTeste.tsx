@@ -37,7 +37,7 @@ export function ProvedorEdicaoTeste({ modo, children }: { modo: ModoEdicao; chil
 function BarraTeste() {
   const slug = useParams().slug ?? "";
   const { data } = useProjeto(slug);
-  return data ? <BotaoNovoAno projeto={data} /> : null;
+  return data?.cadernos.map((c) => <BotaoNovoAno key={c.id} caderno={c} />);
 }
 
 /** Renderiza as rotas do ano sob /projetos/:slug com o provedor de teste. */

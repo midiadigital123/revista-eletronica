@@ -6,14 +6,32 @@ import { chaves } from "../api/chaves";
 import { queryClient } from "../api/queryClient";
 import { BLOQUEIO_HEARTBEAT_MS, BLOQUEIO_INATIVIDADE_MS, type Projeto } from "../contrato/schemas";
 import { bloquearPorOutro, mockDb, resetarMockDb } from "../mocks/db";
-import revistaFixture from "../mocks/revista.json";
+import extracaoFixture from "../mocks/extracao.json";
 import { servidorMock } from "../mocks/server";
 import { renderizarRota } from "../test/renderizar";
 
 const ANA = "000000000000000000000002";
 
 beforeEach(() => resetarMockDb({ logadoComo: ANA }));
-afterEach(() => vi.useRealTimers());
+afterEach(() => {
+  vi.useRealTimers();
+  servidorMock.events.removeAllListeners();
+});
+
+/** Corpos enviados a POST /api/projetos durante o teste. */
+function capturarCriacao() {
+  const corpos: unknown[] = [];
+  servidorMock.events.on("request:start", ({ request }) => {
+    if (request.method === "POST" && new URL(request.url).pathname === "/api/projetos")
+      void request
+        .clone()
+        .json()
+        .then((c) => corpos.push(c));
+  });
+  return corpos;
+}
+
+const pdf = () => new File(["%PDF-1.7"], "revista.pdf", { type: "application/pdf" });
 
 /** Abre o projeto e espera o modo edição (bloqueio adquirido). */
 async function abrirEditando(caminho = "/projetos/exemplo") {
@@ -31,12 +49,15 @@ describe("lista de projetos", () => {
     expect(screen.getByText(/atualizado/)).toBeInTheDocument();
   });
 
-  it("cria projeto vazio com slug sugerido e entra editando", async () => {
+  it("cria projeto vazio com 2 disciplinas, slug sugerido e entra editando", async () => {
     const user = userEvent.setup();
+    const corpos = capturarCriacao();
     const { router } = renderizarRota("/projetos");
     await user.click(await screen.findByRole("button", { name: "Novo projeto" }));
     await user.type(screen.getByLabelText("Nome"), "São Paulo 2026");
     expect(screen.getByLabelText("Identificador (slug)")).toHaveValue("sao-paulo-2026");
+    await user.click(screen.getByLabelText("Matemática"));
+    await user.click(screen.getByLabelText("Língua Portuguesa"));
     await user.click(screen.getByLabelText("3ª EM"));
     expect(screen.getByLabelText("1º EF")).not.toBeChecked();
     await user.click(screen.getByLabelText("2º EF"));
@@ -47,36 +68,116 @@ describe("lista de projetos", () => {
     ).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/projetos/sao-paulo-2026");
     expect(await screen.findByText("Editando")).toBeInTheDocument();
+    expect(corpos).toEqual([
+      {
+        nome: "São Paulo 2026",
+        slug: "sao-paulo-2026",
+        disciplinas: ["lingua-portuguesa", "matematica"],
+        origem: { tipo: "vazio", anos: ["2ef", "5ef", "9ef"] },
+      },
+    ]);
     const criado = mockDb.projetos.get("sao-paulo-2026")!;
-    expect(criado.anos.map((a) => a.ano)).toEqual(["2ef", "5ef", "9ef"]);
+    expect(criado.cadernos.map((c) => [c.id, c.anos.map((a) => a.ano)])).toEqual([
+      ["lingua-portuguesa", ["2ef", "5ef", "9ef"]],
+      ["matematica", ["2ef", "5ef", "9ef"]],
+    ]);
     expect(criado.bloqueio?.usuarioId).toBe(ANA);
+    // Uma aba por caderno (leva ao primeiro ano); os anos e o "+ Ano" aparecem só no caderno aberto.
+    const secoes = screen.getByRole("navigation", { name: "Seções do projeto" });
+    expect(screen.queryByRole("navigation", { name: "Anos de Matemática" })).toBeNull();
+    // Preview abre direto o caderno da aba (na Página, o primeiro), nunca o índice.
+    const preview = () => screen.getByRole("link", { name: "Preview" });
+    expect(preview()).toHaveAttribute(
+      "href",
+      "/api/projetos/sao-paulo-2026/preview/lingua-portuguesa/index.html",
+    );
+    await user.click(within(secoes).getByRole("link", { name: "Matemática" }));
+    const mat = await screen.findByRole("navigation", { name: "Anos de Matemática" });
+    expect(preview()).toHaveAttribute(
+      "href",
+      "/api/projetos/sao-paulo-2026/preview/matematica/index.html",
+    );
+    expect(within(secoes).getByRole("link", { name: "Matemática" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(within(mat).getByRole("link", { name: "2º EF" })).toHaveAttribute(
+      "href",
+      "/projetos/sao-paulo-2026/matematica/ano/2ef",
+    );
+    expect(within(mat).getByRole("button", { name: "+ Ano em Matemática" })).toBeEnabled();
   });
 
-  it("importa um .json: recusa arquivo inválido e cria com o válido", async () => {
+  it("sem disciplina marcada não envia", async () => {
     const user = userEvent.setup();
+    const corpos = capturarCriacao();
+    renderizarRota("/projetos");
+    await user.click(await screen.findByRole("button", { name: "Novo projeto" }));
+    await user.type(screen.getByLabelText("Nome"), "Sem disciplina");
+    await user.click(screen.getByRole("button", { name: "Criar projeto" }));
+    expect(await screen.findByText("Escolha ao menos uma disciplina")).toBeInTheDocument();
+    expect(corpos).toEqual([]);
+  });
+
+  it("Alfabetização + Importar PDF: mostra os anos lidos e cria os dois cadernos", async () => {
+    const user = userEvent.setup();
+    const corpos = capturarCriacao();
     const { router } = renderizarRota("/projetos");
     await user.click(await screen.findByRole("button", { name: "Novo projeto" }));
-    await user.type(screen.getByLabelText("Nome"), "Importado");
-    await user.click(screen.getByRole("radio", { name: /Importar arquivo/ }));
-    const entrada = screen.getByLabelText("Arquivo .json");
+    await user.type(screen.getByLabelText("Nome"), "Alfa");
+    await user.click(screen.getByLabelText("Alfabetização"));
+    await user.click(screen.getByRole("radio", { name: /Importar PDF/ }));
+    await user.upload(screen.getByLabelText("PDF — Alfabetização"), pdf());
 
-    await user.upload(entrada, new File(["{ruim"], "x.json", { type: "application/json" }));
-    expect(await screen.findByText("O arquivo não é um JSON válido.")).toBeInTheDocument();
-    await user.upload(
-      entrada,
-      new File([JSON.stringify({ pagina: {} })], "x.json", { type: "application/json" }),
-    );
-    expect(await screen.findByText(/não está no formato da revista/)).toBeInTheDocument();
-
-    await user.upload(
-      entrada,
-      new File([JSON.stringify(revistaFixture)], "r.json", { type: "application/json" }),
-    );
-    expect(await screen.findByText("Arquivo válido.")).toBeInTheDocument();
+    for (const ano of ["2º EF", "5º EF"]) {
+      const caixa = await screen.findByLabelText(ano);
+      expect(caixa).toBeChecked();
+      expect(caixa).toBeDisabled();
+    }
+    expect(screen.queryByLabelText("9º EF")).not.toBeInTheDocument();
+    expect(screen.getByText(/D07 sem escala/)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Criar projeto" }));
 
-    await waitFor(() => expect(router.state.location.pathname).toBe("/projetos/importado"));
-    expect(mockDb.projetos.get("importado")!.anos.length).toBeGreaterThan(0);
+    await waitFor(() => expect(router.state.location.pathname).toBe("/projetos/alfa"));
+    const corpo = corpos[0] as {
+      disciplinas: string[];
+      origem: { tipo: string; cadernos: object };
+    };
+    expect(corpo.disciplinas).toEqual(["alfabetizacao"]);
+    expect(corpo.origem.tipo).toBe("importar");
+    expect(Object.keys(corpo.origem.cadernos)).toEqual(["alfabetizacao-lp", "alfabetizacao-mat"]);
+    expect(
+      mockDb.projetos.get("alfa")!.cadernos.map((c) => [c.id, c.anos.map((a) => a.ano)]),
+    ).toEqual([
+      ["alfabetizacao-lp", ["2ef", "5ef"]],
+      ["alfabetizacao-mat", ["2ef", "5ef"]],
+    ]);
+  });
+
+  it("PDF sem Matemática no campo de Matemática mostra erro e não envia", async () => {
+    const user = userEvent.setup();
+    const { disciplinas, avisos } = extracaoFixture;
+    servidorMock.use(
+      http.post("/api/extracao", () =>
+        HttpResponse.json({
+          disciplinas: { "lingua-portuguesa": disciplinas["lingua-portuguesa"] },
+          avisos,
+        }),
+      ),
+    );
+    const corpos = capturarCriacao();
+    renderizarRota("/projetos");
+    await user.click(await screen.findByRole("button", { name: "Novo projeto" }));
+    await user.type(screen.getByLabelText("Nome"), "Só LP");
+    await user.click(screen.getByLabelText("Matemática"));
+    await user.click(screen.getByRole("radio", { name: /Importar PDF/ }));
+    await user.upload(screen.getByLabelText("PDF — Matemática"), pdf());
+
+    expect(await screen.findByText("Este PDF não traz Matemática")).toBeInTheDocument();
+    expect(screen.queryByLabelText("2º EF")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Criar projeto" }));
+    expect(await screen.findByText("Escolha um PDF válido para Matemática.")).toBeInTheDocument();
+    expect(corpos).toEqual([]);
   });
 });
 
@@ -149,6 +250,43 @@ describe("casca do projeto", () => {
     expect(screen.getByText("Texto perdido")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Copiar" })).toBeInTheDocument();
     expect(screen.getByText("Somente leitura")).toBeInTheDocument();
+  });
+});
+
+describe("falhas por caderno", () => {
+  it("mesmo código e ano em cadernos diferentes: as duas falhas são repetidas", async () => {
+    const projeto = mockDb.projetos.get("exemplo")!;
+    projeto.cadernos.push({ id: "matematica", anos: structuredClone(projeto.cadernos[0]!.anos) });
+    const topico = (i: number) =>
+      mockDb.projetos.get("exemplo")!.cadernos[i]!.anos.find((a) => a.ano === "5ef")!
+        .descritores[0]!.topic;
+    let falhar = 2;
+    servidorMock.use(
+      http.patch("/api/projetos/:slug/cadernos/:caderno/anos/:ano/descritores/:codigo", () =>
+        falhar-- > 0 ? HttpResponse.json({ erro: "Falhou" }, { status: 500 }) : undefined,
+      ),
+    );
+    const user = userEvent.setup();
+    const { router } = await abrirEditando("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01");
+    for (const [caderno, texto] of [
+      ["lingua-portuguesa", "Tópico LP"],
+      ["matematica", "Tópico MT"],
+    ] as const) {
+      if (caderno === "matematica")
+        await router.navigate(`/projetos/exemplo/${caderno}/ano/5ef/D01`);
+      // Espera o formulário do caderno atual (o anterior foi remontado).
+      await waitFor(() => expect(screen.getByLabelText("Tópico")).not.toHaveValue("Tópico LP"));
+      const campo = screen.getByLabelText("Tópico");
+      await user.clear(campo);
+      await user.type(campo, texto);
+      await user.tab();
+      await waitFor(() => expect(screen.getByText("Erro: Falhou")).toBeInTheDocument());
+    }
+    await waitFor(() => expect(falhar).toBe(0));
+
+    await user.click(screen.getByRole("button", { name: "tentar de novo" }));
+    await waitFor(() => expect(topico(0)).toBe("Tópico LP"));
+    await waitFor(() => expect(topico(1)).toBe("Tópico MT"));
   });
 });
 

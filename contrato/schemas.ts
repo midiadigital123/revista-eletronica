@@ -34,6 +34,18 @@ export const CORTES_PADRAO = {
 /** Conteúdo de linha da escala sem item associado (convenção da revista). */
 export const CONTEUDO_VAZIO = "---";
 
+/** Cadernos: unidade editável e publicada (uma pasta por caderno no pacote). */
+export const CADERNOS = ["lingua-portuguesa", "matematica", "alfabetizacao-lp", "alfabetizacao-mat"] as const;
+/** Disciplinas marcadas no "Novo projeto" → cadernos criados (Alfabetização traz LP + MT). */
+export const DISCIPLINAS = {
+  "lingua-portuguesa": ["lingua-portuguesa"],
+  matematica: ["matematica"],
+  alfabetizacao: ["alfabetizacao-lp", "alfabetizacao-mat"],
+} as const;
+
+/** Tamanho máximo do PDF enviado a POST /api/extracao. */
+export const PDF_MAX_BYTES = 50 * 1024 * 1024;
+
 export const IMAGEM_MIMES = ["image/png", "image/jpeg", "image/webp"] as const;
 export const IMAGEM_MAX_BYTES = 5 * 1024 * 1024;
 
@@ -69,6 +81,10 @@ export const Slug = z
   });
 export const Email = z.email().trim().toLowerCase();
 export const Senha = z.string().min(8, { error: "Mínimo de 8 caracteres" }).max(200);
+export const Caderno = z.enum(CADERNOS);
+export const Disciplina = z.enum(
+  Object.keys(DISCIPLINAS) as [keyof typeof DISCIPLINAS, ...(keyof typeof DISCIPLINAS)[]],
+);
 export const Perfil = z.enum(["admin", "editor"]);
 export const ObjectIdTexto = z.string().regex(/^[a-f0-9]{24}$/);
 
@@ -89,6 +105,28 @@ export function rotuloAnoLongo(ano: string): string {
   const e = etapa(ano);
   if (!e) return ano;
   return e.nivel === "ef" ? `${e.n}º Ano do Ensino Fundamental` : `${e.n}ª Série do Ensino Médio`;
+}
+
+const ROTULOS_DISCIPLINA: Record<Disciplina, string> = {
+  "lingua-portuguesa": "Língua Portuguesa",
+  matematica: "Matemática",
+  alfabetizacao: "Alfabetização",
+};
+
+const ROTULOS_CADERNO: Record<Caderno, string> = {
+  "lingua-portuguesa": "Língua Portuguesa",
+  matematica: "Matemática",
+  "alfabetizacao-lp": "Alfabetização · Língua Portuguesa",
+  "alfabetizacao-mat": "Alfabetização · Matemática",
+};
+
+export const rotuloDisciplina = (d: Disciplina) => ROTULOS_DISCIPLINA[d];
+export const rotuloCaderno = (c: Caderno) => ROTULOS_CADERNO[c];
+
+/** Cadernos das disciplinas marcadas, na ordem de CADERNOS, sem repetir. */
+export function cadernosDasDisciplinas(disciplinas: readonly Disciplina[]): Caderno[] {
+  const marcados = new Set<Caderno>(disciplinas.flatMap((d) => DISCIPLINAS[d]));
+  return CADERNOS.filter((c) => marcados.has(c));
 }
 
 /** Ordem das etapas: EF antes de EM, depois pelo número; fora do formato, no fim por texto. */
@@ -160,6 +198,11 @@ export const AnoProjeto = z.strictObject({
   scaleRange: ScaleRange,
   cortes: Cortes,
   descritores: z.array(Descritor),
+});
+
+export const CadernoProjeto = z.strictObject({
+  id: Caderno,
+  anos: z.array(AnoProjeto),
 });
 
 // ==========================================
@@ -359,13 +402,15 @@ export const AtualizarUsuarioEntrada = z
 
 export const OrigemProjeto = z.discriminatedUnion("tipo", [
   z.strictObject({ tipo: z.literal("vazio"), anos: z.array(Ano).min(1).default([...ANOS_PADRAO]) }),
-  z.strictObject({ tipo: z.literal("importar"), revista: Revista }),
+  // Uma revista por caderno marcado (o editor monta a partir de POST /api/extracao).
+  z.strictObject({ tipo: z.literal("importar"), cadernos: z.partialRecord(Caderno, Revista) }),
   z.strictObject({ tipo: z.literal("copiar"), de: Slug }),
 ]);
 
 export const CriarProjetoEntrada = z.strictObject({
   slug: Slug,
   nome: texto(120).min(1),
+  disciplinas: z.array(Disciplina).min(1, { error: "Marque ao menos uma disciplina" }),
   origem: OrigemProjeto,
 });
 
@@ -396,7 +441,8 @@ export const AtualizarDescritorEntrada = z
   .refine((v) => Object.keys(v).length > 0, naoVazio);
 
 export const ParamsProjeto = z.strictObject({ slug: Slug });
-export const ParamsAno = ParamsProjeto.extend({ ano: Ano });
+export const ParamsCaderno = ParamsProjeto.extend({ caderno: Caderno });
+export const ParamsAno = ParamsCaderno.extend({ ano: Ano });
 export const ParamsDescritor = ParamsAno.extend({ codigo: Codigo });
 export const ParamsPadrao = ParamsDescritor.extend({ padrao: Padrao });
 export const ParamsImagem = ParamsProjeto.extend({ chave: z.string() });
@@ -424,7 +470,7 @@ export const BloqueioPublico = z.strictObject({
 export const ProjetoResumo = z.strictObject({
   slug: Slug,
   nome: z.string(),
-  anos: z.array(Ano),
+  cadernos: z.array(z.strictObject({ id: Caderno, anos: z.array(Ano) })),
   atualizadoEm: z.iso.datetime(),
   bloqueio: BloqueioPublico.nullable(),
 });
@@ -433,10 +479,17 @@ export const Projeto = z.strictObject({
   slug: Slug,
   nome: z.string(),
   pagina: Pagina,
-  anos: z.array(AnoProjeto),
+  /** Na ordem de CADERNOS. */
+  cadernos: z.array(CadernoProjeto),
   bloqueio: BloqueioPublico.nullable(),
   criadoEm: z.iso.datetime(),
   atualizadoEm: z.iso.datetime(),
+});
+
+/** Resposta de POST /api/extracao: revistas (sem `pagina`) por disciplina achada no PDF. */
+export const ResultadoExtracao = z.strictObject({
+  disciplinas: z.partialRecord(z.enum(["lingua-portuguesa", "matematica"]), Revista),
+  avisos: z.array(z.string()),
 });
 
 export const ErroApi = z.strictObject({
@@ -452,6 +505,10 @@ export const ErroApi = z.strictObject({
 
 export type Ano = z.infer<typeof Ano>;
 export type Padrao = z.infer<typeof Padrao>;
+export type Caderno = z.infer<typeof Caderno>;
+export type Disciplina = z.infer<typeof Disciplina>;
+export type CadernoProjeto = z.infer<typeof CadernoProjeto>;
+export type ResultadoExtracao = z.infer<typeof ResultadoExtracao>;
 export type ScaleRange = z.infer<typeof ScaleRange>;
 export type Cortes = z.infer<typeof Cortes>;
 export type LinhaEscala = z.infer<typeof LinhaEscala>;

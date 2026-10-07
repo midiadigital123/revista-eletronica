@@ -5,6 +5,7 @@ import {
   rotuloAno,
   type AnoProjeto,
   type AtualizarDescritorEntrada,
+  type Caderno,
   type Descritor,
 } from "../../contrato/schemas";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
@@ -13,22 +14,28 @@ import { Separator } from "@/components/ui/separator";
 import { AreaTexto, CampoTexto } from "../../ui";
 import { projetosApi } from "../api";
 import { useEdicao } from "../edicao";
-import { caminhoDescritor, rotuloPadrao, trocarDescritor, useAnoAtual } from "./dados";
+import {
+  caminhoDescritor,
+  rotuloPadrao,
+  trocarDescritor,
+  useAnoAtual,
+  rotuloAnoCaderno,
+} from "./dados";
 import { EditorEscala, type PersistirPadrao } from "./EditorEscala";
 import { ListaTextos } from "./ListaTextos";
 import { useAutoSalvar } from "./useAutoSalvar";
 import { useTituloPagina } from "../../layout/useTituloPagina";
 
-/** Rota ano/:ano/:codigo. O formulário é remontado (key) quando muda de descritor. */
+/** Rota :caderno/ano/:ano/:codigo. O formulário é remontado (key) quando muda de descritor. */
 export function TelaDescritor() {
-  const { projeto, anoProjeto, codigo } = useAnoAtual();
+  const { projeto, caderno, anoProjeto, codigo } = useAnoAtual();
   const descritor = anoProjeto?.descritores.find((d) => d.codigo === codigo);
   useTituloPagina(
     projeto && anoProjeto
       ? `${descritor ? codigo : "Descritor não encontrado"} · ${rotuloAno(anoProjeto.ano)} · ${projeto.nome}`
       : null,
   );
-  if (!anoProjeto) return null;
+  if (!caderno || !anoProjeto) return null;
   if (!descritor)
     return (
       <Empty role="status" className="border">
@@ -44,7 +51,8 @@ export function TelaDescritor() {
     );
   return (
     <FormDescritor
-      key={`${anoProjeto.ano}-${descritor.codigo}`}
+      key={`${caderno}-${anoProjeto.ano}-${descritor.codigo}`}
+      caderno={caderno}
       ano={anoProjeto}
       descritor={descritor}
     />
@@ -53,7 +61,15 @@ export function TelaDescritor() {
 
 type Patch = AtualizarDescritorEntrada;
 
-function FormDescritor({ ano, descritor }: { ano: AnoProjeto; descritor: Descritor }) {
+function FormDescritor({
+  caderno,
+  ano,
+  descritor,
+}: {
+  caderno: Caderno;
+  ano: AnoProjeto;
+  descritor: Descritor;
+}) {
   const { slug, modo, salvar } = useEdicao();
   const navigate = useNavigate();
   const idTopicos = useId();
@@ -62,19 +78,19 @@ function FormDescritor({ ano, descritor }: { ano: AnoProjeto; descritor: Descrit
 
   const atualizar = (descricao: string, patch: Patch, valor?: string) =>
     salvar({
-      descricao: `${descricao} do ${codigo} (${rotuloAno(ano.ano)})`,
+      descricao: `${descricao} do ${codigo} (${rotuloAnoCaderno(caderno, ano.ano)})`,
       valor,
-      executar: () => projetosApi.atualizarDescritor(slug, ano.ano, codigo, patch),
-      aplicar: (p, novo) => trocarDescritor(p, ano.ano, codigo, () => novo),
+      executar: () => projetosApi.atualizarDescritor(slug, caderno, ano.ano, codigo, patch),
+      aplicar: (p, novo) => trocarDescritor(p, caderno, ano.ano, codigo, () => novo),
     });
 
   const persistirPadrao: PersistirPadrao = (padrao, linhas) =>
     salvar({
-      descricao: `Escala do ${codigo} (${rotuloAno(ano.ano)}), ${rotuloPadrao(padrao)}`,
+      descricao: `Escala do ${codigo} (${rotuloAnoCaderno(caderno, ano.ano)}), ${rotuloPadrao(padrao)}`,
       valor: JSON.stringify(linhas),
-      executar: () => projetosApi.salvarEscala(slug, ano.ano, codigo, padrao, linhas),
+      executar: () => projetosApi.salvarEscala(slug, caderno, ano.ano, codigo, padrao, linhas),
       aplicar: (p, resposta) =>
-        trocarDescritor(p, ano.ano, codigo, (d) => ({
+        trocarDescritor(p, caderno, ano.ano, codigo, (d) => ({
           ...d,
           scale: { ...d.scale, [padrao]: resposta },
         })),
@@ -84,7 +100,7 @@ function FormDescritor({ ano, descritor }: { ano: AnoProjeto; descritor: Descrit
     const valido = Codigo.safeParse(novo);
     if (!valido.success) throw new Error(valido.error.issues[0]?.message);
     const renomeado = await atualizar("Código", { codigo: novo }, novo);
-    navigate(caminhoDescritor(slug, ano.ano, renomeado.codigo), { replace: true });
+    navigate(caminhoDescritor(slug, caderno, ano.ano, renomeado.codigo), { replace: true });
   }
 
   const campoCodigo = useAutoSalvar(

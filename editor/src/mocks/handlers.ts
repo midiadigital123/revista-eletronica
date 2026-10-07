@@ -8,6 +8,7 @@ import {
   AtualizarProjetoEntrada,
   AtualizarUsuarioEntrada,
   BLOQUEIO_TTL_MS,
+  cadernosDasDisciplinas,
   compararAnos,
   CriarAnoEntrada,
   CriarDescritorEntrada,
@@ -21,11 +22,15 @@ import {
   nomeArquivoImagem,
   PaginaPatch,
   ParamsAno,
+  ParamsCaderno,
   ParamsDescritor,
   ParamsPadrao,
   ParamsProjeto,
   problemasDoAno,
+  rotuloCaderno,
   type AnoProjeto,
+  type Caderno,
+  type CadernoProjeto,
   type ErroApi,
   type Pagina,
   type Problema,
@@ -34,6 +39,7 @@ import {
   type Usuario,
 } from "../contrato/schemas";
 import { bloqueioPublico, mockDb, usuarioLogado, type ProjetoMock, type UsuarioMock } from "./db";
+import extracaoFixture from "./extracao.json";
 
 /**
  * Implementação em memória de TODAS as rotas de docs/contrato.md, com as mesmas
@@ -128,7 +134,7 @@ const paraProjeto = (p: ProjetoMock): Projeto => ({
   slug: p.slug,
   nome: p.nome,
   pagina: p.pagina,
-  anos: structuredClone(p.anos),
+  cadernos: structuredClone(p.cadernos),
   bloqueio: bloqueioPublico(p),
   criadoEm: p.criadoEm,
   atualizadoEm: p.atualizadoEm,
@@ -136,12 +142,17 @@ const paraProjeto = (p: ProjetoMock): Projeto => ({
 const paraResumo = (p: ProjetoMock): ProjetoResumo => ({
   slug: p.slug,
   nome: p.nome,
-  anos: p.anos.map((a) => a.ano),
+  cadernos: p.cadernos.map((c) => ({ id: c.id, anos: c.anos.map((a) => a.ano) })),
   atualizadoEm: p.atualizadoEm,
   bloqueio: bloqueioPublico(p),
 });
-function obterAno(projeto: ProjetoMock, ano: string): AnoProjeto {
-  const encontrado = projeto.anos.find((a) => a.ano === ano);
+function obterCaderno(projeto: ProjetoMock, caderno: Caderno): CadernoProjeto {
+  const encontrado = projeto.cadernos.find((c) => c.id === caderno);
+  if (!encontrado) return falha(404, "Caderno não encontrado");
+  return encontrado;
+}
+function obterAno(projeto: ProjetoMock, caderno: Caderno, ano: string): AnoProjeto {
+  const encontrado = obterCaderno(projeto, caderno).anos.find((a) => a.ano === ano);
   if (!encontrado) return falha(404, "Ano não encontrado");
   return encontrado;
 }
@@ -169,7 +180,8 @@ function adquirir(request: Request, projeto: ProjetoMock, usuario: UsuarioMock) 
 }
 
 const P = "/api/projetos/:slug";
-const D = `${P}/anos/:ano/descritores/:codigo`;
+const C = `${P}/cadernos/:caderno`;
+const D = `${C}/anos/:ano/descritores/:codigo`;
 
 export const handlers = [
   // ---------- auth
@@ -276,32 +288,47 @@ export const handlers = [
     "/api/projetos",
     rota(async ({ request }) => {
       const usuario = exigirLogin();
-      const { slug, nome, origem } = CriarProjetoEntrada.parse(await json(request));
+      const { slug, nome, disciplinas, origem } = CriarProjetoEntrada.parse(await json(request));
       if (mockDb.projetos.has(slug))
         falha(409, "Já existe um projeto com esse identificador", { campo: "slug" });
+      const ids = cadernosDasDisciplinas(disciplinas);
       const agora = new Date().toISOString();
       let pagina: Pagina = {};
-      let anos: AnoProjeto[];
+      let cadernos: CadernoProjeto[];
       let imagens: Record<string, Blob> = {};
       if (origem.tipo === "copiar") {
         const base = obterProjeto(origem.de);
         pagina = structuredClone(base.pagina);
-        anos = structuredClone(base.anos);
+        cadernos = ids.map((id) => {
+          const c = base.cadernos.find((x) => x.id === id);
+          if (!c)
+            return falha(400, `O projeto de origem não tem ${rotuloCaderno(id)}`, {
+              campo: "disciplinas",
+            });
+          return structuredClone(c);
+        });
         imagens = { ...base.imagens };
       } else if (origem.tipo === "importar") {
-        pagina = { ...(origem.revista.pagina ?? {}) } as Pagina;
-        anos = anosDaRevista(origem.revista);
-        anos.forEach(validarAno);
+        cadernos = ids.map((id) => {
+          const revista = origem.cadernos[id];
+          if (!revista)
+            return falha(400, `Falta a revista de ${rotuloCaderno(id)}`, {
+              campo: `origem.cadernos.${id}`,
+            });
+          return { id, anos: anosDaRevista(revista) };
+        });
+        cadernos.forEach((c) => c.anos.forEach(validarAno));
+        const comPagina = ids.map((id) => origem.cadernos[id]?.pagina).find(Boolean);
+        pagina = { ...(comPagina ?? {}) } as Pagina;
       } else {
-        anos = CriarAnoEntrada.array()
-          .parse(origem.anos.map((ano) => ({ ano })))
-          .map((a) => ({ ...a, descritores: [] }));
+        const anos = CriarAnoEntrada.array().parse(origem.anos.map((ano) => ({ ano })));
+        cadernos = ids.map((id) => ({ id, anos: anos.map((a) => ({ ...a, descritores: [] })) }));
       }
       const projeto: ProjetoMock = {
         slug,
         nome,
         pagina,
-        anos,
+        cadernos,
         bloqueio: null,
         criadoEm: agora,
         atualizadoEm: agora,
@@ -347,11 +374,24 @@ export const handlers = [
     }),
   ),
   http.get(
-    `${P}/revista`,
+    `${C}/revista`,
     rota(({ params }) => {
       exigirLogin();
-      const projeto = obterProjeto(ParamsProjeto.parse(params).slug);
-      return HttpResponse.json(revistaDosAnos(projeto.anos, projeto.pagina));
+      const { slug, caderno } = ParamsCaderno.parse(params);
+      const projeto = obterProjeto(slug);
+      return HttpResponse.json(revistaDosAnos(obterCaderno(projeto, caderno).anos, projeto.pagina));
+    }),
+  ),
+
+  // ---------- extração de PDF (devolve sempre a fixture LP + MT, 2º e 5º EF)
+  http.post(
+    "/api/extracao",
+    rota(async ({ request }) => {
+      exigirLogin();
+      const arquivo = (await request.formData()).get("arquivo");
+      if (!arquivo || typeof arquivo === "string")
+        return falha(400, "Envie o PDF no campo arquivo", { campo: "arquivo" });
+      return HttpResponse.json(extracaoFixture);
     }),
   ),
 
@@ -444,26 +484,28 @@ export const handlers = [
 
   // ---------- anos
   http.post(
-    `${P}/anos`,
+    `${C}/anos`,
     rota(async ({ request, params }) => {
-      const projeto = exigirBloqueio(request, ParamsProjeto.parse(params).slug);
+      const { slug, caderno } = ParamsCaderno.parse(params);
+      const projeto = exigirBloqueio(request, slug);
+      const alvo = obterCaderno(projeto, caderno);
       const dados = CriarAnoEntrada.parse(await json(request));
-      if (projeto.anos.some((a) => a.ano === dados.ano))
-        falha(409, "Esse ano já existe no projeto", { campo: "ano" });
+      if (alvo.anos.some((a) => a.ano === dados.ano))
+        falha(409, "Esse ano já existe no caderno", { campo: "ano" });
       const ano: AnoProjeto = { ...dados, descritores: [] };
       validarAno(ano);
-      projeto.anos.push(ano);
-      projeto.anos.sort((a, b) => compararAnos(a.ano, b.ano));
+      alvo.anos.push(ano);
+      alvo.anos.sort((a, b) => compararAnos(a.ano, b.ano));
       tocar(projeto);
       return HttpResponse.json(ano, { status: 201 });
     }),
   ),
   http.patch(
-    `${P}/anos/:ano`,
+    `${C}/anos/:ano`,
     rota(async ({ request, params }) => {
-      const { slug, ano } = ParamsAno.parse(params);
+      const { slug, caderno, ano } = ParamsAno.parse(params);
       const projeto = exigirBloqueio(request, slug);
-      const atual = obterAno(projeto, ano);
+      const atual = obterAno(projeto, caderno, ano);
       const dados = AtualizarAnoEntrada.parse(await json(request));
       const novo = { ...atual, ...dados };
       validarAno(novo);
@@ -473,14 +515,15 @@ export const handlers = [
     }),
   ),
   http.delete(
-    `${P}/anos/:ano`,
+    `${C}/anos/:ano`,
     rota(({ request, params }) => {
-      const { slug, ano } = ParamsAno.parse(params);
+      const { slug, caderno, ano } = ParamsAno.parse(params);
       const projeto = exigirBloqueio(request, slug);
-      obterAno(projeto, ano);
-      if (projeto.anos.length === 1)
-        falha(400, "O projeto precisa ter ao menos um ano", { campo: "ano" });
-      projeto.anos = projeto.anos.filter((a) => a.ano !== ano);
+      obterAno(projeto, caderno, ano);
+      const alvo = obterCaderno(projeto, caderno);
+      if (alvo.anos.length === 1)
+        falha(400, "O caderno precisa ter ao menos um ano", { campo: "ano" });
+      alvo.anos = alvo.anos.filter((a) => a.ano !== ano);
       tocar(projeto);
       return new HttpResponse(null, { status: 204 });
     }),
@@ -488,11 +531,11 @@ export const handlers = [
 
   // ---------- descritores
   http.post(
-    `${P}/anos/:ano/descritores`,
+    `${C}/anos/:ano/descritores`,
     rota(async ({ request, params }) => {
-      const { slug, ano } = ParamsAno.parse(params);
+      const { slug, caderno, ano } = ParamsAno.parse(params);
       const projeto = exigirBloqueio(request, slug);
-      const alvo = obterAno(projeto, ano);
+      const alvo = obterAno(projeto, caderno, ano);
       const descritor = CriarDescritorEntrada.parse(await json(request));
       if (alvo.descritores.some((d) => d.codigo === descritor.codigo))
         falha(409, "Esse código já existe neste ano", { campo: "codigo" });
@@ -506,9 +549,9 @@ export const handlers = [
   http.patch(
     D,
     rota(async ({ request, params }) => {
-      const { slug, ano, codigo } = ParamsDescritor.parse(params);
+      const { slug, caderno, ano, codigo } = ParamsDescritor.parse(params);
       const projeto = exigirBloqueio(request, slug);
-      const alvo = obterAno(projeto, ano);
+      const alvo = obterAno(projeto, caderno, ano);
       const atual = alvo.descritores.find((d) => d.codigo === codigo);
       if (!atual) return falha(404, "Descritor não encontrado");
       const { bncc, ...dados } = AtualizarDescritorEntrada.parse(await json(request));
@@ -527,9 +570,9 @@ export const handlers = [
   http.delete(
     D,
     rota(({ request, params }) => {
-      const { slug, ano, codigo } = ParamsDescritor.parse(params);
+      const { slug, caderno, ano, codigo } = ParamsDescritor.parse(params);
       const projeto = exigirBloqueio(request, slug);
-      const alvo = obterAno(projeto, ano);
+      const alvo = obterAno(projeto, caderno, ano);
       if (!alvo.descritores.some((d) => d.codigo === codigo))
         falha(404, "Descritor não encontrado");
       alvo.descritores = alvo.descritores.filter((d) => d.codigo !== codigo);
@@ -540,9 +583,9 @@ export const handlers = [
   http.put(
     `${D}/escala/:padrao`,
     rota(async ({ request, params }) => {
-      const { slug, ano, codigo, padrao } = ParamsPadrao.parse(params);
+      const { slug, caderno, ano, codigo, padrao } = ParamsPadrao.parse(params);
       const projeto = exigirBloqueio(request, slug);
-      const alvo = obterAno(projeto, ano);
+      const alvo = obterAno(projeto, caderno, ano);
       const descritor = alvo.descritores.find((d) => d.codigo === codigo);
       if (!descritor) return falha(404, "Descritor não encontrado");
       const linhas = LinhasPadrao.parse(await json(request));

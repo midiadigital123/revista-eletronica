@@ -18,7 +18,7 @@ export function criarApp(config: Config, log: Logger): Express {
 
   app.use(helmet());
   app.use(pinoHttp({ logger: log }));
-  app.use(express.json({ limit: "2mb" }));
+  app.use(express.json({ limit: "10mb" }));
   app.use(
     session({
       name: "revista.sid",

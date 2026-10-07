@@ -1,10 +1,10 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
-import { Link, NavLink, Outlet, useLocation, useNavigate, useParams } from "react-router";
+import { Link, NavLink, Outlet, useLocation, useMatch, useNavigate, useParams } from "react-router";
 import { chaves } from "../api/chaves";
 import { ehErroApi } from "../api/client";
 import { Check, Download, ExternalLink, FileJson, Pencil, Trash2 } from "lucide-react";
-import { rotuloAno, Slug, type Projeto } from "../contrato/schemas";
+import { rotuloAno, rotuloCaderno, Slug, type Caderno, type Projeto } from "../contrato/schemas";
 import { Aviso, Botao, CampoTexto, Confirmacao, Dialogo } from "../ui";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -34,6 +34,8 @@ export function ProjetoLayout() {
   const consulta = useProjeto(slug);
   const { edicao, inativo, tentarEditar, naoSalvos, descartarNaoSalvo, repetir } =
     useEdicaoProjeto(slug);
+  // O layout não vê os params das rotas filhas; o caderno aberto vem da URL.
+  const rotaCaderno = useMatch("/projetos/:slug/:caderno/ano/*");
   const naoEncontrado = consulta.isError && ehErroApi(consulta.error, 404);
   // Só no erro: com o projeto aberto, o título vem da aba (Página, ano, descritor).
   useTituloPagina(
@@ -72,10 +74,16 @@ export function ProjetoLayout() {
     );
 
   const projeto = consulta.data;
+  const cadernoAberto = projeto.cadernos.find((c) => c.id === rotaCaderno?.params.caderno);
   return (
     <EdicaoContext value={edicao}>
       <div className="flex flex-col pb-16">
-        <Cabecalho projeto={projeto} edicao={edicao} repetir={repetir} />
+        <Cabecalho
+          projeto={projeto}
+          edicao={edicao}
+          repetir={repetir}
+          caderno={cadernoAberto?.id ?? projeto.cadernos[0]?.id}
+        />
 
         <div className="mt-4 flex flex-col gap-3">
           {/* Região viva sempre montada: a faixa que entra é anunciada. */}
@@ -85,7 +93,7 @@ export function ProjetoLayout() {
           {naoSalvos.length > 0 && <NaoSalvos itens={naoSalvos} descartar={descartarNaoSalvo} />}
         </div>
 
-        {/* Muitos anos (catálogo de etapas): a fila rola na horizontal, sem quebrar. */}
+        {/* Dois níveis: Página e cadernos em cima; anos do caderno aberto embaixo. Muitos itens: rola na horizontal. */}
         <nav
           aria-label="Seções do projeto"
           className="mt-6 flex items-center gap-1 overflow-x-auto border-b border-border [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]"
@@ -93,15 +101,43 @@ export function ProjetoLayout() {
           <Aba to="." end>
             Página
           </Aba>
-          {projeto.anos.map((a) => (
-            <Aba key={a.ano} to={`ano/${a.ano}`}>
-              {rotuloAno(a.ano)}
+          {projeto.cadernos.map((c) => (
+            <Aba
+              key={c.id}
+              to={c.anos[0] ? `${c.id}/ano/${c.anos[0].ano}` : "."}
+              ativa={cadernoAberto?.id === c.id}
+            >
+              {rotuloCaderno(c.id)}
             </Aba>
           ))}
-          <div className="shrink-0 py-1 pr-2 pl-1">
-            <BotaoNovoAno projeto={projeto} />
-          </div>
         </nav>
+
+        {cadernoAberto && (
+          <nav
+            aria-label={`Anos de ${rotuloCaderno(cadernoAberto.id)}`}
+            className="mt-4 flex flex-wrap items-center gap-3"
+          >
+            <div className="flex items-center gap-0.5 rounded-lg bg-muted p-1">
+              {cadernoAberto.anos.map((a) => (
+                <NavLink
+                  key={a.ano}
+                  to={`${cadernoAberto.id}/ano/${a.ano}`}
+                  className={({ isActive }) =>
+                    cn(
+                      "rounded-md px-3 py-1 text-sm font-medium whitespace-nowrap tabular-nums transition-colors duration-150 ease-saida outline-none focus-visible:ring-3 focus-visible:ring-ring",
+                      isActive
+                        ? "bg-background text-foreground shadow-[0_1px_2px_oklch(0_0_0/0.08)]"
+                        : "text-muted-foreground hover:text-foreground",
+                    )
+                  }
+                >
+                  {rotuloAno(a.ano)}
+                </NavLink>
+              ))}
+            </div>
+            <BotaoNovoAno caderno={cadernoAberto} />
+          </nav>
+        )}
 
         <div className="pt-8">
           <Outlet />
@@ -111,15 +147,27 @@ export function ProjetoLayout() {
   );
 }
 
-function Aba({ to, end, children }: { to: string; end?: boolean; children: React.ReactNode }) {
+/** `ativa` sobrepõe o NavLink: a aba do caderno aponta para um ano, mas vale para todos os anos dele. */
+function Aba({
+  to,
+  end,
+  ativa,
+  children,
+}: {
+  to: string;
+  end?: boolean;
+  ativa?: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <NavLink
       to={to}
       end={end}
+      aria-current={ativa ? "page" : undefined}
       className={({ isActive }) =>
         cn(
           "shrink-0 border-b-2 px-3 py-2.5 text-sm font-medium whitespace-nowrap transition-colors duration-150 ease-saida outline-none focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring",
-          isActive
+          (ativa ?? isActive)
             ? "border-primary text-foreground"
             : "border-transparent text-muted-foreground hover:text-foreground",
         )
@@ -134,10 +182,13 @@ function Cabecalho({
   projeto,
   edicao,
   repetir,
+  caderno,
 }: {
   projeto: Projeto;
   edicao: Edicao;
   repetir: (() => void) | null;
+  /** Caderno da aba aberta (na aba Página, o primeiro): o Preview abre direto nele. */
+  caderno: Caderno | undefined;
 }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -146,12 +197,17 @@ function Cabecalho({
   const podeEditar = edicao.modo === "edicao";
   const { slug } = projeto;
 
+  // Um arquivo só, no formato de `origem.cadernos` da importação: {caderno: Revista}.
   const exportar = async () => {
     setErroAcao(null);
     try {
-      const revista = await projetosApi.exportar(slug);
+      const revistas = await Promise.all(
+        projeto.cadernos.map(async (c) => [c.id, await projetosApi.exportar(slug, c.id)] as const),
+      );
       const url = URL.createObjectURL(
-        new Blob([JSON.stringify(revista, null, 2)], { type: "application/json" }),
+        new Blob([JSON.stringify(Object.fromEntries(revistas), null, 2)], {
+          type: "application/json",
+        }),
       );
       const link = document.createElement("a");
       link.href = url;
@@ -205,12 +261,14 @@ function Cabecalho({
             Gerar pacote .zip
           </a>
         </Button>
-        <Button asChild variant="outline" size="sm">
-          <a href={projetosApi.urlPreview(slug)} target="_blank" rel="noopener">
-            Preview
-            <ExternalLink data-icon="inline-end" />
-          </a>
-        </Button>
+        {caderno && (
+          <Button asChild variant="outline" size="sm">
+            <a href={projetosApi.urlPreview(slug, caderno)} target="_blank" rel="noopener">
+              Preview
+              <ExternalLink data-icon="inline-end" />
+            </a>
+          </Button>
+        )}
         <Button type="button" variant="outline" size="sm" onClick={() => void exportar()}>
           <FileJson data-icon="inline-start" />
           Exportar JSON

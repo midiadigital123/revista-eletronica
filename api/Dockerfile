@@ -21,6 +21,9 @@ FROM node:22-alpine
 
 WORKDIR /app
 
+# Extrator de PDF (POST /api/extracao): python3 + pdftotext
+RUN apk add --no-cache python3 poppler-utils
+
 # Copiar package files
 COPY api/package.json api/package-lock.json ./api/
 
@@ -32,6 +35,9 @@ COPY --from=builder /app/api/dist ./api/dist
 
 # Copiar pasta revista (necessária em runtime)
 COPY revista ./revista
+
+# Extrator de descritores (resolvido como /app/scripts/ a partir de dist/modules/extracao)
+COPY scripts/extrair_descritores.py ./scripts/extrair_descritores.py
 
 # Criar usuário node e mudar propriedade
 RUN chown -R node:node /app

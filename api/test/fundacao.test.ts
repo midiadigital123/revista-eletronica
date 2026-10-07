@@ -9,7 +9,12 @@ async function criarProjetoNoBanco(slug = "sp") {
   return ProjetoModel.create({
     slug,
     nome: "SP",
-    anos: [{ ano: "5ef", scaleRange: { min: 0, max: 500 }, cortes: { "padrao-1": 125, "padrao-2": 250, "padrao-3": 375 } }],
+    cadernos: [
+      {
+        id: "lingua-portuguesa",
+        anos: [{ ano: "5ef", scaleRange: { min: 0, max: 500 }, cortes: { "padrao-1": 125, "padrao-2": 250, "padrao-3": 375 } }],
+      },
+    ],
   });
 }
 

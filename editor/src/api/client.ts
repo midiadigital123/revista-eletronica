@@ -55,7 +55,16 @@ export async function api<T>(caminho: string, opcoes: Opcoes = {}): Promise<T> {
     ? await resposta.json()
     : undefined;
   if (!resposta.ok)
-    throw new ApiError(resposta.status, (dados as ErroApi) ?? { erro: `Erro ${resposta.status}` });
+    throw new ApiError(
+      resposta.status,
+      (dados as ErroApi) ?? {
+        // 413 sem JSON vem do proxy (nginx), antes de chegar à API.
+        erro:
+          resposta.status === 413
+            ? "O arquivo é grande demais para o servidor."
+            : `Erro ${resposta.status}`,
+      },
+    );
   return dados as T;
 }
 

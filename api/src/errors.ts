@@ -32,6 +32,8 @@ export const naoAutenticado = () => new AppError(401, "Faça login para continua
 export const proibido = () => new AppError(403, "Acesso restrito a administradores");
 export const naoEncontrado = (oQue: string) => new AppError(404, `${oQue} não encontrado`);
 export const conflito = (erro: string, campo?: string) => new AppError(409, erro, { campo });
+/** 422: entrada bem formada que não deu para processar (ex.: PDF sem a seção esperada). */
+export const naoProcessavel = (erro: string) => new AppError(422, erro);
 export const muitoGrande = (erro = "Conteúdo grande demais") => new AppError(413, erro);
 export const bloqueado = (bloqueio: BloqueioPublico | null) =>
   new AppError(

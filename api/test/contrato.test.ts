@@ -2,8 +2,12 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { anosDaRevista, revistaDosAnos } from "../src/contrato/revista.js";
 import {
+  cadernosDasDisciplinas,
   CORTES_PADRAO,
+  CriarProjetoEntrada,
   Revista,
+  rotuloCaderno,
+  rotuloDisciplina,
   compararAnos,
   problemasDoAno,
   rotuloAno,
@@ -76,5 +80,49 @@ describe("contrato: etapas (anos)", () => {
 
   it("compararAnos: EF antes de EM, depois número", () => {
     expect(["3em", "9ef", "1em", "2ef", "5ef"].sort(compararAnos)).toEqual(["2ef", "5ef", "9ef", "1em", "3em"]);
+  });
+});
+
+describe("contrato: disciplinas e cadernos", () => {
+  const base = { slug: "go", nome: "Goiás", disciplinas: ["alfabetizacao"] };
+
+  it("CriarProjetoEntrada aceita as 3 origens", () => {
+    expect(CriarProjetoEntrada.parse({ ...base, origem: { tipo: "vazio" } }).origem).toEqual({
+      tipo: "vazio",
+      anos: ["5ef", "9ef", "3em"],
+    });
+    expect(CriarProjetoEntrada.safeParse({ ...base, origem: { tipo: "copiar", de: "sp" } }).success).toBe(true);
+    const importar = CriarProjetoEntrada.safeParse({
+      ...base,
+      origem: { tipo: "importar", cadernos: { "alfabetizacao-lp": fixture } },
+    });
+    expect(importar.success).toBe(true);
+  });
+
+  it("CriarProjetoEntrada recusa disciplina vazia/desconhecida e caderno desconhecido", () => {
+    const vazio = { tipo: "vazio" };
+    expect(CriarProjetoEntrada.safeParse({ ...base, disciplinas: [], origem: vazio }).success).toBe(false);
+    expect(CriarProjetoEntrada.safeParse({ ...base, disciplinas: ["fisica"], origem: vazio }).success).toBe(false);
+    expect(
+      CriarProjetoEntrada.safeParse({ ...base, origem: { tipo: "importar", cadernos: { fisica: fixture } } })
+        .success,
+    ).toBe(false);
+    expect(CriarProjetoEntrada.safeParse({ ...base, origem: { tipo: "importar", revista: fixture } }).success).toBe(
+      false,
+    );
+  });
+
+  it("cadernosDasDisciplinas segue a ordem de CADERNOS, sem repetir", () => {
+    expect(cadernosDasDisciplinas(["alfabetizacao", "lingua-portuguesa", "alfabetizacao"])).toEqual([
+      "lingua-portuguesa",
+      "alfabetizacao-lp",
+      "alfabetizacao-mat",
+    ]);
+  });
+
+  it("rótulos", () => {
+    expect(rotuloDisciplina("alfabetizacao")).toBe("Alfabetização");
+    expect(rotuloCaderno("alfabetizacao-mat")).toBe("Alfabetização · Matemática");
+    expect(rotuloCaderno("lingua-portuguesa")).toBe("Língua Portuguesa");
   });
 });

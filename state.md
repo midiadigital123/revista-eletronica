@@ -1,18 +1,19 @@
 # state.md — revista-express
 
 ## Estado atual
-Passo 4 de 4: concluído
-Funcionando: extrator Python (84 descritores); contrato/API/editor/revista aceitam qualquer etapa <n>ef/<n>em; API 85 testes, editor 49, regua e extrator OK; typechecks limpos
-Quebrado/pendente: nada
+Passo 5 de 5: concluído
+Funcionando: projeto com disciplinas (LP, MT, Alfabetização = LP+MT); Novo projeto com Vazio/Copiar/Importar PDF; POST /api/extracao; abas em dois níveis; zip com pasta por caderno; API 98 testes, editor 52, extrator 5
+Quebrado/pendente: teste manual com o PDF real via docker compose (API + editor) ainda não feito
 
 ## Próxima ação
-Abrir PR do branch redesign-shadcn quando quiser integrar.
+`docker compose up --build`, criar projeto Alfabetização com o PDF SAEGO e conferir os anos 2º/5º EF.
 
 ## Plano
-1. [x] (a) Contrato + API + testes API
-2. [x] (b) Editor + testes (diálogo "+ Ano" com número + EF/EM)
-3. [x] (c) Revista publicada (abas geradas por etapa)
-4. [x] Verificação completa + docs/contrato.md
+1. [x] Contrato: cadernos, disciplinas, entradas
+2. [x] API: cadernos nas rotas + POST /api/extracao + extrator --stdout + Dockerfile
+3. [x] Editor: diálogo Novo projeto (disciplinas, Importar PDF)
+4. [x] Editor: navegação por caderno
+5. [x] Publicação (geração feita no passo 2) (pasta por caderno) + apagar projetos antigos (com confirmação) + docs
 
 ## Decisões
 
@@ -72,6 +73,62 @@ Abrir PR do branch redesign-shadcn quando quiser integrar.
 - **Arquivos afetados:** `contrato/schemas.ts`, `contrato/revista.ts`, `api/src/modules/projetos/*`, `editor/src/projetos/*`, `revista/escala.hbs`, `revista/script.js`, `api/src/modules/revista/render.ts`
 - **Status:** ativa
 
+### D-008 — Projeto com cadernos por disciplina (2026-10-07)
+- **Contexto:** a revista de um estado é dividida em LP, Matemática e Alfabetização (Alfa = PDF com LP + MT juntos).
+- **Decisão:** `Projeto.cadernos[] = {id, anos}`, ids fixos `lingua-portuguesa`, `matematica`, `alfabetizacao-lp`, `alfabetizacao-mat`; `DISCIPLINAS` mapeia checkbox → cadernos. Rotas `/:slug/cadernos/:caderno/anos/...`.
+- **Motivo:** escolha do usuário (1 projeto, N disciplinas); lista plana evita um nível a mais de aninhamento.
+- **Descartadas:** 1 projeto por disciplina — usuário preferiu 1 projeto; disciplinas→componentes→anos aninhados — mais código para o mesmo resultado.
+- **Arquivos afetados:** `contrato/schemas.ts`, `api/src/modules/projetos/*`, `editor/src/projetos/*`
+- **Status:** ativa
+
+### D-009 — Extração de PDF por rota síncrona (2026-10-07)
+- **Contexto:** "Importar PDF" deve preencher os Anos antes de criar o projeto.
+- **Decisão:** `POST /api/extracao` roda `extrair_descritores.py --stdout` e devolve as revistas por disciplina; o editor envia o resultado em `origem: {tipo: "importar", cadernos}`. Origem "Importar .json" sai da UI.
+- **Motivo:** reusa a importação existente (Revista + anosDaRevista); API sem estado entre upload e criação.
+- **Descartadas:** guardar o PDF e extrair na criação — anos não apareceriam antes de criar.
+- **Arquivos afetados:** `scripts/extrair_descritores.py`, `api/src/modules/extracao/*`, `api/Dockerfile`, `editor/src/projetos/NovoProjeto.tsx`
+- **Status:** ativa
+
+### D-010 — Publicação: uma pasta por caderno; projetos antigos apagados (2026-10-07)
+- **Contexto:** como publicar várias disciplinas e o que fazer com projetos só com `anos`.
+- **Decisão:** zip/preview com `<caderno>/index.html` + índice raiz; página (textos/imagens) compartilhada. Projetos antigos são apagados (com confirmação antes do comando). Copiar copia só as disciplinas marcadas.
+- **Motivo:** escolhas do usuário; template da revista intacto.
+- **Descartadas:** página única com seletor — mexe em template/CSS/JS; migrar antigos para LP — usuário disse que são dados de teste.
+- **Arquivos afetados:** `api/src/modules/geracao/service.ts`
+- **Status:** ativa
+
+### D-011 — Detalhes da API de cadernos/extração (2026-10-07)
+- **Contexto:** pontos decididos na implementação dos passos 1–2.
+- **Decisão:** `cadernosDasDisciplinas()` no contrato; exportar JSON vira `GET /:slug/cadernos/:caderno/revista`; extração devolve 422 para PDF ilegível/vazio/timeout e 500 se faltar python3; script configurável por `EXTRATOR_PDF`; `express.json` 10mb; índice raiz do zip usa o nome do projeto.
+- **Motivo:** reuso no editor; erro do PDF ≠ erro do servidor; payload de importação com até 4 revistas.
+- **Descartadas:** manter `/:slug/revista` — ambíguo com N cadernos.
+- **Arquivos afetados:** `contrato/schemas.ts`, `api/src/modules/extracao/*`, `api/src/app.ts`, `api/src/modules/geracao/service.ts`
+- **Status:** ativa
+
+### D-012 — Detalhes do editor com cadernos (2026-10-07)
+- **Contexto:** pontos decididos na implementação dos passos 3–4.
+- **Decisão:** disciplinas começam desmarcadas (erro se nenhuma); rotas `/projetos/:slug/:caderno/ano/:ano[/:codigo]`; exportar JSON baixa um arquivo `{[caderno]: Revista}`; "+ Ano" por caderno; PDF > 50 MB recusado no cliente.
+- **Motivo:** evitar criar disciplina por engano; formato do export igual a `origem.cadernos`.
+- **Descartadas:** LP marcada por padrão — risco de criar LP ao importar só Matemática; um download por caderno — vários arquivos.
+- **Arquivos afetados:** `editor/src/projetos/*`, `editor/src/mocks/*`
+- **Status:** ativa
+
+### D-013 — Abas do projeto em dois níveis (2026-10-07)
+- **Contexto:** usuário achou confusa a fila única "Página | caderno 2º EF 5º EF + Ano | caderno ...".
+- **Decisão:** 1º nível = Página + uma aba por caderno (leva ao 1º ano); 2º nível, só com caderno aberto = seletor segmentado dos anos + um "+ Ano". Caderno ativo via `useMatch` no layout.
+- **Motivo:** o rótulo do caderno deixa de parecer aba; "+ Ano" aparece uma vez; hierarquia caderno → ano explícita.
+- **Descartadas:** grupos com separador na mesma fila — era o layout confuso; select de caderno — esconde as opções.
+- **Arquivos afetados:** `editor/src/projetos/ProjetoLayout.tsx`, `editor/src/projetos/projetos.test.tsx`
+- **Status:** ativa
+
+### D-014 — Preview abre o caderno da aba (2026-10-07)
+- **Contexto:** o botão Preview abria o índice raiz com links por caderno; usuário quer o preview da aba aberta.
+- **Decisão:** `urlPreview(slug, caderno)` → `preview/<caderno>/index.html`; na aba Página usa o primeiro caderno. Índice raiz fica só para o zip offline.
+- **Motivo:** um clique até a revista certa.
+- **Descartadas:** remover o índice raiz — o zip offline ainda precisa dele.
+- **Arquivos afetados:** `editor/src/projetos/api.ts`, `editor/src/projetos/ProjetoLayout.tsx`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] Cortes do 5º ano corretos? — confirmados pelo usuário
 
@@ -83,3 +140,12 @@ Abrir PR do branch redesign-shadcn quando quiser integrar.
 - Novo projeto oferece todas as etapas (ETAPAS: 1º–9º EF, 1ª–3ª EM), padrão continua 5ef/9ef/3em.
 - Diálogo "+ Ano" aprovado pelo usuário como está (atalhos padrão + "Outra etapa").
 - Cortes do 5º ano confirmados; commit da etapa livre.
+
+### 2026-10-07 (sessão 2)
+- Plano aprovado: disciplinas + Importar PDF (D-008, D-009, D-010).
+- Passos 1–2 + geração concluídos (API 98 testes verdes).
+- Passos 3–4 concluídos (editor 51 testes verdes).
+- Abas reorganizadas em dois níveis (D-013), conferido em desktop e 390px.
+- Banco limpo: 4 projetos antigos (1 ativo `teste`, 3 na lixeira) e 2 imagens GridFS apagados com confirmação do usuário.
+- Bug: "Erro 413" ao importar PDF de 11,7 MB. Causa: nginx do editor com client_max_body_size 6m. Correção: location /api/extracao com 51m e timeout 90s; 413 sem JSON vira mensagem legível no client.
+- Preview passa a abrir o caderno da aba (D-014).

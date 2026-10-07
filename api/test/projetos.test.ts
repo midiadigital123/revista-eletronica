@@ -15,6 +15,11 @@ const fixture: unknown = JSON.parse(
   readFileSync(new URL("./fixtures/revista.json", import.meta.url), "utf8"),
 );
 
+const lerSaida = (nome: string) =>
+  JSON.parse(readFileSync(new URL(`../../saida/${nome}.json`, import.meta.url), "utf8"));
+const saidaLp = lerSaida("lingua-portuguesa");
+const saidaMt = lerSaida("matematica");
+
 type Agente = Awaited<ReturnType<typeof agenteLogado>>["agente"];
 
 /** Editor logado com um projeto "sp" (5ef e 9ef) já criado e bloqueado para ele. */
@@ -22,17 +27,18 @@ async function comProjeto(anos: string[] = ["5ef", "9ef"]) {
   const logado = await agenteLogado(ctx.app);
   await logado.agente
     .post("/api/projetos")
-    .send({ slug: "sp", nome: "São Paulo", origem: { tipo: "vazio", anos } })
+    .send({ slug: "sp", nome: "São Paulo", disciplinas: ["lingua-portuguesa"], origem: { tipo: "vazio", anos } })
     .expect(201);
   return logado;
 }
 
-const D01 = "/api/projetos/sp/anos/5ef/descritores/D01";
+const LP = "/api/projetos/sp/cadernos/lingua-portuguesa";
+const D01 = `${LP}/anos/5ef/descritores/D01`;
 
 async function comDescritor() {
   const logado = await comProjeto();
   await logado.agente
-    .post("/api/projetos/sp/anos/5ef/descritores")
+    .post(`${LP}/anos/5ef/descritores`)
     .send({
       codigo: "D01",
       topic: "Leitura",
@@ -50,16 +56,19 @@ describe("projetos", () => {
     const { agente, usuario } = await agenteLogado(ctx.app);
     const r = await agente
       .post("/api/projetos")
-      .send({ slug: "sp-2026", nome: "SP", origem: { tipo: "vazio" } })
+      .send({ slug: "sp-2026", nome: "SP", disciplinas: ["lingua-portuguesa"], origem: { tipo: "vazio" } })
       .expect(201);
-    expect(r.body.anos).toEqual(
-      ["5ef", "9ef", "3em"].map((ano) => ({
-        ano,
-        scaleRange: { min: 0, max: 500 },
-        cortes: { "padrao-1": 125, "padrao-2": 250, "padrao-3": 375 },
-        descritores: [],
-      })),
-    );
+    expect(r.body.cadernos).toEqual([
+      {
+        id: "lingua-portuguesa",
+        anos: ["5ef", "9ef", "3em"].map((ano) => ({
+          ano,
+          scaleRange: { min: 0, max: 500 },
+          cortes: { "padrao-1": 125, "padrao-2": 250, "padrao-3": 375 },
+          descritores: [],
+        })),
+      },
+    ]);
     expect(r.body).toMatchObject({ slug: "sp-2026", nome: "SP", pagina: {} });
     expect(r.body.bloqueio).toMatchObject({ usuarioId: usuario.id, nome: usuario.nome });
     // Já pode escrever sem POST /bloqueio.
@@ -70,31 +79,117 @@ describe("projetos", () => {
     const { agente } = await comProjeto();
     const dup = await agente
       .post("/api/projetos")
-      .send({ slug: "sp", nome: "Outro", origem: { tipo: "vazio" } })
+      .send({ slug: "sp", nome: "Outro", disciplinas: ["lingua-portuguesa"], origem: { tipo: "vazio" } })
       .expect(409);
     expect(dup.body).toEqual({ erro: "Já existe um projeto com esse identificador", campo: "slug" });
     const inv = await agente
       .post("/api/projetos")
-      .send({ slug: "SP!", nome: "x", origem: { tipo: "vazio" } })
+      .send({ slug: "SP!", nome: "x", disciplinas: ["lingua-portuguesa"], origem: { tipo: "vazio" } })
       .expect(400);
     expect(inv.body).toMatchObject(erro400("slug"));
     await agente
       .post("/api/projetos")
       .set(HEADER_SESSAO_EDICAO, "")
-      .send({ slug: "rj", nome: "RJ", origem: { tipo: "vazio" } })
+      .send({ slug: "rj", nome: "RJ", disciplinas: ["lingua-portuguesa"], origem: { tipo: "vazio" } })
       .expect(400);
   });
 
-  it("importar a fixture e exportar de volta (GET /revista) devolve a mesma revista", async () => {
+  it("POST vazio com Alfabetização gera os 2 cadernos; disciplinas na ordem de CADERNOS, sem repetir", async () => {
     const { agente } = await agenteLogado(ctx.app);
     const r = await agente
       .post("/api/projetos")
-      .send({ slug: "fx", nome: "Fixture", origem: { tipo: "importar", revista: fixture } })
+      .send({ slug: "alfa", nome: "Alfa", disciplinas: ["alfabetizacao"], origem: { tipo: "vazio", anos: ["2ef"] } })
       .expect(201);
-    expect(r.body.anos.map((a: { ano: string }) => a.ano)).toEqual(["5ef", "9ef", "3em"]);
-    expect(r.body.anos[0].descritores).toHaveLength(40);
-    const exportada = await agente.get("/api/projetos/fx/revista").expect(200);
+    expect(r.body.cadernos.map((c: { id: string }) => c.id)).toEqual(["alfabetizacao-lp", "alfabetizacao-mat"]);
+    expect(r.body.cadernos[1].anos.map((a: { ano: string }) => a.ano)).toEqual(["2ef"]);
+    const todas = await agente
+      .post("/api/projetos")
+      .send({
+        slug: "todas",
+        nome: "Todas",
+        disciplinas: ["alfabetizacao", "matematica", "lingua-portuguesa", "matematica"],
+        origem: { tipo: "vazio" },
+      })
+      .expect(201);
+    expect(todas.body.cadernos.map((c: { id: string }) => c.id)).toEqual([
+      "lingua-portuguesa",
+      "matematica",
+      "alfabetizacao-lp",
+      "alfabetizacao-mat",
+    ]);
+    const lista = await agente.get("/api/projetos").expect(200);
+    expect(lista.body[0]).toMatchObject({
+      slug: "alfa",
+      cadernos: [
+        { id: "alfabetizacao-lp", anos: ["2ef"] },
+        { id: "alfabetizacao-mat", anos: ["2ef"] },
+      ],
+    });
+    const sem = await agente
+      .post("/api/projetos")
+      .send({ slug: "nada", nome: "Nada", disciplinas: [], origem: { tipo: "vazio" } })
+      .expect(400);
+    expect(sem.body.campo).toBe("disciplinas");
+  });
+
+  it("importar a fixture e exportar de volta (GET /cadernos/:caderno/revista) devolve a mesma revista", async () => {
+    const { agente } = await agenteLogado(ctx.app);
+    const r = await agente
+      .post("/api/projetos")
+      .send({
+        slug: "fx",
+        nome: "Fixture",
+        disciplinas: ["lingua-portuguesa"],
+        origem: { tipo: "importar", cadernos: { "lingua-portuguesa": fixture } },
+      })
+      .expect(201);
+    const [lp] = r.body.cadernos;
+    expect(lp.anos.map((a: { ano: string }) => a.ano)).toEqual(["5ef", "9ef", "3em"]);
+    expect(lp.anos[0].descritores).toHaveLength(40);
+    const exportada = await agente.get("/api/projetos/fx/cadernos/lingua-portuguesa/revista").expect(200);
     expect(exportada.body).toEqual(fixture);
+    await agente.get("/api/projetos/fx/cadernos/matematica/revista").expect(404);
+    await agente.get("/api/projetos/fx/cadernos/fisica/revista").expect(400);
+  });
+
+  it("importar saida/*.json (sem pagina) como cadernos de Alfabetização", async () => {
+    const { agente } = await agenteLogado(ctx.app);
+    const r = await agente
+      .post("/api/projetos")
+      .send({
+        slug: "alfa",
+        nome: "Alfa",
+        disciplinas: ["alfabetizacao"],
+        origem: { tipo: "importar", cadernos: { "alfabetizacao-lp": saidaLp, "alfabetizacao-mat": saidaMt } },
+      })
+      .expect(201);
+    expect(r.body.pagina).toEqual({});
+    expect(
+      r.body.cadernos.map((c: { id: string; anos: { ano: string; descritores: unknown[] }[] }) => [
+        c.id,
+        c.anos.map((a) => `${a.ano}:${a.descritores.length}`),
+      ]),
+    ).toEqual([
+      ["alfabetizacao-lp", ["2ef:8", "5ef:15"]],
+      ["alfabetizacao-mat", ["2ef:33", "5ef:28"]],
+    ]);
+    const mt = await agente.get("/api/projetos/alfa/cadernos/alfabetizacao-mat/revista").expect(200);
+    expect(mt.body["2ef"].D01).toEqual(saidaMt["2ef"].D01);
+  });
+
+  it("importar: falta a revista de um caderno marcado → 400 com o campo do caderno", async () => {
+    const { agente } = await agenteLogado(ctx.app);
+    const r = await agente
+      .post("/api/projetos")
+      .send({
+        slug: "alfa",
+        nome: "Alfa",
+        disciplinas: ["alfabetizacao"],
+        origem: { tipo: "importar", cadernos: { "alfabetizacao-lp": saidaLp } },
+      })
+      .expect(400);
+    expect(r.body).toMatchObject({ campo: "origem.cadernos.alfabetizacao-mat" });
+    await agente.get("/api/projetos/alfa").expect(404);
   });
 
   it("importar: regra de domínio violada → 400 com campo prefixado pelo ano", async () => {
@@ -108,39 +203,65 @@ describe("projetos", () => {
     };
     const r = await agente
       .post("/api/projetos")
-      .send({ slug: "x", nome: "X", origem: { tipo: "importar", revista } })
+      .send({
+        slug: "x",
+        nome: "X",
+        disciplinas: ["matematica"],
+        origem: { tipo: "importar", cadernos: { matematica: revista } },
+      })
       .expect(400);
-    expect(r.body.campo).toBe("5ef.cortes.padrao-2");
+    expect(r.body.campo).toBe("matematica.5ef.cortes.padrao-2");
     expect(r.body.detalhes.map((d: { campo: string }) => d.campo)).toContain(
-      "5ef.descritores.D01.scale.padrao-1.0.level",
+      "matematica.5ef.descritores.D01.scale.padrao-1.0.level",
     );
   });
 
-  it("copiar duplica página e anos; origem inexistente → 404", async () => {
+  it("copiar duplica página e cadernos das disciplinas marcadas; origem inexistente → 404", async () => {
     const { agente } = await comDescritor();
     await agente.patch("/api/projetos/sp/pagina").send({ heroTitulo: "Título" }).expect(200);
     const r = await agente
       .post("/api/projetos")
-      .send({ slug: "copia", nome: "Cópia", origem: { tipo: "copiar", de: "sp" } })
+      .send({ slug: "copia", nome: "Cópia", disciplinas: ["lingua-portuguesa"], origem: { tipo: "copiar", de: "sp" } })
       .expect(201);
     const fonte = await agente.get("/api/projetos/sp").expect(200);
     expect(r.body.pagina).toEqual({ heroTitulo: "Título" });
-    expect(r.body.anos).toEqual(fonte.body.anos);
+    expect(r.body.cadernos).toEqual(fonte.body.cadernos);
     await agente
       .post("/api/projetos")
-      .send({ slug: "c2", nome: "C2", origem: { tipo: "copiar", de: "nada" } })
+      .send({ slug: "c2", nome: "C2", disciplinas: ["lingua-portuguesa"], origem: { tipo: "copiar", de: "nada" } })
       .expect(404);
+  });
+
+  it("copiar só copia os cadernos marcados; caderno ausente na origem → 400", async () => {
+    const { agente } = await agenteLogado(ctx.app);
+    await agente
+      .post("/api/projetos")
+      .send({ slug: "base", nome: "Base", disciplinas: ["lingua-portuguesa", "alfabetizacao"], origem: { tipo: "vazio" } })
+      .expect(201);
+    const r = await agente
+      .post("/api/projetos")
+      .send({ slug: "so-alfa", nome: "Só Alfa", disciplinas: ["alfabetizacao"], origem: { tipo: "copiar", de: "base" } })
+      .expect(201);
+    expect(r.body.cadernos.map((c: { id: string }) => c.id)).toEqual(["alfabetizacao-lp", "alfabetizacao-mat"]);
+    const falta = await agente
+      .post("/api/projetos")
+      .send({ slug: "mt", nome: "MT", disciplinas: ["matematica"], origem: { tipo: "copiar", de: "base" } })
+      .expect(400);
+    expect(falta.body).toEqual({ erro: "O projeto de origem não tem Matemática", campo: "disciplinas" });
   });
 
   it("GET / lista resumos por nome; GET /:slug 404 se não existe", async () => {
     const { agente } = await comProjeto();
     await agente
       .post("/api/projetos")
-      .send({ slug: "ac", nome: "Acre", origem: { tipo: "vazio", anos: ["3em"] } })
+      .send({ slug: "ac", nome: "Acre", disciplinas: ["lingua-portuguesa"], origem: { tipo: "vazio", anos: ["3em"] } })
       .expect(201);
     const r = await agente.get("/api/projetos").expect(200);
     expect(r.body.map((p: { nome: string }) => p.nome)).toEqual(["Acre", "São Paulo"]);
-    expect(r.body[1]).toMatchObject({ slug: "sp", anos: ["5ef", "9ef"], bloqueio: expect.any(Object) });
+    expect(r.body[1]).toMatchObject({
+      slug: "sp",
+      cadernos: [{ id: "lingua-portuguesa", anos: ["5ef", "9ef"] }],
+      bloqueio: expect.any(Object) });
     await agente.get("/api/projetos/nada").expect(404);
   });
 
@@ -148,7 +269,7 @@ describe("projetos", () => {
     const { agente } = await comProjeto();
     await agente
       .post("/api/projetos")
-      .send({ slug: "rj", nome: "RJ", origem: { tipo: "vazio" } })
+      .send({ slug: "rj", nome: "RJ", disciplinas: ["lingua-portuguesa"], origem: { tipo: "vazio" } })
       .expect(201);
     const conf = await agente.patch("/api/projetos/sp").send({ slug: "rj" }).expect(409);
     expect(conf.body.campo).toBe("slug");
@@ -166,7 +287,7 @@ describe("projetos", () => {
     expect((await agente.get("/api/projetos").expect(200)).body).toEqual([]);
     await agente
       .post("/api/projetos")
-      .send({ slug: "sp", nome: "De novo", origem: { tipo: "vazio" } })
+      .send({ slug: "sp", nome: "De novo", disciplinas: ["lingua-portuguesa"], origem: { tipo: "vazio" } })
       .expect(201);
   });
 });
@@ -194,7 +315,7 @@ describe("anos", () => {
   it("POST cria (201 AnoProjeto); 409 duplicado; 400 cortes fora da faixa", async () => {
     const { agente } = await comProjeto();
     const r = await agente
-      .post("/api/projetos/sp/anos")
+      .post(`${LP}/anos`)
       .send({ ano: "3em", scaleRange: { min: 100, max: 600 }, cortes: { "padrao-1": 200, "padrao-2": 300, "padrao-3": 400 } })
       .expect(201);
     expect(r.body).toEqual({
@@ -203,11 +324,11 @@ describe("anos", () => {
       cortes: { "padrao-1": 200, "padrao-2": 300, "padrao-3": 400 },
       descritores: [],
     });
-    const dup = await agente.post("/api/projetos/sp/anos").send({ ano: "5ef" }).expect(409);
+    const dup = await agente.post(`${LP}/anos`).send({ ano: "5ef" }).expect(409);
     expect(dup.body.campo).toBe("ano");
-    await agente.delete("/api/projetos/sp/anos/3em").expect(204);
+    await agente.delete(`${LP}/anos/3em`).expect(204);
     const inv = await agente
-      .post("/api/projetos/sp/anos")
+      .post(`${LP}/anos`)
       .send({ ano: "3em", scaleRange: { min: 0, max: 100 } })
       .expect(400);
     expect(inv.body).toMatchObject(erro400("cortes.padrao-1"));
@@ -216,46 +337,47 @@ describe("anos", () => {
   it("PATCH altera faixa e cortes; reduzir a faixa deixando nível de fora → 400 com o descritor", async () => {
     const { agente } = await comDescritor();
     const r = await agente
-      .patch("/api/projetos/sp/anos/5ef")
+      .patch(`${LP}/anos/5ef`)
       .send({ cortes: { "padrao-1": 100, "padrao-2": 200, "padrao-3": 300 } })
       .expect(200);
     expect(r.body).toMatchObject({ ano: "5ef", cortes: { "padrao-1": 100 }, descritores: [{ codigo: "D01" }] });
     const red = await agente
-      .patch("/api/projetos/sp/anos/5ef")
+      .patch(`${LP}/anos/5ef`)
       .send({ scaleRange: { min: 60, max: 500 } })
       .expect(400);
     expect(red.body.detalhes).toContainEqual({
       campo: "descritores.D01.scale.padrao-1.0.level",
       erro: expect.any(String),
     });
-    await agente.patch("/api/projetos/sp/anos/3em").send({ cortes: { "padrao-1": 1, "padrao-2": 2, "padrao-3": 3 } }).expect(404);
-    await agente.patch("/api/projetos/sp/anos/5ef").send({ scaleRange: { min: 5, max: 5 } }).expect(400);
+    await agente.patch(`${LP}/anos/3em`).send({ cortes: { "padrao-1": 1, "padrao-2": 2, "padrao-3": 3 } }).expect(404);
+    await agente.patch(`${LP}/anos/5ef`).send({ scaleRange: { min: 5, max: 5 } }).expect(400);
   });
 
   it("POST aceita qualquer etapa <n>ef/<n>em e ordena EF → EM; formato inválido → 400", async () => {
     const { agente } = await comProjeto(["5ef", "9ef", "3em"]);
-    await agente.post("/api/projetos/sp/anos").send({ ano: "2ef" }).expect(201);
+    await agente.post(`${LP}/anos`).send({ ano: "2ef" }).expect(201);
     const r = await agente.get("/api/projetos/sp").expect(200);
-    expect(r.body.anos.map((a: { ano: string }) => a.ano)).toEqual(["2ef", "5ef", "9ef", "3em"]);
+    expect(r.body.cadernos[0].anos.map((a: { ano: string }) => a.ano)).toEqual(["2ef", "5ef", "9ef", "3em"]);
     for (const ano of ["10ef", "4em", "xyz"]) {
-      const inv = await agente.post("/api/projetos/sp/anos").send({ ano }).expect(400);
+      const inv = await agente.post(`${LP}/anos`).send({ ano }).expect(400);
       expect(inv.body).toMatchObject(erro400("ano"));
     }
   });
 
   it("DELETE remove; 404 se não existe; 400 se for o último", async () => {
     const { agente } = await comProjeto();
-    await agente.delete("/api/projetos/sp/anos/9ef").expect(204);
-    await agente.delete("/api/projetos/sp/anos/9ef").expect(404);
-    const r = await agente.delete("/api/projetos/sp/anos/5ef").expect(400);
-    expect(r.body.erro).toBe("O projeto precisa ter ao menos um ano");
+    await agente.delete(`${LP}/anos/9ef`).expect(204);
+    await agente.delete(`${LP}/anos/9ef`).expect(404);
+    await agente.delete("/api/projetos/sp/cadernos/matematica/anos/5ef").expect(404);
+    const r = await agente.delete(`${LP}/anos/5ef`).expect(400);
+    expect(r.body.erro).toBe("O caderno precisa ter ao menos um ano");
   });
 });
 
 describe("descritores", () => {
   it("POST cria com defaults (201 Descritor); 409 código repetido; 400 nível fora; 404 ano", async () => {
     const { agente } = await comDescritor();
-    const r = await agente.post("/api/projetos/sp/anos/5ef/descritores").send({ codigo: "D02" }).expect(201);
+    const r = await agente.post(`${LP}/anos/5ef/descritores`).send({ codigo: "D02" }).expect(201);
     expect(r.body).toEqual({
       codigo: "D02",
       topic: "",
@@ -264,19 +386,19 @@ describe("descritores", () => {
       bncc: { practices: "", knowledge: "", skills: [] },
       scale: { "padrao-1": [], "padrao-2": [], "padrao-3": [], "padrao-4": [] },
     });
-    const dup = await agente.post("/api/projetos/sp/anos/5ef/descritores").send({ codigo: "D01" }).expect(409);
+    const dup = await agente.post(`${LP}/anos/5ef/descritores`).send({ codigo: "D01" }).expect(409);
     expect(dup.body.campo).toBe("codigo");
     await agente
-      .post("/api/projetos/sp/anos/5ef/descritores")
+      .post(`${LP}/anos/5ef/descritores`)
       .send({ codigo: "D03", scale: { "padrao-1": [{ level: 900, content: "x" }], "padrao-2": [], "padrao-3": [], "padrao-4": [] } })
       .expect(400);
-    await agente.post("/api/projetos/sp/anos/3em/descritores").send({ codigo: "D01" }).expect(404);
-    await agente.post("/api/projetos/sp/anos/5ef/descritores").send({ codigo: "X1" }).expect(400);
+    await agente.post(`${LP}/anos/3em/descritores`).send({ codigo: "D01" }).expect(404);
+    await agente.post(`${LP}/anos/5ef/descritores`).send({ codigo: "X1" }).expect(400);
   });
 
   it("PATCH renomeia e mescla bncc parcial; 409 código ocupado; 404 inexistente", async () => {
     const { agente } = await comDescritor();
-    await agente.post("/api/projetos/sp/anos/5ef/descritores").send({ codigo: "D02" }).expect(201);
+    await agente.post(`${LP}/anos/5ef/descritores`).send({ codigo: "D02" }).expect(201);
     const r = await agente
       .patch(D01)
       .send({ codigo: "D05", prerequisites: ["x", ""], bncc: { knowledge: "K2" } })
@@ -287,11 +409,11 @@ describe("descritores", () => {
       prerequisites: ["x"],
       bncc: { practices: "P", knowledge: "K2", skills: ["EF01"] },
     });
-    const conf = await agente.patch("/api/projetos/sp/anos/5ef/descritores/D05").send({ codigo: "D02" }).expect(409);
+    const conf = await agente.patch(`${LP}/anos/5ef/descritores/D05`).send({ codigo: "D02" }).expect(409);
     expect(conf.body.campo).toBe("codigo");
     await agente.patch(D01).send({ topic: "x" }).expect(404);
     const ano = await agente.get("/api/projetos/sp").expect(200);
-    expect(ano.body.anos[0].descritores.map((d: { codigo: string }) => d.codigo)).toEqual(["D02", "D05"]);
+    expect(ano.body.cadernos[0].anos[0].descritores.map((d: { codigo: string }) => d.codigo)).toEqual(["D02", "D05"]);
   });
 
   it("DELETE remove; 404 se não existe", async () => {
@@ -314,9 +436,9 @@ describe("descritores", () => {
       { level: 150, content: "b" },
     ]);
     const p = await agente.get("/api/projetos/sp").expect(200);
-    expect(p.body.anos[0].descritores[0].scale["padrao-2"]).toEqual(r.body);
+    expect(p.body.cadernos[0].anos[0].descritores[0].scale["padrao-2"]).toEqual(r.body);
     await agente.put(`${D01}/escala/padrao-5`).send([]).expect(404);
-    await agente.put("/api/projetos/sp/anos/5ef/descritores/D09/escala/padrao-1").send([]).expect(404);
+    await agente.put(`${LP}/anos/5ef/descritores/D09/escala/padrao-1`).send([]).expect(404);
     const fora = await agente.put(`${D01}/escala/padrao-1`).send([{ level: -1, content: "x" }]).expect(400);
     expect(fora.body.campo).toBe("descritores.D01.scale.padrao-1.0.level");
   });
@@ -327,10 +449,10 @@ describe("bloqueio nas rotas de escrita", () => {
     ["patch", "/api/projetos/sp", { nome: "x" }],
     ["delete", "/api/projetos/sp"],
     ["patch", "/api/projetos/sp/pagina", { heroTitulo: "x" }],
-    ["post", "/api/projetos/sp/anos", { ano: "3em" }],
-    ["patch", "/api/projetos/sp/anos/5ef", { scaleRange: { min: 0, max: 600 } }],
-    ["delete", "/api/projetos/sp/anos/9ef"],
-    ["post", "/api/projetos/sp/anos/5ef/descritores", { codigo: "D02" }],
+    ["post", `${LP}/anos`, { ano: "3em" }],
+    ["patch", `${LP}/anos/5ef`, { scaleRange: { min: 0, max: 600 } }],
+    ["delete", `${LP}/anos/9ef`],
+    ["post", `${LP}/anos/5ef/descritores`, { codigo: "D02" }],
     ["patch", D01, { topic: "x" }],
     ["delete", D01],
     ["put", `${D01}/escala/padrao-1`, []],

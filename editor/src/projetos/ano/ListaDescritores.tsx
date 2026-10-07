@@ -6,7 +6,13 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { NavLink, useNavigate } from "react-router";
-import { Codigo, rotuloAno, type AnoProjeto, type Descritor } from "../../contrato/schemas";
+import {
+  Codigo,
+  rotuloAno,
+  type AnoProjeto,
+  type Caderno,
+  type Descritor,
+} from "../../contrato/schemas";
 import { Spinner } from "@/components/ui/spinner";
 import { Aviso, Botao, CampoTexto, Confirmacao, Dialogo, useUltimo } from "../../ui";
 import { projetosApi } from "../api";
@@ -17,6 +23,7 @@ import {
   mensagemDeErro,
   proximoCodigo,
   trocarDescritores,
+  rotuloAnoCaderno,
 } from "./dados";
 
 const normalizar = (s: string) =>
@@ -29,7 +36,15 @@ const casa = (d: Descritor, busca: string) =>
   normalizar(`${d.codigo} ${d.topic} ${d.description}`).includes(normalizar(busca.trim()));
 
 /** Lista de descritores do ano: busca, criar, duplicar e excluir. */
-export function ListaDescritores({ ano, codigoAtual }: { ano: AnoProjeto; codigoAtual?: string }) {
+export function ListaDescritores({
+  caderno,
+  ano,
+  codigoAtual,
+}: {
+  caderno: Caderno;
+  ano: AnoProjeto;
+  codigoAtual?: string;
+}) {
   const { slug, modo, salvar } = useEdicao();
   const navigate = useNavigate();
   const [busca, setBusca] = useState("");
@@ -48,11 +63,11 @@ export function ListaDescritores({ ano, codigoAtual }: { ano: AnoProjeto; codigo
     setErro(undefined);
     try {
       await salvar({
-        descricao: `Criar ${livre} no ${rotuloAno(ano.ano)}`,
-        executar: () => projetosApi.criarDescritor(slug, ano.ano, { codigo: livre }),
-        aplicar: (p, novo) => trocarDescritores(p, ano.ano, (ds) => [...ds, novo]),
+        descricao: `Criar ${livre} no ${rotuloAnoCaderno(caderno, ano.ano)}`,
+        executar: () => projetosApi.criarDescritor(slug, caderno, ano.ano, { codigo: livre }),
+        aplicar: (p, novo) => trocarDescritores(p, caderno, ano.ano, (ds) => [...ds, novo]),
       });
-      navigate(caminhoDescritor(slug, ano.ano, livre));
+      navigate(caminhoDescritor(slug, caderno, ano.ano, livre));
     } catch (e) {
       setErro(mensagemDeErro(e));
     }
@@ -63,12 +78,12 @@ export function ListaDescritores({ ano, codigoAtual }: { ano: AnoProjeto; codigo
     setExcluindoPendente(true);
     try {
       await salvar({
-        descricao: `Excluir ${d.codigo} do ${rotuloAno(ano.ano)}`,
-        executar: () => projetosApi.excluirDescritor(slug, ano.ano, d.codigo),
+        descricao: `Excluir ${d.codigo} do ${rotuloAnoCaderno(caderno, ano.ano)}`,
+        executar: () => projetosApi.excluirDescritor(slug, caderno, ano.ano, d.codigo),
         aplicar: (p) =>
-          trocarDescritores(p, ano.ano, (ds) => ds.filter((x) => x.codigo !== d.codigo)),
+          trocarDescritores(p, caderno, ano.ano, (ds) => ds.filter((x) => x.codigo !== d.codigo)),
       });
-      if (codigoAtual === d.codigo) navigate(caminhoAno(slug, ano.ano));
+      if (codigoAtual === d.codigo) navigate(caminhoAno(slug, caderno, ano.ano));
     } catch (e) {
       setErro(mensagemDeErro(e));
     } finally {
@@ -119,7 +134,7 @@ export function ListaDescritores({ ano, codigoAtual }: { ano: AnoProjeto; codigo
               className="group relative flex animate-entra items-center rounded-md"
             >
               <NavLink
-                to={caminhoDescritor(slug, ano.ano, d.codigo)}
+                to={caminhoDescritor(slug, caderno, ano.ano, d.codigo)}
                 className={({ isActive }) =>
                   cn(
                     "flex min-w-0 flex-1 gap-3 rounded-md px-3 py-2 transition-colors duration-150 ease-saida hover:bg-muted/60",
@@ -163,6 +178,7 @@ export function ListaDescritores({ ano, codigoAtual }: { ano: AnoProjeto; codigo
       {duplicando && (
         <DialogoDuplicar
           key={duplicando.codigo}
+          caderno={caderno}
           ano={ano}
           origem={duplicando}
           sugestao={livre ?? ""}
@@ -210,12 +226,13 @@ function AcaoItem(props: {
 }
 
 function DialogoDuplicar(props: {
+  caderno: Caderno;
   ano: AnoProjeto;
   origem: Descritor;
   sugestao: string;
   aoFechar: () => void;
 }) {
-  const { ano, origem, aoFechar } = props;
+  const { caderno, ano, origem, aoFechar } = props;
   const { slug, salvar } = useEdicao();
   const navigate = useNavigate();
   const [codigo, setCodigo] = useState(props.sugestao);
@@ -232,12 +249,13 @@ function DialogoDuplicar(props: {
     setEnviando(true);
     try {
       await salvar({
-        descricao: `Duplicar ${origem.codigo} como ${novo} no ${rotuloAno(ano.ano)}`,
-        executar: () => projetosApi.criarDescritor(slug, ano.ano, { ...origem, codigo: novo }),
-        aplicar: (p, criado) => trocarDescritores(p, ano.ano, (ds) => [...ds, criado]),
+        descricao: `Duplicar ${origem.codigo} como ${novo} no ${rotuloAnoCaderno(caderno, ano.ano)}`,
+        executar: () =>
+          projetosApi.criarDescritor(slug, caderno, ano.ano, { ...origem, codigo: novo }),
+        aplicar: (p, criado) => trocarDescritores(p, caderno, ano.ano, (ds) => [...ds, criado]),
       });
       aoFechar();
-      navigate(caminhoDescritor(slug, ano.ano, novo));
+      navigate(caminhoDescritor(slug, caderno, ano.ano, novo));
     } catch (e) {
       setErro(mensagemDeErro(e));
     } finally {

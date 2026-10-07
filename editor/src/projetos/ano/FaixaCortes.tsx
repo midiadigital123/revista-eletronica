@@ -5,9 +5,9 @@ import {
   Padrao,
   PADROES_COM_CORTE,
   problemasDosCortes,
-  rotuloAno,
   ScaleRange,
   type AnoProjeto,
+  type Caderno,
   type AtualizarAnoEntrada,
   type Cortes,
   type Problema,
@@ -16,7 +16,7 @@ import { ehErroApi } from "../../api/client";
 import { Aviso } from "../../ui";
 import { projetosApi } from "../api";
 import { useEdicao } from "../edicao";
-import { mensagemDeErro, rotuloPadrao, trocarAno } from "./dados";
+import { mensagemDeErro, rotuloPadrao, trocarAno, rotuloAnoCaderno } from "./dados";
 
 const CAMPOS = [
   { chave: "scaleRange.min", rotulo: "Mínimo" },
@@ -113,7 +113,7 @@ function descreverProblema({ campo, erro }: Problema) {
 }
 
 /** Faixa (min/max) e os 3 cortes do ano. Valida inline; salva ao sair do campo. */
-export function FaixaCortes({ ano }: { ano: AnoProjeto }) {
+export function FaixaCortes({ caderno, ano }: { caderno: Caderno; ano: AnoProjeto }) {
   const { slug, salvar } = useEdicao();
   const id = useId();
   const [valores, setValores] = useState(() => valoresDoAno(ano));
@@ -144,10 +144,10 @@ export function FaixaCortes({ ano }: { ano: AnoProjeto }) {
 
     try {
       await salvar({
-        descricao: `Faixa e cortes do ${rotuloAno(ano.ano)}`,
+        descricao: `Faixa e cortes do ${rotuloAnoCaderno(caderno, ano.ano)}`,
         valor: JSON.stringify(dados),
-        executar: () => projetosApi.atualizarAno(slug, ano.ano, dados),
-        aplicar: (p, resposta) => trocarAno(p, ano.ano, () => resposta),
+        executar: () => projetosApi.atualizarAno(slug, caderno, ano.ano, dados),
+        aplicar: (p, resposta) => trocarAno(p, caderno, ano.ano, () => resposta),
       });
     } catch (e) {
       if (ehErroApi(e, 400) && e.corpo.detalhes?.length) mostrar(e.corpo.detalhes);

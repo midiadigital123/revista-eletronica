@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { rotuloAno } from "../contrato/schemas";
+import { rotuloAno, rotuloCaderno } from "../contrato/schemas";
 import { useTituloPagina } from "../layout/useTituloPagina";
 import { Aviso } from "../ui";
 import { useProjetos } from "./consultas";
@@ -70,7 +70,7 @@ export function ListaProjetos() {
           <TableHeader>
             <TableRow>
               <TableHead>Projeto</TableHead>
-              <TableHead>Anos</TableHead>
+              <TableHead>Cadernos e anos</TableHead>
               <TableHead>Atualizado</TableHead>
               <TableHead>Situação</TableHead>
             </TableRow>
@@ -91,13 +91,18 @@ export function ListaProjetos() {
                   <p className="truncate text-muted-foreground">{p.slug}</p>
                 </TableCell>
                 <TableCell className="whitespace-normal">
-                  <div className="flex flex-wrap gap-1">
-                    {p.anos.map((ano) => (
-                      <Badge key={ano} variant="secondary">
-                        {rotuloAno(ano)}
-                      </Badge>
+                  <dl className="flex flex-col gap-1.5">
+                    {p.cadernos.map((c) => (
+                      <div key={c.id} className="flex flex-wrap items-center gap-1">
+                        <dt className="mr-1 text-muted-foreground">{rotuloCaderno(c.id)}</dt>
+                        {c.anos.map((ano) => (
+                          <dd key={ano}>
+                            <Badge variant="secondary">{rotuloAno(ano)}</Badge>
+                          </dd>
+                        ))}
+                      </div>
                     ))}
-                  </div>
+                  </dl>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   atualizado {tempoRelativo(p.atualizadoEm)}

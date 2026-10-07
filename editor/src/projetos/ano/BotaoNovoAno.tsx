@@ -1,6 +1,12 @@
 import { useId, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
-import { Ano, ANOS_PADRAO, rotuloAno, type Projeto } from "../../contrato/schemas";
+import {
+  Ano,
+  ANOS_PADRAO,
+  rotuloAno,
+  rotuloCaderno,
+  type CadernoProjeto,
+} from "../../contrato/schemas";
 import { Aviso, Botao, Dialogo } from "../../ui";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
@@ -11,11 +17,11 @@ import { useEdicao } from "../edicao";
 import { caminhoAno, mensagemDeErro, trocarAnos } from "./dados";
 
 /**
- * Botão "+ Ano" na barra de abas do projeto (renderizado por A6a no
- * ProjetoLayout). Atalhos para as etapas padrão que faltam e um formulário
+ * Botão "+ Ano" de um caderno na barra de abas do projeto (renderizado por A6a no
+ * ProjetoLayout, um por caderno). Atalhos para as etapas padrão que faltam e um formulário
  * para qualquer etapa (número + EF/EM); cria com faixa e cortes padrão.
  */
-export function BotaoNovoAno({ projeto }: { projeto: Projeto }) {
+export function BotaoNovoAno({ caderno }: { caderno: CadernoProjeto }) {
   const { slug, modo, salvar } = useEdicao();
   const navigate = useNavigate();
   const id = useId();
@@ -24,7 +30,7 @@ export function BotaoNovoAno({ projeto }: { projeto: Projeto }) {
   const [numero, setNumero] = useState("");
   const [nivel, setNivel] = useState<"ef" | "em">("ef");
   const [erroEtapa, setErroEtapa] = useState<string>();
-  const existe = (ano: string) => projeto.anos.some((p) => p.ano === ano);
+  const existe = (ano: string) => caderno.anos.some((p) => p.ano === ano);
   const faltam = ANOS_PADRAO.filter((a) => !existe(a));
   const chave = `${numero.trim()}${nivel}`;
   const previa = Ano.safeParse(chave).success ? rotuloAno(chave) : null;
@@ -32,12 +38,12 @@ export function BotaoNovoAno({ projeto }: { projeto: Projeto }) {
   async function criar(ano: Ano) {
     try {
       await salvar({
-        descricao: `Criar ano ${rotuloAno(ano)}`,
-        executar: () => projetosApi.criarAno(slug, { ano }),
-        aplicar: (p, novo) => trocarAnos(p, (anos) => [...anos, novo]),
+        descricao: `Criar ano ${rotuloAno(ano)} em ${rotuloCaderno(caderno.id)}`,
+        executar: () => projetosApi.criarAno(slug, caderno.id, { ano }),
+        aplicar: (p, novo) => trocarAnos(p, caderno.id, (anos) => [...anos, novo]),
       });
       setAberto(false);
-      navigate(caminhoAno(slug, ano));
+      navigate(caminhoAno(slug, caderno.id, ano));
     } catch (e) {
       setErro(mensagemDeErro(e));
     }
@@ -51,7 +57,7 @@ export function BotaoNovoAno({ projeto }: { projeto: Projeto }) {
       : !r.success
         ? r.error.issues[0]?.message
         : existe(r.data)
-          ? "Esta etapa já existe no projeto"
+          ? "Esta etapa já existe neste caderno"
           : undefined;
     setErroEtapa(problema);
     if (!problema && r.success) void criar(r.data);
@@ -64,6 +70,7 @@ export function BotaoNovoAno({ projeto }: { projeto: Projeto }) {
         size="sm"
         variant="ghost"
         disabled={modo !== "edicao"}
+        aria-label={`+ Ano em ${rotuloCaderno(caderno.id)}`}
         onClick={() => {
           setErro(undefined);
           setErroEtapa(undefined);
@@ -77,7 +84,7 @@ export function BotaoNovoAno({ projeto }: { projeto: Projeto }) {
       <Dialogo
         aberto={aberto}
         aoFechar={() => setAberto(false)}
-        titulo="Novo ano"
+        titulo={`Novo ano · ${rotuloCaderno(caderno.id)}`}
         acoes={<Botao onClick={() => setAberto(false)}>Cancelar</Botao>}
       >
         <div className="flex flex-col gap-4">

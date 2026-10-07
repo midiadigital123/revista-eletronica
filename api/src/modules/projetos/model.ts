@@ -1,5 +1,5 @@
 import { Schema, model, type HydratedDocument, type Types } from "mongoose";
-import { ANO_REGEX, PADROES, type AnoProjeto } from "../../contrato/schemas.js";
+import { ANO_REGEX, CADERNOS, PADROES, type CadernoProjeto } from "../../contrato/schemas.js";
 
 export interface ImagemArmazenada {
   arquivoId: Types.ObjectId;
@@ -23,7 +23,7 @@ export interface ProjetoDb {
   slug: string;
   nome: string;
   pagina: Record<string, ValorPagina>;
-  anos: AnoProjeto[];
+  cadernos: CadernoProjeto[];
   bloqueio: BloqueioDb | null;
   excluidoEm: Date | null;
   slugOriginal: string | null;
@@ -71,6 +71,14 @@ const anoSchema = new Schema(
   { _id: false },
 );
 
+const cadernoSchema = new Schema(
+  {
+    id: { type: String, enum: CADERNOS, required: true },
+    anos: { type: [anoSchema], default: [] },
+  },
+  { _id: false },
+);
+
 const bloqueioSchema = new Schema(
   {
     usuarioId: { type: Schema.Types.ObjectId, ref: "Usuario", required: true },
@@ -92,7 +100,7 @@ const projetoSchema = new Schema<ProjetoDb>(
      * { arquivoId, nome, mime, tamanho } (imagem, arquivo no GridFS).
      */
     pagina: { type: Schema.Types.Mixed, default: () => ({}) },
-    anos: { type: [anoSchema], default: [] },
+    cadernos: { type: [cadernoSchema], default: [] },
     bloqueio: { type: bloqueioSchema, default: null },
     excluidoEm: { type: Date, default: null },
     slugOriginal: { type: String, default: null },

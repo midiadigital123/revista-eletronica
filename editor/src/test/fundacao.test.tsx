@@ -25,17 +25,24 @@ describe("fundação do editor", () => {
   it("com bloqueio, edita a escala e devolve linhas ordenadas", async () => {
     resetarMockDb({ logadoComo: "000000000000000000000002" });
     await projetosApi.adquirirBloqueio("exemplo");
-    const linhas = await projetosApi.salvarEscala("exemplo", "5ef", "D01", "padrao-3", [
-      { level: 250, content: "" },
-      { level: 300, content: "x" },
-    ]);
+    const linhas = await projetosApi.salvarEscala(
+      "exemplo",
+      "lingua-portuguesa",
+      "5ef",
+      "D01",
+      "padrao-3",
+      [
+        { level: 250, content: "" },
+        { level: 300, content: "x" },
+      ],
+    );
     expect(linhas).toEqual([
       { level: 300, content: "x" },
       { level: 250, content: "---" },
     ]);
-    expect(mockDb.projetos.get("exemplo")!.anos[0]!.descritores[0]!.scale["padrao-3"]).toEqual(
-      linhas,
-    );
+    expect(
+      mockDb.projetos.get("exemplo")!.cadernos[0]!.anos[0]!.descritores[0]!.scale["padrao-3"],
+    ).toEqual(linhas);
   });
 
   it("roteador: sem sessão vai para /login; logado fica em /projetos", async () => {

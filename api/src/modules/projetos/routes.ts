@@ -10,6 +10,7 @@ import {
   LinhasPadrao,
   PaginaPatch,
   ParamsAno,
+  ParamsCaderno,
   ParamsDescritor,
   ParamsProjeto,
 } from "../../contrato/schemas.js";
@@ -26,7 +27,9 @@ export const projetosRouter = Router();
 // O contrato pede 404 (não 400) para padrão inexistente: o service valida o padrão.
 const ParamsEscala = ParamsDescritor.extend({ padrao: z.string() });
 
-const descritor = "/:slug/anos/:ano/descritores/:codigo";
+const rotaCaderno = "/:slug/cadernos/:caderno";
+const rotaAno = `${rotaCaderno}/anos/:ano`;
+const descritor = `${rotaAno}/descritores/:codigo`;
 
 // ---------- projeto
 
@@ -69,9 +72,9 @@ projetosRouter.delete(
 );
 
 projetosRouter.get(
-  "/:slug/revista",
-  handler({ params: ParamsProjeto }, async ({ params }, _req, res) => {
-    res.json(await service.exportarRevista(params.slug));
+  `${rotaCaderno}/revista`,
+  handler({ params: ParamsCaderno }, async ({ params }, _req, res) => {
+    res.json(await service.exportarRevista(params.slug, params.caderno));
   }),
 );
 
@@ -86,26 +89,26 @@ projetosRouter.patch(
 // ---------- anos
 
 projetosRouter.post(
-  "/:slug/anos",
+  `${rotaCaderno}/anos`,
   exigirBloqueio,
-  handler({ params: ParamsProjeto, body: CriarAnoEntrada }, async ({ params, body }, _req, res) => {
-    res.status(201).json(await service.criarAno(params.slug, body));
+  handler({ params: ParamsCaderno, body: CriarAnoEntrada }, async ({ params, body }, _req, res) => {
+    res.status(201).json(await service.criarAno(params.slug, params.caderno, body));
   }),
 );
 
 projetosRouter.patch(
-  "/:slug/anos/:ano",
+  rotaAno,
   exigirBloqueio,
   handler({ params: ParamsAno, body: AtualizarAnoEntrada }, async ({ params, body }, _req, res) => {
-    res.json(await service.atualizarAno(params.slug, params.ano, body));
+    res.json(await service.atualizarAno(params.slug, params.caderno, params.ano, body));
   }),
 );
 
 projetosRouter.delete(
-  "/:slug/anos/:ano",
+  rotaAno,
   exigirBloqueio,
   handler({ params: ParamsAno }, async ({ params }, _req, res) => {
-    await service.excluirAno(params.slug, params.ano);
+    await service.excluirAno(params.slug, params.caderno, params.ano);
     res.status(204).end();
   }),
 );
@@ -113,10 +116,10 @@ projetosRouter.delete(
 // ---------- descritores
 
 projetosRouter.post(
-  "/:slug/anos/:ano/descritores",
+  `${rotaAno}/descritores`,
   exigirBloqueio,
   handler({ params: ParamsAno, body: CriarDescritorEntrada }, async ({ params, body }, _req, res) => {
-    res.status(201).json(await service.criarDescritor(params.slug, params.ano, body));
+    res.status(201).json(await service.criarDescritor(params.slug, params.caderno, params.ano, body));
   }),
 );
 
@@ -126,7 +129,7 @@ projetosRouter.patch(
   handler(
     { params: ParamsDescritor, body: AtualizarDescritorEntrada },
     async ({ params, body }, _req, res) => {
-      res.json(await service.atualizarDescritor(params.slug, params.ano, params.codigo, body));
+      res.json(await service.atualizarDescritor(params.slug, params.caderno, params.ano, params.codigo, body));
     },
   ),
 );
@@ -135,7 +138,7 @@ projetosRouter.delete(
   descritor,
   exigirBloqueio,
   handler({ params: ParamsDescritor }, async ({ params }, _req, res) => {
-    await service.excluirDescritor(params.slug, params.ano, params.codigo);
+    await service.excluirDescritor(params.slug, params.caderno, params.ano, params.codigo);
     res.status(204).end();
   }),
 );
@@ -144,7 +147,7 @@ projetosRouter.put(
   `${descritor}/escala/:padrao`,
   exigirBloqueio,
   handler({ params: ParamsEscala, body: LinhasPadrao }, async ({ params, body }, _req, res) => {
-    const { slug, ano, codigo, padrao } = params;
-    res.json(await service.salvarEscala(slug, ano, codigo, padrao, body));
+    const { slug, caderno, ano, codigo, padrao } = params;
+    res.json(await service.salvarEscala(slug, caderno, ano, codigo, padrao, body));
   }),
 );

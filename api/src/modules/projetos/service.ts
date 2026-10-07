@@ -1,10 +1,14 @@
 import {
+  cadernosDasDisciplinas,
   CORTES_PADRAO,
   FAIXA_PADRAO,
   Padrao,
   problemasDoAno,
+  rotuloCaderno,
   type Ano,
   type AnoProjeto,
+  type Caderno,
+  type CadernoProjeto,
   type AtualizarAnoEntrada,
   type AtualizarDescritorEntrada,
   type AtualizarProjetoEntrada,
@@ -12,7 +16,6 @@ import {
   type CriarProjetoEntrada,
   type Descritor,
   type LinhaEscala,
-  type OrigemProjeto,
   type PaginaPatch,
   type Revista,
 } from "../../contrato/schemas.js";
@@ -26,7 +29,7 @@ import {
   excluirProjeto,
   listarProjetos,
   obterProjeto,
-  paraAnos,
+  paraCadernos,
   paraPagina,
   paraProjeto,
   paraResumo,
@@ -39,9 +42,9 @@ export const listar = async () => (await listarProjetos()).map(paraResumo);
 
 export const obter = async (slug: string) => paraProjeto(await obterProjeto(slug));
 
-export async function exportarRevista(slug: string): Promise<Revista> {
+export async function exportarRevista(slug: string, caderno: Caderno): Promise<Revista> {
   const projeto = await obterProjeto(slug);
-  return revistaDosAnos(paraAnos(projeto), paraPagina(projeto));
+  return revistaDosAnos(acharCaderno(paraCadernos(projeto), caderno).anos, paraPagina(projeto));
 }
 
 async function exigirSlugLivre(slug: string): Promise<void> {
@@ -64,25 +67,51 @@ const textosPreenchidos = (pagina: Record<string, string | string[] | undefined>
     ),
   );
 
-async function conteudoDaOrigem(
-  origem: OrigemProjeto,
-): Promise<Pick<ProjetoDb, "anos" | "pagina">> {
+/** Cadernos das disciplinas marcadas, preenchidos conforme a origem. */
+async function conteudoDaOrigem({
+  disciplinas,
+  origem,
+}: CriarProjetoEntrada): Promise<Pick<ProjetoDb, "cadernos" | "pagina">> {
+  const ids = cadernosDasDisciplinas(disciplinas);
   switch (origem.tipo) {
-    case "vazio":
-      return { anos: [...new Set(origem.anos)].map(anoVazio), pagina: {} };
+    case "vazio": {
+      const anos = [...new Set(origem.anos)];
+      return { cadernos: ids.map((id) => ({ id, anos: anos.map(anoVazio) })), pagina: {} };
+    }
     case "importar": {
-      const anos = anosDaRevista(origem.revista);
-      const problemas = anos.flatMap((a) =>
-        problemasDoAno(a).map((p) => ({ ...p, campo: `${a.ano}.${p.campo}` })),
+      const revistas = ids.map((id) => {
+        const revista = origem.cadernos[id];
+        if (!revista)
+          throw requisicaoInvalida(`Falta a revista de ${rotuloCaderno(id)}`, {
+            campo: `origem.cadernos.${id}`,
+          });
+        return { id, revista };
+      });
+      const cadernos = revistas.map(({ id, revista }) => ({ id, anos: anosDaRevista(revista) }));
+      const problemas = cadernos.flatMap(({ id, anos }) =>
+        anos.flatMap((a) =>
+          problemasDoAno(a).map((p) => ({ ...p, campo: `${id}.${a.ano}.${p.campo}` })),
+        ),
       );
       if (problemas.length) throw problemasInvalidos(problemas);
-      return { anos, pagina: textosPreenchidos(origem.revista.pagina ?? {}) };
+      // Página é uma só: vem da primeira revista que a traz.
+      const pagina = revistas.find(({ revista }) => revista.pagina)?.revista.pagina ?? {};
+      return { cadernos, pagina: textosPreenchidos(pagina) };
     }
     case "copiar": {
       const fonte = await obterProjeto(origem.de);
+      const daFonte = paraCadernos(fonte);
+      const cadernos = ids.map((id) => {
+        const c = daFonte.find((x) => x.id === id);
+        if (!c)
+          throw requisicaoInvalida(`O projeto de origem não tem ${rotuloCaderno(id)}`, {
+            campo: "disciplinas",
+          });
+        return c;
+      });
       // copiarImagens devolve a mesma página, com novos arquivoId nas imagens.
       const pagina = await copiarImagens(fonte.pagina);
-      return { anos: paraAnos(fonte), pagina };
+      return { cadernos, pagina };
     }
   }
 }
@@ -90,7 +119,7 @@ async function conteudoDaOrigem(
 /** Cria o projeto já bloqueado para quem o criou. */
 export async function criar(entrada: CriarProjetoEntrada, editor: Editor) {
   await exigirSlugLivre(entrada.slug);
-  const conteudo = await conteudoDaOrigem(entrada.origem);
+  const conteudo = await conteudoDaOrigem(entrada);
   const projeto = await ProjetoModel.create({
     slug: entrada.slug,
     nome: entrada.nome,
@@ -126,7 +155,13 @@ export async function atualizarPagina(slug: string, patch: PaginaPatch) {
   return paraPagina(projeto);
 }
 
-// ---------- anos
+// ---------- cadernos e anos
+
+function acharCaderno(cadernos: CadernoProjeto[], id: Caderno): CadernoProjeto {
+  const alvo = cadernos.find((c) => c.id === id);
+  if (!alvo) throw naoEncontrado("Caderno");
+  return alvo;
+}
 
 function validarAno(ano: AnoProjeto): void {
   const problemas = problemasDoAno(ano);
@@ -140,40 +175,54 @@ function acharAno(anos: AnoProjeto[], ano: Ano): AnoProjeto {
 }
 
 /**
- * Carrega o projeto, aplica `editar` no ano, valida o ano inteiro com
+ * Carrega o projeto, aplica `editar` no ano do caderno, valida o ano inteiro com
  * problemasDoAno e grava. Devolve o que `editar` devolver.
  */
-async function editarAno<T>(slug: string, ano: Ano, editar: (alvo: AnoProjeto) => T): Promise<T> {
+async function editarAno<T>(
+  slug: string,
+  caderno: Caderno,
+  ano: Ano,
+  editar: (alvo: AnoProjeto) => T,
+): Promise<T> {
   const projeto = await obterProjeto(slug);
-  const anos = paraAnos(projeto);
-  const alvo = acharAno(anos, ano);
+  const cadernos = paraCadernos(projeto);
+  const alvo = acharAno(acharCaderno(cadernos, caderno).anos, ano);
   const resultado = editar(alvo);
   validarAno(alvo);
-  projeto.anos = anos;
+  projeto.cadernos = cadernos;
   await projeto.save();
   return resultado;
 }
 
-export async function criarAno(slug: string, entrada: CriarAnoEntrada) {
+export async function criarAno(slug: string, caderno: Caderno, entrada: CriarAnoEntrada) {
   const projeto = await obterProjeto(slug);
-  if (projeto.anos.some((a) => a.ano === entrada.ano))
-    throw conflito("Esse ano já existe no projeto", "ano");
+  const cadernos = paraCadernos(projeto);
+  const { anos } = acharCaderno(cadernos, caderno);
+  if (anos.some((a) => a.ano === entrada.ano))
+    throw conflito("Esse ano já existe no caderno", "ano");
   const novo: AnoProjeto = { ...entrada, descritores: [] };
   validarAno(novo);
-  projeto.anos = [...paraAnos(projeto), novo];
+  anos.push(novo);
+  projeto.cadernos = cadernos;
   await projeto.save();
   return novo;
 }
 
-export const atualizarAno = (slug: string, ano: Ano, entrada: AtualizarAnoEntrada) =>
-  editarAno(slug, ano, (alvo) => Object.assign(alvo, entrada));
+export const atualizarAno = (
+  slug: string,
+  caderno: Caderno,
+  ano: Ano,
+  entrada: AtualizarAnoEntrada,
+) => editarAno(slug, caderno, ano, (alvo) => Object.assign(alvo, entrada));
 
-export async function excluirAno(slug: string, ano: Ano): Promise<void> {
+export async function excluirAno(slug: string, caderno: Caderno, ano: Ano): Promise<void> {
   const projeto = await obterProjeto(slug);
-  const anos = paraAnos(projeto);
-  acharAno(anos, ano);
-  if (anos.length === 1) throw requisicaoInvalida("O projeto precisa ter ao menos um ano");
-  projeto.anos = anos.filter((a) => a.ano !== ano);
+  const cadernos = paraCadernos(projeto);
+  const alvo = acharCaderno(cadernos, caderno);
+  acharAno(alvo.anos, ano);
+  if (alvo.anos.length === 1) throw requisicaoInvalida("O caderno precisa ter ao menos um ano");
+  alvo.anos = alvo.anos.filter((a) => a.ano !== ano);
+  projeto.cadernos = cadernos;
   await projeto.save();
 }
 
@@ -190,8 +239,8 @@ function exigirCodigoLivre(ano: AnoProjeto, codigo: string): void {
     throw conflito("Já existe um descritor com esse código no ano", "codigo");
 }
 
-export const criarDescritor = (slug: string, ano: Ano, descritor: Descritor) =>
-  editarAno(slug, ano, (alvo) => {
+export const criarDescritor = (slug: string, caderno: Caderno, ano: Ano, descritor: Descritor) =>
+  editarAno(slug, caderno, ano, (alvo) => {
     exigirCodigoLivre(alvo, descritor.codigo);
     alvo.descritores.push(descritor);
     return descritor;
@@ -199,11 +248,12 @@ export const criarDescritor = (slug: string, ano: Ano, descritor: Descritor) =>
 
 export const atualizarDescritor = (
   slug: string,
+  caderno: Caderno,
   ano: Ano,
   codigo: string,
   { bncc, ...campos }: AtualizarDescritorEntrada,
 ) =>
-  editarAno(slug, ano, (alvo) => {
+  editarAno(slug, caderno, ano, (alvo) => {
     const d = acharDescritor(alvo, codigo);
     if (campos.codigo !== undefined && campos.codigo !== codigo)
       exigirCodigoLivre(alvo, campos.codigo);
@@ -212,8 +262,8 @@ export const atualizarDescritor = (
     return d;
   });
 
-export const excluirDescritor = (slug: string, ano: Ano, codigo: string) =>
-  editarAno(slug, ano, (alvo) => {
+export const excluirDescritor = (slug: string, caderno: Caderno, ano: Ano, codigo: string) =>
+  editarAno(slug, caderno, ano, (alvo) => {
     const d = acharDescritor(alvo, codigo);
     alvo.descritores.splice(alvo.descritores.indexOf(d), 1);
   });
@@ -221,6 +271,7 @@ export const excluirDescritor = (slug: string, ano: Ano, codigo: string) =>
 /** Substitui um padrão inteiro da escala. `linhas` já vem ordenada (LinhasPadrao). */
 export async function salvarEscala(
   slug: string,
+  caderno: Caderno,
   ano: Ano,
   codigo: string,
   padrao: string,
@@ -228,7 +279,7 @@ export async function salvarEscala(
 ) {
   const p = Padrao.safeParse(padrao);
   if (!p.success) throw naoEncontrado("Padrão");
-  return editarAno(slug, ano, (alvo) => {
+  return editarAno(slug, caderno, ano, (alvo) => {
     acharDescritor(alvo, codigo).scale[p.data] = linhas;
     return linhas;
   });

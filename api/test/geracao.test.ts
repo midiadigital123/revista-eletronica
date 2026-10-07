@@ -26,7 +26,15 @@ async function projetoComImagem() {
   const { agente } = await agenteLogado(ctx.app);
   await agente
     .post("/api/projetos")
-    .send({ slug: "fx", nome: "Fixture", origem: { tipo: "importar", revista: fixture } })
+    .send({
+      slug: "fx",
+      nome: "Fixture <&>",
+      disciplinas: ["lingua-portuguesa", "alfabetizacao"],
+      origem: {
+        tipo: "importar",
+        cadernos: { "lingua-portuguesa": fixture, "alfabetizacao-lp": fixture, "alfabetizacao-mat": fixture },
+      },
+    })
     .expect(201);
   await agente.post("/api/projetos/fx/bloqueio").expect(201);
   await agente
@@ -36,17 +44,29 @@ async function projetoComImagem() {
   return agente;
 }
 
+const CAD = "/api/projetos/fx/preview/alfabetizacao-mat";
+
 const python = (...args: string[]) =>
   execFileSync("python3", ["-I", "-m", "zipfile", ...args]).toString();
 
 describe("geração da revista", () => {
-  it("preview: html com título e dados, redirecionamento, estáticos e imagem", async () => {
+  it("preview: índice raiz com um link por caderno (HTML escapado)", async () => {
     const agente = await projetoComImagem();
-
     const r = await agente.get("/api/projetos/fx/preview").expect(302);
     expect(r.headers.location).toBe("/api/projetos/fx/preview/");
-
     const h = await agente.get("/api/projetos/fx/preview/").expect(200);
+    expect(h.headers["content-type"]).toBe("text/html; charset=utf-8");
+    expect(h.text).toContain("<title>Fixture &lt;&amp;&gt;</title>");
+    expect([...h.text.matchAll(/<a href="([^"]+)">([^<]+)<\/a>/g)].map((m) => [m[1], m[2]])).toEqual([
+      ["lingua-portuguesa/index.html", "Língua Portuguesa"],
+      ["alfabetizacao-lp/index.html", "Alfabetização · Língua Portuguesa"],
+      ["alfabetizacao-mat/index.html", "Alfabetização · Matemática"],
+    ]);
+  });
+
+  it("preview: html do caderno com título e dados, estáticos e imagem", async () => {
+    const agente = await projetoComImagem();
+    const h = await agente.get(`${CAD}/index.html`).expect(200);
     expect(h.headers["content-type"]).toBe("text/html; charset=utf-8");
     expect(h.headers["cache-control"]).toBe("no-store");
     expect(h.text).toContain("ANÁLISE DOS RESULTADOS PARA INTERVENÇÃO PEDAGÓGICA");
@@ -56,13 +76,13 @@ describe("geração da revista", () => {
     );
     expect(JSON.parse(dados![1]!)).toHaveProperty("5ef.D01");
 
-    const css = await agente.get("/api/projetos/fx/preview/styles.css").expect(200);
+    const css = await agente.get(`${CAD}/styles.css`).expect(200);
     expect(css.headers["content-type"]).toBe("text/css; charset=utf-8");
-    const js = await agente.get("/api/projetos/fx/preview/script.js").expect(200);
+    const js = await agente.get(`${CAD}/script.js`).expect(200);
     expect(js.headers["content-type"]).toBe("text/javascript; charset=utf-8");
 
     const img = await agente
-      .get("/api/projetos/fx/preview/arquivos/heroImagem.png")
+      .get(`${CAD}/arquivos/heroImagem.png`)
       .buffer(true)
       .parse(binario)
       .expect(200);
@@ -72,11 +92,11 @@ describe("geração da revista", () => {
 
   it("preview: ícones servidos como SVG; imagem sumida do GridFS → 404 em JSON", async () => {
     const agente = await projetoComImagem();
-    const svg = await agente.get("/api/projetos/fx/preview/assets/seta-proxima.svg").expect(200);
+    const svg = await agente.get(`${CAD}/assets/seta-proxima.svg`).expect(200);
     expect(svg.headers["content-type"]).toBe("image/svg+xml");
 
     await mongoose.connection.db!.collection("imagens.files").deleteMany({});
-    const r = await agente.get("/api/projetos/fx/preview/arquivos/heroImagem.png").expect(404);
+    const r = await agente.get(`${CAD}/arquivos/heroImagem.png`).expect(404);
     expect(r.headers["content-type"]).toMatch(/^application\/json/);
     expect(r.headers["cache-control"]).toBeUndefined();
   });
@@ -91,7 +111,7 @@ describe("geração da revista", () => {
     await supertest(ctx.app).get("/api/projetos/fx/pacote.zip").expect(401);
   });
 
-  it("pacote.zip é um zip válido com index.html (dados), styles.css, script.js e a imagem", async () => {
+  it("pacote.zip: índice raiz + pasta por caderno com index.html (dados), estáticos e a imagem", async () => {
     const agente = await projetoComImagem();
     const z = await agente
       .get("/api/projetos/fx/pacote.zip")
@@ -107,15 +127,21 @@ describe("geração da revista", () => {
     python("-t", arquivo);
     const lista = python("-l", arquivo);
     const nomes = ["index.html", "styles.css", "script.js", "arquivos/heroImagem.png"];
-    for (const nome of [...nomes, "assets/seta-anterior.svg", "assets/seta-proxima.svg"])
-      expect(lista).toContain(nome);
+    const cadernos = ["lingua-portuguesa", "alfabetizacao-lp", "alfabetizacao-mat"];
+    for (const c of cadernos)
+      for (const nome of [...nomes, "assets/seta-anterior.svg", "assets/seta-proxima.svg"])
+        expect(lista).toContain(`${c}/${nome}`);
+    expect(lista).not.toMatch(/(^|\s)matematica\//m); // caderno não marcado
 
     const saida = join(dir, "extraido");
     python("-e", arquivo, saida);
-    const html = readFileSync(join(saida, "index.html"), "utf8");
-    expect(html).toContain('id="dados-revista"');
-    expect(html).toContain("ANÁLISE DOS RESULTADOS PARA INTERVENÇÃO PEDAGÓGICA");
-    expect(html).not.toContain("localhost:3845");
-    expect(Buffer.compare(readFileSync(join(saida, "arquivos/heroImagem.png")), PNG)).toBe(0);
+    expect(readFileSync(join(saida, "index.html"), "utf8")).toContain('href="alfabetizacao-lp/index.html"');
+    for (const c of cadernos) {
+      const html = readFileSync(join(saida, c, "index.html"), "utf8");
+      expect(html).toContain('id="dados-revista"');
+      expect(html).toContain("ANÁLISE DOS RESULTADOS PARA INTERVENÇÃO PEDAGÓGICA");
+      expect(html).not.toContain("localhost:3845");
+      expect(Buffer.compare(readFileSync(join(saida, c, "arquivos/heroImagem.png")), PNG)).toBe(0);
+    }
   });
 });

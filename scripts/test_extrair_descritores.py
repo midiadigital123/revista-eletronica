@@ -1,12 +1,18 @@
 """Checa a extração contra valores conferidos na revista.
 Uso: python3 scripts/test_extrair_descritores.py  (outro PDF: REVISTA_PDF=<pdf> python3 ...)
 """
+import io
+import json
 import os
 import sys
+import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).parent))
+import extrair_descritores  # noqa: E402
 from extrair_descritores import extrair  # noqa: E402
 
 PDF = os.environ.get(
@@ -50,6 +56,22 @@ class TestExtrair(unittest.TestCase):
         self.assertEqual(d["bncc"]["skills"][0], "EF02MA01")
         self.assertTrue(d["description"].endswith("(ou valor relativo) em um número natural de até 3 ordens."))
         self.assertEqual(self.mt["2ef"]["cortes"], {"padrao-1": 400, "padrao-2": 500, "padrao-3": 625})
+
+
+class TestStdout(unittest.TestCase):
+    """--stdout (usado pela API): JSON no stdout, nenhum arquivo gravado. Não precisa do PDF."""
+
+    def test_imprime_json_sem_gravar(self):
+        dados = {"matematica": {"2ef": {"scaleRange": {"min": 0, "max": 1000}}}, "lingua-portuguesa": {}}
+        with tempfile.TemporaryDirectory() as pasta, mock.patch.object(
+            extrair_descritores, "extrair", return_value=dados
+        ) as falso:
+            saida = io.StringIO()
+            with redirect_stdout(saida):
+                extrair_descritores.main(["x.pdf", pasta, "--stdout"])
+            falso.assert_called_once_with("x.pdf")
+            self.assertEqual(json.loads(saida.getvalue()), dados)
+            self.assertEqual(os.listdir(pasta), [])
 
 
 if __name__ == "__main__":

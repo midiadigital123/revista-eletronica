@@ -1,6 +1,7 @@
 import {
+  CADERNOS,
   compararAnos,
-  type AnoProjeto,
+  type CadernoProjeto,
   type BloqueioPublico,
   type Pagina,
   type Projeto,
@@ -66,14 +67,22 @@ export function paraPagina(projeto: ProjetoDoc): Pagina {
   return pagina;
 }
 
-/** Anos em ordem EF → EM (por número), descritores em ordem de código. */
-export function paraAnos(projeto: ProjetoDoc): AnoProjeto[] {
-  const { anos } = projeto.toObject<ProjetoDb>({ versionKey: false });
-  return anos
-    .sort((a, b) => compararAnos(a.ano, b.ano))
-    .map((ano) => ({
-      ...ano,
-      descritores: [...ano.descritores].sort((x, y) => x.codigo.localeCompare(y.codigo)),
+/**
+ * Cadernos na ordem de CADERNOS; anos em ordem EF → EM (por número);
+ * descritores em ordem de código. Cópia solta do documento (pode ser editada e regravada).
+ */
+export function paraCadernos(projeto: ProjetoDoc): CadernoProjeto[] {
+  const { cadernos } = projeto.toObject<ProjetoDb>({ versionKey: false });
+  return cadernos
+    .sort((a, b) => CADERNOS.indexOf(a.id) - CADERNOS.indexOf(b.id))
+    .map(({ id, anos }) => ({
+      id,
+      anos: anos
+        .sort((a, b) => compararAnos(a.ano, b.ano))
+        .map((ano) => ({
+          ...ano,
+          descritores: [...ano.descritores].sort((x, y) => x.codigo.localeCompare(y.codigo)),
+        })),
     }));
 }
 
@@ -82,7 +91,7 @@ export function paraProjeto(projeto: ProjetoDoc): Projeto {
     slug: projeto.slug,
     nome: projeto.nome,
     pagina: paraPagina(projeto),
-    anos: paraAnos(projeto),
+    cadernos: paraCadernos(projeto),
     bloqueio: paraBloqueio(projeto),
     criadoEm: projeto.criadoEm.toISOString(),
     atualizadoEm: projeto.atualizadoEm.toISOString(),
@@ -93,7 +102,7 @@ export function paraResumo(projeto: ProjetoDoc): ProjetoResumo {
   return {
     slug: projeto.slug,
     nome: projeto.nome,
-    anos: paraAnos(projeto).map((a) => a.ano),
+    cadernos: paraCadernos(projeto).map(({ id, anos }) => ({ id, anos: anos.map((a) => a.ano) })),
     atualizadoEm: projeto.atualizadoEm.toISOString(),
     bloqueio: paraBloqueio(projeto),
   };

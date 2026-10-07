@@ -8,7 +8,7 @@ import { renderizarAno } from "./test/ProvedorEdicaoTeste";
 
 const ANA = "000000000000000000000002";
 const d01 = () =>
-  mockDb.projetos.get("exemplo")!.anos.find((a) => a.ano === "5ef")!.descritores[0]!;
+  mockDb.projetos.get("exemplo")!.cadernos[0]!.anos.find((a) => a.ano === "5ef")!.descritores[0]!;
 const niveis = (p: Padrao) => d01().scale[p].map((l) => l.level);
 const bloco = (rotulo: string) => screen.getByRole("region", { name: rotulo });
 
@@ -20,7 +20,7 @@ beforeEach(async () => {
 describe("formulário do descritor", () => {
   it("salva campo de texto no blur", async () => {
     const user = userEvent.setup();
-    renderizarAno("/projetos/exemplo/ano/5ef/D01");
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01");
     const descricao = await screen.findByLabelText("Descrição");
     await user.clear(descricao);
     await user.type(descricao, "Nova descrição");
@@ -36,7 +36,7 @@ describe("formulário do descritor", () => {
   });
 
   it("tópico oferece os tópicos do ano num datalist", async () => {
-    renderizarAno("/projetos/exemplo/ano/5ef/D01");
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01");
     const topico = await screen.findByLabelText("Tópico");
     const lista = document.getElementById(topico.getAttribute("list")!)!;
     expect(lista.querySelectorAll("option")).toHaveLength(6);
@@ -44,7 +44,7 @@ describe("formulário do descritor", () => {
 
   it("adiciona e remove pré-requisitos salvando a lista inteira", async () => {
     const user = userEvent.setup();
-    renderizarAno("/projetos/exemplo/ano/5ef/D01");
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01");
     const antes = [...d01().prerequisites];
 
     await user.click(await screen.findByRole("button", { name: "Adicionar pré-requisito" }));
@@ -59,7 +59,7 @@ describe("formulário do descritor", () => {
 
 describe("editor da escala", () => {
   it("mostra os padrões do 04 ao 01, intervalos, avisos e o placeholder 'sem item'", async () => {
-    renderizarAno("/projetos/exemplo/ano/5ef/D01");
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01");
     const titulos = (await screen.findAllByRole("heading", { level: 4 })).map((h) => h.textContent);
     expect(titulos).toEqual(["Padrão 04", "Padrão 03", "Padrão 02", "Padrão 01"]);
     expect(within(bloco("Padrão 04")).getByText("375 ≤ nível ≤ 500")).toBeInTheDocument();
@@ -84,7 +84,7 @@ describe("editor da escala", () => {
 
   it("adiciona linha no início do intervalo e salva o padrão inteiro", async () => {
     const user = userEvent.setup();
-    renderizarAno("/projetos/exemplo/ano/5ef/D01");
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01");
     await user.click(await screen.findByRole("button", { name: "Adicionar linha ao Padrão 04" }));
     await waitFor(() =>
       expect(d01().scale["padrao-4"]).toEqual([
@@ -96,7 +96,7 @@ describe("editor da escala", () => {
 
   it("remove linha", async () => {
     const user = userEvent.setup();
-    renderizarAno("/projetos/exemplo/ano/5ef/D01");
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01");
     await user.click(await screen.findByRole("button", { name: "Remover linha 2 do Padrão 01" }));
     await waitFor(() => expect(niveis("padrao-1")).toEqual([100]));
     expect(screen.queryByLabelText("Nível da linha 2 do Padrão 01")).not.toBeInTheDocument();
@@ -104,7 +104,7 @@ describe("editor da escala", () => {
 
   it("reordena as linhas por nível decrescente depois de salvar", async () => {
     const user = userEvent.setup();
-    renderizarAno("/projetos/exemplo/ano/5ef/D01");
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01");
     const nivel = await screen.findByLabelText("Nível da linha 1 do Padrão 03");
     await user.clear(nivel);
     await user.type(nivel, "260");
@@ -119,7 +119,7 @@ describe("editor da escala", () => {
 
   it("nível fora da escala: erro 400 no campo, nada salvo", async () => {
     const user = userEvent.setup();
-    renderizarAno("/projetos/exemplo/ano/5ef/D01");
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01");
     const nivel = await screen.findByLabelText("Nível da linha 1 do Padrão 04");
     await user.clear(nivel);
     await user.type(nivel, "600");
@@ -134,7 +134,7 @@ describe("editor da escala", () => {
 
   it("salva o conteúdo; vazio vira '---' na API", async () => {
     const user = userEvent.setup();
-    renderizarAno("/projetos/exemplo/ano/5ef/D01");
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01");
     const conteudo = await screen.findByLabelText("Conteúdo da linha 1 do Padrão 03");
     await user.clear(conteudo);
     await user.tab();
@@ -144,7 +144,7 @@ describe("editor da escala", () => {
 
 describe("modo leitura", () => {
   it("desabilita todos os campos e ações de edição", async () => {
-    renderizarAno("/projetos/exemplo/ano/5ef/D01", "leitura");
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01", "leitura");
     expect(await screen.findByLabelText("Código")).toBeDisabled();
     for (const rotulo of [
       "Corte 01 → 02",
@@ -157,7 +157,7 @@ describe("modo leitura", () => {
     ])
       expect(screen.getByLabelText(rotulo)).toBeDisabled();
     for (const nome of [
-      "+ Ano",
+      "+ Ano em Língua Portuguesa",
       "Excluir ano",
       "+ Descritor",
       "Duplicar D01",

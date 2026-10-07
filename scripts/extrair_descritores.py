@@ -3,6 +3,8 @@
 e grava um JSON por disciplina no formato do descritores.json.
 
 Uso: python3 scripts/extrair_descritores.py <revista.pdf> [pasta-saida]
+     python3 scripts/extrair_descritores.py <revista.pdf> --stdout
+       (imprime {disciplina: {ano: ...}} em uma linha e não grava arquivos; usado pela API)
 
 Requer pdftotext (poppler-utils). Lê as palavras com coordenadas (-bbox) porque
 prerrequisitos têm 2 colunas e régua/BNCC dependem da posição na página.
@@ -277,8 +279,13 @@ def extrair(pdf):
 
 
 def main(argv):
+    stdout = "--stdout" in argv
+    argv = [a for a in argv if a != "--stdout"]
     if not argv:
-        sys.exit("Uso: python3 scripts/extrair_descritores.py <revista.pdf> [pasta-saida]")
+        sys.exit("Uso: python3 scripts/extrair_descritores.py <revista.pdf> [pasta-saida] [--stdout]")
+    if stdout:
+        print(json.dumps(extrair(argv[0]), ensure_ascii=False))
+        return
     pasta = Path(argv[1] if len(argv) > 1 else ".")
     pasta.mkdir(parents=True, exist_ok=True)
     for disc, anos in extrair(argv[0]).items():

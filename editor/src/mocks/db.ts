@@ -2,7 +2,7 @@ import { anosDaRevista } from "../contrato/revista";
 import {
   BLOQUEIO_TTL_MS,
   Revista,
-  type AnoProjeto,
+  type CadernoProjeto,
   type BloqueioPublico,
   type Pagina,
   type Usuario,
@@ -27,7 +27,7 @@ export interface ProjetoMock {
   slug: string;
   nome: string;
   pagina: Pagina;
-  anos: AnoProjeto[];
+  cadernos: CadernoProjeto[];
   bloqueio: BloqueioMock | null;
   criadoEm: string;
   atualizadoEm: string;
@@ -72,7 +72,7 @@ function estadoInicial() {
         slug: "exemplo",
         nome: "Exemplo",
         pagina: { ...(revista.pagina ?? {}) } as Pagina,
-        anos: anosDaRevista(revista),
+        cadernos: [{ id: "lingua-portuguesa", anos: anosDaRevista(revista) }],
         bloqueio: null,
         criadoEm: agora,
         atualizadoEm: agora,
