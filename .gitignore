@@ -2,3 +2,5 @@
 .impleccable/
 .vscode/
 menu-funcionalidade/
+.env
+.playwright-mcp/

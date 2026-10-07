@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens do editor. Cores dos padrões copiadas de ../styles.css (revista)
+ * para que o editor mostre a escala com as mesmas cores do produto final.
+ * Use as utilidades geradas: bg-papel, text-tinta, border-linha, bg-padrao-1 …
+ */
+@theme {
+  --font-display: "Public Sans", system-ui, sans-serif;
+  --font-sans: "Public Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-papel: #f6f4ef;
+  --color-superficie: #fffdf8;
+  --color-tinta: #1d2126;
+  --color-tinta-suave: #5b6168;
+  --color-linha: #dcd6c8;
+  --color-acento: #0f5c4d;
+  --color-acento-claro: #e3efe9;
+  --color-alerta: #9a5b00;
+  --color-alerta-claro: #fdf1dc;
+  --color-erro: #a3282b;
+  --color-erro-claro: #fbe7e6;
+
+  --color-padrao-1: #f72628;
+  --color-padrao-2: #ff8d43;
+  --color-padrao-3: #b3ccff;
+  --color-padrao-4: #0ed3ff;
+  --color-padrao-1-bg: rgb(247 38 40 / 0.1);
+  --color-padrao-2-bg: rgb(255 141 67 / 0.1);
+  --color-padrao-3-bg: rgb(179 204 255 / 0.1);
+  --color-padrao-4-bg: rgb(14 211 255 / 0.1);
+}
+
+@layer base {
+  html {
+    background: var(--color-papel);
+    color: var(--color-tinta);
+    font-family: var(--font-sans);
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-acento);
+    outline-offset: 2px;
+  }
+}
