@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ROTULO_ANO } from "../contrato/schemas";
+import { rotuloAno } from "../contrato/schemas";
 import { useTituloPagina } from "../layout/useTituloPagina";
 import { Aviso } from "../ui";
 import { useProjetos } from "./consultas";
@@ -94,7 +94,7 @@ export function ListaProjetos() {
                   <div className="flex flex-wrap gap-1">
                     {p.anos.map((ano) => (
                       <Badge key={ano} variant="secondary">
-                        {ROTULO_ANO[ano]}
+                        {rotuloAno(ano)}
                       </Badge>
                     ))}
                   </div>

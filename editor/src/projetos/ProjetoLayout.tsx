@@ -4,7 +4,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate, useParams } from "reac
 import { chaves } from "../api/chaves";
 import { ehErroApi } from "../api/client";
 import { Check, Download, ExternalLink, FileJson, Pencil, Trash2 } from "lucide-react";
-import { ROTULO_ANO, Slug, type Projeto } from "../contrato/schemas";
+import { rotuloAno, Slug, type Projeto } from "../contrato/schemas";
 import { Aviso, Botao, CampoTexto, Confirmacao, Dialogo } from "../ui";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -95,7 +95,7 @@ export function ProjetoLayout() {
           </Aba>
           {projeto.anos.map((a) => (
             <Aba key={a.ano} to={`ano/${a.ano}`}>
-              {ROTULO_ANO[a.ano]}
+              {rotuloAno(a.ano)}
             </Aba>
           ))}
           <div className="shrink-0 py-1 pr-2 pl-1">

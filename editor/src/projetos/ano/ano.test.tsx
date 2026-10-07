@@ -1,7 +1,9 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
-import type { Ano } from "../../contrato/schemas";
+import { chaves } from "../../api/chaves";
+import { queryClient } from "../../api/queryClient";
+import { rotuloAno, type Ano, type Projeto } from "../../contrato/schemas";
 import { mockDb, resetarMockDb } from "../../mocks/db";
 import { projetosApi } from "../api";
 import { renderizarAno } from "./test/ProvedorEdicaoTeste";
@@ -34,7 +36,57 @@ describe("anos", () => {
       cortes: { "padrao-1": 125, "padrao-2": 250, "padrao-3": 375 },
       descritores: [],
     });
-    expect(screen.getByRole("button", { name: "+ Ano" })).toBeDisabled();
+    // Sem atalhos restantes, o botão continua ativo: o formulário cria qualquer etapa.
+    expect(screen.getByRole("button", { name: "+ Ano" })).toBeEnabled();
+  });
+
+  it("cria qualquer etapa pelo formulário e a aba entra na ordem EF/EM", async () => {
+    const user = userEvent.setup();
+    const { router } = renderizarAno("/projetos/exemplo/ano/5ef");
+
+    await user.click(await screen.findByRole("button", { name: "+ Ano" }));
+    const dialogo = screen.getByRole("dialog", { name: "Novo ano" });
+    await user.type(within(dialogo).getByLabelText("Número"), "2");
+    await user.selectOptions(within(dialogo).getByLabelText("Segmento"), "ef");
+    expect(within(dialogo).getByText("Será criado: 2º EF")).toBeInTheDocument();
+    await user.click(within(dialogo).getByRole("button", { name: "Criar" }));
+
+    expect(await screen.findByRole("heading", { name: "2º EF" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/projetos/exemplo/ano/2ef");
+    // As abas do ProjetoLayout seguem projeto.anos do cache, na mesma ordem.
+    const abas = queryClient
+      .getQueryData<Projeto>(chaves.projeto("exemplo"))!
+      .anos.map((a) => rotuloAno(a.ano));
+    expect(abas).toEqual(["2º EF", "5º EF", "9º EF", "3ª EM"]);
+    expect(
+      projetoMock()
+        .anos.map((a) => a.ano)
+        .slice(0, 2),
+    ).toEqual(["2ef", "5ef"]);
+  });
+
+  it("formulário mostra erro inline para EM acima de 3 e para etapa existente", async () => {
+    const user = userEvent.setup();
+    renderizarAno("/projetos/exemplo/ano/5ef");
+
+    await user.click(await screen.findByRole("button", { name: "+ Ano" }));
+    const dialogo = screen.getByRole("dialog", { name: "Novo ano" });
+    const numero = within(dialogo).getByLabelText("Número");
+    await user.type(numero, "4");
+    await user.selectOptions(within(dialogo).getByLabelText("Segmento"), "em");
+    await user.click(within(dialogo).getByRole("button", { name: "Criar" }));
+    expect(within(dialogo).getByRole("alert")).toHaveTextContent(
+      "No Ensino Médio use 1em, 2em ou 3em",
+    );
+    expect(numero).toHaveAccessibleDescription("No Ensino Médio use 1em, 2em ou 3em");
+
+    await user.clear(numero);
+    await user.type(numero, "5");
+    await user.selectOptions(within(dialogo).getByLabelText("Segmento"), "ef");
+    await user.click(within(dialogo).getByRole("button", { name: "Criar" }));
+    expect(within(dialogo).getByRole("alert")).toHaveTextContent("Esta etapa já existe no projeto");
+    expect(anoMock("4em")).toBeUndefined();
+    expect(screen.getByRole("dialog", { name: "Novo ano" })).toBeInTheDocument();
   });
 
   it("corte inválido mostra o erro sem enviar; corte válido salva", async () => {

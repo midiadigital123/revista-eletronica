@@ -6,7 +6,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { NavLink, useNavigate } from "react-router";
-import { Codigo, ROTULO_ANO, type AnoProjeto, type Descritor } from "../../contrato/schemas";
+import { Codigo, rotuloAno, type AnoProjeto, type Descritor } from "../../contrato/schemas";
 import { Spinner } from "@/components/ui/spinner";
 import { Aviso, Botao, CampoTexto, Confirmacao, Dialogo, useUltimo } from "../../ui";
 import { projetosApi } from "../api";
@@ -48,7 +48,7 @@ export function ListaDescritores({ ano, codigoAtual }: { ano: AnoProjeto; codigo
     setErro(undefined);
     try {
       await salvar({
-        descricao: `Criar ${livre} no ${ROTULO_ANO[ano.ano]}`,
+        descricao: `Criar ${livre} no ${rotuloAno(ano.ano)}`,
         executar: () => projetosApi.criarDescritor(slug, ano.ano, { codigo: livre }),
         aplicar: (p, novo) => trocarDescritores(p, ano.ano, (ds) => [...ds, novo]),
       });
@@ -63,7 +63,7 @@ export function ListaDescritores({ ano, codigoAtual }: { ano: AnoProjeto; codigo
     setExcluindoPendente(true);
     try {
       await salvar({
-        descricao: `Excluir ${d.codigo} do ${ROTULO_ANO[ano.ano]}`,
+        descricao: `Excluir ${d.codigo} do ${rotuloAno(ano.ano)}`,
         executar: () => projetosApi.excluirDescritor(slug, ano.ano, d.codigo),
         aplicar: (p) =>
           trocarDescritores(p, ano.ano, (ds) => ds.filter((x) => x.codigo !== d.codigo)),
@@ -78,7 +78,7 @@ export function ListaDescritores({ ano, codigoAtual }: { ano: AnoProjeto; codigo
   }
 
   return (
-    <nav aria-label={`Descritores do ${ROTULO_ANO[ano.ano]}`} className="flex flex-col gap-3">
+    <nav aria-label={`Descritores do ${rotuloAno(ano.ano)}`} className="flex flex-col gap-3">
       <div className="flex items-center gap-2">
         <InputGroup className="flex-1">
           <InputGroupAddon>
@@ -232,7 +232,7 @@ function DialogoDuplicar(props: {
     setEnviando(true);
     try {
       await salvar({
-        descricao: `Duplicar ${origem.codigo} como ${novo} no ${ROTULO_ANO[ano.ano]}`,
+        descricao: `Duplicar ${origem.codigo} como ${novo} no ${rotuloAno(ano.ano)}`,
         executar: () => projetosApi.criarDescritor(slug, ano.ano, { ...origem, codigo: novo }),
         aplicar: (p, criado) => trocarDescritores(p, ano.ano, (ds) => [...ds, criado]),
       });

@@ -4,7 +4,13 @@ import { fileURLToPath } from "node:url";
 import Handlebars from "handlebars";
 import { camposDoTipo } from "../../contrato/campos-pagina.js";
 import { revistaDosAnos } from "../../contrato/revista.js";
-import { nomeArquivoImagem, type AnoProjeto, type Pagina } from "../../contrato/schemas.js";
+import {
+  compararAnos,
+  nomeArquivoImagem,
+  rotuloAno,
+  type AnoProjeto,
+  type Pagina,
+} from "../../contrato/schemas.js";
 
 /**
  * Renderiza revista/escala.hbs com os dados do projeto. Função pura (sem Mongo).
@@ -59,6 +65,11 @@ const jsonSeguro = (valor: unknown) =>
 export function renderRevista({ anos, pagina }: EntradaRender): string {
   template ??= Handlebars.compile(lerRevista("escala.hbs").toString("utf8"));
   return template({
+    // Abas da revista: uma por ano do projeto, na ordem das etapas (a primeira começa ativa).
+    anos: anos
+      .map(({ ano }) => ano)
+      .sort(compararAnos)
+      .map((chave) => ({ chave, rotulo: rotuloAno(chave) })),
     pagina: contextoPagina(pagina),
     dadosRevista: jsonSeguro(revistaDosAnos(anos, pagina)),
   });

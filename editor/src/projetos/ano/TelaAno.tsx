@@ -13,7 +13,7 @@ import { FieldLegend } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useTituloPagina } from "../../layout/useTituloPagina";
-import { ROTULO_ANO, type AnoProjeto } from "../../contrato/schemas";
+import { rotuloAno, type AnoProjeto } from "../../contrato/schemas";
 import { Aviso, Confirmacao } from "../../ui";
 import { projetosApi } from "../api";
 import { useEdicao } from "../edicao";
@@ -26,7 +26,7 @@ export function TelaAno() {
   const { consulta, projeto, anoProjeto, codigo } = useAnoAtual();
   // Com descritor aberto, o título vem da TelaDescritor.
   useTituloPagina(
-    projeto && anoProjeto && !codigo ? `${ROTULO_ANO[anoProjeto.ano]} · ${projeto.nome}` : null,
+    projeto && anoProjeto && !codigo ? `${rotuloAno(anoProjeto.ano)} · ${projeto.nome}` : null,
   );
 
   if (consulta.isPending) return <Carregando />;
@@ -57,7 +57,7 @@ export function TelaAno() {
       <header className="flex flex-col gap-5">
         <div className="flex items-start justify-between gap-4">
           <h2 id="titulo-ano" className="text-xl font-semibold tracking-tight">
-            {ROTULO_ANO[anoProjeto.ano]}
+            {rotuloAno(anoProjeto.ano)}
           </h2>
           <ExcluirAno ano={anoProjeto} unico={projeto.anos.length === 1} />
         </div>
@@ -98,7 +98,7 @@ function ListaRecolhivel({ ano, codigo }: { ano: AnoProjeto; codigo?: string }) 
         aria-controls={id}
         onClick={() => setAberta((a) => !a)}
       >
-        Descritores do {ROTULO_ANO[ano.ano]} ({ano.descritores.length})
+        Descritores do {rotuloAno(ano.ano)} ({ano.descritores.length})
         <ChevronDown
           data-icon="inline-end"
           className={cn("transition-transform duration-150 ease-saida", aberta && "rotate-180")}
@@ -168,7 +168,7 @@ function ExcluirAno({ ano, unico }: { ano: AnoProjeto; unico: boolean }) {
   const navigate = useNavigate();
   const [confirmando, setConfirmando] = useState(false);
   const [erro, setErro] = useState<string>();
-  const rotulo = ROTULO_ANO[ano.ano];
+  const rotulo = rotuloAno(ano.ano);
   const idMotivo = useId();
 
   async function excluir() {

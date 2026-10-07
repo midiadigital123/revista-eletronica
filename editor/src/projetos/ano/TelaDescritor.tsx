@@ -2,7 +2,7 @@ import { useId, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 import {
   Codigo,
-  ROTULO_ANO,
+  rotuloAno,
   type AnoProjeto,
   type AtualizarDescritorEntrada,
   type Descritor,
@@ -25,7 +25,7 @@ export function TelaDescritor() {
   const descritor = anoProjeto?.descritores.find((d) => d.codigo === codigo);
   useTituloPagina(
     projeto && anoProjeto
-      ? `${descritor ? codigo : "Descritor não encontrado"} · ${ROTULO_ANO[anoProjeto.ano]} · ${projeto.nome}`
+      ? `${descritor ? codigo : "Descritor não encontrado"} · ${rotuloAno(anoProjeto.ano)} · ${projeto.nome}`
       : null,
   );
   if (!anoProjeto) return null;
@@ -37,7 +37,7 @@ export function TelaDescritor() {
             <h2>Descritor não encontrado</h2>
           </EmptyTitle>
           <EmptyDescription>
-            O descritor {codigo} não existe no {ROTULO_ANO[anoProjeto.ano]}.
+            O descritor {codigo} não existe no {rotuloAno(anoProjeto.ano)}.
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -62,7 +62,7 @@ function FormDescritor({ ano, descritor }: { ano: AnoProjeto; descritor: Descrit
 
   const atualizar = (descricao: string, patch: Patch, valor?: string) =>
     salvar({
-      descricao: `${descricao} do ${codigo} (${ROTULO_ANO[ano.ano]})`,
+      descricao: `${descricao} do ${codigo} (${rotuloAno(ano.ano)})`,
       valor,
       executar: () => projetosApi.atualizarDescritor(slug, ano.ano, codigo, patch),
       aplicar: (p, novo) => trocarDescritor(p, ano.ano, codigo, () => novo),
@@ -70,7 +70,7 @@ function FormDescritor({ ano, descritor }: { ano: AnoProjeto; descritor: Descrit
 
   const persistirPadrao: PersistirPadrao = (padrao, linhas) =>
     salvar({
-      descricao: `Escala do ${codigo} (${ROTULO_ANO[ano.ano]}), ${rotuloPadrao(padrao)}`,
+      descricao: `Escala do ${codigo} (${rotuloAno(ano.ano)}), ${rotuloPadrao(padrao)}`,
       valor: JSON.stringify(linhas),
       executar: () => projetosApi.salvarEscala(slug, ano.ano, codigo, padrao, linhas),
       aplicar: (p, resposta) =>
@@ -107,7 +107,7 @@ function FormDescritor({ ano, descritor }: { ano: AnoProjeto; descritor: Descrit
     <article aria-labelledby="titulo-descritor" className="flex flex-col gap-6">
       <h2 id="titulo-descritor" className="flex items-baseline gap-3">
         <span className="text-2xl font-semibold tabular-nums">{codigo}</span>
-        <span className="text-base font-normal text-muted-foreground">{ROTULO_ANO[ano.ano]}</span>
+        <span className="text-base font-normal text-muted-foreground">{rotuloAno(ano.ano)}</span>
       </h2>
 
       {/* <fieldset disabled> nativo: fora do modo edição, desabilita todos os controles de dentro. */}

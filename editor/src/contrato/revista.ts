@@ -4,7 +4,7 @@
  * a estrutura do projeto (anos[] com descritores[]). Funções puras.
  */
 import {
-  ANOS,
+  compararAnos,
   CORTES_PADRAO,
   DescritorCampos,
   type AnoProjeto,
@@ -16,10 +16,13 @@ import {
 
 const CHAVES_DO_ANO = new Set(["scaleRange", "cortes"]);
 
-/** Revista (já validada pelo schema Revista) → anos do projeto, em ordem 5ef/9ef/3em. */
+/** Revista (já validada pelo schema Revista) → anos do projeto, em ordem compararAnos (EF → EM). */
 export function anosDaRevista(revista: Revista): AnoProjeto[] {
-  return ANOS.flatMap((ano) => {
-    const dados = revista[ano];
+  const anos = Object.keys(revista)
+    .filter((k) => k !== "pagina")
+    .sort(compararAnos);
+  return anos.flatMap((ano) => {
+    const dados = revista[ano] as RevistaAno | undefined;
     if (!dados) return [];
     const descritores = Object.entries(dados as RevistaAno)
       .filter(([chave]) => !CHAVES_DO_ANO.has(chave))

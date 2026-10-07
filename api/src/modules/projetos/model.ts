@@ -1,5 +1,5 @@
 import { Schema, model, type HydratedDocument, type Types } from "mongoose";
-import { ANOS, PADROES, type AnoProjeto } from "../../contrato/schemas.js";
+import { ANO_REGEX, PADROES, type AnoProjeto } from "../../contrato/schemas.js";
 
 export interface ImagemArmazenada {
   arquivoId: Types.ObjectId;
@@ -59,7 +59,7 @@ const descritorSchema = new Schema(
 
 const anoSchema = new Schema(
   {
-    ano: { type: String, enum: ANOS, required: true },
+    ano: { type: String, match: ANO_REGEX, required: true },
     scaleRange: { min: { type: Number, required: true }, max: { type: Number, required: true } },
     cortes: {
       "padrao-1": { type: Number, required: true },

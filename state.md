@@ -1,18 +1,18 @@
 # state.md — revista-express
 
 ## Estado atual
-Passo 3 de 4: script e teste prontos; falta confirmar cortes do 5º ano
-Funcionando: `python3 scripts/extrair_descritores.py <pdf> <pasta>` gera lingua-portuguesa.json (2ef: 8, 5ef: 15) e matematica.json (2ef: 33, 5ef: 28); `python3 scripts/test_extrair_descritores.py` → 4 OK
-Quebrado/pendente: cortes do 5º ano são suposição (Saeb); contrato não aceita 2ef
+Passo 4 de 4: concluído
+Funcionando: extrator Python (84 descritores); contrato/API/editor/revista aceitam qualquer etapa <n>ef/<n>em; API 85 testes, editor 49, regua e extrator OK; typechecks limpos
+Quebrado/pendente: nada
 
 ## Próxima ação
-Confirmar os cortes do 5º ano (LP 150/200/250, MT 175/225/275) em `CORTES_SEM_NUMERO`.
+Abrir PR do branch redesign-shadcn quando quiser integrar.
 
 ## Plano
-1. [x] Parser `scripts/extrair_descritores.py`
-2. [x] Teste `scripts/test_extrair_descritores.py`
-3. [ ] Confirmar cortes do 5º ano  ← agora
-4. [ ] Contrato aceitar `2ef` (se o usuário quiser)
+1. [x] (a) Contrato + API + testes API
+2. [x] (b) Editor + testes (diálogo "+ Ano" com número + EF/EM)
+3. [x] (c) Revista publicada (abas geradas por etapa)
+4. [x] Verificação completa + docs/contrato.md
 
 ## Decisões
 
@@ -62,13 +62,24 @@ Confirmar os cortes do 5º ano (LP 150/200/250, MT 175/225/275) em `CORTES_SEM_N
 - **Motivo:** rótulos Básico/Proficiente da página ficam nesses ticks.
 - **Descartadas:** ler linhas vetoriais (pdftocairo -svg) — linhas de corte não são caminhos consistentes.
 - **Arquivos afetados:** `scripts/extrair_descritores.py`
-- **Status:** ativa, aguardando confirmação
+- **Status:** ativa (cortes confirmados pelo usuário em 2026-10-07)
+
+### D-007 — Etapa livre no formato <n><ef|em> (2026-10-07)
+- **Contexto:** usuário pediu que o editor aceite qualquer etapa; ANOS fixo (5ef/9ef/3em) rejeita "2ef" do extrator.
+- **Decisão:** `Ano` = regex `^[1-9](ef|em)$` (EM até 3); rótulos curto/longo e ordem gerados por funções no contrato; `ANOS_PADRAO` só como default/sugestão.
+- **Motivo:** chaves curtas, rótulos atuais preservados exatamente, ordem igual à atual.
+- **Descartadas:** texto livre — sem rótulo/ordem previsíveis; ampliar a lista fixa — volta a travar na próxima etapa.
+- **Arquivos afetados:** `contrato/schemas.ts`, `contrato/revista.ts`, `api/src/modules/projetos/*`, `editor/src/projetos/*`, `revista/escala.hbs`, `revista/script.js`, `api/src/modules/revista/render.ts`
+- **Status:** ativa
 
 ## Perguntas em aberto
-- [ ] Cortes do 5º ano corretos? — depende de: usuário
-- [ ] Contrato (`contrato/schemas.ts:14`) não aceita `2ef` — depende de: usuário decidir se o contrato ganha o ano.
+- [x] Cortes do 5º ano corretos? — confirmados pelo usuário
 
 ## Sessões
 ### 2026-10-07
 - PDF base trocado para SAEGO_2025_RE_Alfa_2EF_5EF Web.pdf; plano aprovado.
 - Script reescrito em Python; 84 descritores extraídos; 4 testes OK.
+- Etapa livre implementada (D-007) em contrato, API, editor e revista; todas as suítes verdes.
+- Novo projeto oferece todas as etapas (ETAPAS: 1º–9º EF, 1ª–3ª EM), padrão continua 5ef/9ef/3em.
+- Diálogo "+ Ano" aprovado pelo usuário como está (atalhos padrão + "Outra etapa").
+- Cortes do 5º ano confirmados; commit da etapa livre.

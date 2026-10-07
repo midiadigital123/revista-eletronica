@@ -1,7 +1,14 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { anosDaRevista, revistaDosAnos } from "../src/contrato/revista.js";
-import { CORTES_PADRAO, Revista, problemasDoAno } from "../src/contrato/schemas.js";
+import {
+  CORTES_PADRAO,
+  Revista,
+  compararAnos,
+  problemasDoAno,
+  rotuloAno,
+  rotuloAnoLongo,
+} from "../src/contrato/schemas.js";
 
 const fixture = JSON.parse(readFileSync(new URL("./fixtures/revista.json", import.meta.url), "utf8"));
 const descritoresOriginal = JSON.parse(
@@ -38,5 +45,36 @@ describe("contrato: formato da revista", () => {
     expect(problemas.map((p) => p.campo)).toEqual(
       expect.arrayContaining(["cortes.padrao-2", "cortes.padrao-3", "descritores.D01.scale.padrao-3.0.level"]),
     );
+  });
+});
+
+describe("contrato: etapas (anos)", () => {
+  const anoMinimo = { scaleRange: { min: 0, max: 500 } };
+
+  it("aceita etapa fora da lista padrão e anosDaRevista a devolve em ordem", () => {
+    const r = Revista.safeParse({ "3em": anoMinimo, "2ef": anoMinimo });
+    expect(r.success).toBe(true);
+    expect(anosDaRevista(r.data!).map((a) => a.ano)).toEqual(["2ef", "3em"]);
+  });
+
+  it("recusa chave de etapa inválida apontando a chave", () => {
+    const r = Revista.safeParse({ "5ef": anoMinimo, abc: anoMinimo });
+    expect(r.success).toBe(false);
+    expect(r.error!.issues.map((i) => i.path)).toContainEqual(["abc"]);
+    expect(Revista.safeParse({ "4em": anoMinimo }).success).toBe(false);
+    expect(Revista.safeParse({ pagina: {} }).success).toBe(false);
+  });
+
+  it("rotuloAno / rotuloAnoLongo", () => {
+    expect(rotuloAno("5ef")).toBe("5º EF");
+    expect(rotuloAno("3em")).toBe("3ª EM");
+    expect(rotuloAno("xyz")).toBe("xyz");
+    expect(rotuloAnoLongo("2ef")).toBe("2º Ano do Ensino Fundamental");
+    expect(rotuloAnoLongo("1em")).toBe("1ª Série do Ensino Médio");
+    expect(rotuloAnoLongo("xyz")).toBe("xyz");
+  });
+
+  it("compararAnos: EF antes de EM, depois número", () => {
+    expect(["3em", "9ef", "1em", "2ef", "5ef"].sort(compararAnos)).toEqual(["2ef", "5ef", "9ef", "1em", "3em"]);
   });
 });

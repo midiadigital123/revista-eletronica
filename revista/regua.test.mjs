@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 
-const { montarFaixasRegua } = createRequire(import.meta.url)("./script.js");
+const { montarFaixasRegua, rotuloAno, rotuloAnoLongo } = createRequire(import.meta.url)("./script.js");
 
 const cortes = { "padrao-1": 125, "padrao-2": 250, "padrao-3": 375 };
 const L = (level, content = "Lorem") => ({ level, content });
@@ -81,5 +81,13 @@ assert.deepEqual(
   resumo(montarFaixasRegua({ min: 0, max: 500, cortes, escala: { "padrao-4": [L(500, "topo")] } }))[0],
   ["4", 500, 500, null, false, "topo"],
 );
+
+// Rótulos das abas gerados a partir da chave da etapa (mesmo texto do contrato)
+assert.equal(rotuloAno("2ef"), "2º EF");
+assert.equal(rotuloAno("3em"), "3ª EM");
+assert.equal(rotuloAnoLongo("5ef"), "5º Ano do Ensino Fundamental");
+assert.equal(rotuloAnoLongo("3em"), "3ª Série do Ensino Médio");
+assert.equal(rotuloAno("outro"), "outro");
+assert.equal(rotuloAnoLongo("outro"), "outro");
 
 console.log("regua.test.mjs: ok");

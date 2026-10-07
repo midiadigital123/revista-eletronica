@@ -42,9 +42,9 @@
                 <!-- Menu de Descritores -->
                 <div class="descritores-menu" id="filtro">
                     <div class="tab-bar" role="tablist">
-                        <button class="filtro-btn tab active" data-filter="5ef" role="tab" aria-selected="true">5º EF</button>
-                        <button class="filtro-btn tab" data-filter="9ef" role="tab" aria-selected="false">9º EF</button>
-                        <button class="filtro-btn tab" data-filter="3em" role="tab" aria-selected="false">3ª EM</button>
+                        {{#each anos}}
+                        <button class="filtro-btn tab{{#if @first}} active{{/if}}" data-filter="{{chave}}" role="tab" aria-selected="{{#if @first}}true{{else}}false{{/if}}">{{rotulo}}</button>
+                        {{/each}}
                     </div>
 
                     <div class="descritores-card" id="descritoresCard">

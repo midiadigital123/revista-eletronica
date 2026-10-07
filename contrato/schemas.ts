@@ -11,16 +11,18 @@ import { CAMPOS_PAGINA } from "./campos-pagina.js";
 // CONSTANTES
 // ==========================================
 
-export const ANOS = ["5ef", "9ef", "3em"] as const;
+/** Etapas sugeridas por padrão (projeto vazio, atalhos da UI). Qualquer `<n>ef`/`<n>em` é aceita. */
+export const ANOS_PADRAO = ["5ef", "9ef", "3em"] as const;
+/** Todas as etapas válidas, em ordem: 1ef…9ef, 1em…3em. */
+export const ETAPAS = [
+  ...Array.from({ length: 9 }, (_, i) => `${i + 1}ef`),
+  ...Array.from({ length: 3 }, (_, i) => `${i + 1}em`),
+];
+/** Formato da chave de etapa: número + ef/em (ex.: 2ef, 3em). A faixa do EM (1–3) é checada em `Ano`. */
+export const ANO_REGEX = /^[1-9](ef|em)$/;
 export const PADROES = ["padrao-1", "padrao-2", "padrao-3", "padrao-4"] as const;
 /** Padrões cujo início é marcado por um corte (o padrão 4 vai até scaleRange.max). */
 export const PADROES_COM_CORTE = ["padrao-1", "padrao-2", "padrao-3"] as const;
-
-export const ROTULO_ANO = {
-  "5ef": "5º EF",
-  "9ef": "9º EF",
-  "3em": "3ª EM",
-} as const satisfies Record<(typeof ANOS)[number], string>;
 
 export const FAIXA_PADRAO = { min: 0, max: 500 } as const;
 export const CORTES_PADRAO = {
@@ -49,7 +51,12 @@ const texto = (max: number) => z.string().trim().max(max);
 const listaTextos = (max: number) =>
   z.array(texto(max)).transform((itens) => itens.filter(Boolean));
 
-export const Ano = z.enum(ANOS);
+export const Ano = z
+  .string()
+  .regex(ANO_REGEX, { error: "Use número + ef/em (ex.: 2ef, 3em)" })
+  .refine((a) => !a.endsWith("em") || Number(a[0]) <= 3, {
+    error: "No Ensino Médio use 1em, 2em ou 3em",
+  });
 export const Padrao = z.enum(PADROES);
 export const Codigo = z
   .string()
@@ -64,6 +71,34 @@ export const Email = z.email().trim().toLowerCase();
 export const Senha = z.string().min(8, { error: "Mínimo de 8 caracteres" }).max(200);
 export const Perfil = z.enum(["admin", "editor"]);
 export const ObjectIdTexto = z.string().regex(/^[a-f0-9]{24}$/);
+
+/** Partes de uma chave de etapa ("5ef" → 5, "ef"); null se fora do formato. */
+function etapa(ano: string): { n: number; nivel: "ef" | "em" } | null {
+  return ANO_REGEX.test(ano) ? { n: Number(ano.slice(0, -2)), nivel: ano.slice(-2) as "ef" | "em" } : null;
+}
+
+/** Rótulo curto da etapa: "5º EF", "3ª EM". Chave fora do formato volta como veio. */
+export function rotuloAno(ano: string): string {
+  const e = etapa(ano);
+  if (!e) return ano;
+  return e.nivel === "ef" ? `${e.n}º EF` : `${e.n}ª EM`;
+}
+
+/** Rótulo longo: "5º Ano do Ensino Fundamental", "3ª Série do Ensino Médio". */
+export function rotuloAnoLongo(ano: string): string {
+  const e = etapa(ano);
+  if (!e) return ano;
+  return e.nivel === "ef" ? `${e.n}º Ano do Ensino Fundamental` : `${e.n}ª Série do Ensino Médio`;
+}
+
+/** Ordem das etapas: EF antes de EM, depois pelo número; fora do formato, no fim por texto. */
+export function compararAnos(a: string, b: string): number {
+  const ea = etapa(a);
+  const eb = etapa(b);
+  if (ea && eb) return ea.nivel.localeCompare(eb.nivel) || ea.n - eb.n;
+  if (ea || eb) return ea ? -1 : 1;
+  return a.localeCompare(b);
+}
 
 // ==========================================
 // ESCALA, ANO, DESCRITOR
@@ -284,14 +319,19 @@ export const RevistaAno: z.ZodType<RevistaAno, unknown> = z
     return saida as RevistaAno;
   });
 
+/** `pagina` + uma chave por etapa (`<n>ef`/`<n>em`) com os dados do ano. */
 export const Revista = z
-  .strictObject({
-    pagina: PaginaTextos.optional(),
-    "5ef": RevistaAno.optional(),
-    "9ef": RevistaAno.optional(),
-    "3em": RevistaAno.optional(),
-  })
-  .refine((r) => ANOS.some((a) => r[a]), { error: "A revista precisa de ao menos um ano" });
+  .object({ pagina: PaginaTextos.optional() })
+  .catchall(RevistaAno)
+  .superRefine((r, ctx) => {
+    const anos = Object.keys(r).filter((k) => k !== "pagina");
+    for (const k of anos) {
+      const ano = Ano.safeParse(k);
+      if (!ano.success)
+        ctx.addIssue({ code: "custom", path: [k], message: `Etapa inválida: ${ano.error.issues[0]?.message}` });
+    }
+    if (!anos.length) ctx.addIssue({ code: "custom", message: "A revista precisa de ao menos um ano" });
+  });
 
 // ==========================================
 // ENTRADAS DAS ROTAS
@@ -318,7 +358,7 @@ export const AtualizarUsuarioEntrada = z
   .refine((v) => Object.keys(v).length > 0, naoVazio);
 
 export const OrigemProjeto = z.discriminatedUnion("tipo", [
-  z.strictObject({ tipo: z.literal("vazio"), anos: z.array(Ano).min(1).default([...ANOS]) }),
+  z.strictObject({ tipo: z.literal("vazio"), anos: z.array(Ano).min(1).default([...ANOS_PADRAO]) }),
   z.strictObject({ tipo: z.literal("importar"), revista: Revista }),
   z.strictObject({ tipo: z.literal("copiar"), de: Slug }),
 ]);

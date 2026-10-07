@@ -62,6 +62,27 @@ describe("renderRevista", () => {
     expect(html.match(/<script\b/g)).toHaveLength(2); // dados + script.js
     expect(dadosDoHtml(html)).toEqual(revistaDosAnos([hostil, ...resto], pagina));
   });
+
+  it("gera uma aba por ano do projeto, na ordem das etapas", () => {
+    const [base] = anos as [AnoProjeto];
+    const html = renderRevista({
+      anos: [
+        { ...base, ano: "5ef" },
+        { ...base, ano: "2ef" },
+      ],
+      pagina: {},
+    });
+    const abas = [
+      ...html.matchAll(
+        /<button class="filtro-btn tab( active)?" data-filter="(\w+)"[^>]*>([^<]*)</g,
+      ),
+    ].map((m) => [m[2], m[3], Boolean(m[1])]);
+    expect(abas).toEqual([
+      ["2ef", "2º EF", true],
+      ["5ef", "5º EF", false],
+    ]);
+    expect(html).not.toMatch(/data-filter="(9ef|3em)"/);
+  });
 });
 
 describe("arquivosEstaticosRevista", () => {

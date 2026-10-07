@@ -38,6 +38,8 @@ describe("lista de projetos", () => {
     await user.type(screen.getByLabelText("Nome"), "São Paulo 2026");
     expect(screen.getByLabelText("Identificador (slug)")).toHaveValue("sao-paulo-2026");
     await user.click(screen.getByLabelText("3ª EM"));
+    expect(screen.getByLabelText("1º EF")).not.toBeChecked();
+    await user.click(screen.getByLabelText("2º EF"));
     await user.click(screen.getByRole("button", { name: "Criar projeto" }));
 
     expect(
@@ -46,7 +48,7 @@ describe("lista de projetos", () => {
     expect(router.state.location.pathname).toBe("/projetos/sao-paulo-2026");
     expect(await screen.findByText("Editando")).toBeInTheDocument();
     const criado = mockDb.projetos.get("sao-paulo-2026")!;
-    expect(criado.anos.map((a) => a.ano)).toEqual(["5ef", "9ef"]);
+    expect(criado.anos.map((a) => a.ano)).toEqual(["2ef", "5ef", "9ef"]);
     expect(criado.bloqueio?.usuarioId).toBe(ANA);
   });
 

@@ -8,6 +8,7 @@ import {
   AtualizarProjetoEntrada,
   AtualizarUsuarioEntrada,
   BLOQUEIO_TTL_MS,
+  compararAnos,
   CriarAnoEntrada,
   CriarDescritorEntrada,
   CriarProjetoEntrada,
@@ -452,6 +453,7 @@ export const handlers = [
       const ano: AnoProjeto = { ...dados, descritores: [] };
       validarAno(ano);
       projeto.anos.push(ano);
+      projeto.anos.sort((a, b) => compararAnos(a.ano, b.ano));
       tocar(projeto);
       return HttpResponse.json(ano, { status: 201 });
     }),

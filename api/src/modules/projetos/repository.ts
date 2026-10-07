@@ -1,5 +1,5 @@
 import {
-  ANOS,
+  compararAnos,
   type AnoProjeto,
   type BloqueioPublico,
   type Pagina,
@@ -66,13 +66,11 @@ export function paraPagina(projeto: ProjetoDoc): Pagina {
   return pagina;
 }
 
-const ordemAno = (a: string) => ANOS.indexOf(a as (typeof ANOS)[number]);
-
-/** Anos em ordem 5ef → 9ef → 3em, descritores em ordem de código. */
+/** Anos em ordem EF → EM (por número), descritores em ordem de código. */
 export function paraAnos(projeto: ProjetoDoc): AnoProjeto[] {
   const { anos } = projeto.toObject<ProjetoDb>({ versionKey: false });
   return anos
-    .sort((a, b) => ordemAno(a.ano) - ordemAno(b.ano))
+    .sort((a, b) => compararAnos(a.ano, b.ano))
     .map((ano) => ({
       ...ano,
       descritores: [...ano.descritores].sort((x, y) => x.codigo.localeCompare(y.codigo)),

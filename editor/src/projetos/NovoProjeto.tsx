@@ -4,8 +4,9 @@ import { useNavigate } from "react-router";
 import { chaves } from "../api/chaves";
 import { ehErroApi } from "../api/client";
 import {
-  ANOS,
-  ROTULO_ANO,
+  ANOS_PADRAO,
+  ETAPAS,
+  rotuloAno,
   Revista,
   Slug,
   type Ano,
@@ -84,7 +85,7 @@ export function NovoProjeto({
   const [slug, setSlug] = useState("");
   const [slugEditado, setSlugEditado] = useState(false);
   const [tipo, setTipo] = useState<TipoOrigem>("vazio");
-  const [anos, setAnos] = useState<Ano[]>([...ANOS]);
+  const [anos, setAnos] = useState<Ano[]>([...ANOS_PADRAO]);
   const [revista, setRevista] = useState<Revista | null>(null);
   const [de, setDe] = useState("");
   const [erros, setErros] = useState<Erros>({});
@@ -99,7 +100,7 @@ export function NovoProjeto({
       setSlug("");
       setSlugEditado(false);
       setTipo("vazio");
-      setAnos([...ANOS]);
+      setAnos([...ANOS_PADRAO]);
       setRevista(null);
       setDe("");
       setErros({});
@@ -226,9 +227,9 @@ export function NovoProjeto({
                 <FieldLegend variant="label">Anos</FieldLegend>
                 <FieldGroup
                   data-slot="checkbox-group"
-                  className="grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] gap-3"
+                  className="grid grid-cols-3 gap-3"
                 >
-                  {ANOS.map((ano) => (
+                  {ETAPAS.map((ano) => (
                     <Field key={ano} orientation="horizontal">
                       <Checkbox
                         id={`${id}-ano-${ano}`}
@@ -236,13 +237,13 @@ export function NovoProjeto({
                         onCheckedChange={(marcado) =>
                           setAnos((atual) =>
                             marcado === true
-                              ? ANOS.filter((a) => a === ano || atual.includes(a))
+                              ? ETAPAS.filter((a) => a === ano || atual.includes(a))
                               : atual.filter((a) => a !== ano),
                           )
                         }
                       />
                       <FieldLabel htmlFor={`${id}-ano-${ano}`} className="font-normal">
-                        {ROTULO_ANO[ano]}
+                        {rotuloAno(ano)}
                       </FieldLabel>
                     </Field>
                   ))}

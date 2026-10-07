@@ -232,6 +232,17 @@ describe("anos", () => {
     await agente.patch("/api/projetos/sp/anos/5ef").send({ scaleRange: { min: 5, max: 5 } }).expect(400);
   });
 
+  it("POST aceita qualquer etapa <n>ef/<n>em e ordena EF → EM; formato inválido → 400", async () => {
+    const { agente } = await comProjeto(["5ef", "9ef", "3em"]);
+    await agente.post("/api/projetos/sp/anos").send({ ano: "2ef" }).expect(201);
+    const r = await agente.get("/api/projetos/sp").expect(200);
+    expect(r.body.anos.map((a: { ano: string }) => a.ano)).toEqual(["2ef", "5ef", "9ef", "3em"]);
+    for (const ano of ["10ef", "4em", "xyz"]) {
+      const inv = await agente.post("/api/projetos/sp/anos").send({ ano }).expect(400);
+      expect(inv.body).toMatchObject(erro400("ano"));
+    }
+  });
+
   it("DELETE remove; 404 se não existe; 400 se for o último", async () => {
     const { agente } = await comProjeto();
     await agente.delete("/api/projetos/sp/anos/9ef").expect(204);

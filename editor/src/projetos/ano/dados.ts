@@ -1,7 +1,7 @@
 import { useParams } from "react-router";
 import {
   Ano,
-  ANOS,
+  compararAnos,
   type AnoProjeto,
   type Descritor,
   type Padrao,
@@ -19,13 +19,12 @@ export const caminhoDescritor = (slug: string, ano: Ano, codigo: string) =>
 
 export const rotuloPadrao = (padrao: Padrao) => `Padrão 0${padrao.slice(-1)}`;
 
-const ordemAno = (a: AnoProjeto) => ANOS.indexOf(a.ano);
 const porCodigo = (a: Descritor, b: Descritor) => a.codigo.localeCompare(b.codigo);
 
-/** Projeto com os anos trocados por `f` (mantém a ordem 5ef/9ef/3em). */
+/** Projeto com os anos trocados por `f` (mantém a ordem das etapas: EF antes de EM, depois pelo número). */
 export const trocarAnos = (p: Projeto, f: (anos: AnoProjeto[]) => AnoProjeto[]): Projeto => ({
   ...p,
-  anos: f(p.anos).sort((a, b) => ordemAno(a) - ordemAno(b)),
+  anos: f(p.anos).sort((a, b) => compararAnos(a.ano, b.ano)),
 });
 
 export const trocarAno = (p: Projeto, ano: Ano, f: (a: AnoProjeto) => AnoProjeto): Projeto =>

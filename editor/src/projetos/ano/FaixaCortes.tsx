@@ -5,7 +5,7 @@ import {
   Padrao,
   PADROES_COM_CORTE,
   problemasDosCortes,
-  ROTULO_ANO,
+  rotuloAno,
   ScaleRange,
   type AnoProjeto,
   type AtualizarAnoEntrada,
@@ -144,7 +144,7 @@ export function FaixaCortes({ ano }: { ano: AnoProjeto }) {
 
     try {
       await salvar({
-        descricao: `Faixa e cortes do ${ROTULO_ANO[ano.ano]}`,
+        descricao: `Faixa e cortes do ${rotuloAno(ano.ano)}`,
         valor: JSON.stringify(dados),
         executar: () => projetosApi.atualizarAno(slug, ano.ano, dados),
         aplicar: (p, resposta) => trocarAno(p, ano.ano, () => resposta),

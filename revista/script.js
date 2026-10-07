@@ -9,7 +9,23 @@
 // CONFIGURAÇÃO
 // ==========================================
 
-const ANOS = ["5ef", "9ef", "3em"];
+const ETAPA = /^(\d+)(ef|em)$/;
+
+/** Rótulo curto da etapa: "5ef" → "5º EF", "3em" → "3ª EM"; fora do formato, a própria chave. */
+function rotuloAno(ano) {
+  const m = ETAPA.exec(ano);
+  if (!m) return ano;
+  return m[2] === "ef" ? `${m[1]}º EF` : `${m[1]}ª EM`;
+}
+
+/** Rótulo longo: "5º Ano do Ensino Fundamental", "3ª Série do Ensino Médio". */
+function rotuloAnoLongo(ano) {
+  const m = ETAPA.exec(ano);
+  if (!m) return ano;
+  return m[2] === "ef"
+    ? `${m[1]}º Ano do Ensino Fundamental`
+    : `${m[1]}ª Série do Ensino Médio`;
+}
 const CHAVE_DESCRITOR = /^D\d{2}$/;
 
 /** Escapa texto dos dados antes de ir para innerHTML. */
@@ -82,7 +98,7 @@ function montarFaixasRegua({ min, max, cortes, escala }) {
 }
 
 // Exporta para o teste em Node; no navegador (script clássico) `module` não existe.
-if (typeof module !== "undefined") module.exports = { montarFaixasRegua };
+if (typeof module !== "undefined") module.exports = { montarFaixasRegua, rotuloAno, rotuloAnoLongo };
 
 // ==========================================
 // ESTADO DA APLICAÇÃO
@@ -92,12 +108,6 @@ const appState = {
   currentFilter: null, // definido em App.bootstrap (primeiro ano presente)
   currentDescriptor: null,
   scrolling: false,
-};
-
-const FILTER_LABELS = {
-  "5ef": { short: "5º EF", long: "5º Ano do Ensino Fundamental" },
-  "9ef": { short: "9º EF", long: "9º Ano do Ensino Fundamental" },
-  "3em": { short: "3ª EM", long: "3ª Série do Ensino Médio" },
 };
 
 // ==========================================
@@ -161,9 +171,7 @@ class FilterManager {
       const filter = btn.getAttribute("data-filter");
       const isActive = btn.classList.contains("active");
       btn.setAttribute("aria-selected", String(isActive));
-      btn.textContent = isActive
-        ? FILTER_LABELS[filter].long
-        : FILTER_LABELS[filter].short;
+      btn.textContent = isActive ? rotuloAnoLongo(filter) : rotuloAno(filter);
     });
   }
 
@@ -417,7 +425,7 @@ class DescriptorManager {
 
     const topicTitle = document.querySelector(".titulo-topico h3");
     if (topicTitle)
-      topicTitle.textContent = FILTER_LABELS[appState.currentFilter].long;
+      topicTitle.textContent = rotuloAnoLongo(appState.currentFilter);
 
     const descriptorBadge = document.querySelector(
       ".descritor-detalhado .descritor-badge",
@@ -726,7 +734,11 @@ class App {
 
     try {
       const data = new DataService().load();
-      appState.currentFilter = ANOS.find((ano) => data[ano]) ?? null;
+      // Primeira aba (já na ordem das etapas, vinda do template) com dados.
+      const primeira = [...document.querySelectorAll(".filtro-btn")].find(
+        (btn) => data[btn.dataset.filter],
+      );
+      appState.currentFilter = primeira?.dataset.filter ?? null;
 
       const descriptorManager = new DescriptorManager(data);
       const navigationManager = new NavigationManager(data);

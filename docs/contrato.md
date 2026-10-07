@@ -92,7 +92,7 @@ O identificador na URL é o **`slug`**: minúsculas, números e hífen, até 60 
 | GET | `/projetos/:slug/revista` | — | 200 `Revista` (Exportar JSON) |
 
 **`origem`:**
-- `{tipo: "vazio", anos?: Ano[]}`: anos sem descritores, faixa 0–500 e cortes 125/250/375. Sem `anos`, cria 5ef, 9ef e 3em.
+- `{tipo: "vazio", anos?: Ano[]}`: anos sem descritores, faixa 0–500 e cortes 125/250/375. Sem `anos`, cria `ANOS_PADRAO` (5ef, 9ef e 3em).
 - `{tipo: "importar", revista: Revista}`: aceita o `descritores.json` antigo (sem `cortes`/`pagina`). `Revista.pagina` usa `PaginaTextos`: só textos, sem `null`.
 - `{tipo: "copiar", de: slug}`: copia página, anos **e imagens**.
 
@@ -112,7 +112,9 @@ O identificador na URL é o **`slug`**: minúsculas, números e hífen, até 60 
 - **`PaginaPatch`:** valor `null`, `""` ou `[]` remove o campo, e a revista volta ao texto padrão do template. Itens vazios em parágrafos são descartados.
 - **Imagem:** PNG, JPEG ou WebP, até 5 MB; SVG é recusado. Uma nova substitui a anterior (o arquivo antigo é removido do GridFS). Fica no GridFS; em `Pagina` aparece como `{nome, mime, tamanho}`, onde `nome = nomeArquivoImagem(chave, mime)` (ex.: `heroImagem.png`; JPEG vira `.jpg`). No zip e no preview, o arquivo fica em `arquivos/<nome>`.
 
-### Anos (`5ef` | `9ef` | `3em`)
+### Anos (etapas)
+
+Chave `<n>ef` (1 a 9) ou `<n>em` (1 a 3), ex.: `2ef`, `5ef`, `3em`. Rótulos gerados por `rotuloAno` (`2º EF`, `3ª EM`) e `rotuloAnoLongo` (`2º Ano do Ensino Fundamental`, `3ª Série do Ensino Médio`); ordem por `compararAnos` (EF antes de EM, depois o número). A revista importada/exportada aceita qualquer etapa válida como chave.
 
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|
