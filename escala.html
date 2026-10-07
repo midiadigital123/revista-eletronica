@@ -35,29 +35,40 @@
         <div class="interactive-container">
             <!-- Área de Filtros e Descritores -->
             <div class="descriptors-area">
-                <!-- Filtros -->
-                <div class="filtro">
-                    <button class="filtro-btn active" data-filter="5ef">5º EF</button>
-                    <button class="filtro-btn" data-filter="9ef">9º EF</button>
-                    <button class="filtro-btn" data-filter="3em">3ª EM</button>
+                <!-- Menu de Descritores -->
+                <div class="descritores-menu" id="filtro">
+                    <div class="tab-bar" role="tablist">
+                        <button class="filtro-btn tab active" data-filter="5ef" role="tab" aria-selected="true">5º EF</button>
+                        <button class="filtro-btn tab" data-filter="9ef" role="tab" aria-selected="false">9º EF</button>
+                        <button class="filtro-btn tab" data-filter="3em" role="tab" aria-selected="false">3ª EM</button>
+                    </div>
+
+                    <div class="descritores-card" id="descritoresCard">
+                        <div class="controls-row">
+                            <button class="dropdown-toggle" id="dropdownToggle" type="button" aria-haspopup="true" aria-expanded="false">
+                                <span class="dropdown-label" id="dropdownLabel"></span>
+                                <svg class="chevron" id="chevronIcon" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                    <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="tag-panel" id="tagPanel" hidden>
+                            <div class="descritores-grid tag-grid"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Título do Tópico -->
+                <div class="titulo-topico">
+                    <h3></h3>
                 </div>
 
                 <!-- Conteúdo dos Descritores -->
                 <div class="content-wrapper">
-                    <!-- Menu de Descritores (gerado dinamicamente via JS) -->
-                    <div class="descritores-section">
-                        <div class="menu">
-                            <div class="descritores-grid"></div>
-                        </div>
-                    </div>
-
-                    <!-- Título do Tópico -->
-                    <div class="titulo-topico">
-                        <h3></h3>
-                    </div>
-
                     <!-- Descritor Detalhado -->
                     <div class="descritor-detalhado">
+                        <span class="descritor-badge"></span>
                         <p></p>
                     </div>
                 </div>
@@ -114,6 +125,12 @@
                 <img src="http://localhost:3845/assets/ce2f3a0b0ee924a91a8da4a2b3235a6bf102cc13.svg" alt="Anterior">
                 <span>Descritor anterior</span>
             </button>
+            <a class="nav-btn top-btn" href="#filtro">
+                <svg width="16" height="16" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M3.5 8.75L7 5.25L10.5 8.75" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Voltar ao filtro</span>
+            </a>
             <button class="nav-btn next-btn">
                 <span>Próximo descritor</span>
                 <img src="http://localhost:3845/assets/4bb291fb707d5b59629166635e4695c377cd1d8b.svg" alt="Próximo">
@@ -128,6 +145,90 @@
         <div class="menu-lateral-grid"></div>
     </aside>
 
+    <!-- Modal do Item -->
+    <div class="modal-overlay" id="itemModal" hidden>
+        <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="itemModalTitle">
+            <button type="button" class="modal-close" id="itemModalClose" aria-label="Fechar">&times;</button>
+            <h3 class="modal-title" id="itemModalTitle"></h3>
+            <p class="modal-body" id="itemModalBody"></p>
+        </div>
+    </div>
+
     <script src="script.js"></script>
+
+    <!-- ========================================================
+         BOTÃO PROVISÓRIO DE PRÉ-VISUALIZAÇÃO MOBILE/DESKTOP
+         (remover depois de usar — não faz parte do site)
+         ======================================================== -->
+    <style>
+        #preview-toggle-btn {
+            position: fixed;
+            bottom: 1.25rem;
+            right: 1.25rem;
+            z-index: 9999;
+            padding: 0.75rem 1.25rem;
+            border: none;
+            border-radius: 999px;
+            background-color: #111827;
+            color: #ffffff;
+            font-family: system-ui, sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.35);
+        }
+
+        #preview-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9998;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+
+        #preview-overlay.aberto {
+            display: flex;
+        }
+
+        #preview-frame {
+            width: 375px;
+            height: 812px;
+            max-height: 90vh;
+            border: 10px solid #111827;
+            border-radius: 2.5rem;
+            box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.5);
+            background-color: #ffffff;
+        }
+    </style>
+
+    <button id="preview-toggle-btn" type="button">📱 Ver versão mobile</button>
+    <div id="preview-overlay">
+        <iframe id="preview-frame" title="Pré-visualização mobile"></iframe>
+    </div>
+
+    <script>
+        (function () {
+            const botao = document.getElementById("preview-toggle-btn");
+            const overlay = document.getElementById("preview-overlay");
+            const frame = document.getElementById("preview-frame");
+
+            botao.addEventListener("click", () => {
+                const aberto = overlay.classList.toggle("aberto");
+                if (aberto) {
+                    frame.src = window.location.pathname + window.location.search;
+                    botao.textContent = "🖥️ Ver versão desktop";
+                } else {
+                    frame.src = "";
+                    botao.textContent = "📱 Ver versão mobile";
+                }
+            });
+
+            overlay.addEventListener("click", (e) => {
+                if (e.target === overlay) botao.click();
+            });
+        })();
+    </script>
 </body>
 </html>

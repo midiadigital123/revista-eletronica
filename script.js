@@ -9,8 +9,7 @@
 // CONFIGURAÇÃO
 // ==========================================
 
-const API_URL =
-  "https://recursos-moodle.caeddigital.net/projetos/revista-digital/2026-1/Escala/data/data.json"; // <- Substituir pela URL real do JSON
+const API_URL = "./descritores.json"; // <- Substituir pela URL real do JSON
 
 // ==========================================
 // ESTADO DA APLICAÇÃO
@@ -20,6 +19,12 @@ const appState = {
   currentFilter: "5ef",
   currentDescriptor: null,
   scrolling: false,
+};
+
+const FILTER_LABELS = {
+  "5ef": { short: "5º EF", long: "5º Ano do Ensino Fundamental" },
+  "9ef": { short: "9º EF", long: "9º Ano do Ensino Fundamental" },
+  "3em": { short: "3ª EM", long: "3ª Série do Ensino Médio" },
 };
 
 // ==========================================
@@ -54,6 +59,7 @@ class FilterManager {
     this.filterButtons.forEach((button) => {
       button.addEventListener("click", (e) => this.handleFilterClick(e));
     });
+    this.renderLabels();
   }
 
   handleFilterClick(event) {
@@ -74,6 +80,18 @@ class FilterManager {
   updateActiveFilter(activeButton) {
     this.filterButtons.forEach((btn) => btn.classList.remove("active"));
     activeButton.classList.add("active");
+    this.renderLabels();
+  }
+
+  renderLabels() {
+    this.filterButtons.forEach((btn) => {
+      const filter = btn.getAttribute("data-filter");
+      const isActive = btn.classList.contains("active");
+      btn.setAttribute("aria-selected", String(isActive));
+      btn.textContent = isActive
+        ? FILTER_LABELS[filter].long
+        : FILTER_LABELS[filter].short;
+    });
   }
 
   animateFilterChange() {
@@ -98,21 +116,154 @@ class FilterManager {
 class DescriptorManager {
   constructor(data) {
     this.data = data;
+    this.dropdownOpen = false;
     this.init();
   }
 
   init() {
     this.renderButtons();
+    this.initVerMais();
+    this.initDropdown();
+    this.initModal();
 
     window.addEventListener("filterChanged", () => {
       appState.currentDescriptor = null;
+      this.dropdownOpen = false;
       this.renderButtons();
+      this.updateDropdownUI();
+    });
+  }
+
+  initModal() {
+    const modal = document.getElementById("itemModal");
+    const closeBtn = document.getElementById("itemModalClose");
+    const titulo = document.getElementById("itemModalTitle");
+    const corpo = document.getElementById("itemModalBody");
+    if (!modal) return;
+
+    const abrirModal = (nivel, conteudo) => {
+      titulo.textContent = `Item — nível ${nivel}`;
+      corpo.textContent = conteudo;
+      modal.hidden = false;
+      document.body.style.overflow = "hidden";
+    };
+
+    const fecharModal = () => {
+      modal.hidden = true;
+      document.body.style.overflow = "";
+    };
+
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest(".ver-item-btn");
+      if (!btn) return;
+      abrirModal(btn.dataset.nivelItem, btn.dataset.conteudoItem);
+    });
+
+    closeBtn.addEventListener("click", fecharModal);
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) fecharModal();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !modal.hidden) fecharModal();
+    });
+  }
+
+  getDescriptorList() {
+    const filterData = this.data[appState.currentFilter] || {};
+    return Object.keys(filterData)
+      .filter((k) => k !== "scaleRange")
+      .sort();
+  }
+
+  initDropdown() {
+    const toggle = document.getElementById("dropdownToggle");
+    const card = document.getElementById("descritoresCard");
+
+    if (toggle) {
+      toggle.addEventListener("click", () => {
+        this.dropdownOpen = !this.dropdownOpen;
+        this.updateDropdownUI();
+      });
+    }
+
+    document.addEventListener("click", (e) => {
+      if (!this.dropdownOpen) return;
+      if (card && !card.contains(e.target)) {
+        this.dropdownOpen = false;
+        this.updateDropdownUI();
+      }
+    });
+  }
+
+  updateDropdownUI() {
+    const toggle = document.getElementById("dropdownToggle");
+    const panel = document.getElementById("tagPanel");
+    const chevron = document.getElementById("chevronIcon");
+    if (toggle)
+      toggle.setAttribute("aria-expanded", String(this.dropdownOpen));
+    if (panel) panel.hidden = !this.dropdownOpen;
+    if (chevron) chevron.classList.toggle("open", this.dropdownOpen);
+  }
+
+  updateDropdownLabel() {
+    const label = document.getElementById("dropdownLabel");
+    if (label) label.textContent = appState.currentDescriptor || "";
+  }
+
+  initVerMais() {
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest(".ver-mais-btn");
+      if (!btn) return;
+
+      const conteudo = btn.closest(".linha-conteudo");
+      const paragrafo = conteudo.querySelector("p");
+      const textoBtn = btn.querySelector(".btn-texto");
+      const iconeBtn = btn.querySelector(".btn-icone");
+      const vaiExpandir = !conteudo.classList.contains("expandido");
+      const alturaColapsada = getComputedStyle(document.documentElement)
+        .getPropertyValue("--escala-linha-height")
+        .trim();
+
+      if (vaiExpandir) {
+        paragrafo.textContent = conteudo.dataset.textoCompleto;
+        conteudo.classList.add("expandido");
+        if (window.innerWidth <= 500) {
+          // No mobile o card ocupa a largura total da tela
+          const linhaRect = conteudo.closest(".linha").getBoundingClientRect();
+          conteudo.style.left = `${-linhaRect.left}px`;
+          conteudo.style.right = `${linhaRect.right - document.documentElement.clientWidth}px`;
+        }
+        conteudo.style.maxHeight = alturaColapsada;
+        void conteudo.offsetHeight; // força o navegador a registrar a altura inicial
+        conteudo.style.maxHeight = `${conteudo.scrollHeight}px`;
+        textoBtn.textContent = "Ver menos";
+        iconeBtn.classList.add("aberto");
+      } else {
+        conteudo.style.maxHeight = `${conteudo.scrollHeight}px`;
+        void conteudo.offsetHeight;
+        conteudo.style.maxHeight = alturaColapsada;
+        textoBtn.textContent = "Ver mais";
+        iconeBtn.classList.remove("aberto");
+        conteudo.addEventListener(
+          "transitionend",
+          () => {
+            conteudo.classList.remove("expandido");
+            conteudo.style.maxHeight = "";
+            conteudo.style.left = "";
+            conteudo.style.right = "";
+            paragrafo.textContent = conteudo.dataset.textoTruncado;
+          },
+          { once: true },
+        );
+      }
     });
   }
 
   renderButtons() {
     const filterData = this.data[appState.currentFilter] || {};
-    const descriptors = Object.keys(filterData).filter((k) => k !== "scaleRange").sort();
+    const descriptors = this.getDescriptorList();
 
     // Grid principal
     const grid = document.querySelector(".descritores-grid");
@@ -160,12 +311,15 @@ class DescriptorManager {
     const button = event.currentTarget;
     const descriptor = button.getAttribute("data-descritor");
 
-    if (descriptor === appState.currentDescriptor) return;
+    if (descriptor !== appState.currentDescriptor) {
+      appState.currentDescriptor = descriptor;
+      this.updateActiveDescriptor(descriptor);
+      this.updateContent(descriptor);
+      this.scrollToContent();
+    }
 
-    appState.currentDescriptor = descriptor;
-    this.updateActiveDescriptor(descriptor);
-    this.updateContent(descriptor);
-    this.scrollToContent();
+    this.dropdownOpen = false;
+    this.updateDropdownUI();
   }
 
   updateActiveDescriptor(descriptor) {
@@ -177,6 +331,7 @@ class DescriptorManager {
           btn.getAttribute("data-descritor") === descriptor,
         );
       });
+    this.updateDropdownLabel();
   }
 
   updateContent(descriptor) {
@@ -191,12 +346,16 @@ class DescriptorManager {
     const data = filterData[descriptor];
 
     const topicTitle = document.querySelector(".titulo-topico h3");
-    if (topicTitle) topicTitle.textContent = data.topic;
+    if (topicTitle)
+      topicTitle.textContent = FILTER_LABELS[appState.currentFilter].long;
+
+    const descriptorBadge = document.querySelector(
+      ".descritor-detalhado .descritor-badge",
+    );
+    if (descriptorBadge) descriptorBadge.textContent = descriptor;
 
     const descriptorDetail = document.querySelector(".descritor-detalhado p");
-    if (descriptorDetail) {
-      descriptorDetail.innerHTML = `<strong>${descriptor} - </strong>${data.description}`;
-    }
+    if (descriptorDetail) descriptorDetail.textContent = data.description;
 
     if (data.prerequisites) this.updatePrerequisites(data.prerequisites);
     if (data.scale) this.updateScale(data.scale);
@@ -223,6 +382,10 @@ class DescriptorManager {
     const escalaContent = document.querySelector(".escala-content");
     if (!escalaContent) return;
 
+    const LIMITE_CARACTERES = window.innerWidth <= 500 ? 40 : 56;
+    const textosCompletos = [];
+    const itensCompletos = [];
+
     const padroes = ["padrao-4", "padrao-3", "padrao-2", "padrao-1"];
     const labels = {
       "padrao-4": "Padrão 04",
@@ -230,41 +393,108 @@ class DescriptorManager {
       "padrao-2": "Padrão 02",
       "padrao-1": "Padrão 01",
     };
+    // Corte que marca o início de cada padrão (o topo do padrão 04 já é o "500")
+    const cortes = {
+      "padrao-3": 375,
+      "padrao-2": 250,
+      "padrao-1": 125,
+    };
 
     escalaContent.innerHTML = padroes
-      .map((padrao) => {
+      .map((padrao, indicePadrao) => {
         const linhas = scale[padrao] || [];
+        const proximoPadrao = padroes[indicePadrao + 1];
+        const ocultarUltimoValor = Boolean(cortes[proximoPadrao]);
 
         const linhasHTML = linhas
-          .map(
-            ({ level, content }) => `
+          .map(({ level, content }, indiceLinha) => {
+            const excedeLimite = content.length > LIMITE_CARACTERES;
+            const textoExibido = excedeLimite
+              ? `${content.slice(0, LIMITE_CARACTERES).trimEnd()}...`
+              : content;
+
+            if (excedeLimite) textosCompletos.push(content);
+
+            const temItem = content !== "---";
+            if (temItem) itensCompletos.push({ level, content });
+
+            const ocultarValor =
+              ocultarUltimoValor && indiceLinha === linhas.length - 1;
+
+            return `
                 <div class="linha">
-                    <span class="proficiencia-valor">${level}</span>
-                    <div class="linha-marcador"></div>
                     <div class="linha-cor cor-${padrao}"></div>
-                    <div class="linha-conteudo"><p>${content}</p></div>
-                </div>`,
-          )
+                    <div class="linha-marcador"></div>
+                    <span class="proficiencia-valor">${ocultarValor ? "" : `<span class="proficiencia-valor-numero">${level}</span>`}</span>
+                    <div class="linha-conteudo${excedeLimite ? " tem-ver-mais" : ""}${temItem ? " tem-ver-item" : ""}">
+                        <p>${textoExibido}</p>
+                        ${
+                          temItem || excedeLimite
+                            ? `<div class="linha-acoes">
+                                ${
+                                  temItem
+                                    ? `<button type="button" class="ver-item-btn">
+                                        <svg class="btn-icone" width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                            <path d="M1 7C1 7 3.5 2.5 7 2.5C10.5 2.5 13 7 13 7C13 7 10.5 11.5 7 11.5C3.5 11.5 1 7 1 7Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                                            <circle cx="7" cy="7" r="1.8" stroke="currentColor" stroke-width="1.3"/>
+                                        </svg>
+                                        <span class="btn-texto">Ver item</span>
+                                    </button>`
+                                    : ""
+                                }
+                                ${
+                                  excedeLimite
+                                    ? `<button type="button" class="ver-mais-btn">
+                                        <svg class="btn-icone" width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                            <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                        <span class="btn-texto">Ver mais</span>
+                                    </button>`
+                                    : ""
+                                }
+                            </div>`
+                            : ""
+                        }
+                    </div>
+                </div>`;
+          })
           .join("");
 
         const linhaVazia =
           padrao === "padrao-1"
             ? `
                 <div class="linha linha-vazia">
-                    <span class="proficiencia-valor"></span>
-                    <div class="linha-marcador-vazio"></div>
                     <div class="linha-cor cor-padrao-1"></div>
+                    <div class="linha-marcador-vazio"></div>
+                    <span class="proficiencia-valor"></span>
                     <div class="linha-conteudo-vazio"></div>
                 </div>`
             : "";
 
+        const corteHTML = cortes[padrao]
+          ? `<span class="padrao-corte">${cortes[padrao]}</span>`
+          : "";
+
         return `
                 <div class="padrao ${padrao}">
                     <div class="padrao-label"><span>${labels[padrao]}</span></div>
-                    <div class="padrao-linhas">${linhasHTML}${linhaVazia}</div>
+                    <div class="padrao-linhas">${corteHTML}${linhasHTML}${linhaVazia}</div>
                 </div>`;
       })
       .join("");
+
+    escalaContent.querySelectorAll(".ver-mais-btn").forEach((btn, i) => {
+      const conteudo = btn.closest(".linha-conteudo");
+      const paragrafo = conteudo.querySelector("p");
+      conteudo.dataset.textoCompleto = textosCompletos[i];
+      conteudo.dataset.textoTruncado = paragrafo.textContent;
+    });
+
+    escalaContent.querySelectorAll(".ver-item-btn").forEach((btn, i) => {
+      const { level, content } = itensCompletos[i];
+      btn.dataset.nivelItem = level;
+      btn.dataset.conteudoItem = content;
+    });
   }
 
   updateBNCC(bncc) {
@@ -342,7 +572,9 @@ class NavigationManager {
 
   navigate(direction) {
     const filterData = this.data[appState.currentFilter] || {};
-    const descriptors = Object.keys(filterData).filter((k) => k !== "scaleRange").sort();
+    const descriptors = Object.keys(filterData)
+      .filter((k) => k !== "scaleRange")
+      .sort();
     const currentIndex = descriptors.indexOf(appState.currentDescriptor);
     const newIndex = currentIndex + direction;
 
