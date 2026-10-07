@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { FieldLegend, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+import { cn, novoId as gerarId } from "@/lib/utils";
 import { useAutoSalvar } from "./useAutoSalvar";
 
 interface Item {
@@ -29,7 +29,7 @@ export function ListaTextos(props: {
 }) {
   const { rotulo, rotuloItem } = props;
   const campo = useAutoSalvar<Item[]>(
-    props.inicial.map((texto) => ({ id: crypto.randomUUID(), texto })),
+    props.inicial.map((texto) => ({ id: gerarId(), texto })),
     (itens) => props.persistir(textos(itens)),
     (itens) => JSON.stringify(textos(itens)),
   );
@@ -42,7 +42,7 @@ export function ListaTextos(props: {
     campo.setValor(itens.map((i) => (i.id === id ? { ...i, texto } : i)));
 
   function adicionar() {
-    const id = crypto.randomUUID();
+    const id = gerarId();
     setNovoId(id);
     campo.setValor([...itens, { id, texto: "" }]);
   }

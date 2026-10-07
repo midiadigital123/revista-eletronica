@@ -15,7 +15,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { cn, novoId } from "@/lib/utils";
 import { Aviso } from "../../ui";
 import { mensagemDeErro, rotuloPadrao } from "./dados";
 
@@ -102,7 +102,7 @@ function BlocoPadrao(props: {
   const { inicio, texto } = intervalo(padrao, ano.scaleRange, ano.cortes);
   const [linhas, setLinhas] = useState<Linha[]>(() =>
     props.inicial.map((l) => ({
-      id: crypto.randomUUID(),
+      id: novoId(),
       level: String(l.level),
       content: l.content === CONTEUDO_VAZIO ? "" : l.content,
     })),
@@ -148,7 +148,7 @@ function BlocoPadrao(props: {
     setLinhas((ls) => ls.map((l) => (l.id === id ? { ...l, [campo]: valor } : l)));
 
   function adicionar() {
-    const id = crypto.randomUUID();
+    const id = novoId();
     const novas = [...linhas, { id, level: String(inicio), content: "" }];
     setNovaId(id);
     setLinhas(novas);

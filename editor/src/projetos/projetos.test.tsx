@@ -248,8 +248,16 @@ describe("casca do projeto", () => {
 
     expect(await screen.findByText(/não foram salvas/)).toBeInTheDocument();
     expect(screen.getByText("Texto perdido")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Copiar" })).toBeInTheDocument();
     expect(screen.getByText("Somente leitura")).toBeInTheDocument();
+
+    // Pela rede em http não há navigator.clipboard: Copiar usa execCommand("copy").
+    vi.stubGlobal("navigator", { ...navigator, clipboard: undefined });
+    const execCommand = vi.fn(() => true);
+    Object.defineProperty(document, "execCommand", { value: execCommand, configurable: true });
+    await user.click(screen.getByRole("button", { name: "Copiar" }));
+    expect(execCommand).toHaveBeenCalledWith("copy");
+    expect(await screen.findByRole("button", { name: "Copiado" })).toBeInTheDocument();
+    vi.unstubAllGlobals();
   });
 });
 

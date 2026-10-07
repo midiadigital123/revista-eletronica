@@ -403,7 +403,39 @@ function FaixaModo({
   );
 }
 
+/**
+ * navigator.clipboard só existe em contexto seguro (HTTPS/localhost). Pela rede em http,
+ * cai no execCommand("copy") com um textarea temporário. Devolve se copiou.
+ */
+async function copiarTexto(texto: string): Promise<boolean> {
+  if (navigator.clipboard) {
+    try {
+      await navigator.clipboard.writeText(texto);
+      return true;
+    } catch {
+      // permissão negada: tenta o caminho antigo
+    }
+  }
+  const area = document.createElement("textarea");
+  area.value = texto;
+  area.setAttribute("readonly", "");
+  area.style.position = "fixed";
+  area.style.opacity = "0";
+  document.body.append(area);
+  area.select();
+  try {
+    return document.execCommand("copy");
+  } catch {
+    return false;
+  } finally {
+    area.remove();
+  }
+}
+
 function NaoSalvos({ itens, descartar }: { itens: NaoSalvo[]; descartar: (id: number) => void }) {
+  const [copiado, setCopiado] = useState<{ id: number; ok: boolean } | null>(null);
+  const copiar = async (n: NaoSalvo) =>
+    setCopiado({ id: n.id, ok: await copiarTexto(n.valor ?? "") });
   return (
     <Aviso tom="erro">
       <p className="font-semibold">
@@ -416,12 +448,12 @@ function NaoSalvos({ itens, descartar }: { itens: NaoSalvo[]; descartar: (id: nu
             {n.valor !== undefined && (
               <>
                 <span className="max-w-xl truncate text-muted-foreground">{n.valor}</span>
-                <Botao
-                  tamanho="sm"
-                  onClick={() => void navigator.clipboard.writeText(n.valor ?? "")}
-                >
-                  Copiar
+                <Botao tamanho="sm" onClick={() => void copiar(n)}>
+                  {copiado?.id === n.id && copiado.ok ? "Copiado" : "Copiar"}
                 </Botao>
+                {copiado?.id === n.id && !copiado.ok && (
+                  <span className="text-sm">Não foi possível copiar.</span>
+                )}
               </>
             )}
             <Botao tamanho="sm" variante="fantasma" onClick={() => descartar(n.id)}>

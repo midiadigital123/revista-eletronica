@@ -12,6 +12,7 @@ import {
 import { RotateCcw, X } from "lucide-react";
 import { AreaTexto, Aviso, CampoTexto } from "../ui";
 import { Button } from "@/components/ui/button";
+import { novoId } from "@/lib/utils";
 import {
   Field,
   FieldDescription,
@@ -184,7 +185,7 @@ interface Paragrafo {
   texto: string;
 }
 
-const novoParagrafo = (texto: string): Paragrafo => ({ id: crypto.randomUUID(), texto });
+const novoParagrafo = (texto: string): Paragrafo => ({ id: novoId(), texto });
 
 function CampoParagrafos({ campo, inicial, edicao }: PropsCampo) {
   const [itens, setItens] = useState<Paragrafo[]>(() =>

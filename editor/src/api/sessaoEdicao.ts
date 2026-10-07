@@ -1,3 +1,5 @@
+import { novoId } from "@/lib/utils";
+
 const CHAVE = "revista.sessaoEdicao";
 
 /**
@@ -8,11 +10,11 @@ export function sessaoEdicao(): string {
   try {
     const existente = sessionStorage.getItem(CHAVE);
     if (existente) return existente;
-    const nova = crypto.randomUUID();
+    const nova = novoId();
     sessionStorage.setItem(CHAVE, nova);
     return nova;
   } catch {
-    return (memoria ??= crypto.randomUUID());
+    return (memoria ??= novoId());
   }
 }
 let memoria: string | undefined;

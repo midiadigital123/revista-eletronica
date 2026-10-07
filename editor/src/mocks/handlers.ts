@@ -40,6 +40,7 @@ import {
 } from "../contrato/schemas";
 import { bloqueioPublico, mockDb, usuarioLogado, type ProjetoMock, type UsuarioMock } from "./db";
 import extracaoFixture from "./extracao.json";
+import { novoId } from "@/lib/utils";
 
 /**
  * Implementação em memória de TODAS as rotas de docs/contrato.md, com as mesmas
@@ -223,7 +224,7 @@ export const handlers = [
       if (mockDb.usuarios.some((u) => u.email === dados.email))
         falha(409, "E-mail já cadastrado", { campo: "email" });
       const novo: UsuarioMock = {
-        id: crypto.randomUUID().replace(/-/g, "").slice(0, 24),
+        id: novoId().replace(/-/g, "").slice(0, 24),
         ativo: true,
         ...dados,
       };

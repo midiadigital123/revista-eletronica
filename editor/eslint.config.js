@@ -9,7 +9,19 @@ export default tseslint.config(
   reactHooks.configs.flat["recommended-latest"] ?? reactHooks.configs.flat.recommended,
   {
     rules: {
-      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
+      // Indisponível pela rede em http (contexto não seguro). Use novoId() de @/lib/utils.
+      "no-restricted-properties": [
+        "error",
+        {
+          object: "crypto",
+          property: "randomUUID",
+          message: "Use novoId() de @/lib/utils (funciona em http).",
+        },
+      ],
     },
   },
 );
