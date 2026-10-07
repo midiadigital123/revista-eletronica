@@ -1,85 +1,119 @@
 import { useState } from "react";
 import { Link } from "react-router";
+import { FolderOpen, Lock, Plus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { ROTULO_ANO } from "../contrato/schemas";
-import { Aviso, Botao } from "../ui";
+import { useTituloPagina } from "../layout/useTituloPagina";
+import { Aviso } from "../ui";
 import { useProjetos } from "./consultas";
 import { mensagemDeErro, tempoRelativo } from "./formato";
 import { NovoProjeto } from "./NovoProjeto";
-
-export function Cadeado({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 16 16" aria-hidden="true" className={`size-4 ${className}`} fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="3" y="7" width="10" height="7" rx="1.5" />
-      <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" />
-    </svg>
-  );
-}
 
 /** /projetos: lista com quem está editando cada projeto + "Novo projeto". */
 export function ListaProjetos() {
   const { data: projetos, isPending, error } = useProjetos();
   const [criando, setCriando] = useState(false);
+  const novo = () => setCriando(true);
+  useTituloPagina("Projetos");
 
   return (
-    <section className="mx-auto w-full max-w-5xl px-6 py-10">
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-tinta pb-5">
-        <div>
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-tinta-suave">Revista eletrônica</p>
-          <h1 className="mt-1 text-4xl font-medium tracking-tight">Projetos</h1>
-        </div>
-        <Botao variante="primario" onClick={() => setCriando(true)}>
+    <section className="flex flex-col gap-6">
+      <header className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-3xl font-semibold tracking-tight">Projetos</h1>
+        <Button onClick={novo}>
+          <Plus data-icon="inline-start" />
           Novo projeto
-        </Botao>
+        </Button>
       </header>
 
-      {isPending && <p className="py-8 text-tinta-suave">Carregando projetos…</p>}
-      {error && (
-        <div className="py-6">
-          <Aviso tom="erro">Não foi possível carregar os projetos: {mensagemDeErro(error)}</Aviso>
+      {isPending && (
+        <div role="status" className="flex flex-col gap-2">
+          <span className="sr-only">Carregando…</span>
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
         </div>
       )}
+      {error && (
+        <Aviso tom="erro">Não foi possível carregar os projetos: {mensagemDeErro(error)}</Aviso>
+      )}
       {projetos?.length === 0 && (
-        <p className="py-10 text-tinta-suave">Nenhum projeto ainda. Crie o primeiro em “Novo projeto”.</p>
+        <Empty className="border">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <FolderOpen />
+            </EmptyMedia>
+            <EmptyTitle>Nenhum projeto ainda</EmptyTitle>
+          </EmptyHeader>
+          <EmptyContent>
+            <Button onClick={novo}>
+              <Plus data-icon="inline-start" />
+              Novo projeto
+            </Button>
+          </EmptyContent>
+        </Empty>
       )}
 
       {projetos && projetos.length > 0 && (
-        <ul className="divide-y divide-linha">
-          {projetos.map((p) => (
-            <li key={p.slug}>
-              <Link
-                to={`/projetos/${p.slug}`}
-                className="group grid gap-x-6 gap-y-1 py-5 sm:grid-cols-[1fr_auto] sm:items-center"
-              >
-                <div className="min-w-0">
-                  <h2 className="truncate text-2xl leading-tight group-hover:text-acento">{p.nome}</h2>
-                  <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-tinta-suave">
-                    <span className="font-mono text-xs">{p.slug}</span>
-                    <span aria-hidden="true">·</span>
-                    <span className="flex gap-1.5">
-                      {p.anos.map((ano) => (
-                        <span key={ano} className="rounded-sm border border-linha px-1.5 font-mono text-xs text-tinta">
-                          {ROTULO_ANO[ano]}
-                        </span>
-                      ))}
-                    </span>
-                    <span aria-hidden="true">·</span>
-                    <span>atualizado {tempoRelativo(p.atualizadoEm)}</span>
-                  </p>
-                </div>
-                {p.bloqueio ? (
-                  <span className="inline-flex items-center gap-1.5 text-sm text-alerta">
-                    <Cadeado />
-                    Em edição por {p.bloqueio.nome}
-                  </span>
-                ) : (
-                  <span className="text-sm text-tinta-suave opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true">
-                    Abrir →
-                  </span>
-                )}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Projeto</TableHead>
+              <TableHead>Anos</TableHead>
+              <TableHead>Atualizado</TableHead>
+              <TableHead>Situação</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {projetos.map((p) => (
+              <TableRow key={p.slug} className="relative">
+                <TableCell className="max-w-80">
+                  <h2 className="truncate font-medium">
+                    {/* after:inset-0 estende o link para a linha inteira. */}
+                    <Link
+                      to={`/projetos/${p.slug}`}
+                      className="outline-none after:absolute after:inset-0 focus-visible:after:ring-3 focus-visible:after:ring-ring focus-visible:after:ring-inset"
+                    >
+                      {p.nome}
+                    </Link>
+                  </h2>
+                  <p className="truncate text-muted-foreground">{p.slug}</p>
+                </TableCell>
+                <TableCell className="whitespace-normal">
+                  <div className="flex flex-wrap gap-1">
+                    {p.anos.map((ano) => (
+                      <Badge key={ano} variant="secondary">
+                        {ROTULO_ANO[ano]}
+                      </Badge>
+                    ))}
+                  </div>
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  atualizado {tempoRelativo(p.atualizadoEm)}
+                </TableCell>
+                <TableCell>
+                  {p.bloqueio && (
+                    <Badge variant="warning">
+                      <Lock data-icon="inline-start" />
+                      Em edição por {p.bloqueio.nome}
+                    </Badge>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
 
       <NovoProjeto aberto={criando} aoFechar={() => setCriando(false)} projetos={projetos ?? []} />

@@ -2,6 +2,7 @@ import { QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { render } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { Outlet, RouterProvider, createMemoryRouter, useParams } from "react-router";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { chaves } from "../../../api/chaves";
 import { queryClient } from "../../../api/queryClient";
 import type { Projeto } from "../../../contrato/schemas";
@@ -60,7 +61,9 @@ export function renderizarAno(caminho: string, modo: ModoEdicao = "edicao") {
     router,
     ...render(
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
+        <TooltipProvider>
+          <RouterProvider router={router} />
+        </TooltipProvider>
       </QueryClientProvider>,
     ),
   };

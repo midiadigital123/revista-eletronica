@@ -64,7 +64,9 @@ describe("anos", () => {
     await user.clear(max);
     await user.type(max, "400");
     await user.tab();
-    expect(await screen.findByText(/Não foi possível salvar a faixa e os cortes/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Não foi possível salvar a faixa e os cortes/),
+    ).toBeInTheDocument();
     expect(screen.getByText("D01, Padrão 04: Nível fora da escala (0–400)")).toBeInTheDocument();
     expect(anoMock("5ef")!.scaleRange.max).toBe(500);
   });
@@ -121,7 +123,9 @@ describe("descritores", () => {
     await user.type(campo, "D10");
     await user.click(within(dialogo).getByRole("button", { name: "Duplicar" }));
 
-    await waitFor(() => expect(router.state.location.pathname).toBe("/projetos/exemplo/ano/9ef/D10"));
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe("/projetos/exemplo/ano/9ef/D10"),
+    );
     const [d01, , d10] = anoMock("9ef")!.descritores;
     expect(d10).toEqual({ ...d01, codigo: "D10" });
   });
@@ -153,7 +157,9 @@ describe("descritores", () => {
     await user.clear(screen.getByLabelText("Código"));
     await user.type(screen.getByLabelText("Código"), "d07");
     await user.tab();
-    await waitFor(() => expect(router.state.location.pathname).toBe("/projetos/exemplo/ano/9ef/D07"));
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe("/projetos/exemplo/ano/9ef/D07"),
+    );
     expect(codigos("9ef")).toEqual(["D01", "D07"]);
     expect(await screen.findByLabelText("Código")).toHaveValue("D07");
   });

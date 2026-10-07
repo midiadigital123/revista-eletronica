@@ -5,13 +5,27 @@ import { Navigate, useLocation, useNavigate } from "react-router";
 import { chaves } from "../api/chaves";
 import { ehErroApi } from "../api/client";
 import { LoginEntrada } from "../contrato/schemas";
-import { Aviso, Botao, CampoTexto } from "../ui";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { FieldGroup } from "@/components/ui/field";
+import { Spinner } from "@/components/ui/spinner";
+import { useTituloPagina } from "../layout/useTituloPagina";
+import { Aviso, CampoTexto } from "../ui";
 import { authApi } from "./api";
 import { useUsuario } from "./useUsuario";
 
 const destinoDe = (state: unknown): string => {
   const from = (state as { from?: unknown } | null)?.from;
-  return typeof from === "string" && from.startsWith("/") && !from.startsWith("//") ? from : "/projetos";
+  return typeof from === "string" && from.startsWith("/") && !from.startsWith("//")
+    ? from
+    : "/projetos";
 };
 
 export function Login() {
@@ -20,6 +34,7 @@ export function Login() {
   const qc = useQueryClient();
   const { data: logado } = useUsuario();
   const destino = destinoDe(local.state);
+  useTituloPagina("Entrar");
 
   const { register, handleSubmit, formState } = useForm<LoginEntrada>({
     resolver: zodResolver(LoginEntrada),
@@ -36,26 +51,53 @@ export function Login() {
   if (logado && !entrar.isPending && !entrar.isSuccess) return <Navigate to={destino} replace />;
 
   const erro = entrar.error;
-  const mensagem = erro ? (ehErroApi(erro, 401) ? "E-mail ou senha incorretos." : erro.message) : null;
+  const mensagem = erro
+    ? ehErroApi(erro, 401)
+      ? "E-mail ou senha incorretos."
+      : erro.message
+    : null;
 
   return (
-    <main className="grid min-h-screen place-items-center px-4">
-      <form
-        onSubmit={handleSubmit((d) => entrar.mutate(d))}
-        noValidate
-        className="flex w-full max-w-sm flex-col gap-5 rounded-lg border border-linha bg-superficie p-8 shadow-sm"
-      >
-        <header>
-          <p className="text-xs font-semibold uppercase tracking-widest text-acento">Revista Eletrônica</p>
-          <h1 className="mt-1 text-3xl">Entrar</h1>
-        </header>
-        {mensagem && <Aviso tom="erro">{mensagem}</Aviso>}
-        <CampoTexto rotulo="E-mail" type="email" autoComplete="username" erro={formState.errors.email?.message} {...register("email")} />
-        <CampoTexto rotulo="Senha" type="password" autoComplete="current-password" erro={formState.errors.senha?.message} {...register("senha")} />
-        <Botao type="submit" variante="primario" disabled={entrar.isPending}>
-          {entrar.isPending ? "Entrando…" : "Entrar"}
-        </Botao>
-      </form>
+    <main className="grid min-h-screen place-items-center bg-background px-4">
+      <Card className="w-full max-w-sm">
+        <form
+          onSubmit={handleSubmit((d) => entrar.mutate(d))}
+          noValidate
+          className="flex flex-col gap-6"
+        >
+          <CardHeader>
+            <CardTitle>
+              <h1>Entrar</h1>
+            </CardTitle>
+            <CardDescription>Acesse o editor da Revista Eletrônica.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FieldGroup>
+              {mensagem && <Aviso tom="erro">{mensagem}</Aviso>}
+              <CampoTexto
+                rotulo="E-mail"
+                type="email"
+                autoComplete="username"
+                erro={formState.errors.email?.message}
+                {...register("email")}
+              />
+              <CampoTexto
+                rotulo="Senha"
+                type="password"
+                autoComplete="current-password"
+                erro={formState.errors.senha?.message}
+                {...register("senha")}
+              />
+            </FieldGroup>
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" className="w-full" disabled={entrar.isPending}>
+              {entrar.isPending && <Spinner aria-hidden data-icon="inline-start" />}
+              {entrar.isPending ? "Entrando…" : "Entrar"}
+            </Button>
+          </CardFooter>
+        </form>
+      </Card>
     </main>
   );
 }

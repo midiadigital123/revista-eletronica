@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { ehErroApi } from "../api/client";
 import { Aviso } from "../ui";
 import { useUsuario } from "./useUsuario";
@@ -11,16 +13,23 @@ export function RotaProtegida({ children }: { children: ReactNode }) {
 
   if (isPending)
     return (
-      <p role="status" className="p-8 text-sm text-tinta-suave">
-        Carregando…
-      </p>
+      <div className="grid min-h-screen place-items-center">
+        <Spinner aria-label="Carregando" className="size-6 text-muted-foreground" />
+      </div>
     );
   if (ehErroApi(error, 401))
     return <Navigate to="/login" replace state={{ from: local.pathname + local.search }} />;
   if (!data)
     return (
       <div className="mx-auto max-w-xl p-8">
-        <Aviso tom="erro" acao={<button className="underline" onClick={() => void refetch()}>Tentar de novo</button>}>
+        <Aviso
+          tom="erro"
+          acao={
+            <Button variant="outline" size="sm" onClick={() => void refetch()}>
+              Tentar de novo
+            </Button>
+          }
+        >
           Não foi possível verificar a sessão.
         </Aviso>
       </div>

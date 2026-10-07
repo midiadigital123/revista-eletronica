@@ -41,8 +41,7 @@ export const projetosApi = {
 
   adquirirBloqueio: (slug: string) =>
     api<BloqueioPublico>(`${p(slug)}/bloqueio`, { method: "POST" }),
-  renovarBloqueio: (slug: string) =>
-    api<BloqueioPublico>(`${p(slug)}/bloqueio`, { method: "PUT" }),
+  renovarBloqueio: (slug: string) => api<BloqueioPublico>(`${p(slug)}/bloqueio`, { method: "PUT" }),
   liberarBloqueio: (slug: string, opcoes: { keepalive?: boolean } = {}) =>
     api<void>(`${p(slug)}/bloqueio`, { method: "DELETE", ...opcoes }),
 

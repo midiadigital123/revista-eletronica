@@ -7,7 +7,8 @@ import { projetosApi } from "../api";
 import { renderizarAno } from "./test/ProvedorEdicaoTeste";
 
 const ANA = "000000000000000000000002";
-const d01 = () => mockDb.projetos.get("exemplo")!.anos.find((a) => a.ano === "5ef")!.descritores[0]!;
+const d01 = () =>
+  mockDb.projetos.get("exemplo")!.anos.find((a) => a.ano === "5ef")!.descritores[0]!;
 const niveis = (p: Padrao) => d01().scale[p].map((l) => l.level);
 const bloco = (rotulo: string) => screen.getByRole("region", { name: rotulo });
 
@@ -69,7 +70,10 @@ describe("editor da escala", () => {
       "Nível 325 pertence ao Padrão 03",
     );
     expect(screen.getByLabelText("Conteúdo da linha 1 do Padrão 04")).toHaveValue("");
-    expect(screen.getByLabelText("Conteúdo da linha 1 do Padrão 04")).toHaveAttribute("placeholder", "sem item");
+    expect(screen.getByLabelText("Conteúdo da linha 1 do Padrão 04")).toHaveAttribute(
+      "placeholder",
+      "sem item",
+    );
 
     for (const p of ["Padrão 04", "Padrão 03", "Padrão 02"])
       expect(within(bloco(p)).getAllByRole("note")).toHaveLength(1);
@@ -107,7 +111,9 @@ describe("editor da escala", () => {
     await user.tab();
 
     await waitFor(() => expect(niveis("padrao-3")).toEqual([275, 260, 250]));
-    await waitFor(() => expect(screen.getByLabelText("Nível da linha 1 do Padrão 03")).toHaveValue(275));
+    await waitFor(() =>
+      expect(screen.getByLabelText("Nível da linha 1 do Padrão 03")).toHaveValue(275),
+    );
     expect(screen.getByLabelText("Nível da linha 2 do Padrão 03")).toHaveValue(260);
   });
 
@@ -119,7 +125,9 @@ describe("editor da escala", () => {
     await user.type(nivel, "600");
     await user.tab();
 
-    expect(await within(bloco("Padrão 04")).findByRole("alert")).toHaveTextContent("Nível fora da escala (0–500)");
+    expect(await within(bloco("Padrão 04")).findByRole("alert")).toHaveTextContent(
+      "Nível fora da escala (0–500)",
+    );
     expect(nivel).toHaveAttribute("aria-invalid", "true");
     expect(niveis("padrao-4")).toEqual([325]);
   });
@@ -138,9 +146,26 @@ describe("modo leitura", () => {
   it("desabilita todos os campos e ações de edição", async () => {
     renderizarAno("/projetos/exemplo/ano/5ef/D01", "leitura");
     expect(await screen.findByLabelText("Código")).toBeDisabled();
-    for (const rotulo of ["Corte 01 → 02", "Máximo", "Descrição", "Tópico", "Pré-requisito 1", "Nível da linha 1 do Padrão 04", "Conteúdo da linha 1 do Padrão 04"])
+    for (const rotulo of [
+      "Corte 01 → 02",
+      "Máximo",
+      "Descrição",
+      "Tópico",
+      "Pré-requisito 1",
+      "Nível da linha 1 do Padrão 04",
+      "Conteúdo da linha 1 do Padrão 04",
+    ])
       expect(screen.getByLabelText(rotulo)).toBeDisabled();
-    for (const nome of ["+ Ano", "Excluir ano", "+ Descritor", "Duplicar D01", "Excluir D01", "Adicionar linha ao Padrão 04", "Remover linha 1 do Padrão 04", "Adicionar pré-requisito"])
+    for (const nome of [
+      "+ Ano",
+      "Excluir ano",
+      "+ Descritor",
+      "Duplicar D01",
+      "Excluir D01",
+      "Adicionar linha ao Padrão 04",
+      "Remover linha 1 do Padrão 04",
+      "Adicionar pré-requisito",
+    ])
       expect(screen.getByRole("button", { name: nome })).toBeDisabled();
     expect(screen.getByLabelText("Buscar descritor")).toBeEnabled();
   });

@@ -1,12 +1,24 @@
+import { FileQuestion } from "lucide-react";
 import { Link } from "react-router";
+import { Button } from "@/components/ui/button";
+import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 
 export function NaoEncontrado() {
   return (
-    <section className="p-8">
-      <h1 className="text-2xl">Página não encontrada</h1>
-      <Link className="text-acento underline mt-4 inline-block" to="/projetos">
-        Voltar aos projetos
-      </Link>
-    </section>
+    <Empty>
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <FileQuestion />
+        </EmptyMedia>
+        <EmptyTitle>
+          <h1>Página não encontrada</h1>
+        </EmptyTitle>
+      </EmptyHeader>
+      <EmptyContent>
+        <Button asChild variant="outline">
+          <Link to="/projetos">Voltar aos projetos</Link>
+        </Button>
+      </EmptyContent>
+    </Empty>
   );
 }

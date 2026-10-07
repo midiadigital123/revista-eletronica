@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { ANOS, ROTULO_ANO, type Ano, type Projeto } from "../../contrato/schemas";
 import { Aviso, Botao, Dialogo } from "../../ui";
+import { Button } from "@/components/ui/button";
 import { projetosApi } from "../api";
 import { useEdicao } from "../edicao";
 import { caminhoAno, mensagemDeErro, trocarAnos } from "./dados";
@@ -33,9 +34,10 @@ export function BotaoNovoAno({ projeto }: { projeto: Projeto }) {
 
   return (
     <>
-      <Botao
-        tamanho="sm"
-        variante="fantasma"
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
         disabled={modo !== "edicao" || faltam.length === 0}
         onClick={() => {
           setErro(undefined);
@@ -43,30 +45,34 @@ export function BotaoNovoAno({ projeto }: { projeto: Projeto }) {
         }}
       >
         + Ano
-      </Botao>
+      </Button>
       <Dialogo
         aberto={aberto}
         aoFechar={() => setAberto(false)}
         titulo="Novo ano"
         acoes={<Botao onClick={() => setAberto(false)}>Cancelar</Botao>}
       >
-        <p className="mb-3 text-sm text-tinta-suave">
-          O ano começa sem descritores, com a faixa e os cortes padrão. Dá para ajustar depois.
-        </p>
-        <ul className="flex flex-wrap gap-2">
-          {faltam.map((ano) => (
-            <li key={ano}>
-              <Botao variante="primario" onClick={() => void criar(ano)}>
-                {ROTULO_ANO[ano]}
-              </Botao>
-            </li>
-          ))}
-        </ul>
-        {erro && (
-          <div className="mt-3">
-            <Aviso tom="erro">{erro}</Aviso>
-          </div>
-        )}
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-muted-foreground">
+            O ano começa sem descritores, com a faixa e os cortes padrão. Dá para ajustar depois.
+          </p>
+          {/* Grade que cresce com o catálogo de etapas (N anos), sem largura fixa. */}
+          <ul className="grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] gap-2">
+            {faltam.map((ano) => (
+              <li key={ano}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => void criar(ano)}
+                >
+                  {ROTULO_ANO[ano]}
+                </Button>
+              </li>
+            ))}
+          </ul>
+          {erro && <Aviso tom="erro">{erro}</Aviso>}
+        </div>
       </Dialogo>
     </>
   );

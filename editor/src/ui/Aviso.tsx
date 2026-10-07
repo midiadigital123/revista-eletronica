@@ -1,19 +1,37 @@
 import type { ReactNode } from "react";
+import { CircleAlert, Info, TriangleAlert } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type Tom = "info" | "alerta" | "erro";
 
-const estilos: Record<Tom, string> = {
-  info: "bg-acento-claro border-acento/30 text-tinta",
-  alerta: "bg-alerta-claro border-alerta/30 text-tinta",
-  erro: "bg-erro-claro border-erro/30 text-tinta",
-};
+const icones = { info: Info, alerta: TriangleAlert, erro: CircleAlert } satisfies Record<
+  Tom,
+  unknown
+>;
 
 /** Faixa de aviso (modo leitura, erros de carga, avisos da escala). */
-export function Aviso({ tom = "info", children, acao }: { tom?: Tom; children: ReactNode; acao?: ReactNode }) {
+export function Aviso({
+  tom = "info",
+  children,
+  acao,
+  semRole,
+}: {
+  tom?: Tom;
+  children: ReactNode;
+  acao?: ReactNode;
+  /** Dentro de uma região viva já montada (ex.: role="status" do pai). */
+  semRole?: boolean;
+}) {
+  const Icone = icones[tom];
   return (
-    <div role={tom === "erro" ? "alert" : "status"} className={`flex items-center justify-between gap-4 rounded-md border px-4 py-3 text-sm ${estilos[tom]}`}>
-      <div>{children}</div>
-      {acao}
-    </div>
+    <Alert
+      role={semRole ? undefined : tom === "erro" ? "alert" : "status"}
+      variant={tom === "erro" ? "destructive" : tom === "alerta" ? "warning" : "default"}
+      className={acao ? "has-[>svg]:grid-cols-[auto_1fr_auto]" : undefined}
+    >
+      <Icone />
+      <AlertDescription>{children}</AlertDescription>
+      {acao && <div className="col-start-3 row-start-1 self-center">{acao}</div>}
+    </Alert>
   );
 }

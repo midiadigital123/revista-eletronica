@@ -31,6 +31,60 @@ function descriptorKeys(filterData) {
 }
 
 // ==========================================
+// RÉGUA DA ESCALA (função pura, testada em regua.test.mjs)
+// ==========================================
+
+const PADROES_DE_CIMA = ["padrao-4", "padrao-3", "padrao-2", "padrao-1"];
+
+/**
+ * Faixas da régua, de cima para baixo.
+ * Padrões contíguos: P01 = [min, cortes.padrao-1], P02 = [padrao-1, padrao-2],
+ * P03 = [padrao-2, padrao-3], P04 = [padrao-3, max].
+ * Cada linha vira uma faixa cuja base é o seu nível e cujo topo é a linha de
+ * cima (ou o topo do padrão). Sobra entre a última linha e a base do padrão
+ * vira faixa sem conteúdo (conteudo null); padrão sem linhas vira uma faixa "---".
+ * rotuloBase é o número do tick na base: null quando é o mínimo ou o máximo
+ * (aparecem fora da régua) ou quando a faixa seguinte tem a mesma base (o número sai só nela).
+ */
+function montarFaixasRegua({ min, max, cortes, escala }) {
+  const limites = {
+    "padrao-4": [max, cortes["padrao-3"]],
+    "padrao-3": [cortes["padrao-3"], cortes["padrao-2"]],
+    "padrao-2": [cortes["padrao-2"], cortes["padrao-1"]],
+    "padrao-1": [cortes["padrao-1"], min],
+  };
+  const faixas = [];
+  for (const padrao of PADROES_DE_CIMA) {
+    const [topoPadrao, basePadrao] = limites[padrao];
+    const linhas = [...((escala && escala[padrao]) || [])].sort(
+      (a, b) => b.level - a.level,
+    );
+    let topo = topoPadrao;
+    for (const { level, content } of linhas) {
+      faixas.push({ padrao, topo, base: level, conteudo: content || "---" });
+      topo = level;
+    }
+    if (!linhas.length)
+      faixas.push({ padrao, topo, base: basePadrao, conteudo: "---" });
+    else if (topo > basePadrao)
+      faixas.push({ padrao, topo, base: basePadrao, conteudo: null });
+  }
+  const valoresCorte = Object.values(cortes);
+  return faixas.map((f, i) => {
+    const proxima = faixas[i + 1];
+    const mostrar = f.base !== min && f.base !== max && !(proxima && proxima.base === f.base);
+    return {
+      ...f,
+      rotuloBase: mostrar ? f.base : null,
+      ehCorte: mostrar && valoresCorte.includes(f.base),
+    };
+  });
+}
+
+// Exporta para o teste em Node; no navegador (script clássico) `module` não existe.
+if (typeof module !== "undefined") module.exports = { montarFaixasRegua };
+
+// ==========================================
 // ESTADO DA APLICAÇÃO
 // ==========================================
 
@@ -374,7 +428,8 @@ class DescriptorManager {
     if (descriptorDetail) descriptorDetail.textContent = data.description;
 
     if (data.prerequisites) this.updatePrerequisites(data.prerequisites);
-    if (data.scale) this.updateScale(data.scale, filterData.cortes);
+    if (data.scale && filterData.scaleRange)
+      this.updateScale(data.scale, filterData.cortes, filterData.scaleRange);
     if (data.bncc) this.updateBNCC(data.bncc);
     if (filterData.scaleRange) this.updateScaleRange(filterData.scaleRange);
 
@@ -394,49 +449,41 @@ class DescriptorManager {
     ul.innerHTML = prerequisites.map((p) => `<li>${escapeHtml(p)}</li>`).join("");
   }
 
-  updateScale(scale, cortes) {
+  updateScale(scale, cortes, { min, max }) {
     const escalaContent = document.querySelector(".escala-content");
     if (!escalaContent) return;
 
     const LIMITE_CARACTERES = window.innerWidth <= 500 ? 40 : 56;
     const textosCompletos = [];
     const itensCompletos = [];
-
-    const padroes = ["padrao-4", "padrao-3", "padrao-2", "padrao-1"];
     const labels = {
       "padrao-4": "Padrão 04",
       "padrao-3": "Padrão 03",
       "padrao-2": "Padrão 02",
       "padrao-1": "Padrão 01",
     };
-    // `cortes` marca o início de cada padrão; o topo do padrão 04 é scaleRange.max
 
-    escalaContent.innerHTML = padroes
-      .map((padrao, indicePadrao) => {
-        const linhas = scale[padrao] || [];
-        const proximoPadrao = padroes[indicePadrao + 1];
-        const ocultarUltimoValor = Boolean(cortes[proximoPadrao]);
+    const faixas = montarFaixasRegua({ min, max, cortes, escala: scale });
 
-        const linhasHTML = linhas
-          .map(({ level, content }, indiceLinha) => {
-            const excedeLimite = content.length > LIMITE_CARACTERES;
-            const textoExibido = excedeLimite
-              ? `${content.slice(0, LIMITE_CARACTERES).trimEnd()}...`
-              : content;
+    const faixaHTML = ({ padrao, base, rotuloBase, ehCorte, conteudo }) => {
+      const tick =
+        rotuloBase === null
+          ? ""
+          : `<span class="proficiencia-valor-numero${ehCorte ? " eh-corte" : ""}">${escapeHtml(rotuloBase)}</span>`;
+      const texto = conteudo ?? "";
+      const excedeLimite = texto.length > LIMITE_CARACTERES;
+      const textoExibido = excedeLimite
+        ? `${texto.slice(0, LIMITE_CARACTERES).trimEnd()}...`
+        : texto;
+      if (excedeLimite) textosCompletos.push(texto);
+      const temItem = conteudo !== null && conteudo !== "---";
+      if (temItem) itensCompletos.push({ level: base, content: texto });
 
-            if (excedeLimite) textosCompletos.push(content);
-
-            const temItem = content !== "---";
-            if (temItem) itensCompletos.push({ level, content });
-
-            const ocultarValor =
-              ocultarUltimoValor && indiceLinha === linhas.length - 1;
-
-            return `
+      return `
                 <div class="linha">
                     <div class="linha-cor cor-${padrao}"></div>
                     <div class="linha-marcador"></div>
-                    <span class="proficiencia-valor">${ocultarValor ? "" : `<span class="proficiencia-valor-numero">${escapeHtml(level)}</span>`}</span>
+                    <span class="proficiencia-valor">${tick}</span>
                     <div class="linha-conteudo${excedeLimite ? " tem-ver-mais" : ""}${temItem ? " tem-ver-item" : ""}">
                         <p>${escapeHtml(textoExibido)}</p>
                         ${
@@ -468,31 +515,19 @@ class DescriptorManager {
                         }
                     </div>
                 </div>`;
-          })
-          .join("");
+    };
 
-        const linhaVazia =
-          padrao === "padrao-1"
-            ? `
-                <div class="linha linha-vazia">
-                    <div class="linha-cor cor-padrao-1"></div>
-                    <div class="linha-marcador-vazio"></div>
-                    <span class="proficiencia-valor"></span>
-                    <div class="linha-conteudo-vazio"></div>
-                </div>`
-            : "";
-
-        const corteHTML = cortes[padrao]
-          ? `<span class="padrao-corte">${escapeHtml(cortes[padrao])}</span>`
-          : "";
-
-        return `
+    // Um bloco por padrão: o rótulo ocupa a altura somada das suas faixas.
+    escalaContent.innerHTML = PADROES_DE_CIMA.map(
+      (padrao) => `
                 <div class="padrao ${padrao}">
                     <div class="padrao-label"><span>${labels[padrao]}</span></div>
-                    <div class="padrao-linhas">${corteHTML}${linhasHTML}${linhaVazia}</div>
-                </div>`;
-      })
-      .join("");
+                    <div class="padrao-linhas">${faixas
+                      .filter((f) => f.padrao === padrao)
+                      .map(faixaHTML)
+                      .join("")}</div>
+                </div>`,
+    ).join("");
 
     escalaContent.querySelectorAll(".ver-mais-btn").forEach((btn, i) => {
       const conteudo = btn.closest(".linha-conteudo");
@@ -708,4 +743,4 @@ class App {
   }
 }
 
-const app = new App();
+if (typeof document !== "undefined") new App();

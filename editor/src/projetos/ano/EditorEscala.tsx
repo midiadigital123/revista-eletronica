@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import {
   CONTEUDO_VAZIO,
   padraoDoNivel,
@@ -9,7 +10,13 @@ import {
   type ScaleRange,
 } from "../../contrato/schemas";
 import { ehErroApi } from "../../api/client";
-import { Aviso, Botao } from "../../ui";
+import { Info, Plus, X } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import { Aviso } from "../../ui";
 import { mensagemDeErro, rotuloPadrao } from "./dados";
 
 /** Ordem da revista: Padrão 04 no topo. */
@@ -18,28 +25,52 @@ const ORDEM = ["padrao-4", "padrao-3", "padrao-2", "padrao-1"] as const;
 /** Na revista, o nível da última linha dos padrões 2, 3 e 4 fica oculto (script.js: ocultarUltimoValor). */
 const OCULTA_ULTIMO_NIVEL: ReadonlySet<Padrao> = new Set(["padrao-2", "padrao-3", "padrao-4"]);
 
-const CORES: Record<Padrao, { faixa: string; fundo: string }> = {
-  "padrao-1": { faixa: "bg-padrao-1", fundo: "bg-padrao-1-bg" },
-  "padrao-2": { faixa: "bg-padrao-2", fundo: "bg-padrao-2-bg" },
-  "padrao-3": { faixa: "bg-padrao-3", fundo: "bg-padrao-3-bg" },
-  "padrao-4": { faixa: "bg-padrao-4", fundo: "bg-padrao-4-bg" },
+/** Cor plena só no cabeçalho; o corpo fica em bg-background para manter o contraste dos campos. */
+const FAIXA: Record<Padrao, string> = {
+  "padrao-1": "bg-padrao-1",
+  "padrao-2": "bg-padrao-2",
+  "padrao-3": "bg-padrao-3",
+  "padrao-4": "bg-padrao-4",
 };
 
 /** Intervalo do padrão segundo os cortes (mesma regra de padraoDoNivel). */
 function intervalo(padrao: Padrao, faixa: ScaleRange, cortes: Cortes) {
-  const inicio = { "padrao-1": faixa.min, "padrao-2": cortes["padrao-1"], "padrao-3": cortes["padrao-2"], "padrao-4": cortes["padrao-3"] }[padrao];
-  const fim = { "padrao-1": cortes["padrao-1"], "padrao-2": cortes["padrao-2"], "padrao-3": cortes["padrao-3"], "padrao-4": faixa.max }[padrao];
-  return { inicio, texto: padrao === "padrao-4" ? `${inicio} ≤ nível ≤ ${fim}` : `${inicio} ≤ nível < ${fim}` };
+  const inicio = {
+    "padrao-1": faixa.min,
+    "padrao-2": cortes["padrao-1"],
+    "padrao-3": cortes["padrao-2"],
+    "padrao-4": cortes["padrao-3"],
+  }[padrao];
+  const fim = {
+    "padrao-1": cortes["padrao-1"],
+    "padrao-2": cortes["padrao-2"],
+    "padrao-3": cortes["padrao-3"],
+    "padrao-4": faixa.max,
+  }[padrao];
+  return {
+    inicio,
+    texto: padrao === "padrao-4" ? `${inicio} ≤ nível ≤ ${fim}` : `${inicio} ≤ nível < ${fim}`,
+  };
 }
 
 export type PersistirPadrao = (padrao: Padrao, linhas: LinhaEscala[]) => Promise<unknown>;
 
 /** Escala do descritor: um bloco por padrão, cada mudança salva o padrão inteiro. */
-export function EditorEscala(props: { ano: AnoProjeto; escala: Record<Padrao, LinhaEscala[]>; persistir: PersistirPadrao }) {
+export function EditorEscala(props: {
+  ano: AnoProjeto;
+  escala: Record<Padrao, LinhaEscala[]>;
+  persistir: PersistirPadrao;
+}) {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       {ORDEM.map((p) => (
-        <BlocoPadrao key={p} padrao={p} ano={props.ano} inicial={props.escala[p]} persistir={props.persistir} />
+        <BlocoPadrao
+          key={p}
+          padrao={p}
+          ano={props.ano}
+          inicial={props.escala[p]}
+          persistir={props.persistir}
+        />
       ))}
     </div>
   );
@@ -54,11 +85,18 @@ interface Linha {
 const nivel = (l: Linha) => (l.level.trim() === "" ? NaN : Number(l.level));
 /** Ordem decrescente de nível (estável; inválidos no fim), como a API devolve. */
 const ordenar = (ls: readonly Linha[]) =>
-  [...ls].sort((a, b) => (Number.isNaN(nivel(b)) ? -1 : Number.isNaN(nivel(a)) ? 1 : nivel(b) - nivel(a)));
+  [...ls].sort((a, b) =>
+    Number.isNaN(nivel(b)) ? -1 : Number.isNaN(nivel(a)) ? 1 : nivel(b) - nivel(a),
+  );
 const paraApi = (ls: readonly Linha[]): LinhaEscala[] =>
   ls.map((l) => ({ level: nivel(l), content: l.content.trim() }));
 
-function BlocoPadrao(props: { padrao: Padrao; ano: AnoProjeto; inicial: LinhaEscala[]; persistir: PersistirPadrao }) {
+function BlocoPadrao(props: {
+  padrao: Padrao;
+  ano: AnoProjeto;
+  inicial: LinhaEscala[];
+  persistir: PersistirPadrao;
+}) {
   const { padrao, ano } = props;
   const rotulo = rotuloPadrao(padrao);
   const { inicio, texto } = intervalo(padrao, ano.scaleRange, ano.cortes);
@@ -73,10 +111,13 @@ function BlocoPadrao(props: { padrao: Padrao; ano: AnoProjeto; inicial: LinhaEsc
   const [erroGeral, setErroGeral] = useState<string>();
   const [novaId, setNovaId] = useState<string>();
   const salvo = useRef(JSON.stringify(paraApi(ordenar(linhas))));
+  const lista = useRef<HTMLOListElement>(null);
+  const botaoAdicionar = useRef<HTMLButtonElement>(null);
 
   async function salvar(novas: Linha[]) {
     const vazias = novas.filter((l) => Number.isNaN(nivel(l)));
-    if (vazias.length) return setErros(Object.fromEntries(vazias.map((l) => [l.id, "Informe o nível"])));
+    if (vazias.length)
+      return setErros(Object.fromEntries(vazias.map((l) => [l.id, "Informe o nível"])));
 
     const ordenadas = ordenar(novas);
     const corpo = paraApi(ordenadas);
@@ -115,57 +156,85 @@ function BlocoPadrao(props: { padrao: Padrao; ano: AnoProjeto; inicial: LinhaEsc
   }
 
   function remover(id: string) {
+    const i = linhas.findIndex((l) => l.id === id);
     const novas = linhas.filter((l) => l.id !== id);
-    setLinhas(novas);
+    flushSync(() => setLinhas(novas));
+    // O botão clicado sumiu: foco no nível da linha que ocupou o lugar, ou em "Adicionar linha".
+    const proximo = lista.current?.querySelectorAll<HTMLElement>('input[type="number"]')[i];
+    (proximo ?? botaoAdicionar.current)?.focus();
     void salvar(novas);
   }
 
   return (
-    <section aria-labelledby={`titulo-${padrao}`} className={`flex overflow-hidden rounded-md border border-linha ${CORES[padrao].fundo}`}>
-      <div aria-hidden className={`w-2 shrink-0 ${CORES[padrao].faixa}`} />
-      <div className="flex min-w-0 flex-1 flex-col gap-2 p-3">
-        <header className="flex items-baseline justify-between gap-3">
-          <h4 id={`titulo-${padrao}`} className="font-display text-lg">
-            {rotulo}
-          </h4>
-          <span className="font-mono text-xs text-tinta-suave">{texto}</span>
-        </header>
+    <section
+      aria-labelledby={`titulo-${padrao}`}
+      className="overflow-hidden rounded-lg border border-border bg-background"
+    >
+      <header
+        className={cn(
+          "flex items-baseline justify-between gap-3 px-4 py-2 text-foreground",
+          FAIXA[padrao],
+        )}
+      >
+        <h4 id={`titulo-${padrao}`} className="font-semibold">
+          {rotulo}
+        </h4>
+        <span className="text-sm tabular-nums">{texto}</span>
+      </header>
 
-        {linhas.length === 0 && <p className="text-sm text-tinta-suave">Sem linhas.</p>}
-        <ol className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3 p-4">
+        {linhas.length === 0 && <p className="text-sm text-muted-foreground">Sem linhas.</p>}
+        <ol ref={lista} className="flex flex-col gap-3">
           {linhas.map((l, i) => {
             const n = i + 1;
             const valor = nivel(l);
             const pertence = Number.isNaN(valor) ? padrao : padraoDoNivel(valor, ano.cortes);
             const idErro = `erro-${l.id}`;
+            const rotuloRemover = `Remover linha ${n} do ${rotulo}`;
             return (
-              <li key={l.id} className="grid grid-cols-[5.5rem_1fr_auto] items-start gap-2">
-                <input
+              <li
+                key={l.id}
+                className={cn(
+                  "grid grid-cols-[6rem_1fr_auto] items-start gap-2",
+                  l.id === novaId && "animate-entra",
+                )}
+              >
+                <Input
                   type="number"
                   aria-label={`Nível da linha ${n} do ${rotulo}`}
                   aria-invalid={Boolean(erros[l.id])}
                   aria-describedby={erros[l.id] ? idErro : undefined}
-                  className="h-9 rounded-md border border-linha bg-superficie px-2 text-right font-mono text-sm tabular-nums aria-[invalid=true]:border-erro disabled:bg-papel disabled:text-tinta-suave"
+                  className="bg-background text-right text-base font-semibold tabular-nums"
                   value={l.level}
                   onChange={(e) => mudar(l.id, "level", e.target.value)}
                   onBlur={() => void salvar(linhas)}
                 />
-                <textarea
+                <Textarea
                   aria-label={`Conteúdo da linha ${n} do ${rotulo}`}
                   placeholder="sem item"
                   rows={2}
-                  className="min-h-9 resize-y rounded-md border border-linha bg-superficie px-3 py-1.5 text-sm placeholder:italic placeholder:text-tinta-suave/70 disabled:bg-papel disabled:text-tinta-suave"
+                  className="min-h-9 bg-background"
                   value={l.content}
                   autoFocus={l.id === novaId}
                   onChange={(e) => mudar(l.id, "content", e.target.value)}
                   onBlur={() => void salvar(linhas)}
                 />
-                <Botao tamanho="sm" variante="fantasma" aria-label={`Remover linha ${n} do ${rotulo}`} onClick={() => remover(l.id)}>
-                  ×
-                </Botao>
-                <div className="col-span-3 flex flex-col gap-1 empty:hidden">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label={rotuloRemover}
+                      onClick={() => remover(l.id)}
+                    >
+                      <X />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Remover e salvar o padrão</TooltipContent>
+                </Tooltip>
+                <div className="col-span-3 flex flex-col gap-2 empty:hidden">
                   {erros[l.id] && (
-                    <p id={idErro} role="alert" className="text-xs text-erro">
+                    <p id={idErro} role="alert" className="text-sm text-destructive">
                       {erros[l.id]}
                     </p>
                   )}
@@ -175,8 +244,12 @@ function BlocoPadrao(props: { padrao: Padrao; ano: AnoProjeto; inicial: LinhaEsc
                     </Aviso>
                   )}
                   {OCULTA_ULTIMO_NIVEL.has(padrao) && i === linhas.length - 1 && (
-                    <p role="note" className="text-xs italic text-tinta-suave">
-                      O nível desta linha não aparece na revista.
+                    <p
+                      role="note"
+                      className="flex items-center gap-1.5 text-sm text-muted-foreground"
+                    >
+                      <Info aria-hidden className="size-4 shrink-0" />O nível desta linha não
+                      aparece na revista.
                     </p>
                   )}
                 </div>
@@ -185,11 +258,18 @@ function BlocoPadrao(props: { padrao: Padrao; ano: AnoProjeto; inicial: LinhaEsc
           })}
         </ol>
         <div className="flex items-center gap-3">
-          <Botao tamanho="sm" onClick={adicionar} aria-label={`Adicionar linha ao ${rotulo}`}>
-            + linha
-          </Botao>
+          <Button
+            ref={botaoAdicionar}
+            variant="outline"
+            size="sm"
+            onClick={adicionar}
+            aria-label={`Adicionar linha ao ${rotulo}`}
+          >
+            <Plus data-icon="inline-start" />
+            Adicionar linha
+          </Button>
           {erroGeral && (
-            <p role="alert" className="text-xs text-erro">
+            <p role="alert" className="text-sm text-destructive">
               {erroGeral}
             </p>
           )}

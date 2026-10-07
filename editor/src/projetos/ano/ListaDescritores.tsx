@@ -1,7 +1,14 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent, type ReactNode } from "react";
+import { Copy, Search, SearchX, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia } from "@/components/ui/empty";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import { NavLink, useNavigate } from "react-router";
 import { Codigo, ROTULO_ANO, type AnoProjeto, type Descritor } from "../../contrato/schemas";
-import { Aviso, Botao, CampoTexto, Confirmacao, Dialogo } from "../../ui";
+import { Spinner } from "@/components/ui/spinner";
+import { Aviso, Botao, CampoTexto, Confirmacao, Dialogo, useUltimo } from "../../ui";
 import { projetosApi } from "../api";
 import { useEdicao } from "../edicao";
 import {
@@ -28,7 +35,10 @@ export function ListaDescritores({ ano, codigoAtual }: { ano: AnoProjeto; codigo
   const [busca, setBusca] = useState("");
   const [duplicando, setDuplicando] = useState<Descritor>();
   const [excluindo, setExcluindo] = useState<Descritor>();
+  const [excluindoPendente, setExcluindoPendente] = useState(false);
   const [erro, setErro] = useState<string>();
+  const exibidoExcluir = useUltimo(excluindo ?? null);
+  const campoBusca = useRef<HTMLInputElement>(null);
   const editavel = modo === "edicao";
   const livre = proximoCodigo(ano.descritores);
   const visiveis = ano.descritores.filter((d) => casa(d, busca));
@@ -49,8 +59,8 @@ export function ListaDescritores({ ano, codigoAtual }: { ano: AnoProjeto; codigo
   }
 
   async function excluir(d: Descritor) {
-    setExcluindo(undefined);
     setErro(undefined);
+    setExcluindoPendente(true);
     try {
       await salvar({
         descricao: `Excluir ${d.codigo} do ${ROTULO_ANO[ano.ano]}`,
@@ -61,75 +71,94 @@ export function ListaDescritores({ ano, codigoAtual }: { ano: AnoProjeto; codigo
       if (codigoAtual === d.codigo) navigate(caminhoAno(slug, ano.ano));
     } catch (e) {
       setErro(mensagemDeErro(e));
+    } finally {
+      setExcluindoPendente(false);
+      setExcluindo(undefined);
     }
   }
 
   return (
     <nav aria-label={`Descritores do ${ROTULO_ANO[ano.ano]}`} className="flex flex-col gap-3">
-      <div className="flex items-end gap-2">
-        <div className="flex-1">
-          <CampoTexto
-            rotulo="Buscar descritor"
+      <div className="flex items-center gap-2">
+        <InputGroup className="flex-1">
+          <InputGroupAddon>
+            <Search />
+          </InputGroupAddon>
+          <InputGroupInput
+            ref={campoBusca}
+            aria-label="Buscar descritor"
             type="search"
-            placeholder="Código, tópico ou descrição"
+            placeholder="Código ou texto"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
           />
-        </div>
-        <Botao variante="primario" disabled={!editavel || !livre} onClick={() => void criar()}>
+        </InputGroup>
+        <Button type="button" disabled={!editavel || !livre} onClick={() => void criar()}>
           + Descritor
-        </Botao>
+        </Button>
       </div>
       {erro && <Aviso tom="erro">{erro}</Aviso>}
 
-      <p className="text-xs text-tinta-suave" aria-live="polite">
+      <p className="text-xs text-muted-foreground tabular-nums" aria-live="polite">
         {visiveis.length} de {ano.descritores.length} descritores
       </p>
-      <ul className="flex flex-col divide-y divide-linha overflow-hidden rounded-md border border-linha bg-superficie">
-        {visiveis.map((d) => (
-          <li key={d.codigo} className="group flex items-stretch">
-            <NavLink
-              to={caminhoDescritor(slug, ano.ano, d.codigo)}
-              className={({ isActive }) =>
-                `flex min-w-0 flex-1 gap-3 px-3 py-2 hover:bg-papel ${isActive ? "bg-acento-claro" : ""}`
-              }
+      {visiveis.length === 0 ? (
+        <Empty className="border p-6">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <SearchX />
+            </EmptyMedia>
+            <EmptyDescription>Nenhum descritor encontrado.</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      ) : (
+        <ul className="flex flex-col gap-0.5">
+          {visiveis.map((d) => (
+            <li
+              key={d.codigo}
+              className="group relative flex animate-entra items-center rounded-md"
             >
-              <span className="font-mono text-sm font-semibold text-acento">{d.codigo}</span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm">{d.description || "Sem descrição"}</span>
-                <span className="block truncate text-xs text-tinta-suave">
-                  {d.topic || "Sem tópico"}
+              <NavLink
+                to={caminhoDescritor(slug, ano.ano, d.codigo)}
+                className={({ isActive }) =>
+                  cn(
+                    "flex min-w-0 flex-1 gap-3 rounded-md px-3 py-2 transition-colors duration-150 ease-saida hover:bg-muted/60",
+                    "focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none",
+                    "before:absolute before:inset-y-2 before:left-0 before:w-px before:rounded-full before:bg-primary before:opacity-0 before:transition-opacity",
+                    isActive && "bg-muted before:opacity-100",
+                  )
+                }
+              >
+                <span className="text-sm font-semibold tabular-nums">{d.codigo}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm">{d.description || "Sem descrição"}</span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {d.topic || "Sem tópico"}
+                  </span>
                 </span>
-              </span>
-            </NavLink>
-            <div className="flex items-center pr-1">
-              <Botao
-                tamanho="sm"
-                variante="fantasma"
-                aria-label={`Duplicar ${d.codigo}`}
-                title="Duplicar"
-                disabled={!editavel || !livre}
-                onClick={() => setDuplicando(d)}
-              >
-                ⧉
-              </Botao>
-              <Botao
-                tamanho="sm"
-                variante="fantasma"
-                aria-label={`Excluir ${d.codigo}`}
-                title="Excluir"
-                disabled={!editavel}
-                onClick={() => setExcluindo(d)}
-              >
-                ×
-              </Botao>
-            </div>
-          </li>
-        ))}
-        {visiveis.length === 0 && (
-          <li className="px-3 py-4 text-sm text-tinta-suave">Nenhum descritor encontrado.</li>
-        )}
-      </ul>
+              </NavLink>
+              <div className="flex items-center opacity-0 transition-opacity duration-150 ease-saida group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
+                <AcaoItem
+                  rotulo={`Duplicar ${d.codigo}`}
+                  dica="Duplicar com outro código"
+                  disabled={!editavel || !livre}
+                  onClick={() => setDuplicando(d)}
+                >
+                  <Copy />
+                </AcaoItem>
+                <AcaoItem
+                  rotulo={`Excluir ${d.codigo}`}
+                  dica="Excluir com a escala"
+                  disabled={!editavel}
+                  onClick={() => setExcluindo(d)}
+                >
+                  <Trash2 />
+                </AcaoItem>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {duplicando && (
         <DialogoDuplicar
@@ -142,12 +171,41 @@ export function ListaDescritores({ ano, codigoAtual }: { ano: AnoProjeto; codigo
       )}
       <Confirmacao
         aberto={Boolean(excluindo)}
-        titulo={`Excluir ${excluindo?.codigo ?? ""}?`}
+        titulo={`Excluir ${exibidoExcluir?.codigo ?? ""}?`}
         mensagem="O descritor e toda a sua escala serão removidos deste ano."
+        pendente={excluindoPendente}
+        focoAoFechar={campoBusca}
         aoCancelar={() => setExcluindo(undefined)}
         aoConfirmar={() => excluindo && void excluir(excluindo)}
       />
     </nav>
+  );
+}
+
+/** Botão só com ícone + dica. */
+function AcaoItem(props: {
+  rotulo: string;
+  dica: string;
+  disabled: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label={props.rotulo}
+          disabled={props.disabled}
+          onClick={props.onClick}
+        >
+          {props.children}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{props.dica}</TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -162,6 +220,7 @@ function DialogoDuplicar(props: {
   const navigate = useNavigate();
   const [codigo, setCodigo] = useState(props.sugestao);
   const [erro, setErro] = useState<string>();
+  const [enviando, setEnviando] = useState(false);
 
   async function enviar(e: FormEvent) {
     e.preventDefault();
@@ -170,6 +229,7 @@ function DialogoDuplicar(props: {
     if (!valido.success) return setErro(valido.error.issues[0]?.message);
     if (ano.descritores.some((d) => d.codigo === novo))
       return setErro("Esse código já existe neste ano");
+    setEnviando(true);
     try {
       await salvar({
         descricao: `Duplicar ${origem.codigo} como ${novo} no ${ROTULO_ANO[ano.ano]}`,
@@ -180,6 +240,8 @@ function DialogoDuplicar(props: {
       navigate(caminhoDescritor(slug, ano.ano, novo));
     } catch (e) {
       setErro(mensagemDeErro(e));
+    } finally {
+      setEnviando(false);
     }
   }
 
@@ -188,21 +250,21 @@ function DialogoDuplicar(props: {
       aberto
       aoFechar={aoFechar}
       titulo={`Duplicar ${origem.codigo}`}
+      bloqueado={enviando}
       acoes={
         <>
-          <Botao onClick={aoFechar}>Cancelar</Botao>
-          <Botao variante="primario" type="submit" form="form-duplicar">
+          <Botao onClick={aoFechar} disabled={enviando}>
+            Cancelar
+          </Botao>
+          <Botao variante="primario" type="submit" form="form-duplicar" disabled={enviando}>
+            {enviando && <Spinner data-icon="inline-start" />}
             Duplicar
           </Botao>
         </>
       }
     >
-      <form
-        id="form-duplicar"
-        onSubmit={(e) => void enviar(e)}
-        className="flex flex-col gap-2 [&_input]:font-mono"
-      >
-        <p className="text-sm text-tinta-suave">
+      <form id="form-duplicar" onSubmit={(e) => void enviar(e)} className="flex flex-col gap-3">
+        <p className="text-sm text-muted-foreground">
           A cópia leva tópico, descrição, pré-requisitos, BNCC e a escala inteira.
         </p>
         <CampoTexto

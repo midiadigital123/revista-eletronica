@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
 import { chaves } from "../api/chaves";
 import { ehErroApi } from "../api/client";
@@ -12,7 +12,23 @@ import {
   type OrigemProjeto,
   type ProjetoResumo,
 } from "../contrato/schemas";
-import { Botao, CampoTexto, Dialogo } from "../ui";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+  FieldTitle,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Spinner } from "@/components/ui/spinner";
+import { Aviso, Botao, CampoTexto, Dialogo } from "../ui";
 import { projetosApi } from "./api";
 import { mensagemDeErro, sugerirSlug } from "./formato";
 
@@ -26,8 +42,12 @@ interface Erros {
 }
 
 const ORIGENS: { tipo: TipoOrigem; rotulo: string; ajuda: string }[] = [
-  { tipo: "vazio", rotulo: "Vazio", ajuda: "Anos sem descritores, escala 0–500." },
-  { tipo: "importar", rotulo: "Importar arquivo", ajuda: "Um .json exportado (ou o descritores.json antigo)." },
+  { tipo: "vazio", rotulo: "Vazio", ajuda: "Anos sem descritores, escala de 0 a 500." },
+  {
+    tipo: "importar",
+    rotulo: "Importar arquivo",
+    ajuda: "Um .json exportado (ou o descritores.json antigo).",
+  },
   { tipo: "copiar", rotulo: "Copiar projeto", ajuda: "Duplica página, anos e imagens." },
 ];
 
@@ -59,6 +79,7 @@ export function NovoProjeto({
 }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const id = useId();
   const [nome, setNome] = useState("");
   const [slug, setSlug] = useState("");
   const [slugEditado, setSlugEditado] = useState(false);
@@ -69,17 +90,22 @@ export function NovoProjeto({
   const [erros, setErros] = useState<Erros>({});
   const [enviando, setEnviando] = useState(false);
 
-  const fechar = () => {
-    setNome("");
-    setSlug("");
-    setSlugEditado(false);
-    setTipo("vazio");
-    setAnos([...ANOS]);
-    setRevista(null);
-    setDe("");
-    setErros({});
-    aoFechar();
-  };
+  // Zera o formulário ao REABRIR: ao fechar, o conteúdo fica intacto durante a animação de saída.
+  const [abertoAntes, setAbertoAntes] = useState(aberto);
+  if (aberto !== abertoAntes) {
+    setAbertoAntes(aberto);
+    if (aberto) {
+      setNome("");
+      setSlug("");
+      setSlugEditado(false);
+      setTipo("vazio");
+      setAnos([...ANOS]);
+      setRevista(null);
+      setDe("");
+      setErros({});
+    }
+  }
+  const fechar = aoFechar;
 
   const escolherArquivo = async (arquivo: File | undefined) => {
     setRevista(null);
@@ -94,7 +120,8 @@ export function NovoProjeto({
 
   const origem = (): OrigemProjeto | string => {
     if (tipo === "vazio") return anos.length ? { tipo, anos } : "Escolha ao menos um ano.";
-    if (tipo === "importar") return revista ? { tipo, revista } : (erros.origem ?? "Escolha um arquivo .json.");
+    if (tipo === "importar")
+      return revista ? { tipo, revista } : (erros.origem ?? "Escolha um arquivo .json.");
     return de ? { tipo, de } : "Escolha o projeto a copiar.";
   };
 
@@ -103,7 +130,8 @@ export function NovoProjeto({
     const novos: Erros = {};
     if (!nome.trim()) novos.nome = "Informe o nome";
     const slugValido = Slug.safeParse(slug);
-    if (!slugValido.success) novos.slug = slugValido.error.issues[0]?.message ?? "Identificador inválido";
+    if (!slugValido.success)
+      novos.slug = slugValido.error.issues[0]?.message ?? "Identificador inválido";
     const o = origem();
     if (typeof o === "string") novos.origem = o;
     setErros(novos);
@@ -129,124 +157,133 @@ export function NovoProjeto({
       aberto={aberto}
       aoFechar={fechar}
       titulo="Novo projeto"
+      bloqueado={enviando}
       acoes={
         <>
-          <Botao onClick={fechar}>Cancelar</Botao>
+          <Botao onClick={fechar} disabled={enviando}>
+            Cancelar
+          </Botao>
           <Botao type="submit" form="form-novo-projeto" variante="primario" disabled={enviando}>
-            {enviando ? "Criando…" : "Criar projeto"}
+            {enviando && <Spinner data-icon="inline-start" aria-label="Criando" />}
+            Criar projeto
           </Botao>
         </>
       }
     >
-      <form id="form-novo-projeto" noValidate onSubmit={enviar} className="flex flex-col gap-4">
-        <CampoTexto
-          rotulo="Nome"
-          value={nome}
-          erro={erros.nome}
-          autoFocus
-          onChange={(e) => {
-            setNome(e.target.value);
-            if (!slugEditado) setSlug(sugerirSlug(e.target.value));
-          }}
-        />
-        <CampoTexto
-          rotulo="Identificador (slug)"
-          value={slug}
-          erro={erros.slug}
-          ajuda="Aparece na URL. Minúsculas, números e hífen."
-          onChange={(e) => {
-            setSlug(e.target.value);
-            setSlugEditado(true);
-          }}
-        />
+      <form id="form-novo-projeto" noValidate onSubmit={enviar}>
+        <FieldGroup>
+          <CampoTexto
+            rotulo="Nome"
+            value={nome}
+            erro={erros.nome}
+            autoFocus
+            onChange={(e) => {
+              setNome(e.target.value);
+              if (!slugEditado) setSlug(sugerirSlug(e.target.value));
+            }}
+          />
+          <CampoTexto
+            rotulo="Identificador (slug)"
+            value={slug}
+            erro={erros.slug}
+            ajuda="Aparece na URL. Minúsculas, números e hífen."
+            onChange={(e) => {
+              setSlug(e.target.value);
+              setSlugEditado(true);
+            }}
+          />
 
-        <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1 text-sm font-semibold">Origem</legend>
-          <div className="grid gap-2 sm:grid-cols-3">
-            {ORIGENS.map((op) => (
-              <label
-                key={op.tipo}
-                className="flex cursor-pointer flex-col gap-0.5 rounded-md border border-linha p-3 text-sm has-[:checked]:border-acento has-[:checked]:bg-acento-claro"
-              >
-                <span className="flex items-center gap-2 font-medium">
-                  <input
-                    type="radio"
-                    name="origem"
-                    value={op.tipo}
-                    checked={tipo === op.tipo}
-                    onChange={() => {
-                      setTipo(op.tipo);
-                      setErros((e) => ({ ...e, origem: undefined }));
-                    }}
-                    className="accent-acento"
-                  />
-                  {op.rotulo}
-                </span>
-                <span className="text-xs text-tinta-suave">{op.ajuda}</span>
-              </label>
-            ))}
-          </div>
-
-          {tipo === "vazio" && (
-            <div role="group" aria-label="Anos" className="flex flex-wrap gap-4 pt-1">
-              {ANOS.map((ano) => (
-                <label key={ano} className="flex items-center gap-2 font-mono text-sm">
-                  <input
-                    type="checkbox"
-                    className="accent-acento"
-                    checked={anos.includes(ano)}
-                    onChange={(e) =>
-                      setAnos((atual) =>
-                        e.target.checked ? ANOS.filter((a) => a === ano || atual.includes(a)) : atual.filter((a) => a !== ano),
-                      )
-                    }
-                  />
-                  {ROTULO_ANO[ano]}
-                </label>
+          <FieldSet data-invalid={erros.origem ? true : undefined}>
+            <FieldLegend id={`${id}-origem`} variant="label">
+              Origem
+            </FieldLegend>
+            <RadioGroup
+              aria-labelledby={`${id}-origem`}
+              aria-invalid={erros.origem ? true : undefined}
+              aria-describedby={erros.origem ? `${id}-origem-erro` : undefined}
+              value={tipo}
+              onValueChange={(v) => {
+                setTipo(v as TipoOrigem);
+                setErros((e) => ({ ...e, origem: undefined }));
+              }}
+              className="grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-2"
+            >
+              {ORIGENS.map((op) => (
+                <FieldLabel key={op.tipo} htmlFor={`${id}-${op.tipo}`}>
+                  <Field orientation="horizontal">
+                    <RadioGroupItem value={op.tipo} id={`${id}-${op.tipo}`} />
+                    <FieldContent>
+                      <FieldTitle>{op.rotulo}</FieldTitle>
+                      <FieldDescription>{op.ajuda}</FieldDescription>
+                    </FieldContent>
+                  </Field>
+                </FieldLabel>
               ))}
-            </div>
-          )}
-          {tipo === "importar" && (
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="font-semibold">Arquivo .json</span>
-              <input
-                type="file"
-                accept="application/json,.json"
-                onChange={(e) => void escolherArquivo(e.target.files?.[0])}
-                className="text-sm file:mr-3 file:rounded-md file:border file:border-linha file:bg-superficie file:px-3 file:py-1.5"
-              />
-              {revista && <span className="text-xs text-acento">Arquivo válido.</span>}
-            </label>
-          )}
-          {tipo === "copiar" && (
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="font-semibold">Projeto de origem</span>
-              <select
-                value={de}
-                onChange={(e) => setDe(e.target.value)}
-                className="h-10 rounded-md border border-linha bg-superficie px-3"
-              >
-                <option value="">Escolha…</option>
-                {projetos.map((p) => (
-                  <option key={p.slug} value={p.slug}>
-                    {p.nome} ({p.slug})
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-          {erros.origem && (
-            <p role="alert" className="text-xs text-erro">
-              {erros.origem}
-            </p>
-          )}
-        </fieldset>
+            </RadioGroup>
 
-        {erros.geral && (
-          <p role="alert" className="text-sm text-erro">
-            {erros.geral}
-          </p>
-        )}
+            {tipo === "vazio" && (
+              <FieldSet>
+                <FieldLegend variant="label">Anos</FieldLegend>
+                <FieldGroup
+                  data-slot="checkbox-group"
+                  className="grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] gap-3"
+                >
+                  {ANOS.map((ano) => (
+                    <Field key={ano} orientation="horizontal">
+                      <Checkbox
+                        id={`${id}-ano-${ano}`}
+                        checked={anos.includes(ano)}
+                        onCheckedChange={(marcado) =>
+                          setAnos((atual) =>
+                            marcado === true
+                              ? ANOS.filter((a) => a === ano || atual.includes(a))
+                              : atual.filter((a) => a !== ano),
+                          )
+                        }
+                      />
+                      <FieldLabel htmlFor={`${id}-ano-${ano}`} className="font-normal">
+                        {ROTULO_ANO[ano]}
+                      </FieldLabel>
+                    </Field>
+                  ))}
+                </FieldGroup>
+              </FieldSet>
+            )}
+            {tipo === "importar" && (
+              <Field>
+                <FieldLabel htmlFor={`${id}-arquivo`}>Arquivo .json</FieldLabel>
+                <Input
+                  id={`${id}-arquivo`}
+                  type="file"
+                  accept="application/json,.json"
+                  onChange={(e) => void escolherArquivo(e.target.files?.[0])}
+                />
+                {revista && <FieldDescription>Arquivo válido.</FieldDescription>}
+              </Field>
+            )}
+            {tipo === "copiar" && (
+              <Field>
+                <FieldLabel htmlFor={`${id}-de`}>Projeto de origem</FieldLabel>
+                <NativeSelect
+                  id={`${id}-de`}
+                  className="w-full"
+                  value={de}
+                  onChange={(e) => setDe(e.target.value)}
+                >
+                  <NativeSelectOption value="">Escolha…</NativeSelectOption>
+                  {projetos.map((p) => (
+                    <NativeSelectOption key={p.slug} value={p.slug}>
+                      {p.nome} ({p.slug})
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
+              </Field>
+            )}
+            {erros.origem && <FieldError id={`${id}-origem-erro`}>{erros.origem}</FieldError>}
+          </FieldSet>
+
+          {erros.geral && <Aviso tom="erro">{erros.geral}</Aviso>}
+        </FieldGroup>
       </form>
     </Dialogo>
   );

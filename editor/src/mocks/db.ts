@@ -39,9 +39,30 @@ export const SENHA_MOCK = "senha1234";
 function estadoInicial() {
   const agora = new Date().toISOString();
   const usuarios: UsuarioMock[] = [
-    { id: "000000000000000000000001", email: "admin@exemplo.org", nome: "Admin", perfil: "admin", ativo: true, senha: SENHA_MOCK },
-    { id: "000000000000000000000002", email: "ana@exemplo.org", nome: "Ana", perfil: "editor", ativo: true, senha: SENHA_MOCK },
-    { id: "000000000000000000000003", email: "bia@exemplo.org", nome: "Bia", perfil: "editor", ativo: true, senha: SENHA_MOCK },
+    {
+      id: "000000000000000000000001",
+      email: "admin@exemplo.org",
+      nome: "Admin",
+      perfil: "admin",
+      ativo: true,
+      senha: SENHA_MOCK,
+    },
+    {
+      id: "000000000000000000000002",
+      email: "ana@exemplo.org",
+      nome: "Ana",
+      perfil: "editor",
+      ativo: true,
+      senha: SENHA_MOCK,
+    },
+    {
+      id: "000000000000000000000003",
+      email: "bia@exemplo.org",
+      nome: "Bia",
+      perfil: "editor",
+      ativo: true,
+      senha: SENHA_MOCK,
+    },
   ];
   const revista = Revista.parse(revistaFixture);
   const projetos = new Map<string, ProjetoMock>([
@@ -83,7 +104,11 @@ export function bloqueioPublico(projeto: ProjetoMock, agora = Date.now()): Bloqu
 }
 
 /** Simula outra pessoa editando o projeto (útil em testes do modo leitura). */
-export function bloquearPorOutro(slug: string, nome = "Bia", usuarioId = "000000000000000000000003") {
+export function bloquearPorOutro(
+  slug: string,
+  nome = "Bia",
+  usuarioId = "000000000000000000000003",
+) {
   const projeto = mockDb.projetos.get(slug);
   if (!projeto) throw new Error(`Projeto ${slug} não existe no mock`);
   const agora = Date.now();

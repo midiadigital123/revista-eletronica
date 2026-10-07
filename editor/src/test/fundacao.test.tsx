@@ -33,7 +33,9 @@ describe("fundação do editor", () => {
       { level: 300, content: "x" },
       { level: 250, content: "---" },
     ]);
-    expect(mockDb.projetos.get("exemplo")!.anos[0]!.descritores[0]!.scale["padrao-3"]).toEqual(linhas);
+    expect(mockDb.projetos.get("exemplo")!.anos[0]!.descritores[0]!.scale["padrao-3"]).toEqual(
+      linhas,
+    );
   });
 
   it("roteador: sem sessão vai para /login; logado fica em /projetos", async () => {

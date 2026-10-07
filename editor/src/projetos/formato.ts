@@ -17,7 +17,8 @@ const UNIDADES: [Intl.RelativeTimeFormatUnit, number][] = [
 export function tempoRelativo(data: string, agora = Date.now()): string {
   const segundos = Math.round((Date.parse(data) - agora) / 1000);
   for (const [unidade, tamanho] of UNIDADES)
-    if (Math.abs(segundos) >= tamanho) return relativo.format(Math.round(segundos / tamanho), unidade);
+    if (Math.abs(segundos) >= tamanho)
+      return relativo.format(Math.round(segundos / tamanho), unidade);
   return "agora mesmo";
 }
 

@@ -3,28 +3,70 @@ import { useState, type FormEvent } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate, useParams } from "react-router";
 import { chaves } from "../api/chaves";
 import { ehErroApi } from "../api/client";
+import { Check, Download, ExternalLink, FileJson, Pencil, Trash2 } from "lucide-react";
 import { ROTULO_ANO, Slug, type Projeto } from "../contrato/schemas";
 import { Aviso, Botao, CampoTexto, Confirmacao, Dialogo } from "../ui";
+import { Badge } from "@/components/ui/badge";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
+import { FieldError, FieldGroup } from "@/components/ui/field";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
 import { BotaoNovoAno } from "./ano/BotaoNovoAno";
 import { projetosApi } from "./api";
 import { useProjeto } from "./consultas";
 import { EdicaoContext, type Edicao } from "./edicao";
 import { horaCurta, mensagemDeErro } from "./formato";
-import { Cadeado } from "./ListaProjetos";
+import { useTituloPagina } from "../layout/useTituloPagina";
 import { useEdicaoProjeto, type NaoSalvo } from "./useEdicaoProjeto";
 
 /** /projetos/:slug — cabeçalho, ações, faixas de bloqueio, abas e provedor de edição. */
 export function ProjetoLayout() {
   const { slug = "" } = useParams();
   const consulta = useProjeto(slug);
-  const { edicao, inativo, tentarEditar, naoSalvos, descartarNaoSalvo, repetir } = useEdicaoProjeto(slug);
+  const { edicao, inativo, tentarEditar, naoSalvos, descartarNaoSalvo, repetir } =
+    useEdicaoProjeto(slug);
+  const naoEncontrado = consulta.isError && ehErroApi(consulta.error, 404);
+  // Só no erro: com o projeto aberto, o título vem da aba (Página, ano, descritor).
+  useTituloPagina(
+    consulta.isError ? (naoEncontrado ? "Projeto não encontrado" : "Erro ao abrir projeto") : null,
+  );
 
-  if (consulta.isPending) return <p className="mx-auto max-w-6xl px-6 py-10 text-tinta-suave">Carregando projeto…</p>;
+  if (consulta.isPending)
+    return (
+      <div role="status" className="flex flex-col gap-4 py-8">
+        <span className="sr-only">Carregando…</span>
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-9 w-80 max-w-full" />
+        <Skeleton className="h-8 w-full max-w-xl" />
+        <Skeleton className="mt-4 h-64 w-full" />
+      </div>
+    );
   if (consulta.isError)
     return (
-      <div className="mx-auto max-w-6xl px-6 py-10">
-        <Aviso tom="erro" acao={<Link to="/projetos" className="underline">Voltar aos projetos</Link>}>
-          {ehErroApi(consulta.error, 404) ? "Projeto não encontrado." : mensagemDeErro(consulta.error)}
+      <div className="flex flex-col gap-4 py-8">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {naoEncontrado ? "Projeto não encontrado" : "Não foi possível abrir o projeto"}
+        </h1>
+        <Aviso
+          tom="erro"
+          acao={
+            <Button asChild variant="outline" size="sm">
+              <Link to="/projetos">Voltar aos projetos</Link>
+            </Button>
+          }
+        >
+          {naoEncontrado
+            ? "Confira o endereço ou volte à lista de projetos."
+            : mensagemDeErro(consulta.error)}
         </Aviso>
       </div>
     );
@@ -32,24 +74,31 @@ export function ProjetoLayout() {
   const projeto = consulta.data;
   return (
     <EdicaoContext value={edicao}>
-      <div className="mx-auto w-full max-w-6xl px-6 pb-16">
+      <div className="flex flex-col pb-16">
         <Cabecalho projeto={projeto} edicao={edicao} repetir={repetir} />
 
         <div className="mt-4 flex flex-col gap-3">
-          <FaixaModo edicao={edicao} inativo={inativo} tentarEditar={tentarEditar} />
+          {/* Região viva sempre montada: a faixa que entra é anunciada. */}
+          <div role="status" className="empty:hidden">
+            <FaixaModo edicao={edicao} inativo={inativo} tentarEditar={tentarEditar} />
+          </div>
           {naoSalvos.length > 0 && <NaoSalvos itens={naoSalvos} descartar={descartarNaoSalvo} />}
         </div>
 
-        <nav aria-label="Seções do projeto" className="mt-6 flex flex-wrap items-center gap-x-1 border-b border-linha">
+        {/* Muitos anos (catálogo de etapas): a fila rola na horizontal, sem quebrar. */}
+        <nav
+          aria-label="Seções do projeto"
+          className="mt-6 flex items-center gap-1 overflow-x-auto border-b border-border [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]"
+        >
           <Aba to="." end>
             Página
           </Aba>
           {projeto.anos.map((a) => (
             <Aba key={a.ano} to={`ano/${a.ano}`}>
-              <span className="font-mono">{ROTULO_ANO[a.ano]}</span>
+              {ROTULO_ANO[a.ano]}
             </Aba>
           ))}
-          <div className="ml-1 py-1">
+          <div className="shrink-0 py-1 pr-2 pl-1">
             <BotaoNovoAno projeto={projeto} />
           </div>
         </nav>
@@ -68,9 +117,12 @@ function Aba({ to, end, children }: { to: string; end?: boolean; children: React
       to={to}
       end={end}
       className={({ isActive }) =>
-        `-mb-px border-b-2 px-3 py-2.5 text-sm font-medium transition-colors ${
-          isActive ? "border-acento text-tinta" : "border-transparent text-tinta-suave hover:text-tinta"
-        }`
+        cn(
+          "shrink-0 border-b-2 px-3 py-2.5 text-sm font-medium whitespace-nowrap transition-colors duration-150 ease-saida outline-none focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring",
+          isActive
+            ? "border-primary text-foreground"
+            : "border-transparent text-muted-foreground hover:text-foreground",
+        )
       }
     >
       {children}
@@ -78,7 +130,15 @@ function Aba({ to, end, children }: { to: string; end?: boolean; children: React
   );
 }
 
-function Cabecalho({ projeto, edicao, repetir }: { projeto: Projeto; edicao: Edicao; repetir: (() => void) | null }) {
+function Cabecalho({
+  projeto,
+  edicao,
+  repetir,
+}: {
+  projeto: Projeto;
+  edicao: Edicao;
+  repetir: (() => void) | null;
+}) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [dialogo, setDialogo] = useState<"renomear" | "excluir" | null>(null);
@@ -90,7 +150,9 @@ function Cabecalho({ projeto, edicao, repetir }: { projeto: Projeto; edicao: Edi
     setErroAcao(null);
     try {
       const revista = await projetosApi.exportar(slug);
-      const url = URL.createObjectURL(new Blob([JSON.stringify(revista, null, 2)], { type: "application/json" }));
+      const url = URL.createObjectURL(
+        new Blob([JSON.stringify(revista, null, 2)], { type: "application/json" }),
+      );
       const link = document.createElement("a");
       link.href = url;
       link.download = `${slug}.json`;
@@ -105,7 +167,11 @@ function Cabecalho({ projeto, edicao, repetir }: { projeto: Projeto; edicao: Edi
     setDialogo(null);
     try {
       // `aplicar` identidade: sem refetch de um projeto que deixou de existir.
-      await edicao.salvar({ descricao: "Excluir projeto", executar: () => projetosApi.excluir(slug), aplicar: (p) => p });
+      await edicao.salvar({
+        descricao: "Excluir projeto",
+        executar: () => projetosApi.excluir(slug),
+        aplicar: (p) => p,
+      });
       void queryClient.invalidateQueries({ queryKey: chaves.projetos, exact: true });
       navigate("/projetos", { replace: true });
     } catch (e) {
@@ -114,53 +180,71 @@ function Cabecalho({ projeto, edicao, repetir }: { projeto: Projeto; edicao: Edi
   };
 
   return (
-    <header className="border-b border-tinta pt-8 pb-5">
-      <p className="text-sm text-tinta-suave">
-        <Link to="/projetos" className="hover:text-tinta hover:underline">
-          Projetos
-        </Link>
-        <span aria-hidden="true"> / </span>
-        <span className="font-mono text-xs">{slug}</span>
-      </p>
-      <div className="mt-2 flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
-        <div className="min-w-0">
-          <h1 className="text-4xl font-medium tracking-tight">{projeto.nome}</h1>
-          <IndicadorSalvamento edicao={edicao} repetir={repetir} />
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Botao tamanho="sm" disabled={!podeEditar} onClick={() => setDialogo("renomear")}>
-            Renomear
-          </Botao>
-          <a
-            href={projetosApi.urlPreview(slug)}
-            target="_blank"
-            rel="noopener"
-            className="inline-flex h-8 items-center rounded-md border border-linha bg-superficie px-3 text-sm font-medium hover:bg-papel"
-          >
-            Preview ↗
-          </a>
-          <a
-            href={projetosApi.urlPacote(slug)}
-            download={`${slug}.zip`}
-            className="inline-flex h-8 items-center rounded-md border border-linha bg-superficie px-3 text-sm font-medium hover:bg-papel"
-          >
+    <header className="flex flex-col gap-4 border-b border-border pt-6 pb-5">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link to="/projetos">Projetos</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{projeto.nome}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <h1 className="min-w-0 text-3xl font-semibold tracking-tight">{projeto.nome}</h1>
+        <IndicadorSalvamento edicao={edicao} repetir={repetir} />
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button asChild size="sm">
+          <a href={projetosApi.urlPacote(slug)} download={`${slug}.zip`}>
+            <Download data-icon="inline-start" />
             Gerar pacote .zip
           </a>
-          <Botao tamanho="sm" onClick={() => void exportar()}>
-            Exportar JSON
-          </Botao>
-          <Botao tamanho="sm" variante="fantasma" className="text-erro hover:text-erro" disabled={!podeEditar} onClick={() => setDialogo("excluir")}>
-            Excluir
-          </Botao>
-        </div>
+        </Button>
+        <Button asChild variant="outline" size="sm">
+          <a href={projetosApi.urlPreview(slug)} target="_blank" rel="noopener">
+            Preview
+            <ExternalLink data-icon="inline-end" />
+          </a>
+        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={() => void exportar()}>
+          <FileJson data-icon="inline-start" />
+          Exportar JSON
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={!podeEditar}
+          onClick={() => setDialogo("renomear")}
+        >
+          <Pencil data-icon="inline-start" />
+          Renomear
+        </Button>
+        <Button
+          type="button"
+          variant="destructive"
+          size="sm"
+          className="ml-auto"
+          disabled={!podeEditar}
+          onClick={() => setDialogo("excluir")}
+        >
+          <Trash2 data-icon="inline-start" />
+          Excluir
+        </Button>
       </div>
-      {erroAcao && (
-        <div className="mt-3">
-          <Aviso tom="erro">{erroAcao}</Aviso>
-        </div>
-      )}
+      {erroAcao && <Aviso tom="erro">{erroAcao}</Aviso>}
 
-      <Renomear aberto={dialogo === "renomear"} aoFechar={() => setDialogo(null)} projeto={projeto} edicao={edicao} />
+      <Renomear
+        aberto={dialogo === "renomear"}
+        aoFechar={() => setDialogo(null)}
+        projeto={projeto}
+        edicao={edicao}
+      />
       <Confirmacao
         aberto={dialogo === "excluir"}
         titulo="Excluir projeto"
@@ -172,32 +256,67 @@ function Cabecalho({ projeto, edicao, repetir }: { projeto: Projeto; edicao: Edi
   );
 }
 
-function IndicadorSalvamento({ edicao, repetir }: { edicao: Edicao; repetir: (() => void) | null }) {
+const MODO = {
+  edicao: { rotulo: "Editando", variante: "default" },
+  leitura: { rotulo: "Somente leitura", variante: "secondary" },
+  carregando: { rotulo: "Conectando…", variante: "outline" },
+} as const;
+
+function IndicadorSalvamento({
+  edicao,
+  repetir,
+}: {
+  edicao: Edicao;
+  repetir: (() => void) | null;
+}) {
   const { salvamento, modo } = edicao;
+  const erro = salvamento.status === "erro";
   return (
-    <div className="mt-1 flex min-h-6 items-center gap-3 text-sm">
+    <div className="flex min-h-6 flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+      <Badge variant={MODO[modo].variante}>{MODO[modo].rotulo}</Badge>
       <span
-        className={`rounded-sm px-1.5 font-mono text-[11px] uppercase tracking-wider ${
-          modo === "edicao" ? "bg-acento-claro text-acento" : "bg-linha/60 text-tinta-suave"
-        }`}
+        role="status"
+        aria-live="polite"
+        className={erro ? "text-destructive" : "text-muted-foreground"}
       >
-        {modo === "edicao" ? "Editando" : modo === "leitura" ? "Somente leitura" : "Conectando…"}
+        {/* key por estado: cada troca remonta o texto e o @starting-style faz o fade (uma vez, sem loop). */}
+        <span
+          key={salvamento.status}
+          className="inline-flex items-center gap-1.5 transition-opacity duration-180 ease-saida starting:opacity-0"
+        >
+          {salvamento.status === "salvando" && (
+            <>
+              <Spinner aria-hidden="true" className="size-3.5" />
+              Salvando…
+            </>
+          )}
+          {salvamento.status === "salvo" && salvamento.salvoEm && (
+            <>
+              <Check aria-hidden="true" className="size-3.5" />
+              {`Salvo às ${horaCurta(salvamento.salvoEm)}`}
+            </>
+          )}
+          {erro && `Erro: ${salvamento.erro ?? "falha ao salvar"}`}
+        </span>
       </span>
-      <span role="status" aria-live="polite" className={salvamento.status === "erro" ? "text-erro" : "text-tinta-suave"}>
-        {salvamento.status === "salvando" && "Salvando…"}
-        {salvamento.status === "salvo" && salvamento.salvoEm && `Salvo às ${horaCurta(salvamento.salvoEm)}`}
-        {salvamento.status === "erro" && `Erro: ${salvamento.erro ?? "falha ao salvar"}`}
-      </span>
-      {salvamento.status === "erro" && repetir && (
-        <button type="button" onClick={repetir} className="text-sm font-medium text-acento underline">
+      {erro && repetir && (
+        <Button type="button" variant="link" size="sm" className="h-auto px-0" onClick={repetir}>
           tentar de novo
-        </button>
+        </Button>
       )}
     </div>
   );
 }
 
-function FaixaModo({ edicao, inativo, tentarEditar }: { edicao: Edicao; inativo: boolean; tentarEditar: () => Promise<void> }) {
+function FaixaModo({
+  edicao,
+  inativo,
+  tentarEditar,
+}: {
+  edicao: Edicao;
+  inativo: boolean;
+  tentarEditar: () => Promise<void>;
+}) {
   const [tentando, setTentando] = useState(false);
   if (edicao.modo !== "leitura") return null;
   const tentar = async () => {
@@ -212,19 +331,16 @@ function FaixaModo({ edicao, inativo, tentarEditar }: { edicao: Edicao; inativo:
   );
   if (inativo)
     return (
-      <Aviso tom="info" acao={botao("Voltar a editar")}>
+      <Aviso tom="info" semRole acao={botao("Voltar a editar")}>
         Você saiu da edição por inatividade. Os campos estão em modo leitura.
       </Aviso>
     );
   const { bloqueio } = edicao;
   return (
-    <Aviso tom="alerta" acao={botao("Tentar editar")}>
-      <span className="inline-flex items-center gap-2">
-        <Cadeado />
-        {bloqueio
-          ? `Em edição por ${bloqueio.nome} desde ${horaCurta(bloqueio.desde)}. Você está em modo leitura.`
-          : "Você não está editando este projeto. Modo leitura."}
-      </span>
+    <Aviso tom="alerta" semRole acao={botao("Tentar editar")}>
+      {bloqueio
+        ? `Em edição por ${bloqueio.nome} desde ${horaCurta(bloqueio.desde)}. Você está em modo leitura.`
+        : "Você não está editando este projeto. Modo leitura."}
     </Aviso>
   );
 }
@@ -232,15 +348,20 @@ function FaixaModo({ edicao, inativo, tentarEditar }: { edicao: Edicao; inativo:
 function NaoSalvos({ itens, descartar }: { itens: NaoSalvo[]; descartar: (id: number) => void }) {
   return (
     <Aviso tom="erro">
-      <p className="font-semibold">Estas alterações não foram salvas (outra pessoa assumiu a edição):</p>
+      <p className="font-semibold">
+        Estas alterações não foram salvas (outra pessoa assumiu a edição):
+      </p>
       <ul className="mt-2 flex flex-col gap-2">
         {itens.map((n) => (
-          <li key={n.id} className="flex flex-wrap items-start gap-2">
+          <li key={n.id} className="flex flex-wrap items-center gap-2">
             <span className="font-medium">{n.descricao}</span>
             {n.valor !== undefined && (
               <>
-                <span className="max-w-xl truncate font-mono text-xs text-tinta-suave">{n.valor}</span>
-                <Botao tamanho="sm" onClick={() => void navigator.clipboard.writeText(n.valor ?? "")}>
+                <span className="max-w-xl truncate text-muted-foreground">{n.valor}</span>
+                <Botao
+                  tamanho="sm"
+                  onClick={() => void navigator.clipboard.writeText(n.valor ?? "")}
+                >
                   Copiar
                 </Botao>
               </>
@@ -255,20 +376,36 @@ function NaoSalvos({ itens, descartar }: { itens: NaoSalvo[]; descartar: (id: nu
   );
 }
 
-function Renomear({ aberto, aoFechar, projeto, edicao }: { aberto: boolean; aoFechar: () => void; projeto: Projeto; edicao: Edicao }) {
+function Renomear({
+  aberto,
+  aoFechar,
+  projeto,
+  edicao,
+}: {
+  aberto: boolean;
+  aoFechar: () => void;
+  projeto: Projeto;
+  edicao: Edicao;
+}) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [nome, setNome] = useState(projeto.nome);
   const [slug, setSlug] = useState(projeto.slug);
   const [erros, setErros] = useState<{ nome?: string; slug?: string; geral?: string }>({});
+  const [enviando, setEnviando] = useState(false);
 
-  const fechar = () => {
-    setNome(projeto.nome);
-    setSlug(projeto.slug);
-    setErros({});
-    aoFechar();
-  };
+  // Zera ao REABRIR: ao fechar, o conteúdo fica intacto durante a animação de saída.
+  const [abertoAntes, setAbertoAntes] = useState(aberto);
+  if (aberto !== abertoAntes) {
+    setAbertoAntes(aberto);
+    if (aberto) {
+      setNome(projeto.nome);
+      setSlug(projeto.slug);
+      setErros({});
+    }
+  }
+  const fechar = aoFechar;
 
   const enviar = async (evento: FormEvent) => {
     evento.preventDefault();
@@ -284,6 +421,7 @@ function Renomear({ aberto, aoFechar, projeto, edicao }: { aberto: boolean; aoFe
       ...(slug !== projeto.slug && { slug }),
     };
     if (!Object.keys(dados).length) return fechar();
+    setEnviando(true);
     try {
       const novo = await edicao.salvar({
         descricao: "Renomear projeto",
@@ -295,11 +433,15 @@ function Renomear({ aberto, aoFechar, projeto, edicao }: { aberto: boolean; aoFe
       aoFechar();
       if (novo.slug !== projeto.slug) {
         queryClient.setQueryData(chaves.projeto(novo.slug), novo);
-        navigate(pathname.replace(`/projetos/${projeto.slug}`, `/projetos/${novo.slug}`), { replace: true });
+        navigate(pathname.replace(`/projetos/${projeto.slug}`, `/projetos/${novo.slug}`), {
+          replace: true,
+        });
       }
     } catch (e) {
       if (ehErroApi(e) && e.campo === "slug") setErros({ slug: e.message });
       else setErros({ geral: mensagemDeErro(e) });
+    } finally {
+      setEnviando(false);
     }
   };
 
@@ -308,29 +450,36 @@ function Renomear({ aberto, aoFechar, projeto, edicao }: { aberto: boolean; aoFe
       aberto={aberto}
       aoFechar={fechar}
       titulo="Renomear projeto"
+      bloqueado={enviando}
       acoes={
         <>
-          <Botao onClick={fechar}>Cancelar</Botao>
-          <Botao type="submit" form="form-renomear" variante="primario">
+          <Botao onClick={fechar} disabled={enviando}>
+            Cancelar
+          </Botao>
+          <Botao type="submit" form="form-renomear" variante="primario" disabled={enviando}>
+            {enviando && <Spinner data-icon="inline-start" />}
             Salvar
           </Botao>
         </>
       }
     >
-      <form id="form-renomear" noValidate onSubmit={enviar} className="flex flex-col gap-4">
-        <CampoTexto rotulo="Nome" value={nome} erro={erros.nome} onChange={(e) => setNome(e.target.value)} />
-        <CampoTexto
-          rotulo="Identificador (slug)"
-          value={slug}
-          erro={erros.slug}
-          ajuda="Mudar o identificador muda a URL do projeto."
-          onChange={(e) => setSlug(e.target.value)}
-        />
-        {erros.geral && (
-          <p role="alert" className="text-sm text-erro">
-            {erros.geral}
-          </p>
-        )}
+      <form id="form-renomear" noValidate onSubmit={enviar}>
+        <FieldGroup>
+          <CampoTexto
+            rotulo="Nome"
+            value={nome}
+            erro={erros.nome}
+            onChange={(e) => setNome(e.target.value)}
+          />
+          <CampoTexto
+            rotulo="Identificador (slug)"
+            value={slug}
+            erro={erros.slug}
+            ajuda="Mudar o identificador muda a URL do projeto."
+            onChange={(e) => setSlug(e.target.value)}
+          />
+          {erros.geral && <FieldError>{erros.geral}</FieldError>}
+        </FieldGroup>
       </form>
     </Dialogo>
   );

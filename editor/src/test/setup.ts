@@ -14,6 +14,12 @@ beforeAll(() => {
     this.removeAttribute("open");
     this.dispatchEvent(new Event("close"));
   };
+  // jsdom não tem ResizeObserver; Checkbox/RadioGroup do Radix usam para medir o input oculto.
+  globalThis.ResizeObserver ??= class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
   servidorMock.listen({ onUnhandledRequest: "error" });
 });
 afterEach(() => {

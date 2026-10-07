@@ -518,20 +518,14 @@ body {
 }
 
 .padrao-1 {
-    min-height: 15rem;
-    /* 240px */
     background-color: var(--color-padrao-1-bg);
 }
 
 .padrao-2 {
-    min-height: 15rem;
-    /* 240px */
     background-color: var(--color-padrao-2-bg);
 }
 
 .padrao-3 {
-    min-height: 15rem;
-    /* 240px */
     background-color: var(--color-padrao-3-bg);
 }
 
@@ -566,26 +560,6 @@ body {
     flex-direction: column;
 }
 
-.padrao-corte {
-    position: absolute;
-    top: 0;
-    left: calc(
-        var(--escala-cor-width) + var(--escala-marcador-width) + (var(--escala-valor-width) / 2)
-    );
-    transform: translate(-50%, -50%);
-    z-index: 2;
-    background-color: var(--color-primary);
-    color: var(--color-black);
-    font-family: var(--font-family);
-    font-size: var(--font-size-xsmall);
-    font-weight: 700;
-    line-height: 1.25rem;
-    padding: 0.0625rem 0.5rem;
-    border-radius: 999px;
-    white-space: nowrap;
-    box-shadow: 0 0 0 2px var(--color-white);
-}
-
 .linha {
     position: relative;
     display: flex;
@@ -593,10 +567,6 @@ body {
     align-items: flex-end;
     min-height: var(--escala-linha-height);
     height: var(--escala-linha-height);
-}
-
-.linha-vazia {
-    border-bottom: none;
 }
 
 .proficiencia-valor {
@@ -627,12 +597,21 @@ body {
 
 .proficiencia-valor-numero {
     position: relative;
-    z-index: 1;
+    z-index: 2;
     display: block;
     transform: translateY(50%);
     background-color: var(--color-white);
     padding: 0.0625rem 0.5rem;
     border-radius: 999px;
+}
+
+/* Nível que coincide com um corte: selo amarelo */
+.proficiencia-valor-numero.eh-corte {
+    background-color: var(--color-primary);
+    font-size: var(--font-size-xsmall);
+    line-height: 1.25rem;
+    white-space: nowrap;
+    box-shadow: 0 0 0 2px var(--color-white);
 }
 
 .linha-marcador {
@@ -642,14 +621,6 @@ body {
     background-color: var(--color-white);
     border-bottom: 1px solid var(--color-black);
     margin-bottom: 0;
-    flex-shrink: 0;
-}
-
-.linha-marcador-vazio {
-    width: var(--escala-marcador-width);
-    min-width: var(--escala-marcador-width);
-    align-self: stretch;
-    background-color: var(--color-white);
     flex-shrink: 0;
 }
 
@@ -684,13 +655,6 @@ body {
     padding: 1rem 0.625rem 1rem 0;
     /* 16px 10px 16px 0 */
     border-bottom: 1px solid var(--color-border);
-    min-height: var(--escala-linha-height);
-    height: var(--escala-linha-height);
-    background-color: var(--color-white);
-}
-
-.linha-conteudo-vazio {
-    flex: 1;
     min-height: var(--escala-linha-height);
     height: var(--escala-linha-height);
     background-color: var(--color-white);

@@ -1,6 +1,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { render } from "@testing-library/react";
 import { RouterProvider, createMemoryRouter } from "react-router";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { queryClient } from "../api/queryClient";
 import { definicaoRotas } from "../rotas";
 
@@ -11,7 +12,9 @@ export function renderizarRota(caminho: string) {
     router,
     ...render(
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
+        <TooltipProvider>
+          <RouterProvider router={router} />
+        </TooltipProvider>
       </QueryClientProvider>,
     ),
   };

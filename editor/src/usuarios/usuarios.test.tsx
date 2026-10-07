@@ -77,8 +77,12 @@ describe("CRUD de usuários (admin)", () => {
     expect(mockDb.usuarios.find((x) => x.nome === "Carla Dias")?.ativo).toBe(false);
 
     await u.click(screen.getByRole("button", { name: "Excluir Carla Dias" }));
-    await u.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Excluir" }));
-    await waitFor(() => expect(screen.queryByRole("rowheader", { name: "Carla Dias" })).not.toBeInTheDocument());
+    await u.click(
+      within(await screen.findByRole("dialog")).getByRole("button", { name: "Excluir" }),
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole("rowheader", { name: "Carla Dias" })).not.toBeInTheDocument(),
+    );
   });
 
   it("e-mail duplicado (409) aparece no campo; própria conta (400) vira aviso", async () => {
@@ -97,7 +101,9 @@ describe("CRUD de usuários (admin)", () => {
     await u.click(within(dlg).getByRole("button", { name: "Cancelar" }));
 
     await u.click(screen.getByRole("button", { name: "Excluir Admin" }));
-    await u.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Excluir" }));
+    await u.click(
+      within(await screen.findByRole("dialog")).getByRole("button", { name: "Excluir" }),
+    );
     expect(await screen.findByText("Você não pode excluir a própria conta")).toBeInTheDocument();
   });
 });
