@@ -7,3 +7,4 @@ menu-funcionalidade/
 __pycache__/
 *.pyc
 db.sqlite3
+.playwright-mcp/
