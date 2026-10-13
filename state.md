@@ -177,6 +177,14 @@ Quebrado/pendente: (D-020 concluída: API 103, editor 58 verdes) teste manual vi
 - **Arquivos afetados:** `contrato/schemas.ts`, `editor/src/projetos/NovoProjeto.tsx`, testes da API/editor, `README.md`, `docs/contrato.md`
 - **Status:** ativa
 
+### D-021 — BNCC: valores por bloco e coluna detectada; skills até 2000 (2026-10-13)
+- **Contexto:** PDF LP recusado: "3em.D05.bncc.skills.1: Too big (<=500)". Causas: (1) linha a linha, a 1ª linha de um valor longo ia para o rótulo de cima ("relacionadas"); (2) no 9º D03 a coluna de valores começa em x=154 (< 165 fixo) e o valor virava rótulo; (3) habilidades do EM chegam a ~1000 caracteres.
+- **Decisão:** agrupar linhas de valor em blocos (entrelinha < 13pt) e ligar cada bloco ao rótulo mais próximo do centro; coluna de valores = 1ª palavra após "Rótulo:" (fallback 165); `Bncc.skills` com até 2000 caracteres.
+- **Motivo:** rótulos ficam centralizados no bloco; layout varia por revista.
+- **Descartadas:** só aumentar o limite — skills continuariam erradas.
+- **Arquivos afetados:** `scripts/extrair_descritores.py`, `scripts/test_extrair_descritores.py`, `contrato/schemas.ts`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] Cortes do 5º ano corretos? — confirmados pelo usuário
 
@@ -211,3 +219,4 @@ Quebrado/pendente: (D-020 concluída: API 103, editor 58 verdes) teste manual vi
 - Passos 3–5 concluídos; bug achado: linhaSchema do Mongoose descartava campos novos (corrigido). Todas as suítes verdes.
 - Bug: PDF LP recusado (cortes 9ef). Causa: cortes em negrito na coluna dos ticks. Correção D-019; LP 5º EF corrigido para 125/175/225.
 - D-020: Alfabetização removida; 3 projetos Alfa apagados do Mongo (confirmado pelo usuário).
+- Bug: PDF LP recusado (skills > 500). Causa: BNCC linha a linha + coluna fixa. Correção D-021.

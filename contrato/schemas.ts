@@ -190,7 +190,7 @@ export const Escala = z.strictObject({
 export const Bncc = z.strictObject({
   practices: texto(2000),
   knowledge: texto(2000),
-  skills: listaTextos(500),
+  skills: listaTextos(2000),
 });
 
 const escalaVazia = () => ({ "padrao-1": [], "padrao-2": [], "padrao-3": [], "padrao-4": [] });

@@ -88,6 +88,12 @@ class TestExtrairLp(unittest.TestCase):
         self.assertEqual(lp["9ef"]["cortes"], {"padrao-1": 200, "padrao-2": 250, "padrao-3": 300})
         self.assertEqual(lp["3em"]["cortes"], {"padrao-1": 225, "padrao-2": 275, "padrao-3": 325})
         self.assertEqual(lp["3em"]["D01"]["topic"], "3ª SÉRIE DO ENSINO MÉDIO")
+        # Valor longo: a 1ª linha ficava no rótulo de cima ("relacionadas").
+        self.assertEqual(lp["3em"]["D05"]["bncc"]["skills"][0], "EF69LP33, EF07LP02, EM13LP18, EM13LP19")
+        self.assertTrue(lp["3em"]["D05"]["bncc"]["skills"][1].startswith("(EM13LP15) Planejar"))
+        # Coluna de valores em x=154 (< 165): o valor era lido como rótulo.
+        self.assertEqual(lp["9ef"]["D03"]["bncc"]["skills"][0], "EF69LP20")
+        self.assertTrue(lp["9ef"]["D03"]["bncc"]["skills"][1].startswith("(EF69LP47)"))
 
 
 class TestStdout(unittest.TestCase):

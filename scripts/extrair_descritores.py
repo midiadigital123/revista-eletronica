@@ -164,14 +164,30 @@ def regua(ls):
 
 
 def bncc(ls):
-    """Cada linha de valor vai para o rótulo mais próximo em y (rótulos ficam centralizados no valor)."""
-    rotulos = [{"y": l["y"], "t": texto([w for w in l["w"] if w["x"] < X_ROTULO_BNCC])} for l in ls]
+    """Linhas de valor viram blocos (entrelinha ~11pt; entre blocos ~15pt) e cada bloco vai para o
+    rótulo mais próximo do seu centro (rótulos ficam centralizados no valor). Linha a linha, a 1ª
+    linha de um valor longo caía no rótulo de cima."""
+    # Coluna dos valores: 1ª palavra depois de "Rótulo:" (varia por revista: 154 a 171 pt).
+    x_valor = min(
+        (l["w"][i + 1]["x"] for l in ls for i, w in enumerate(l["w"][:-1]) if w["t"].endswith(":")),
+        default=X_ROTULO_BNCC,
+    ) - 1
+    rotulos = [{"y": l["y"], "t": texto([w for w in l["w"] if w["x"] < x_valor])} for l in ls]
     rotulos = [r for r in rotulos if r["t"].endswith(":")]
     valores = {r["t"]: [] for r in rotulos}
+    blocos = []
     for l in ls:
-        ws = [w for w in l["w"] if w["x"] >= X_ROTULO_BNCC]
-        if ws and rotulos:
-            valores[mais_proxima(rotulos, l["y"])["t"]].append(texto(ws))
+        ws = [w for w in l["w"] if w["x"] >= x_valor]
+        if not ws:
+            continue
+        if blocos and l["y"] - blocos[-1][-1]["y"] < 13:
+            blocos[-1].append({"y": l["y"], "t": texto(ws)})
+        else:
+            blocos.append([{"y": l["y"], "t": texto(ws)}])
+    for b in blocos:
+        if rotulos:
+            centro = (b[0]["y"] + b[-1]["y"]) / 2
+            valores[mais_proxima(rotulos, centro)["t"]].extend(x["t"] for x in b)
 
     def campo(padrao):
         return juntar(next((v for k, v in valores.items() if re.search(padrao, k, re.I)), []))
