@@ -270,7 +270,8 @@ function BlocoPadrao(props: {
               <li
                 key={l.id}
                 className={cn(
-                  "grid grid-cols-[6.5rem_6.5rem_1fr_auto_auto] items-start gap-2",
+                  // Celular: o texto desce para uma linha própria; DOM e tab não mudam.
+                  "grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_auto] items-start gap-2 sm:grid-cols-[6.5rem_6.5rem_1fr_auto_auto]",
                   l.id === novaId && "animate-entra",
                 )}
               >
@@ -299,7 +300,7 @@ function BlocoPadrao(props: {
                   aria-label={`Conteúdo da linha ${n} do ${rotulo}`}
                   placeholder="sem item"
                   rows={2}
-                  className="min-h-9 bg-background"
+                  className="min-h-9 bg-background max-sm:order-1 max-sm:col-span-full"
                   value={l.content}
                   autoFocus={l.id === novaId}
                   onChange={(e) => mudar(l.id, "content", e.target.value)}
@@ -346,7 +347,7 @@ function BlocoPadrao(props: {
                   </TooltipTrigger>
                   <TooltipContent>Remover e salvar o padrão</TooltipContent>
                 </Tooltip>
-                <div className="col-span-full flex flex-col gap-2 empty:hidden">
+                <div className="col-span-full flex flex-col gap-2 empty:hidden max-sm:order-2">
                   {l.item && (
                     <p className="flex flex-wrap items-center gap-2 text-sm">
                       <a

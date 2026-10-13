@@ -1,5 +1,5 @@
 import { useId, useState } from "react";
-import { ChevronDown, MousePointerClick, SearchX } from "lucide-react";
+import { ChevronDown, MousePointerClick, SearchX, Trash2 } from "lucide-react";
 import { Outlet, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import {
@@ -152,7 +152,7 @@ export function SemDescritor() {
         </EmptyMedia>
         <EmptyTitle>Escolha um descritor</EmptyTitle>
         <EmptyDescription>
-          Selecione um na lista ou use “+ Descritor” para criar um novo.
+          Selecione um na lista ou use “Novo descritor” para criar um novo.
         </EmptyDescription>
       </EmptyHeader>
     </Empty>
@@ -210,12 +210,13 @@ function ExcluirAno({
     <div className="flex flex-col items-end gap-2">
       <Button
         type="button"
-        variant="outline"
+        variant="destructive"
         size="sm"
         disabled={modo !== "edicao" || unico}
         aria-describedby={unico ? idMotivo : undefined}
         onClick={() => setConfirmando(true)}
       >
+        <Trash2 data-icon="inline-start" />
         Excluir ano
       </Button>
       {/* Texto visível: botão desabilitado não recebe foco nem mostra tooltip. */}

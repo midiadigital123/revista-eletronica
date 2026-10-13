@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
-import { Copy, Search, SearchX, Trash2 } from "lucide-react";
+import { Copy, Plus, Search, SearchX, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia } from "@/components/ui/empty";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
@@ -109,7 +109,8 @@ export function ListaDescritores({
           />
         </InputGroup>
         <Button type="button" disabled={!editavel || !livre} onClick={() => void criar()}>
-          + Descritor
+          <Plus data-icon="inline-start" />
+          Novo descritor
         </Button>
       </div>
       {erro && <Aviso tom="erro">{erro}</Aviso>}

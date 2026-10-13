@@ -105,14 +105,16 @@ export function ListaProjetos() {
                   </dl>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  atualizado {tempoRelativo(p.atualizadoEm)}
+                  {tempoRelativo(p.atualizadoEm)}
                 </TableCell>
                 <TableCell>
-                  {p.bloqueio && (
+                  {p.bloqueio ? (
                     <Badge variant="warning">
                       <Lock data-icon="inline-start" />
                       Em edição por {p.bloqueio.nome}
                     </Badge>
+                  ) : (
+                    <span className="text-muted-foreground">Livre</span>
                   )}
                 </TableCell>
               </TableRow>

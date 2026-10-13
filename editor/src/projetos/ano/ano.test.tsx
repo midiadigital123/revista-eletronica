@@ -24,7 +24,7 @@ describe("anos", () => {
     const user = userEvent.setup();
     const { router } = renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef");
 
-    await user.click(await screen.findByRole("button", { name: /^\+ Ano/ }));
+    await user.click(await screen.findByRole("button", { name: /^Novo ano/ }));
     const dialogo = screen.getByRole("dialog", { name: /^Novo ano/ });
     expect(within(dialogo).queryByRole("button", { name: "5º EF" })).not.toBeInTheDocument();
     await user.click(within(dialogo).getByRole("button", { name: "3ª EM" }));
@@ -37,14 +37,14 @@ describe("anos", () => {
       descritores: [],
     });
     // Sem atalhos restantes, o botão continua ativo: o formulário cria qualquer etapa.
-    expect(screen.getByRole("button", { name: /^\+ Ano/ })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /^Novo ano/ })).toBeEnabled();
   });
 
   it("cria qualquer etapa pelo formulário e a aba entra na ordem EF/EM", async () => {
     const user = userEvent.setup();
     const { router } = renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef");
 
-    await user.click(await screen.findByRole("button", { name: /^\+ Ano/ }));
+    await user.click(await screen.findByRole("button", { name: /^Novo ano/ }));
     const dialogo = screen.getByRole("dialog", { name: /^Novo ano/ });
     await user.type(within(dialogo).getByLabelText("Número"), "2");
     await user.selectOptions(within(dialogo).getByLabelText("Segmento"), "ef");
@@ -69,7 +69,7 @@ describe("anos", () => {
     const user = userEvent.setup();
     renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef");
 
-    await user.click(await screen.findByRole("button", { name: /^\+ Ano/ }));
+    await user.click(await screen.findByRole("button", { name: /^Novo ano/ }));
     const dialogo = screen.getByRole("dialog", { name: /^Novo ano/ });
     const numero = within(dialogo).getByLabelText("Número");
     await user.type(numero, "4");
@@ -179,7 +179,7 @@ describe("descritores", () => {
   it("cria com o próximo código livre e abre o descritor", async () => {
     const user = userEvent.setup();
     const { router } = renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/9ef");
-    await user.click(await screen.findByRole("button", { name: "+ Descritor" }));
+    await user.click(await screen.findByRole("button", { name: "Novo descritor" }));
 
     expect(await screen.findByLabelText("Código")).toHaveValue("D03");
     expect(router.state.location.pathname).toBe("/projetos/exemplo/lingua-portuguesa/ano/9ef/D03");

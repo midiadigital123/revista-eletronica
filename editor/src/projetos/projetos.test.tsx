@@ -46,7 +46,7 @@ describe("lista de projetos", () => {
     renderizarRota("/projetos");
     expect(await screen.findByRole("heading", { name: "Exemplo" })).toBeInTheDocument();
     expect(screen.getByText("Em edição por Bia")).toBeInTheDocument();
-    expect(screen.getByText(/atualizado/)).toBeInTheDocument();
+    expect(screen.getByText(/^(agora mesmo|há )/)).toBeInTheDocument();
   });
 
   it("cria projeto vazio com 2 disciplinas, slug sugerido e entra editando", async () => {
@@ -82,7 +82,7 @@ describe("lista de projetos", () => {
       ["matematica", ["2ef", "5ef", "9ef"]],
     ]);
     expect(criado.bloqueio?.usuarioId).toBe(ANA);
-    // Uma aba por caderno (leva ao primeiro ano); os anos e o "+ Ano" aparecem só no caderno aberto.
+    // Uma aba por caderno (leva ao primeiro ano); os anos e o "Novo ano" aparecem só no caderno aberto.
     const secoes = screen.getByRole("navigation", { name: "Seções do projeto" });
     expect(screen.queryByRole("navigation", { name: "Anos de Matemática" })).toBeNull();
     // Preview abre direto o caderno da aba (na Página, o primeiro), nunca o índice.
@@ -105,7 +105,7 @@ describe("lista de projetos", () => {
       "href",
       "/projetos/sao-paulo-2026/matematica/ano/2ef",
     );
-    expect(within(mat).getByRole("button", { name: "+ Ano em Matemática" })).toBeEnabled();
+    expect(within(mat).getByRole("button", { name: "Novo ano em Matemática" })).toBeEnabled();
   });
 
   it("sem disciplina marcada não envia", async () => {
@@ -365,7 +365,7 @@ describe("aba Página", () => {
     await user.type(titulo, " A");
     await user.tab();
     expect(await screen.findByText("Erro: Falhou")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "+ parágrafo" }));
+    await user.click(screen.getByRole("button", { name: "Adicionar parágrafo" }));
     await user.type(screen.getByLabelText("Parágrafo 1"), "Novo");
     await user.tab();
     await waitFor(() => expect(falhar).toBe(0));
@@ -397,7 +397,7 @@ describe("aba Página", () => {
   it("parágrafos: adiciona, salva no blur e remove", async () => {
     const user = userEvent.setup();
     await abrirEditando();
-    await user.click(await screen.findByRole("button", { name: "+ parágrafo" }));
+    await user.click(await screen.findByRole("button", { name: "Adicionar parágrafo" }));
     await user.type(screen.getByLabelText("Parágrafo 1"), "Primeiro");
     await user.tab();
     await waitFor(() =>

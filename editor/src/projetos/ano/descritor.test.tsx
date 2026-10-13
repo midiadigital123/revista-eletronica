@@ -232,9 +232,9 @@ describe("modo leitura", () => {
     ])
       expect(screen.getByLabelText(rotulo)).toBeDisabled();
     for (const nome of [
-      "+ Ano em Língua Portuguesa",
+      "Novo ano em Língua Portuguesa",
       "Excluir ano",
-      "+ Descritor",
+      "Novo descritor",
       "Duplicar D01",
       "Excluir D01",
       "Adicionar linha ao Padrão 04",

@@ -9,7 +9,7 @@ import {
   type Pagina,
   type Projeto,
 } from "../contrato/schemas";
-import { RotateCcw, X } from "lucide-react";
+import { Plus, RotateCcw, X } from "lucide-react";
 import { AreaTexto, Aviso, CampoTexto } from "../ui";
 import { Button } from "@/components/ui/button";
 import { novoId } from "@/lib/utils";
@@ -256,7 +256,8 @@ function CampoParagrafos({ campo, inicial, edicao }: PropsCampo) {
           variant="outline"
           onClick={() => setItens((l) => [...l, novoParagrafo("")])}
         >
-          + parágrafo
+          <Plus data-icon="inline-start" />
+          Adicionar parágrafo
         </Button>
         <Restaurar
           onClick={() => {

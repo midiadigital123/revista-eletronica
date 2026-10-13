@@ -1,12 +1,13 @@
 # state.md — revista-express
 
 ## Estado atual
-Passo 5 de 5: concluído (falta teste manual no docker)
-Funcionando: extrator com topic, início/fim e uma linha por habilidade; cortes com ≥/< no editor; linhas com início/fim e PDF por linha; revista expande no hover e "Ver item" abre o PDF (iframe) só quando há item. Python 7 OK, API 103, editor 58, régua ok.
-Quebrado/pendente: (D-020 concluída: API 103, editor 58 verdes) teste manual via docker não feito (precisa rebuild da API para pegar o extrator novo); projetos já criados seguem com topic vazio e sem fim (reimportar).
+<!-- sobrescrever a cada atualização -->
+Polish da UI dos projetos: 5 de 5 concluídos (D-022), sem commit.
+Funcionando: escala no celular com o texto em linha própria; "Novo descritor", "Novo ano", "Adicionar parágrafo" com ícone Plus; "Excluir ano" destructive; lista com "agora mesmo"/"Livre"; console sem 404 do favicon. Editor 58 testes, typecheck e lint verdes.
+Quebrado/pendente: teste manual no docker da sessão anterior (extrator novo) segue pendente. Detector impeccable acusa border-b-2 nas abas (ProjetoLayout.tsx:169): falso positivo, é o sublinhado de 2px da DESIGN.md (raio só no foco).
 
 ## Próxima ação
-`docker compose up --build api` e importar "SAEGO_2025_RE_LP Web.pdf"; depois anexar um PDF a uma linha de um projeto existente; abrir o Preview e clicar "Ver item".
+Revisar o diff com `git diff editor/` e decidir o commit.
 
 ## Plano
 1. [x] Extrator Python: topic, fim, split por habilidade, sem CORTES_SEM_NUMERO
@@ -185,6 +186,14 @@ Quebrado/pendente: (D-020 concluída: API 103, editor 58 verdes) teste manual vi
 - **Arquivos afetados:** `scripts/extrair_descritores.py`, `scripts/test_extrair_descritores.py`, `contrato/schemas.ts`
 - **Status:** ativa
 
+### D-022 — Botões de criar com ícone Plus e verbo (2026-10-13 17:15)
+- **Contexto:** polish da UI dos projetos; "+ Descritor", "+ Ano", "+ parágrafo" usavam "+" digitado, enquanto "Novo projeto" e "Adicionar linha" usam ícone lucide.
+- **Decisão:** ícone `Plus` + "Novo descritor", "Novo ano" (aria "Novo ano em {caderno}"), "Adicionar parágrafo". "Excluir ano" vira destructive com Trash2. Lista: "Atualizado" sem a palavra repetida; Situação "Livre" sem bloqueio. Favicon vazio (data:). Escala no celular: textarea em linha própria.
+- **Motivo:** um padrão só para criar/excluir; glifo no lugar de ícone foge do sistema.
+- **Descartadas:** manter "+" com aria-label antigo — nome acessível diferente do visível; mudar placeholder "sem item" — convenção da revista, fixado em teste.
+- **Arquivos afetados:** `editor/src/projetos/**`, `editor/index.html`, testes.
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] Cortes do 5º ano corretos? — confirmados pelo usuário
 
@@ -220,3 +229,7 @@ Quebrado/pendente: (D-020 concluída: API 103, editor 58 verdes) teste manual vi
 - Bug: PDF LP recusado (cortes 9ef). Causa: cortes em negrito na coluna dos ticks. Correção D-019; LP 5º EF corrigido para 125/175/225.
 - D-020: Alfabetização removida; 3 projetos Alfa apagados do Mongo (confirmado pelo usuário).
 - Bug: PDF LP recusado (skills > 500). Causa: BNCC linha a linha + coluna fixa. Correção D-021.
+
+### 2026-10-13 17:15 (polish)
+- Plano de polish aprovado (5 itens, D-022).
+- Polish aplicado e verificado (mocks, 1440px e celular); 58 testes verdes.

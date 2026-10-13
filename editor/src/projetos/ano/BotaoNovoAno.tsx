@@ -1,4 +1,5 @@
 import { useId, useState, type FormEvent } from "react";
+import { Plus } from "lucide-react";
 import { useNavigate } from "react-router";
 import {
   Ano,
@@ -17,7 +18,7 @@ import { useEdicao } from "../edicao";
 import { caminhoAno, mensagemDeErro, trocarAnos } from "./dados";
 
 /**
- * Botão "+ Ano" de um caderno na barra de abas do projeto (renderizado por A6a no
+ * Botão "Novo ano" de um caderno na barra de abas do projeto (renderizado por A6a no
  * ProjetoLayout, um por caderno). Atalhos para as etapas padrão que faltam e um formulário
  * para qualquer etapa (número + EF/EM); cria com faixa e cortes padrão.
  */
@@ -70,7 +71,7 @@ export function BotaoNovoAno({ caderno }: { caderno: CadernoProjeto }) {
         size="sm"
         variant="ghost"
         disabled={modo !== "edicao"}
-        aria-label={`+ Ano em ${rotuloCaderno(caderno.id)}`}
+        aria-label={`Novo ano em ${rotuloCaderno(caderno.id)}`}
         onClick={() => {
           setErro(undefined);
           setErroEtapa(undefined);
@@ -79,7 +80,8 @@ export function BotaoNovoAno({ caderno }: { caderno: CadernoProjeto }) {
           setAberto(true);
         }}
       >
-        + Ano
+        <Plus data-icon="inline-start" />
+        Novo ano
       </Button>
       <Dialogo
         aberto={aberto}
