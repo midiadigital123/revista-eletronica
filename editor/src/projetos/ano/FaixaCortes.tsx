@@ -1,6 +1,5 @@
 import { useId, useState } from "react";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import { Field, FieldError } from "@/components/ui/field";
 import {
   Padrao,
   PADROES_COM_CORTE,
@@ -17,54 +16,25 @@ import { Aviso } from "../../ui";
 import { projetosApi } from "../api";
 import { useEdicao } from "../edicao";
 import { mensagemDeErro, rotuloPadrao, trocarAno, rotuloAnoCaderno } from "./dados";
+import { EntradaComOperador } from "./EditorEscala";
 
 const CAMPOS = [
-  { chave: "scaleRange.min", rotulo: "Mínimo" },
-  { chave: "cortes.padrao-1", rotulo: "Corte 01 → 02" },
-  { chave: "cortes.padrao-2", rotulo: "Corte 02 → 03" },
-  { chave: "cortes.padrao-3", rotulo: "Corte 03 → 04" },
-  { chave: "scaleRange.max", rotulo: "Máximo" },
+  { chave: "scaleRange.min" },
+  { chave: "cortes.padrao-1" },
+  { chave: "cortes.padrao-2" },
+  { chave: "cortes.padrao-3" },
+  { chave: "scaleRange.max" },
 ] as const;
 
 type Chave = (typeof CAMPOS)[number]["chave"];
 
-/** Cada padrão: campos que moram no bloco (o corte fica no padrão que ele inicia) e de onde vem a faixa. */
+/** Cada padrão vai de `inicio` (≥) a `fim` (<; ≤ no 04). O fim de um é o início do próximo: mesma chave. */
 const BLOCOS = [
-  {
-    padrao: "padrao-1",
-    cor: "bg-padrao-1",
-    campos: [0],
-    inicio: "scaleRange.min",
-    fim: "cortes.padrao-1",
-  },
-  {
-    padrao: "padrao-2",
-    cor: "bg-padrao-2",
-    campos: [1],
-    inicio: "cortes.padrao-1",
-    fim: "cortes.padrao-2",
-  },
-  {
-    padrao: "padrao-3",
-    cor: "bg-padrao-3",
-    campos: [2],
-    inicio: "cortes.padrao-2",
-    fim: "cortes.padrao-3",
-  },
-  {
-    padrao: "padrao-4",
-    cor: "bg-padrao-4",
-    campos: [3, 4],
-    inicio: "cortes.padrao-3",
-    fim: "scaleRange.max",
-  },
-] as const satisfies readonly {
-  padrao: Padrao;
-  cor: string;
-  campos: readonly number[];
-  inicio: Chave;
-  fim: Chave;
-}[];
+  { padrao: "padrao-1", cor: "bg-padrao-1", inicio: "scaleRange.min", fim: "cortes.padrao-1" },
+  { padrao: "padrao-2", cor: "bg-padrao-2", inicio: "cortes.padrao-1", fim: "cortes.padrao-2" },
+  { padrao: "padrao-3", cor: "bg-padrao-3", inicio: "cortes.padrao-2", fim: "cortes.padrao-3" },
+  { padrao: "padrao-4", cor: "bg-padrao-4", inicio: "cortes.padrao-3", fim: "scaleRange.max" },
+] as const satisfies readonly { padrao: Padrao; cor: string; inicio: Chave; fim: Chave }[];
 type Valores = Record<Chave, string>;
 type Erros = Partial<Record<Chave, string>>;
 
@@ -156,53 +126,49 @@ export function FaixaCortes({ caderno, ano }: { caderno: Caderno; ano: AnoProjet
     }
   }
 
-  /** "125 a 249": o fim é exclusivo (é o próximo corte), exceto no Padrão 04, que vai até o máximo. */
-  function faixaDoBloco(b: (typeof BLOCOS)[number]) {
-    const n = (c: Chave) => (valores[c].trim() === "" ? NaN : Number(valores[c]));
-    const inicio = n(b.inicio);
-    const fim = n(b.fim) - (b.padrao === "padrao-4" ? 0 : 1);
-    return Number.isInteger(inicio) && Number.isInteger(fim) ? `${inicio} a ${fim}` : "…";
-  }
+  /** Erro de cada chave aparece uma vez: no campo de início (ou no máximo); os dois campos o referenciam. */
+  const idErro = (c: Chave) => `${id}-${c}-erro`;
 
   return (
     <div className="flex flex-col gap-3">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        {BLOCOS.map((b) => (
-          <div key={b.padrao} className="flex flex-col gap-3 rounded-lg border p-3">
-            <div className="flex flex-col gap-2">
-              <span aria-hidden className={`h-1.5 rounded-full ${b.cor}`} />
-              <div className="flex flex-wrap items-baseline justify-between gap-x-2">
+        {BLOCOS.map((b) => {
+          const ultimo = b.padrao === "padrao-4";
+          const lados = [
+            { chave: b.inicio, operador: ">=", texto: "início (maior ou igual a)" },
+            ultimo
+              ? ({ chave: b.fim, operador: "<=", texto: "fim (menor ou igual a)" } as const)
+              : ({ chave: b.fim, operador: "<", texto: "fim (menor que)" } as const),
+          ] as const;
+          return (
+            <div key={b.padrao} className="flex flex-col gap-3 rounded-lg border p-3">
+              <div className="flex flex-col gap-2">
+                <span aria-hidden className={`h-1.5 rounded-full ${b.cor}`} />
                 <p className="text-sm font-medium whitespace-nowrap">{rotuloPadrao(b.padrao)}</p>
-                <p className="text-sm whitespace-nowrap text-muted-foreground tabular-nums">
-                  {faixaDoBloco(b)}
-                </p>
               </div>
+              {lados.map(({ chave, operador, texto }) => {
+                const erro = erros[chave];
+                const mostraErro = chave === b.inicio || chave === "scaleRange.max";
+                return (
+                  <Field key={operador} data-invalid={erro ? true : undefined} className="gap-1.5">
+                    <EntradaComOperador
+                      operador={operador}
+                      aria-label={`${rotuloPadrao(b.padrao)} — ${texto}`}
+                      className="tabular-nums"
+                      step={1}
+                      aria-invalid={Boolean(erro)}
+                      aria-describedby={erro ? idErro(chave) : undefined}
+                      value={valores[chave]}
+                      onChange={(e) => setValores((v) => ({ ...v, [chave]: e.target.value }))}
+                      onBlur={() => void confirmar()}
+                    />
+                    {erro && mostraErro && <FieldError id={idErro(chave)}>{erro}</FieldError>}
+                  </Field>
+                );
+              })}
             </div>
-            {b.campos.map((i) => {
-              const c = CAMPOS[i];
-              const campoId = `${id}-${i}`;
-              const erro = erros[c.chave];
-              return (
-                <Field key={c.chave} data-invalid={erro ? true : undefined}>
-                  <FieldLabel htmlFor={campoId}>{c.rotulo}</FieldLabel>
-                  <Input
-                    id={campoId}
-                    className="tabular-nums"
-                    type="number"
-                    step={1}
-                    inputMode="numeric"
-                    aria-invalid={Boolean(erro)}
-                    aria-describedby={erro ? `${campoId}-erro` : undefined}
-                    value={valores[c.chave]}
-                    onChange={(e) => setValores((v) => ({ ...v, [c.chave]: e.target.value }))}
-                    onBlur={() => void confirmar()}
-                  />
-                  {erro && <FieldError id={`${campoId}-erro`}>{erro}</FieldError>}
-                </Field>
-              );
-            })}
-          </div>
-        ))}
+          );
+        })}
       </div>
       {geral.length > 0 && (
         <Aviso tom="erro">

@@ -1,23 +1,57 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type ComponentProps } from "react";
 import { flushSync } from "react-dom";
 import {
   CONTEUDO_VAZIO,
+  ITEM_MAX_BYTES,
   padraoDoNivel,
   type AnoProjeto,
   type Cortes,
+  type ItemPdf,
   type LinhaEscala,
   type Padrao,
   type ScaleRange,
 } from "../../contrato/schemas";
 import { ehErroApi } from "../../api/client";
-import { Info, Plus, X } from "lucide-react";
+import { FileUp, Info, Plus, X } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from "@/components/ui/input-group";
 import { Textarea } from "@/components/ui/textarea";
 import { cn, novoId } from "@/lib/utils";
 import { Aviso } from "../../ui";
+import { projetosApi } from "../api";
+import { useEdicao } from "../edicao";
 import { mensagemDeErro, rotuloPadrao } from "./dados";
+
+const OPERADORES = {
+  ">=": ["≥", "maior ou igual a"],
+  "<": ["<", "menor que"],
+  "<=": ["≤", "menor ou igual a"],
+} as const;
+
+/** Campo numérico com o operador fixo na frente (≥, <, ≤); o aria-label diz o operador em palavras. */
+export function EntradaComOperador({
+  operador,
+  className,
+  ...props
+}: { operador: keyof typeof OPERADORES } & ComponentProps<typeof InputGroupInput>) {
+  const [simbolo, palavras] = OPERADORES[operador];
+  return (
+    <InputGroup className={className}>
+      <InputGroupAddon>
+        <InputGroupText aria-hidden title={palavras}>
+          {simbolo}
+        </InputGroupText>
+      </InputGroupAddon>
+      <InputGroupInput type="number" inputMode="numeric" {...props} />
+    </InputGroup>
+  );
+}
 
 /** Ordem da revista: Padrão 04 no topo. */
 const ORDEM = ["padrao-4", "padrao-3", "padrao-2", "padrao-1"] as const;
@@ -49,6 +83,7 @@ function intervalo(padrao: Padrao, faixa: ScaleRange, cortes: Cortes) {
   }[padrao];
   return {
     inicio,
+    fim,
     texto: padrao === "padrao-4" ? `${inicio} ≤ nível ≤ ${fim}` : `${inicio} ≤ nível < ${fim}`,
   };
 }
@@ -79,7 +114,10 @@ export function EditorEscala(props: {
 interface Linha {
   id: string;
   level: string;
+  /** Tick acima da habilidade; vazio = sem fim. */
+  fim: string;
   content: string;
+  item?: ItemPdf;
 }
 
 const nivel = (l: Linha) => (l.level.trim() === "" ? NaN : Number(l.level));
@@ -89,7 +127,12 @@ const ordenar = (ls: readonly Linha[]) =>
     Number.isNaN(nivel(b)) ? -1 : Number.isNaN(nivel(a)) ? 1 : nivel(b) - nivel(a),
   );
 const paraApi = (ls: readonly Linha[]): LinhaEscala[] =>
-  ls.map((l) => ({ level: nivel(l), content: l.content.trim() }));
+  ls.map((l) => ({
+    level: nivel(l),
+    ...(l.fim.trim() !== "" && { fim: Number(l.fim) }),
+    content: l.content.trim(),
+    ...(l.item && { item: l.item }),
+  }));
 
 function BlocoPadrao(props: {
   padrao: Padrao;
@@ -99,11 +142,14 @@ function BlocoPadrao(props: {
 }) {
   const { padrao, ano } = props;
   const rotulo = rotuloPadrao(padrao);
-  const { inicio, texto } = intervalo(padrao, ano.scaleRange, ano.cortes);
+  const { slug, salvar: salvarNaFila } = useEdicao();
+  const { inicio, fim, texto } = intervalo(padrao, ano.scaleRange, ano.cortes);
   const [linhas, setLinhas] = useState<Linha[]>(() =>
     props.inicial.map((l) => ({
       id: novoId(),
       level: String(l.level),
+      fim: l.fim === undefined ? "" : String(l.fim),
+      item: l.item,
       content: l.content === CONTEUDO_VAZIO ? "" : l.content,
     })),
   );
@@ -133,7 +179,8 @@ function BlocoPadrao(props: {
     } catch (e) {
       salvo.current = anterior;
       const porLinha: Record<string, string> = {};
-      const sufixo = new RegExp(`scale\\.${padrao}\\.(\\d+)\\.level$`);
+      // "descritores.D01.scale.padrao-4.0.level" (faixa) ou "0.fim" (schema da linha).
+      const sufixo = /(?:^|\.)(\d+)\.(?:level|fim)$/;
       if (ehErroApi(e, 400))
         for (const d of e.corpo.detalhes ?? []) {
           const id = ordenadas[Number(sufixo.exec(d.campo)?.[1])]?.id;
@@ -144,12 +191,12 @@ function BlocoPadrao(props: {
     }
   }
 
-  const mudar = (id: string, campo: "level" | "content", valor: string) =>
+  const mudar = (id: string, campo: "level" | "fim" | "content", valor: string) =>
     setLinhas((ls) => ls.map((l) => (l.id === id ? { ...l, [campo]: valor } : l)));
 
   function adicionar() {
     const id = novoId();
-    const novas = [...linhas, { id, level: String(inicio), content: "" }];
+    const novas = [...linhas, { id, level: String(inicio), fim: String(fim), content: "" }];
     setNovaId(id);
     setLinhas(novas);
     void salvar(novas);
@@ -160,9 +207,36 @@ function BlocoPadrao(props: {
     const novas = linhas.filter((l) => l.id !== id);
     flushSync(() => setLinhas(novas));
     // O botão clicado sumiu: foco no nível da linha que ocupou o lugar, ou em "Adicionar linha".
-    const proximo = lista.current?.querySelectorAll<HTMLElement>('input[type="number"]')[i];
+    const proximo = lista.current?.querySelectorAll<HTMLElement>("input[data-nivel]")[i];
     (proximo ?? botaoAdicionar.current)?.focus();
     void salvar(novas);
+  }
+
+  function trocarItem(id: string, item: ItemPdf | undefined) {
+    const novas = linhas.map((l) => (l.id === id ? { ...l, item } : l));
+    setLinhas(novas);
+    void salvar(novas);
+  }
+
+  async function anexar(id: string, arquivo: File | undefined) {
+    if (!arquivo) return;
+    if (arquivo.size > ITEM_MAX_BYTES) return setErros({ [id]: "O PDF passa de 5 MB." });
+    try {
+      const item = await salvarNaFila({
+        descricao: `PDF do item (${rotulo})`,
+        executar: () => projetosApi.enviarItem(slug, arquivo),
+        aplicar: (p) => p, // o projeto só muda ao salvar o padrão
+      });
+      setErros({});
+      // Lê o estado atual: o usuário pode ter editado durante o envio.
+      let novas: Linha[] = [];
+      flushSync(() =>
+        setLinhas((atuais) => (novas = atuais.map((l) => (l.id === id ? { ...l, item } : l)))),
+      );
+      void salvar(novas);
+    } catch (e) {
+      setErros({ [id]: mensagemDeErro(e) });
+    }
   }
 
   return (
@@ -191,22 +265,34 @@ function BlocoPadrao(props: {
             const pertence = Number.isNaN(valor) ? padrao : padraoDoNivel(valor, ano.cortes);
             const idErro = `erro-${l.id}`;
             const rotuloRemover = `Remover linha ${n} do ${rotulo}`;
+            const rotuloAnexar = `Anexar PDF do item da linha ${n} do ${rotulo}`;
             return (
               <li
                 key={l.id}
                 className={cn(
-                  "grid grid-cols-[6rem_1fr_auto] items-start gap-2",
+                  "grid grid-cols-[6.5rem_6.5rem_1fr_auto_auto] items-start gap-2",
                   l.id === novaId && "animate-entra",
                 )}
               >
-                <Input
-                  type="number"
-                  aria-label={`Nível da linha ${n} do ${rotulo}`}
+                <EntradaComOperador
+                  operador=">="
+                  data-nivel
+                  aria-label={`Nível da linha ${n} do ${rotulo} — início (maior ou igual a)`}
                   aria-invalid={Boolean(erros[l.id])}
                   aria-describedby={erros[l.id] ? idErro : undefined}
-                  className="bg-background text-right text-base font-semibold tabular-nums"
+                  className="bg-background"
                   value={l.level}
                   onChange={(e) => mudar(l.id, "level", e.target.value)}
+                  onBlur={() => void salvar(linhas)}
+                />
+                <EntradaComOperador
+                  operador="<"
+                  aria-label={`Nível da linha ${n} do ${rotulo} — fim (menor que)`}
+                  aria-invalid={Boolean(erros[l.id])}
+                  aria-describedby={erros[l.id] ? idErro : undefined}
+                  className="bg-background"
+                  value={l.fim}
+                  onChange={(e) => mudar(l.id, "fim", e.target.value)}
                   onBlur={() => void salvar(linhas)}
                 />
                 <Textarea
@@ -219,6 +305,34 @@ function BlocoPadrao(props: {
                   onChange={(e) => mudar(l.id, "content", e.target.value)}
                   onBlur={() => void salvar(linhas)}
                 />
+                <div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        aria-label={rotuloAnexar}
+                        onClick={(e) =>
+                          e.currentTarget.parentElement?.querySelector("input")?.click()
+                        }
+                      >
+                        <FileUp />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Anexar PDF do item</TooltipContent>
+                  </Tooltip>
+                  <input
+                    type="file"
+                    hidden
+                    accept="application/pdf,.pdf"
+                    aria-label={`PDF do item da linha ${n} do ${rotulo}`}
+                    onChange={(e) => {
+                      const arquivo = e.target.files?.[0];
+                      e.target.value = "";
+                      void anexar(l.id, arquivo);
+                    }}
+                  />
+                </div>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -232,7 +346,28 @@ function BlocoPadrao(props: {
                   </TooltipTrigger>
                   <TooltipContent>Remover e salvar o padrão</TooltipContent>
                 </Tooltip>
-                <div className="col-span-3 flex flex-col gap-2 empty:hidden">
+                <div className="col-span-full flex flex-col gap-2 empty:hidden">
+                  {l.item && (
+                    <p className="flex flex-wrap items-center gap-2 text-sm">
+                      <a
+                        href={projetosApi.urlItem(slug, l.item.id)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="break-all underline underline-offset-2"
+                      >
+                        {l.item.nome}
+                      </a>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        aria-label={`Remover PDF da linha ${n} do ${rotulo}`}
+                        onClick={() => trocarItem(l.id, undefined)}
+                      >
+                        Remover PDF
+                      </Button>
+                    </p>
+                  )}
                   {erros[l.id] && (
                     <p id={idErro} role="alert" className="text-sm text-destructive">
                       {erros[l.id]}

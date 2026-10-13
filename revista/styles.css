@@ -692,7 +692,17 @@ body {
     border-bottom: 1px solid var(--color-border);
     border-radius: 0.5rem;
     box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.18);
-    padding: 1rem 0.625rem 2.75rem 1.5rem;
+    padding: 1rem 0.625rem 1rem 1.5rem;
+}
+
+.linha-conteudo.tem-ver-mais:focus-visible {
+    outline: 2px solid var(--color-black);
+    outline-offset: -2px;
+}
+
+/* Espaço para o "Ver item", que desce para o rodapé do card expandido */
+.linha-conteudo.expandido.tem-ver-item {
+    padding-bottom: 2.75rem;
 }
 
 .linha-conteudo.expandido p {
@@ -717,7 +727,6 @@ body {
     transform: none;
 }
 
-.ver-mais-btn,
 .ver-item-btn {
     width: 4.5rem;
     display: inline-flex;
@@ -737,7 +746,6 @@ body {
     transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
-.ver-mais-btn:hover,
 .ver-item-btn:hover {
     background-color: var(--color-ver-mais-bg-hover);
 }
@@ -745,11 +753,6 @@ body {
 .btn-icone {
     display: none;
     flex-shrink: 0;
-    transition: transform var(--transition-fast);
-}
-
-.btn-icone.aberto {
-    transform: rotate(180deg);
 }
 
 /* ==========================================
@@ -1224,7 +1227,6 @@ body {
         padding-right: 3.25rem;
     }
 
-    .ver-mais-btn,
     .ver-item-btn {
         width: 1.75rem;
         height: 1.75rem;
@@ -1260,11 +1262,10 @@ body {
 
 .modal-dialog {
     position: relative;
-    width: 100%;
-    max-width: 32rem;
-    /* 512px */
-    max-height: 80vh;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    width: min(56rem, 92vw);
+    height: 85vh;
     background-color: var(--color-white);
     border-radius: 0.75rem;
     /* 12px */
@@ -1301,9 +1302,22 @@ body {
     margin-bottom: var(--spacing-sm);
 }
 
-.modal-body {
-    font-family: var(--font-family);
-    font-size: var(--font-size-p);
-    color: var(--color-black);
-    line-height: 2rem;
+.modal-pdf {
+    flex: 1;
+    width: 100%;
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+}
+
+@media (max-width: 500px) {
+    .modal-overlay {
+        padding: 0;
+    }
+
+    .modal-dialog {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        padding: var(--spacing-md);
+    }
 }

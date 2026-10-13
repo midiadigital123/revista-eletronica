@@ -1,19 +1,19 @@
 # state.md — revista-express
 
 ## Estado atual
-Passo 5 de 5: concluído
-Funcionando: projeto com disciplinas (LP, MT, Alfabetização = LP+MT); Novo projeto com Vazio/Copiar/Importar PDF; POST /api/extracao; abas em dois níveis; zip com pasta por caderno; API 98 testes, editor 52, extrator 5
-Quebrado/pendente: teste manual com o PDF real via docker compose (API + editor) ainda não feito
+Passo 5 de 5: concluído (falta teste manual no docker)
+Funcionando: extrator com topic, início/fim e uma linha por habilidade; cortes com ≥/< no editor; linhas com início/fim e PDF por linha; revista expande no hover e "Ver item" abre o PDF (iframe) só quando há item. Python 7 OK, API 103, editor 58, régua ok.
+Quebrado/pendente: (D-020 concluída: API 103, editor 58 verdes) teste manual via docker não feito (precisa rebuild da API para pegar o extrator novo); projetos já criados seguem com topic vazio e sem fim (reimportar).
 
 ## Próxima ação
-`docker compose up --build`, criar projeto Alfabetização com o PDF SAEGO e conferir os anos 2º/5º EF.
+`docker compose up --build api` e importar "SAEGO_2025_RE_LP Web.pdf"; depois anexar um PDF a uma linha de um projeto existente; abrir o Preview e clicar "Ver item".
 
 ## Plano
-1. [x] Contrato: cadernos, disciplinas, entradas
-2. [x] API: cadernos nas rotas + POST /api/extracao + extrator --stdout + Dockerfile
-3. [x] Editor: diálogo Novo projeto (disciplinas, Importar PDF)
-4. [x] Editor: navegação por caderno
-5. [x] Publicação (geração feita no passo 2) (pasta por caderno) + apagar projetos antigos (com confirmação) + docs
+1. [x] Extrator Python: topic, fim, split por habilidade, sem CORTES_SEM_NUMERO
+2. [x] Contrato + API: LinhaEscala.fim / item, ITEM_MAX_BYTES (+ linhaSchema do Mongoose com fim/item)
+3. [x] Editor: cards com ≥/<, linha com início/fim
+4. [x] PDF do item: POST/GET /api/projetos/:slug/itens, pacote com <caderno>/arquivos/itens/<id>.pdf, editor anexar/remover
+5. [x] Revista: hover no lugar de "Ver mais"; "Ver item" só com PDF (iframe)
 
 ## Decisões
 
@@ -31,7 +31,7 @@ Quebrado/pendente: teste manual com o PDF real via docker compose (API + editor)
 - **Motivo:** schema aceita; não inventar dado.
 - **Descartadas:** unidade temática/objeto — duplicaria bncc.knowledge.
 - **Arquivos afetados:** `scripts/extrair-descritores.mjs`
-- **Status:** ativa
+- **Status:** ~~substituída por D-015~~
 
 ### D-003 — Coordenadas (pdftotext -bbox) em vez de texto -layout (2026-10-07)
 - **Contexto:** prerrequisitos em 2 colunas, ticks × cortes em colunas diferentes, rótulos BNCC centralizados (MT D06 sai trocado no -layout).
@@ -63,7 +63,7 @@ Quebrado/pendente: teste manual com o PDF real via docker compose (API + editor)
 - **Motivo:** rótulos Básico/Proficiente da página ficam nesses ticks.
 - **Descartadas:** ler linhas vetoriais (pdftocairo -svg) — linhas de corte não são caminhos consistentes.
 - **Arquivos afetados:** `scripts/extrair_descritores.py`
-- **Status:** ativa (cortes confirmados pelo usuário em 2026-10-07)
+- **Status:** ~~substituída por D-016~~
 
 ### D-007 — Etapa livre no formato <n><ef|em> (2026-10-07)
 - **Contexto:** usuário pediu que o editor aceite qualquer etapa; ANOS fixo (5ef/9ef/3em) rejeita "2ef" do extrator.
@@ -79,7 +79,7 @@ Quebrado/pendente: teste manual com o PDF real via docker compose (API + editor)
 - **Motivo:** escolha do usuário (1 projeto, N disciplinas); lista plana evita um nível a mais de aninhamento.
 - **Descartadas:** 1 projeto por disciplina — usuário preferiu 1 projeto; disciplinas→componentes→anos aninhados — mais código para o mesmo resultado.
 - **Arquivos afetados:** `contrato/schemas.ts`, `api/src/modules/projetos/*`, `editor/src/projetos/*`
-- **Status:** ativa
+- **Status:** parcialmente substituída por D-020 (Alfabetização removida)
 
 ### D-009 — Extração de PDF por rota síncrona (2026-10-07)
 - **Contexto:** "Importar PDF" deve preencher os Anos antes de criar o projeto.
@@ -129,6 +129,54 @@ Quebrado/pendente: teste manual com o PDF real via docker compose (API + editor)
 - **Arquivos afetados:** `editor/src/projetos/api.ts`, `editor/src/projetos/ProjetoLayout.tsx`
 - **Status:** ativa
 
+### D-015 — topic = rótulo longo da etapa em maiúsculas (2026-10-13)
+- **Contexto:** tópico ficava vazio (D-002); usuário quer "2º ANO DO ENSINO FUNDAMENTAL" para 2ef, idem para todas as etapas.
+- **Decisão:** extrator gera `topic` como `rotuloAnoLongo` em maiúsculas (EF: "Nº ANO DO ENSINO FUNDAMENTAL"; EM: "Nª SÉRIE DO ENSINO MÉDIO"). Substitui D-002.
+- **Motivo:** pedido do usuário; mesmo texto do cabeçalho da página.
+- **Descartadas:** default no schema — afetaria dados digitados à mão.
+- **Arquivos afetados:** `scripts/extrair_descritores.py`
+- **Status:** ativa
+
+### D-016 — Cortes sempre impressos; sem tabela de fallback (2026-10-13)
+- **Contexto:** usuário corrigiu: todas as revistas imprimem os números de corte; o 5º EF do PDF de exemplo foi exceção.
+- **Decisão:** remover `CORTES_SEM_NUMERO`; faltando corte, a extração falha com erro. Substitui D-006.
+- **Motivo:** não inventar dado; erro explícito em vez de valor Saeb silencioso.
+- **Descartadas:** manter fallback — esconderia PDF fora do padrão.
+- **Arquivos afetados:** `scripts/extrair_descritores.py`, `scripts/test_extrair_descritores.py`
+- **Status:** ativa
+
+### D-017 — Linha da escala com início (level), fim e item opcionais (2026-10-13)
+- **Contexto:** habilidades tinham só âncora; várias habilidades da mesma faixa saíam concatenadas; "Ver item" precisa de PDF.
+- **Decisão:** `LinhaEscala = {level, fim?, content, item?}`; `level` continua sendo o início; extrator gera uma linha por habilidade (nova habilidade = linha anterior termina em "." e atual começa com maiúscula), `fim` = tick acima (ou máximo). `item = {id, nome, tamanho}` aponta para PDF no GridFS (≤ 5 MB).
+- **Motivo:** campos opcionais mantêm dados antigos válidos; manter `level` evita reescrever API/editor/revista.
+- **Descartadas:** renomear para inicio/fim — diff grande sem ganho; juntar por faixa — era o bug.
+- **Arquivos afetados:** `contrato/schemas.ts`, `scripts/extrair_descritores.py`, editor, API, revista
+- **Status:** ativa
+
+### D-018 — UX: ≥/< nos cortes, hover no lugar de "Ver mais", "Ver item" só com PDF (2026-10-13)
+- **Contexto:** pedido do usuário (itens 2, 5, 6).
+- **Decisão:** cards de padrão com dois campos de operador fixo (≥ início, < fim; Padrão 04 ≤ máximo), mesmo corte ligado entre cards vizinhos; revista expande o texto no hover/foco reaproveitando a animação existente; "Ver item" abre o PDF num iframe no modal.
+- **Motivo:** mostra onde o padrão começa e termina; menos cliques; `<object>` é bloqueado pelo CSP do helmet.
+- **Descartadas:** operador selecionável — mudaria a semântica dos cortes; link em nova aba — usuário quer ver na revista.
+- **Arquivos afetados:** `editor/src/projetos/ano/*`, `revista/*`, `api/src/modules/*`
+- **Status:** ativa
+
+### D-019 — Cortes em negrito na coluna dos ticks (2026-10-13)
+- **Contexto:** PDF de LP (9º EF/3ª EM) recusado com "esperados 3 cortes impressos, achados []". Os cortes estão impressos, em negrito, na mesma coluna dos ticks (não à esquerda como no 2º EF Alfa). O 5º EF do PDF Alfa é igual — D-006 partiu de premissa errada.
+- **Decisão:** número na coluna dos ticks com caixa mais alta que a mediana dos ticks (+0,1 pt; negrito = 9,918 vs 9,747 pt) também é corte (continua sendo tick/base de faixa).
+- **Motivo:** pdftotext -bbox não informa a fonte; a altura da caixa difere de forma consistente nos dois PDFs.
+- **Descartadas:** ler fonte com pdfplumber — dependência nova; tabela de cortes — dado inventado (LP 5º EF real é 125/175/225, não 150/200/250).
+- **Arquivos afetados:** `scripts/extrair_descritores.py`, `scripts/test_extrair_descritores.py`, `api/test/extracao.test.ts`
+- **Status:** ativa
+
+### D-020 — Só dois cadernos: LP e MT (2026-10-13)
+- **Contexto:** usuário decidiu remover a disciplina Alfabetização; cortes variam por projeto (já lidos do PDF, D-019).
+- **Decisão:** `CADERNOS = ["lingua-portuguesa", "matematica"]`, `DISCIPLINAS` sem `alfabetizacao`. PDF de Alfabetização (LP + MT) pode ser enviado nos dois campos. 3 projetos antigos com cadernos Alfa (todos na lixeira, sem imagens) apagados com confirmação.
+- **Motivo:** pedido do usuário; `cadernosDaExtracao` já filtra a disciplina do campo, sem código novo.
+- **Descartadas:** migrar alfabetizacao-* → LP/MT — usuário escolheu apagar.
+- **Arquivos afetados:** `contrato/schemas.ts`, `editor/src/projetos/NovoProjeto.tsx`, testes da API/editor, `README.md`, `docs/contrato.md`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] Cortes do 5º ano corretos? — confirmados pelo usuário
 
@@ -156,3 +204,10 @@ Quebrado/pendente: teste manual com o PDF real via docker compose (API + editor)
 ### 2026-10-08
 - README.md criado na raiz (conceitos, arquitetura, Docker, dev sem Docker, fluxo, contrato, extrator, testes). Comandos de teste conferidos: régua OK, extrator OK.
 - Pendência: CLAUDE.md do projeto descreve só o protótipo escala.html (desatualizado).
+
+### 2026-10-13
+- Plano aprovado: 6 correções (D-015 a D-018); D-002 e D-006 substituídas.
+- Passos 1–2 concluídos. Extrator: habilidade sem ponto final antes de outra na mesma faixa seria fundida (não ocorre no PDF atual); "–." vira "---".
+- Passos 3–5 concluídos; bug achado: linhaSchema do Mongoose descartava campos novos (corrigido). Todas as suítes verdes.
+- Bug: PDF LP recusado (cortes 9ef). Causa: cortes em negrito na coluna dos ticks. Correção D-019; LP 5º EF corrigido para 125/175/225.
+- D-020: Alfabetização removida; 3 projetos Alfa apagados do Mongo (confirmado pelo usuário).

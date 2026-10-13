@@ -31,8 +31,18 @@ export interface ProjetoDb {
   atualizadoEm: Date;
 }
 
+const itemSchema = new Schema(
+  { id: { type: String, required: true }, nome: { type: String, required: true }, tamanho: Number },
+  { _id: false, id: false },
+);
+
 const linhaSchema = new Schema(
-  { level: { type: Number, required: true }, content: { type: String, required: true } },
+  {
+    level: { type: Number, required: true },
+    fim: Number,
+    content: { type: String, required: true },
+    item: { type: itemSchema, default: undefined },
+  },
   { _id: false },
 );
 

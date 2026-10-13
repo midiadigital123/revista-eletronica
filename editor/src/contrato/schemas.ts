@@ -36,12 +36,11 @@ export const CORTES_PADRAO = {
 export const CONTEUDO_VAZIO = "---";
 
 /** Cadernos: unidade editável e publicada (uma pasta por caderno no pacote). */
-export const CADERNOS = ["lingua-portuguesa", "matematica", "alfabetizacao-lp", "alfabetizacao-mat"] as const;
-/** Disciplinas marcadas no "Novo projeto" → cadernos criados (Alfabetização traz LP + MT). */
+export const CADERNOS = ["lingua-portuguesa", "matematica"] as const;
+/** Disciplinas marcadas no "Novo projeto" → cadernos criados. */
 export const DISCIPLINAS = {
   "lingua-portuguesa": ["lingua-portuguesa"],
   matematica: ["matematica"],
-  alfabetizacao: ["alfabetizacao-lp", "alfabetizacao-mat"],
 } as const;
 
 /** Tamanho máximo do PDF enviado a POST /api/extracao. */
@@ -49,6 +48,8 @@ export const PDF_MAX_BYTES = 50 * 1024 * 1024;
 
 export const IMAGEM_MIMES = ["image/png", "image/jpeg", "image/webp"] as const;
 export const IMAGEM_MAX_BYTES = 5 * 1024 * 1024;
+/** PDF do item de uma linha da escala ("Ver item" na revista). */
+export const ITEM_MAX_BYTES = 5 * 1024 * 1024;
 
 export const HEADER_SESSAO_EDICAO = "X-Sessao-Edicao";
 export const BLOQUEIO_TTL_MS = 2 * 60 * 1000;
@@ -111,14 +112,11 @@ export function rotuloAnoLongo(ano: string): string {
 const ROTULOS_DISCIPLINA: Record<Disciplina, string> = {
   "lingua-portuguesa": "Língua Portuguesa",
   matematica: "Matemática",
-  alfabetizacao: "Alfabetização",
 };
 
 const ROTULOS_CADERNO: Record<Caderno, string> = {
   "lingua-portuguesa": "Língua Portuguesa",
   matematica: "Matemática",
-  "alfabetizacao-lp": "Alfabetização · Língua Portuguesa",
-  "alfabetizacao-mat": "Alfabetização · Matemática",
 };
 
 export const rotuloDisciplina = (d: Disciplina) => ROTULOS_DISCIPLINA[d];
@@ -156,10 +154,25 @@ export const Cortes = z.strictObject({
   "padrao-3": z.int(),
 });
 
-export const LinhaEscala = z.strictObject({
-  level: z.number(),
-  content: texto(5000).transform((c) => c || CONTEUDO_VAZIO),
+/** PDF guardado no GridFS; no pacote fica em `arquivos/itens/<id>.pdf`. */
+export const ItemPdf = z.strictObject({
+  id: ObjectIdTexto,
+  nome: z.string().max(300),
+  tamanho: z.int(),
 });
+
+/** Uma habilidade da régua: `level` é o início da faixa, `fim` o tick acima. */
+export const LinhaEscala = z
+  .strictObject({
+    level: z.number(),
+    fim: z.number().optional(),
+    content: texto(5000).transform((c) => c || CONTEUDO_VAZIO),
+    item: ItemPdf.optional(),
+  })
+  .refine((l) => l.fim === undefined || l.fim > l.level, {
+    error: "O fim deve ser maior que o início",
+    path: ["fim"],
+  });
 
 /** Linhas de um padrão; sempre devolvidas em ordem decrescente de nível. */
 export const LinhasPadrao = z
@@ -237,15 +250,15 @@ export function problemasDosCortes(cortes: Cortes, faixa: Faixa): Problema[] {
 }
 
 export function problemasDasLinhas(
-  linhas: readonly { level: number }[],
+  linhas: readonly { level: number; fim?: number }[],
   faixa: Faixa,
   prefixo: string,
 ): Problema[] {
-  return linhas.flatMap((l, i) =>
-    l.level < faixa.min || l.level > faixa.max
-      ? [{ campo: `${prefixo}.${i}.level`, erro: `Nível fora da escala (${faixa.min}–${faixa.max})` }]
-      : [],
-  );
+  const erro = `Nível fora da escala (${faixa.min}–${faixa.max})`;
+  return linhas.flatMap((l, i) => [
+    ...(l.level < faixa.min || l.level > faixa.max ? [{ campo: `${prefixo}.${i}.level`, erro }] : []),
+    ...(l.fim !== undefined && l.fim > faixa.max ? [{ campo: `${prefixo}.${i}.fim`, erro }] : []),
+  ]);
 }
 
 /** Valida um ano inteiro: cortes na faixa, códigos únicos e todos os níveis na faixa. */
@@ -513,6 +526,7 @@ export type ResultadoExtracao = z.infer<typeof ResultadoExtracao>;
 export type ScaleRange = z.infer<typeof ScaleRange>;
 export type Cortes = z.infer<typeof Cortes>;
 export type LinhaEscala = z.infer<typeof LinhaEscala>;
+export type ItemPdf = z.infer<typeof ItemPdf>;
 export type Escala = z.infer<typeof Escala>;
 export type Bncc = z.infer<typeof Bncc>;
 export type Descritor = z.infer<typeof Descritor>;

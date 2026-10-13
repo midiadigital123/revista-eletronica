@@ -91,10 +91,30 @@ describe("anos", () => {
     expect(screen.getByRole("dialog", { name: /^Novo ano/ })).toBeInTheDocument();
   });
 
+  it("cada padrão mostra ≥ início e < fim; fim de um e início do próximo são o mesmo corte", async () => {
+    const user = userEvent.setup();
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef");
+    const fim02 = await screen.findByLabelText("Padrão 02 — fim (menor que)");
+    const inicio03 = screen.getByLabelText("Padrão 03 — início (maior ou igual a)");
+    expect(fim02).toHaveValue(250);
+    expect(inicio03).toHaveValue(250);
+    expect(screen.getByLabelText("Padrão 01 — início (maior ou igual a)")).toHaveValue(0);
+    expect(screen.getByLabelText("Padrão 04 — fim (menor ou igual a)")).toHaveValue(500);
+    expect(screen.getAllByTitle("maior ou igual a")).toHaveLength(4);
+    expect(screen.getAllByTitle("menor que")).toHaveLength(3);
+    expect(screen.getAllByTitle("menor ou igual a")).toHaveLength(1);
+
+    await user.clear(fim02);
+    await user.type(fim02, "240");
+    expect(inicio03).toHaveValue(240);
+    await user.tab();
+    await waitFor(() => expect(anoMock("5ef")!.cortes["padrao-2"]).toBe(240));
+  });
+
   it("corte inválido mostra o erro sem enviar; corte válido salva", async () => {
     const user = userEvent.setup();
     renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef");
-    const corte = await screen.findByLabelText("Corte 02 → 03");
+    const corte = await screen.findByLabelText("Padrão 03 — início (maior ou igual a)");
 
     await user.clear(corte);
     await user.type(corte, "100");
@@ -114,7 +134,7 @@ describe("anos", () => {
     anoMock("5ef")!.descritores[0]!.scale["padrao-4"] = [{ level: 450, content: "x" }];
     const user = userEvent.setup();
     renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef");
-    const max = await screen.findByLabelText("Máximo");
+    const max = await screen.findByLabelText("Padrão 04 — fim (menor ou igual a)");
     await user.clear(max);
     await user.type(max, "400");
     await user.tab();

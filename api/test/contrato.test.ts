@@ -84,7 +84,7 @@ describe("contrato: etapas (anos)", () => {
 });
 
 describe("contrato: disciplinas e cadernos", () => {
-  const base = { slug: "go", nome: "Goiás", disciplinas: ["alfabetizacao"] };
+  const base = { slug: "go", nome: "Goiás", disciplinas: ["matematica"] };
 
   it("CriarProjetoEntrada aceita as 3 origens", () => {
     expect(CriarProjetoEntrada.parse({ ...base, origem: { tipo: "vazio" } }).origem).toEqual({
@@ -94,7 +94,7 @@ describe("contrato: disciplinas e cadernos", () => {
     expect(CriarProjetoEntrada.safeParse({ ...base, origem: { tipo: "copiar", de: "sp" } }).success).toBe(true);
     const importar = CriarProjetoEntrada.safeParse({
       ...base,
-      origem: { tipo: "importar", cadernos: { "alfabetizacao-lp": fixture } },
+      origem: { tipo: "importar", cadernos: { matematica: fixture } },
     });
     expect(importar.success).toBe(true);
   });
@@ -113,16 +113,15 @@ describe("contrato: disciplinas e cadernos", () => {
   });
 
   it("cadernosDasDisciplinas segue a ordem de CADERNOS, sem repetir", () => {
-    expect(cadernosDasDisciplinas(["alfabetizacao", "lingua-portuguesa", "alfabetizacao"])).toEqual([
+    expect(cadernosDasDisciplinas(["matematica", "lingua-portuguesa", "matematica"])).toEqual([
       "lingua-portuguesa",
-      "alfabetizacao-lp",
-      "alfabetizacao-mat",
+      "matematica",
     ]);
   });
 
   it("rótulos", () => {
-    expect(rotuloDisciplina("alfabetizacao")).toBe("Alfabetização");
-    expect(rotuloCaderno("alfabetizacao-mat")).toBe("Alfabetização · Matemática");
+    expect(rotuloDisciplina("matematica")).toBe("Matemática");
+    expect(rotuloCaderno("matematica")).toBe("Matemática");
     expect(rotuloCaderno("lingua-portuguesa")).toBe("Língua Portuguesa");
   });
 });

@@ -22,13 +22,6 @@ X_TICK = 140  # níveis da régua (782, 732...) entre X_CORTE e isto
 X_FAIXA = 170  # 1000/500 e 0 (limites da escala) entre X_TICK e isto; texto das faixas à direita
 X_ROTULO_BNCC = 165
 
-# ponytail: nos 5º anos a revista não imprime os números de corte (só as linhas coloridas).
-# Valores do Saeb; confirmar e atualizar aqui se a revista usar outros.
-CORTES_SEM_NUMERO = {
-    "lingua-portuguesa": {"5ef": [150, 200, 250]},
-    "matematica": {"5ef": [175, 225, 275]},
-}
-
 PALAVRA = re.compile(r'<word xMin="([\d.]+)" yMin="([\d.]+)" xMax="([\d.]+)" yMax="([\d.]+)">([^<]*)</word>')
 MARCADOR = re.compile("^[\x80-\x9f\ue000-\uf8ff\u25aa\u2022\u25a0]$")  # a fonte do PDF exporta o marcador como U+0083
 NUMERO = re.compile(r"^\d+$")
@@ -40,6 +33,23 @@ def juntar(partes):
     return re.sub(r"\s+", " ", " ".join(partes)).strip()
 
 
+def rotulo_ano_longo(ano):
+    """Espelha rotuloAnoLongo (contrato/schemas.ts), em maiúsculas: "2ef" → "2º ANO DO ENSINO FUNDAMENTAL"."""
+    n, nivel = ano[:-2], ano[-2:]
+    return f"{n}º ANO DO ENSINO FUNDAMENTAL" if nivel == "ef" else f"{n}ª SÉRIE DO ENSINO MÉDIO"
+
+
+def habilidades(partes):
+    """Nova habilidade quando a linha anterior termina em "." e a atual começa com maiúscula."""
+    hs = []
+    for t in partes:
+        if not hs or (hs[-1].endswith(".") and t[:1].isupper()):
+            hs.append(t)
+        else:
+            hs[-1] = juntar([hs[-1], t])
+    return hs or ["---"]
+
+
 def ler_paginas(pdf):
     """Palavras de cada página: [{x, x2, y, t}]."""
     saida = subprocess.run(
@@ -47,7 +57,8 @@ def ler_paginas(pdf):
     ).stdout
     return [
         [
-            {"x": float(m[1]), "y": float(m[2]), "x2": float(m[3]), "t": html.unescape(m[5])}
+            {"x": float(m[1]), "y": float(m[2]), "x2": float(m[3]), "h": float(m[4]) - float(m[2]),
+             "t": html.unescape(m[5])}
             for m in PALAVRA.finditer(pagina)
         ]
         for pagina in saida.split("<page ")[1:]
@@ -115,14 +126,18 @@ def limites_escala(ls):
 
 
 def regua(ls):
-    """Cada linha de texto pertence ao nível (tick) logo abaixo dela; "–" vira "---"."""
+    """Cada linha de texto pertence ao nível (tick) logo abaixo dela; "–" vira "---".
+    fim = tick logo acima (na faixa do topo, o máximo da escala)."""
     topo, base = limites_escala(ls)
     numeros = [
         w for l in ls for w in l["w"]
         if NUMERO.match(w["t"]) and w["x"] < X_FAIXA and topo["y"] <= w["y"] <= base["y"]
     ]
     ticks = sorted((w for w in numeros if X_CORTE <= w["x"] < X_TICK), key=lambda w: w["y"])
-    cortes = [int(w["t"]) for w in numeros if w["x"] < X_CORTE]
+    # Cortes: à esquerda da régua (2º EF Alfa) ou em negrito na coluna dos ticks (LP 9º, Alfa 5º).
+    # ponytail: negrito detectado pela caixa mais alta (9,918 vs 9,747 pt); trocar por leitura de fonte se falhar.
+    h_tick = sorted(w["h"] for w in ticks)[len(ticks) // 2] if ticks else 0
+    cortes = [int(w["t"]) for w in numeros if w["x"] < X_CORTE or w in ticks and w["h"] > h_tick + 0.1]
 
     # Fragmentos deslocados (ex.: glifo "ʒ" um pouco acima da linha) entram na linha mais próxima.
     faixa = [
@@ -138,11 +153,13 @@ def regua(ls):
     conteudo = {int(t["t"]): [] for t in ticks}
     for l in inteiras:
         t = texto(l["w"])
-        if t in ("–", "-"):
+        if t.rstrip(".") in ("–", "-"):
             continue
         tick = next((t for t in ticks if t["y"] > l["y"]), base)  # abaixo do último tick: vai até o mínimo
         conteudo.setdefault(int(tick["t"]), []).append(t)
-    niveis = [{"level": n, "content": juntar(p) or "---"} for n, p in conteudo.items()]
+    valores = [int(t["t"]) for t in ticks]
+    fim = dict(zip(valores + [int(base["t"])], [int(topo["t"])] + valores))
+    niveis = [{"level": n, "fim": fim[n], "content": h} for n, p in conteudo.items() for h in habilidades(p)]
     return {"scaleRange": {"min": int(base["t"]), "max": int(topo["t"])}, "cortes": cortes, "niveis": niveis}
 
 
@@ -173,10 +190,10 @@ def descritor(palavras):
     def linha_de(padrao):
         return next(l for l in ls if re.search(padrao, texto(l["w"])))
 
-    cab = linha_de(r"^\d+º ANO DO ENSINO FUNDAMENTAL$")
+    cab = linha_de(r"^\d+(º ANO DO ENSINO FUNDAMENTAL|ª SÉRIE DO ENSINO MÉDIO)$")
     pre = linha_de(r"^Pré-requisitos")
     codigo = next(w["t"] for w in palavras if CODIGO.match(w["t"]) and cab["y"] < w["y"] < pre["y"])
-    ano = re.match(r"^(\d+)º", texto(cab["w"]))[1] + "ef"
+    ano = re.match(r"^\d+", texto(cab["w"]))[0] + ("ef" if "º" in texto(cab["w"]) else "em")
     topo_regua = limites_escala([l for l in ls if l["y"] > pre["y"]])[0]["y"]
     y_bncc = next(w["y"] for w in palavras if w["t"] == "BNCC" and w["y"] > topo_regua)
 
@@ -244,10 +261,9 @@ def extrair(pdf):
     for disc, anos in brutos.items():
         for ano, ds in anos.items():
             impressos = sorted({c for d in ds for c in d["regua"]["cortes"]})
-            valores = impressos if len(impressos) == 3 else CORTES_SEM_NUMERO.get(disc, {}).get(ano)
-            if not valores:
-                raise ValueError(f"{disc} {ano}: cortes impressos {impressos} e ausentes em CORTES_SEM_NUMERO")
-            cortes = {"padrao-1": valores[0], "padrao-2": valores[1], "padrao-3": valores[2]}
+            if len(impressos) != 3:
+                raise ValueError(f"{disc} {ano}: esperados 3 cortes impressos, achados {impressos}")
+            cortes = {"padrao-1": impressos[0], "padrao-2": impressos[1], "padrao-3": impressos[2]}
             scale_range = ds[0]["regua"]["scaleRange"]
             dados_ano = {"scaleRange": scale_range, "cortes": cortes}
             for d in sorted(ds, key=lambda d: d["codigo"]):
@@ -264,7 +280,7 @@ def extrair(pdf):
                 for nivel in sorted(d["regua"]["niveis"], key=lambda n: -n["level"]):
                     scale[padrao_do_nivel(nivel["level"], cortes)].append(nivel)
                 dados_ano[d["codigo"]] = {
-                    "topic": "",
+                    "topic": rotulo_ano_longo(ano),
                     "description": d["description"],
                     "prerequisites": d["prerequisites"],
                     "bncc": {

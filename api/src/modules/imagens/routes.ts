@@ -1,4 +1,5 @@
-import { Router, type RequestHandler } from "express";
+import { Router, type RequestHandler, type Response } from "express";
+import type { Types } from "mongoose";
 import multer from "multer";
 import { buscarCampo } from "../../contrato/campos-pagina.js";
 import { IMAGEM_MAX_BYTES, IMAGEM_MIMES, ParamsImagem } from "../../contrato/schemas.js";
@@ -45,26 +46,31 @@ const receberArquivo = multer({
   limits: { fileSize: IMAGEM_MAX_BYTES, files: 1 },
 }).single("arquivo");
 
+/** Stream do GridFS para a resposta (também usado pelos itens em PDF). */
+export async function enviarArquivo(res: Response, arquivoId: Types.ObjectId, mime: string) {
+  const leitura = abrirLeitura(arquivoId);
+  res.type(mime).set("Cache-Control", "no-cache");
+  // Erro antes do primeiro byte vira resposta JSON; depois disso só resta cortar a conexão.
+  await new Promise<void>((resolve, reject) => {
+    leitura.on("error", (erro) => {
+      if (res.headersSent) return res.destroy(erro);
+      for (const h of ["Content-Type", "Cache-Control"]) res.removeHeader(h);
+      reject(erro);
+    });
+    res.on("close", () => {
+      leitura.destroy();
+      resolve();
+    });
+    leitura.pipe(res);
+  });
+}
+
 imagensRouter.get(
   "/",
   handler({ params: ParamsImagem }, async ({ params }, _req, res) => {
     const imagem = (await obterProjeto(params.slug)).pagina[params.chave];
     if (!ehImagem(imagem)) throw naoEncontrado("Imagem");
-    const leitura = abrirLeitura(imagem.arquivoId);
-    res.type(imagem.mime).set("Cache-Control", "no-cache");
-    // Erro antes do primeiro byte vira resposta JSON; depois disso só resta cortar a conexão.
-    await new Promise<void>((resolve, reject) => {
-      leitura.on("error", (erro) => {
-        if (res.headersSent) return res.destroy(erro);
-        for (const h of ["Content-Type", "Cache-Control"]) res.removeHeader(h);
-        reject(erro);
-      });
-      res.on("close", () => {
-        leitura.destroy();
-        resolve();
-      });
-      leitura.pipe(res);
-    });
+    await enviarArquivo(res, imagem.arquivoId, imagem.mime);
   }),
 );
 

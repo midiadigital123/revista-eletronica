@@ -17,6 +17,8 @@ import {
   HEADER_SESSAO_EDICAO,
   IMAGEM_MAX_BYTES,
   IMAGEM_MIMES,
+  ITEM_MAX_BYTES,
+  type ItemPdf,
   LinhasPadrao,
   LoginEntrada,
   nomeArquivoImagem,
@@ -55,6 +57,9 @@ class ErroMock extends Error {
     super(corpo.erro);
   }
 }
+// ponytail: PDFs dos itens fora do mockDb (não somem no reset); basta para dev e testes.
+const itensPdf = new Map<string, Blob>();
+
 const falha = (status: number, erro: string, extra: Omit<ErroApi, "erro"> = {}) => {
   throw new ErroMock(status, { erro, ...extra });
 };
@@ -71,12 +76,15 @@ const rota =
     try {
       return await fn(info);
     } catch (e) {
-      if (e instanceof ErroMock) return HttpResponse.json(e.corpo, { status: e.status });
-      if (e instanceof ZodError)
-        return invalido(
-          e.issues.map((i) => ({ campo: i.path.join("."), erro: i.message })),
-        ) as never;
-      throw e;
+      let erro = e;
+      if (erro instanceof ZodError)
+        try {
+          invalido(erro.issues.map((i) => ({ campo: i.path.join("."), erro: i.message })));
+        } catch (convertido) {
+          erro = convertido;
+        }
+      if (erro instanceof ErroMock) return HttpResponse.json(erro.corpo, { status: erro.status });
+      throw erro;
     }
   };
 
@@ -480,6 +488,34 @@ export const handlers = [
       delete projeto.pagina[chave];
       tocar(projeto);
       return HttpResponse.json(projeto.pagina);
+    }),
+  ),
+
+  // ---------- PDFs dos itens da escala (a linha guarda o ItemPdf)
+  http.post(
+    `${P}/itens`,
+    rota(async ({ request, params }) => {
+      exigirBloqueio(request, String(params.slug));
+      const arquivo = (await request.formData()).get("arquivo");
+      if (!arquivo || typeof arquivo === "string")
+        return falha(400, "Envie o arquivo no campo 'arquivo'", { campo: "arquivo" });
+      if (arquivo.size > ITEM_MAX_BYTES) falha(413, "Arquivo grande demais");
+      const item: ItemPdf = {
+        id: novoId().replace(/-/g, "").slice(0, 24),
+        nome: arquivo.name,
+        tamanho: arquivo.size,
+      };
+      itensPdf.set(item.id, arquivo);
+      return HttpResponse.json(item, { status: 201 });
+    }),
+  ),
+  http.get(
+    `${P}/itens/:id`,
+    rota(({ params }) => {
+      exigirLogin();
+      const pdf = itensPdf.get(String(params.id));
+      if (!pdf) return falha(404, "PDF não encontrado");
+      return new HttpResponse(pdf, { headers: { "Content-Type": "application/pdf" } });
     }),
   ),
 

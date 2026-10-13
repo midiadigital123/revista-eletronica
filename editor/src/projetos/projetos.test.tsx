@@ -119,23 +119,29 @@ describe("lista de projetos", () => {
     expect(corpos).toEqual([]);
   });
 
-  it("Alfabetização + Importar PDF: mostra os anos lidos e cria os dois cadernos", async () => {
+  it("Importar PDF: o mesmo PDF em LP e Matemática mostra os anos lidos e cria os dois cadernos", async () => {
     const user = userEvent.setup();
     const corpos = capturarCriacao();
     const { router } = renderizarRota("/projetos");
     await user.click(await screen.findByRole("button", { name: "Novo projeto" }));
     await user.type(screen.getByLabelText("Nome"), "Alfa");
-    await user.click(screen.getByLabelText("Alfabetização"));
+    expect(screen.queryByLabelText("Alfabetização")).toBeNull();
+    await user.click(screen.getByLabelText("Língua Portuguesa"));
+    await user.click(screen.getByLabelText("Matemática"));
     await user.click(screen.getByRole("radio", { name: /Importar PDF/ }));
-    await user.upload(screen.getByLabelText("PDF — Alfabetização"), pdf());
+    await user.upload(screen.getByLabelText("PDF — Língua Portuguesa"), pdf());
+    await user.upload(screen.getByLabelText("PDF — Matemática"), pdf());
 
     for (const ano of ["2º EF", "5º EF"]) {
-      const caixa = await screen.findByLabelText(ano);
-      expect(caixa).toBeChecked();
-      expect(caixa).toBeDisabled();
+      const caixas = await screen.findAllByLabelText(ano);
+      expect(caixas).toHaveLength(2);
+      for (const caixa of caixas) {
+        expect(caixa).toBeChecked();
+        expect(caixa).toBeDisabled();
+      }
     }
     expect(screen.queryByLabelText("9º EF")).not.toBeInTheDocument();
-    expect(screen.getByText(/D07 sem escala/)).toBeInTheDocument();
+    expect(screen.getAllByText(/D07 sem escala/).length).toBeGreaterThan(0);
     await user.click(screen.getByRole("button", { name: "Criar projeto" }));
 
     await waitFor(() => expect(router.state.location.pathname).toBe("/projetos/alfa"));
@@ -143,14 +149,14 @@ describe("lista de projetos", () => {
       disciplinas: string[];
       origem: { tipo: string; cadernos: object };
     };
-    expect(corpo.disciplinas).toEqual(["alfabetizacao"]);
+    expect(corpo.disciplinas).toEqual(["lingua-portuguesa", "matematica"]);
     expect(corpo.origem.tipo).toBe("importar");
-    expect(Object.keys(corpo.origem.cadernos)).toEqual(["alfabetizacao-lp", "alfabetizacao-mat"]);
+    expect(Object.keys(corpo.origem.cadernos)).toEqual(["lingua-portuguesa", "matematica"]);
     expect(
       mockDb.projetos.get("alfa")!.cadernos.map((c) => [c.id, c.anos.map((a) => a.ano)]),
     ).toEqual([
-      ["alfabetizacao-lp", ["2ef", "5ef"]],
-      ["alfabetizacao-mat", ["2ef", "5ef"]],
+      ["lingua-portuguesa", ["2ef", "5ef"]],
+      ["matematica", ["2ef", "5ef"]],
     ]);
   });
 

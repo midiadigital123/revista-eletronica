@@ -76,8 +76,8 @@ function montarFaixasRegua({ min, max, cortes, escala }) {
       (a, b) => b.level - a.level,
     );
     let topo = topoPadrao;
-    for (const { level, content } of linhas) {
-      faixas.push({ padrao, topo, base: level, conteudo: content || "---" });
+    for (const { level, content, item } of linhas) {
+      faixas.push({ padrao, topo, base: level, conteudo: content || "---", item });
       topo = level;
     }
     if (!linhas.length)
@@ -95,6 +95,12 @@ function montarFaixasRegua({ min, max, cortes, escala }) {
       ehCorte: mostrar && valoresCorte.includes(f.base),
     };
   });
+}
+
+function alturaLinhaColapsada() {
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue("--escala-linha-height")
+    .trim();
 }
 
 // Exporta para o teste em Node; no navegador (script clássico) `module` não existe.
@@ -219,25 +225,27 @@ class DescriptorManager {
     const modal = document.getElementById("itemModal");
     const closeBtn = document.getElementById("itemModalClose");
     const titulo = document.getElementById("itemModalTitle");
-    const corpo = document.getElementById("itemModalBody");
+    const frame = document.getElementById("itemModalFrame");
     if (!modal) return;
 
-    const abrirModal = (nivel, conteudo) => {
+    const abrirModal = (nivel, id) => {
       titulo.textContent = `Item — nível ${nivel}`;
-      corpo.textContent = conteudo;
+      frame.title = `PDF do item — nível ${nivel}`;
+      frame.src = `arquivos/itens/${encodeURIComponent(id)}.pdf`;
       modal.hidden = false;
       document.body.style.overflow = "hidden";
     };
 
     const fecharModal = () => {
       modal.hidden = true;
+      frame.removeAttribute("src");
       document.body.style.overflow = "";
     };
 
     document.addEventListener("click", (e) => {
       const btn = e.target.closest(".ver-item-btn");
       if (!btn) return;
-      abrirModal(btn.dataset.nivelItem, btn.dataset.conteudoItem);
+      abrirModal(btn.dataset.nivelItem, btn.dataset.itemId);
     });
 
     closeBtn.addEventListener("click", fecharModal);
@@ -290,53 +298,52 @@ class DescriptorManager {
     if (label) label.textContent = appState.currentDescriptor || "";
   }
 
+  // Linhas longas (.tem-ver-mais) expandem no hover/foco; ver expandirLinha/recolherLinha.
   initVerMais() {
-    document.addEventListener("click", (e) => {
-      const btn = e.target.closest(".ver-mais-btn");
-      if (!btn) return;
-
-      const conteudo = btn.closest(".linha-conteudo");
-      const paragrafo = conteudo.querySelector("p");
-      const textoBtn = btn.querySelector(".btn-texto");
-      const iconeBtn = btn.querySelector(".btn-icone");
-      const vaiExpandir = !conteudo.classList.contains("expandido");
-      const alturaColapsada = getComputedStyle(document.documentElement)
-        .getPropertyValue("--escala-linha-height")
-        .trim();
-
-      if (vaiExpandir) {
-        paragrafo.textContent = conteudo.dataset.textoCompleto;
-        conteudo.classList.add("expandido");
-        if (window.innerWidth <= 500) {
-          // No mobile o card ocupa a largura total da tela
-          const linhaRect = conteudo.closest(".linha").getBoundingClientRect();
-          conteudo.style.left = `${-linhaRect.left}px`;
-          conteudo.style.right = `${linhaRect.right - document.documentElement.clientWidth}px`;
-        }
-        conteudo.style.maxHeight = alturaColapsada;
-        void conteudo.offsetHeight; // força o navegador a registrar a altura inicial
-        conteudo.style.maxHeight = `${conteudo.scrollHeight}px`;
-        textoBtn.textContent = "Ver menos";
-        iconeBtn.classList.add("aberto");
-      } else {
-        conteudo.style.maxHeight = `${conteudo.scrollHeight}px`;
-        void conteudo.offsetHeight;
-        conteudo.style.maxHeight = alturaColapsada;
-        textoBtn.textContent = "Ver mais";
-        iconeBtn.classList.remove("aberto");
-        conteudo.addEventListener(
-          "transitionend",
-          () => {
-            conteudo.classList.remove("expandido");
-            conteudo.style.maxHeight = "";
-            conteudo.style.left = "";
-            conteudo.style.right = "";
-            paragrafo.textContent = conteudo.dataset.textoTruncado;
-          },
-          { once: true },
-        );
-      }
+    document.addEventListener("transitionend", (e) => {
+      const conteudo = e.target;
+      if (e.propertyName === "max-height" && conteudo.dataset.estado === "fechando")
+        this.finalizarRecolher(conteudo);
     });
+  }
+
+  finalizarRecolher(conteudo) {
+    delete conteudo.dataset.estado;
+    conteudo.classList.remove("expandido");
+    conteudo.style.maxHeight = "";
+    conteudo.style.left = "";
+    conteudo.style.right = "";
+    conteudo.querySelector("p").textContent = conteudo.dataset.textoTruncado;
+  }
+
+  expandirLinha(conteudo) {
+    if (conteudo.dataset.estado === "aberto") return;
+    // Se ainda está recolhendo, segue da altura atual sem reiniciar
+    if (!conteudo.classList.contains("expandido")) {
+      conteudo.querySelector("p").textContent = conteudo.dataset.textoCompleto;
+      conteudo.classList.add("expandido");
+      if (window.innerWidth <= 500) {
+        // No mobile o card ocupa a largura total da tela
+        const linhaRect = conteudo.closest(".linha").getBoundingClientRect();
+        conteudo.style.left = `${-linhaRect.left}px`;
+        conteudo.style.right = `${linhaRect.right - document.documentElement.clientWidth}px`;
+      }
+      conteudo.style.maxHeight = alturaLinhaColapsada();
+      void conteudo.offsetHeight; // força o navegador a registrar a altura inicial
+    }
+    conteudo.dataset.estado = "aberto";
+    conteudo.style.maxHeight = `${conteudo.scrollHeight}px`;
+  }
+
+  recolherLinha(conteudo) {
+    if (conteudo.dataset.estado !== "aberto") return;
+    conteudo.dataset.estado = "fechando"; // o transitionend em initVerMais finaliza
+    conteudo.style.maxHeight = `${conteudo.scrollHeight}px`;
+    void conteudo.offsetHeight;
+    conteudo.style.maxHeight = alturaLinhaColapsada();
+    void conteudo.offsetHeight;
+    // Sem diferença de altura não há transição (nem transitionend)
+    if (!conteudo.getAnimations().length) this.finalizarRecolher(conteudo);
   }
 
   renderButtons() {
@@ -463,7 +470,6 @@ class DescriptorManager {
 
     const LIMITE_CARACTERES = window.innerWidth <= 500 ? 40 : 56;
     const textosCompletos = [];
-    const itensCompletos = [];
     const labels = {
       "padrao-4": "Padrão 04",
       "padrao-3": "Padrão 03",
@@ -473,7 +479,7 @@ class DescriptorManager {
 
     const faixas = montarFaixasRegua({ min, max, cortes, escala: scale });
 
-    const faixaHTML = ({ padrao, base, rotuloBase, ehCorte, conteudo }) => {
+    const faixaHTML = ({ padrao, base, rotuloBase, ehCorte, conteudo, item }) => {
       const tick =
         rotuloBase === null
           ? ""
@@ -484,40 +490,25 @@ class DescriptorManager {
         ? `${texto.slice(0, LIMITE_CARACTERES).trimEnd()}...`
         : texto;
       if (excedeLimite) textosCompletos.push(texto);
-      const temItem = conteudo !== null && conteudo !== "---";
-      if (temItem) itensCompletos.push({ level: base, content: texto });
+      const temItem = Boolean(item && item.id);
 
       return `
                 <div class="linha">
                     <div class="linha-cor cor-${padrao}"></div>
                     <div class="linha-marcador"></div>
                     <span class="proficiencia-valor">${tick}</span>
-                    <div class="linha-conteudo${excedeLimite ? " tem-ver-mais" : ""}${temItem ? " tem-ver-item" : ""}">
+                    <div class="linha-conteudo${excedeLimite ? " tem-ver-mais" : ""}${temItem ? " tem-ver-item" : ""}"${excedeLimite ? ' tabindex="0"' : ""}>
                         <p>${escapeHtml(textoExibido)}</p>
                         ${
-                          temItem || excedeLimite
+                          temItem
                             ? `<div class="linha-acoes">
-                                ${
-                                  temItem
-                                    ? `<button type="button" class="ver-item-btn">
-                                        <svg class="btn-icone" width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                            <path d="M1 7C1 7 3.5 2.5 7 2.5C10.5 2.5 13 7 13 7C13 7 10.5 11.5 7 11.5C3.5 11.5 1 7 1 7Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-                                            <circle cx="7" cy="7" r="1.8" stroke="currentColor" stroke-width="1.3"/>
-                                        </svg>
-                                        <span class="btn-texto">Ver item</span>
-                                    </button>`
-                                    : ""
-                                }
-                                ${
-                                  excedeLimite
-                                    ? `<button type="button" class="ver-mais-btn">
-                                        <svg class="btn-icone" width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                            <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                        <span class="btn-texto">Ver mais</span>
-                                    </button>`
-                                    : ""
-                                }
+                                <button type="button" class="ver-item-btn" data-nivel-item="${escapeHtml(base)}" data-item-id="${escapeHtml(item.id)}">
+                                    <svg class="btn-icone" width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                        <path d="M1 7C1 7 3.5 2.5 7 2.5C10.5 2.5 13 7 13 7C13 7 10.5 11.5 7 11.5C3.5 11.5 1 7 1 7Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                                        <circle cx="7" cy="7" r="1.8" stroke="currentColor" stroke-width="1.3"/>
+                                    </svg>
+                                    <span class="btn-texto">Ver item</span>
+                                </button>
                             </div>`
                             : ""
                         }
@@ -537,17 +528,16 @@ class DescriptorManager {
                 </div>`,
     ).join("");
 
-    escalaContent.querySelectorAll(".ver-mais-btn").forEach((btn, i) => {
-      const conteudo = btn.closest(".linha-conteudo");
-      const paragrafo = conteudo.querySelector("p");
+    escalaContent.querySelectorAll(".tem-ver-mais").forEach((conteudo, i) => {
       conteudo.dataset.textoCompleto = textosCompletos[i];
-      conteudo.dataset.textoTruncado = paragrafo.textContent;
-    });
-
-    escalaContent.querySelectorAll(".ver-item-btn").forEach((btn, i) => {
-      const { level, content } = itensCompletos[i];
-      btn.dataset.nivelItem = level;
-      btn.dataset.conteudoItem = content;
+      conteudo.dataset.textoTruncado = conteudo.querySelector("p").textContent;
+      conteudo.addEventListener("mouseenter", () => this.expandirLinha(conteudo));
+      conteudo.addEventListener("mouseleave", () => this.recolherLinha(conteudo));
+      conteudo.addEventListener("focusin", () => this.expandirLinha(conteudo));
+      conteudo.addEventListener("focusout", (e) => {
+        // Foco indo para o "Ver item" da mesma linha mantém aberto
+        if (!conteudo.contains(e.relatedTarget)) this.recolherLinha(conteudo);
+      });
     });
   }
 

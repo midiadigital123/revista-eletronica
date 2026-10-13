@@ -53,7 +53,7 @@ Projeto (ex.: "SAEGO 2025")
 |---|---|
 | **Projeto** | Uma revista inteira (por exemplo, a de um estado num ano). Tem nome e *slug* (o identificador na URL). |
 | **Página** | Os textos e imagens que envolvem a escala: título, introdução, imagem do topo. |
-| **Caderno / disciplina** | Uma parte da revista. Ids fixos: `lingua-portuguesa`, `matematica`, `alfabetizacao-lp`, `alfabetizacao-mat`. Ao criar o projeto, você marca disciplinas; **Alfabetização** gera dois cadernos (LP + MT). |
+| **Caderno / disciplina** | Uma parte da revista. Ids fixos: `lingua-portuguesa` e `matematica`. Ao criar o projeto, você marca as disciplinas; cada uma gera um caderno. O PDF de Alfabetização (LP + MT juntos) pode ser enviado nos dois campos. |
 | **Ano (etapa)** | A série avaliada, no formato `<n>ef` ou `<n>em`: `2ef` = 2º ano do Ensino Fundamental, `3em` = 3ª série do Ensino Médio. |
 | **Escala de proficiência** | Uma régua numérica (ex.: 0 a 500) onde a nota do aluno é posicionada. |
 | **Cortes e padrões** | Três valores de corte dividem a régua em **4 padrões de desempenho** contíguos: o Padrão 01 vai do mínimo até o corte 1, o Padrão 02 começa logo depois, e assim por diante. Cores fixas: 01 `#f72628`, 02 `#ff8d43`, 03 `#b3ccff`, 04 `#0ed3ff`. |

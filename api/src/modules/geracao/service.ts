@@ -1,5 +1,6 @@
 import type { Readable } from "node:stream";
 import Handlebars from "handlebars";
+import { Types } from "mongoose";
 import { camposDoTipo } from "../../contrato/campos-pagina.js";
 import { rotuloCaderno, type CadernoProjeto } from "../../contrato/schemas.js";
 import { renderRevista, arquivosEstaticosRevista } from "../revista/render.js";
@@ -21,6 +22,7 @@ const TIPOS: Record<string, string> = {
   jpg: "image/jpeg",
   webp: "image/webp",
   svg: "image/svg+xml",
+  pdf: "application/pdf",
 };
 
 const tipoDe = (caminho: string) =>
@@ -82,6 +84,20 @@ export async function montarPacote(slug: string): Promise<ArquivoPacote[]> {
         abrir: () => abrirLeitura(imagem.arquivoId),
       });
     }
+    // PDFs dos itens ("Ver item"); o mesmo item pode aparecer em várias linhas.
+    const itens = new Set(
+      anos.flatMap(({ descritores }) =>
+        descritores.flatMap(({ scale }) =>
+          Object.values(scale).flatMap((linhas) => linhas.flatMap((l) => l.item?.id ?? [])),
+        ),
+      ),
+    );
+    for (const itemId of itens)
+      arquivos.push({
+        caminho: `${id}/arquivos/itens/${itemId}.pdf`,
+        tipo: tipoDe(".pdf"),
+        abrir: () => abrirLeitura(new Types.ObjectId(itemId)),
+      });
   }
   return arquivos;
 }

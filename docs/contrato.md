@@ -80,7 +80,7 @@ Usuário inativo não loga (401). O login regenera a sessão.
 
 O identificador na URL é o **`slug`**: minúsculas, números e hífen, até 60 caracteres.
 
-**Cadernos:** um projeto tem N cadernos (`Projeto.cadernos: {id, anos: AnoProjeto[]}[]`, na ordem de `CADERNOS`). Ids fixos: `lingua-portuguesa`, `matematica`, `alfabetizacao-lp`, `alfabetizacao-mat` (rótulos por `rotuloCaderno`). Na criação o usuário marca **disciplinas** (`DISCIPLINAS`, rótulos por `rotuloDisciplina`): `lingua-portuguesa` → 1 caderno, `matematica` → 1 caderno, `alfabetizacao` → `alfabetizacao-lp` + `alfabetizacao-mat` (`cadernosDasDisciplinas`). A página (textos/imagens) é uma só por projeto. `ProjetoResumo.cadernos: {id, anos: Ano[]}[]`.
+**Cadernos:** um projeto tem N cadernos (`Projeto.cadernos: {id, anos: AnoProjeto[]}[]`, na ordem de `CADERNOS`). Ids fixos: `lingua-portuguesa` e `matematica` (rótulos por `rotuloCaderno`). Na criação o usuário marca **disciplinas** (`DISCIPLINAS`, rótulos por `rotuloDisciplina`): cada uma gera 1 caderno (`cadernosDasDisciplinas`). A página (textos/imagens) é uma só por projeto. `ProjetoResumo.cadernos: {id, anos: Ano[]}[]`.
 
 ### Projeto
 
@@ -169,7 +169,7 @@ Conteúdo do zip: `index.html` (índice com `<a href="<caderno>/index.html">rotu
 - Não exige bloqueio nem grava nada. Confere os bytes `%PDF-`, roda `python3 scripts/extrair_descritores.py <pdf> --stdout` (timeout 60 s) e valida cada disciplina com `Revista`.
 - **`ResultadoExtracao`:** `{disciplinas: {"lingua-portuguesa"?: Revista, matematica?: Revista}, avisos: string[]}`. As revistas vêm sem `pagina`. `avisos` são as linhas `aviso: …` do extrator.
 - **422:** erro do script (`"Não foi possível ler o PDF: <última linha do stderr>"`), saída inválida ou nenhum descritor encontrado.
-- O editor mapeia: LP → `lingua-portuguesa`, MT → `matematica`, Alfabetização → `alfabetizacao-lp` + `alfabetizacao-mat`, e envia em `origem: {tipo: "importar", cadernos}`.
+- O editor mapeia: LP → `lingua-portuguesa`, MT → `matematica` (um PDF com as duas disciplinas pode ir nos dois campos), e envia em `origem: {tipo: "importar", cadernos}`.
 - Docker: a imagem da API instala `python3` e `poppler-utils` e copia o script para `/app/scripts/` (caminho sobrescrevível por `EXTRATOR_PDF`).
 
 ---

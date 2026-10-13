@@ -44,6 +44,11 @@ describe("extração de PDF", () => {
       "padrao-2": 400,
       "padrao-3": 500,
     });
+    expect(r.body.disciplinas["lingua-portuguesa"]["5ef"].cortes).toEqual({
+      "padrao-1": 125,
+      "padrao-2": 175,
+      "padrao-3": 225,
+    });
     expect(r.body.avisos).toContainEqual(expect.stringContaining("matematica 2ef D06"));
   });
 });

@@ -82,13 +82,13 @@ describe("editor da escala", () => {
     expect(within(linhasP3.at(-1)!).getByRole("note")).toHaveTextContent("não aparece na revista");
   });
 
-  it("adiciona linha no início do intervalo e salva o padrão inteiro", async () => {
+  it("adiciona linha com início e fim do intervalo e salva o padrão inteiro", async () => {
     const user = userEvent.setup();
     renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01");
     await user.click(await screen.findByRole("button", { name: "Adicionar linha ao Padrão 04" }));
     await waitFor(() =>
       expect(d01().scale["padrao-4"]).toEqual([
-        { level: 375, content: "---" },
+        { level: 375, fim: 500, content: "---" },
         { level: 325, content: "---" },
       ]),
     );
@@ -99,28 +99,38 @@ describe("editor da escala", () => {
     renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01");
     await user.click(await screen.findByRole("button", { name: "Remover linha 2 do Padrão 01" }));
     await waitFor(() => expect(niveis("padrao-1")).toEqual([100]));
-    expect(screen.queryByLabelText("Nível da linha 2 do Padrão 01")).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Nível da linha 2 do Padrão 01 — início (maior ou igual a)"),
+    ).not.toBeInTheDocument();
   });
 
   it("reordena as linhas por nível decrescente depois de salvar", async () => {
     const user = userEvent.setup();
     renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01");
-    const nivel = await screen.findByLabelText("Nível da linha 1 do Padrão 03");
+    const nivel = await screen.findByLabelText(
+      "Nível da linha 1 do Padrão 03 — início (maior ou igual a)",
+    );
     await user.clear(nivel);
     await user.type(nivel, "260");
     await user.tab();
 
     await waitFor(() => expect(niveis("padrao-3")).toEqual([275, 260, 250]));
     await waitFor(() =>
-      expect(screen.getByLabelText("Nível da linha 1 do Padrão 03")).toHaveValue(275),
+      expect(
+        screen.getByLabelText("Nível da linha 1 do Padrão 03 — início (maior ou igual a)"),
+      ).toHaveValue(275),
     );
-    expect(screen.getByLabelText("Nível da linha 2 do Padrão 03")).toHaveValue(260);
+    expect(
+      screen.getByLabelText("Nível da linha 2 do Padrão 03 — início (maior ou igual a)"),
+    ).toHaveValue(260);
   });
 
   it("nível fora da escala: erro 400 no campo, nada salvo", async () => {
     const user = userEvent.setup();
     renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01");
-    const nivel = await screen.findByLabelText("Nível da linha 1 do Padrão 04");
+    const nivel = await screen.findByLabelText(
+      "Nível da linha 1 do Padrão 04 — início (maior ou igual a)",
+    );
     await user.clear(nivel);
     await user.type(nivel, "600");
     await user.tab();
@@ -140,6 +150,70 @@ describe("editor da escala", () => {
     await user.tab();
     await waitFor(() => expect(d01().scale["padrao-3"][0]).toEqual({ level: 300, content: "---" }));
   });
+
+  it("salva o fim da linha; vazio é omitido", async () => {
+    const user = userEvent.setup();
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01");
+    const fim = await screen.findByLabelText("Nível da linha 1 do Padrão 03 — fim (menor que)");
+    await user.type(fim, "320");
+    await user.tab();
+    await waitFor(() =>
+      expect(d01().scale["padrao-3"][0]).toEqual({
+        level: 300,
+        fim: 320,
+        content: expect.any(String),
+      }),
+    );
+    await user.clear(fim);
+    await user.tab();
+    await waitFor(() => expect(d01().scale["padrao-3"][0]).not.toHaveProperty("fim"));
+  });
+
+  it("fim menor que o início: erro 400 na linha", async () => {
+    const user = userEvent.setup();
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01");
+    await user.type(
+      await screen.findByLabelText("Nível da linha 1 do Padrão 03 — fim (menor que)"),
+      "200",
+    );
+    await user.tab();
+    expect(await within(bloco("Padrão 03")).findByRole("alert")).toHaveTextContent(
+      "O fim deve ser maior que o início",
+    );
+    expect(d01().scale["padrao-3"][0]).not.toHaveProperty("fim");
+  });
+
+  it("anexa o PDF do item, mostra o nome e remove", async () => {
+    const user = userEvent.setup();
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01");
+    const pdf = new File(["%PDF"], "item-d01.pdf", { type: "application/pdf" });
+    await user.upload(await screen.findByLabelText("PDF do item da linha 1 do Padrão 03"), pdf);
+
+    // Divergência do mock (como no PUT imagem): no jsdom o File chega ao handler sem o nome
+    // ("blob"); a API real guarda o nome enviado. O teste usa o nome que o mock gravou.
+    await waitFor(() => expect(d01().scale["padrao-3"][0]!.item).toMatchObject({ tamanho: 4 }));
+    const { id, nome } = d01().scale["padrao-3"][0]!.item!;
+    const link = await screen.findByRole("link", { name: nome });
+    expect(link).toHaveAttribute("href", `/api/projetos/exemplo/itens/${id}`);
+    expect(link).toHaveAttribute("target", "_blank");
+
+    await user.click(screen.getByRole("button", { name: "Remover PDF da linha 1 do Padrão 03" }));
+    await waitFor(() => expect(d01().scale["padrao-3"][0]).not.toHaveProperty("item"));
+    expect(screen.queryByRole("link", { name: nome })).not.toBeInTheDocument();
+  });
+
+  it("recusa PDF acima de 5 MB no cliente", async () => {
+    const user = userEvent.setup();
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01");
+    const grande = new File([new Uint8Array(5 * 1024 * 1024 + 1)], "g.pdf", {
+      type: "application/pdf",
+    });
+    await user.upload(await screen.findByLabelText("PDF do item da linha 1 do Padrão 03"), grande);
+    expect(await within(bloco("Padrão 03")).findByRole("alert")).toHaveTextContent(
+      "O PDF passa de 5 MB.",
+    );
+    expect(d01().scale["padrao-3"][0]).not.toHaveProperty("item");
+  });
 });
 
 describe("modo leitura", () => {
@@ -147,13 +221,14 @@ describe("modo leitura", () => {
     renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01", "leitura");
     expect(await screen.findByLabelText("Código")).toBeDisabled();
     for (const rotulo of [
-      "Corte 01 → 02",
-      "Máximo",
+      "Padrão 02 — início (maior ou igual a)",
+      "Padrão 04 — fim (menor ou igual a)",
       "Descrição",
       "Tópico",
       "Pré-requisito 1",
-      "Nível da linha 1 do Padrão 04",
+      "Nível da linha 1 do Padrão 04 — início (maior ou igual a)",
       "Conteúdo da linha 1 do Padrão 04",
+      "PDF do item da linha 1 do Padrão 04",
     ])
       expect(screen.getByLabelText(rotulo)).toBeDisabled();
     for (const nome of [
@@ -164,6 +239,7 @@ describe("modo leitura", () => {
       "Excluir D01",
       "Adicionar linha ao Padrão 04",
       "Remover linha 1 do Padrão 04",
+      "Anexar PDF do item da linha 1 do Padrão 04",
       "Adicionar pré-requisito",
     ])
       expect(screen.getByRole("button", { name: nome })).toBeDisabled();

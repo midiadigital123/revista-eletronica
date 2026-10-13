@@ -11,6 +11,7 @@ import type {
   CriarDescritorEntrada,
   CriarProjetoEntrada,
   Descritor,
+  ItemPdf,
   LinhaEscala,
   Padrao,
   Pagina,
@@ -105,6 +106,14 @@ export const projetosApi = {
       method: "PUT",
       body: linhas,
     }),
+
+  /** PDF do item de uma linha da escala; a linha guarda o ItemPdf devolvido. */
+  enviarItem: (slug: string, arquivo: File) => {
+    const corpo = new FormData();
+    corpo.append("arquivo", arquivo);
+    return api<ItemPdf>(`${p(slug)}/itens`, { method: "POST", body: corpo });
+  },
+  urlItem: (slug: string, id: string) => urlApi(`${p(slug)}/itens/${id}`),
 
   urlImagem: (slug: string, chave: string, versao?: string) =>
     urlApi(`${p(slug)}/pagina/${chave}/imagem${versao ? `?v=${encodeURIComponent(versao)}` : ""}`),

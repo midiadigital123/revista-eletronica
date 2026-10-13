@@ -82,6 +82,28 @@ assert.deepEqual(
   ["4", 500, 500, null, false, "topo"],
 );
 
+// Linhas no mesmo nível (habilidades separadas) e item repassado para a faixa
+{
+  const item = { id: "abc123", nome: "item.pdf", tamanho: 1024 };
+  const faixas = montarFaixasRegua({
+    min: 0,
+    max: 500,
+    cortes,
+    escala: { "padrao-3": [{ level: 300, content: "A", item }, L(300, "B")] },
+  });
+  assert.deepEqual(
+    resumo(faixas).slice(1, 4),
+    [
+      ["3", 375, 300, null, false, "A"],
+      ["3", 300, 300, 300, false, "B"],
+      ["3", 300, 250, 250, true, null],
+    ],
+  );
+  assert.deepEqual(faixas[1].item, item);
+  assert.equal(faixas[2].item, undefined);
+  assert.equal(faixas[3].item, undefined); // preenchimento não tem item
+}
+
 // Rótulos das abas gerados a partir da chave da etapa (mesmo texto do contrato)
 assert.equal(rotuloAno("2ef"), "2º EF");
 assert.equal(rotuloAno("3em"), "3ª EM");

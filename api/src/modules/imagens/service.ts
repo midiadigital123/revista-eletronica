@@ -10,6 +10,7 @@ import type { ImagemArmazenada, ValorPagina } from "../projetos/model.js";
  * Outros módulos usam só estas assinaturas:
  *  - A5a: copiarImagens (criar projeto com origem "copiar"), removerImagens (não usado na exclusão lógica)
  *  - A7: abrirLeitura (preview e zip)
+ *  - itens: salvarItem (PDF do "Ver item" de uma linha da escala)
  */
 
 const BUCKET = "imagens";
@@ -38,6 +39,13 @@ export async function salvarImagem(dados: {
   });
   await pipeline(Readable.from([dados.conteudo]), upload);
   return { arquivoId: upload.id, nome, mime: dados.mime, tamanho: dados.conteudo.length };
+}
+
+/** Grava o PDF de um item (linha da escala) no mesmo bucket e devolve o id do arquivo. */
+export async function salvarItem(nome: string, conteudo: Buffer): Promise<Types.ObjectId> {
+  const upload = bucket().openUploadStream(nome, { metadata: { mime: "application/pdf" } });
+  await pipeline(Readable.from([conteudo]), upload);
+  return upload.id;
 }
 
 /** Stream do arquivo; se não existir, o stream emite AppError 404. */

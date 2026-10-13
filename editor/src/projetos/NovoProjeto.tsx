@@ -58,12 +58,10 @@ const ORIGENS: { tipo: TipoOrigem; rotulo: string; ajuda: string }[] = [
 
 const LISTA_DISCIPLINAS = Object.keys(DISCIPLINAS) as Disciplina[];
 
-/** Disciplina do extrator que preenche cada caderno (Alfabetização usa as duas do mesmo PDF). */
+/** Disciplina do extrator que preenche cada caderno. */
 const FONTE: Record<Caderno, keyof ResultadoExtracao["disciplinas"]> = {
   "lingua-portuguesa": "lingua-portuguesa",
   matematica: "matematica",
-  "alfabetizacao-lp": "lingua-portuguesa",
-  "alfabetizacao-mat": "matematica",
 };
 
 /** PDF lido por disciplina. `arquivo` descarta respostas de um arquivo que já foi trocado. */

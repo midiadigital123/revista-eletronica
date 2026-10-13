@@ -29,10 +29,10 @@ async function projetoComImagem() {
     .send({
       slug: "fx",
       nome: "Fixture <&>",
-      disciplinas: ["lingua-portuguesa", "alfabetizacao"],
+      disciplinas: ["lingua-portuguesa", "matematica"],
       origem: {
         tipo: "importar",
-        cadernos: { "lingua-portuguesa": fixture, "alfabetizacao-lp": fixture, "alfabetizacao-mat": fixture },
+        cadernos: { "lingua-portuguesa": fixture, matematica: fixture },
       },
     })
     .expect(201);
@@ -44,7 +44,7 @@ async function projetoComImagem() {
   return agente;
 }
 
-const CAD = "/api/projetos/fx/preview/alfabetizacao-mat";
+const CAD = "/api/projetos/fx/preview/matematica";
 
 const python = (...args: string[]) =>
   execFileSync("python3", ["-I", "-m", "zipfile", ...args]).toString();
@@ -59,8 +59,7 @@ describe("geração da revista", () => {
     expect(h.text).toContain("<title>Fixture &lt;&amp;&gt;</title>");
     expect([...h.text.matchAll(/<a href="([^"]+)">([^<]+)<\/a>/g)].map((m) => [m[1], m[2]])).toEqual([
       ["lingua-portuguesa/index.html", "Língua Portuguesa"],
-      ["alfabetizacao-lp/index.html", "Alfabetização · Língua Portuguesa"],
-      ["alfabetizacao-mat/index.html", "Alfabetização · Matemática"],
+      ["matematica/index.html", "Matemática"],
     ]);
   });
 
@@ -127,15 +126,14 @@ describe("geração da revista", () => {
     python("-t", arquivo);
     const lista = python("-l", arquivo);
     const nomes = ["index.html", "styles.css", "script.js", "arquivos/heroImagem.png"];
-    const cadernos = ["lingua-portuguesa", "alfabetizacao-lp", "alfabetizacao-mat"];
+    const cadernos = ["lingua-portuguesa", "matematica"];
     for (const c of cadernos)
       for (const nome of [...nomes, "assets/seta-anterior.svg", "assets/seta-proxima.svg"])
         expect(lista).toContain(`${c}/${nome}`);
-    expect(lista).not.toMatch(/(^|\s)matematica\//m); // caderno não marcado
 
     const saida = join(dir, "extraido");
     python("-e", arquivo, saida);
-    expect(readFileSync(join(saida, "index.html"), "utf8")).toContain('href="alfabetizacao-lp/index.html"');
+    expect(readFileSync(join(saida, "index.html"), "utf8")).toContain('href="matematica/index.html"');
     for (const c of cadernos) {
       const html = readFileSync(join(saida, c, "index.html"), "utf8");
       expect(html).toContain('id="dados-revista"');
