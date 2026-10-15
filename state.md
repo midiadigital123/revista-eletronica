@@ -194,6 +194,14 @@ Revisar o diff com `git diff editor/` e decidir o commit.
 - **Arquivos afetados:** `editor/src/projetos/**`, `editor/index.html`, testes.
 - **Status:** ativa
 
+### D-023 — CSP da API sem upgrade-insecure-requests (2026-10-15)
+- **Contexto:** no acesso por http://192.168.5.39:8080 o preview não carregava CSS/JS/SVG: o `helmet()` padrão envia `upgrade-insecure-requests`, e o navegador troca as requisições para https. Em localhost isso não aparece porque o navegador ignora a diretiva.
+- **Decisão:** `helmet({ contentSecurityPolicy: { directives: { upgradeInsecureRequests: null } } })`.
+- **Motivo:** o sistema é servido em http na rede local; o resto do CSP continua igual.
+- **Descartadas:** HTTPS com certificado próprio — exige confiar no certificado em cada máquina; desligar o CSP inteiro — perde proteção sem motivo.
+- **Arquivos afetados:** `api/src/app.ts`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] Cortes do 5º ano corretos? — confirmados pelo usuário
 
@@ -233,3 +241,7 @@ Revisar o diff com `git diff editor/` e decidir o commit.
 ### 2026-10-13 17:15 (polish)
 - Plano de polish aprovado (5 itens, D-022).
 - Polish aplicado e verificado (mocks, 1440px e celular); 58 testes verdes.
+
+### 2026-10-15
+- Acesso pela rede local: editor já publica em 0.0.0.0:8080; cookie secure "auto" funciona em http; falta liberar a 8080 no ufw (ativo).
+- Bug: preview quebrava via IP (CSP do helmet com upgrade-insecure-requests forçava https). Correção: diretiva desligada em api/src/app.ts (D-023).

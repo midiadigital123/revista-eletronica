@@ -16,7 +16,8 @@ export function criarApp(config: Config, log: Logger): Express {
   // Atrás do nginx do docker-compose: confia no X-Forwarded-Proto (cookie secure "auto").
   app.set("trust proxy", 1);
 
-  app.use(helmet());
+  // Sem upgrade-insecure-requests: servido em http pela rede local (ex.: http://192.168.x.x:8080).
+  app.use(helmet({ contentSecurityPolicy: { directives: { upgradeInsecureRequests: null } } }));
   app.use(pinoHttp({ logger: log }));
   app.use(express.json({ limit: "10mb" }));
   app.use(
