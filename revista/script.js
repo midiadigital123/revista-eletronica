@@ -53,14 +53,18 @@ function descriptorKeys(filterData) {
 const PADROES_DE_CIMA = ["padrao-4", "padrao-3", "padrao-2", "padrao-1"];
 
 /**
- * Faixas da régua, de cima para baixo.
+ * Régua da escala, de cima para baixo.
  * Padrões contíguos: P01 = [min, cortes.padrao-1], P02 = [padrao-1, padrao-2],
  * P03 = [padrao-2, padrao-3], P04 = [padrao-3, max].
- * Cada linha vira uma faixa cuja base é o seu nível e cujo topo é a linha de
- * cima (ou o topo do padrão). Sobra entre a última linha e a base do padrão
- * vira faixa sem conteúdo (conteudo null); padrão sem linhas vira uma faixa "---".
+ * As faixas vêm só dos níveis das linhas (todos os padrões juntos): base = nível,
+ * topo = nível de cima (ou max). Corte que não cai num nível fica dentro da faixa
+ * que o contém, sem criar faixa nova. Padrão sem linhas ganha uma faixa "---"
+ * (com preenchimento acima, se preciso); sobra até o mínimo vira preenchimento.
+ * Preenchimento (conteudo null) tem meia altura.
  * rotuloBase é o número do tick na base: null quando é o mínimo ou o máximo
  * (aparecem fora da régua) ou quando a faixa seguinte tem a mesma base (o número sai só nela).
+ * Retorna { faixas, cortes: [{padrao, valor, y, exato}], padroes: [{padrao, y0, y1}] },
+ * com y em alturas de linha a partir do topo.
  */
 function montarFaixasRegua({ min, max, cortes, escala }) {
   const limites = {
@@ -69,32 +73,74 @@ function montarFaixasRegua({ min, max, cortes, escala }) {
     "padrao-2": [cortes["padrao-2"], cortes["padrao-1"]],
     "padrao-1": [cortes["padrao-1"], min],
   };
-  const faixas = [];
+  const entradas = [];
   for (const padrao of PADROES_DE_CIMA) {
-    const [topoPadrao, basePadrao] = limites[padrao];
-    const linhas = [...((escala && escala[padrao]) || [])].sort(
-      (a, b) => b.level - a.level,
-    );
-    let topo = topoPadrao;
-    for (const { level, content, item } of linhas) {
-      faixas.push({ padrao, topo, base: level, conteudo: content || "---", item });
-      topo = level;
+    const linhas = (escala && escala[padrao]) || [];
+    for (const { level, content, item } of linhas)
+      entradas.push({ padrao, base: level, conteudo: content || "---", item });
+    if (!linhas.length) {
+      const [topoPadrao, basePadrao] = limites[padrao];
+      entradas.push({ padrao, base: topoPadrao, conteudo: null });
+      entradas.push({ padrao, base: basePadrao, conteudo: "---" });
     }
-    if (!linhas.length)
-      faixas.push({ padrao, topo, base: basePadrao, conteudo: "---" });
-    else if (topo > basePadrao)
-      faixas.push({ padrao, topo, base: basePadrao, conteudo: null });
   }
+  // sort estável: mesmo nível mantém a ordem dos padrões e das linhas
+  entradas.sort((a, b) => b.base - a.base);
+
+  const faixas = [];
+  let topo = max;
+  for (const e of entradas) {
+    if (e.conteudo === null && e.base === topo) continue; // preenchimento de altura zero
+    // preenchimento acima de um padrão vazio pertence ao padrão de cima
+    if (e.conteudo === null)
+      e.padrao = PADROES_DE_CIMA.find((p) => limites[p][1] <= e.base) || e.padrao;
+    faixas.push({ ...e, topo });
+    topo = e.base;
+  }
+  if (topo > min) faixas.push({ padrao: "padrao-1", topo, base: min, conteudo: null });
+
+  let y = 0;
   const valoresCorte = Object.values(cortes);
-  return faixas.map((f, i) => {
+  const comY = faixas.map((f, i) => {
     const proxima = faixas[i + 1];
     const mostrar = f.base !== min && f.base !== max && !(proxima && proxima.base === f.base);
+    const altura = f.conteudo === null ? 0.5 : 1;
+    const y0 = y;
+    y += altura;
     return {
       ...f,
+      y0,
+      altura,
       rotuloBase: mostrar ? f.base : null,
       ehCorte: mostrar && valoresCorte.includes(f.base),
     };
   });
+
+  // y de um valor: na borda se coincide com um nível; senão dentro da faixa, entre 25% e 75%
+  // (a revista impressa faz o mesmo, e o número do corte não cola no tick vizinho)
+  const posicao = (v) => {
+    if (v >= max) return { y: 0, exato: true };
+    if (v <= min) return { y, exato: true };
+    const borda = comY.findLast((f) => f.base === v);
+    if (borda) return { y: borda.y0 + borda.altura, exato: true };
+    const f = comY.find((f) => f.topo > v && v > f.base);
+    const t = Math.min(0.75, Math.max(0.25, (f.topo - v) / (f.topo - f.base)));
+    return { y: f.y0 + f.altura * t, exato: false };
+  };
+
+  return {
+    faixas: comY,
+    cortes: ["padrao-3", "padrao-2", "padrao-1"].map((padrao) => ({
+      padrao,
+      valor: cortes[padrao],
+      ...posicao(cortes[padrao]),
+    })),
+    padroes: PADROES_DE_CIMA.map((padrao) => ({
+      padrao,
+      y0: posicao(limites[padrao][0]).y,
+      y1: posicao(limites[padrao][1]).y,
+    })),
+  };
 }
 
 function alturaLinhaColapsada() {
@@ -477,9 +523,10 @@ class DescriptorManager {
       "padrao-1": "Padrão 01",
     };
 
-    const faixas = montarFaixasRegua({ min, max, cortes, escala: scale });
+    const regua = montarFaixasRegua({ min, max, cortes, escala: scale });
+    const emLinhas = (y) => `calc(var(--escala-linha-height) * ${y})`;
 
-    const faixaHTML = ({ padrao, base, rotuloBase, ehCorte, conteudo, item }) => {
+    const faixaHTML = ({ base, rotuloBase, ehCorte, conteudo, item }) => {
       const tick =
         rotuloBase === null
           ? ""
@@ -493,8 +540,8 @@ class DescriptorManager {
       const temItem = Boolean(item && item.id);
 
       return `
-                <div class="linha">
-                    <div class="linha-cor cor-${padrao}"></div>
+                <div class="linha${conteudo === null ? " preenchimento" : ""}">
+                    <div class="linha-cor"></div>
                     <div class="linha-marcador"></div>
                     <span class="proficiencia-valor">${tick}</span>
                     <div class="linha-conteudo${excedeLimite ? " tem-ver-mais" : ""}${temItem ? " tem-ver-item" : ""}"${excedeLimite ? ' tabindex="0"' : ""}>
@@ -516,17 +563,23 @@ class DescriptorManager {
                 </div>`;
     };
 
-    // Um bloco por padrão: o rótulo ocupa a altura somada das suas faixas.
-    escalaContent.innerHTML = PADROES_DE_CIMA.map(
-      (padrao) => `
-                <div class="padrao ${padrao}">
-                    <div class="padrao-label"><span>${labels[padrao]}</span></div>
-                    <div class="padrao-linhas">${faixas
-                      .filter((f) => f.padrao === padrao)
-                      .map(faixaHTML)
-                      .join("")}</div>
-                </div>`,
-    ).join("");
+    // Linhas só pelos níveis; rótulos, barra de cor e cortes ficam por cima, posicionados por y.
+    const faixaDoPadrao = (classe) => ({ padrao, y0, y1 }) =>
+      `<div class="${classe} ${padrao}" style="top:${emLinhas(y0)};height:${emLinhas(y1 - y0)}">${
+        classe === "padrao-label" ? `<span>${labels[padrao]}</span>` : ""
+      }</div>`;
+    escalaContent.innerHTML = `
+                <div class="escala-rotulos">${regua.padroes.map(faixaDoPadrao("padrao-label")).join("")}</div>
+                <div class="padrao-linhas">
+                    ${regua.faixas.map(faixaHTML).join("")}
+                    ${regua.padroes.map(faixaDoPadrao("escala-barra")).join("")}
+                    ${regua.cortes
+                      .filter((c) => !c.exato)
+                      .map(
+                        (c) => `<div class="escala-corte" style="top:${emLinhas(c.y)}"><span class="proficiencia-valor-numero eh-corte">${escapeHtml(c.valor)}</span></div>`,
+                      )
+                      .join("")}
+                </div>`;
 
     escalaContent.querySelectorAll(".tem-ver-mais").forEach((conteudo, i) => {
       conteudo.dataset.textoCompleto = textosCompletos[i];

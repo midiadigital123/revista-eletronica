@@ -504,17 +504,13 @@ body {
 
 .escala-content {
     display: flex;
-    flex-direction: column;
 }
 
-.padrao {
-    display: flex;
-    gap: var(--escala-gap-default);
-    min-height: var(--escala-linha-height);
-}
-
-.padrao:first-child {
-    /* border-top: 0.5px solid var(--color-black); */
+/* Coluna dos rótulos; cada rótulo é posicionado por top/height (script.js) */
+.escala-rotulos {
+    position: relative;
+    width: calc(var(--escala-padrao-width) + var(--escala-gap-default));
+    flex-shrink: 0;
 }
 
 .padrao-1 {
@@ -534,8 +530,13 @@ body {
 }
 
 .padrao-label {
-    width: var(--escala-padrao-width);
-    min-width: var(--escala-padrao-width);
+    position: absolute;
+    left: 0;
+    right: 0;
+    box-sizing: border-box;
+    /* borda transparente: o fundo do padrão cobre o vão até a barra */
+    border-right: var(--escala-gap-default) solid transparent;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -624,6 +625,42 @@ body {
     flex-shrink: 0;
 }
 
+/* Preenchimento (sem conteúdo): meia altura, como na revista impressa */
+.linha.preenchimento,
+.linha.preenchimento .linha-cor,
+.linha.preenchimento .linha-conteudo {
+    min-height: calc(var(--escala-linha-height) / 2);
+    height: calc(var(--escala-linha-height) / 2);
+}
+
+/* Barra de cor e cortes: por cima das linhas, posicionados por y (script.js) */
+.escala-barra {
+    position: absolute;
+    left: 0;
+    width: var(--escala-cor-width);
+}
+
+.escala-barra.padrao-1 { background-color: var(--color-padrao-1); }
+.escala-barra.padrao-2 { background-color: var(--color-padrao-2); }
+.escala-barra.padrao-3 { background-color: var(--color-padrao-3); }
+.escala-barra.padrao-4 { background-color: var(--color-padrao-4); }
+
+/* Corte que não coincide com um nível: selo no meio da faixa */
+.escala-corte {
+    position: absolute;
+    left: calc(var(--escala-cor-width) + var(--escala-marcador-width));
+    width: var(--escala-valor-width);
+    display: flex;
+    justify-content: center;
+    transform: translateY(-50%);
+    z-index: 3;
+    pointer-events: none;
+}
+
+.escala-corte .proficiencia-valor-numero {
+    transform: none;
+}
+
 .linha-cor {
     width: var(--escala-cor-width);
     min-width: var(--escala-cor-width);
@@ -631,21 +668,9 @@ body {
     flex-shrink: 0;
 }
 
-.cor-padrao-1 {
-    background-color: var(--color-padrao-1);
-}
 
-.cor-padrao-2 {
-    background-color: var(--color-padrao-2);
-}
 
-.cor-padrao-3 {
-    background-color: var(--color-padrao-3);
-}
 
-.cor-padrao-4 {
-    background-color: var(--color-padrao-4);
-}
 
 .linha-conteudo {
     position: relative;
@@ -1002,10 +1027,9 @@ body {
         margin: var(--spacing-lg) auto;
     }
 
-    .padrao-label {
-        min-width: 5rem;
+    :root {
+        --escala-padrao-width: 5rem;
         /* 80px */
-        width: 5rem;
     }
 }
 
