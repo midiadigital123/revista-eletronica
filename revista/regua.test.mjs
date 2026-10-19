@@ -65,6 +65,19 @@ assert.deepEqual(
   ],
 );
 
+// Nível repetido: só a última faixa do nível tem tick
+assert.deepEqual(
+  montarFaixasRegua({
+    min: 0,
+    max: 500,
+    cortes,
+    escala: { "padrao-4": [L(383, "a"), L(383, "b"), L(375, "c")] },
+  })
+    .slice(0, 3)
+    .map((f) => f.mesmoNivel),
+  [true, false, false],
+);
+
 // Padrões vazios: uma faixa "---" entre os limites de cada um
 assert.deepEqual(
   resumo(montarFaixasRegua({ min: 0, max: 500, cortes, escala: { "padrao-3": [L(300)] } })),
