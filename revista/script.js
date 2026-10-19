@@ -53,14 +53,18 @@ function descriptorKeys(filterData) {
 const PADROES_DE_CIMA = ["padrao-4", "padrao-3", "padrao-2", "padrao-1"];
 
 /**
- * Faixas da régua, de cima para baixo.
+ * Régua da escala, de cima para baixo.
  * Padrões contíguos: P01 = [min, cortes.padrao-1], P02 = [padrao-1, padrao-2],
  * P03 = [padrao-2, padrao-3], P04 = [padrao-3, max].
- * Cada linha vira uma faixa cuja base é o seu nível e cujo topo é a linha de
- * cima (ou o topo do padrão). Sobra entre a última linha e a base do padrão
- * vira faixa sem conteúdo (conteudo null); padrão sem linhas vira uma faixa "---".
+ * As faixas vêm só dos níveis das linhas (todos os padrões juntos): base = nível,
+ * topo = nível de cima (ou max). Corte que não cai num nível fica dentro da faixa
+ * que o contém, sem criar faixa nova. Padrão sem linhas ganha uma faixa "---"
+ * (com preenchimento acima, se preciso); sobra até o mínimo vira preenchimento.
+ * Preenchimento (conteudo null) tem meia altura.
  * rotuloBase é o número do tick na base: null quando é o mínimo ou o máximo
  * (aparecem fora da régua) ou quando a faixa seguinte tem a mesma base (o número sai só nela).
+ * Retorna { faixas, cortes: [{padrao, valor, y, exato}], padroes: [{padrao, y0, y1}] },
+ * com y em alturas de linha a partir do topo.
  */
 function montarFaixasRegua({ min, max, cortes, escala }) {
   const limites = {
@@ -69,32 +73,76 @@ function montarFaixasRegua({ min, max, cortes, escala }) {
     "padrao-2": [cortes["padrao-2"], cortes["padrao-1"]],
     "padrao-1": [cortes["padrao-1"], min],
   };
-  const faixas = [];
+  const entradas = [];
   for (const padrao of PADROES_DE_CIMA) {
-    const [topoPadrao, basePadrao] = limites[padrao];
-    const linhas = [...((escala && escala[padrao]) || [])].sort(
-      (a, b) => b.level - a.level,
-    );
-    let topo = topoPadrao;
-    for (const { level, content, item } of linhas) {
-      faixas.push({ padrao, topo, base: level, conteudo: content || "---", item });
-      topo = level;
+    const linhas = (escala && escala[padrao]) || [];
+    for (const { level, content, item } of linhas)
+      entradas.push({ padrao, base: level, conteudo: content || "---", item });
+    if (!linhas.length) {
+      const [topoPadrao, basePadrao] = limites[padrao];
+      entradas.push({ padrao, base: topoPadrao, conteudo: null });
+      entradas.push({ padrao, base: basePadrao, conteudo: "---" });
     }
-    if (!linhas.length)
-      faixas.push({ padrao, topo, base: basePadrao, conteudo: "---" });
-    else if (topo > basePadrao)
-      faixas.push({ padrao, topo, base: basePadrao, conteudo: null });
   }
+  // sort estável: mesmo nível mantém a ordem dos padrões e das linhas
+  entradas.sort((a, b) => b.base - a.base);
+
+  const faixas = [];
+  let topo = max;
+  for (const e of entradas) {
+    if (e.conteudo === null && e.base === topo) continue; // preenchimento de altura zero
+    // preenchimento acima de um padrão vazio pertence ao padrão de cima
+    if (e.conteudo === null)
+      e.padrao = PADROES_DE_CIMA.find((p) => limites[p][1] <= e.base) || e.padrao;
+    faixas.push({ ...e, topo });
+    topo = e.base;
+  }
+  if (topo > min) faixas.push({ padrao: "padrao-1", topo, base: min, conteudo: null });
+
+  let y = 0;
   const valoresCorte = Object.values(cortes);
-  return faixas.map((f, i) => {
+  const comY = faixas.map((f, i) => {
     const proxima = faixas[i + 1];
-    const mostrar = f.base !== min && f.base !== max && !(proxima && proxima.base === f.base);
+    const mesmoNivel = Boolean(proxima && proxima.base === f.base);
+    const mostrar = f.base !== min && f.base !== max && !mesmoNivel;
+    const altura = f.conteudo === null ? 0.5 : 1;
+    const y0 = y;
+    y += altura;
     return {
       ...f,
+      y0,
+      altura,
+      mesmoNivel, // tick e número saem só na última faixa do nível
       rotuloBase: mostrar ? f.base : null,
       ehCorte: mostrar && valoresCorte.includes(f.base),
     };
   });
+
+  // y de um valor: na borda se coincide com um nível; senão dentro da faixa, entre 25% e 75%
+  // (a revista impressa faz o mesmo, e o número do corte não cola no tick vizinho)
+  const posicao = (v) => {
+    if (v >= max) return { y: 0, exato: true };
+    if (v <= min) return { y, exato: true };
+    const borda = comY.findLast((f) => f.base === v);
+    if (borda) return { y: borda.y0 + borda.altura, exato: true };
+    const f = comY.find((f) => f.topo > v && v > f.base);
+    const t = Math.min(0.75, Math.max(0.25, (f.topo - v) / (f.topo - f.base)));
+    return { y: f.y0 + f.altura * t, exato: false };
+  };
+
+  return {
+    faixas: comY,
+    cortes: ["padrao-3", "padrao-2", "padrao-1"].map((padrao) => ({
+      padrao,
+      valor: cortes[padrao],
+      ...posicao(cortes[padrao]),
+    })),
+    padroes: PADROES_DE_CIMA.map((padrao) => ({
+      padrao,
+      y0: posicao(limites[padrao][0]).y,
+      y1: posicao(limites[padrao][1]).y,
+    })),
+  };
 }
 
 function alturaLinhaColapsada() {
@@ -209,9 +257,19 @@ class DescriptorManager {
 
   init() {
     this.renderButtons();
-    this.initVerMais();
+    this.initHabilidadeHover();
     this.initDropdown();
     this.initModal();
+
+    // A largura disponível muda com fontes e redimensionamento: reavalia onde há "..."
+    let timerResize = null;
+    window.addEventListener("resize", () => {
+      clearTimeout(timerResize);
+      timerResize = setTimeout(() => this.atualizarTruncamentos(), 150);
+    });
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => this.atualizarTruncamentos());
+    }
 
     window.addEventListener("filterChanged", () => {
       appState.currentDescriptor = null;
@@ -298,52 +356,143 @@ class DescriptorManager {
     if (label) label.textContent = appState.currentDescriptor || "";
   }
 
-  // Linhas longas (.tem-ver-mais) expandem no hover/foco; ver expandirLinha/recolherLinha.
-  initVerMais() {
-    document.addEventListener("transitionend", (e) => {
-      const conteudo = e.target;
-      if (e.propertyName === "max-height" && conteudo.dataset.estado === "fechando")
-        this.finalizarRecolher(conteudo);
-    });
-  }
+  // Linhas cujo texto estoura (.tem-ver-mais) expandem no hover/foco/toque.
+  abrirHabilidade(conteudo) {
+    const estavaExpandido = conteudo.classList.contains("expandido");
 
-  finalizarRecolher(conteudo) {
-    delete conteudo.dataset.estado;
-    conteudo.classList.remove("expandido");
-    conteudo.style.maxHeight = "";
-    conteudo.style.left = "";
-    conteudo.style.right = "";
-    conteudo.querySelector("p").textContent = conteudo.dataset.textoTruncado;
-  }
+    // Reabrir durante o fechamento: cancela a finalização pendente
+    clearTimeout(conteudo._timerFim);
+    if (conteudo._aoTerminar) {
+      conteudo.removeEventListener("transitionend", conteudo._aoTerminar);
+    }
+    conteudo.classList.remove("fechando");
 
-  expandirLinha(conteudo) {
-    if (conteudo.dataset.estado === "aberto") return;
-    // Se ainda está recolhendo, segue da altura atual sem reiniciar
-    if (!conteudo.classList.contains("expandido")) {
-      conteudo.querySelector("p").textContent = conteudo.dataset.textoCompleto;
-      conteudo.classList.add("expandido");
-      if (window.innerWidth <= 500) {
-        // No mobile o card ocupa a largura total da tela
-        const linhaRect = conteudo.closest(".linha").getBoundingClientRect();
-        conteudo.style.left = `${-linhaRect.left}px`;
-        conteudo.style.right = `${linhaRect.right - document.documentElement.clientWidth}px`;
-      }
+    conteudo.classList.add("expandido");
+    if (window.innerWidth <= 500) {
+      // No mobile o card ocupa a largura total da tela
+      const linhaRect = conteudo.closest(".linha").getBoundingClientRect();
+      conteudo.style.left = `${-linhaRect.left}px`;
+      conteudo.style.right = `${linhaRect.right - document.documentElement.clientWidth}px`;
+    }
+    if (!estavaExpandido) {
       conteudo.style.maxHeight = alturaLinhaColapsada();
       void conteudo.offsetHeight; // força o navegador a registrar a altura inicial
     }
-    conteudo.dataset.estado = "aberto";
     conteudo.style.maxHeight = `${conteudo.scrollHeight}px`;
   }
 
-  recolherLinha(conteudo) {
-    if (conteudo.dataset.estado !== "aberto") return;
-    conteudo.dataset.estado = "fechando"; // o transitionend em initVerMais finaliza
-    conteudo.style.maxHeight = `${conteudo.scrollHeight}px`;
-    void conteudo.offsetHeight;
+  fecharHabilidade(conteudo) {
+    if (!conteudo.classList.contains("expandido")) return;
+
+    // Mantém o card sobreposto durante a animação, mas abaixo do que está abrindo
+    conteudo.classList.add("fechando");
     conteudo.style.maxHeight = alturaLinhaColapsada();
-    void conteudo.offsetHeight;
-    // Sem diferença de altura não há transição (nem transitionend)
-    if (!conteudo.getAnimations().length) this.finalizarRecolher(conteudo);
+
+    const finalizar = () => {
+      clearTimeout(conteudo._timerFim);
+      conteudo.removeEventListener("transitionend", aoTerminar);
+      conteudo.classList.remove("expandido", "fechando");
+      conteudo.style.maxHeight = "";
+      conteudo.style.left = "";
+      conteudo.style.right = "";
+    };
+    const aoTerminar = (e) => {
+      if (e.target === conteudo && e.propertyName === "max-height") finalizar();
+    };
+    conteudo._aoTerminar = aoTerminar;
+    conteudo.addEventListener("transitionend", aoTerminar);
+    // Sem diferença de altura não há transitionend
+    conteudo._timerFim = setTimeout(finalizar, 450);
+  }
+
+  initHabilidadeHover() {
+    const DELAY_ABRIR = 120; // intenção: ignora o mouse só "passando" pela linha
+    const DELAY_FECHAR = 140; // tolera o mouse saindo e voltando para o card
+    const SELETOR = ".linha-conteudo.tem-ver-mais";
+
+    let aberta = null;
+    let alvoPendente = null;
+    let timerAbrir = null;
+    let timerFechar = null;
+
+    const habilidadeDe = (el) => (el && el.closest ? el.closest(SELETOR) : null);
+
+    // Só uma habilidade aberta por vez: ao trocar, uma fecha enquanto a outra abre
+    const trocarPara = (conteudo) => {
+      clearTimeout(timerAbrir);
+      clearTimeout(timerFechar);
+      alvoPendente = null;
+      if (aberta && !aberta.isConnected) aberta = null;
+      if (aberta === conteudo) return;
+      if (aberta) this.fecharHabilidade(aberta);
+      aberta = conteudo;
+      if (conteudo) this.abrirHabilidade(conteudo);
+    };
+
+    // O botão "Ver item" fica fora da linha de texto: passar o mouse nele não
+    // abre a habilidade, então o item pode ser consultado direto.
+    document.addEventListener("pointerover", (e) => {
+      if (e.pointerType !== "mouse") return;
+      const conteudo = habilidadeDe(e.target);
+      if (!conteudo || conteudo === habilidadeDe(e.relatedTarget)) return;
+
+      if (conteudo === aberta) {
+        clearTimeout(timerFechar); // voltou para a que já estava aberta
+        return;
+      }
+      clearTimeout(timerAbrir);
+      alvoPendente = conteudo;
+      timerAbrir = setTimeout(() => trocarPara(conteudo), DELAY_ABRIR);
+    });
+
+    document.addEventListener("pointerout", (e) => {
+      if (e.pointerType !== "mouse") return;
+      const conteudo = habilidadeDe(e.target);
+      if (!conteudo || conteudo === habilidadeDe(e.relatedTarget)) return;
+
+      if (conteudo === alvoPendente) {
+        clearTimeout(timerAbrir);
+        alvoPendente = null;
+      }
+      if (conteudo === aberta) {
+        clearTimeout(timerFechar);
+        timerFechar = setTimeout(() => trocarPara(null), DELAY_FECHAR);
+      }
+    });
+
+    // Toque (sem hover): tocar na habilidade alterna; tocar fora fecha
+    document.addEventListener("click", (e) => {
+      if (e.pointerType !== "touch" && e.pointerType !== "pen") return;
+      if (e.target.closest(".ver-item-btn")) return;
+      const conteudo = habilidadeDe(e.target);
+      if (conteudo) trocarPara(conteudo === aberta ? null : conteudo);
+      else if (aberta) trocarPara(null);
+    });
+
+    // Teclado: foco na habilidade abre, sair do foco fecha
+    document.addEventListener("focusin", (e) => {
+      const conteudo = habilidadeDe(e.target);
+      if (conteudo && e.target.matches(":focus-visible")) trocarPara(conteudo);
+    });
+    document.addEventListener("focusout", (e) => {
+      const conteudo = habilidadeDe(e.target);
+      if (conteudo && conteudo === aberta && !conteudo.contains(e.relatedTarget)) {
+        trocarPara(null);
+      }
+    });
+  }
+
+  // O texto ocupa toda a largura da coluna; só se estourar (aparecem os "...")
+  // a habilidade passa a ser expansível
+  atualizarTruncamentos() {
+    document.querySelectorAll(".linha-conteudo.tem-texto").forEach((c) => {
+      if (c.classList.contains("expandido")) return;
+      const p = c.querySelector("p");
+      const trunca = p.scrollWidth > p.clientWidth + 1;
+      c.classList.toggle("tem-ver-mais", trunca);
+      if (trunca) c.setAttribute("tabindex", "0");
+      else c.removeAttribute("tabindex");
+    });
   }
 
   renderButtons() {
@@ -468,8 +617,6 @@ class DescriptorManager {
     const escalaContent = document.querySelector(".escala-content");
     if (!escalaContent) return;
 
-    const LIMITE_CARACTERES = window.innerWidth <= 500 ? 40 : 56;
-    const textosCompletos = [];
     const labels = {
       "padrao-4": "Padrão 04",
       "padrao-3": "Padrão 03",
@@ -477,68 +624,62 @@ class DescriptorManager {
       "padrao-1": "Padrão 01",
     };
 
-    const faixas = montarFaixasRegua({ min, max, cortes, escala: scale });
+    const regua = montarFaixasRegua({ min, max, cortes, escala: scale });
+    const emLinhas = (y) => `calc(var(--escala-linha-height) * ${y})`;
 
-    const faixaHTML = ({ padrao, base, rotuloBase, ehCorte, conteudo, item }) => {
+    const faixaHTML = ({ base, rotuloBase, ehCorte, conteudo, item, mesmoNivel }) => {
       const tick =
         rotuloBase === null
           ? ""
           : `<span class="proficiencia-valor-numero${ehCorte ? " eh-corte" : ""}">${escapeHtml(rotuloBase)}</span>`;
-      const texto = conteudo ?? "";
-      const excedeLimite = texto.length > LIMITE_CARACTERES;
-      const textoExibido = excedeLimite
-        ? `${texto.slice(0, LIMITE_CARACTERES).trimEnd()}...`
-        : texto;
-      if (excedeLimite) textosCompletos.push(texto);
+      const texto = conteudo === "---" || conteudo === null ? "" : conteudo;
       const temItem = Boolean(item && item.id);
 
+      // O "..." vem do CSS; atualizarTruncamentos marca as linhas que estouram
       return `
-                <div class="linha">
-                    <div class="linha-cor cor-${padrao}"></div>
+                <div class="linha${conteudo === null ? " preenchimento" : ""}${mesmoNivel ? " mesmo-nivel" : ""}">
+                    <div class="linha-cor"></div>
                     <div class="linha-marcador"></div>
                     <span class="proficiencia-valor">${tick}</span>
-                    <div class="linha-conteudo${excedeLimite ? " tem-ver-mais" : ""}${temItem ? " tem-ver-item" : ""}"${excedeLimite ? ' tabindex="0"' : ""}>
-                        <p>${escapeHtml(textoExibido)}</p>
-                        ${
-                          temItem
-                            ? `<div class="linha-acoes">
-                                <button type="button" class="ver-item-btn" data-nivel-item="${escapeHtml(base)}" data-item-id="${escapeHtml(item.id)}">
-                                    <svg class="btn-icone" width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                        <path d="M1 7C1 7 3.5 2.5 7 2.5C10.5 2.5 13 7 13 7C13 7 10.5 11.5 7 11.5C3.5 11.5 1 7 1 7Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-                                        <circle cx="7" cy="7" r="1.8" stroke="currentColor" stroke-width="1.3"/>
-                                    </svg>
-                                    <span class="btn-texto">Ver item</span>
-                                </button>
-                            </div>`
-                            : ""
-                        }
+                    <div class="linha-conteudo${texto ? " tem-texto" : ""}${temItem ? " tem-ver-item" : ""}">
+                        <p>${escapeHtml(texto)}</p>
                     </div>
+                    ${
+                      temItem
+                        ? `<button type="button" class="ver-item-btn" aria-label="Ver item" data-legenda="Ver item" data-nivel-item="${escapeHtml(base)}" data-item-id="${escapeHtml(item.id)}">
+                            <svg viewBox="4 0 44.3506 44.3506" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <rect x="16.6117" y="12.2362" width="19.1273" height="19.8787" rx="2.36459" stroke="black" stroke-width="0.910823"/>
+                                <path d="M19.8918 15.424V17.997H32.4548V15.424H19.8918ZM33.4599 17.997C33.4598 18.5 33.0099 18.9079 32.4548 18.9079H19.8918C19.3367 18.9079 18.8868 18.5 18.8867 17.997V15.424C18.8867 14.921 19.3367 14.5132 19.8918 14.5132H32.4548C33.0099 14.5132 33.4599 14.921 33.4599 15.424V17.997Z" fill="black"/>
+                                <path d="M32.9574 21.6406C33.2349 21.6406 33.4599 21.8445 33.4599 22.096C33.4599 22.3476 33.2349 22.5514 32.9574 22.5514H19.3892C19.1117 22.5514 18.8867 22.3476 18.8867 22.096C18.8867 21.8445 19.1117 21.6406 19.3892 21.6406H32.9574Z" fill="black"/>
+                                <path d="M27.5315 25.2837C27.783 25.2837 27.9869 25.4876 27.9869 25.7391C27.9869 25.9906 27.783 26.1945 27.5315 26.1945H19.3421C19.0906 26.1945 18.8867 25.9906 18.8867 25.7391C18.8867 25.4876 19.0906 25.2837 19.3421 25.2837H27.5315Z" fill="black"/>
+                                <path d="M27.5315 27.1055C27.783 27.1055 27.9869 27.3094 27.9869 27.5609C27.9869 27.8124 27.783 28.0163 27.5315 28.0163H19.3421C19.0906 28.0163 18.8867 27.8124 18.8867 27.5609C18.8867 27.3094 19.0906 27.1055 19.3421 27.1055H27.5315Z" fill="black"/>
+                                <path d="M27.5315 28.9268C27.783 28.9268 27.9869 29.1307 27.9869 29.3822C27.9869 29.6337 27.783 29.8376 27.5315 29.8376H19.3421C19.0906 29.8376 18.8867 29.6337 18.8867 29.3822C18.8867 29.1307 19.0906 28.9268 19.3421 28.9268H27.5315Z" fill="black"/>
+                            </svg>
+                        </button>`
+                        : ""
+                    }
                 </div>`;
     };
 
-    // Um bloco por padrão: o rótulo ocupa a altura somada das suas faixas.
-    escalaContent.innerHTML = PADROES_DE_CIMA.map(
-      (padrao) => `
-                <div class="padrao ${padrao}">
-                    <div class="padrao-label"><span>${labels[padrao]}</span></div>
-                    <div class="padrao-linhas">${faixas
-                      .filter((f) => f.padrao === padrao)
-                      .map(faixaHTML)
-                      .join("")}</div>
-                </div>`,
-    ).join("");
+    // Linhas só pelos níveis; rótulos, barra de cor e cortes ficam por cima, posicionados por y.
+    const faixaDoPadrao = (classe) => ({ padrao, y0, y1 }) =>
+      `<div class="${classe} ${padrao}" style="top:${emLinhas(y0)};height:${emLinhas(y1 - y0)}">${
+        classe === "padrao-label" ? `<span>${labels[padrao]}</span>` : ""
+      }</div>`;
+    escalaContent.innerHTML = `
+                <div class="escala-rotulos">${regua.padroes.map(faixaDoPadrao("padrao-label")).join("")}</div>
+                <div class="padrao-linhas">
+                    ${regua.faixas.map(faixaHTML).join("")}
+                    ${regua.padroes.map(faixaDoPadrao("escala-barra")).join("")}
+                    ${regua.cortes
+                      .filter((c) => !c.exato)
+                      .map(
+                        (c) => `<div class="escala-corte" style="top:${emLinhas(c.y)}"><span class="proficiencia-valor-numero eh-corte">${escapeHtml(c.valor)}</span></div>`,
+                      )
+                      .join("")}
+                </div>`;
 
-    escalaContent.querySelectorAll(".tem-ver-mais").forEach((conteudo, i) => {
-      conteudo.dataset.textoCompleto = textosCompletos[i];
-      conteudo.dataset.textoTruncado = conteudo.querySelector("p").textContent;
-      conteudo.addEventListener("mouseenter", () => this.expandirLinha(conteudo));
-      conteudo.addEventListener("mouseleave", () => this.recolherLinha(conteudo));
-      conteudo.addEventListener("focusin", () => this.expandirLinha(conteudo));
-      conteudo.addEventListener("focusout", (e) => {
-        // Foco indo para o "Ver item" da mesma linha mantém aberto
-        if (!conteudo.contains(e.relatedTarget)) this.recolherLinha(conteudo);
-      });
-    });
+    this.atualizarTruncamentos();
   }
 
   updateBNCC(bncc) {

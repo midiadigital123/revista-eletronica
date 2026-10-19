@@ -2,12 +2,12 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Polish da UI dos projetos: 5 de 5 concluídos (D-022), sem commit.
-Funcionando: escala no celular com o texto em linha própria; "Novo descritor", "Novo ano", "Adicionar parágrafo" com ícone Plus; "Excluir ano" destructive; lista com "agora mesmo"/"Livre"; console sem 404 do favicon. Editor 58 testes, typecheck e lint verdes.
-Quebrado/pendente: teste manual no docker da sessão anterior (extrator novo) segue pendente. Detector impeccable acusa border-b-2 nas abas (ProjetoLayout.tsx:169): falso positivo, é o sublinhado de 2px da DESIGN.md (raio só no foco).
+Ajustes do UX portados (D-026/D-027), sem commit, junto com D-025 e o fix do traço solto.
+Funcionando: botão "Ver item" circular fora da linha com tooltip e anel amarelo na habilidade aberta; "..." por CSS; hover abre em 120ms e fecha em 140ms, uma aberta por vez; botão abre o PDF; conferido por DOM em 1950, 1000 e 420px; `node revista/regua.test.mjs` ok.
+Quebrado/pendente: sem conferência visual (prints do Playwright saem em branco, zoom 67%); editor (EditorEscala) não foi revisto; teste manual no docker segue pendente.
 
 ## Próxima ação
-Revisar o diff com `git diff editor/` e decidir o commit.
+Abrir o preview de LP 2ef D01 no navegador e passar o mouse numa habilidade com item.
 
 ## Plano
 1. [x] Extrator Python: topic, fim, split por habilidade, sem CORTES_SEM_NUMERO
@@ -202,6 +202,38 @@ Revisar o diff com `git diff editor/` e decidir o commit.
 - **Arquivos afetados:** `api/src/app.ts`
 - **Status:** ativa
 
+### D-024 — Régua pelos níveis; cortes posicionados dentro da faixa (2026-10-16 10:40)
+- **Contexto:** a régua quebrava as faixas por padrão; corte fora de um nível (500 ≠ 503, 400 ≠ 446/390) gerava faixas vazias de altura cheia e a proporção ficava diferente da revista impressa.
+- **Decisão:** `montarFaixasRegua` monta as faixas só pelos níveis de todas as linhas e retorna `{faixas, cortes, padroes}` com y em alturas de linha. Cortes fora de um nível ficam dentro da faixa que os contém, na fração (topo − corte)/(topo − base) limitada a 25–75%. Preenchimento tem meia altura. Rótulos dos padrões, barra de cor e selos dos cortes ficam numa camada absoluta (`.escala-rotulos`, `.escala-barra`, `.escala-corte`). Padrão sem linhas continua com faixa "---".
+- **Motivo:** a revista mede 500 a ~23% e 400 a ~72% das faixas; o limite também impede o selo de colar no tick vizinho.
+- **Descartadas:** proporção linear pura — selo do 500 cola no 503; manter blocos por padrão — uma faixa não atravessa dois blocos.
+- **Arquivos afetados:** `revista/script.js`, `revista/styles.css`, `revista/regua.test.mjs`
+- **Status:** ativa
+
+### D-025 — Faixa sem habilidade aparece vazia, sem "---" (2026-10-16)
+- **Contexto:** usuário prefere a faixa vazia aos tracinhos "---" na revista.
+- **Decisão:** só a exibição muda (`faixaHTML` em `revista/script.js`): "---" e `null` viram texto vazio. O dado e `montarFaixasRegua` continuam com "---", que marca faixa de altura cheia (preenchimento `null` tem meia altura).
+- **Motivo:** uma linha; não mexe no extrator, no editor nem nos testes da régua.
+- **Descartadas:** remover "---" do extrator/dados — muda D-005 e o editor sem necessidade.
+- **Arquivos afetados:** `revista/script.js`
+- **Status:** ativa
+
+### D-026 — Ajustes do UX portados à mão, não copiados (2026-10-16 11:00)
+- **Contexto:** o UX designer editou `~/Documentos/{escala.html,script.js,styles.css}` a partir de um protótipo antigo (fetch do JSON, régua fixa 125/250/375, modal com texto).
+- **Decisão:** portar só botão "Ver item" (círculo 44px fora da linha, SVG, tooltip, anel amarelo; ≤1040px dentro da linha; ≤500px 36px) e hover (120ms abrir / 140ms fechar, uma aberta por vez, `.fechando`, transição 0.3s, padding 1.5rem).
+- **Motivo:** copiar os arquivos quebraria a régua (D-024/D-025), o PDF do item e o `escala.hbs`.
+- **Descartadas:** substituir os arquivos — perde régua, PDF e `escapeHtml`.
+- **Arquivos afetados:** `revista/script.js`, `revista/styles.css`
+- **Status:** ativa
+
+### D-027 — Truncamento por CSS em vez de por caracteres (2026-10-16 11:00)
+- **Contexto:** o JS cortava o texto em 56/40 caracteres; o designer passou a usar `text-overflow: ellipsis`.
+- **Decisão:** texto completo no `<p>`, "..." pelo CSS (classe `tem-texto`, vale também para linhas sem PDF); `atualizarTruncamentos` marca `.tem-ver-mais` só onde o texto estoura, refeito em resize (150ms) e `document.fonts.ready`.
+- **Motivo:** o corte acompanha a largura real; some o texto truncado guardado em `data-*`.
+- **Descartadas:** manter o limite de caracteres — corta cedo em telas largas e tarde em estreitas.
+- **Arquivos afetados:** `revista/script.js`, `revista/styles.css`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] Cortes do 5º ano corretos? — confirmados pelo usuário
 
@@ -248,3 +280,11 @@ Revisar o diff com `git diff editor/` e decidir o commit.
 - Pergunta: stack para reconstruir o app. Resposta: não reescrever; candidatos ranqueados = monorepo com pacote de contrato, API tipada ponta a ponta (Hono/ts-rest), revista em Astro. Nada decidido.
 - Restrição do usuário: prefere Python a TypeScript na reconstrução. Proposta: Django + Django Ninja + HTMX + PostgreSQL (alternativa: FastAPI + Beanie mantendo o editor React). Aguardando escolha.
 - Escolhido: reconstrução em Django no modo mentor (usuário escreve o código). Projeto novo em ~/dev/revista-django; progresso em ~/dev/revista-django/JORNADA.md. Concorrência: trava com expiração + versão otimista (D-002 da jornada).
+
+### 2026-10-16 10:00
+- Bug: régua com linhas vazias quando o corte não coincide com um nível. Causa: faixas quebradas por padrão em montarFaixasRegua. Correção: D-024 (teste ok, navegador ok).
+- Faixa sem habilidade aparece vazia em vez de "---" (D-025).
+- Bug: traço solto entre 325 e 300 (5º EF). Causa: duas habilidades no mesmo nível; a primeira faixa ficava sem número, mas desenhava o tick. Correção: `mesmoNivel` em montarFaixasRegua + classe `.mesmo-nivel` sem tick (teste e navegador ok).
+
+### 2026-10-16 11:00
+- Ajustes do UX (~/Documentos) mapeados e portados: botão "Ver item" circular + hover com delays (D-026), "..." por CSS (D-027). Teste da régua ok; DOM conferido em 3 larguras.

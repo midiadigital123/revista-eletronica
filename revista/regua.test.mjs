@@ -2,7 +2,8 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 
-const { montarFaixasRegua, rotuloAno, rotuloAnoLongo } = createRequire(import.meta.url)("./script.js");
+const { montarFaixasRegua: regua, rotuloAno, rotuloAnoLongo } = createRequire(import.meta.url)("./script.js");
+const montarFaixasRegua = (args) => regua(args).faixas;
 
 const cortes = { "padrao-1": 125, "padrao-2": 250, "padrao-3": 375 };
 const L = (level, content = "Lorem") => ({ level, content });
@@ -64,6 +65,19 @@ assert.deepEqual(
   ],
 );
 
+// Nível repetido: só a última faixa do nível tem tick
+assert.deepEqual(
+  montarFaixasRegua({
+    min: 0,
+    max: 500,
+    cortes,
+    escala: { "padrao-4": [L(383, "a"), L(383, "b"), L(375, "c")] },
+  })
+    .slice(0, 3)
+    .map((f) => f.mesmoNivel),
+  [true, false, false],
+);
+
 // Padrões vazios: uma faixa "---" entre os limites de cada um
 assert.deepEqual(
   resumo(montarFaixasRegua({ min: 0, max: 500, cortes, escala: { "padrao-3": [L(300)] } })),
@@ -111,5 +125,46 @@ assert.equal(rotuloAnoLongo("5ef"), "5º Ano do Ensino Fundamental");
 assert.equal(rotuloAnoLongo("3em"), "3ª Série do Ensino Médio");
 assert.equal(rotuloAno("outro"), "outro");
 assert.equal(rotuloAnoLongo("outro"), "outro");
+
+// Revista LP: cortes 500/400 caem entre níveis (503→446, 446→390) e não criam faixa vazia
+{
+  const r = regua({
+    min: 0,
+    max: 1000,
+    cortes: { "padrao-1": 350, "padrao-2": 400, "padrao-3": 500 },
+    escala: {
+      "padrao-4": [L(782), L(732), L(675), L(616), L(556), L(503)],
+      "padrao-3": [L(446)],
+      "padrao-2": [L(390)],
+    },
+  });
+  assert.deepEqual(
+    r.faixas.map((f) => [f.topo, f.base, f.conteudo]),
+    [
+      [1000, 782, "Lorem"],
+      [782, 732, "Lorem"],
+      [732, 675, "Lorem"],
+      [675, 616, "Lorem"],
+      [616, 556, "Lorem"],
+      [556, 503, "Lorem"],
+      [503, 446, "Lorem"], // atravessa o corte 500
+      [446, 390, "Lorem"], // atravessa o corte 400
+      [390, 350, null], // meia altura até o padrão vazio
+      [350, 0, "---"],
+    ],
+  );
+  assert.deepEqual(
+    r.cortes.map((c) => [c.valor, c.y, c.exato]),
+    [
+      [500, 6.25, false], // 3/57 da faixa, limitado a 25%
+      [400, 7.75, false], // 46/56 da faixa, limitado a 75%
+      [350, 8.5, true],
+    ],
+  );
+  assert.deepEqual(
+    r.padroes.map((p) => [p.y0, p.y1]),
+    [[0, 6.25], [6.25, 7.75], [7.75, 8.5], [8.5, 9.5]],
+  );
+}
 
 console.log("regua.test.mjs: ok");

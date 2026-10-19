@@ -36,10 +36,6 @@
     --color-padrao-3-bg: rgba(179, 204, 255, 0.1);
     --color-padrao-4-bg: rgba(14, 211, 255, 0.1);
 
-    /* Botão "Ver mais" / "Ver item" */
-    --color-ver-mais-bg: #000000;
-    --color-ver-mais-bg-hover: #333333;
-    --color-ver-mais-text: #ffffff;
 
     /* Tipografia - rem (16px base) */
     --font-family: 'Proxima Nova', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
@@ -504,17 +500,13 @@ body {
 
 .escala-content {
     display: flex;
-    flex-direction: column;
 }
 
-.padrao {
-    display: flex;
-    gap: var(--escala-gap-default);
-    min-height: var(--escala-linha-height);
-}
-
-.padrao:first-child {
-    /* border-top: 0.5px solid var(--color-black); */
+/* Coluna dos rótulos; cada rótulo é posicionado por top/height (script.js) */
+.escala-rotulos {
+    position: relative;
+    width: calc(var(--escala-padrao-width) + var(--escala-gap-default));
+    flex-shrink: 0;
 }
 
 .padrao-1 {
@@ -534,8 +526,13 @@ body {
 }
 
 .padrao-label {
-    width: var(--escala-padrao-width);
-    min-width: var(--escala-padrao-width);
+    position: absolute;
+    left: 0;
+    right: 0;
+    box-sizing: border-box;
+    /* borda transparente: o fundo do padrão cobre o vão até a barra */
+    border-right: var(--escala-gap-default) solid transparent;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -556,6 +553,7 @@ body {
 .padrao-linhas {
     position: relative;
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
 }
@@ -624,6 +622,51 @@ body {
     flex-shrink: 0;
 }
 
+/* Preenchimento (sem conteúdo): meia altura, como na revista impressa */
+.linha.preenchimento,
+.linha.preenchimento .linha-cor,
+.linha.preenchimento .linha-conteudo {
+    min-height: calc(var(--escala-linha-height) / 2);
+    height: calc(var(--escala-linha-height) / 2);
+}
+
+/* Habilidade com o mesmo nível da seguinte: sem tick (sairia solto, sem número) */
+.linha.mesmo-nivel .linha-marcador {
+    border-bottom: 0;
+}
+
+.linha.mesmo-nivel .proficiencia-valor::after {
+    display: none;
+}
+
+/* Barra de cor e cortes: por cima das linhas, posicionados por y (script.js) */
+.escala-barra {
+    position: absolute;
+    left: 0;
+    width: var(--escala-cor-width);
+}
+
+.escala-barra.padrao-1 { background-color: var(--color-padrao-1); }
+.escala-barra.padrao-2 { background-color: var(--color-padrao-2); }
+.escala-barra.padrao-3 { background-color: var(--color-padrao-3); }
+.escala-barra.padrao-4 { background-color: var(--color-padrao-4); }
+
+/* Corte que não coincide com um nível: selo no meio da faixa */
+.escala-corte {
+    position: absolute;
+    left: calc(var(--escala-cor-width) + var(--escala-marcador-width));
+    width: var(--escala-valor-width);
+    display: flex;
+    justify-content: center;
+    transform: translateY(-50%);
+    z-index: 3;
+    pointer-events: none;
+}
+
+.escala-corte .proficiencia-valor-numero {
+    transform: none;
+}
+
 .linha-cor {
     width: var(--escala-cor-width);
     min-width: var(--escala-cor-width);
@@ -631,25 +674,14 @@ body {
     flex-shrink: 0;
 }
 
-.cor-padrao-1 {
-    background-color: var(--color-padrao-1);
-}
 
-.cor-padrao-2 {
-    background-color: var(--color-padrao-2);
-}
 
-.cor-padrao-3 {
-    background-color: var(--color-padrao-3);
-}
 
-.cor-padrao-4 {
-    background-color: var(--color-padrao-4);
-}
 
 .linha-conteudo {
     position: relative;
     flex: 1;
+    min-width: 0;
     display: flex;
     align-items: center;
     padding: 1rem 0.625rem 1rem 0;
@@ -674,11 +706,15 @@ body {
     height: auto;
     max-height: var(--escala-linha-height);
     overflow: hidden;
-    transition: max-height 0.35s ease;
+    transition: max-height 0.3s ease, box-shadow 0.3s ease;
 }
 
-.linha-conteudo.tem-ver-item p {
-    padding-right: 7rem;
+/* O texto ocupa a largura toda da coluna; "..." só no fim */
+.linha-conteudo.tem-texto p {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .linha-conteudo.expandido {
@@ -692,7 +728,14 @@ body {
     border-bottom: 1px solid var(--color-border);
     border-radius: 0.5rem;
     box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.18);
-    padding: 1rem 0.625rem 1rem 1.5rem;
+    /* mesmo espaço nos 4 lados; começa no topo para não cortar texto maior que a caixa */
+    padding: 1.5rem;
+}
+
+/* Fechando: segue sobreposto durante a animação, mas abaixo do que está abrindo */
+.linha-conteudo.expandido.fechando {
+    z-index: 4;
+    box-shadow: none;
 }
 
 .linha-conteudo.tem-ver-mais:focus-visible {
@@ -700,59 +743,121 @@ body {
     outline-offset: -2px;
 }
 
-/* Espaço para o "Ver item", que desce para o rodapé do card expandido */
-.linha-conteudo.expandido.tem-ver-item {
-    padding-bottom: 2.75rem;
-}
-
 .linha-conteudo.expandido p {
     padding-right: 0;
     padding-left: 0;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
 }
 
-.linha-acoes {
-    position: absolute;
-    right: 0.625rem;
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.25rem;
-}
-
-.linha-conteudo.expandido .linha-acoes {
-    top: auto;
-    bottom: 0.625rem;
-    transform: none;
-}
-
-.ver-item-btn {
-    width: 4.5rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-    border: none;
-    border-radius: 999px;
-    padding: 0.125rem 0.5rem;
-    font-family: var(--font-family);
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--color-ver-mais-text);
-    background-color: var(--color-ver-mais-bg);
-    cursor: pointer;
+.linha-conteudo.expandido.fechando p {
     white-space: nowrap;
-    transition: background-color var(--transition-fast), color var(--transition-fast);
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.ver-item-btn:hover {
-    background-color: var(--color-ver-mais-bg-hover);
+/* Botão "Ver item": círculo fora da linha, à direita, centralizado na vertical */
+.ver-item-btn {
+    --ver-item-size: 44px;
+    position: absolute;
+    top: calc(50% - var(--ver-item-size) / 2);
+    left: 100%;
+    margin-left: 0.75rem;
+    z-index: 6;
+    width: var(--ver-item-size);
+    height: var(--ver-item-size);
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background-color: var(--color-white);
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.btn-icone {
-    display: none;
-    flex-shrink: 0;
+.ver-item-btn svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.ver-item-btn:hover,
+.ver-item-btn:focus-visible {
+    transform: scale(1.08);
+    box-shadow: 0 8px 14px rgba(0, 0, 0, 0.2);
+}
+
+/* Habilidade aberta: destaca o botão dela (anel amarelo) para ligar os dois */
+.linha-conteudo.expandido:not(.fechando) + .ver-item-btn {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 3px var(--color-primary), 0 8px 14px rgba(0, 0, 0, 0.2);
+}
+
+/* Legenda (tooltip) */
+.ver-item-btn::before,
+.ver-item-btn::after {
+    position: absolute;
+    left: 50%;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.ver-item-btn::after {
+    content: attr(data-legenda);
+    bottom: calc(100% + 0.5rem);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    background-color: #1a1a1a;
+    color: var(--color-white);
+    font-family: var(--font-family);
+    font-size: 0.75rem;
+    /* 12px */
+    line-height: 1.2;
+    white-space: nowrap;
+    transform: translate(-50%, 4px);
+}
+
+.ver-item-btn::before {
+    content: "";
+    bottom: calc(100% + 0.5rem - 5px);
+    margin-left: -5px;
+    border: 5px solid transparent;
+    border-top-color: #1a1a1a;
+    border-bottom-width: 0;
+    transform: translateY(4px);
+}
+
+.ver-item-btn:hover::before,
+.ver-item-btn:hover::after,
+.ver-item-btn:focus-visible::before,
+.ver-item-btn:focus-visible::after {
+    opacity: 1;
+}
+
+.ver-item-btn:hover::after,
+.ver-item-btn:focus-visible::after {
+    transform: translate(-50%, 0);
+}
+
+.ver-item-btn:hover::before,
+.ver-item-btn:focus-visible::before {
+    transform: translateY(0);
+}
+
+/* Sem espaço lateral fora da escala: o botão entra na linha, no canto direito */
+@media (max-width: 1040px) {
+    .ver-item-btn {
+        left: auto;
+        right: 0.5rem;
+        margin-left: 0;
+    }
+
+    .linha-conteudo.tem-ver-item,
+    .linha-conteudo.tem-ver-item.expandido {
+        padding-right: 4rem;
+    }
 }
 
 /* ==========================================
@@ -1002,10 +1107,9 @@ body {
         margin: var(--spacing-lg) auto;
     }
 
-    .padrao-label {
-        min-width: 5rem;
+    :root {
+        --escala-padrao-width: 5rem;
         /* 80px */
-        width: 5rem;
     }
 }
 
@@ -1223,22 +1327,14 @@ body {
         /* ~17.6px */
     }
 
-    .linha-conteudo.tem-ver-item p {
+    .linha-conteudo.tem-ver-item,
+    .linha-conteudo.tem-ver-item.expandido {
         padding-right: 3.25rem;
     }
 
     .ver-item-btn {
-        width: 1.75rem;
-        height: 1.75rem;
-        padding: 0;
-    }
-
-    .btn-texto {
-        display: none;
-    }
-
-    .btn-icone {
-        display: block;
+        --ver-item-size: 36px;
+        right: 0.375rem;
     }
 }
 
