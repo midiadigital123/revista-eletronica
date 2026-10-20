@@ -36,11 +36,16 @@ export function IntervaloMinimo({ caderno, ano }: { caderno: Caderno; ano: AnoPr
   const id = useId();
   const [valor, setValor] = useState(ano.passo === undefined ? "" : String(ano.passo));
   const [erro, setErro] = useState<string>();
-  const [confirmando, setConfirmando] = useState(false);
+  // Contagem fixada ao abrir: o ano muda durante a geração e o título não pode piscar "0 linhas".
+  const [confirmando, setConfirmando] = useState<{ linhas: number; descritores: number } | null>(
+    null,
+  );
   const [pendente, setPendente] = useState(false);
   const [falha, setFalha] = useState<string>();
 
-  async function confirmar() {
+  async function confirmar(textoInvalido: boolean) {
+    // input number com texto inválido reporta value "": não é "limpar o passo".
+    if (textoInvalido) return setErro("Use um número inteiro");
     const texto = valor.trim();
     const passo = texto === "" ? undefined : Number(texto);
     if (passo !== undefined && (!Number.isInteger(passo) || passo < 1))
@@ -76,7 +81,7 @@ export function IntervaloMinimo({ caderno, ano }: { caderno: Caderno; ano: AnoPr
       setFalha(mensagemDeErro(e));
     } finally {
       setPendente(false);
-      setConfirmando(false);
+      setConfirmando(null);
     }
   }
 
@@ -100,12 +105,12 @@ export function IntervaloMinimo({ caderno, ano }: { caderno: Caderno; ano: AnoPr
             aria-describedby={erro ? idErro : undefined}
             value={valor}
             onChange={(e) => setValor(e.target.value)}
-            onBlur={() => void confirmar()}
+            onBlur={(e) => void confirmar(e.currentTarget.validity.badInput)}
           />
         </Field>
         <Botao
           disabled={ano.passo === undefined || linhas === 0}
-          onClick={() => setConfirmando(true)}
+          onClick={() => setConfirmando({ linhas, descritores })}
         >
           <Plus data-icon="inline-start" />
           Gerar linhas vazias
@@ -117,12 +122,12 @@ export function IntervaloMinimo({ caderno, ano }: { caderno: Caderno; ano: AnoPr
       {erro && <FieldError id={idErro}>{erro}</FieldError>}
       {falha && <Aviso tom="erro">{falha}</Aviso>}
       <Confirmacao
-        aberto={confirmando}
-        titulo={`Criar ${plural(linhas, "linha vazia", "linhas vazias")} em ${plural(descritores, "descritor", "descritores")}?`}
+        aberto={confirmando !== null}
+        titulo={`Criar ${plural(confirmando?.linhas ?? linhas, "linha vazia", "linhas vazias")} em ${plural(confirmando?.descritores ?? descritores, "descritor", "descritores")}?`}
         mensagem="As linhas existentes não são alteradas."
         rotuloConfirmar="Criar linhas"
         pendente={pendente}
-        aoCancelar={() => setConfirmando(false)}
+        aoCancelar={() => setConfirmando(null)}
         aoConfirmar={() => void gerar()}
       />
     </div>

@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { chaves } from "../../api/chaves";
 import { queryClient } from "../../api/queryClient";
 import { rotuloAno, type Ano, type Projeto } from "../../contrato/schemas";
@@ -165,6 +165,8 @@ describe("anos", () => {
 });
 
 describe("intervalo mínimo", () => {
+  afterEach(() => servidorMock.events.removeAllListeners());
+
   /** Ano 5ef com 1 descritor sem linhas, faixa 0–500. */
   function descritorVazio(passo?: number) {
     const ano = anoMock("5ef")!;
@@ -190,7 +192,6 @@ describe("intervalo mínimo", () => {
     await user.tab();
     await waitFor(() => expect(corpos).toEqual([{ passo: 25 }]));
     expect(anoMock("5ef")!.passo).toBe(25);
-    servidorMock.events.removeAllListeners();
   });
 
   it("Gerar linhas vazias confirma com a contagem e atualiza a escala", async () => {
@@ -209,6 +210,24 @@ describe("intervalo mínimo", () => {
   it("sem passo salvo o botão fica desabilitado", async () => {
     renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef");
     expect(await screen.findByRole("button", { name: "Gerar linhas vazias" })).toBeDisabled();
+  });
+
+  it("texto inválido no campo não apaga o passo salvo", async () => {
+    anoMock("5ef")!.passo = 25;
+    const corpos: unknown[] = [];
+    servidorMock.events.on("request:start", ({ request }) => {
+      if (request.method === "PATCH") corpos.push(request.url);
+    });
+    const user = userEvent.setup();
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef");
+    const campo = await screen.findByLabelText("Intervalo mínimo");
+    await user.clear(campo);
+    // jsdom não simula badInput: força o que o navegador reporta com "e" digitado.
+    Object.defineProperty(campo, "validity", { value: { badInput: true } });
+    await user.tab();
+    expect(await screen.findByText("Use um número inteiro")).toBeInTheDocument();
+    expect(corpos).toEqual([]);
+    expect(anoMock("5ef")!.passo).toBe(25);
   });
 
   it("intervalo que gera mais de 200 linhas mostra erro e não salva", async () => {
