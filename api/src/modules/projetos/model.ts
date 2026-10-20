@@ -76,6 +76,7 @@ const anoSchema = new Schema(
       "padrao-2": { type: Number, required: true },
       "padrao-3": { type: Number, required: true },
     },
+    passo: Number,
     descritores: { type: [descritorSchema], default: [] },
   },
   { _id: false },

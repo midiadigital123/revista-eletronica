@@ -104,6 +104,14 @@ projetosRouter.patch(
   }),
 );
 
+projetosRouter.post(
+  `${rotaAno}/gerar-linhas`,
+  exigirBloqueio,
+  handler({ params: ParamsAno }, async ({ params }, _req, res) => {
+    res.json(await service.gerarLinhas(params.slug, params.caderno, params.ano));
+  }),
+);
+
 projetosRouter.delete(
   rotaAno,
   exigirBloqueio,

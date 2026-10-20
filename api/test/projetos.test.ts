@@ -602,6 +602,44 @@ describe("descritores", () => {
   });
 });
 
+describe("passo e linhas vazias", () => {
+  const contar = (d: { scale: Record<string, unknown[]> }) =>
+    Object.values(d.scale).reduce((n, l) => n + l.length, 0);
+
+  it("PATCH passo e gerar-linhas: 20 linhas no 5ef, texto preservado, idempotente", async () => {
+    const { agente } = await comDescritor();
+    const p = await agente.patch(`${LP}/anos/5ef`).send({ passo: 25 }).expect(200);
+    expect(p.body.passo).toBe(25);
+    const g = await agente.post(`${LP}/anos/5ef/gerar-linhas`).expect(200);
+    const d = g.body.descritores[0];
+    expect(contar(d)).toBe(20);
+    expect(d.scale["padrao-1"].find((l: { level: number }) => l.level === 50).content).toBe("a");
+    const g2 = await agente.post(`${LP}/anos/5ef/gerar-linhas`).expect(200);
+    expect(contar(g2.body.descritores[0])).toBe(20);
+  });
+
+  it("descritor novo em ano com passo já nasce com as linhas vazias", async () => {
+    const { agente } = await comProjeto();
+    await agente.patch(`${LP}/anos/5ef`).send({ passo: 25 }).expect(200);
+    const r = await agente.post(`${LP}/anos/5ef/descritores`).send({ codigo: "D02" }).expect(201);
+    expect(contar(r.body)).toBe(20);
+    expect(Object.values(r.body.scale).flat().every((l) => (l as { content: string }).content === "---")).toBe(true);
+  });
+
+  it("gerar-linhas sem passo → 400 no campo passo", async () => {
+    const { agente } = await comDescritor();
+    const r = await agente.post(`${LP}/anos/5ef/gerar-linhas`).expect(400);
+    expect(r.body.campo).toBe("passo");
+  });
+
+  it("passo: null remove o passo", async () => {
+    const { agente } = await comProjeto();
+    await agente.patch(`${LP}/anos/5ef`).send({ passo: 25 }).expect(200);
+    const r = await agente.patch(`${LP}/anos/5ef`).send({ passo: null }).expect(200);
+    expect(r.body.passo).toBeUndefined();
+  });
+});
+
 describe("bloqueio nas rotas de escrita", () => {
   const escritas: [string, string, object?][] = [
     ["patch", "/api/projetos/sp", { nome: "x" }],
@@ -614,6 +652,7 @@ describe("bloqueio nas rotas de escrita", () => {
     ["patch", D01, { topic: "x" }],
     ["delete", D01],
     ["put", `${D01}/escala/padrao-1`, []],
+    ["post", `${LP}/anos/5ef/gerar-linhas`],
   ];
 
   const enviar = (agente: Agente, metodo: string, url: string, corpo?: object, aba?: string) => {
