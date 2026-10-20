@@ -123,4 +123,5 @@ export const projetosApi = {
   urlPreview: (slug: string, caderno: Caderno) =>
     urlApi(`${p(slug)}/preview/${caderno}/index.html`),
   urlPacote: (slug: string) => urlApi(`${p(slug)}/pacote.zip`),
+  urlPlanilhas: (slug: string) => urlApi(`${p(slug)}/planilhas.zip`),
 };

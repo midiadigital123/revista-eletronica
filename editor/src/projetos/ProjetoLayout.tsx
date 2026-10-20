@@ -274,6 +274,12 @@ function Cabecalho({
           <FileJson data-icon="inline-start" />
           Exportar JSON
         </Button>
+        <Button asChild variant="outline" size="sm">
+          <a href={projetosApi.urlPlanilhas(slug)} download={`${slug}-planilhas.zip`}>
+            <Download data-icon="inline-start" />
+            Exportar planilhas
+          </a>
+        </Button>
         <Button
           type="button"
           variant="outline"

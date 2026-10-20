@@ -204,6 +204,12 @@ describe("casca do projeto", () => {
     expect(screen.getByText("Editando")).toBeInTheDocument();
   });
 
+  it("botão Exportar planilhas aponta para planilhas.zip", async () => {
+    await abrirEditando();
+    const link = await screen.findByRole("link", { name: "Exportar planilhas" });
+    expect(link.getAttribute("href")).toMatch(/\/planilhas\.zip$/);
+  });
+
   it("exclui com confirmação e volta para a lista", async () => {
     const user = userEvent.setup();
     const { router } = await abrirEditando();

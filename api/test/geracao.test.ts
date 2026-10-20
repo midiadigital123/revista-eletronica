@@ -129,6 +129,43 @@ describe("geração da revista", () => {
     await supertest(ctx.app).get("/api/projetos/fx/pacote.zip").expect(401);
   });
 
+  it("planilhas.zip tem um xlsx por caderno e etapa", async () => {
+    const agente = await projetoComImagem();
+    const z = await agente
+      .get("/api/projetos/fx/planilhas.zip")
+      .buffer(true)
+      .parse(binario)
+      .expect(200);
+    expect(z.headers["content-type"]).toBe("application/zip");
+    expect(z.headers["content-disposition"]).toBe('attachment; filename="fx-planilhas.zip"');
+    const dir = mkdtempSync(join(tmpdir(), "planilhas-"));
+    const arquivo = join(dir, "p.zip");
+    writeFileSync(arquivo, z.body as Buffer);
+    python("-t", arquivo);
+    const lista = python("-l", arquivo);
+    for (const c of ["lingua-portuguesa", "matematica"])
+      for (const ano of ["5EF", "9EF", "3EM"])
+        expect(lista).toMatch(new RegExp(`${c}/Fixture & - (LP|MT) ${ano}\\.xlsx`));
+    expect(lista).not.toContain("index.html");
+  });
+
+  it("pacote.zip inclui <caderno>/planilhas/*.xlsx", async () => {
+    const agente = await projetoComImagem();
+    const z = await agente.get("/api/projetos/fx/pacote.zip").buffer(true).parse(binario).expect(200);
+    const dir = mkdtempSync(join(tmpdir(), "pacote-xlsx-"));
+    const arquivo = join(dir, "fx.zip");
+    writeFileSync(arquivo, z.body as Buffer);
+    const lista = python("-l", arquivo);
+    expect(lista).toContain("lingua-portuguesa/planilhas/Fixture & - LP 5EF.xlsx");
+    expect(lista).toContain("matematica/planilhas/Fixture & - MT 3EM.xlsx");
+  });
+
+  it("planilhas.zip exige login (401) e 404 para projeto inexistente", async () => {
+    const agente = await projetoComImagem();
+    await agente.get("/api/projetos/nao-existe/planilhas.zip").expect(404);
+    await supertest(ctx.app).get("/api/projetos/fx/planilhas.zip").expect(401);
+  });
+
   it("pacote.zip: índice raiz + pasta por caderno com index.html (dados), estáticos e a imagem", async () => {
     const agente = await projetoComImagem();
     const z = await agente
