@@ -3,6 +3,7 @@ import {
   BLOQUEIO_TTL_MS,
   Revista,
   type CadernoProjeto,
+  type Cores,
   type BloqueioPublico,
   type Pagina,
   type Usuario,
@@ -29,6 +30,7 @@ export interface ProjetoMock {
   pagina: Pagina;
   cadernos: CadernoProjeto[];
   bloqueio: BloqueioMock | null;
+  cores: Cores | null;
   criadoEm: string;
   atualizadoEm: string;
   imagens: Record<string, Blob>;
@@ -74,6 +76,7 @@ function estadoInicial() {
         pagina: { ...(revista.pagina ?? {}) } as Pagina,
         cadernos: [{ id: "lingua-portuguesa", anos: anosDaRevista(revista) }],
         bloqueio: null,
+        cores: null,
         criadoEm: agora,
         atualizadoEm: agora,
         imagens: {},

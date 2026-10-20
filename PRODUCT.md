@@ -30,7 +30,7 @@ O centro do produto é a escala de proficiência e seus descritores. Os 4 padrõ
 - Sem dark mode por enquanto.
 
 ## Brand Commitments
-- As cores dos Padrões 01–04 (`#f72628`, `#ff8d43`, `#b3ccff`, `#0ed3ff`) são dado do produto e precisam bater com a revista publicada.
+- As cores dos Padrões 01–04 são dado de cada projeto (padrão: `#f72628`, `#ff8d43`, `#b3ccff`, `#0ed3ff`) e a revista publicada usa as do projeto.
 - Base estrutural herdada das diretrizes do CMS interno: escalas fechadas de espaço e raio, foco de 2px, movimento de 120/180ms com `cubic-bezier(0.16, 1, 0.3, 1)` e `prefers-reduced-motion` respeitado. Cor e tipografia são próprias do editor.
 - O usuário rejeita o visual "morno, com cara de feito por IA". Isso inclui fontes genéricas, mono decorativo, sobrescrito espaçado em caixa alta e fundo bege "papel".
 

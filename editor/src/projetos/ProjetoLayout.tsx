@@ -6,6 +6,7 @@ import { ehErroApi } from "../api/client";
 import { Check, Download, ExternalLink, FileJson, Pencil, Trash2 } from "lucide-react";
 import { rotuloAno, rotuloCaderno, Slug, type Caderno, type Projeto } from "../contrato/schemas";
 import { Aviso, Botao, CampoTexto, Confirmacao, Dialogo } from "../ui";
+import { CoresPadroes, estiloCores } from "./CoresPadroes";
 import { Badge } from "@/components/ui/badge";
 import {
   Breadcrumb,
@@ -77,7 +78,7 @@ export function ProjetoLayout() {
   const cadernoAberto = projeto.cadernos.find((c) => c.id === rotaCaderno?.params.caderno);
   return (
     <EdicaoContext value={edicao}>
-      <div className="flex flex-col pb-16">
+      <div className="flex flex-col pb-16" style={estiloCores(projeto.cores)}>
         <Cabecalho
           projeto={projeto}
           edicao={edicao}
@@ -283,6 +284,7 @@ function Cabecalho({
           <Pencil data-icon="inline-start" />
           Renomear
         </Button>
+        <CoresPadroes projeto={projeto} />
         <Button
           type="button"
           variant="destructive"

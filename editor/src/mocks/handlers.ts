@@ -33,6 +33,7 @@ import {
   rotuloCaderno,
   type AnoProjeto,
   type Caderno,
+  type Cores,
   type CadernoProjeto,
   type ErroApi,
   type Pagina,
@@ -146,7 +147,7 @@ const paraProjeto = (p: ProjetoMock): Projeto => ({
   pagina: p.pagina,
   cadernos: structuredClone(p.cadernos),
   bloqueio: bloqueioPublico(p),
-  cores: null,
+  cores: p.cores,
   criadoEm: p.criadoEm,
   atualizadoEm: p.atualizadoEm,
 });
@@ -156,7 +157,7 @@ const paraResumo = (p: ProjetoMock): ProjetoResumo => ({
   cadernos: p.cadernos.map((c) => ({ id: c.id, anos: c.anos.map((a) => a.ano) })),
   atualizadoEm: p.atualizadoEm,
   bloqueio: bloqueioPublico(p),
-  cores: null,
+  cores: p.cores,
 });
 function obterCaderno(projeto: ProjetoMock, caderno: Caderno): CadernoProjeto {
   const encontrado = projeto.cadernos.find((c) => c.id === caderno);
@@ -308,6 +309,7 @@ export const handlers = [
       let pagina: Pagina = {};
       let cadernos: CadernoProjeto[];
       let imagens: Record<string, Blob> = {};
+      let cores: Cores | null = null;
       if (origem.tipo === "copiar") {
         const base = obterProjeto(origem.de);
         pagina = structuredClone(base.pagina);
@@ -320,6 +322,7 @@ export const handlers = [
           return structuredClone(c);
         });
         imagens = { ...base.imagens };
+        cores = base.cores ? { ...base.cores } : null;
       } else if (origem.tipo === "importar") {
         cadernos = ids.map((id) => {
           const revista = origem.cadernos[id];
@@ -342,6 +345,7 @@ export const handlers = [
         pagina,
         cadernos,
         bloqueio: null,
+        cores,
         criadoEm: agora,
         atualizadoEm: agora,
         imagens,
@@ -372,6 +376,7 @@ export const handlers = [
         mockDb.projetos.set(dados.slug, projeto);
       }
       if (dados.nome) projeto.nome = dados.nome;
+      if (dados.cores !== undefined) projeto.cores = dados.cores;
       tocar(projeto);
       return HttpResponse.json(paraProjeto(projeto));
     }),
