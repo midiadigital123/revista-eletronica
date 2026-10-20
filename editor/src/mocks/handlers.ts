@@ -146,6 +146,7 @@ const paraProjeto = (p: ProjetoMock): Projeto => ({
   pagina: p.pagina,
   cadernos: structuredClone(p.cadernos),
   bloqueio: bloqueioPublico(p),
+  cores: null,
   criadoEm: p.criadoEm,
   atualizadoEm: p.atualizadoEm,
 });
@@ -155,6 +156,7 @@ const paraResumo = (p: ProjetoMock): ProjetoResumo => ({
   cadernos: p.cadernos.map((c) => ({ id: c.id, anos: c.anos.map((a) => a.ano) })),
   atualizadoEm: p.atualizadoEm,
   bloqueio: bloqueioPublico(p),
+  cores: null,
 });
 function obterCaderno(projeto: ProjetoMock, caderno: Caderno): CadernoProjeto {
   const encontrado = projeto.cadernos.find((c) => c.id === caderno);

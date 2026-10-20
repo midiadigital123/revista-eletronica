@@ -3,10 +3,14 @@ import { describe, expect, it } from "vitest";
 import { anosDaRevista, revistaDosAnos } from "../src/contrato/revista.js";
 import {
   cadernosDasDisciplinas,
+  AtualizarProjetoEntrada,
+  CORES_PADRAO,
   CORTES_PADRAO,
+  Cores,
   CriarProjetoEntrada,
   Escala,
   linhasVaziasDoPasso,
+  mesmasCores,
   niveisDoPasso,
   Revista,
   rotuloCaderno,
@@ -155,5 +159,19 @@ describe("contrato: passo", () => {
     expect(anos[0]!.passo).toBe(25);
     expect(revistaDosAnos(anos, {})["5ef"]).toMatchObject({ passo: 25 });
     expect(anosDaRevista(Revista.parse({ "5ef": { scaleRange: { min: 0, max: 500 } } }))[0]).not.toHaveProperty("passo");
+  });
+  it("cores: aceita #rrggbb, recusa nome, abreviação e injeção de CSS", () => {
+    const ok = { ...CORES_PADRAO, "padrao-1": "#0A3d2F" };
+    expect(Cores.safeParse(ok).success).toBe(true);
+    for (const ruim of ["red", "#fff", "red;}</style>"])
+      expect(Cores.safeParse({ ...CORES_PADRAO, "padrao-2": ruim }).success).toBe(false);
+  });
+  it("AtualizarProjetoEntrada aceita { cores: null } (restaura o padrão)", () => {
+    expect(AtualizarProjetoEntrada.parse({ cores: null })).toEqual({ cores: null });
+  });
+  it("mesmasCores: null equivale ao padrão e ignora maiúsculas", () => {
+    expect(mesmasCores(null, CORES_PADRAO)).toBe(true);
+    expect(mesmasCores({ ...CORES_PADRAO, "padrao-1": "#F72628" }, null)).toBe(true);
+    expect(mesmasCores({ ...CORES_PADRAO, "padrao-1": "#000000" }, null)).toBe(false);
   });
 });

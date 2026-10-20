@@ -32,6 +32,24 @@ export const CORTES_PADRAO = {
   "padrao-3": 375,
 } as const;
 
+/** Cor dos padrões da escala: só `#rrggbb` (vai para CSS e planilhas, nada de nomes ou expressões). */
+export const CorHex = z.string().regex(/^#[0-9a-fA-F]{6}$/, { error: "Use uma cor no formato #rrggbb" });
+export const Cores = z.strictObject({ "padrao-1": CorHex, "padrao-2": CorHex, "padrao-3": CorHex, "padrao-4": CorHex });
+export const CORES_PADRAO = {
+  "padrao-1": "#f72628",
+  "padrao-2": "#ff8d43",
+  "padrao-3": "#b3ccff",
+  "padrao-4": "#0ed3ff",
+} as const;
+export type Cores = z.infer<typeof Cores>;
+
+/** `null` vale `CORES_PADRAO`; compara sem diferenciar maiúsculas. */
+export function mesmasCores(a: Cores | null, b: Cores | null): boolean {
+  const x = a ?? CORES_PADRAO;
+  const y = b ?? CORES_PADRAO;
+  return PADROES.every((p) => x[p].toLowerCase() === y[p].toLowerCase());
+}
+
 /** Conteúdo de linha da escala sem item associado (convenção da revista). */
 export const CONTEUDO_VAZIO = "---";
 
@@ -485,7 +503,11 @@ export const CriarProjetoEntrada = z.strictObject({
 });
 
 export const AtualizarProjetoEntrada = z
-  .strictObject({ slug: Slug.optional(), nome: texto(120).min(1).optional() })
+  .strictObject({
+    slug: Slug.optional(),
+    nome: texto(120).min(1).optional(),
+    cores: Cores.nullable().optional(), // null restaura o padrão
+  })
   .refine((v) => Object.keys(v).length > 0, naoVazio);
 
 export const CriarAnoEntrada = z.strictObject({
@@ -548,6 +570,7 @@ export const ProjetoResumo = z.strictObject({
   cadernos: z.array(z.strictObject({ id: Caderno, anos: z.array(Ano) })),
   atualizadoEm: z.iso.datetime(),
   bloqueio: BloqueioPublico.nullable(),
+  cores: Cores.nullable(), // null = CORES_PADRAO
 });
 
 export const Projeto = z.strictObject({
@@ -557,6 +580,7 @@ export const Projeto = z.strictObject({
   /** Na ordem de CADERNOS. */
   cadernos: z.array(CadernoProjeto),
   bloqueio: BloqueioPublico.nullable(),
+  cores: Cores.nullable(), // null = CORES_PADRAO
   criadoEm: z.iso.datetime(),
   atualizadoEm: z.iso.datetime(),
 });

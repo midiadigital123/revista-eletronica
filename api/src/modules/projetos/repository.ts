@@ -93,6 +93,7 @@ export function paraProjeto(projeto: ProjetoDoc): Projeto {
     pagina: paraPagina(projeto),
     cadernos: paraCadernos(projeto),
     bloqueio: paraBloqueio(projeto),
+    cores: null, // provisório até a Task 5
     criadoEm: projeto.criadoEm.toISOString(),
     atualizadoEm: projeto.atualizadoEm.toISOString(),
   };
@@ -105,5 +106,6 @@ export function paraResumo(projeto: ProjetoDoc): ProjetoResumo {
     cadernos: paraCadernos(projeto).map(({ id, anos }) => ({ id, anos: anos.map((a) => a.ano) })),
     atualizadoEm: projeto.atualizadoEm.toISOString(),
     bloqueio: paraBloqueio(projeto),
+    cores: null, // provisório até a Task 5
   };
 }
