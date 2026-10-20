@@ -85,8 +85,13 @@ export function IntervaloMinimo({ caderno, ano }: { caderno: Caderno; ano: AnoPr
     }
   }
 
+  // O botão segue o valor digitado (inteiro > 0); a contagem usa esse passo. O salvamento do blur
+  // entra na fila antes da geração, então "Criar linhas" sempre roda com o passo já gravado.
+  const digitado = /^\d+$/.test(valor.trim()) ? Number(valor) : 0;
   const { linhas, descritores } =
-    ano.passo === undefined ? { linhas: 0, descritores: 0 } : contarLinhas(ano);
+    digitado > 0 ? contarLinhas({ ...ano, passo: digitado }) : { linhas: 0, descritores: 0 };
+  // Passo salvo e grade completa: não há o que gerar.
+  const jaDefinido = ano.passo !== undefined && ano.passo === digitado && linhas === 0;
   const idErro = `${id}-erro`;
 
   return (
@@ -108,15 +113,16 @@ export function IntervaloMinimo({ caderno, ano }: { caderno: Caderno; ano: AnoPr
             onBlur={(e) => void confirmar(e.currentTarget.validity.badInput)}
           />
         </Field>
-        <Botao
-          disabled={ano.passo === undefined || linhas === 0}
-          onClick={() => setConfirmando({ linhas, descritores })}
-        >
-          <Plus data-icon="inline-start" />
-          Gerar linhas vazias
-        </Botao>
-        {ano.passo !== undefined && linhas === 0 && (
-          <p className="pb-2 text-sm text-muted-foreground">Nenhuma linha a criar</p>
+        {jaDefinido ? (
+          <p className="pb-2 text-sm text-muted-foreground">Intervalo mínimo já definido</p>
+        ) : (
+          digitado > 0 &&
+          linhas > 0 && (
+            <Botao onClick={() => setConfirmando({ linhas, descritores })}>
+              <Plus data-icon="inline-start" />
+              Gerar linhas vazias
+            </Botao>
+          )
         )}
       </div>
       {erro && <FieldError id={idErro}>{erro}</FieldError>}

@@ -205,11 +205,21 @@ describe("intervalo mínimo", () => {
       const escala = anoMock("5ef")!.descritores.find((x) => x.codigo === d.codigo)!.scale;
       expect(Object.values(escala).flat()).toHaveLength(20);
     });
+    expect(await screen.findByText("Intervalo mínimo já definido")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Gerar linhas vazias" })).not.toBeInTheDocument();
   });
 
-  it("sem passo salvo o botão fica desabilitado", async () => {
+  it("o botão só aparece com um valor maior que 0 no campo", async () => {
+    descritorVazio();
+    const user = userEvent.setup();
     renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef");
-    expect(await screen.findByRole("button", { name: "Gerar linhas vazias" })).toBeDisabled();
+    const campo = await screen.findByLabelText("Intervalo mínimo");
+    expect(screen.queryByRole("button", { name: "Gerar linhas vazias" })).not.toBeInTheDocument();
+    await user.type(campo, "0");
+    expect(screen.queryByRole("button", { name: "Gerar linhas vazias" })).not.toBeInTheDocument();
+    await user.clear(campo);
+    await user.type(campo, "25");
+    expect(screen.getByRole("button", { name: "Gerar linhas vazias" })).toBeEnabled();
   });
 
   it("texto inválido no campo não apaga o passo salvo", async () => {
