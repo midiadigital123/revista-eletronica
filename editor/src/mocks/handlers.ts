@@ -601,6 +601,7 @@ export const handlers = [
       const descritor = CriarDescritorEntrada.parse(await json(request));
       if (alvo.descritores.some((d) => d.codigo === descritor.codigo))
         falha(409, "Esse código já existe neste ano", { campo: "codigo" });
+      descritor.scale = linhasVaziasDoPasso(alvo, descritor.scale);
       validarAno({ ...alvo, descritores: [...alvo.descritores, descritor] });
       alvo.descritores.push(descritor);
       alvo.descritores.sort((a, b) => a.codigo.localeCompare(b.codigo));

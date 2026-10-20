@@ -313,10 +313,12 @@ export function problemasDoAno(ano: AnoProjeto): Problema[] {
     if (vistos.has(d.codigo))
       problemas.push({ campo: `descritores.${d.codigo}`, erro: "Código repetido no ano" });
     vistos.add(d.codigo);
-    for (const p of PADROES)
-      problemas.push(
-        ...problemasDasLinhas(d.scale[p], ano.scaleRange, `descritores.${d.codigo}.scale.${p}`),
-      );
+    for (const p of PADROES) {
+      const campo = `descritores.${d.codigo}.scale.${p}`;
+      if (d.scale[p].length > MAX_LINHAS_PADRAO)
+        problemas.push({ campo, erro: `No máximo ${MAX_LINHAS_PADRAO} linhas por padrão` });
+      problemas.push(...problemasDasLinhas(d.scale[p], ano.scaleRange, campo));
+    }
   }
   return problemas;
 }

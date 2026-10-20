@@ -214,9 +214,7 @@ describe("projetos", () => {
       ["lingua-portuguesa", ["2ef:8", "5ef:15"]],
       ["matematica", ["2ef:33", "5ef:28"]],
     ]);
-    const mt = await agente
-      .get("/api/projetos/alfa/cadernos/matematica/revista")
-      .expect(200);
+    const mt = await agente.get("/api/projetos/alfa/cadernos/matematica/revista").expect(200);
     expect(mt.body["2ef"].D01).toEqual(saidaMt["2ef"].D01);
   });
 
@@ -690,7 +688,29 @@ describe("passo e linhas vazias", () => {
     await agente.patch(`${LP}/anos/5ef`).send({ passo: 25 }).expect(200);
     const r = await agente.post(`${LP}/anos/5ef/descritores`).send({ codigo: "D02" }).expect(201);
     expect(contar(r.body)).toBe(20);
-    expect(Object.values(r.body.scale).flat().every((l) => (l as { content: string }).content === "---")).toBe(true);
+    expect(
+      Object.values(r.body.scale)
+        .flat()
+        .every((l) => (l as { content: string }).content === "---"),
+    ).toBe(true);
+  });
+
+  it("gerar-linhas que estoura 200 linhas num padrão → 400", async () => {
+    const { agente } = await comProjeto();
+    const manuais = Array.from({ length: 190 }, (_, i) => ({
+      level: 1 + i + Math.floor(i / 2),
+      content: "m",
+    })); // não múltiplos de 3
+    await agente
+      .post(`${LP}/anos/5ef/descritores`)
+      .send({
+        codigo: "D01",
+        scale: { "padrao-1": manuais, "padrao-2": [], "padrao-3": [], "padrao-4": [] },
+      })
+      .expect(201);
+    await agente.patch(`${LP}/anos/5ef`).send({ passo: 3 }).expect(200);
+    const r = await agente.post(`${LP}/anos/5ef/gerar-linhas`).expect(400);
+    expect(r.body.campo).toBe("descritores.D01.scale.padrao-1");
   });
 
   it("gerar-linhas sem passo → 400 no campo passo", async () => {

@@ -265,6 +265,16 @@ describe("descritores", () => {
     expect(codigos("9ef")).toEqual(["D01", "D02", "D03"]);
   });
 
+  it("cria descritor em ano com passo 25 já com 20 linhas vazias", async () => {
+    const user = userEvent.setup();
+    anoMock("5ef")!.passo = 25;
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef");
+    await user.click(await screen.findByRole("button", { name: "Novo descritor" }));
+    await screen.findByLabelText("Código");
+    const novo = anoMock("5ef")!.descritores.at(-1)!;
+    expect(Object.values(novo.scale).flat()).toHaveLength(20);
+  });
+
   it("duplica copiando todos os campos e a escala", async () => {
     const user = userEvent.setup();
     const { router } = renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/9ef");

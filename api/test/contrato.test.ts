@@ -21,7 +21,9 @@ import {
   rotuloAnoLongo,
 } from "../src/contrato/schemas.js";
 
-const fixture = JSON.parse(readFileSync(new URL("./fixtures/revista.json", import.meta.url), "utf8"));
+const fixture = JSON.parse(
+  readFileSync(new URL("./fixtures/revista.json", import.meta.url), "utf8"),
+);
 const descritoresOriginal = JSON.parse(
   readFileSync(new URL("../../descritores.json", import.meta.url), "utf8"),
 );
@@ -54,7 +56,11 @@ describe("contrato: formato da revista", () => {
       scaleRange: { min: 0, max: 280 },
     });
     expect(problemas.map((p) => p.campo)).toEqual(
-      expect.arrayContaining(["cortes.padrao-2", "cortes.padrao-3", "descritores.D01.scale.padrao-3.0.level"]),
+      expect.arrayContaining([
+        "cortes.padrao-2",
+        "cortes.padrao-3",
+        "descritores.D01.scale.padrao-3.0.level",
+      ]),
     );
   });
 });
@@ -86,7 +92,13 @@ describe("contrato: etapas (anos)", () => {
   });
 
   it("compararAnos: EF antes de EM, depois número", () => {
-    expect(["3em", "9ef", "1em", "2ef", "5ef"].sort(compararAnos)).toEqual(["2ef", "5ef", "9ef", "1em", "3em"]);
+    expect(["3em", "9ef", "1em", "2ef", "5ef"].sort(compararAnos)).toEqual([
+      "2ef",
+      "5ef",
+      "9ef",
+      "1em",
+      "3em",
+    ]);
   });
 });
 
@@ -98,7 +110,9 @@ describe("contrato: disciplinas e cadernos", () => {
       tipo: "vazio",
       anos: ["5ef", "9ef", "3em"],
     });
-    expect(CriarProjetoEntrada.safeParse({ ...base, origem: { tipo: "copiar", de: "sp" } }).success).toBe(true);
+    expect(
+      CriarProjetoEntrada.safeParse({ ...base, origem: { tipo: "copiar", de: "sp" } }).success,
+    ).toBe(true);
     const importar = CriarProjetoEntrada.safeParse({
       ...base,
       origem: { tipo: "importar", cadernos: { matematica: fixture } },
@@ -108,15 +122,22 @@ describe("contrato: disciplinas e cadernos", () => {
 
   it("CriarProjetoEntrada recusa disciplina vazia/desconhecida e caderno desconhecido", () => {
     const vazio = { tipo: "vazio" };
-    expect(CriarProjetoEntrada.safeParse({ ...base, disciplinas: [], origem: vazio }).success).toBe(false);
-    expect(CriarProjetoEntrada.safeParse({ ...base, disciplinas: ["fisica"], origem: vazio }).success).toBe(false);
-    expect(
-      CriarProjetoEntrada.safeParse({ ...base, origem: { tipo: "importar", cadernos: { fisica: fixture } } })
-        .success,
-    ).toBe(false);
-    expect(CriarProjetoEntrada.safeParse({ ...base, origem: { tipo: "importar", revista: fixture } }).success).toBe(
+    expect(CriarProjetoEntrada.safeParse({ ...base, disciplinas: [], origem: vazio }).success).toBe(
       false,
     );
+    expect(
+      CriarProjetoEntrada.safeParse({ ...base, disciplinas: ["fisica"], origem: vazio }).success,
+    ).toBe(false);
+    expect(
+      CriarProjetoEntrada.safeParse({
+        ...base,
+        origem: { tipo: "importar", cadernos: { fisica: fixture } },
+      }).success,
+    ).toBe(false);
+    expect(
+      CriarProjetoEntrada.safeParse({ ...base, origem: { tipo: "importar", revista: fixture } })
+        .success,
+    ).toBe(false);
   });
 
   it("cadernosDasDisciplinas segue a ordem de CADERNOS, sem repetir", () => {
@@ -141,7 +162,11 @@ describe("contrato: passo", () => {
     expect(n.at(-1)).toBe(475);
   });
   it("linhasVaziasDoPasso distribui pelos cortes e não duplica nível existente", () => {
-    const ano = { scaleRange: { min: 0, max: 500 }, cortes: { "padrao-1": 150, "padrao-2": 200, "padrao-3": 250 }, passo: 25 };
+    const ano = {
+      scaleRange: { min: 0, max: 500 },
+      cortes: { "padrao-1": 150, "padrao-2": 200, "padrao-3": 250 },
+      passo: 25,
+    };
     const escala = Escala.parse({ "padrao-3": [{ level: 150, content: "manual" }] }); // 150 em outro padrão
     const r = linhasVaziasDoPasso(ano, escala);
     expect(r["padrao-1"].map((l) => l.level)).toEqual([125, 100, 75, 50, 25, 0]);
@@ -151,14 +176,47 @@ describe("contrato: passo", () => {
     expect(r["padrao-4"][0]).toEqual({ level: 475, fim: 500, content: "---" });
   });
   it("problemasDoAno recusa passo que gera mais de 200 linhas", () => {
-    const p = problemasDoAno({ ano: "2ef", scaleRange: { min: 0, max: 1000 }, cortes: { "padrao-1": 350, "padrao-2": 400, "padrao-3": 500 }, passo: 1, descritores: [] });
+    const p = problemasDoAno({
+      ano: "2ef",
+      scaleRange: { min: 0, max: 1000 },
+      cortes: { "padrao-1": 350, "padrao-2": 400, "padrao-3": 500 },
+      passo: 1,
+      descritores: [],
+    });
     expect(p).toContainEqual(expect.objectContaining({ campo: "passo" }));
   });
+  it("problemasDoAno recusa mais de 200 linhas num padrão", () => {
+    const linhas = Array.from({ length: 201 }, (_, i) => ({ level: i, content: "x" }));
+    const vazio = { "padrao-1": [], "padrao-2": [], "padrao-3": [], "padrao-4": [] };
+    const p = problemasDoAno({
+      ano: "5ef",
+      scaleRange: { min: 0, max: 500 },
+      cortes: { "padrao-1": 100, "padrao-2": 200, "padrao-3": 300 },
+      descritores: [
+        {
+          codigo: "D01",
+          topic: "",
+          description: "",
+          prerequisites: [],
+          bncc: { practices: "", knowledge: "", skills: [] },
+          scale: { ...vazio, "padrao-1": linhas },
+        },
+      ],
+    } as never);
+    expect(p).toContainEqual({
+      campo: "descritores.D01.scale.padrao-1",
+      erro: "No máximo 200 linhas por padrão",
+    });
+  });
   it("revista: passo vai e volta no JSON; sem passo continua válido", () => {
-    const anos = anosDaRevista(Revista.parse({ "5ef": { scaleRange: { min: 0, max: 500 }, passo: 25 } }));
+    const anos = anosDaRevista(
+      Revista.parse({ "5ef": { scaleRange: { min: 0, max: 500 }, passo: 25 } }),
+    );
     expect(anos[0]!.passo).toBe(25);
     expect(revistaDosAnos(anos, {})["5ef"]).toMatchObject({ passo: 25 });
-    expect(anosDaRevista(Revista.parse({ "5ef": { scaleRange: { min: 0, max: 500 } } }))[0]).not.toHaveProperty("passo");
+    expect(
+      anosDaRevista(Revista.parse({ "5ef": { scaleRange: { min: 0, max: 500 } } }))[0],
+    ).not.toHaveProperty("passo");
   });
   it("cores: aceita #rrggbb, recusa nome, abreviação e injeção de CSS", () => {
     const ok = { ...CORES_PADRAO, "padrao-1": "#0A3d2F" };

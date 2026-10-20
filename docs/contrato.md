@@ -129,7 +129,7 @@ Chave `<n>ef` (1 a 9) ou `<n>em` (1 a 3), ex.: `2ef`, `5ef`, `3em`. Rótulos ger
 | POST 🔒 | `/projetos/:slug/cadernos/:caderno/anos/:ano/gerar-linhas` | — | 200 `AnoProjeto` · 400 sem `passo` |
 | DELETE 🔒 | `/projetos/:slug/cadernos/:caderno/anos/:ano` | — | 204 · 400 se for o último ano do caderno |
 
-**`passo`** (opcional em `AnoProjeto` e `RevistaAno`): intervalo mínimo entre níveis, inteiro ≥ 1 (`Passo`). Sem `passo` o ano segue com níveis manuais, como antes; JSON sem `passo` importa como hoje. Com `passo`, a régua da revista e as planilhas usam os níveis `min + k·passo < max`. `gerar-linhas` acrescenta uma linha vazia por nível do passo que ainda não existe em nenhum padrão (`linhasVaziasDoPasso`), em cada descritor, sem mexer nas linhas existentes. Um passo que gere mais de `MAX_LINHAS_PADRAO` (200) linhas → 400 `campo: "passo"`.
+**`passo`** (opcional em `AnoProjeto` e `RevistaAno`): intervalo mínimo entre níveis, inteiro ≥ 1 (`Passo`). Sem `passo` o ano segue com níveis manuais, como antes; JSON sem `passo` importa como hoje. A régua da revista e as planilhas usam sempre os níveis das linhas guardadas; os níveis `min + k·passo < max` só aparecem ali depois de virarem linhas, ao chamar `gerar-linhas` ou ao criar um descritor num ano que já tem `passo`. `gerar-linhas` acrescenta uma linha vazia por nível do passo que ainda não existe em nenhum padrão (`linhasVaziasDoPasso`), em cada descritor, sem mexer nas linhas existentes. Um passo que gere mais de `MAX_LINHAS_PADRAO` (200) linhas → 400 `campo: "passo"`.
 
 ### Descritores
 
