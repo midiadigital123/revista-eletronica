@@ -258,6 +258,7 @@ class DescriptorManager {
   init() {
     this.renderButtons();
     this.initHabilidadeHover();
+    this.initDestaqueNumeros();
     this.initDropdown();
     this.initModal();
 
@@ -368,12 +369,6 @@ class DescriptorManager {
     conteudo.classList.remove("fechando");
 
     conteudo.classList.add("expandido");
-    if (window.innerWidth <= 500) {
-      // No mobile o card ocupa a largura total da tela
-      const linhaRect = conteudo.closest(".linha").getBoundingClientRect();
-      conteudo.style.left = `${-linhaRect.left}px`;
-      conteudo.style.right = `${linhaRect.right - document.documentElement.clientWidth}px`;
-    }
     if (!estavaExpandido) {
       conteudo.style.maxHeight = alturaLinhaColapsada();
       void conteudo.offsetHeight; // força o navegador a registrar a altura inicial
@@ -393,8 +388,6 @@ class DescriptorManager {
       conteudo.removeEventListener("transitionend", aoTerminar);
       conteudo.classList.remove("expandido", "fechando");
       conteudo.style.maxHeight = "";
-      conteudo.style.left = "";
-      conteudo.style.right = "";
     };
     const aoTerminar = (e) => {
       if (e.target === conteudo && e.propertyName === "max-height") finalizar();
@@ -403,6 +396,36 @@ class DescriptorManager {
     conteudo.addEventListener("transitionend", aoTerminar);
     // Sem diferença de altura não há transitionend
     conteudo._timerFim = setTimeout(finalizar, 450);
+  }
+
+  // Hover/foco numa linha destaca o número de início (o da linha, ou o do primeiro nível abaixo
+  // se ela divide o nível com a seguinte) e o de fim (o primeiro número acima), cortes inclusive.
+  initDestaqueNumeros() {
+    const numero = (l) => l.querySelector(".proficiencia-valor-numero");
+    const marcar = (linha) => {
+      document.querySelectorAll(".proficiencia-valor-numero.destaque").forEach((n) => n.classList.remove("destaque"));
+      if (!linha) return;
+      const linhas = [...linha.parentElement.querySelectorAll(":scope > .linha")];
+      const i = linhas.indexOf(linha);
+      const inicio = linhas.slice(i).map(numero).find(Boolean);
+      const fim = linhas.slice(0, i).reverse().map(numero).find(Boolean);
+      for (const n of [inicio, fim]) {
+        if (!n) continue;
+        n.style.setProperty("--destaque", linha.style.getPropertyValue("--p"));
+        n.classList.add("destaque");
+      }
+    };
+    const linhaDe = (el) => (el && el.closest ? el.closest(".padrao-linhas > .linha") : null);
+    document.addEventListener("pointerover", (e) => {
+      if (e.pointerType === "mouse") marcar(linhaDe(e.target));
+    });
+    document.addEventListener("pointerout", (e) => {
+      if (e.pointerType === "mouse" && !linhaDe(e.relatedTarget)) marcar(null);
+    });
+    document.addEventListener("focusin", (e) => marcar(linhaDe(e.target)));
+    document.addEventListener("focusout", (e) => {
+      if (!linhaDe(e.relatedTarget)) marcar(null);
+    });
   }
 
   initHabilidadeHover() {
@@ -627,7 +650,8 @@ class DescriptorManager {
     const regua = montarFaixasRegua({ min, max, cortes, escala: scale });
     const emLinhas = (y) => `calc(var(--escala-linha-height) * ${y})`;
 
-    const faixaHTML = ({ base, rotuloBase, ehCorte, conteudo, item, mesmoNivel }) => {
+    // --p: cor do padrão da linha (tinge a linha e os números de início/fim no hover)
+    const faixaHTML = ({ base, rotuloBase, ehCorte, conteudo, item, mesmoNivel, padrao }) => {
       const tick =
         rotuloBase === null
           ? ""
@@ -637,7 +661,7 @@ class DescriptorManager {
 
       // O "..." vem do CSS; atualizarTruncamentos marca as linhas que estouram
       return `
-                <div class="linha${conteudo === null ? " preenchimento" : ""}${mesmoNivel ? " mesmo-nivel" : ""}">
+                <div class="linha${conteudo === null ? " preenchimento" : ""}${mesmoNivel ? " mesmo-nivel" : ""}" style="--p:var(--color-${padrao})">
                     <div class="linha-cor"></div>
                     <div class="linha-marcador"></div>
                     <span class="proficiencia-valor">${tick}</span>
@@ -663,7 +687,7 @@ class DescriptorManager {
 
     // Linhas só pelos níveis; rótulos, barra de cor e cortes ficam por cima, posicionados por y.
     const faixaDoPadrao = (classe) => ({ padrao, y0, y1 }) =>
-      `<div class="${classe} ${padrao}" style="top:${emLinhas(y0)};height:${emLinhas(y1 - y0)}">${
+      `<div class="${classe} ${padrao}" style="top:${emLinhas(y0)};height:${emLinhas(y1 - y0)}" data-y="${y0},${y1 - y0}">${
         classe === "padrao-label" ? `<span>${labels[padrao]}</span>` : ""
       }</div>`;
     escalaContent.innerHTML = `
@@ -674,12 +698,42 @@ class DescriptorManager {
                     ${regua.cortes
                       .filter((c) => !c.exato)
                       .map(
-                        (c) => `<div class="escala-corte" style="top:${emLinhas(c.y)}"><span class="proficiencia-valor-numero eh-corte">${escapeHtml(c.valor)}</span></div>`,
+                        (c) => `<div class="escala-corte" style="top:${emLinhas(c.y)}" data-y="${c.y}"><span class="proficiencia-valor-numero eh-corte">${escapeHtml(c.valor)}</span></div>`,
                       )
                       .join("")}
                 </div>`;
 
     this.atualizarTruncamentos();
+    this.seguirLinhas();
+  }
+
+  // A linha aberta cresce: barras, rótulos e cortes (posicionados em "alturas de linha", data-y)
+  // passam a seguir a altura real das linhas. O ResizeObserver dispara a cada quadro da transição.
+  seguirLinhas() {
+    const linhas = document.querySelector(".padrao-linhas");
+    if (!linhas) return;
+    this.observadorLinhas ??= new ResizeObserver(() => this.reposicionarCamadas());
+    this.observadorLinhas.disconnect();
+    this.observadorLinhas.observe(linhas);
+    this.reposicionarCamadas();
+  }
+
+  reposicionarCamadas() {
+    let y = 0;
+    const trechos = [...document.querySelectorAll(".padrao-linhas > .linha")].map((l) => {
+      const h = l.classList.contains("preenchimento") ? 0.5 : 1;
+      return { l, y0: (y += h) - h, h };
+    });
+    if (!trechos.length) return;
+    const px = (v) => {
+      const t = trechos.find((t) => v < t.y0 + t.h - 1e-9) || trechos[trechos.length - 1];
+      return t.l.offsetTop + ((v - t.y0) / t.h) * t.l.offsetHeight;
+    };
+    document.querySelectorAll(".escala-barra, .padrao-label, .escala-corte").forEach((el) => {
+      const [a, h] = el.dataset.y.split(",").map(Number);
+      el.style.top = `${px(a)}px`;
+      if (h !== undefined) el.style.height = `${px(a + h) - px(a)}px`;
+    });
   }
 
   updateBNCC(bncc) {
