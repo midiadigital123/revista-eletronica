@@ -28,6 +28,7 @@ import {
   ParamsDescritor,
   ParamsPadrao,
   ParamsProjeto,
+  linhasVaziasDoPasso,
   problemasDoAno,
   rotuloCaderno,
   type AnoProjeto,
@@ -544,9 +545,26 @@ export const handlers = [
       const projeto = exigirBloqueio(request, slug);
       const atual = obterAno(projeto, caderno, ano);
       const dados = AtualizarAnoEntrada.parse(await json(request));
-      const novo = { ...atual, ...dados };
+      const { passo, ...resto } = dados;
+      const novo = { ...atual, ...resto };
+      if (passo === null) delete novo.passo;
+      else if (passo !== undefined) novo.passo = passo;
       validarAno(novo);
+      if (passo === null) delete atual.passo;
       Object.assign(atual, novo);
+      tocar(projeto);
+      return HttpResponse.json(atual);
+    }),
+  ),
+  http.post(
+    `${C}/anos/:ano/gerar-linhas`,
+    rota(({ request, params }) => {
+      const { slug, caderno, ano } = ParamsAno.parse(params);
+      const projeto = exigirBloqueio(request, slug);
+      const atual = obterAno(projeto, caderno, ano);
+      if (atual.passo === undefined)
+        falha(400, "Defina o intervalo mínimo do ano antes de gerar as linhas", { campo: "passo" });
+      for (const d of atual.descritores) d.scale = linhasVaziasDoPasso(atual, d.scale);
       tocar(projeto);
       return HttpResponse.json(atual);
     }),

@@ -5,6 +5,7 @@ import { chaves } from "../../api/chaves";
 import { queryClient } from "../../api/queryClient";
 import { rotuloAno, type Ano, type Projeto } from "../../contrato/schemas";
 import { mockDb, resetarMockDb } from "../../mocks/db";
+import { servidorMock } from "../../mocks/server";
 import { projetosApi } from "../api";
 import { renderizarAno } from "./test/ProvedorEdicaoTeste";
 
@@ -160,6 +161,65 @@ describe("anos", () => {
     cadernoMock().anos = cadernoMock().anos.filter((a) => a.ano === "5ef");
     renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef");
     expect(await screen.findByRole("button", { name: "Excluir ano" })).toBeDisabled();
+  });
+});
+
+describe("intervalo mínimo", () => {
+  /** Ano 5ef com 1 descritor sem linhas, faixa 0–500. */
+  function descritorVazio(passo?: number) {
+    const ano = anoMock("5ef")!;
+    const d = ano.descritores[0]!;
+    d.scale = { "padrao-1": [], "padrao-2": [], "padrao-3": [], "padrao-4": [] };
+    ano.descritores = [d];
+    if (passo !== undefined) ano.passo = passo;
+    return d;
+  }
+
+  it("salva o intervalo mínimo ao sair do campo", async () => {
+    const corpos: unknown[] = [];
+    servidorMock.events.on("request:start", ({ request }) => {
+      if (request.method === "PATCH" && new URL(request.url).pathname.endsWith("/anos/5ef"))
+        void request
+          .clone()
+          .json()
+          .then((c) => corpos.push(c));
+    });
+    const user = userEvent.setup();
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef");
+    await user.type(await screen.findByLabelText("Intervalo mínimo"), "25");
+    await user.tab();
+    await waitFor(() => expect(corpos).toEqual([{ passo: 25 }]));
+    expect(anoMock("5ef")!.passo).toBe(25);
+    servidorMock.events.removeAllListeners();
+  });
+
+  it("Gerar linhas vazias confirma com a contagem e atualiza a escala", async () => {
+    const d = descritorVazio(25);
+    const user = userEvent.setup();
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef");
+    await user.click(await screen.findByRole("button", { name: "Gerar linhas vazias" }));
+    expect(await screen.findByText("Criar 20 linhas vazias em 1 descritor?")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Criar linhas" }));
+    await waitFor(() => {
+      const escala = anoMock("5ef")!.descritores.find((x) => x.codigo === d.codigo)!.scale;
+      expect(Object.values(escala).flat()).toHaveLength(20);
+    });
+  });
+
+  it("sem passo salvo o botão fica desabilitado", async () => {
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef");
+    expect(await screen.findByRole("button", { name: "Gerar linhas vazias" })).toBeDisabled();
+  });
+
+  it("intervalo que gera mais de 200 linhas mostra erro e não salva", async () => {
+    const user = userEvent.setup();
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef");
+    const campo = await screen.findByLabelText("Intervalo mínimo");
+    await user.type(campo, "2");
+    await user.tab();
+    expect(await screen.findByText(/Intervalo pequeno demais/)).toBeInTheDocument();
+    expect(campo).toHaveAttribute("aria-invalid", "true");
+    expect(anoMock("5ef")!.passo).toBeUndefined();
   });
 });
 

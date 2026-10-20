@@ -19,6 +19,7 @@ import { projetosApi } from "../api";
 import { useEdicao } from "../edicao";
 import { caminhoProjeto, mensagemDeErro, trocarAnos, useAnoAtual, rotuloAnoCaderno } from "./dados";
 import { FaixaCortes } from "./FaixaCortes";
+import { IntervaloMinimo } from "./IntervaloMinimo";
 import { ListaDescritores } from "./ListaDescritores";
 
 /** Aba de um ano: faixa e cortes, lista de descritores e o descritor aberto (Outlet). */
@@ -68,6 +69,13 @@ export function TelaAno() {
         </div>
         <FieldsetEdicao legenda="Faixa da escala e cortes dos padrões">
           <FaixaCortes key={`${caderno}-${anoProjeto.ano}`} caderno={caderno} ano={anoProjeto} />
+        </FieldsetEdicao>
+        <FieldsetEdicao legenda="Intervalo mínimo da escala">
+          <IntervaloMinimo
+            key={`${caderno}-${anoProjeto.ano}`}
+            caderno={caderno}
+            ano={anoProjeto}
+          />
         </FieldsetEdicao>
       </header>
 
