@@ -21,7 +21,8 @@ const XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 /** Níveis distintos de todas as linhas do ano ∪ mínimo da faixa, crescentes; `fim` = próximo nível ou máximo. */
 export function niveisDaPlanilha(ano: AnoProjeto): { level: number; fim: number }[] {
   const niveis = new Set<number>([ano.scaleRange.min]);
-  for (const d of ano.descritores) for (const p of PADROES) for (const l of d.scale[p]) niveis.add(l.level);
+  for (const d of ano.descritores)
+    for (const p of PADROES) for (const l of d.scale[p]) niveis.add(l.level);
   const ordenados = [...niveis].sort((a, b) => a - b);
   return ordenados.map((level, i) => ({ level, fim: ordenados[i + 1] ?? ano.scaleRange.max }));
 }
@@ -33,7 +34,10 @@ export function celulaDoNivel(linhas: LinhaEscala[], vazio: "–" | "..."): stri
 }
 
 /** Itens entre parênteses no início são a habilidade correspondente; o resto, códigos relacionados. */
-export function separarHabilidades(skills: string[]): { relacionadas: string; correspondente: string } {
+export function separarHabilidades(skills: string[]): {
+  relacionadas: string;
+  correspondente: string;
+} {
   const correspondentes = skills.filter((s) => s.startsWith("("));
   return {
     relacionadas: skills.filter((s) => !s.startsWith("(")).join("\n"),
@@ -52,15 +56,28 @@ function abaNiveis(wb: ExcelJS.Workbook, caderno: Caderno, ano: AnoProjeto) {
   const layout = LAYOUTS[caderno];
   const niveis = niveisDaPlanilha(ano);
   const ws = wb.addWorksheet("Níveis", { views: [{ state: "frozen", ySplit: 1 }] });
-  const cabecalhos = [...layout.inicio, ...niveis.map((n) => `${n.level} a ${n.fim}`), ...layout.fim];
+  const cabecalhos = [
+    ...layout.inicio,
+    ...niveis.map((n) => `${n.level} a ${n.fim}`),
+    ...layout.fim,
+  ];
   ws.columns = cabecalhos.map((header, i) => ({
     header,
-    width: i < 4 ? layout.larguras.inicio[i] : i < 4 + niveis.length ? layout.larguras.nivel : layout.larguras.fim[i - 4 - niveis.length],
+    width:
+      i < 4
+        ? layout.larguras.inicio[i]
+        : i < 4 + niveis.length
+          ? layout.larguras.nivel
+          : layout.larguras.fim[i - 4 - niveis.length],
   }));
   const cabecalho = ws.getRow(1);
   cabecalho.font = { bold: true };
   niveis.forEach((_, i) => {
-    cabecalho.getCell(5 + i).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_NIVEL } };
+    cabecalho.getCell(5 + i).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: COR_NIVEL },
+    };
   });
   for (const d of ano.descritores) {
     const { relacionadas, correspondente } = separarHabilidades(d.bncc.skills);
@@ -110,7 +127,11 @@ function abaEscala(wb: ExcelJS.Workbook, ano: AnoProjeto, cores: Cores) {
   ws.getColumn(1).font = { bold: true };
 }
 
-export async function gerarPlanilha(projeto: ProjetoPlanilha, caderno: Caderno, ano: AnoProjeto): Promise<Buffer> {
+export async function gerarPlanilha(
+  projeto: ProjetoPlanilha,
+  caderno: Caderno,
+  ano: AnoProjeto,
+): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
   abaNiveis(wb, caderno, ano);
   abaEscala(wb, ano, projeto.cores ?? CORES_PADRAO);
@@ -118,7 +139,10 @@ export async function gerarPlanilha(projeto: ProjetoPlanilha, caderno: Caderno, 
 }
 
 /** Uma planilha por ano; `abrir` devolve na hora um stream que recebe o arquivo quando fica pronto. */
-export function planilhasDoCaderno(projeto: ProjetoPlanilha, caderno: CadernoProjeto): ArquivoPacote[] {
+export function planilhasDoCaderno(
+  projeto: ProjetoPlanilha,
+  caderno: CadernoProjeto,
+): ArquivoPacote[] {
   return caderno.anos.map((ano) => ({
     caminho: nomePlanilha(projeto.nome, caderno.id, ano.ano),
     tipo: XLSX,

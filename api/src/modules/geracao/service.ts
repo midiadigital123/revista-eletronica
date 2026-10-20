@@ -86,7 +86,10 @@ export async function montarPacote(slug: string): Promise<ArquivoPacote[]> {
         abrir: () => abrirLeitura(imagem.arquivoId),
       });
     }
-    for (const p of planilhasDoCaderno({ nome: projeto.nome, cores: paraCores(projeto) }, { id, anos }))
+    for (const p of planilhasDoCaderno(
+      { nome: projeto.nome, cores: paraCores(projeto) },
+      { id, anos },
+    ))
       arquivos.push({ ...p, caminho: `${id}/planilhas/${p.caminho}` });
     // PDFs dos itens ("Ver item"); o mesmo item pode aparecer em várias linhas.
     const itens = new Set(

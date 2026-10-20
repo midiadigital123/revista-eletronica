@@ -48,7 +48,12 @@ geracaoRouter.get("/preview/*arquivo", (req, res, next) => {
 });
 
 /** Zipa `arquivos` na resposta; erro depois do primeiro byte derruba a conexão. */
-async function enviarZip(res: Response, nome: string, arquivos: ArquivoPacote[], next: NextFunction) {
+async function enviarZip(
+  res: Response,
+  nome: string,
+  arquivos: ArquivoPacote[],
+  next: NextFunction,
+) {
   const zip = new ZipArchive();
   zip.on("error", (erro) => {
     if (res.headersSent) res.destroy(erro);

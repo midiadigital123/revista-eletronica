@@ -15,13 +15,23 @@ export interface LayoutCaderno {
 export const LAYOUTS: Record<Caderno, LayoutCaderno> = {
   "lingua-portuguesa": {
     inicio: ["Etapa", "Descritor", "Descrição da habilidade", "Pre requisito"],
-    fim: ["Praticas de linguagem:", "Objeto de conhecimento:", "Habilidades relacionadas", "Habilidade correspondente"],
+    fim: [
+      "Praticas de linguagem:",
+      "Objeto de conhecimento:",
+      "Habilidades relacionadas",
+      "Habilidade correspondente",
+    ],
     vazio: "–",
     larguras: { inicio: [8, 12, 50, 30], nivel: 28, fim: [30, 30, 30, 40] },
   },
   matematica: {
     inicio: ["Etapa", "Cód. Descritor", "Descritor", "Pre requisito"],
-    fim: ["Eixo cognitivo (Saeb):", "Unidade temática:", "Habilidades relacionadas:", "Habilidade correspondente:"],
+    fim: [
+      "Eixo cognitivo (Saeb):",
+      "Unidade temática:",
+      "Habilidades relacionadas:",
+      "Habilidade correspondente:",
+    ],
     vazio: "...",
     larguras: { inicio: [8, 14, 50, 30], nivel: 28, fim: [30, 30, 30, 40] },
   },
@@ -32,7 +42,10 @@ export const ROTULOS_PADRAO = ["Padrão 01", "Padrão 02", "Padrão 03", "Padrã
 
 export const COR_NIVEL = "FFFFFF00";
 
-export const SUFIXO_CADERNO: Record<Caderno, string> = { "lingua-portuguesa": "LP", matematica: "MT" };
+export const SUFIXO_CADERNO: Record<Caderno, string> = {
+  "lingua-portuguesa": "LP",
+  matematica: "MT",
+};
 
 /** Valores BNCC na ordem das duas primeiras colunas finais (as outras duas vêm das habilidades). */
 export const bnccDoDescritor = (b: Bncc): [string, string] => [b.practices, b.knowledge];

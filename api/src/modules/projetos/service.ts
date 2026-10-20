@@ -77,7 +77,8 @@ async function conteudoDaOrigem({
   switch (origem.tipo) {
     case "vazio": {
       const anos = [...new Set(origem.anos)];
-      return { cadernos: ids.map((id) => ({ id, anos: anos.map(anoVazio) })),
+      return {
+        cadernos: ids.map((id) => ({ id, anos: anos.map(anoVazio) })),
         pagina: {},
         cores: null,
       };
