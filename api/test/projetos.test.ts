@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import { HEADER_SESSAO_EDICAO } from "../src/contrato/schemas.js";
+import { CORES_PADRAO, HEADER_SESSAO_EDICAO } from "../src/contrato/schemas.js";
+import { ProjetoModel } from "../src/modules/projetos/model.js";
 import { agenteLogado, usarApp } from "./helpers.js";
 
 // copiarImagens é do A5b; aqui só importa que a página copiada chegue ao projeto novo.
@@ -385,6 +386,72 @@ describe("projetos", () => {
         origem: { tipo: "vazio" },
       })
       .expect(201);
+  });
+});
+
+describe("cores", () => {
+  const verdes = {
+    "padrao-1": "#006400",
+    "padrao-2": "#228b22",
+    "padrao-3": "#90ee90",
+    "padrao-4": "#98fb98",
+  };
+
+  it("PATCH cores grava, GET devolve, null restaura", async () => {
+    const { agente } = await comProjeto();
+    expect((await agente.get("/api/projetos/sp").expect(200)).body.cores).toBeNull();
+    const r = await agente.patch("/api/projetos/sp").send({ cores: verdes }).expect(200);
+    expect(r.body.cores).toEqual(verdes);
+    expect((await agente.get("/api/projetos/sp").expect(200)).body.cores).toEqual(verdes);
+    const lista = await agente.get("/api/projetos").expect(200);
+    expect(lista.body[0].cores).toEqual(verdes);
+    const volta = await agente.patch("/api/projetos/sp").send({ cores: null }).expect(200);
+    expect(volta.body.cores).toBeNull();
+    expect((await agente.get("/api/projetos/sp").expect(200)).body.cores).toBeNull();
+  });
+
+  it("copiar projeto herda as cores por valor", async () => {
+    const { agente } = await comProjeto();
+    await agente.patch("/api/projetos/sp").send({ cores: verdes }).expect(200);
+    const r = await agente
+      .post("/api/projetos")
+      .send({
+        slug: "rj",
+        nome: "RJ",
+        disciplinas: ["lingua-portuguesa"],
+        origem: { tipo: "copiar", de: "sp" },
+      })
+      .expect(201);
+    expect(r.body.cores).toEqual(verdes);
+    await agente.patch("/api/projetos/sp").send({ cores: CORES_PADRAO }).expect(200);
+    expect((await agente.get("/api/projetos/rj").expect(200)).body.cores).toEqual(verdes);
+  });
+
+  it("projeto gravado sem o campo cores devolve cores null", async () => {
+    const { agente } = await agenteLogado(ctx.app);
+    const agora = new Date();
+    await ProjetoModel.collection.insertOne({
+      slug: "antigo",
+      nome: "Antigo",
+      pagina: {},
+      cadernos: [],
+      bloqueio: null,
+      excluidoEm: null,
+      slugOriginal: null,
+      criadoEm: agora,
+      atualizadoEm: agora,
+      __v: 0,
+    });
+    const r = await agente.get("/api/projetos/antigo").expect(200);
+    expect(r.body.cores).toBeNull();
+  });
+
+  it("PATCH com cor inválida → 400", async () => {
+    const { agente } = await comProjeto();
+    await agente
+      .patch("/api/projetos/sp")
+      .send({ cores: { ...verdes, "padrao-1": "verde" } })
+      .expect(400);
   });
 });
 

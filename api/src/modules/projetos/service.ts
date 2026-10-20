@@ -72,12 +72,15 @@ const textosPreenchidos = (pagina: Record<string, string | string[] | undefined>
 async function conteudoDaOrigem({
   disciplinas,
   origem,
-}: CriarProjetoEntrada): Promise<Pick<ProjetoDb, "cadernos" | "pagina">> {
+}: CriarProjetoEntrada): Promise<Pick<ProjetoDb, "cadernos" | "pagina" | "cores">> {
   const ids = cadernosDasDisciplinas(disciplinas);
   switch (origem.tipo) {
     case "vazio": {
       const anos = [...new Set(origem.anos)];
-      return { cadernos: ids.map((id) => ({ id, anos: anos.map(anoVazio) })), pagina: {} };
+      return { cadernos: ids.map((id) => ({ id, anos: anos.map(anoVazio) })),
+        pagina: {},
+        cores: null,
+      };
     }
     case "importar": {
       const revistas = ids.map((id) => {
@@ -97,7 +100,7 @@ async function conteudoDaOrigem({
       if (problemas.length) throw problemasInvalidos(problemas);
       // Página é uma só: vem da primeira revista que a traz.
       const pagina = revistas.find(({ revista }) => revista.pagina)?.revista.pagina ?? {};
-      return { cadernos, pagina: textosPreenchidos(pagina) };
+      return { cadernos, pagina: textosPreenchidos(pagina), cores: null };
     }
     case "copiar": {
       const fonte = await obterProjeto(origem.de);
@@ -112,7 +115,8 @@ async function conteudoDaOrigem({
       });
       // copiarImagens devolve a mesma página, com novos arquivoId nas imagens.
       const pagina = await copiarImagens(fonte.pagina);
-      return { cadernos, pagina };
+      // Por valor: objeto simples, sem compartilhar o subdocumento da fonte.
+      return { cadernos, pagina, cores: fonte.toObject().cores ?? null };
     }
   }
 }
@@ -137,6 +141,7 @@ export async function atualizar(slug: string, entrada: AtualizarProjetoEntrada) 
     projeto.slug = entrada.slug;
   }
   if (entrada.nome !== undefined) projeto.nome = entrada.nome;
+  if (entrada.cores !== undefined) projeto.cores = entrada.cores;
   await projeto.save();
   return paraProjeto(projeto);
 }

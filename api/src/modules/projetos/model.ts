@@ -1,5 +1,5 @@
 import { Schema, model, type HydratedDocument, type Types } from "mongoose";
-import { ANO_REGEX, CADERNOS, PADROES, type CadernoProjeto } from "../../contrato/schemas.js";
+import { ANO_REGEX, CADERNOS, PADROES, type CadernoProjeto, type Cores } from "../../contrato/schemas.js";
 
 export interface ImagemArmazenada {
   arquivoId: Types.ObjectId;
@@ -25,6 +25,8 @@ export interface ProjetoDb {
   pagina: Record<string, ValorPagina>;
   cadernos: CadernoProjeto[];
   bloqueio: BloqueioDb | null;
+  /** null = cores padrão da revista. */
+  cores: Cores | null;
   excluidoEm: Date | null;
   slugOriginal: string | null;
   criadoEm: Date;
@@ -101,6 +103,16 @@ const bloqueioSchema = new Schema(
   { _id: false },
 );
 
+const coresSchema = new Schema(
+  {
+    "padrao-1": { type: String, required: true },
+    "padrao-2": { type: String, required: true },
+    "padrao-3": { type: String, required: true },
+    "padrao-4": { type: String, required: true },
+  },
+  { _id: false },
+);
+
 const projetoSchema = new Schema<ProjetoDb>(
   {
     // Único entre todos os documentos; ao excluir, o slug é liberado (ver repository.excluir).
@@ -113,6 +125,7 @@ const projetoSchema = new Schema<ProjetoDb>(
     pagina: { type: Schema.Types.Mixed, default: () => ({}) },
     cadernos: { type: [cadernoSchema], default: [] },
     bloqueio: { type: bloqueioSchema, default: null },
+    cores: { type: coresSchema, default: null },
     excluidoEm: { type: Date, default: null },
     slugOriginal: { type: String, default: null },
   },
