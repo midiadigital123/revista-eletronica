@@ -5,7 +5,7 @@ import { camposDoTipo } from "../../contrato/campos-pagina.js";
 import { rotuloCaderno, type CadernoProjeto } from "../../contrato/schemas.js";
 import { renderRevista, arquivosEstaticosRevista } from "../revista/render.js";
 import { abrirLeitura, ehImagem } from "../imagens/service.js";
-import { obterProjeto, paraCadernos, paraPagina } from "../projetos/repository.js";
+import { obterProjeto, paraCadernos, paraCores, paraPagina } from "../projetos/repository.js";
 
 /** Arquivo da revista: conteúdo em memória ou stream aberto sob demanda. */
 export interface ArquivoPacote {
@@ -66,7 +66,7 @@ export async function montarPacote(slug: string): Promise<ArquivoPacote[]> {
     { caminho: "index.html", tipo: tipoDe("index.html"), abrir: () => raiz },
   ];
   for (const { id, anos } of cadernos) {
-    const html = Buffer.from(renderRevista({ anos, pagina }));
+    const html = Buffer.from(renderRevista({ anos, pagina, cores: paraCores(projeto) }));
     arquivos.push(
       { caminho: `${id}/index.html`, tipo: tipoDe("index.html"), abrir: () => html },
       ...arquivosEstaticosRevista().map(({ caminho, conteudo }) => ({

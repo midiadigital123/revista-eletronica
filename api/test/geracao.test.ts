@@ -89,6 +89,25 @@ describe("geração da revista", () => {
     expect(Buffer.compare(img.body as Buffer, PNG)).toBe(0);
   });
 
+  it("preview: cores do projeto (via PATCH) viram <style>; CSP permite style inline", async () => {
+    const agente = await projetoComImagem();
+    await agente
+      .patch("/api/projetos/fx")
+      .send({
+        cores: {
+          "padrao-1": "#14532d",
+          "padrao-2": "#228b22",
+          "padrao-3": "#90ee90",
+          "padrao-4": "#0b6b3a",
+        },
+      })
+      .expect(200);
+    const h = await agente.get(`${CAD}/index.html`).expect(200);
+    expect(h.text).toContain("--color-padrao-4-bg:rgba(11, 107, 58, 0.1);");
+    const csp = String(h.headers["content-security-policy"]);
+    expect(/style-src[^;]*'unsafe-inline'/.test(csp)).toBe(true);
+  });
+
   it("preview: ícones servidos como SVG; imagem sumida do GridFS → 404 em JSON", async () => {
     const agente = await projetoComImagem();
     const svg = await agente.get(`${CAD}/assets/seta-proxima.svg`).expect(200);

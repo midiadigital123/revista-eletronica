@@ -5,7 +5,10 @@ import Handlebars from "handlebars";
 import { camposDoTipo } from "../../contrato/campos-pagina.js";
 import { revistaDosAnos } from "../../contrato/revista.js";
 import {
+  Cores,
+  PADROES,
   compararAnos,
+  mesmasCores,
   nomeArquivoImagem,
   rotuloAno,
   type AnoProjeto,
@@ -20,6 +23,8 @@ export interface EntradaRender {
   anos: AnoProjeto[];
   /** Página no formato do contrato: textos e imagens ({nome, mime, tamanho}). */
   pagina: Pagina;
+  /** Cores do projeto; null = padrão de styles.css. */
+  cores: Cores | null;
 }
 
 export interface ArquivoRevista {
@@ -61,8 +66,19 @@ const jsonSeguro = (valor: unknown) =>
     .replaceAll(" ", "\\u2028")
     .replaceAll(" ", "\\u2029");
 
+/** `:root{...}` que sobrescreve as cores dos padrões; "" nas cores padrão. Revalida: vai cru no <style>. */
+export function cssDasCores(cores: Cores | null): string {
+  if (mesmasCores(cores, null)) return "";
+  const c = Cores.parse(cores);
+  const vars = PADROES.map((p) => {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(c[p].slice(i, i + 2), 16));
+    return `--color-${p}:${c[p]};--color-${p}-bg:rgba(${r}, ${g}, ${b}, 0.1);`;
+  });
+  return `:root{${vars.join("")}}`;
+}
+
 /** HTML de index.html. */
-export function renderRevista({ anos, pagina }: EntradaRender): string {
+export function renderRevista({ anos, pagina, cores }: EntradaRender): string {
   template ??= Handlebars.compile(lerRevista("escala.hbs").toString("utf8"));
   return template({
     // Abas da revista: uma por ano do projeto, na ordem das etapas (a primeira começa ativa).
@@ -71,6 +87,7 @@ export function renderRevista({ anos, pagina }: EntradaRender): string {
       .sort(compararAnos)
       .map((chave) => ({ chave, rotulo: rotuloAno(chave) })),
     pagina: contextoPagina(pagina),
+    cssCores: cssDasCores(cores),
     dadosRevista: jsonSeguro(revistaDosAnos(anos, pagina)),
   });
 }

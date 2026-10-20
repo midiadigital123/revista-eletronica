@@ -1,7 +1,9 @@
 import {
   CADERNOS,
   compararAnos,
+  PADROES,
   type CadernoProjeto,
+  type Cores,
   type BloqueioPublico,
   type Pagina,
   type Projeto,
@@ -86,6 +88,13 @@ export function paraCadernos(projeto: ProjetoDoc): CadernoProjeto[] {
     }));
 }
 
+/** Cópia simples das 4 cores (o subdocumento do Mongoose não passa por `Cores.parse`). */
+export function paraCores(projeto: ProjetoDoc): Cores | null {
+  const c = projeto.cores;
+  if (!c) return null;
+  return Object.fromEntries(PADROES.map((p) => [p, c[p]])) as Cores;
+}
+
 export function paraProjeto(projeto: ProjetoDoc): Projeto {
   return {
     slug: projeto.slug,
@@ -93,7 +102,7 @@ export function paraProjeto(projeto: ProjetoDoc): Projeto {
     pagina: paraPagina(projeto),
     cadernos: paraCadernos(projeto),
     bloqueio: paraBloqueio(projeto),
-    cores: projeto.cores ?? null,
+    cores: paraCores(projeto),
     criadoEm: projeto.criadoEm.toISOString(),
     atualizadoEm: projeto.atualizadoEm.toISOString(),
   };
@@ -106,6 +115,6 @@ export function paraResumo(projeto: ProjetoDoc): ProjetoResumo {
     cadernos: paraCadernos(projeto).map(({ id, anos }) => ({ id, anos: anos.map((a) => a.ano) })),
     atualizadoEm: projeto.atualizadoEm.toISOString(),
     bloqueio: paraBloqueio(projeto),
-    cores: projeto.cores ?? null,
+    cores: paraCores(projeto),
   };
 }
