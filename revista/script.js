@@ -315,14 +315,9 @@ class DescriptorManager {
       abridor = null;
     };
 
-    // Clicar no botão, ou (mouse) na habilidade que tem item, abre o PDF.
-    // Habilidade sem item: o clique não faz nada (o hover já expande o texto).
+    // O item só abre pelo botão; clicar na habilidade não faz nada (o hover já expande o texto).
     document.addEventListener("click", (e) => {
-      let btn = e.target.closest(".ver-item-btn");
-      if (!btn && e.pointerType === "mouse") {
-        const conteudo = e.target.closest(".linha-conteudo.tem-ver-item");
-        btn = conteudo && conteudo.parentElement.querySelector(".ver-item-btn");
-      }
+      const btn = e.target.closest(".ver-item-btn");
       if (btn) abrirModal(btn.dataset.nivelItem, btn.dataset.itemId, btn);
     });
 
@@ -515,15 +510,13 @@ class DescriptorManager {
       else if (aberta) trocarPara(null);
     });
 
-    // Teclado: Enter/Espaço na habilidade abre o item (se houver) ou alterna a expansão
+    // Teclado: Enter/Espaço na habilidade alterna a expansão (o item abre pelo botão)
     document.addEventListener("keydown", (e) => {
       if (e.key !== "Enter" && e.key !== " ") return;
       const conteudo = e.target.closest?.(".linha-conteudo.tem-ver-mais");
       if (!conteudo || e.target !== conteudo) return;
       e.preventDefault();
-      const btn = conteudo.parentElement.querySelector(".ver-item-btn");
-      if (btn) btn.click();
-      else trocarPara(conteudo === aberta ? null : conteudo);
+      trocarPara(conteudo === aberta ? null : conteudo);
     });
 
     // Teclado: foco na habilidade abre, sair do foco fecha

@@ -718,10 +718,6 @@ body {
     transition: background-color var(--transition-fast);
 }
 
-.linha-conteudo.tem-ver-item {
-    cursor: pointer;
-}
-
 .linha-conteudo p {
     font-size: var(--font-size-p);
     font-family: var(--font-family);
@@ -776,8 +772,8 @@ body {
     transition: background-color var(--transition-fast), transform var(--transition-fast);
 }
 
-/* Leitura cumulativa: o que está acima da linha em foco também vale (nota ≥ nível), tinta leve */
-.linha:has(~ .linha:is(:hover, :has(:focus-visible))) .linha-conteudo {
+/* Leitura cumulativa: quem chegou à habilidade em foco já domina todas as de baixo, tinta leve */
+.linha:is(:hover, :has(:focus-visible)) ~ .linha :is(.proficiencia-valor, .linha-marcador, .linha-conteudo) {
     background-color: color-mix(in srgb, var(--p) 6%, white);
 }
 
@@ -789,6 +785,8 @@ body {
 .proficiencia-valor-numero.destaque {
     background-color: var(--destaque);
     transform: translateY(50%) scale(1.15);
+    /* acima do selo de corte solto (.escala-corte, z-index 3) quando um cobre o outro */
+    z-index: 4;
     /* mesmo tamanho com ou sem corte: anula a fonte menor, a altura e o anel de .eh-corte */
     font-size: var(--font-size-small);
     line-height: 1;
