@@ -287,24 +287,43 @@ class DescriptorManager {
     const frame = document.getElementById("itemModalFrame");
     if (!modal) return;
 
-    const abrirModal = (nivel, id) => {
+    let abridor = null;
+
+    // Fundo inerte: o foco e o leitor de tela ficam presos no diálogo (sem focus trap manual)
+    const fundoInerte = (inerte) =>
+      [...document.body.children].forEach((el) => {
+        if (el !== modal) el.inert = inerte;
+      });
+
+    const abrirModal = (nivel, id, origem) => {
+      abridor = origem;
       titulo.textContent = `Item — nível ${nivel}`;
       frame.title = `PDF do item — nível ${nivel}`;
       frame.src = `arquivos/itens/${encodeURIComponent(id)}.pdf`;
       modal.hidden = false;
+      fundoInerte(true);
       document.body.style.overflow = "hidden";
+      closeBtn.focus();
     };
 
     const fecharModal = () => {
       modal.hidden = true;
       frame.removeAttribute("src");
       document.body.style.overflow = "";
+      fundoInerte(false);
+      if (abridor && abridor.isConnected) abridor.focus({ preventScroll: true });
+      abridor = null;
     };
 
+    // Clicar no botão, ou (mouse) na habilidade que tem item, abre o PDF.
+    // Habilidade sem item: o clique não faz nada (o hover já expande o texto).
     document.addEventListener("click", (e) => {
-      const btn = e.target.closest(".ver-item-btn");
-      if (!btn) return;
-      abrirModal(btn.dataset.nivelItem, btn.dataset.itemId);
+      let btn = e.target.closest(".ver-item-btn");
+      if (!btn && e.pointerType === "mouse") {
+        const conteudo = e.target.closest(".linha-conteudo.tem-ver-item");
+        btn = conteudo && conteudo.parentElement.querySelector(".ver-item-btn");
+      }
+      if (btn) abrirModal(btn.dataset.nivelItem, btn.dataset.itemId, btn);
     });
 
     closeBtn.addEventListener("click", fecharModal);
@@ -369,6 +388,7 @@ class DescriptorManager {
     conteudo.classList.remove("fechando");
 
     conteudo.classList.add("expandido");
+    conteudo.setAttribute("aria-expanded", "true");
     if (!estavaExpandido) {
       conteudo.style.maxHeight = alturaLinhaColapsada();
       void conteudo.offsetHeight; // força o navegador a registrar a altura inicial
@@ -387,6 +407,7 @@ class DescriptorManager {
       clearTimeout(conteudo._timerFim);
       conteudo.removeEventListener("transitionend", aoTerminar);
       conteudo.classList.remove("expandido", "fechando");
+      conteudo.setAttribute("aria-expanded", "false");
       conteudo.style.maxHeight = "";
     };
     const aoTerminar = (e) => {
@@ -422,7 +443,9 @@ class DescriptorManager {
     document.addEventListener("pointerout", (e) => {
       if (e.pointerType === "mouse" && !linhaDe(e.relatedTarget)) marcar(null);
     });
-    document.addEventListener("focusin", (e) => marcar(linhaDe(e.target)));
+    document.addEventListener("focusin", (e) => {
+      if (e.target.matches(":focus-visible")) marcar(linhaDe(e.target));
+    });
     document.addEventListener("focusout", (e) => {
       if (!linhaDe(e.relatedTarget)) marcar(null);
     });
@@ -492,6 +515,17 @@ class DescriptorManager {
       else if (aberta) trocarPara(null);
     });
 
+    // Teclado: Enter/Espaço na habilidade abre o item (se houver) ou alterna a expansão
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      const conteudo = e.target.closest?.(".linha-conteudo.tem-ver-mais");
+      if (!conteudo || e.target !== conteudo) return;
+      e.preventDefault();
+      const btn = conteudo.parentElement.querySelector(".ver-item-btn");
+      if (btn) btn.click();
+      else trocarPara(conteudo === aberta ? null : conteudo);
+    });
+
     // Teclado: foco na habilidade abre, sair do foco fecha
     document.addEventListener("focusin", (e) => {
       const conteudo = habilidadeDe(e.target);
@@ -513,8 +547,13 @@ class DescriptorManager {
       const p = c.querySelector("p");
       const trunca = p.scrollWidth > p.clientWidth + 1;
       c.classList.toggle("tem-ver-mais", trunca);
-      if (trunca) c.setAttribute("tabindex", "0");
-      else c.removeAttribute("tabindex");
+      if (trunca) {
+        c.setAttribute("tabindex", "0");
+        c.setAttribute("role", "button");
+        c.setAttribute("aria-expanded", "false");
+      } else {
+        for (const a of ["tabindex", "role", "aria-expanded"]) c.removeAttribute(a);
+      }
     });
   }
 
@@ -647,6 +686,14 @@ class DescriptorManager {
       "padrao-1": "Padrão 01",
     };
 
+    // Início de cada padrão (o fim é o início do de cima): combina com a leitura "nota ≥ nível"
+    const intervalos = {
+      "padrao-4": `≥ ${cortes["padrao-3"]}`,
+      "padrao-3": `≥ ${cortes["padrao-2"]}`,
+      "padrao-2": `≥ ${cortes["padrao-1"]}`,
+      "padrao-1": `≥ ${min}`,
+    };
+
     const regua = montarFaixasRegua({ min, max, cortes, escala: scale });
     const emLinhas = (y) => `calc(var(--escala-linha-height) * ${y})`;
 
@@ -670,7 +717,7 @@ class DescriptorManager {
                     </div>
                     ${
                       temItem
-                        ? `<button type="button" class="ver-item-btn" aria-label="Ver item" data-legenda="Ver item" data-nivel-item="${escapeHtml(base)}" data-item-id="${escapeHtml(item.id)}">
+                        ? `<button type="button" class="ver-item-btn" aria-label="Ver item do nível ${escapeHtml(base)}" data-legenda="Ver item" data-nivel-item="${escapeHtml(base)}" data-item-id="${escapeHtml(item.id)}">
                             <svg viewBox="4 0 44.3506 44.3506" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                 <rect x="16.6117" y="12.2362" width="19.1273" height="19.8787" rx="2.36459" stroke="black" stroke-width="0.910823"/>
                                 <path d="M19.8918 15.424V17.997H32.4548V15.424H19.8918ZM33.4599 17.997C33.4598 18.5 33.0099 18.9079 32.4548 18.9079H19.8918C19.3367 18.9079 18.8868 18.5 18.8867 17.997V15.424C18.8867 14.921 19.3367 14.5132 19.8918 14.5132H32.4548C33.0099 14.5132 33.4599 14.921 33.4599 15.424V17.997Z" fill="black"/>
@@ -688,7 +735,7 @@ class DescriptorManager {
     // Linhas só pelos níveis; rótulos, barra de cor e cortes ficam por cima, posicionados por y.
     const faixaDoPadrao = (classe) => ({ padrao, y0, y1 }) =>
       `<div class="${classe} ${padrao}" style="top:${emLinhas(y0)};height:${emLinhas(y1 - y0)}" data-y="${y0},${y1 - y0}">${
-        classe === "padrao-label" ? `<span>${labels[padrao]}</span>` : ""
+        classe === "padrao-label" ? `<span>${labels[padrao]}</span><small>${escapeHtml(intervalos[padrao])}</small>` : ""
       }</div>`;
     escalaContent.innerHTML = `
                 <div class="escala-rotulos">${regua.padroes.map(faixaDoPadrao("padrao-label")).join("")}</div>

@@ -21,7 +21,7 @@
 
     /* Abas do menu de descritores */
     --color-tab-inactive-bg: #e8e9eb;
-    --color-tab-inactive-text: #6b7280;
+    --color-tab-inactive-text: #4b5563;
     --color-tab-inactive-hover: #dfe0e2;
 
     /* Cores da Escala */
@@ -541,6 +541,11 @@ body {
     border-bottom: 0.5px solid var(--color-black);
 }
 
+.padrao-label {
+    flex-direction: column;
+    padding-block: 0.25rem;
+}
+
 .padrao-label span {
     font-size: var(--font-size-small);
     font-weight: 700;
@@ -548,6 +553,21 @@ body {
     color: var(--color-black);
     line-height: 1.5rem;
     /* 24px */
+}
+
+/* Início do padrão (≥), embaixo do nome */
+.padrao-label small {
+    font-size: var(--font-size-xsmall);
+    text-align: center;
+    color: var(--color-black);
+    line-height: 1.25rem;
+}
+
+.escala-legenda {
+    margin: 0 0 var(--spacing-sm);
+    font-size: var(--font-size-xsmall);
+    line-height: 1.25rem;
+    color: var(--color-black);
 }
 
 .padrao-linhas {
@@ -646,6 +666,11 @@ body {
     width: var(--escala-cor-width);
 }
 
+/* borda escura fina: 3 das 4 cores não chegam a 3:1 contra o branco (WCAG 1.4.11) */
+.escala-barra {
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.35);
+}
+
 .escala-barra.padrao-1 { background-color: var(--color-padrao-1); }
 .escala-barra.padrao-2 { background-color: var(--color-padrao-2); }
 .escala-barra.padrao-3 { background-color: var(--color-padrao-3); }
@@ -690,6 +715,11 @@ body {
     min-height: var(--escala-linha-height);
     height: var(--escala-linha-height);
     background-color: var(--color-white);
+    transition: background-color var(--transition-fast);
+}
+
+.linha-conteudo.tem-ver-item {
+    cursor: pointer;
 }
 
 .linha-conteudo p {
@@ -734,8 +764,9 @@ body {
     text-overflow: clip;
 }
 
-/* Foco na linha: hover/foco tinge a linha com a cor do padrão (--p, de script.js), engrossa a
-   barra (7→10px) e preenche o número de início (base da linha) e o de fim (base da linha de cima) */
+/* Foco na linha: hover/foco de teclado tinge a linha com a cor do padrão (--p, de script.js) e
+   preenche o número de início (base da linha) e o de fim (base da linha de cima). Foco de mouse
+   não conta (:focus-visible), senão a linha fica "ativa" depois que o mouse sai. */
 .proficiencia-valor,
 .linha-marcador {
     transition: background-color var(--transition-fast);
@@ -745,25 +776,12 @@ body {
     transition: background-color var(--transition-fast), transform var(--transition-fast);
 }
 
-.linha::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: calc(var(--escala-cor-width) + 3px);
-    background: var(--p);
-    opacity: 0;
-    z-index: 2;
-    pointer-events: none;
-    transition: opacity var(--transition-fast);
+/* Leitura cumulativa: o que está acima da linha em foco também vale (nota ≥ nível), tinta leve */
+.linha:has(~ .linha:is(:hover, :has(:focus-visible))) .linha-conteudo {
+    background-color: color-mix(in srgb, var(--p) 6%, white);
 }
 
-.linha:is(:hover, :focus-within)::before {
-    opacity: 1;
-}
-
-.linha:is(:hover, :focus-within) :is(.proficiencia-valor, .linha-marcador, .linha-conteudo) {
+.linha:is(:hover, :has(:focus-visible)) :is(.proficiencia-valor, .linha-marcador, .linha-conteudo) {
     background-color: color-mix(in srgb, var(--p) 16%, white);
 }
 
@@ -771,6 +789,15 @@ body {
 .proficiencia-valor-numero.destaque {
     background-color: var(--destaque);
     transform: translateY(50%) scale(1.15);
+    /* mesmo tamanho com ou sem corte: anula a fonte menor, a altura e o anel de .eh-corte */
+    font-size: var(--font-size-small);
+    line-height: 1;
+    box-shadow: none;
+}
+
+/* selo de corte solto já é centrado pelo pai: só amplia */
+.escala-corte .proficiencia-valor-numero.destaque {
+    transform: scale(1.15);
 }
 
 /* Botão "Ver item": círculo fora da linha, à direita, centralizado na vertical */
@@ -802,6 +829,11 @@ body {
 .ver-item-btn:focus-visible {
     transform: scale(1.08);
     box-shadow: 0 8px 14px rgba(0, 0, 0, 0.2);
+}
+
+.ver-item-btn:focus-visible {
+    outline: 2px solid var(--color-black);
+    outline-offset: 3px;
 }
 
 /* Habilidade aberta: destaca o botão dela (anel amarelo) para ligar os dois */
@@ -873,6 +905,28 @@ body {
     .linha-conteudo.tem-ver-item,
     .linha-conteudo.tem-ver-item.expandido {
         padding-right: 4rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .linha-conteudo,
+    .linha-conteudo.tem-ver-mais,
+    .proficiencia-valor,
+    .linha-marcador,
+    .proficiencia-valor-numero,
+    .ver-item-btn,
+    .ver-item-btn::before,
+    .ver-item-btn::after,
+    .modal-close {
+        transition: none;
+    }
+
+    .proficiencia-valor-numero.destaque {
+        transform: translateY(50%);
+    }
+
+    .escala-corte .proficiencia-valor-numero.destaque {
+        transform: none;
     }
 }
 
@@ -1389,8 +1443,8 @@ body {
     position: absolute;
     top: 0.75rem;
     right: 0.75rem;
-    width: 2rem;
-    height: 2rem;
+    width: 2.75rem;
+    height: 2.75rem;
     border: none;
     border-radius: 50%;
     background-color: var(--color-gray-100);
@@ -1410,7 +1464,7 @@ body {
     font-size: var(--font-size-h3);
     font-weight: 700;
     color: var(--color-black);
-    padding-right: 2rem;
+    padding-right: 3.5rem;
     margin-bottom: var(--spacing-sm);
 }
 
