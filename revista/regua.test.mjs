@@ -167,4 +167,15 @@ assert.equal(rotuloAnoLongo("outro"), "outro");
   );
 }
 
+// Texto sobre a cor do padrão: branco só onde contrasta mais que o preto
+const { corTextoSobre } = createRequire(import.meta.url)("./script.js");
+assert.equal(corTextoSobre("#f72628"), "#fff"); // padrão 1 (vermelho)
+assert.equal(corTextoSobre("#ff8d43"), "#000"); // padrão 2
+assert.equal(corTextoSobre("#b3ccff"), "#000"); // padrão 3
+assert.equal(corTextoSobre("#0ed3ff"), "#000"); // padrão 4
+assert.equal(corTextoSobre("#000"), "#fff");
+assert.equal(corTextoSobre("#FFFFFF"), "#000");
+assert.equal(corTextoSobre("#1a237e"), "#fff"); // azul escuro de um projeto
+assert.equal(corTextoSobre(""), "#000"); // inválido: preto
+
 console.log("regua.test.mjs: ok");

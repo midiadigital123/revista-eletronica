@@ -145,6 +145,24 @@ function montarFaixasRegua({ min, max, cortes, escala }) {
   };
 }
 
+/**
+ * Cor do texto sobre um fundo "#rgb"/"#rrggbb": branco só quando contrasta mais que o preto.
+ * Usa APCA (contraste perceptual, W3 0.0.98G): no vermelho #f72628 a razão WCAG 2 aprova o preto
+ * (5,3:1), mas a leitura é bem melhor em branco (|Lc| 72 contra 45). Preto no que não der para ler.
+ */
+function corTextoSobre(hex) {
+  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(hex).trim());
+  if (!m) return "#000";
+  const h = m[1].length === 3 ? [...m[1]].map((c) => c + c).join("") : m[1];
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+  const luz = (y) => (y < 0.022 ? y + (0.022 - y) ** 1.414 : y);
+  const yFundo = luz(0.2126729 * r ** 2.4 + 0.7151522 * g ** 2.4 + 0.072175 * b ** 2.4);
+  // |Lc| de texto preto (y≈0) e branco (y=1) sobre o fundo
+  const preto = Math.max(0, (yFundo ** 0.56 - luz(0) ** 0.57) * 114 - 2.7);
+  const branco = Math.max(0, (1 - yFundo ** 0.65) * 114 - 2.7);
+  return branco > preto ? "#fff" : "#000";
+}
+
 function alturaLinhaColapsada() {
   return getComputedStyle(document.documentElement)
     .getPropertyValue("--escala-linha-height")
@@ -152,7 +170,7 @@ function alturaLinhaColapsada() {
 }
 
 // Exporta para o teste em Node; no navegador (script clássico) `module` não existe.
-if (typeof module !== "undefined") module.exports = { montarFaixasRegua, rotuloAno, rotuloAnoLongo };
+if (typeof module !== "undefined") module.exports = { montarFaixasRegua, rotuloAno, rotuloAnoLongo, corTextoSobre };
 
 // ==========================================
 // ESTADO DA APLICAÇÃO
@@ -425,9 +443,14 @@ class DescriptorManager {
       const i = linhas.indexOf(linha);
       const inicio = linhas.slice(i).map(numero).find(Boolean);
       const fim = linhas.slice(0, i).reverse().map(numero).find(Boolean);
+      // texto branco quando o preto não contrasta com a cor do padrão (as cores são do projeto)
+      const p = linha.style.getPropertyValue("--p");
+      const nome = /--color-padrao-\d/.exec(p);
+      const hex = nome && getComputedStyle(document.documentElement).getPropertyValue(nome[0]);
       for (const n of [inicio, fim]) {
         if (!n) continue;
-        n.style.setProperty("--destaque", linha.style.getPropertyValue("--p"));
+        n.style.setProperty("--destaque", p);
+        n.style.setProperty("--destaque-texto", corTextoSobre(hex));
         n.classList.add("destaque");
       }
     };
