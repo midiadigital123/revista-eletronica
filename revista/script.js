@@ -120,16 +120,24 @@ function montarFaixasRegua({ min, max, cortes, escala }) {
     };
   });
 
-  // y de um valor: na borda se coincide com um nível; senão dentro da faixa, entre 25% e 75%
-  // (a revista impressa faz o mesmo, e o número do corte não cola no tick vizinho)
+  // Corte que não cai num nível fica solto dentro da faixa que o contém. Os n cortes da mesma
+  // faixa ocupam as posições k/(n+1) (o maior em cima) e o CSS dá à faixa (n+1) × 1,75rem de
+  // altura mínima (`.tem-corte`): o selo não encosta no número vizinho nem em outro selo.
+  const faixaDoCorte = (v) => comY.find((f) => f.topo > v && v > f.base);
+  const soltos = valoresCorte
+    .filter((v) => v > min && v < max && !comY.some((f) => f.base === v))
+    .sort((a, b) => b - a);
+  for (const f of comY) f.cortesDentro = soltos.filter((v) => faixaDoCorte(v) === f).length;
+
+  // y de um valor: na borda se coincide com um nível; senão no slot do selo dentro da faixa
   const posicao = (v) => {
     if (v >= max) return { y: 0, exato: true };
     if (v <= min) return { y, exato: true };
     const borda = comY.findLast((f) => f.base === v);
     if (borda) return { y: borda.y0 + borda.altura, exato: true };
-    const f = comY.find((f) => f.topo > v && v > f.base);
-    const t = Math.min(0.75, Math.max(0.25, (f.topo - v) / (f.topo - f.base)));
-    return { y: f.y0 + f.altura * t, exato: false };
+    const f = faixaDoCorte(v);
+    const k = soltos.filter((s) => faixaDoCorte(s) === f).indexOf(v) + 1;
+    return { y: f.y0 + (f.altura * k) / (f.cortesDentro + 1), exato: false };
   };
 
   return {
@@ -737,7 +745,7 @@ class DescriptorManager {
     const emLinhas = (y) => `calc(var(--escala-linha-height) * ${y})`;
 
     // --p: cor do padrão da linha (tinge a linha e os números de início/fim no hover)
-    const faixaHTML = ({ base, rotuloBase, ehCorte, conteudo, item, mesmoNivel, padrao }) => {
+    const faixaHTML = ({ base, rotuloBase, ehCorte, conteudo, item, mesmoNivel, padrao, cortesDentro }) => {
       const tick =
         rotuloBase === null
           ? ""
@@ -747,7 +755,7 @@ class DescriptorManager {
 
       // O "..." vem do CSS; atualizarTruncamentos marca as linhas que estouram
       return `
-                <div class="linha${ehVazia(conteudo) ? " preenchimento" : ""}${mesmoNivel ? " mesmo-nivel" : ""}" style="--p:var(--color-${padrao})">
+                <div class="linha${ehVazia(conteudo) ? " preenchimento" : ""}${mesmoNivel ? " mesmo-nivel" : ""}${cortesDentro ? " tem-corte" : ""}" style="--p:var(--color-${padrao})${cortesDentro ? `;--cortes:${cortesDentro}` : ""}">
                     <div class="linha-cor"></div>
                     <div class="linha-marcador"></div>
                     <span class="proficiencia-valor">${tick}</span>

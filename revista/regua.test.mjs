@@ -156,14 +156,18 @@ assert.equal(rotuloAnoLongo("outro"), "outro");
   assert.deepEqual(
     r.cortes.map((c) => [c.valor, c.y, c.exato]),
     [
-      [500, 6.25, false], // 3/57 da faixa, limitado a 25%
-      [400, 7.75, false], // 46/56 da faixa, limitado a 75%
+      [500, 6.5, false], // selo no meio da faixa 503→446: não encosta no 503 nem no 446
+      [400, 7.5, false], // idem na faixa 446→390
       [350, 8.5, true],
     ],
   );
   assert.deepEqual(
     r.padroes.map((p) => [p.y0, p.y1]),
-    [[0, 6.25], [6.25, 7.75], [7.75, 8.5], [8.5, 9]], // faixa "---" tem meia altura,
+    [[0, 6.5], [6.5, 7.5], [7.5, 8.5], [8.5, 9]], // faixa "---" tem meia altura,
+  );
+  assert.deepEqual(
+    r.faixas.filter((f) => f.cortesDentro).map((f) => [f.topo, f.base, f.cortesDentro]),
+    [[503, 446, 1], [446, 390, 1]], // só essas ganham altura mínima no CSS
   );
 }
 
@@ -185,5 +189,48 @@ assert.equal(urlDoItem("abc", undefined), "arquivos/itens/abc.pdf"); // item ant
 assert.equal(urlDoItem("abc", "../x"), "arquivos/itens/abc.pdf"); // tipo inválido
 assert.equal(urlDoItem("a/b", "pdf"), "arquivos/itens/a%2Fb.pdf");
 assert.equal(tipoDoItem("PNG"), "pdf"); // case-sensitive: só o que o pacote grava
+
+// Selos de corte soltos não encostam no número vizinho: a faixa guarda o selo em k/(n+1)
+// da sua altura e o CSS lhe dá (n+1) × 1,75rem de altura mínima
+{
+  const niveis = (conteudo475 = "Lorem") => ({
+    "padrao-4": [L(525)],
+    "padrao-3": [L(503)],
+    "padrao-2": [L(475, conteudo475)],
+    "padrao-1": [L(300)],
+  });
+  const faixaDe = (r, base) => r.faixas.find((f) => f.base === base);
+  const centro = (f, k, n) => f.y0 + (f.altura * k) / (n + 1);
+
+  // 500 (corte) a 3 pontos do 503: selo centrado na faixa 503 → 475, não a 25%
+  let r = regua({ min: 0, max: 600, cortes: { "padrao-1": 300, "padrao-2": 400, "padrao-3": 500 }, escala: niveis() });
+  assert.equal(faixaDe(r, 475).cortesDentro, 1);
+  assert.equal(faixaDe(r, 300).cortesDentro, 1); // 400 também cai solto, na faixa 475 → 300
+  assert.equal(faixaDe(r, 503).cortesDentro, 0);
+  assert.deepEqual(
+    r.cortes.map((c) => [c.valor, c.exato]),
+    [[500, false], [400, false], [300, true]],
+  );
+  assert.equal(r.cortes[0].y, centro(faixaDe(r, 475), 1, 1));
+
+  // 500 e 502 na mesma faixa: dois selos, o maior em cima, em y diferentes
+  r = regua({ min: 0, max: 600, cortes: { "padrao-1": 300, "padrao-2": 500, "padrao-3": 502 }, escala: niveis() });
+  assert.equal(faixaDe(r, 475).cortesDentro, 2);
+  const [c502, c500] = r.cortes;
+  assert.equal(c502.valor, 502);
+  assert.equal(c502.y, centro(faixaDe(r, 475), 1, 2));
+  assert.equal(c500.y, centro(faixaDe(r, 475), 2, 2));
+  assert.ok(c502.y < c500.y);
+
+  // faixa "---" (meia altura) também comporta o selo; a altura vem do CSS
+  r = regua({ min: 0, max: 600, cortes: { "padrao-1": 300, "padrao-2": 400, "padrao-3": 500 }, escala: niveis("---") });
+  assert.equal(faixaDe(r, 475).altura, 0.5);
+  assert.equal(faixaDe(r, 475).cortesDentro, 1);
+  assert.equal(r.cortes[0].y, faixaDe(r, 475).y0 + 0.25);
+
+  // sem corte solto: cortesDentro é 0 em todas as faixas
+  r = regua({ min: 0, max: 600, cortes: { "padrao-1": 300, "padrao-2": 475, "padrao-3": 503 }, escala: niveis() });
+  assert.ok(r.faixas.every((f) => f.cortesDentro === 0));
+}
 
 console.log("regua.test.mjs: ok");

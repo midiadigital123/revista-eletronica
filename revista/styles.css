@@ -672,6 +672,19 @@ body {
   height: calc(var(--escala-linha-height) / 2);
 }
 
+/* Faixa com selo(s) de corte solto(s) (--cortes, script.js): 1,75rem por vão entre o número de
+   cima, os selos e o de baixo, para o selo não encostar no vizinho (selo 22px + anel, número 16px) */
+.linha.tem-corte {
+  --escala-linha-min: calc((var(--cortes) + 1) * 1.75rem);
+}
+
+.linha.preenchimento.tem-corte,
+.linha.preenchimento.tem-corte .linha-cor,
+.linha.preenchimento.tem-corte .linha-conteudo {
+  height: auto;
+  min-height: var(--escala-linha-min);
+}
+
 /* Habilidade com o mesmo nível da seguinte: sem tick (sairia solto, sem número) */
 .linha.mesmo-nivel .linha-marcador {
   border-bottom: 0;
