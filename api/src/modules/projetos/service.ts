@@ -2,6 +2,7 @@ import {
   cadernosDasDisciplinas,
   CORTES_PADRAO,
   FAIXA_PADRAO,
+  linhasVaziasDoPasso,
   Padrao,
   problemasDoAno,
   rotuloCaderno,
@@ -71,12 +72,16 @@ const textosPreenchidos = (pagina: Record<string, string | string[] | undefined>
 async function conteudoDaOrigem({
   disciplinas,
   origem,
-}: CriarProjetoEntrada): Promise<Pick<ProjetoDb, "cadernos" | "pagina">> {
+}: CriarProjetoEntrada): Promise<Pick<ProjetoDb, "cadernos" | "pagina" | "cores">> {
   const ids = cadernosDasDisciplinas(disciplinas);
   switch (origem.tipo) {
     case "vazio": {
       const anos = [...new Set(origem.anos)];
-      return { cadernos: ids.map((id) => ({ id, anos: anos.map(anoVazio) })), pagina: {} };
+      return {
+        cadernos: ids.map((id) => ({ id, anos: anos.map(anoVazio) })),
+        pagina: {},
+        cores: null,
+      };
     }
     case "importar": {
       const revistas = ids.map((id) => {
@@ -96,7 +101,7 @@ async function conteudoDaOrigem({
       if (problemas.length) throw problemasInvalidos(problemas);
       // Página é uma só: vem da primeira revista que a traz.
       const pagina = revistas.find(({ revista }) => revista.pagina)?.revista.pagina ?? {};
-      return { cadernos, pagina: textosPreenchidos(pagina) };
+      return { cadernos, pagina: textosPreenchidos(pagina), cores: null };
     }
     case "copiar": {
       const fonte = await obterProjeto(origem.de);
@@ -111,7 +116,8 @@ async function conteudoDaOrigem({
       });
       // copiarImagens devolve a mesma página, com novos arquivoId nas imagens.
       const pagina = await copiarImagens(fonte.pagina);
-      return { cadernos, pagina };
+      // Por valor: objeto simples, sem compartilhar o subdocumento da fonte.
+      return { cadernos, pagina, cores: fonte.toObject().cores ?? null };
     }
   }
 }
@@ -136,6 +142,7 @@ export async function atualizar(slug: string, entrada: AtualizarProjetoEntrada) 
     projeto.slug = entrada.slug;
   }
   if (entrada.nome !== undefined) projeto.nome = entrada.nome;
+  if (entrada.cores !== undefined) projeto.cores = entrada.cores;
   await projeto.save();
   return paraProjeto(projeto);
 }
@@ -212,8 +219,25 @@ export const atualizarAno = (
   slug: string,
   caderno: Caderno,
   ano: Ano,
-  entrada: AtualizarAnoEntrada,
-) => editarAno(slug, caderno, ano, (alvo) => Object.assign(alvo, entrada));
+  { passo, ...entrada }: AtualizarAnoEntrada,
+) =>
+  editarAno(slug, caderno, ano, (alvo) => {
+    Object.assign(alvo, entrada);
+    if (passo === null) delete alvo.passo;
+    else if (passo !== undefined) alvo.passo = passo;
+    return alvo;
+  });
+
+/** Preenche com linhas `---` os níveis do passo que faltam em cada descritor do ano. */
+export const gerarLinhas = (slug: string, caderno: Caderno, ano: Ano) =>
+  editarAno(slug, caderno, ano, (alvo) => {
+    if (alvo.passo === undefined)
+      throw requisicaoInvalida("Defina o intervalo mínimo antes de gerar as linhas", {
+        campo: "passo",
+      });
+    for (const d of alvo.descritores) d.scale = linhasVaziasDoPasso(alvo, d.scale);
+    return alvo;
+  });
 
 export async function excluirAno(slug: string, caderno: Caderno, ano: Ano): Promise<void> {
   const projeto = await obterProjeto(slug);
@@ -242,6 +266,7 @@ function exigirCodigoLivre(ano: AnoProjeto, codigo: string): void {
 export const criarDescritor = (slug: string, caderno: Caderno, ano: Ano, descritor: Descritor) =>
   editarAno(slug, caderno, ano, (alvo) => {
     exigirCodigoLivre(alvo, descritor.codigo);
+    descritor.scale = linhasVaziasDoPasso(alvo, descritor.scale);
     alvo.descritores.push(descritor);
     return descritor;
   });

@@ -109,7 +109,7 @@ components:
 
 # Design System: Editor da Revista Eletrônica
 
-Escopo: o editor em `editor/src`. A revista pública (`revista/`, `escala.html`, `styles.css`) é outra identidade e não segue este sistema; a única coisa que os dois compartilham são as cores dos Padrões 01–04.
+Escopo: o editor em `editor/src`. A revista pública (`revista/`, `escala.html`, `styles.css`) é outra identidade e não segue este sistema; a única coisa que os dois compartilham são as cores dos Padrões 01–04, que vêm de cada projeto (padrão: `#f72628`, `#ff8d43`, `#b3ccff`, `#0ed3ff`).
 
 ## Overview
 

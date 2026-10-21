@@ -1,10 +1,11 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { chaves } from "../../api/chaves";
 import { queryClient } from "../../api/queryClient";
 import { rotuloAno, type Ano, type Projeto } from "../../contrato/schemas";
 import { mockDb, resetarMockDb } from "../../mocks/db";
+import { servidorMock } from "../../mocks/server";
 import { projetosApi } from "../api";
 import { renderizarAno } from "./test/ProvedorEdicaoTeste";
 
@@ -163,6 +164,94 @@ describe("anos", () => {
   });
 });
 
+describe("intervalo mínimo", () => {
+  afterEach(() => servidorMock.events.removeAllListeners());
+
+  /** Ano 5ef com 1 descritor sem linhas, faixa 0–500. */
+  function descritorVazio(passo?: number) {
+    const ano = anoMock("5ef")!;
+    const d = ano.descritores[0]!;
+    d.scale = { "padrao-1": [], "padrao-2": [], "padrao-3": [], "padrao-4": [] };
+    ano.descritores = [d];
+    if (passo !== undefined) ano.passo = passo;
+    return d;
+  }
+
+  it("salva o intervalo mínimo ao sair do campo", async () => {
+    const corpos: unknown[] = [];
+    servidorMock.events.on("request:start", ({ request }) => {
+      if (request.method === "PATCH" && new URL(request.url).pathname.endsWith("/anos/5ef"))
+        void request
+          .clone()
+          .json()
+          .then((c) => corpos.push(c));
+    });
+    const user = userEvent.setup();
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef");
+    await user.type(await screen.findByLabelText("Intervalo mínimo"), "25");
+    await user.tab();
+    await waitFor(() => expect(corpos).toEqual([{ passo: 25 }]));
+    expect(anoMock("5ef")!.passo).toBe(25);
+  });
+
+  it("Gerar linhas vazias confirma com a contagem e atualiza a escala", async () => {
+    const d = descritorVazio(25);
+    const user = userEvent.setup();
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef");
+    await user.click(await screen.findByRole("button", { name: "Gerar linhas vazias" }));
+    expect(await screen.findByText("Criar 20 linhas vazias em 1 descritor?")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Criar linhas" }));
+    await waitFor(() => {
+      const escala = anoMock("5ef")!.descritores.find((x) => x.codigo === d.codigo)!.scale;
+      expect(Object.values(escala).flat()).toHaveLength(20);
+    });
+    expect(await screen.findByText("Intervalo mínimo já definido")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Gerar linhas vazias" })).not.toBeInTheDocument();
+  });
+
+  it("o botão só aparece com um valor maior que 0 no campo", async () => {
+    descritorVazio();
+    const user = userEvent.setup();
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef");
+    const campo = await screen.findByLabelText("Intervalo mínimo");
+    expect(screen.queryByRole("button", { name: "Gerar linhas vazias" })).not.toBeInTheDocument();
+    await user.type(campo, "0");
+    expect(screen.queryByRole("button", { name: "Gerar linhas vazias" })).not.toBeInTheDocument();
+    await user.clear(campo);
+    await user.type(campo, "25");
+    expect(screen.getByRole("button", { name: "Gerar linhas vazias" })).toBeEnabled();
+  });
+
+  it("texto inválido no campo não apaga o passo salvo", async () => {
+    anoMock("5ef")!.passo = 25;
+    const corpos: unknown[] = [];
+    servidorMock.events.on("request:start", ({ request }) => {
+      if (request.method === "PATCH") corpos.push(request.url);
+    });
+    const user = userEvent.setup();
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef");
+    const campo = await screen.findByLabelText("Intervalo mínimo");
+    await user.clear(campo);
+    // jsdom não simula badInput: força o que o navegador reporta com "e" digitado.
+    Object.defineProperty(campo, "validity", { value: { badInput: true } });
+    await user.tab();
+    expect(await screen.findByText("Use um número inteiro")).toBeInTheDocument();
+    expect(corpos).toEqual([]);
+    expect(anoMock("5ef")!.passo).toBe(25);
+  });
+
+  it("intervalo que gera mais de 200 linhas mostra erro e não salva", async () => {
+    const user = userEvent.setup();
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef");
+    const campo = await screen.findByLabelText("Intervalo mínimo");
+    await user.type(campo, "2");
+    await user.tab();
+    expect(await screen.findByText(/Intervalo pequeno demais/)).toBeInTheDocument();
+    expect(campo).toHaveAttribute("aria-invalid", "true");
+    expect(anoMock("5ef")!.passo).toBeUndefined();
+  });
+});
+
 describe("descritores", () => {
   it("busca por código, tópico ou descrição", async () => {
     const user = userEvent.setup();
@@ -184,6 +273,16 @@ describe("descritores", () => {
     expect(await screen.findByLabelText("Código")).toHaveValue("D03");
     expect(router.state.location.pathname).toBe("/projetos/exemplo/lingua-portuguesa/ano/9ef/D03");
     expect(codigos("9ef")).toEqual(["D01", "D02", "D03"]);
+  });
+
+  it("cria descritor em ano com passo 25 já com 20 linhas vazias", async () => {
+    const user = userEvent.setup();
+    anoMock("5ef")!.passo = 25;
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef");
+    await user.click(await screen.findByRole("button", { name: "Novo descritor" }));
+    await screen.findByLabelText("Código");
+    const novo = anoMock("5ef")!.descritores.at(-1)!;
+    expect(Object.values(novo.scale).flat()).toHaveLength(20);
   });
 
   it("duplica copiando todos os campos e a escala", async () => {

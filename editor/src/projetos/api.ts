@@ -76,6 +76,8 @@ export const projetosApi = {
     ano: Ano,
     dados: Entrada<typeof AtualizarAnoEntrada>,
   ) => api<AnoProjeto>(pa(slug, caderno, ano), { method: "PATCH", body: dados }),
+  gerarLinhas: (slug: string, caderno: Caderno, ano: Ano) =>
+    api<AnoProjeto>(`${pa(slug, caderno, ano)}/gerar-linhas`, { method: "POST" }),
   excluirAno: (slug: string, caderno: Caderno, ano: Ano) =>
     api<void>(pa(slug, caderno, ano), { method: "DELETE" }),
 
@@ -121,4 +123,5 @@ export const projetosApi = {
   urlPreview: (slug: string, caderno: Caderno) =>
     urlApi(`${p(slug)}/preview/${caderno}/index.html`),
   urlPacote: (slug: string) => urlApi(`${p(slug)}/pacote.zip`),
+  urlPlanilhas: (slug: string) => urlApi(`${p(slug)}/planilhas.zip`),
 };

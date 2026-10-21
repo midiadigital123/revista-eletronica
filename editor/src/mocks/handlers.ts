@@ -28,10 +28,12 @@ import {
   ParamsDescritor,
   ParamsPadrao,
   ParamsProjeto,
+  linhasVaziasDoPasso,
   problemasDoAno,
   rotuloCaderno,
   type AnoProjeto,
   type Caderno,
+  type Cores,
   type CadernoProjeto,
   type ErroApi,
   type Pagina,
@@ -145,6 +147,7 @@ const paraProjeto = (p: ProjetoMock): Projeto => ({
   pagina: p.pagina,
   cadernos: structuredClone(p.cadernos),
   bloqueio: bloqueioPublico(p),
+  cores: p.cores,
   criadoEm: p.criadoEm,
   atualizadoEm: p.atualizadoEm,
 });
@@ -154,6 +157,7 @@ const paraResumo = (p: ProjetoMock): ProjetoResumo => ({
   cadernos: p.cadernos.map((c) => ({ id: c.id, anos: c.anos.map((a) => a.ano) })),
   atualizadoEm: p.atualizadoEm,
   bloqueio: bloqueioPublico(p),
+  cores: p.cores,
 });
 function obterCaderno(projeto: ProjetoMock, caderno: Caderno): CadernoProjeto {
   const encontrado = projeto.cadernos.find((c) => c.id === caderno);
@@ -305,6 +309,7 @@ export const handlers = [
       let pagina: Pagina = {};
       let cadernos: CadernoProjeto[];
       let imagens: Record<string, Blob> = {};
+      let cores: Cores | null = null;
       if (origem.tipo === "copiar") {
         const base = obterProjeto(origem.de);
         pagina = structuredClone(base.pagina);
@@ -317,6 +322,7 @@ export const handlers = [
           return structuredClone(c);
         });
         imagens = { ...base.imagens };
+        cores = base.cores ? { ...base.cores } : null;
       } else if (origem.tipo === "importar") {
         cadernos = ids.map((id) => {
           const revista = origem.cadernos[id];
@@ -339,6 +345,7 @@ export const handlers = [
         pagina,
         cadernos,
         bloqueio: null,
+        cores,
         criadoEm: agora,
         atualizadoEm: agora,
         imagens,
@@ -369,6 +376,7 @@ export const handlers = [
         mockDb.projetos.set(dados.slug, projeto);
       }
       if (dados.nome) projeto.nome = dados.nome;
+      if (dados.cores !== undefined) projeto.cores = dados.cores;
       tocar(projeto);
       return HttpResponse.json(paraProjeto(projeto));
     }),
@@ -544,9 +552,26 @@ export const handlers = [
       const projeto = exigirBloqueio(request, slug);
       const atual = obterAno(projeto, caderno, ano);
       const dados = AtualizarAnoEntrada.parse(await json(request));
-      const novo = { ...atual, ...dados };
+      const { passo, ...resto } = dados;
+      const novo = { ...atual, ...resto };
+      if (passo === null) delete novo.passo;
+      else if (passo !== undefined) novo.passo = passo;
       validarAno(novo);
+      if (passo === null) delete atual.passo;
       Object.assign(atual, novo);
+      tocar(projeto);
+      return HttpResponse.json(atual);
+    }),
+  ),
+  http.post(
+    `${C}/anos/:ano/gerar-linhas`,
+    rota(({ request, params }) => {
+      const { slug, caderno, ano } = ParamsAno.parse(params);
+      const projeto = exigirBloqueio(request, slug);
+      const atual = obterAno(projeto, caderno, ano);
+      if (atual.passo === undefined)
+        falha(400, "Defina o intervalo mínimo do ano antes de gerar as linhas", { campo: "passo" });
+      for (const d of atual.descritores) d.scale = linhasVaziasDoPasso(atual, d.scale);
       tocar(projeto);
       return HttpResponse.json(atual);
     }),
@@ -576,6 +601,7 @@ export const handlers = [
       const descritor = CriarDescritorEntrada.parse(await json(request));
       if (alvo.descritores.some((d) => d.codigo === descritor.codigo))
         falha(409, "Esse código já existe neste ano", { campo: "codigo" });
+      descritor.scale = linhasVaziasDoPasso(alvo, descritor.scale);
       validarAno({ ...alvo, descritores: [...alvo.descritores, descritor] });
       alvo.descritores.push(descritor);
       alvo.descritores.sort((a, b) => a.codigo.localeCompare(b.codigo));

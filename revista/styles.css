@@ -706,7 +706,7 @@ body {
     height: auto;
     max-height: var(--escala-linha-height);
     overflow: hidden;
-    transition: max-height 0.3s ease, box-shadow 0.3s ease;
+    transition: max-height 0.3s ease, background-color var(--transition-fast);
 }
 
 /* O texto ocupa a largura toda da coluna; "..." só no fim */
@@ -717,25 +717,10 @@ body {
     text-overflow: ellipsis;
 }
 
-.linha-conteudo.expandido {
-    position: absolute;
-    top: 0;
-    left: calc(var(--escala-valor-width) + var(--escala-marcador-width) + var(--escala-cor-width));
-    right: 0;
-    z-index: 5;
-    align-items: flex-start;
-    background-color: var(--color-white);
-    border-bottom: 1px solid var(--color-border);
-    border-radius: 0.5rem;
-    box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.18);
-    /* mesmo espaço nos 4 lados; começa no topo para não cortar texto maior que a caixa */
-    padding: 1.5rem;
-}
-
-/* Fechando: segue sobreposto durante a animação, mas abaixo do que está abrindo */
-.linha-conteudo.expandido.fechando {
-    z-index: 4;
-    box-shadow: none;
+/* Habilidade aberta: a própria linha cresce e mostra o texto inteiro (também enquanto fecha,
+   até voltar a 80px). script.js reposiciona barra, rótulos e cortes pela altura real. */
+.linha:has(.linha-conteudo.expandido) {
+    height: auto;
 }
 
 .linha-conteudo.tem-ver-mais:focus-visible {
@@ -744,17 +729,48 @@ body {
 }
 
 .linha-conteudo.expandido p {
-    padding-right: 0;
-    padding-left: 0;
     white-space: normal;
     overflow: visible;
     text-overflow: clip;
 }
 
-.linha-conteudo.expandido.fechando p {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+/* Foco na linha: hover/foco tinge a linha com a cor do padrão (--p, de script.js), engrossa a
+   barra (7→10px) e preenche o número de início (base da linha) e o de fim (base da linha de cima) */
+.proficiencia-valor,
+.linha-marcador {
+    transition: background-color var(--transition-fast);
+}
+
+.proficiencia-valor-numero {
+    transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.linha::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: calc(var(--escala-cor-width) + 3px);
+    background: var(--p);
+    opacity: 0;
+    z-index: 2;
+    pointer-events: none;
+    transition: opacity var(--transition-fast);
+}
+
+.linha:is(:hover, :focus-within)::before {
+    opacity: 1;
+}
+
+.linha:is(:hover, :focus-within) :is(.proficiencia-valor, .linha-marcador, .linha-conteudo) {
+    background-color: color-mix(in srgb, var(--p) 16%, white);
+}
+
+/* .destaque (script.js): números de início e fim da linha em foco, cortes inclusive */
+.proficiencia-valor-numero.destaque {
+    background-color: var(--destaque);
+    transform: translateY(50%) scale(1.15);
 }
 
 /* Botão "Ver item": círculo fora da linha, à direita, centralizado na vertical */

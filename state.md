@@ -2,19 +2,25 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Ajustes do UX portados (D-026/D-027), sem commit, junto com D-025 e o fix do traço solto.
-Funcionando: botão "Ver item" circular fora da linha com tooltip e anel amarelo na habilidade aberta; "..." por CSS; hover abre em 120ms e fecha em 140ms, uma aberta por vez; botão abre o PDF; conferido por DOM em 1950, 1000 e 420px; `node revista/regua.test.mjs` ok.
-Quebrado/pendente: sem conferência visual (prints do Playwright saem em branco, zoom 67%); editor (EditorEscala) não foi revisto; teste manual no docker segue pendente.
+Passo 9 de 9 concluído: preenchimento manual (passo, cores por projeto, planilhas .xlsx) pronto na branch `feat/preenchimento-manual` (13 commits sobre `redesign-shadcn` 1ac55aa, último b958283). Cada task revisada por subagente; revisão final da branch (opus) liberou com correções, já feitas e re-revisadas.
+Funcionando: API 135 testes + tsc; editor 71 testes + typecheck + lint; régua ok; extrator 8 ok. Passo + "Gerar linhas vazias"; cores no diálogo, na revista e herdadas ao copiar; `planilhas.zip`, planilhas dentro do `pacote.zip` e botão "Exportar planilhas".
+Quebrado/pendente: conferência visual não feita (navegador do Playwright ocupado por outra sessão): layout do campo "Intervalo mínimo", diálogo de cores e planilha gerada vs `revista/modelo/`. Sem push/merge. Pendências pós-merge: `overrides` do uuid (aviso moderado via exceljs, não explorável); minors adiados (testes extras, variante não destrutiva do `Confirmacao`, hex salvo em maiúsculas, `montarPlanilhas` no service).
 
 ## Próxima ação
-Abrir o preview de LP 2ef D01 no navegador e passar o mouse numa habilidade com item.
+Rodar `cd editor && npm run dev:mock`, abrir um ano e conferir o campo "Intervalo mínimo" e o botão "Cores".
 
 ## Plano
-1. [x] Extrator Python: topic, fim, split por habilidade, sem CORTES_SEM_NUMERO
-2. [x] Contrato + API: LinhaEscala.fim / item, ITEM_MAX_BYTES (+ linhaSchema do Mongoose com fim/item)
-3. [x] Editor: cards com ≥/<, linha com início/fim
-4. [x] PDF do item: POST/GET /api/projetos/:slug/itens, pacote com <caderno>/arquivos/itens/<id>.pdf, editor anexar/remover
-5. [x] Revista: hover no lugar de "Ver mais"; "Ver item" só com PDF (iframe)
+<!-- plano completo: ~/.claude/plans/pasted-content-id-aef3-proponha-5-federated-castle.md -->
+1. [x] Task 1 — contrato do passo (`niveisDoPasso`, `linhasVaziasDoPasso`, limite 200)
+2. [x] Task 2 — API: gravar passo e `POST …/gerar-linhas`
+3. [x] Task 3 — editor: "Intervalo mínimo" + "Gerar linhas vazias"
+4. [x] Task 4 — contrato das cores (`Cores`, `CORES_PADRAO`)
+5. [x] Task 5 — API: gravar, devolver e copiar cores
+6. [x] Task 6 — revista: `<style>` com as cores do projeto
+7. [x] Task 7 — editor: diálogo "Cores dos padrões"
+8. [x] Task 8 — gerador de planilha (`exceljs`)
+9. [x] Task 9 — planilhas no zip, `planilhas.zip` e botão no editor
+10. [ ] Conferência visual (passos 8–10 de `docs/e2e.md`) e decidir merge/PR  ← agora
 
 ## Decisões
 
@@ -234,7 +240,58 @@ Abrir o preview de LP 2ef D01 no navegador e passar o mouse numa habilidade com 
 - **Arquivos afetados:** `revista/script.js`, `revista/styles.css`
 - **Status:** ativa
 
+### D-028 — Demo das 5 opções da escala em `demo-escala/`, sem tocar `revista/` (2026-10-20 14:15)
+- **Contexto:** pedido de 5 UIs sutis para a régua, mantendo a identidade (branco, amarelo `#ffeb00`, 4 cores de padrão, selos, "Ver item"); depois, uma página por opção reaproveitando estilos e comportamentos atuais.
+- **Decisão:** `gerar.mjs` renderiza o `revista/escala.hbs` real (handlebars de `api/node_modules`) com `saida/lingua-portuguesa.json` (2ef e 5ef; 1 em cada 4 habilidades ganha `item` de exemplo) e gera `atual.html` + `opcao-1..5.html`, todas carregando `../revista/styles.css` e `../revista/script.js` sem alteração. Uma folha `opcoes.css` com as 5 opções escopadas por `body[data-opcao="N"]` (CSS nesting) e um `opcoes.js` para o que o CSS não alcança: `--p` (cor do padrão) por linha (1 e 5), `.escala-zona`/`.escala-divisa` (3), intervalo no rótulo lendo `cortes` (4) e `DescriptorManager.prototype.atualizarTruncamentos` por altura em vez de largura (5). Todos reagem ao re-render por `MutationObserver` em `.escala-content`.
+- **Motivo:** a revista real fica intacta até a escolha; a linha da régua não carrega o padrão no DOM, então a demo o deduz das barras `.escala-barra`; na implementação, o padrão virar classe em `faixaHTML` (1 linha) evita o JS.
+- **Descartadas:** copiar `styles.css`/`script.js` para a demo — divergiria da revista; 5 CSS/JS separados — mais arquivos e mais portões, mesmo resultado; `--escala-cor-width` 10px na opção 2 — deslocaria toda a geometria; divisa de 1.5px na opção 3 — o navegador arredonda a borda do rótulo para 1px e ela sai mais clara que a da linha (virou 2px).
+- **Arquivos afetados:** `demo-escala/gerar.mjs`, `demo-escala/opcoes.css`, `demo-escala/opcoes.js`, `demo-escala/*.html` (gerados), `demo-escala/arquivos/itens/demo.pdf`
+- **Status:** ativa (demo; nada escolhido nem implementado em `revista/`)
+
+### D-029 — Passo por ano gera linhas vazias gravadas no banco (2026-10-20)
+- **Contexto:** a equipe pedagógica quer preencher no sistema antes da revista impressa existir; hoje as linhas vazias da régua só vêm do PDF importado. Planilhas modelo: 3EM/5EF de 25 em 25; 2º EF (MT e LP) com níveis irregulares (390, 446, 503…).
+- **Decisão:** `AnoProjeto.passo` opcional; `POST …/anos/:ano/gerar-linhas` cria os níveis `min + k·passo < max` que não existem em nenhum padrão (`content: "---"`, padrão por `padraoDoNivel`), sem mexer em linhas existentes; descritor novo em ano com passo já nasce com as linhas; `LinhasPadrao.max` 50 → 200; passo que gera mais de 200 níveis é recusado.
+- **Motivo:** escolha do usuário (gravar no banco); dado igual ao do PDF importado, então régua, JSON e planilha não mudam de lógica.
+- **Descartadas:** só derivar na saída — o JSON deixaria de bater com o importado e a régua dependeria do passo; passo obrigatório — não descreve o 2º EF.
+- **Arquivos afetados:** `contrato/schemas.ts`, `contrato/revista.ts`, `api/src/modules/projetos/*`, `editor/src/projetos/ano/*`, mocks do editor
+- **Status:** aprovada, não implementada
+
+### D-030 — Cores dos 4 padrões por projeto; herdar copia os valores (2026-10-20)
+- **Contexto:** cores fixas em `revista/styles.css:28-37`; a impressa usa outro esquema (verdes); usuário quer personalizar e reaproveitar esquemas de outros projetos.
+- **Decisão:** `Projeto.cores: Cores | null` (null = padrão atual); herdar = escolher um esquema já usado e copiar os 4 hex; "Copiar projeto" leva as cores; a revista recebe `<style>:root{--color-padrao-N…;-bg a 10%}</style>` só quando difere do padrão, com hex revalidado no render.
+- **Motivo:** escolha do usuário (copiar valores); revistas publicadas não mudam quando o projeto de origem muda.
+- **Descartadas:** vínculo vivo com o projeto de origem — exige resolver o vínculo na geração e tratar origem apagada; cor como campo de página — `CAMPOS_PAGINA` não tem tipo cor.
+- **Arquivos afetados:** `contrato/schemas.ts`, `api/src/modules/projetos/*`, `api/src/modules/revista/render.ts`, `revista/escala.hbs`, `editor/src/projetos/*`, `PRODUCT.md`, `DESIGN.md`
+- **Status:** aprovada, não implementada
+
+### D-031 — Planilhas .xlsx por caderno e etapa, com aba "Escala", via exceljs (2026-10-20)
+- **Contexto:** o núcleo de impressão recebe hoje planilhas (`revista/modelo/`, 1 por disciplina e etapa) sem cortes, cores nem nomes de padrão.
+- **Decisão:** 1 `.xlsx` por caderno × etapa: aba "Níveis" no layout dos modelos 3EM/5EF (LP e MT com suas colunas; itens do mesmo nível unidos por `#`; vazio `–` em LP e `...` em MT) + aba "Escala" (mín., máx., passo, cortes, cores). Saem em `planilhas.zip`, no `pacote.zip` e no preview. Gerado na API com `exceljs@4.4.0`.
+- **Motivo:** escolha do usuário; dado já está em memória na API; sem processo filho nem Python novo.
+- **Descartadas:** idêntico aos modelos sem aba extra — cortes continuariam por outro meio; 1 arquivo por projeto — foge do que a impressão usa; openpyxl via Python — dependência nova no container e processo filho.
+- **Arquivos afetados:** `api/package.json`, `api/src/modules/planilhas/*`, `api/src/modules/geracao/*`, `editor/src/projetos/ProjetoLayout.tsx`, `docs/contrato.md`, `docs/e2e.md`
+- **Status:** aprovada, não implementada
+
+### D-032 — Opção 1 escolhida; linha cresce no hover, números de início e fim preenchidos (2026-10-20)
+- **Contexto:** usuário escolheu a opção 1 (foco na linha) e pediu: destacar o número de início e o de fim da habilidade; hover sem cartão flutuante (a linha cresce e mostra o texto das reticências); tirar a "dupla borda" (pílula branca com anel de cor).
+- **Decisão:** só na demo (`opcao-1.html`). Anel removido; número de início (base da linha) e de fim (base da linha de cima, via `:has(+ .linha:hover)`) ganham fundo na cor do padrão (`--p` e `--p-prox`) e `scale(1.15)`. `.linha-conteudo.expandido` deixa de ser `absolute` (fica no fluxo, sem sombra/raio) e a `.linha` aberta passa a `height: auto`. `opcoes.js` (`reposicionar`, via ResizeObserver) recalcula top/height de `.escala-barra`, `.padrao-label` e `.escala-corte` pela altura real das linhas.
+- **Motivo:** barra, rótulos e cortes são posicionados em múltiplos de 80px; sem recalcular, desalinham quando a linha cresce.
+- **Descartadas:** manter o cartão só com outro estilo — usuário quer a linha crescendo; anel + preenchimento — mantém a dupla borda.
+- **Arquivos afetados:** `demo-escala/opcoes.css`, `demo-escala/opcoes.js`
+- **Status:** ativa (demo; `revista/` intacto; conferido por estilos computados, sem print)
+
+### D-033 — Opção 1 portada para `revista/` (2026-10-20)
+- **Contexto:** usuário pediu para levar a opção 1 (D-032) para a revista, com ponytail.
+- **Decisão:** `faixaHTML` põe `--p` e `--p-prox` (cor do padrão da linha e da de baixo) no `style` da `.linha` (sem classe `padrao-N`, que já pinta fundo); barras, rótulos e cortes ganham `data-y`; `seguirLinhas`/`reposicionarCamadas` (ResizeObserver) recalculam top/height pela altura real das linhas. CSS: `.expandido` deixa de ser cartão `absolute` e a linha cresce (`.linha:has(.linha-conteudo.expandido){height:auto}`); hover tinge a linha, barra +3px, número de início e de fim preenchidos. Removidos o `left/right` inline do mobile e as regras de sombra/`fechando`.
+- **Motivo:** o JS só existe porque barra/rótulos/cortes são posicionados em múltiplos de 80px; o resto é CSS.
+- **Descartadas:** reaproveitar `opcoes.js` da demo — deduz o padrão das barras, a revista já sabe; classe `padrao-N` na linha — colide com `.padrao-N{background}`.
+- **Arquivos afetados:** `revista/styles.css`, `revista/script.js`
+- **Status:** ativa, sem commit. Efeito colateral: `demo-escala/` (atual e opções 2–5) passa a usar o novo hover, pois carrega os arquivos da revista.
+
 ## Perguntas em aberto
+- [ ] Modo de execução do plano: subagentes ou nativo? — depende de: usuário
+- [ ] `skills[]` → "relacionadas" vs "correspondente" na planilha: heurística pelo "(" serve à impressão? — depende de: equipe de impressão
+- [ ] Levar a opção 1 ajustada (D-032) para `revista/`? — depende de: usuário ver `demo-escala/opcao-1.html`
 - [x] Cortes do 5º ano corretos? — confirmados pelo usuário
 
 ## Sessões
@@ -288,3 +345,17 @@ Abrir o preview de LP 2ef D01 no navegador e passar o mouse numa habilidade com 
 
 ### 2026-10-16 11:00
 - Ajustes do UX (~/Documentos) mapeados e portados: botão "Ver item" circular + hover com delays (D-026), "..." por CSS (D-027). Teste da régua ok; DOM conferido em 3 larguras.
+
+### 2026-10-20 14:15
+- 5 opções de UI da escala propostas (foco na linha, trilho com nós, zonas tingidas, rótulo com faixa, leitura em 2 linhas).
+- Demo montada em `demo-escala/` (D-028) e conferida no Playwright em 1440 e 420px; servidor estático local usado só para isso e desligado.
+- Aprendizados: Playwright bloqueia `file:`; a barra de navegação da demo, fixa embaixo, cobria as últimas linhas e foi para a lateral esquerda (≥1360px); prints do elemento `.escala-proficiencia` saem certos.
+
+### 2026-10-20 (retomada)
+- Sessão retomada; usuário pergunta como abrir as demos.
+- Demo pausada; nova frente: preenchimento manual (passo, cores por projeto, planilhas .xlsx). 6 planilhas modelo lidas (2º EF com níveis irregulares; 3EM/5EF de 25 em 25).
+- Decisões do usuário: linhas vazias no banco, 1 planilha por caderno e etapa + aba Escala, herdar cores copiando valores (D-029 a D-031). Plano de 9 tasks (writing-plans) aprovado.
+- Achado: `main` está 10+ commits atrás de `redesign-shadcn`; a branch da implementação sai de `redesign-shadcn`.
+- Execução por subagentes: 9 tasks + revisão final; decisões R1–R9 no relatório final da sessão. Correção relevante achada na revisão: texto inválido no campo numérico apagava o passo salvo (corrigido em 1b9f6f0).
+- Bug: "interface não atualizou". Causa: containers reiniciados sem `--build`, com imagens de 2026-10-19 14:10. Correção: `docker compose up -d --build api editor` (imagens 2026-10-20 16:04); conferido: `planilhas.zip` responde 401 (rota existe), JS do editor tem "Intervalo mínimo"/"Cores dos padrões"/"Exportar planilhas", exceljs 4.4.0 na imagem.
+- Ajuste pedido: botão "Gerar linhas vazias" só aparece com inteiro > 0 no campo (contagem usa o valor digitado); com passo salvo e grade completa, o botão dá lugar a "Intervalo mínimo já definido" (substitui "Nenhuma linha a criar"). Testes: ano.test.tsx 20/20, editor 71, typecheck e lint ok; container do editor reconstruído. Sem commit.

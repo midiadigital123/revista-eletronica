@@ -32,6 +32,24 @@ export const CORTES_PADRAO = {
   "padrao-3": 375,
 } as const;
 
+/** Cor dos padrões da escala: só `#rrggbb` (vai para CSS e planilhas, nada de nomes ou expressões). */
+export const CorHex = z.string().regex(/^#[0-9a-fA-F]{6}$/, { error: "Use uma cor no formato #rrggbb" });
+export const Cores = z.strictObject({ "padrao-1": CorHex, "padrao-2": CorHex, "padrao-3": CorHex, "padrao-4": CorHex });
+export const CORES_PADRAO = {
+  "padrao-1": "#f72628",
+  "padrao-2": "#ff8d43",
+  "padrao-3": "#b3ccff",
+  "padrao-4": "#0ed3ff",
+} as const;
+export type Cores = z.infer<typeof Cores>;
+
+/** `null` vale `CORES_PADRAO`; compara sem diferenciar maiúsculas. */
+export function mesmasCores(a: Cores | null, b: Cores | null): boolean {
+  const x = a ?? CORES_PADRAO;
+  const y = b ?? CORES_PADRAO;
+  return PADROES.every((p) => x[p].toLowerCase() === y[p].toLowerCase());
+}
+
 /** Conteúdo de linha da escala sem item associado (convenção da revista). */
 export const CONTEUDO_VAZIO = "---";
 
@@ -174,10 +192,16 @@ export const LinhaEscala = z
     path: ["fim"],
   });
 
+/** Máximo de linhas por padrão (também limita quantas linhas um passo pode gerar). */
+export const MAX_LINHAS_PADRAO = 200;
+
+/** Intervalo mínimo entre níveis de um ano (gera as linhas vazias da régua). */
+export const Passo = z.int().min(1);
+
 /** Linhas de um padrão; sempre devolvidas em ordem decrescente de nível. */
 export const LinhasPadrao = z
   .array(LinhaEscala)
-  .max(50)
+  .max(MAX_LINHAS_PADRAO)
   .transform((linhas) => [...linhas].sort((a, b) => b.level - a.level));
 
 /** Escala de um descritor; padrões ausentes valem lista vazia. */
@@ -211,6 +235,7 @@ export const AnoProjeto = z.strictObject({
   ano: Ano,
   scaleRange: ScaleRange,
   cortes: Cortes,
+  passo: Passo.optional(),
   descritores: z.array(Descritor),
 });
 
@@ -261,18 +286,39 @@ export function problemasDasLinhas(
   ]);
 }
 
+/** Níveis gerados por um passo, crescentes: `min + k·passo < max`. */
+export function niveisDoPasso(faixa: Faixa, passo: number): number[] {
+  const niveis: number[] = [];
+  for (let n = faixa.min; n < faixa.max; n += passo) niveis.push(n);
+  return niveis;
+}
+
+export function problemasDoPasso(passo: number | undefined, faixa: Faixa): Problema[] {
+  if (passo === undefined) return [];
+  // conta sem montar o array: passo 1 numa faixa enorme não pode travar a validação
+  const total = Math.ceil((faixa.max - faixa.min) / passo);
+  return total > MAX_LINHAS_PADRAO
+    ? [{ campo: "passo", erro: `Intervalo pequeno demais: geraria ${total} linhas` }]
+    : [];
+}
+
 /** Valida um ano inteiro: cortes na faixa, códigos únicos e todos os níveis na faixa. */
 export function problemasDoAno(ano: AnoProjeto): Problema[] {
-  const problemas = problemasDosCortes(ano.cortes, ano.scaleRange);
+  const problemas = [
+    ...problemasDosCortes(ano.cortes, ano.scaleRange),
+    ...problemasDoPasso(ano.passo, ano.scaleRange),
+  ];
   const vistos = new Set<string>();
   for (const d of ano.descritores) {
     if (vistos.has(d.codigo))
       problemas.push({ campo: `descritores.${d.codigo}`, erro: "Código repetido no ano" });
     vistos.add(d.codigo);
-    for (const p of PADROES)
-      problemas.push(
-        ...problemasDasLinhas(d.scale[p], ano.scaleRange, `descritores.${d.codigo}.scale.${p}`),
-      );
+    for (const p of PADROES) {
+      const campo = `descritores.${d.codigo}.scale.${p}`;
+      if (d.scale[p].length > MAX_LINHAS_PADRAO)
+        problemas.push({ campo, erro: `No máximo ${MAX_LINHAS_PADRAO} linhas por padrão` });
+      problemas.push(...problemasDasLinhas(d.scale[p], ano.scaleRange, campo));
+    }
   }
   return problemas;
 }
@@ -286,6 +332,31 @@ export function padraoDoNivel(level: number, cortes: Cortes): Padrao {
   if (level >= cortes["padrao-2"]) return "padrao-3";
   if (level >= cortes["padrao-1"]) return "padrao-2";
   return "padrao-1";
+}
+
+/** Escala nova com uma linha vazia por nível do passo que ainda não existe em nenhum padrão. */
+export function linhasVaziasDoPasso(
+  ano: Pick<AnoProjeto, "scaleRange" | "cortes" | "passo">,
+  escala: Escala,
+): Escala {
+  const { passo, scaleRange, cortes } = ano;
+  if (passo === undefined) return escala;
+  const existentes = new Set(PADROES.flatMap((p) => escala[p].map((l) => l.level)));
+  const nova: Escala = {
+    "padrao-1": [...escala["padrao-1"]],
+    "padrao-2": [...escala["padrao-2"]],
+    "padrao-3": [...escala["padrao-3"]],
+    "padrao-4": [...escala["padrao-4"]],
+  };
+  for (const level of niveisDoPasso(scaleRange, passo))
+    if (!existentes.has(level))
+      nova[padraoDoNivel(level, cortes)].push({
+        level,
+        fim: Math.min(level + passo, scaleRange.max),
+        content: CONTEUDO_VAZIO,
+      });
+  for (const p of PADROES) nova[p].sort((a, b) => b.level - a.level);
+  return nova;
 }
 
 // ==========================================
@@ -348,15 +419,20 @@ export const PaginaTextos = z.strictObject(
 export type RevistaAno = {
   scaleRange: ScaleRange;
   cortes: Cortes;
-} & { [codigo: string]: z.output<typeof DescritorCampos> | ScaleRange | Cortes };
+  passo?: number;
+} & { [codigo: string]: z.output<typeof DescritorCampos> | ScaleRange | Cortes | number | undefined };
 
 export const RevistaAno: z.ZodType<RevistaAno, unknown> = z
   .record(z.string(), z.unknown())
   .transform((ano, ctx) => {
-    const { scaleRange, cortes, ...descritores } = ano;
+    const { scaleRange, cortes, passo, ...descritores } = ano;
     const base = z
-      .object({ scaleRange: ScaleRange, cortes: Cortes.default(() => ({ ...CORTES_PADRAO })) })
-      .safeParse({ scaleRange, cortes });
+      .object({
+        scaleRange: ScaleRange,
+        cortes: Cortes.default(() => ({ ...CORTES_PADRAO })),
+        passo: Passo.optional(),
+      })
+      .safeParse({ scaleRange, cortes, passo });
     if (!base.success) {
       for (const i of base.error.issues) ctx.addIssue({ ...i, code: "custom", message: i.message });
       return z.NEVER;
@@ -429,17 +505,26 @@ export const CriarProjetoEntrada = z.strictObject({
 });
 
 export const AtualizarProjetoEntrada = z
-  .strictObject({ slug: Slug.optional(), nome: texto(120).min(1).optional() })
+  .strictObject({
+    slug: Slug.optional(),
+    nome: texto(120).min(1).optional(),
+    cores: Cores.nullable().optional(), // null restaura o padrão
+  })
   .refine((v) => Object.keys(v).length > 0, naoVazio);
 
 export const CriarAnoEntrada = z.strictObject({
   ano: Ano,
   scaleRange: ScaleRange.default({ ...FAIXA_PADRAO }),
   cortes: Cortes.default({ ...CORTES_PADRAO }),
+  passo: Passo.optional(),
 });
 
 export const AtualizarAnoEntrada = z
-  .strictObject({ scaleRange: ScaleRange.optional(), cortes: Cortes.optional() })
+  .strictObject({
+    scaleRange: ScaleRange.optional(),
+    cortes: Cortes.optional(),
+    passo: Passo.nullable().optional(), // null remove o passo
+  })
   .refine((v) => Object.keys(v).length > 0, naoVazio);
 
 export const CriarDescritorEntrada = Descritor;
@@ -487,6 +572,7 @@ export const ProjetoResumo = z.strictObject({
   cadernos: z.array(z.strictObject({ id: Caderno, anos: z.array(Ano) })),
   atualizadoEm: z.iso.datetime(),
   bloqueio: BloqueioPublico.nullable(),
+  cores: Cores.nullable(), // null = CORES_PADRAO
 });
 
 export const Projeto = z.strictObject({
@@ -496,6 +582,7 @@ export const Projeto = z.strictObject({
   /** Na ordem de CADERNOS. */
   cadernos: z.array(CadernoProjeto),
   bloqueio: BloqueioPublico.nullable(),
+  cores: Cores.nullable(), // null = CORES_PADRAO
   criadoEm: z.iso.datetime(),
   atualizadoEm: z.iso.datetime(),
 });

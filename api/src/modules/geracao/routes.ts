@@ -1,7 +1,9 @@
 import { ZipArchive } from "archiver";
 import { Router, type NextFunction, type Response } from "express";
 import { naoEncontrado } from "../../errors.js";
-import { montarPacote } from "./service.js";
+import { obterProjeto, paraCadernos, paraCores } from "../projetos/repository.js";
+import { planilhasDoCaderno } from "../planilhas/service.js";
+import { montarPacote, type ArquivoPacote } from "./service.js";
 
 /**
  * Montado em /api/projetos/:slug (já atrás de requireAuth). DONO: A7.
@@ -45,9 +47,13 @@ geracaoRouter.get("/preview/*arquivo", (req, res, next) => {
   return servir(slugDe(req.params), partes.join("/"), res, next);
 });
 
-geracaoRouter.get("/pacote.zip", async (req, res, next) => {
-  const slug = slugDe(req.params);
-  const arquivos = await montarPacote(slug);
+/** Zipa `arquivos` na resposta; erro depois do primeiro byte derruba a conexão. */
+async function enviarZip(
+  res: Response,
+  nome: string,
+  arquivos: ArquivoPacote[],
+  next: NextFunction,
+) {
   const zip = new ZipArchive();
   zip.on("error", (erro) => {
     if (res.headersSent) res.destroy(erro);
@@ -59,9 +65,28 @@ geracaoRouter.get("/pacote.zip", async (req, res, next) => {
   res.on("close", () => zip.destroy());
   res.set({
     "Content-Type": "application/zip",
-    "Content-Disposition": `attachment; filename="${slug}.zip"`,
+    "Content-Disposition": `attachment; filename="${nome}"`,
   });
   zip.pipe(res);
   for (const a of arquivos) zip.append(a.abrir(), { name: a.caminho });
   await zip.finalize();
+}
+
+geracaoRouter.get("/pacote.zip", async (req, res, next) => {
+  const slug = slugDe(req.params);
+  await enviarZip(res, `${slug}.zip`, await montarPacote(slug), next);
+});
+
+/** Só as planilhas, como `<caderno>/<nomePlanilha>`. */
+geracaoRouter.get("/planilhas.zip", async (req, res, next) => {
+  const slug = slugDe(req.params);
+  const projeto = await obterProjeto(slug);
+  const cores = paraCores(projeto);
+  const arquivos = paraCadernos(projeto).flatMap((caderno) =>
+    planilhasDoCaderno({ nome: projeto.nome, cores }, caderno).map((p) => ({
+      ...p,
+      caminho: `${caderno.id}/${p.caminho}`,
+    })),
+  );
+  await enviarZip(res, `${slug}-planilhas.zip`, arquivos, next);
 });

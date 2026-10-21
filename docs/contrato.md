@@ -89,7 +89,7 @@ O identificador na URL é o **`slug`**: minúsculas, números e hífen, até 60 
 | GET | `/projetos` | — | 200 `ProjetoResumo[]` (ordem por nome) |
 | POST | `/projetos` | `CriarProjetoEntrada` `{slug, nome, disciplinas: Disciplina[] (≥1), origem}` | 201 `Projeto` (com bloqueio do criador) · 400 caderno faltando · 404 origem · 409 slug |
 | GET | `/projetos/:slug` | — | 200 `Projeto` |
-| PATCH 🔒 | `/projetos/:slug` | `AtualizarProjetoEntrada` `{slug?, nome?}` | 200 `Projeto` · 409 slug |
+| PATCH 🔒 | `/projetos/:slug` | `AtualizarProjetoEntrada` `{slug?, nome?, cores?}` | 200 `Projeto` · 409 slug |
 | DELETE 🔒 | `/projetos/:slug` | — | 204 |
 | GET | `/projetos/:slug/cadernos/:caderno/revista` | — | 200 `Revista` do caderno (Exportar JSON) · 404 caderno |
 
@@ -97,6 +97,8 @@ O identificador na URL é o **`slug`**: minúsculas, números e hífen, até 60 
 - `{tipo: "vazio", anos?: Ano[]}`: cada caderno recebe esses anos sem descritores, faixa 0–500 e cortes 125/250/375. Sem `anos`, cria `ANOS_PADRAO` (5ef, 9ef e 3em).
 - `{tipo: "importar", cadernos: {[caderno]?: Revista}}`: uma `Revista` por caderno marcado; faltando → 400 `campo: "origem.cadernos.<caderno>"`. Aceita o `descritores.json` antigo e a saída do extrator (sem `cortes`/`pagina`). A página vem da primeira revista (na ordem de `CADERNOS`) que tiver `pagina` (`PaginaTextos`: só textos, sem `null`). Problemas de domínio → 400 com `campo` prefixado `<caderno>.<ano>.`.
 - `{tipo: "copiar", de: slug}`: copia página, imagens e os cadernos marcados; se a origem não tem um deles → 400 `campo: "disciplinas"`.
+
+**Cores dos padrões:** `Projeto.cores` e `ProjetoResumo.cores` são `Cores | null` (`{"padrao-1".."padrao-4": "#rrggbb"}`); `null` = `CORES_PADRAO` (`#f72628`, `#ff8d43`, `#b3ccff`, `#0ed3ff`). O `PATCH` com `cores` troca as quatro; `cores: null` restaura o padrão. A revista (preview e zip) e as planilhas usam as cores do projeto. `origem: copiar` herda as cores da origem; importar e criar vazio começam em `null`.
 
 **Exclusão:** é lógica (`excluidoEm`) e libera o slug para reuso. Os dados continuam no banco.
 
@@ -123,8 +125,11 @@ Chave `<n>ef` (1 a 9) ou `<n>em` (1 a 3), ex.: `2ef`, `5ef`, `3em`. Rótulos ger
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|
 | POST 🔒 | `/projetos/:slug/cadernos/:caderno/anos` | `CriarAnoEntrada` `{ano, scaleRange?, cortes?}` | 201 `AnoProjeto` · 409 |
-| PATCH 🔒 | `/projetos/:slug/cadernos/:caderno/anos/:ano` | `AtualizarAnoEntrada` `{scaleRange?, cortes?}` | 200 `AnoProjeto` · 400 |
+| PATCH 🔒 | `/projetos/:slug/cadernos/:caderno/anos/:ano` | `AtualizarAnoEntrada` `{scaleRange?, cortes?, passo?}` (`passo: null` remove) | 200 `AnoProjeto` · 400 |
+| POST 🔒 | `/projetos/:slug/cadernos/:caderno/anos/:ano/gerar-linhas` | — | 200 `AnoProjeto` · 400 sem `passo` |
 | DELETE 🔒 | `/projetos/:slug/cadernos/:caderno/anos/:ano` | — | 204 · 400 se for o último ano do caderno |
+
+**`passo`** (opcional em `AnoProjeto` e `RevistaAno`): intervalo mínimo entre níveis, inteiro ≥ 1 (`Passo`). Sem `passo` o ano segue com níveis manuais, como antes; JSON sem `passo` importa como hoje. A régua da revista e as planilhas usam sempre os níveis das linhas guardadas; os níveis `min + k·passo < max` só aparecem ali depois de virarem linhas, ao chamar `gerar-linhas` ou ao criar um descritor num ano que já tem `passo`. `gerar-linhas` acrescenta uma linha vazia por nível do passo que ainda não existe em nenhum padrão (`linhasVaziasDoPasso`), em cada descritor, sem mexer nas linhas existentes. Um passo que gere mais de `MAX_LINHAS_PADRAO` (200) linhas → 400 `campo: "passo"`.
 
 ### Descritores
 
@@ -157,8 +162,11 @@ Chave `<n>ef` (1 a 9) ou `<n>em` (1 a 3), ex.: `2ef`, `5ef`, `3em`. Rótulos ger
 | GET | `/projetos/:slug/preview/<caderno>/index.html` | 200 `text/html` (revista do caderno) |
 | GET | `/projetos/:slug/preview/<caderno>/styles.css` · `…/script.js` · `…/assets/:nome` · `…/arquivos/:nome` | 200 arquivo |
 | GET | `/projetos/:slug/pacote.zip` | 200 `application/zip`, `Content-Disposition: attachment; filename="<slug>.zip"` |
+| GET | `/projetos/:slug/planilhas.zip` | 200 `application/zip`, `Content-Disposition: attachment; filename="<slug>-planilhas.zip"`; leitura, sem bloqueio |
 
-Conteúdo do zip: `index.html` (índice com `<a href="<caderno>/index.html">rotuloCaderno</a>`) e uma pasta por caderno com `index.html`, `styles.css`, `script.js`, `assets/` (setas SVG fixas do template) e `arquivos/<imagens>`. Mesmo com 1 caderno a estrutura é a mesma. A página (textos/imagens) é repetida em cada pasta. Abre com duplo clique (`file://`), sem servidor.
+Conteúdo do zip: `index.html` (índice com `<a href="<caderno>/index.html">rotuloCaderno</a>`) e uma pasta por caderno com `index.html`, `styles.css`, `script.js`, `assets/` (setas SVG fixas do template) e `arquivos/<imagens>`. Mesmo com 1 caderno a estrutura é a mesma. A página (textos/imagens) é repetida em cada pasta. Abre com duplo clique (`file://`), sem servidor. Cada pasta de caderno também leva `planilhas/<nomePlanilha>.xlsx`, uma por etapa.
+
+`planilhas.zip` traz só as planilhas, como `<caderno>/<nomePlanilha>` (ex.: `lingua-portuguesa/São Paulo - LP 5EF.xlsx`), no formato do núcleo de impressão: aba `Níveis` e aba da escala com as cores do projeto.
 
 ## Extração de PDF — `/api/extracao`
 

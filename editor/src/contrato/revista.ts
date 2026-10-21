@@ -14,7 +14,7 @@ import {
   type RevistaAno,
 } from "./schemas.js";
 
-const CHAVES_DO_ANO = new Set(["scaleRange", "cortes"]);
+const CHAVES_DO_ANO = new Set(["scaleRange", "cortes", "passo"]);
 
 /** Revista (já validada pelo schema Revista) → anos do projeto, em ordem compararAnos (EF → EM). */
 export function anosDaRevista(revista: Revista): AnoProjeto[] {
@@ -33,6 +33,7 @@ export function anosDaRevista(revista: Revista): AnoProjeto[] {
         ano,
         scaleRange: dados.scaleRange,
         cortes: dados.cortes ?? { ...CORTES_PADRAO },
+        ...(dados.passo !== undefined && { passo: dados.passo }),
         descritores,
       },
     ];
@@ -54,8 +55,9 @@ export function textosDaPagina(pagina: PaginaQualquer): PaginaTextos {
 /** Anos do projeto → formato da revista (exportar JSON e bloco #dados-revista). */
 export function revistaDosAnos(anos: readonly AnoProjeto[], pagina: PaginaQualquer): Revista {
   const revista: Record<string, unknown> = { pagina: textosDaPagina(pagina) };
-  for (const { ano, scaleRange, cortes, descritores } of anos) {
+  for (const { ano, scaleRange, cortes, passo, descritores } of anos) {
     const dados: Record<string, unknown> = { scaleRange, cortes };
+    if (passo !== undefined) dados.passo = passo;
     for (const { codigo, ...campos } of [...descritores].sort((a, b) =>
       a.codigo.localeCompare(b.codigo),
     ))

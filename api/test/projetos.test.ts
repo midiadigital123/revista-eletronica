@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import { HEADER_SESSAO_EDICAO } from "../src/contrato/schemas.js";
+import { CORES_PADRAO, HEADER_SESSAO_EDICAO } from "../src/contrato/schemas.js";
+import { ProjetoModel } from "../src/modules/projetos/model.js";
 import { agenteLogado, usarApp } from "./helpers.js";
 
 // copiarImagens é do A5b; aqui só importa que a página copiada chegue ao projeto novo.
@@ -213,9 +214,7 @@ describe("projetos", () => {
       ["lingua-portuguesa", ["2ef:8", "5ef:15"]],
       ["matematica", ["2ef:33", "5ef:28"]],
     ]);
-    const mt = await agente
-      .get("/api/projetos/alfa/cadernos/matematica/revista")
-      .expect(200);
+    const mt = await agente.get("/api/projetos/alfa/cadernos/matematica/revista").expect(200);
     expect(mt.body["2ef"].D01).toEqual(saidaMt["2ef"].D01);
   });
 
@@ -385,6 +384,72 @@ describe("projetos", () => {
         origem: { tipo: "vazio" },
       })
       .expect(201);
+  });
+});
+
+describe("cores", () => {
+  const verdes = {
+    "padrao-1": "#006400",
+    "padrao-2": "#228b22",
+    "padrao-3": "#90ee90",
+    "padrao-4": "#98fb98",
+  };
+
+  it("PATCH cores grava, GET devolve, null restaura", async () => {
+    const { agente } = await comProjeto();
+    expect((await agente.get("/api/projetos/sp").expect(200)).body.cores).toBeNull();
+    const r = await agente.patch("/api/projetos/sp").send({ cores: verdes }).expect(200);
+    expect(r.body.cores).toEqual(verdes);
+    expect((await agente.get("/api/projetos/sp").expect(200)).body.cores).toEqual(verdes);
+    const lista = await agente.get("/api/projetos").expect(200);
+    expect(lista.body[0].cores).toEqual(verdes);
+    const volta = await agente.patch("/api/projetos/sp").send({ cores: null }).expect(200);
+    expect(volta.body.cores).toBeNull();
+    expect((await agente.get("/api/projetos/sp").expect(200)).body.cores).toBeNull();
+  });
+
+  it("copiar projeto herda as cores por valor", async () => {
+    const { agente } = await comProjeto();
+    await agente.patch("/api/projetos/sp").send({ cores: verdes }).expect(200);
+    const r = await agente
+      .post("/api/projetos")
+      .send({
+        slug: "rj",
+        nome: "RJ",
+        disciplinas: ["lingua-portuguesa"],
+        origem: { tipo: "copiar", de: "sp" },
+      })
+      .expect(201);
+    expect(r.body.cores).toEqual(verdes);
+    await agente.patch("/api/projetos/sp").send({ cores: CORES_PADRAO }).expect(200);
+    expect((await agente.get("/api/projetos/rj").expect(200)).body.cores).toEqual(verdes);
+  });
+
+  it("projeto gravado sem o campo cores devolve cores null", async () => {
+    const { agente } = await agenteLogado(ctx.app);
+    const agora = new Date();
+    await ProjetoModel.collection.insertOne({
+      slug: "antigo",
+      nome: "Antigo",
+      pagina: {},
+      cadernos: [],
+      bloqueio: null,
+      excluidoEm: null,
+      slugOriginal: null,
+      criadoEm: agora,
+      atualizadoEm: agora,
+      __v: 0,
+    });
+    const r = await agente.get("/api/projetos/antigo").expect(200);
+    expect(r.body.cores).toBeNull();
+  });
+
+  it("PATCH com cor inválida → 400", async () => {
+    const { agente } = await comProjeto();
+    await agente
+      .patch("/api/projetos/sp")
+      .send({ cores: { ...verdes, "padrao-1": "verde" } })
+      .expect(400);
   });
 });
 
@@ -602,6 +667,66 @@ describe("descritores", () => {
   });
 });
 
+describe("passo e linhas vazias", () => {
+  const contar = (d: { scale: Record<string, unknown[]> }) =>
+    Object.values(d.scale).reduce((n, l) => n + l.length, 0);
+
+  it("PATCH passo e gerar-linhas: 20 linhas no 5ef, texto preservado, idempotente", async () => {
+    const { agente } = await comDescritor();
+    const p = await agente.patch(`${LP}/anos/5ef`).send({ passo: 25 }).expect(200);
+    expect(p.body.passo).toBe(25);
+    const g = await agente.post(`${LP}/anos/5ef/gerar-linhas`).expect(200);
+    const d = g.body.descritores[0];
+    expect(contar(d)).toBe(20);
+    expect(d.scale["padrao-1"].find((l: { level: number }) => l.level === 50).content).toBe("a");
+    const g2 = await agente.post(`${LP}/anos/5ef/gerar-linhas`).expect(200);
+    expect(contar(g2.body.descritores[0])).toBe(20);
+  });
+
+  it("descritor novo em ano com passo já nasce com as linhas vazias", async () => {
+    const { agente } = await comProjeto();
+    await agente.patch(`${LP}/anos/5ef`).send({ passo: 25 }).expect(200);
+    const r = await agente.post(`${LP}/anos/5ef/descritores`).send({ codigo: "D02" }).expect(201);
+    expect(contar(r.body)).toBe(20);
+    expect(
+      Object.values(r.body.scale)
+        .flat()
+        .every((l) => (l as { content: string }).content === "---"),
+    ).toBe(true);
+  });
+
+  it("gerar-linhas que estoura 200 linhas num padrão → 400", async () => {
+    const { agente } = await comProjeto();
+    const manuais = Array.from({ length: 190 }, (_, i) => ({
+      level: 1 + i + Math.floor(i / 2),
+      content: "m",
+    })); // não múltiplos de 3
+    await agente
+      .post(`${LP}/anos/5ef/descritores`)
+      .send({
+        codigo: "D01",
+        scale: { "padrao-1": manuais, "padrao-2": [], "padrao-3": [], "padrao-4": [] },
+      })
+      .expect(201);
+    await agente.patch(`${LP}/anos/5ef`).send({ passo: 3 }).expect(200);
+    const r = await agente.post(`${LP}/anos/5ef/gerar-linhas`).expect(400);
+    expect(r.body.campo).toBe("descritores.D01.scale.padrao-1");
+  });
+
+  it("gerar-linhas sem passo → 400 no campo passo", async () => {
+    const { agente } = await comDescritor();
+    const r = await agente.post(`${LP}/anos/5ef/gerar-linhas`).expect(400);
+    expect(r.body.campo).toBe("passo");
+  });
+
+  it("passo: null remove o passo", async () => {
+    const { agente } = await comProjeto();
+    await agente.patch(`${LP}/anos/5ef`).send({ passo: 25 }).expect(200);
+    const r = await agente.patch(`${LP}/anos/5ef`).send({ passo: null }).expect(200);
+    expect(r.body.passo).toBeUndefined();
+  });
+});
+
 describe("bloqueio nas rotas de escrita", () => {
   const escritas: [string, string, object?][] = [
     ["patch", "/api/projetos/sp", { nome: "x" }],
@@ -614,6 +739,7 @@ describe("bloqueio nas rotas de escrita", () => {
     ["patch", D01, { topic: "x" }],
     ["delete", D01],
     ["put", `${D01}/escala/padrao-1`, []],
+    ["post", `${LP}/anos/5ef/gerar-linhas`],
   ];
 
   const enviar = (agente: Agente, metodo: string, url: string, corpo?: object, aba?: string) => {

@@ -8,6 +8,7 @@ import { BLOQUEIO_HEARTBEAT_MS, BLOQUEIO_INATIVIDADE_MS, type Projeto } from "..
 import { bloquearPorOutro, mockDb, resetarMockDb } from "../mocks/db";
 import extracaoFixture from "../mocks/extracao.json";
 import { servidorMock } from "../mocks/server";
+import { esquemasDeCores, estiloCores } from "./CoresPadroes";
 import { renderizarRota } from "../test/renderizar";
 
 const ANA = "000000000000000000000002";
@@ -201,6 +202,12 @@ describe("casca do projeto", () => {
     expect(mockDb.projetos.has("exemplo-novo")).toBe(true);
     expect(await screen.findByText(/Salvo às/)).toBeInTheDocument();
     expect(screen.getByText("Editando")).toBeInTheDocument();
+  });
+
+  it("botão Exportar planilhas aponta para planilhas.zip", async () => {
+    await abrirEditando();
+    const link = await screen.findByRole("link", { name: "Exportar planilhas" });
+    expect(link.getAttribute("href")).toMatch(/\/planilhas\.zip$/);
   });
 
   it("exclui com confirmação e volta para a lista", async () => {
@@ -437,5 +444,119 @@ describe("aba Página", () => {
     await user.upload(await screen.findByLabelText("Imagem do topo"), grande);
     expect(await screen.findByText("A imagem passa de 5 MB.")).toBeInTheDocument();
     expect(mockDb.projetos.get("exemplo")!.pagina.heroImagem).toBeUndefined();
+  });
+});
+
+describe("cores dos padrões", () => {
+  /** Corpos enviados a PATCH /api/projetos/exemplo. */
+  function capturarPatch() {
+    const corpos: unknown[] = [];
+    servidorMock.events.on("request:start", ({ request }) => {
+      if (request.method === "PATCH" && new URL(request.url).pathname === "/api/projetos/exemplo")
+        void request
+          .clone()
+          .json()
+          .then((c) => corpos.push(c));
+    });
+    return corpos;
+  }
+  const VERDE = {
+    "padrao-1": "#006400",
+    "padrao-2": "#228b22",
+    "padrao-3": "#90ee90",
+    "padrao-4": "#00ff7f",
+  };
+  const abrirDialogo = async (user: ReturnType<typeof userEvent.setup>) => {
+    await abrirEditando();
+    await user.click(screen.getByRole("button", { name: "Cores" }));
+    return screen.findByRole("dialog", { name: "Cores dos padrões" });
+  };
+
+  it("salva as 4 cores do diálogo", async () => {
+    const user = userEvent.setup();
+    const corpos = capturarPatch();
+    const dialogo = await abrirDialogo(user);
+    for (const [i, hex] of Object.values(VERDE).entries()) {
+      const campo = within(dialogo).getByLabelText(`Padrão 0${i + 1}`);
+      await user.clear(campo);
+      await user.type(campo, hex);
+    }
+    await user.click(within(dialogo).getByRole("button", { name: "Salvar" }));
+    await waitFor(() => expect(corpos).toEqual([{ cores: VERDE }]));
+    expect(mockDb.projetos.get("exemplo")!.cores).toEqual(VERDE);
+  });
+
+  it("Usar esquema de outro projeto preenche as 4 cores", async () => {
+    const user = userEvent.setup();
+    mockDb.projetos.set("rj", {
+      ...mockDb.projetos.get("exemplo")!,
+      slug: "rj",
+      nome: "RJ",
+      cores: VERDE,
+    });
+    const dialogo = await abrirDialogo(user);
+    await user.selectOptions(within(dialogo).getByLabelText("Usar esquema de…"), "RJ");
+    Object.values(VERDE).forEach((hex, i) =>
+      expect(within(dialogo).getByLabelText(`Padrão 0${i + 1}`)).toHaveValue(hex),
+    );
+  });
+
+  it("Restaurar padrão envia cores null", async () => {
+    const user = userEvent.setup();
+    mockDb.projetos.get("exemplo")!.cores = VERDE;
+    const corpos = capturarPatch();
+    const dialogo = await abrirDialogo(user);
+    await user.click(within(dialogo).getByRole("button", { name: "Restaurar padrão" }));
+    await waitFor(() => expect(corpos).toEqual([{ cores: null }]));
+    expect(mockDb.projetos.get("exemplo")!.cores).toBeNull();
+  });
+
+  it("hex inválido mostra erro e não salva", async () => {
+    const user = userEvent.setup();
+    const corpos = capturarPatch();
+    const dialogo = await abrirDialogo(user);
+    const campo = within(dialogo).getByLabelText("Padrão 02");
+    await user.clear(campo);
+    await user.type(campo, "laranja");
+    await user.click(within(dialogo).getByRole("button", { name: "Salvar" }));
+    expect(await within(dialogo).findByText("Use uma cor no formato #rrggbb")).toBeInTheDocument();
+    expect(campo).toHaveAccessibleDescription("Use uma cor no formato #rrggbb");
+    expect(corpos).toEqual([]);
+  });
+});
+
+describe("helpers de cores", () => {
+  it("estiloCores calcula o -bg a 10% e null não define nada", () => {
+    expect(estiloCores(null)).toEqual({});
+    const e = estiloCores({
+      "padrao-1": "#f72628",
+      "padrao-2": "#ff8d43",
+      "padrao-3": "#b3ccff",
+      "padrao-4": "#0ed3ff",
+    }) as Record<string, string>;
+    expect(e["--color-padrao-1"]).toBe("#f72628");
+    expect(e["--color-padrao-1-bg"]).toBe("rgba(247, 38, 40, 0.1)");
+  });
+
+  it("esquemasDeCores agrupa iguais, ignora o atual e os sem cores", () => {
+    const verde = {
+      "padrao-1": "#006400",
+      "padrao-2": "#228b22",
+      "padrao-3": "#90ee90",
+      "padrao-4": "#00ff7f",
+    };
+    const r = (slug: string, nome: string, cores: typeof verde | null) =>
+      ({ slug, nome, cores, cadernos: [], atualizadoEm: "", bloqueio: null }) as never;
+    expect(
+      esquemasDeCores(
+        [
+          r("a", "A", verde),
+          r("b", "B", { ...verde, "padrao-1": "#006400".toUpperCase() }),
+          r("c", "C", null),
+          r("d", "D", verde),
+        ],
+        "d",
+      ),
+    ).toEqual([{ rotulo: "A, B", cores: verde }]);
   });
 });
