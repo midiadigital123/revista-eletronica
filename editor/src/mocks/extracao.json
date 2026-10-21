@@ -1,0 +1,665 @@
+{
+  "disciplinas": {
+    "lingua-portuguesa": {
+      "2ef": {
+        "scaleRange": {
+          "min": 0,
+          "max": 1000
+        },
+        "cortes": {
+          "padrao-1": 350,
+          "padrao-2": 400,
+          "padrao-3": 500
+        },
+        "D01": {
+          "topic": "",
+          "description": "Relacionar elementos sonoros das palavras com sua representação escrita.",
+          "prerequisites": [
+            "Compreender e produzir frases oralmente.",
+            "Perceber diferenças e semelhanças sonoras entre palavras.",
+            "Identificar e segmentar palavras em sílabas.",
+            "Reconhecer rimas e aliterações.",
+            "Perceber sons iniciais e finais das palavras.",
+            "Identificar fonemas em palavras simples.",
+            "Reconhecer letras do alfabeto.",
+            "Diferenciar letras de números e outros símbolos.",
+            "Entender que a escrita representa a fala.",
+            "Conhecer a relação básica entre letras e sons.",
+            "Demonstrar tentativa de correspondência entre fala e escrita.",
+            "Ser capaz de produzir escritas espontâneas.",
+            "Traçar letras e palavras de forma legível."
+          ],
+          "bncc": {
+            "practices": "Análise linguística/semiótica (Alfabetização)",
+            "knowledge": "Construção do sistema alfabético e da ortografia",
+            "skills": [
+              "EF01LP05, EF01LP07, EF01LP07, EF02LP03, EF02LP04",
+              "(EF01LP08) Relacionar elementos sonoros (sílabas, fonemas, partes de palavras) com sua representação escrita."
+            ]
+          },
+          "scale": {
+            "padrao-1": [],
+            "padrao-2": [
+              {
+                "level": 390,
+                "content": "Reconhecer a sílaba inicial de palavras dissílabas (canônicas e nasais) a partir de ditado e imagens."
+              }
+            ],
+            "padrao-3": [
+              {
+                "level": 446,
+                "content": "Identificar a letra inicial em palavras trissílabas complexas (com dígrafos) e relacioná-la a letras iniciais de outras palavras."
+              }
+            ],
+            "padrao-4": [
+              {
+                "level": 782,
+                "content": "Reconhecer o som da letra \"C\" inicial em polissílabas, associando-o aos fonemas /s/ ou /k/ conforme o contexto."
+              },
+              {
+                "level": 732,
+                "content": "Reconhecer o som da letra \"N\" inicial ou em situações de nasalização de vogal e composição de dígrafo (nh)."
+              },
+              {
+                "level": 675,
+                "content": "Identificar o som da letra \"S\" intervocálica (fonema /z/) em diferentes posições na palavra."
+              },
+              {
+                "level": 616,
+                "content": "Reconhecer a sílaba medial em palavras trissílabas que contêm dígrafos (gu, nh) ou fonemas nasais."
+              },
+              {
+                "level": 556,
+                "content": "Identificar a sílaba final (com ditongos) em dissílabas e a sílaba medial em trissílabas com estruturas CVC ou dígrafos."
+              },
+              {
+                "level": 503,
+                "content": "Reconhecer o som da letra \"G\" inicial em palavras polissílabas, diferenciando os fonemas /ʒ/ e /g/."
+              }
+            ]
+          }
+        },
+        "D02": {
+          "topic": "",
+          "description": "Ler palavras.",
+          "prerequisites": [
+            "Identificar e segmentar palavras em sílabas.",
+            "Reconhecer sons iniciais, mediais e finais das palavras.",
+            "Relacionar fonemas aos grafemas correspondentes.",
+            "Reconhecer rimas e semelhanças sonoras.",
+            "Reconhecer e nomear letras do alfabeto.",
+            "Conhecer os valores sonoros das letras.",
+            "Compreender que a escrita representa a fala.",
+            "Reconhecer sílabas canônicas (CV) e outras estruturas frequentes (VC, CVC).",
+            "Realizar a correspondência grafema–fonema.",
+            "Juntar letras e sílabas para formar palavras."
+          ],
+          "bncc": {
+            "practices": "Leitura/escuta (compartilhada e autônoma)",
+            "knowledge": "Decodificação/Fluência de leitura",
+            "skills": [
+              "EF02LP03, EF02LP04, EF02LP05",
+              "(EF12LP01) Ler palavras novas com precisão na decodificação, no caso de palavras de uso frequente, ler globalmente, por memorização."
+            ]
+          },
+          "scale": {
+            "padrao-1": [],
+            "padrao-2": [
+              {
+                "level": 390,
+                "content": "Ler palavras dissílabas e trissílabas (canônicas e não canônicas) com fonemas simples."
+              }
+            ],
+            "padrao-3": [
+              {
+                "level": 446,
+                "content": "Ler palavras de variada extensão (dissílabas a polissílabas) com oposições fonêmicas (/z/ e /s/; /k/ e /g/)."
+              }
+            ],
+            "padrao-4": [
+              {
+                "level": 782,
+                "content": "---"
+              },
+              {
+                "level": 732,
+                "content": "---"
+              },
+              {
+                "level": 675,
+                "content": "Ler palavras com estruturas complexas, incluindo encontros consonantais, dígrafos e ditongos nasais."
+              },
+              {
+                "level": 556,
+                "content": "Ler palavras canônicas e não canônicas contendo ditongos e fonemas como /k/, /g/, /s/ e /∫/."
+              }
+            ]
+          }
+        }
+      },
+      "5ef": {
+        "scaleRange": {
+          "min": 0,
+          "max": 500
+        },
+        "cortes": {
+          "padrao-1": 150,
+          "padrao-2": 200,
+          "padrao-3": 250
+        },
+        "D01": {
+          "topic": "",
+          "description": "Localizar informações explícitas em um texto.",
+          "prerequisites": [
+            "Identificação de elementos básicos do texto.",
+            "Reconhecimento da estrutura e do gênero textual.",
+            "Localização de informações literais em textos curtos.",
+            "Compreensão da sequência lógica das ideias."
+          ],
+          "bncc": {
+            "practices": "Leitura/escuta (compartilhada e autônoma)",
+            "knowledge": "Estratégia de leitura",
+            "skills": [
+              "EF15LP02, EF15LP04",
+              "(EF15LP03) Localizar informações explícitas em textos."
+            ]
+          },
+          "scale": {
+            "padrao-1": [
+              {
+                "level": 125,
+                "content": "Localizar informações em poemas narrativos."
+              },
+              {
+                "level": 100,
+                "content": "Localizar informações em frases, em bilhetes curtos e em versos."
+              }
+            ],
+            "padrao-2": [
+              {
+                "level": 175,
+                "content": "Localizar informação explícita em contos, reportagens e fábulas. Localizar informação explícita em propagandas com ou sem apoio de recursos gráficos e em instruções de jogo."
+              },
+              {
+                "level": 150,
+                "content": "Localizar informação explícita em contos, em receitas e textos informativos curtos."
+              }
+            ],
+            "padrao-3": [
+              {
+                "level": 225,
+                "content": "Identificar informação explícita em letras de música e contos."
+              },
+              {
+                "level": 200,
+                "content": "Identificar informação explícita em sinopses e receitas culinárias."
+              }
+            ],
+            "padrao-4": [
+              {
+                "level": 450,
+                "content": "---"
+              },
+              {
+                "level": 425,
+                "content": "---"
+              },
+              {
+                "level": 400,
+                "content": "---"
+              },
+              {
+                "level": 375,
+                "content": "---"
+              },
+              {
+                "level": 350,
+                "content": "---"
+              },
+              {
+                "level": 325,
+                "content": "---"
+              },
+              {
+                "level": 300,
+                "content": "---"
+              },
+              {
+                "level": 275,
+                "content": "---"
+              },
+              {
+                "level": 250,
+                "content": "Identificar opinião em reportagens, biografias e informação explícita em fábulas, contos, crônicas e reportagens. Identificar informação explícita em reportagens com ou sem o auxílio de recursos gráficos."
+              }
+            ]
+          }
+        },
+        "D02": {
+          "topic": "",
+          "description": "Estabelecer relações entre partes de um texto, identificando repetições ou substituições que contribuem para a continuidade de um texto.",
+          "prerequisites": [
+            "Reconhecer sequência e repetição de palavras que mantêm o tema.",
+            "Perceber repetições e substituições simples (pronomes).",
+            "Compreender o papel da coesão referencial e conectivos simples.",
+            "Analisar substituições e conectivos que mantêm continuidade.",
+            "Consolidar o uso consciente dos recursos coesivos."
+          ],
+          "bncc": {
+            "practices": "Leitura/escuta (compartilhada e autônoma)",
+            "knowledge": "Estratégia de leitura",
+            "skills": [
+              "EF35LP08, EF35LP14, EF05LP27",
+              "(EF35LP06) Recuperar relações entre partes de um texto, identificando substituições lexicais (de substantivos por sinônimos) ou pronominais (uso de pronomes anafóricos – pessoais, possessivos, demonstrativos) que contribuem para a continuidade do texto."
+            ]
+          },
+          "scale": {
+            "padrao-1": [
+              {
+                "level": 125,
+                "content": "---"
+              },
+              {
+                "level": 100,
+                "content": "---"
+              }
+            ],
+            "padrao-2": [
+              {
+                "level": 175,
+                "content": "---"
+              },
+              {
+                "level": 150,
+                "content": "---"
+              }
+            ],
+            "padrao-3": [
+              {
+                "level": 225,
+                "content": "Reconhecer relação de causa e consequência e relação entre pronome e seu referente em tirinhas, contos e reportagens."
+              },
+              {
+                "level": 200,
+                "content": "Reconhecer relação de causa e consequência e relação entre pronomes e seus referentes em fábulas, poemas, contos, tirinhas e textos didáticos, além de reconhecer o referente de expressão adverbial em contos."
+              }
+            ],
+            "padrao-4": [
+              {
+                "level": 450,
+                "content": "---"
+              },
+              {
+                "level": 425,
+                "content": "---"
+              },
+              {
+                "level": 400,
+                "content": "---"
+              },
+              {
+                "level": 375,
+                "content": "---"
+              },
+              {
+                "level": 350,
+                "content": "---"
+              },
+              {
+                "level": 325,
+                "content": "---"
+              },
+              {
+                "level": 300,
+                "content": "Reconhecer relação de causa e consequência e relação entre pronomes e seus referentes em fábulas e reportagens."
+              },
+              {
+                "level": 275,
+                "content": "Reconhecer relação de causa e consequência e relação entre pronomes e seus referentes em fábulas, contos, crônicas e em textos didáticos."
+              },
+              {
+                "level": 250,
+                "content": "Reconhecer relação de causa e consequência em reportagens e relação entre pronomes e seus referentes em poemas, fábulas e contos."
+              }
+            ]
+          }
+        }
+      }
+    },
+    "matematica": {
+      "2ef": {
+        "scaleRange": {
+          "min": 0,
+          "max": 1000
+        },
+        "cortes": {
+          "padrao-1": 400,
+          "padrao-2": 500,
+          "padrao-3": 625
+        },
+        "D01": {
+          "topic": "",
+          "description": "Reconhecer o que os números naturais indicam em diferentes situações: quantidade, ordem, medida ou código de identificação.",
+          "prerequisites": [
+            "Compreensão básica dos números naturais.",
+            "Noção de quantidade.",
+            "Noção de ordem.",
+            "Noção inicial de medida.",
+            "Noção de código de identificação.",
+            "Observação e leitura funcional.",
+            "Vocabulário matemático básico.",
+            "Experiência com situações cotidianas envolvendo números."
+          ],
+          "bncc": {
+            "practices": "Compreender e aplicar conceitos e procedimentos",
+            "knowledge": "Números",
+            "skills": [
+              "EF01MA01",
+              "(EF01MA01) Utilizar números naturais como indicador de quantidade ou de ordem em diferentes situações cotidianas e reconhecer situações em que os números não indicam contagem nem ordem, mas sim código de identificação."
+            ]
+          },
+          "scale": {
+            "padrao-1": [
+              {
+                "level": 355,
+                "content": "---"
+              }
+            ],
+            "padrao-2": [
+              {
+                "level": 485,
+                "content": "Reconhecer um número natural que indica ordem (posição) com suporte gráfico. Reconhecer um número que representa uma medida em uma imagem que apresenta uma balança analógica."
+              },
+              {
+                "level": 447,
+                "content": "---"
+              },
+              {
+                "level": 404,
+                "content": "---"
+              }
+            ],
+            "padrao-3": [
+              {
+                "level": 596,
+                "content": "Reconhecer um número natural que indica um código de identificação (de pessoas). Reconhecer um número que representa uma quantidade em uma imagem que apresenta portadores numéricos indicando ordem, quantidade, código e medida."
+              },
+              {
+                "level": 530,
+                "content": "Reconhecer um número que representa uma medida em uma imagem que apresenta portadores numéricos indicando ordem, código e medida."
+              },
+              {
+                "level": 522,
+                "content": "---"
+              }
+            ],
+            "padrao-4": [
+              {
+                "level": 681,
+                "content": "---"
+              },
+              {
+                "level": 635,
+                "content": "---"
+              }
+            ]
+          }
+        },
+        "D02": {
+          "topic": "",
+          "description": "Identificar a posição ordinal de um objeto ou termo em uma sequência (1º, 2º etc.).",
+          "prerequisites": [
+            "Compreensão de sequência e ordem.",
+            "Noção de correspondência um a um.",
+            "Reconhecimento de números naturais.",
+            "Vocabulário básico relacionado à ordem.",
+            "Habilidade de seguir instruções sequênciais.",
+            "Percepção visual e atenção.",
+            "Experiência prévia com situações cotidianas envolvendo ordem."
+          ],
+          "bncc": {
+            "practices": "Compreender e aplicar conceitos e procedimentos",
+            "knowledge": "Números",
+            "skills": [
+              "EF01MA01, EF02MA01, EF02MA09",
+              "(EF01MA01) Utilizar números naturais como indicador de quantidade ou de ordem em diferentes situações cotidianas e reconhecer situações em que os números não indicam contagem nem ordem, mas sim código de identificação."
+            ]
+          },
+          "scale": {
+            "padrao-1": [
+              {
+                "level": 355,
+                "content": "---"
+              }
+            ],
+            "padrao-2": [
+              {
+                "level": 485,
+                "content": "---"
+              },
+              {
+                "level": 447,
+                "content": "Identificar a pessoa que ocupa uma determinada posição em uma corrida."
+              },
+              {
+                "level": 404,
+                "content": "Identificar o primeiro número em uma sequência de números naturais consecutivos, de dois algarismos. Identificar o último número de uma sequência de números naturais consecutivos, de dois algarismos. Identificar, em uma sequência de objetos de mesmo tipo, o quinto elemento."
+              }
+            ],
+            "padrao-3": [
+              {
+                "level": 596,
+                "content": "---"
+              },
+              {
+                "level": 530,
+                "content": "---"
+              },
+              {
+                "level": 522,
+                "content": "Identificar, em uma ordenação da direita para a esquerda, a posição ordinal de uma pessoa (em uma fila) de acordo com um referencial dado."
+              }
+            ],
+            "padrao-4": [
+              {
+                "level": 681,
+                "content": "---"
+              },
+              {
+                "level": 635,
+                "content": "---"
+              }
+            ]
+          }
+        }
+      },
+      "5ef": {
+        "scaleRange": {
+          "min": 0,
+          "max": 500
+        },
+        "cortes": {
+          "padrao-1": 175,
+          "padrao-2": 225,
+          "padrao-3": 275
+        },
+        "D01": {
+          "topic": "",
+          "description": "Identificar a localização/movimentação de objeto em mapas, croquis e outras representações gráficas.",
+          "prerequisites": [
+            "Compreensão de espaço e lugar;",
+            "Noção de orientação espacial;",
+            "Noção de posição relativa;",
+            "Entendimento de símbolos e legendas;",
+            "Reconhecimento de pontos de referência",
+            "Ler e interpretar representações gráficas simples;",
+            "Usar coordenadas e eixos de referência;",
+            "Comparar diferentes tipos de representações;",
+            "Relacionar o espaço representado ao espaço real;",
+            "Seguir trajetos e indicar percursos."
+          ],
+          "bncc": {
+            "practices": "Compreender e aplicar conceitos e procedimentos",
+            "knowledge": "Geometria",
+            "skills": [
+              "EF01MA11, EF01MA12, EF02MA12, EF02MA13, EF03MA12, EF04MA16, EF05MA14, EF05MA15.",
+              "(EF05MA14) Utilizar e compreender diferentes representações para a localização de objetos no plano, como mapas, células em planilhas eletrônicas e coordenadas geográficas, a fim de desenvolver as primeiras noções de coordenadas cartesianas."
+            ]
+          },
+          "scale": {
+            "padrao-1": [
+              {
+                "level": 150,
+                "content": "---"
+              },
+              {
+                "level": 125,
+                "content": "Identificar a localização de um objeto situado entre outros dois."
+              }
+            ],
+            "padrao-2": [
+              {
+                "level": 200,
+                "content": "---"
+              },
+              {
+                "level": 175,
+                "content": "Localizar um ponto ou objeto em uma malha quadriculada ou croqui, a partir de duas coordenadas ou referências, ou vice-versa."
+              }
+            ],
+            "padrao-3": [
+              {
+                "level": 250,
+                "content": "---"
+              },
+              {
+                "level": 225,
+                "content": "---"
+              }
+            ],
+            "padrao-4": [
+              {
+                "level": 450,
+                "content": "---"
+              },
+              {
+                "level": 425,
+                "content": "---"
+              },
+              {
+                "level": 400,
+                "content": "---"
+              },
+              {
+                "level": 375,
+                "content": "---"
+              },
+              {
+                "level": 350,
+                "content": "---"
+              },
+              {
+                "level": 325,
+                "content": "Interpretar a movimentação de um objeto utilizando referencial diferente do seu."
+              },
+              {
+                "level": 300,
+                "content": "Reconhecer uma linha paralela a outra dada como referência em um mapa."
+              },
+              {
+                "level": 275,
+                "content": "Localizar um ponto entre outros dois fixados, apresentados em uma figura composta por vários outros pontos."
+              }
+            ]
+          }
+        },
+        "D02": {
+          "topic": "",
+          "description": "Identificar propriedades comuns e diferenças entre poliedros e corpos redondos, relacionando figuras tridimensionais com suas planificações.",
+          "prerequisites": [
+            "Compreensão de figuras planas;",
+            "Noção de formas espaciais;",
+            "Relação entre figuras planas e espaciais;",
+            "Visualização espacial;",
+            "Reconhecimento de características geométricas."
+          ],
+          "bncc": {
+            "practices": "Compreender e aplicar conceitos e procedimentos",
+            "knowledge": "Geometria",
+            "skills": [
+              "EF03MA14, EF04MA17, EF05MA16.",
+              "(EF05MA16) Associar figuras espaciais a suas planificações (prismas, pirâmides, cilindros e cones) e analisar, nomear e comparar seus atributos."
+            ]
+          },
+          "scale": {
+            "padrao-1": [
+              {
+                "level": 150,
+                "content": "---"
+              },
+              {
+                "level": 125,
+                "content": "---"
+              }
+            ],
+            "padrao-2": [
+              {
+                "level": 200,
+                "content": "Reconhecer a planificação de uma pirâmide entre um conjunto de planificações."
+              },
+              {
+                "level": 175,
+                "content": "---"
+              }
+            ],
+            "padrao-3": [
+              {
+                "level": 250,
+                "content": "---"
+              },
+              {
+                "level": 225,
+                "content": "Reconhecer a planificação de um cubo entre um conjunto de planificações apresentadas."
+              }
+            ],
+            "padrao-4": [
+              {
+                "level": 450,
+                "content": "---"
+              },
+              {
+                "level": 425,
+                "content": "---"
+              },
+              {
+                "level": 400,
+                "content": "---"
+              },
+              {
+                "level": 375,
+                "content": "---"
+              },
+              {
+                "level": 350,
+                "content": "---"
+              },
+              {
+                "level": 325,
+                "content": "Reconhecer a planificação de uma caixa cilíndrica."
+              },
+              {
+                "level": 300,
+                "content": "---"
+              },
+              {
+                "level": 275,
+                "content": "Reconhecer um cubo a partir de uma de suas planificações desenhadas em uma malha quadriculada."
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "avisos": ["5º EF de Matemática: D07 sem escala (exemplo do mock)"]
+}

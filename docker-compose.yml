@@ -1,0 +1,50 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: revista-mongo
+    # Replica set de 1 nó: necessário para transações (regra do último admin, D-019).
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    volumes:
+      - mongo-dados:/data/db
+    # Inicia o replica set na primeira vez e depois só confere se está pronto.
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - --eval
+        - "try { rs.status().ok } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongo:27017' }] }).ok }"
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: revista-api
+    env_file: .env
+    environment:
+      MONGO_URL: mongodb://mongo:27017/revista?replicaSet=rs0
+      REVISTA_DIR: /app/revista
+      NODE_ENV: production
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: unless-stopped
+
+  editor:
+    build:
+      context: ./editor
+      dockerfile: Dockerfile
+    container_name: revista-editor
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  mongo-dados:
