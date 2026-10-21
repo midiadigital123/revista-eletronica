@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 
-const { montarFaixasRegua: regua, rotuloAno, rotuloAnoLongo, tipoDoItem, urlDoItem } = createRequire(import.meta.url)("./script.js");
+const { montarFaixasRegua: regua, rotuloAno, rotuloAnoLongo, tipoDoItem, urlDoItem, rotuloNiveis } = createRequire(import.meta.url)("./script.js");
 const montarFaixasRegua = (args) => regua(args).faixas;
 
 const cortes = { "padrao-1": 125, "padrao-2": 250, "padrao-3": 375 };
@@ -189,6 +189,12 @@ assert.equal(urlDoItem("abc", undefined), "arquivos/itens/abc.pdf"); // item ant
 assert.equal(urlDoItem("abc", "../x"), "arquivos/itens/abc.pdf"); // tipo inválido
 assert.equal(urlDoItem("a/b", "pdf"), "arquivos/itens/a%2Fb.pdf");
 assert.equal(tipoDoItem("PNG"), "pdf"); // case-sensitive: só o que o pacote grava
+
+// Título do modal do item: âncora menor e maior da habilidade (aceita número ou texto do data-*)
+assert.equal(rotuloNiveis(556, 616), "níveis 556 a 616");
+assert.equal(rotuloNiveis("782", "1000"), "níveis 782 a 1000");
+assert.equal(rotuloNiveis(300, 300), "nível 300"); // linha que divide o nível: um número só
+assert.equal(rotuloNiveis(300, undefined), "nível 300");
 
 // Selos de corte soltos não encostam no número vizinho: a faixa guarda o selo em k/(n+1)
 // da sua altura e o CSS lhe dá (n+1) × 1,75rem de altura mínima

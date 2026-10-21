@@ -180,6 +180,11 @@ function tipoDoItem(tipo) {
   return TIPOS_ITEM.includes(tipo) ? tipo : "pdf";
 }
 
+/** "nível 556" ou "níveis 556 a 616": âncora menor e maior da habilidade (fim igual ao início = um só). */
+function rotuloNiveis(inicio, fim) {
+  return fim == null || String(fim) === String(inicio) ? `nível ${inicio}` : `níveis ${inicio} a ${fim}`;
+}
+
 /** URL do arquivo do item no pacote; só interpola id escapado e tipo validado. */
 function urlDoItem(id, tipo) {
   return `arquivos/itens/${encodeURIComponent(id)}.${tipoDoItem(tipo)}`;
@@ -192,7 +197,7 @@ function alturaLinhaColapsada() {
 }
 
 // Exporta para o teste em Node; no navegador (script clássico) `module` não existe.
-if (typeof module !== "undefined") module.exports = { montarFaixasRegua, rotuloAno, rotuloAnoLongo, corTextoSobre, tipoDoItem, urlDoItem };
+if (typeof module !== "undefined") module.exports = { montarFaixasRegua, rotuloAno, rotuloAnoLongo, corTextoSobre, tipoDoItem, urlDoItem, rotuloNiveis };
 
 // ==========================================
 // ESTADO DA APLICAÇÃO
@@ -336,11 +341,11 @@ class DescriptorManager {
         if (el !== modal) el.inert = inerte;
       });
 
-    const abrirModal = (nivel, id, tipoBruto, origem) => {
+    const abrirModal = (nivel, fim, id, tipoBruto, origem) => {
       abridor = origem;
       const tipo = tipoDoItem(tipoBruto);
       const ehImagem = tipo !== "pdf";
-      const rotulo = `${ehImagem ? "Imagem" : "PDF"} do item — nível ${nivel}`;
+      const rotulo = `${ehImagem ? "Imagem" : "PDF"} do item — ${rotuloNiveis(nivel, fim)}`;
       titulo.textContent = rotulo;
       frame.hidden = ehImagem;
       imagem.hidden = !ehImagem;
@@ -367,7 +372,7 @@ class DescriptorManager {
     // O item só abre pelo botão; clicar na habilidade não faz nada (o hover já expande o texto).
     document.addEventListener("click", (e) => {
       const btn = e.target.closest(".ver-item-btn");
-      if (btn) abrirModal(btn.dataset.nivelItem, btn.dataset.itemId, btn.dataset.itemTipo, btn);
+      if (btn) abrirModal(btn.dataset.nivelItem, btn.dataset.nivelFim, btn.dataset.itemId, btn.dataset.itemTipo, btn);
     });
 
     closeBtn.addEventListener("click", fecharModal);
@@ -745,7 +750,7 @@ class DescriptorManager {
     const emLinhas = (y) => `calc(var(--escala-linha-height) * ${y})`;
 
     // --p: cor do padrão da linha (tinge a linha e os números de início/fim no hover)
-    const faixaHTML = ({ base, rotuloBase, ehCorte, conteudo, item, mesmoNivel, padrao, cortesDentro }) => {
+    const faixaHTML = ({ base, topo, rotuloBase, ehCorte, conteudo, item, mesmoNivel, padrao, cortesDentro }) => {
       const tick =
         rotuloBase === null
           ? ""
@@ -764,7 +769,7 @@ class DescriptorManager {
                     </div>
                     ${
                       temItem
-                        ? `<button type="button" class="ver-item-btn" aria-label="Ver item do nível ${escapeHtml(base)}" data-legenda="Ver item" data-nivel-item="${escapeHtml(base)}" data-item-id="${escapeHtml(item.id)}" data-item-tipo="${escapeHtml(item.tipo || "pdf")}">
+                        ? `<button type="button" class="ver-item-btn" aria-label="Ver item, ${escapeHtml(rotuloNiveis(base, topo))}" data-legenda="Ver item" data-nivel-item="${escapeHtml(base)}" data-nivel-fim="${escapeHtml(topo)}" data-item-id="${escapeHtml(item.id)}" data-item-tipo="${escapeHtml(item.tipo || "pdf")}">
                             <svg viewBox="4 0 44.3506 44.3506" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                 <rect x="16.6117" y="12.2362" width="19.1273" height="19.8787" rx="2.36459" stroke="black" stroke-width="0.910823"/>
                                 <path d="M19.8918 15.424V17.997H32.4548V15.424H19.8918ZM33.4599 17.997C33.4598 18.5 33.0099 18.9079 32.4548 18.9079H19.8918C19.3367 18.9079 18.8868 18.5 18.8867 17.997V15.424C18.8867 14.921 19.3367 14.5132 19.8918 14.5132H32.4548C33.0099 14.5132 33.4599 14.921 33.4599 15.424V17.997Z" fill="black"/>
