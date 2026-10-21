@@ -565,10 +565,28 @@ body {
 }
 
 .escala-legenda {
-  margin: 0 0 var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0 0 var(--spacing-md);
+  padding: 0.625rem var(--spacing-sm);
+  text-wrap: pretty;
   font-size: var(--font-size-xsmall);
   line-height: 1.25rem;
   color: var(--color-black);
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-300);
+  border-inline-start: 4px solid var(--color-primary);
+  border-radius: 0.5rem;
+}
+
+.escala-legenda svg {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 .padrao-linhas {
