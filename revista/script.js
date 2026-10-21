@@ -60,12 +60,14 @@ const PADROES_DE_CIMA = ["padrao-4", "padrao-3", "padrao-2", "padrao-1"];
  * topo = nível de cima (ou max). Corte que não cai num nível fica dentro da faixa
  * que o contém, sem criar faixa nova. Padrão sem linhas ganha uma faixa "---"
  * (com preenchimento acima, se preciso); sobra até o mínimo vira preenchimento.
- * Preenchimento (conteudo null) tem meia altura.
+ * Preenchimento (conteudo null) e linha sem habilidade ("---") têm meia altura.
  * rotuloBase é o número do tick na base: null quando é o mínimo ou o máximo
  * (aparecem fora da régua) ou quando a faixa seguinte tem a mesma base (o número sai só nela).
  * Retorna { faixas, cortes: [{padrao, valor, y, exato}], padroes: [{padrao, y0, y1}] },
  * com y em alturas de linha a partir do topo.
  */
+const ehVazia = (conteudo) => conteudo === null || conteudo === "---";
+
 function montarFaixasRegua({ min, max, cortes, escala }) {
   const limites = {
     "padrao-4": [max, cortes["padrao-3"]],
@@ -105,7 +107,7 @@ function montarFaixasRegua({ min, max, cortes, escala }) {
     const proxima = faixas[i + 1];
     const mesmoNivel = Boolean(proxima && proxima.base === f.base);
     const mostrar = f.base !== min && f.base !== max && !mesmoNivel;
-    const altura = f.conteudo === null ? 0.5 : 1;
+    const altura = ehVazia(f.conteudo) ? 0.5 : 1;
     const y0 = y;
     y += altura;
     return {
@@ -745,7 +747,7 @@ class DescriptorManager {
 
       // O "..." vem do CSS; atualizarTruncamentos marca as linhas que estouram
       return `
-                <div class="linha${conteudo === null ? " preenchimento" : ""}${mesmoNivel ? " mesmo-nivel" : ""}" style="--p:var(--color-${padrao})">
+                <div class="linha${ehVazia(conteudo) ? " preenchimento" : ""}${mesmoNivel ? " mesmo-nivel" : ""}" style="--p:var(--color-${padrao})">
                     <div class="linha-cor"></div>
                     <div class="linha-marcador"></div>
                     <span class="proficiencia-valor">${tick}</span>

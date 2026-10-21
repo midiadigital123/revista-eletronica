@@ -163,7 +163,7 @@ assert.equal(rotuloAnoLongo("outro"), "outro");
   );
   assert.deepEqual(
     r.padroes.map((p) => [p.y0, p.y1]),
-    [[0, 6.25], [6.25, 7.75], [7.75, 8.5], [8.5, 9.5]],
+    [[0, 6.25], [6.25, 7.75], [7.75, 8.5], [8.5, 9]], // faixa "---" tem meia altura,
   );
 }
 

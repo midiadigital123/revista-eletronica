@@ -17,7 +17,7 @@
   --color-gray-300: #dee2e6;
   --color-gray-500: #adb4bd;
   --color-gray-600: #888888;
-  --color-border: #c9bebe;
+  --color-border: #c9bebe70;
 
   /* Abas do menu de descritores */
   --color-tab-inactive-bg: #e8e9eb;
@@ -49,7 +49,7 @@
   --font-size-p: 1.25rem;
   /* 20px */
   --font-size-small: 1.1rem;
-  /* 16px */
+  /* 17,6px */
   --font-size-xsmall: 0.875rem;
   /* 14px */
   --line-height-normal: 1.6;
@@ -70,17 +70,25 @@
   /* 60px */
 
   /* Dimensões estruturais fixas da escala */
-  --escala-padrao-width: 100px;
-  --escala-valor-width: 53px;
-  --escala-marcador-width: 20px;
-  --escala-cor-width: 7px;
+  --escala-padrao-width: clamp(5rem, 4rem + 3vw, 6.25rem);
+  --escala-valor-width: clamp(2.5rem, 1.6rem + 2.8vw, 3.3rem);
+  --escala-marcador-width: clamp(0.625rem, 0.3rem + 1.6vw, 1.25rem);
+  --escala-cor-width: clamp(0.3125rem, 0.2rem + 0.4vw, 0.4375rem);
   --escala-linha-height: 80px;
-  --escala-gap-default: 10px;
-  --escala-gap-linha: 16px;
+  /* tipografia fluida: do mínimo (≤ ~400px) ao máximo (≥ ~900px) sem breakpoint */
+  --escala-texto-size: clamp(0.875rem, 0.71rem + 0.67vw, 1.1rem);
+  --escala-numero-size: clamp(0.75rem, 0.6rem + 0.57vw, 0.875rem);
+  --escala-extremo-size: clamp(1rem, 0.75rem + 0.67vw, 1.25rem);
+  /* altura mínima de uma habilidade de uma linha (24px de texto + 16px de respiro em cima e embaixo);
+     textos maiores crescem a linha. Preenchimento usa metade de --escala-linha-height */
+  --escala-linha-min: 3.5rem;
+  --escala-gap-default: 0.625rem;
 
   /* Transições */
   --transition-fast: 0.2s ease;
   --transition-normal: 0.3s ease;
+  /* saída forte e suave (mesma curva do editor) para os estados interativos da escala */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 html {
@@ -335,7 +343,11 @@ body {
   background-color: var(--color-white);
   color: var(--color-gray-500);
   cursor: pointer;
-  transition: var(--transition-normal);
+  transition:
+    background-color var(--transition-normal),
+    border-color var(--transition-normal),
+    color var(--transition-normal),
+    box-shadow var(--transition-normal);
 }
 
 .descritor-btn.active {
@@ -470,12 +482,14 @@ body {
   /* 874px */
   position: relative;
   margin: 0 auto;
+  /* espaçamentos internos acompanham a largura da escala (cqi), não a da janela */
+  container: escala / inline-size;
 }
 
 .escala-header {
   display: flex;
   padding-bottom: var(--spacing-sm);
-  padding-left: calc(var(--escala-padrao-width) + var(--escala-gap-default));
+  padding-inline-start: calc(var(--escala-padrao-width) + var(--escala-gap-default));
   justify-content: flex-start;
 }
 
@@ -483,17 +497,16 @@ body {
   display: flex;
   padding-top: var(--spacing-sm);
   padding-bottom: var(--spacing-xxl);
-  padding-left: calc(var(--escala-padrao-width) + var(--escala-gap-default));
+  padding-inline-start: calc(var(--escala-padrao-width) + var(--escala-gap-default));
   justify-content: flex-start;
 }
 
 .escala-label-top,
 .escala-label-bottom {
-  font-size: var(--font-size-p);
+  font-size: var(--escala-extremo-size);
   font-weight: 400;
   color: var(--color-black);
-  line-height: 2rem;
-  /* 32px */
+  line-height: 1.6;
   width: var(--escala-cor-width);
   text-align: center;
   transform: translateX(-50%);
@@ -528,40 +541,33 @@ body {
 
 .padrao-label {
   position: absolute;
-  left: 0;
-  right: 0;
+  inset-inline: 0;
   box-sizing: border-box;
   /* borda transparente: o fundo do padrão cobre o vão até a barra */
-  border-right: var(--escala-gap-default) solid transparent;
+  border-inline-end: var(--escala-gap-default) solid transparent;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.625rem 0;
-  /* 10px */
+  flex-direction: column;
+  padding-block: 0.125rem;
   border-bottom: 0.5px solid var(--color-black);
 }
 
-.padrao-label {
-  flex-direction: column;
-  /* padding-block: 0.25rem; */
-}
-
 .padrao-label span {
-  font-size: var(--font-size-small);
+  font-size: clamp(0.75rem, 0.62rem + 0.5vw, 0.9375rem);
   font-weight: 700;
   text-align: center;
   color: var(--color-black);
-  line-height: 1.5rem;
-  /* 24px */
+  line-height: 1.25;
 }
 
 /* Início do padrão (≥), embaixo do nome */
 .padrao-label small {
-  font-size: var(--font-size-xsmall);
+  font-size: 0.75rem;
   text-align: center;
   color: var(--color-black);
-  line-height: 1.25rem;
+  line-height: 1rem;
 }
 
 .escala-legenda {
@@ -600,10 +606,8 @@ body {
 .linha {
   position: relative;
   display: flex;
-  /* gap: var(--escala-gap-linha); */
   align-items: flex-end;
-  min-height: var(--escala-linha-height);
-  height: var(--escala-linha-height);
+  min-height: var(--escala-linha-min);
 }
 
 .proficiencia-valor {
@@ -615,7 +619,8 @@ body {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  font-size: var(--font-size-small);
+  font-size: var(--escala-numero-size);
+  font-variant-numeric: tabular-nums;
   font-weight: 700;
   text-align: center;
   color: var(--color-black);
@@ -625,10 +630,9 @@ body {
 .proficiencia-valor::after {
   content: "";
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1px;
+  inset-inline: 0;
+  inset-block-end: 0;
+  block-size: 1px;
   background-color: var(--color-border);
 }
 
@@ -638,14 +642,13 @@ body {
   display: block;
   transform: translateY(50%);
   background-color: var(--color-white);
-  padding: 0.0625rem 0.5rem;
+  padding: 0.0625rem clamp(0.25rem, 2.2cqi - 0.19rem, 0.5rem);
   border-radius: 999px;
 }
 
 /* Nível que coincide com um corte: selo amarelo */
 .proficiencia-valor-numero.eh-corte {
   background-color: var(--color-primary);
-  font-size: var(--font-size-xsmall);
   line-height: 1.25rem;
   white-space: nowrap;
   box-shadow: 0 0 0 2px var(--color-white);
@@ -656,7 +659,7 @@ body {
   min-width: var(--escala-marcador-width);
   align-self: stretch;
   background-color: var(--color-white);
-  border-bottom: 1px solid var(--color-black);
+  border-bottom: 1px solid var(--color-border);
   margin-bottom: 0;
   flex-shrink: 0;
 }
@@ -681,12 +684,9 @@ body {
 /* Barra de cor e cortes: por cima das linhas, posicionados por y (script.js) */
 .escala-barra {
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   width: var(--escala-cor-width);
-}
-
-/* borda escura fina: 3 das 4 cores não chegam a 3:1 contra o branco (WCAG 1.4.11) */
-.escala-barra {
+  /* borda escura fina: 3 das 4 cores não chegam a 3:1 contra o branco (WCAG 1.4.11) */
   box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.35);
 }
 
@@ -706,7 +706,7 @@ body {
 /* Corte que não coincide com um nível: selo no meio da faixa */
 .escala-corte {
   position: absolute;
-  left: calc(var(--escala-cor-width) + var(--escala-marcador-width));
+  inset-inline-start: calc(var(--escala-cor-width) + var(--escala-marcador-width));
   width: var(--escala-valor-width);
   display: flex;
   justify-content: center;
@@ -722,7 +722,7 @@ body {
 .linha-cor {
   width: var(--escala-cor-width);
   min-width: var(--escala-cor-width);
-  height: var(--escala-linha-height);
+  align-self: stretch;
   flex-shrink: 0;
 }
 
@@ -732,23 +732,23 @@ body {
   min-width: 0;
   display: flex;
   align-items: center;
-  padding: 1rem 0.625rem 1rem 0;
-  /* 16px 10px 16px 0 */
+  padding-block: clamp(0.75rem, 0.4rem + 1.6cqi, 1rem);
+  padding-inline: 0 clamp(0.5rem, 2cqi, 0.625rem);
   border-bottom: 1px solid var(--color-border);
-  min-height: var(--escala-linha-height);
-  height: var(--escala-linha-height);
+  min-height: var(--escala-linha-min);
   background-color: var(--color-white);
-  transition: background-color var(--transition-fast);
+  transition: background-color 0.2s var(--ease-out);
 }
 
 .linha-conteudo p {
-  font-size: var(--font-size-small);
+  font-size: var(--escala-texto-size);
   font-family: var(--font-family);
   color: var(--color-black);
-  line-height: 1.5rem;
-  /* 32px */
+  line-height: 1.4;
   margin: 0;
-  padding-left: 16px;
+  padding-inline-start: clamp(0.5rem, 2.5cqi, 1rem);
+  overflow-wrap: break-word;
+  text-wrap: pretty;
 }
 
 .linha-conteudo.tem-ver-mais {
@@ -756,23 +756,26 @@ body {
   max-height: var(--escala-linha-height);
   overflow: hidden;
   transition:
-    max-height 0.3s ease,
-    background-color var(--transition-fast);
+    max-height 0.3s var(--ease-out),
+    background-color 0.2s var(--ease-out);
+}
+
+/* Fechar é mais curto que abrir: a saída não deve atrasar a leitura da linha de baixo */
+.linha-conteudo.tem-ver-mais.fechando {
+  transition:
+    max-height 0.2s var(--ease-out),
+    background-color 0.2s var(--ease-out);
 }
 
 /* O texto ocupa a largura toda da coluna; "..." só no fim */
 .linha-conteudo.tem-texto p {
   min-width: 0;
-  /* white-space: nowrap; */
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* Habilidade aberta: a própria linha cresce e mostra o texto inteiro (também enquanto fecha,
-   até voltar a 80px). script.js reposiciona barra, rótulos e cortes pela altura real. */
-.linha:has(.linha-conteudo.expandido) {
-  height: auto;
-}
+/* Habilidade aberta: a própria linha cresce e mostra o texto inteiro. script.js reposiciona
+   barra, rótulos e cortes pela altura real. */
 
 .linha-conteudo.tem-ver-mais:focus-visible {
   outline: 2px solid var(--color-black);
@@ -790,26 +793,39 @@ body {
    não conta (:focus-visible), senão a linha fica "ativa" depois que o mouse sai. */
 .proficiencia-valor,
 .linha-marcador {
-  transition: background-color var(--transition-fast);
+  transition: background-color 0.2s var(--ease-out);
 }
 
 .proficiencia-valor-numero {
   transition:
-    background-color var(--transition-fast),
-    color var(--transition-fast),
-    transform var(--transition-fast);
+    background-color 0.2s var(--ease-out),
+    color 0.2s var(--ease-out),
+    transform 0.2s var(--ease-out);
 }
 
 /* Leitura cumulativa: quem chegou à habilidade em foco já domina todas as de baixo, tinta leve */
-.linha:is(:hover, :has(:focus-visible))
+.linha:has(:focus-visible)
   ~ .linha
   :is(.proficiencia-valor, .linha-marcador, .linha-conteudo) {
   background-color: color-mix(in srgb, var(--p) 6%, white);
 }
 
-.linha:is(:hover, :has(:focus-visible))
+.linha:has(:focus-visible)
   :is(.proficiencia-valor, .linha-marcador, .linha-conteudo) {
   background-color: color-mix(in srgb, var(--p) 16%, white);
+}
+
+/* Hover só onde existe ponteiro: no toque ele "gruda" depois do tap */
+@media (hover: hover) {
+  .linha:hover
+    ~ .linha
+    :is(.proficiencia-valor, .linha-marcador, .linha-conteudo) {
+    background-color: color-mix(in srgb, var(--p) 6%, white);
+  }
+
+  .linha:hover :is(.proficiencia-valor, .linha-marcador, .linha-conteudo) {
+    background-color: color-mix(in srgb, var(--p) 16%, white);
+  }
 }
 
 /* .destaque (script.js): números de início e fim da linha em foco, cortes inclusive */
@@ -819,8 +835,7 @@ body {
   transform: translateY(50%) scale(1.15);
   /* acima do selo de corte solto (.escala-corte, z-index 3) quando um cobre o outro */
   z-index: 4;
-  /* mesmo tamanho com ou sem corte: anula a fonte menor, a altura e o anel de .eh-corte */
-  font-size: var(--font-size-small);
+  /* mesmo tamanho com ou sem corte: anula a altura e o anel de .eh-corte; só o scale amplia */
   line-height: 1;
   box-shadow: none;
 }
@@ -834,12 +849,12 @@ body {
 .ver-item-btn {
   --ver-item-size: 44px;
   position: absolute;
-  top: calc(50% - var(--ver-item-size) / 2);
-  left: 100%;
-  margin-left: 0.75rem;
+  inset-block-start: calc(50% - var(--ver-item-size) / 2);
+  inset-inline-start: 100%;
+  margin-inline-start: 0.75rem;
   z-index: 6;
-  width: var(--ver-item-size);
-  height: var(--ver-item-size);
+  inline-size: var(--ver-item-size);
+  aspect-ratio: 1;
   padding: 0;
   border: none;
   border-radius: 50%;
@@ -847,8 +862,8 @@ body {
   box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
   cursor: pointer;
   transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
+    transform 0.3s var(--ease-out),
+    box-shadow 0.3s var(--ease-out);
 }
 
 .ver-item-btn svg {
@@ -857,10 +872,16 @@ body {
   height: 100%;
 }
 
-.ver-item-btn:hover,
 .ver-item-btn:focus-visible {
   transform: scale(1.08);
   box-shadow: 0 8px 14px rgba(0, 0, 0, 0.2);
+}
+
+@media (hover: hover) {
+  .ver-item-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 8px 14px rgba(0, 0, 0, 0.2);
+  }
 }
 
 .ver-item-btn:focus-visible {
@@ -884,8 +905,8 @@ body {
   opacity: 0;
   pointer-events: none;
   transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
+    opacity 0.2s var(--ease-out),
+    transform 0.2s var(--ease-out);
 }
 
 .ver-item-btn::after {
@@ -913,34 +934,44 @@ body {
   transform: translateY(4px);
 }
 
-.ver-item-btn:hover::before,
-.ver-item-btn:hover::after,
 .ver-item-btn:focus-visible::before,
 .ver-item-btn:focus-visible::after {
   opacity: 1;
 }
 
-.ver-item-btn:hover::after,
 .ver-item-btn:focus-visible::after {
   transform: translate(-50%, 0);
 }
 
-.ver-item-btn:hover::before,
 .ver-item-btn:focus-visible::before {
   transform: translateY(0);
+}
+
+@media (hover: hover) {
+  .ver-item-btn:hover::before,
+  .ver-item-btn:hover::after {
+    opacity: 1;
+  }
+
+  .ver-item-btn:hover::after {
+    transform: translate(-50%, 0);
+  }
+
+  .ver-item-btn:hover::before {
+    transform: translateY(0);
+  }
 }
 
 /* Sem espaço lateral fora da escala: o botão entra na linha, no canto direito */
 @media (max-width: 1040px) {
   .ver-item-btn {
-    left: auto;
-    right: 0.5rem;
-    margin-left: 0;
+    inset-inline: auto 0.5rem;
+    margin-inline-start: 0;
   }
 
   .linha-conteudo.tem-ver-item,
   .linha-conteudo.tem-ver-item.expandido {
-    padding-right: 4rem;
+    padding-inline-end: 4rem;
   }
 }
 
@@ -952,8 +983,7 @@ body {
   .proficiencia-valor-numero,
   .ver-item-btn,
   .ver-item-btn::before,
-  .ver-item-btn::after,
-  .modal-close {
+  .ver-item-btn::after {
     transition: none;
   }
 
@@ -1074,7 +1104,11 @@ body {
   /* 52px */
   border: none;
   cursor: pointer;
-  transition: var(--transition-normal);
+  transition:
+    background-color var(--transition-normal),
+    color var(--transition-normal),
+    opacity var(--transition-normal),
+    transform var(--transition-normal);
   font-family: var(--font-family);
   font-size: var(--font-size-p);
   line-height: 1.56rem;
@@ -1165,7 +1199,11 @@ body {
   background-color: var(--color-white);
   color: var(--color-gray-500);
   cursor: pointer;
-  transition: var(--transition-normal);
+  transition:
+    background-color var(--transition-normal),
+    border-color var(--transition-normal),
+    color var(--transition-normal),
+    box-shadow var(--transition-normal);
 }
 
 .descritor-btn-lateral.active {
@@ -1200,21 +1238,10 @@ body {
 }
 
 @media (max-width: 1200px) {
-  .escala-proficiencia {
-    width: 100%;
-    max-width: 54.63rem;
-    /* 874px */
-  }
-
   .menu-lateral {
     position: static;
     transform: none;
     margin: var(--spacing-lg) auto;
-  }
-
-  :root {
-    --escala-padrao-width: 5rem;
-    /* 80px */
   }
 }
 
@@ -1254,110 +1281,8 @@ body {
 }
 
 @media (max-width: 768px) {
-  /* Ajustes da escala para tablets */
-  :root {
-    --escala-padrao-width: 90px;
-    --escala-valor-width: 45px;
-    --escala-marcador-width: 16px;
-    --escala-cor-width: 6px;
-    --escala-gap-default: 8px;
-    --escala-gap-linha: 12px;
-  }
-
   .escala-proficiencia {
-    max-width: 100%;
-    padding: 0 var(--spacing-sm);
-  }
-
-  .padrao-label {
-    padding: 0.5rem 0;
-    /* 8px */
-  }
-
-  .padrao-label span {
-    font-size: 0.875rem;
-    /* 14px */
-  }
-
-  .proficiencia-valor {
-    font-size: 0.875rem;
-    /* 14px */
-  }
-
-  .linha-conteudo {
-    padding: 0.75rem 0.5rem;
-    /* 12px 8px */
-  }
-
-  .linha-conteudo p {
-    font-size: 1rem;
-    /* 16px */
-    line-height: 1.2rem;
-    /* 24px */
-  }
-}
-
-@media (max-width: 600px) {
-  /* Ajustes da escala para mobile - conforme Figma */
-  :root {
-    --escala-padrao-width: 100px;
-    --escala-valor-width: 53px;
-    --escala-marcador-width: 20px;
-    --escala-cor-width: 7px;
-    --escala-gap-default: 10px;
-    --escala-gap-linha: 16px;
-  }
-
-  .escala-proficiencia {
-    max-width: 100%;
-    padding: 0 var(--spacing-xs);
-  }
-
-  .escala-label-top,
-  .escala-label-bottom {
-    font-size: 1rem;
-    /* 16px */
-    line-height: 1.5rem;
-    /* 24px */
-  }
-
-  .padrao-label {
-    padding: 0.625rem 0;
-    /* 10px */
-  }
-
-  .padrao-label span {
-    font-size: 1rem;
-    /* 16px */
-    line-height: 1.5rem;
-    /* 24px */
-  }
-
-  .linha {
-    flex-wrap: nowrap;
-  }
-
-  .proficiencia-valor {
-    font-size: 1rem;
-    /* 16px */
-    line-height: 1.5rem;
-    /* 24px */
-  }
-
-  .linha-conteudo {
-    flex: 1;
-    min-width: 0;
-    padding: 1rem 0.625rem;
-    /* 16px 10px */
-  }
-
-  .linha-conteudo p {
-    font-size: 1rem;
-    /* 16px */
-    line-height: 1.2rem;
-    /* 24px */
-    word-wrap: break-word;
-    overflow-wrap: break-word;
+    padding-inline: clamp(0.5rem, 2.5vw, 1rem);
   }
 }
 
@@ -1389,56 +1314,6 @@ body {
     /* 16px */
   }
 
-  /* Ajuste adicional da escala em telas muito pequenas */
-  :root {
-    --escala-padrao-width: 80px;
-    --escala-valor-width: 26px;
-    --escala-marcador-width: 10px;
-    --escala-cor-width: 5px;
-    --escala-gap-default: 10px;
-    --escala-gap-linha: 10px;
-  }
-
-  .padrao-label {
-    padding: 0.5rem 0;
-    /* 8px */
-  }
-
-  .padrao-label span {
-    font-size: 0.875rem;
-    /* 14px */
-  }
-
-  .proficiencia-valor {
-    font-size: 0.75rem;
-    /* 12px */
-  }
-
-  .proficiencia-valor-numero {
-    padding: 0.0625rem 0.25rem;
-  }
-
-  .linha-conteudo {
-    padding: 0.75rem 0.5rem;
-    /* 12px 8px */
-  }
-
-  .linha-conteudo p {
-    font-size: 0.875rem;
-    /* 14px */
-    line-height: 0.9rem;
-    /* ~17.6px */
-  }
-
-  .linha-conteudo.tem-ver-item,
-  .linha-conteudo.tem-ver-item.expandido {
-    padding-right: 3.25rem;
-  }
-
-  .ver-item-btn {
-    --ver-item-size: 36px;
-    right: 0.375rem;
-  }
 }
 
 /* ==========================================
@@ -1504,6 +1379,7 @@ body {
 .modal-pdf,
 .modal-imagem {
   flex: 1;
+  min-height: 0;
   width: 100%;
   border: 1px solid var(--color-border);
   border-radius: 0.5rem;
@@ -1530,5 +1406,15 @@ body {
     height: 100%;
     border-radius: 0;
     padding: var(--spacing-md);
+  }
+}
+
+/* No fim do arquivo: precisa vir depois das regras base destes botões (mesma especificidade) */
+@media (prefers-reduced-motion: reduce) {
+  .descritor-btn,
+  .descritor-btn-lateral,
+  .nav-btn,
+  .modal-close {
+    transition: none;
   }
 }
