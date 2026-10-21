@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 
-const { montarFaixasRegua: regua, rotuloAno, rotuloAnoLongo } = createRequire(import.meta.url)("./script.js");
+const { montarFaixasRegua: regua, rotuloAno, rotuloAnoLongo, tipoDoItem, urlDoItem } = createRequire(import.meta.url)("./script.js");
 const montarFaixasRegua = (args) => regua(args).faixas;
 
 const cortes = { "padrao-1": 125, "padrao-2": 250, "padrao-3": 375 };
@@ -177,5 +177,13 @@ assert.equal(corTextoSobre("#000"), "#fff");
 assert.equal(corTextoSobre("#FFFFFF"), "#000");
 assert.equal(corTextoSobre("#1a237e"), "#fff"); // azul escuro de um projeto
 assert.equal(corTextoSobre(""), "#000"); // inválido: preto
+
+// URL do item: tipo validado contra lista fixa, id codificado
+assert.equal(urlDoItem("abc", "png"), "arquivos/itens/abc.png");
+assert.equal(urlDoItem("abc", "jpg"), "arquivos/itens/abc.jpg");
+assert.equal(urlDoItem("abc", undefined), "arquivos/itens/abc.pdf"); // item antigo
+assert.equal(urlDoItem("abc", "../x"), "arquivos/itens/abc.pdf"); // tipo inválido
+assert.equal(urlDoItem("a/b", "pdf"), "arquivos/itens/a%2Fb.pdf");
+assert.equal(tipoDoItem("PNG"), "pdf"); // case-sensitive: só o que o pacote grava
 
 console.log("regua.test.mjs: ok");

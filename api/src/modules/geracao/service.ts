@@ -2,7 +2,7 @@ import type { Readable } from "node:stream";
 import Handlebars from "handlebars";
 import { Types } from "mongoose";
 import { camposDoTipo } from "../../contrato/campos-pagina.js";
-import { rotuloCaderno, type CadernoProjeto } from "../../contrato/schemas.js";
+import { rotuloCaderno, tipoDoItem, type CadernoProjeto } from "../../contrato/schemas.js";
 import { renderRevista, arquivosEstaticosRevista } from "../revista/render.js";
 import { abrirLeitura, ehImagem } from "../imagens/service.js";
 import { planilhasDoCaderno } from "../planilhas/service.js";
@@ -91,18 +91,20 @@ export async function montarPacote(slug: string): Promise<ArquivoPacote[]> {
       { id, anos },
     ))
       arquivos.push({ ...p, caminho: `${id}/planilhas/${p.caminho}` });
-    // PDFs dos itens ("Ver item"); o mesmo item pode aparecer em várias linhas.
-    const itens = new Set(
+    // Arquivos dos itens ("Ver item"); o mesmo item pode aparecer em várias linhas (id → tipo).
+    const itens = new Map(
       anos.flatMap(({ descritores }) =>
         descritores.flatMap(({ scale }) =>
-          Object.values(scale).flatMap((linhas) => linhas.flatMap((l) => l.item?.id ?? [])),
+          Object.values(scale).flatMap((linhas) =>
+            linhas.flatMap((l) => (l.item ? [[l.item.id, tipoDoItem(l.item)] as const] : [])),
+          ),
         ),
       ),
     );
-    for (const itemId of itens)
+    for (const [itemId, tipo] of itens)
       arquivos.push({
-        caminho: `${id}/arquivos/itens/${itemId}.pdf`,
-        tipo: tipoDe(".pdf"),
+        caminho: `${id}/arquivos/itens/${itemId}.${tipo}`,
+        tipo: tipoDe(`.${tipo}`),
         abrir: () => abrirLeitura(new Types.ObjectId(itemId)),
       });
   }

@@ -27,7 +27,7 @@ const ehMimeAceito = (mime: string): mime is Mime =>
   (IMAGEM_MIMES as readonly string[]).includes(mime);
 
 /** Tipo real pelos bytes mágicos (o mime declarado pelo navegador não é confiável). */
-function mimeDoConteudo(b: Buffer): Mime | null {
+export function mimeDoConteudo(b: Buffer): Mime | null {
   if (b.subarray(0, 4).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47]))) return "image/png";
   if (b.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]))) return "image/jpeg";
   if (b.toString("latin1", 0, 4) === "RIFF" && b.toString("latin1", 8, 12) === "WEBP")

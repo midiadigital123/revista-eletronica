@@ -66,8 +66,15 @@ export const PDF_MAX_BYTES = 50 * 1024 * 1024;
 
 export const IMAGEM_MIMES = ["image/png", "image/jpeg", "image/webp"] as const;
 export const IMAGEM_MAX_BYTES = 5 * 1024 * 1024;
-/** PDF do item de uma linha da escala ("Ver item" na revista). */
+/** Arquivo do item de uma linha da escala ("Ver item" na revista): PDF ou imagem. */
 export const ITEM_MAX_BYTES = 5 * 1024 * 1024;
+
+/** Tipos aceitos no item e o mime de cada um (JPG e JPEG são o mesmo tipo, "jpg"). */
+export const ITEM_MIMES = {
+  pdf: "application/pdf",
+  png: "image/png",
+  jpg: "image/jpeg",
+} as const;
 
 export const HEADER_SESSAO_EDICAO = "X-Sessao-Edicao";
 export const BLOQUEIO_TTL_MS = 2 * 60 * 1000;
@@ -172,12 +179,20 @@ export const Cortes = z.strictObject({
   "padrao-3": z.int(),
 });
 
-/** PDF guardado no GridFS; no pacote fica em `arquivos/itens/<id>.pdf`. */
+/**
+ * Arquivo do item guardado no GridFS; no pacote fica em `arquivos/itens/<id>.<tipo>`.
+ * O nome do schema ficou `ItemPdf` por compatibilidade; `tipo` ausente = "pdf" (itens antigos).
+ */
 export const ItemPdf = z.strictObject({
   id: ObjectIdTexto,
   nome: z.string().max(300),
   tamanho: z.int(),
+  tipo: z.enum(["pdf", "png", "jpg"]).optional(),
 });
+
+/** Tipo efetivo do item (PDF quando o campo não existe). */
+export const tipoDoItem = (item: { tipo?: keyof typeof ITEM_MIMES }): keyof typeof ITEM_MIMES =>
+  item.tipo ?? "pdf";
 
 /** Uma habilidade da régua: `level` é o início da faixa, `fim` o tick acima. */
 export const LinhaEscala = z

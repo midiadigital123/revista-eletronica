@@ -187,7 +187,7 @@ describe("editor da escala", () => {
     const user = userEvent.setup();
     renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01");
     const pdf = new File(["%PDF"], "item-d01.pdf", { type: "application/pdf" });
-    await user.upload(await screen.findByLabelText("PDF do item da linha 1 do Padrão 03"), pdf);
+    await user.upload(await screen.findByLabelText("Arquivo do item da linha 1 do Padrão 03"), pdf);
 
     // Divergência do mock (como no PUT imagem): no jsdom o File chega ao handler sem o nome
     // ("blob"); a API real guarda o nome enviado. O teste usa o nome que o mock gravou.
@@ -197,9 +197,40 @@ describe("editor da escala", () => {
     expect(link).toHaveAttribute("href", `/api/projetos/exemplo/itens/${id}`);
     expect(link).toHaveAttribute("target", "_blank");
 
-    await user.click(screen.getByRole("button", { name: "Remover PDF da linha 1 do Padrão 03" }));
+    await user.click(
+      screen.getByRole("button", { name: "Remover arquivo da linha 1 do Padrão 03" }),
+    );
     await waitFor(() => expect(d01().scale["padrao-3"][0]).not.toHaveProperty("item"));
     expect(screen.queryByRole("link", { name: nome })).not.toBeInTheDocument();
+  });
+
+  it("anexa uma imagem PNG como item da linha", async () => {
+    const user = userEvent.setup();
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01");
+    const png = new File(["\x89PNG"], "item-d01.png", { type: "image/png" });
+    await user.upload(await screen.findByLabelText("Arquivo do item da linha 1 do Padrão 03"), png);
+    await waitFor(() => expect(d01().scale["padrao-3"][0]!.item).toMatchObject({ tipo: "png" }));
+    expect(await within(bloco("Padrão 03")).findByText("PNG")).toBeInTheDocument();
+  });
+
+  it("anexa JPG sem mime informado pelo navegador (usa a extensão)", async () => {
+    const user = userEvent.setup();
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01");
+    const jpg = new File(["\xff\xd8\xff"], "item-d01.JPEG", { type: "" });
+    await user.upload(await screen.findByLabelText("Arquivo do item da linha 1 do Padrão 03"), jpg);
+    await waitFor(() => expect(d01().scale["padrao-3"][0]!.item).toMatchObject({ tipo: "jpg" }));
+  });
+
+  it("recusa arquivo que não é PDF nem imagem aceita", async () => {
+    // applyAccept: false simula o usuário que escolhe "todos os arquivos" no seletor.
+    const user = userEvent.setup({ applyAccept: false });
+    renderizarAno("/projetos/exemplo/lingua-portuguesa/ano/5ef/D01");
+    const txt = new File(["oi"], "nota.txt", { type: "text/plain" });
+    await user.upload(await screen.findByLabelText("Arquivo do item da linha 1 do Padrão 03"), txt);
+    expect(await within(bloco("Padrão 03")).findByRole("alert")).toHaveTextContent(
+      "Envie um arquivo PDF, PNG ou JPG.",
+    );
+    expect(d01().scale["padrao-3"][0]).not.toHaveProperty("item");
   });
 
   it("recusa PDF acima de 5 MB no cliente", async () => {
@@ -208,9 +239,12 @@ describe("editor da escala", () => {
     const grande = new File([new Uint8Array(5 * 1024 * 1024 + 1)], "g.pdf", {
       type: "application/pdf",
     });
-    await user.upload(await screen.findByLabelText("PDF do item da linha 1 do Padrão 03"), grande);
+    await user.upload(
+      await screen.findByLabelText("Arquivo do item da linha 1 do Padrão 03"),
+      grande,
+    );
     expect(await within(bloco("Padrão 03")).findByRole("alert")).toHaveTextContent(
-      "O PDF passa de 5 MB.",
+      "O arquivo passa de 5 MB.",
     );
     expect(d01().scale["padrao-3"][0]).not.toHaveProperty("item");
   });
@@ -228,7 +262,7 @@ describe("modo leitura", () => {
       "Pré-requisito 1",
       "Nível da linha 1 do Padrão 04 — início (maior ou igual a)",
       "Conteúdo da linha 1 do Padrão 04",
-      "PDF do item da linha 1 do Padrão 04",
+      "Arquivo do item da linha 1 do Padrão 04",
     ])
       expect(screen.getByLabelText(rotulo)).toBeDisabled();
     for (const nome of [
@@ -239,7 +273,7 @@ describe("modo leitura", () => {
       "Excluir D01",
       "Adicionar linha ao Padrão 04",
       "Remover linha 1 do Padrão 04",
-      "Anexar PDF do item da linha 1 do Padrão 04",
+      "Anexar arquivo do item da linha 1 do Padrão 04",
       "Adicionar pré-requisito",
     ])
       expect(screen.getByRole("button", { name: nome })).toBeDisabled();

@@ -10,7 +10,7 @@ import type { ImagemArmazenada, ValorPagina } from "../projetos/model.js";
  * Outros módulos usam só estas assinaturas:
  *  - A5a: copiarImagens (criar projeto com origem "copiar"), removerImagens (não usado na exclusão lógica)
  *  - A7: abrirLeitura (preview e zip)
- *  - itens: salvarItem (PDF do "Ver item" de uma linha da escala)
+ *  - itens: salvarItem, mimeDoArquivo (PDF/PNG/JPG do "Ver item" de uma linha da escala)
  */
 
 const BUCKET = "imagens";
@@ -41,11 +41,22 @@ export async function salvarImagem(dados: {
   return { arquivoId: upload.id, nome, mime: dados.mime, tamanho: dados.conteudo.length };
 }
 
-/** Grava o PDF de um item (linha da escala) no mesmo bucket e devolve o id do arquivo. */
-export async function salvarItem(nome: string, conteudo: Buffer): Promise<Types.ObjectId> {
-  const upload = bucket().openUploadStream(nome, { metadata: { mime: "application/pdf" } });
+/** Grava o arquivo de um item (linha da escala) no mesmo bucket e devolve o id do arquivo. */
+export async function salvarItem(
+  nome: string,
+  mime: string,
+  conteudo: Buffer,
+): Promise<Types.ObjectId> {
+  const upload = bucket().openUploadStream(nome, { metadata: { mime } });
   await pipeline(Readable.from([conteudo]), upload);
   return upload.id;
+}
+
+/** Mime gravado nos metadados do arquivo (itens antigos, sem mime, são PDF); 404 se não existir. */
+export async function mimeDoArquivo(arquivoId: Types.ObjectId): Promise<string> {
+  const arquivo = await bancoAberto().collection(`${BUCKET}.files`).findOne({ _id: arquivoId });
+  if (!arquivo) throw naoEncontrado("Item");
+  return (arquivo.metadata?.mime as string | undefined) ?? "application/pdf";
 }
 
 /** Stream do arquivo; se não existir, o stream emite AppError 404. */

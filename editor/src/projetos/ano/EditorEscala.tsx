@@ -3,6 +3,7 @@ import { flushSync } from "react-dom";
 import {
   CONTEUDO_VAZIO,
   ITEM_MAX_BYTES,
+  ITEM_MIMES,
   padraoDoNivel,
   type AnoProjeto,
   type Cortes,
@@ -10,6 +11,7 @@ import {
   type LinhaEscala,
   type Padrao,
   type ScaleRange,
+  tipoDoItem,
 } from "../../contrato/schemas";
 import { ehErroApi } from "../../api/client";
 import { FileUp, Info, Plus, X } from "lucide-react";
@@ -120,6 +122,13 @@ interface Linha {
   item?: ItemPdf;
 }
 
+/** Mime aceito (PDF, PNG ou JPG) pelo tipo do arquivo ou, se vier vazio/estranho, pela extensão. */
+const mimeDoItem = (f: File): string | undefined => {
+  if (Object.values<string>(ITEM_MIMES).includes(f.type)) return f.type;
+  const ext = /\.(pdf|png|jpe?g)$/i.exec(f.name)?.[1]?.toLowerCase();
+  return ext && ITEM_MIMES[ext === "jpeg" ? "jpg" : (ext as keyof typeof ITEM_MIMES)];
+};
+
 const nivel = (l: Linha) => (l.level.trim() === "" ? NaN : Number(l.level));
 /** Ordem decrescente de nível (estável; inválidos no fim), como a API devolve. */
 const ordenar = (ls: readonly Linha[]) =>
@@ -220,11 +229,14 @@ function BlocoPadrao(props: {
 
   async function anexar(id: string, arquivo: File | undefined) {
     if (!arquivo) return;
-    if (arquivo.size > ITEM_MAX_BYTES) return setErros({ [id]: "O PDF passa de 5 MB." });
+    const mime = mimeDoItem(arquivo);
+    if (!mime) return setErros({ [id]: "Envie um arquivo PDF, PNG ou JPG." });
+    if (arquivo.size > ITEM_MAX_BYTES) return setErros({ [id]: "O arquivo passa de 5 MB." });
     try {
       const item = await salvarNaFila({
-        descricao: `PDF do item (${rotulo})`,
-        executar: () => projetosApi.enviarItem(slug, arquivo),
+        descricao: `Arquivo do item (${rotulo})`,
+        executar: () =>
+          projetosApi.enviarItem(slug, new File([arquivo], arquivo.name, { type: mime })), // a API confere o mime declarado
         aplicar: (p) => p, // o projeto só muda ao salvar o padrão
       });
       setErros({});
@@ -265,7 +277,7 @@ function BlocoPadrao(props: {
             const pertence = Number.isNaN(valor) ? padrao : padraoDoNivel(valor, ano.cortes);
             const idErro = `erro-${l.id}`;
             const rotuloRemover = `Remover linha ${n} do ${rotulo}`;
-            const rotuloAnexar = `Anexar PDF do item da linha ${n} do ${rotulo}`;
+            const rotuloAnexar = `Anexar arquivo do item da linha ${n} do ${rotulo}`;
             return (
               <li
                 key={l.id}
@@ -320,13 +332,13 @@ function BlocoPadrao(props: {
                         <FileUp />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Anexar PDF do item</TooltipContent>
+                    <TooltipContent>Anexar PDF ou imagem do item</TooltipContent>
                   </Tooltip>
                   <input
                     type="file"
                     hidden
-                    accept="application/pdf,.pdf"
-                    aria-label={`PDF do item da linha ${n} do ${rotulo}`}
+                    accept="application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg"
+                    aria-label={`Arquivo do item da linha ${n} do ${rotulo}`}
                     onChange={(e) => {
                       const arquivo = e.target.files?.[0];
                       e.target.value = "";
@@ -358,14 +370,17 @@ function BlocoPadrao(props: {
                       >
                         {l.item.nome}
                       </a>
+                      <span className="text-xs text-muted-foreground">
+                        {tipoDoItem(l.item).toUpperCase()}
+                      </span>
                       <Button
                         type="button"
                         size="sm"
                         variant="ghost"
-                        aria-label={`Remover PDF da linha ${n} do ${rotulo}`}
+                        aria-label={`Remover arquivo da linha ${n} do ${rotulo}`}
                         onClick={() => trocarItem(l.id, undefined)}
                       >
-                        Remover PDF
+                        Remover arquivo
                       </Button>
                     </p>
                   )}

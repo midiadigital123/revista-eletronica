@@ -154,6 +154,19 @@ Chave `<n>ef` (1 a 9) ou `<n>em` (1 a 3), ex.: `2ef`, `5ef`, `3em`. Rótulos ger
 - **`content` vazio** vira `"---"` (a revista mostra como "sem item").
 - **Nível fora do intervalo do próprio padrão** não é erro (a revista aceita); o editor só mostra um aviso (`padraoDoNivel`).
 
+### Itens ("Ver item") — `/projetos/:slug/itens`
+
+| Método | Rota | Corpo | Resposta |
+|---|---|---|---|
+| POST 🔒 | `/projetos/:slug/itens` | multipart, campo **`arquivo`** | 201 `ItemPdf` · 400 sem arquivo/tipo não aceito/conteúdo não confere · 413 > `ITEM_MAX_BYTES` (5 MB) · 423 sem bloqueio |
+| GET | `/projetos/:slug/itens/:id` | — | 200 stream com o `Content-Type` do arquivo (`application/pdf`, `image/png` ou `image/jpeg`) · 404 id inválido/inexistente |
+
+- **Tipos aceitos:** PDF, PNG e JPG/JPEG (os dois últimos são o mesmo tipo `jpg`, mime `image/jpeg`). O mime declarado precisa estar em `ITEM_MIMES` e bater com os bytes mágicos (`%PDF-`, PNG, JPEG); senão 400 ("Use um PDF, PNG ou JPG").
+- **`ItemPdf.tipo`:** `"pdf" | "png" | "jpg"`, opcional; ausente = `pdf` (itens antigos). `tipoDoItem(item)` devolve o tipo efetivo. O nome do schema ficou `ItemPdf` por compatibilidade.
+- **Content-Type no GET:** vem de `metadata.mime` do GridFS; arquivos antigos, sem mime, saem como `application/pdf`.
+- **Pacote/preview:** o arquivo fica em `<caderno>/arquivos/itens/<id>.<tipo>` (`.pdf`, `.png` ou `.jpg`), uma entrada por item mesmo usado em várias linhas.
+- O editor grava o `ItemPdf` na linha via `PUT …/escala/:padrao`. Arquivos são compartilhados entre cópias do projeto e nunca removidos.
+
 ### Geração da revista
 
 | Método | Rota | Resposta |

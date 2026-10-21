@@ -34,7 +34,12 @@ export interface ProjetoDb {
 }
 
 const itemSchema = new Schema(
-  { id: { type: String, required: true }, nome: { type: String, required: true }, tamanho: Number },
+  {
+    id: { type: String, required: true },
+    nome: { type: String, required: true },
+    tamanho: Number,
+    tipo: String, // ausente = pdf (itens antigos)
+  },
   { _id: false, id: false },
 );
 

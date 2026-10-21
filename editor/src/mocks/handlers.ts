@@ -18,6 +18,7 @@ import {
   IMAGEM_MAX_BYTES,
   IMAGEM_MIMES,
   ITEM_MAX_BYTES,
+  ITEM_MIMES,
   type ItemPdf,
   LinhasPadrao,
   LoginEntrada,
@@ -59,7 +60,7 @@ class ErroMock extends Error {
     super(corpo.erro);
   }
 }
-// ponytail: PDFs dos itens fora do mockDb (não somem no reset); basta para dev e testes.
+// ponytail: arquivos dos itens fora do mockDb (não somem no reset); basta para dev e testes.
 const itensPdf = new Map<string, Blob>();
 
 const falha = (status: number, erro: string, extra: Omit<ErroApi, "erro"> = {}) => {
@@ -499,7 +500,7 @@ export const handlers = [
     }),
   ),
 
-  // ---------- PDFs dos itens da escala (a linha guarda o ItemPdf)
+  // ---------- arquivos dos itens da escala (a linha guarda o ItemPdf)
   http.post(
     `${P}/itens`,
     rota(async ({ request, params }) => {
@@ -507,11 +508,16 @@ export const handlers = [
       const arquivo = (await request.formData()).get("arquivo");
       if (!arquivo || typeof arquivo === "string")
         return falha(400, "Envie o arquivo no campo 'arquivo'", { campo: "arquivo" });
+      const tipo = (Object.keys(ITEM_MIMES) as (keyof typeof ITEM_MIMES)[]).find(
+        (t) => ITEM_MIMES[t] === arquivo.type,
+      );
+      if (!tipo) return falha(400, "Envie um PDF, PNG ou JPG", { campo: "arquivo" });
       if (arquivo.size > ITEM_MAX_BYTES) falha(413, "Arquivo grande demais");
       const item: ItemPdf = {
         id: novoId().replace(/-/g, "").slice(0, 24),
         nome: arquivo.name,
         tamanho: arquivo.size,
+        tipo,
       };
       itensPdf.set(item.id, arquivo);
       return HttpResponse.json(item, { status: 201 });
@@ -521,9 +527,10 @@ export const handlers = [
     `${P}/itens/:id`,
     rota(({ params }) => {
       exigirLogin();
-      const pdf = itensPdf.get(String(params.id));
-      if (!pdf) return falha(404, "PDF não encontrado");
-      return new HttpResponse(pdf, { headers: { "Content-Type": "application/pdf" } });
+      const arquivo = itensPdf.get(String(params.id));
+      if (!arquivo) return falha(404, "Arquivo não encontrado");
+      // O Blob guarda o mime validado no POST.
+      return new HttpResponse(arquivo, { headers: { "Content-Type": arquivo.type } });
     }),
   ),
 

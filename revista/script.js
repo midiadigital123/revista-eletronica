@@ -163,6 +163,18 @@ function corTextoSobre(hex) {
   return branco > preto ? "#fff" : "#000";
 }
 
+const TIPOS_ITEM = ["pdf", "png", "jpg"];
+
+/** Tipo válido do item (lista fixa); ausente ou desconhecido cai em "pdf" (itens antigos). */
+function tipoDoItem(tipo) {
+  return TIPOS_ITEM.includes(tipo) ? tipo : "pdf";
+}
+
+/** URL do arquivo do item no pacote; só interpola id escapado e tipo validado. */
+function urlDoItem(id, tipo) {
+  return `arquivos/itens/${encodeURIComponent(id)}.${tipoDoItem(tipo)}`;
+}
+
 function alturaLinhaColapsada() {
   return getComputedStyle(document.documentElement)
     .getPropertyValue("--escala-linha-height")
@@ -170,7 +182,7 @@ function alturaLinhaColapsada() {
 }
 
 // Exporta para o teste em Node; no navegador (script clássico) `module` não existe.
-if (typeof module !== "undefined") module.exports = { montarFaixasRegua, rotuloAno, rotuloAnoLongo, corTextoSobre };
+if (typeof module !== "undefined") module.exports = { montarFaixasRegua, rotuloAno, rotuloAnoLongo, corTextoSobre, tipoDoItem, urlDoItem };
 
 // ==========================================
 // ESTADO DA APLICAÇÃO
@@ -303,6 +315,7 @@ class DescriptorManager {
     const closeBtn = document.getElementById("itemModalClose");
     const titulo = document.getElementById("itemModalTitle");
     const frame = document.getElementById("itemModalFrame");
+    const imagem = document.getElementById("itemModalImagem");
     if (!modal) return;
 
     let abridor = null;
@@ -313,11 +326,18 @@ class DescriptorManager {
         if (el !== modal) el.inert = inerte;
       });
 
-    const abrirModal = (nivel, id, origem) => {
+    const abrirModal = (nivel, id, tipoBruto, origem) => {
       abridor = origem;
-      titulo.textContent = `Item — nível ${nivel}`;
-      frame.title = `PDF do item — nível ${nivel}`;
-      frame.src = `arquivos/itens/${encodeURIComponent(id)}.pdf`;
+      const tipo = tipoDoItem(tipoBruto);
+      const ehImagem = tipo !== "pdf";
+      const rotulo = `${ehImagem ? "Imagem" : "PDF"} do item — nível ${nivel}`;
+      titulo.textContent = rotulo;
+      frame.hidden = ehImagem;
+      imagem.hidden = !ehImagem;
+      const alvo = ehImagem ? imagem : frame;
+      alvo.src = urlDoItem(id, tipo);
+      if (ehImagem) imagem.alt = rotulo;
+      else frame.title = rotulo;
       modal.hidden = false;
       fundoInerte(true);
       document.body.style.overflow = "hidden";
@@ -327,6 +347,7 @@ class DescriptorManager {
     const fecharModal = () => {
       modal.hidden = true;
       frame.removeAttribute("src");
+      imagem.removeAttribute("src");
       document.body.style.overflow = "";
       fundoInerte(false);
       if (abridor && abridor.isConnected) abridor.focus({ preventScroll: true });
@@ -336,7 +357,7 @@ class DescriptorManager {
     // O item só abre pelo botão; clicar na habilidade não faz nada (o hover já expande o texto).
     document.addEventListener("click", (e) => {
       const btn = e.target.closest(".ver-item-btn");
-      if (btn) abrirModal(btn.dataset.nivelItem, btn.dataset.itemId, btn);
+      if (btn) abrirModal(btn.dataset.nivelItem, btn.dataset.itemId, btn.dataset.itemTipo, btn);
     });
 
     closeBtn.addEventListener("click", fecharModal);
@@ -733,7 +754,7 @@ class DescriptorManager {
                     </div>
                     ${
                       temItem
-                        ? `<button type="button" class="ver-item-btn" aria-label="Ver item do nível ${escapeHtml(base)}" data-legenda="Ver item" data-nivel-item="${escapeHtml(base)}" data-item-id="${escapeHtml(item.id)}">
+                        ? `<button type="button" class="ver-item-btn" aria-label="Ver item do nível ${escapeHtml(base)}" data-legenda="Ver item" data-nivel-item="${escapeHtml(base)}" data-item-id="${escapeHtml(item.id)}" data-item-tipo="${escapeHtml(item.tipo || "pdf")}">
                             <svg viewBox="4 0 44.3506 44.3506" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                 <rect x="16.6117" y="12.2362" width="19.1273" height="19.8787" rx="2.36459" stroke="black" stroke-width="0.910823"/>
                                 <path d="M19.8918 15.424V17.997H32.4548V15.424H19.8918ZM33.4599 17.997C33.4598 18.5 33.0099 18.9079 32.4548 18.9079H19.8918C19.3367 18.9079 18.8868 18.5 18.8867 17.997V15.424C18.8867 14.921 19.3367 14.5132 19.8918 14.5132H32.4548C33.0099 14.5132 33.4599 14.921 33.4599 15.424V17.997Z" fill="black"/>

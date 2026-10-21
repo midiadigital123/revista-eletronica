@@ -1483,11 +1483,23 @@ body {
   margin-bottom: var(--spacing-sm);
 }
 
-.modal-pdf {
+.modal-pdf,
+.modal-imagem {
   flex: 1;
   width: 100%;
   border: 1px solid var(--color-border);
   border-radius: 0.5rem;
+}
+
+.modal-imagem {
+  object-fit: contain;
+  background-color: var(--color-gray-100);
+}
+
+/* display do iframe/img não pode anular o atributo hidden */
+.modal-pdf[hidden],
+.modal-imagem[hidden] {
+  display: none;
 }
 
 @media (max-width: 500px) {
