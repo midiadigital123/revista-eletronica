@@ -581,7 +581,7 @@ body {
   width: fit-content;
   max-width: 100%;
   box-sizing: border-box;
-  margin: 0 0 var(--spacing-md);
+  margin: 0 auto var(--spacing-md);
   padding: 0.625rem var(--spacing-sm);
   text-wrap: pretty;
   font-size: var(--font-size-xsmall);
