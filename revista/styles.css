@@ -826,12 +826,12 @@ body {
 .linha:has(:focus-visible)
   ~ .linha
   :is(.proficiencia-valor, .linha-marcador, .linha-conteudo) {
-  background-color: color-mix(in srgb, var(--p) 6%, white);
+  background-color: color-mix(in srgb, var(--p) 12%, white);
 }
 
 .linha:has(:focus-visible)
   :is(.proficiencia-valor, .linha-marcador, .linha-conteudo) {
-  background-color: color-mix(in srgb, var(--p) 16%, white);
+  background-color: color-mix(in srgb, var(--p) 22%, white);
 }
 
 /* Hover só onde existe ponteiro: no toque ele "gruda" depois do tap */
