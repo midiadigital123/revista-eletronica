@@ -190,6 +190,17 @@ assert.equal(urlDoItem("abc", "../x"), "arquivos/itens/abc.pdf"); // tipo invál
 assert.equal(urlDoItem("a/b", "pdf"), "arquivos/itens/a%2Fb.pdf");
 assert.equal(tipoDoItem("PNG"), "pdf"); // case-sensitive: só o que o pacote grava
 
+// Habilidade que cruza um corte acende a cor do padrão da âncora maior (topo, limite aberto)
+{
+  const c = { "padrao-1": 350, "padrao-2": 400, "padrao-3": 500 };
+  const padroes = (escala) =>
+    Object.fromEntries(montarFaixasRegua({ min: 0, max: 600, cortes: c, escala }).map((f) => [f.base, f.padrao.slice(-1)]));
+  // 390→446 cruza o corte 400: P03, não P02
+  assert.equal(padroes({ "padrao-4": [L(500)], "padrao-3": [L(446)], "padrao-2": [L(390)] })[390], "3");
+  // 350→400: o topo é o próprio corte, a habilidade continua no P02
+  assert.equal(padroes({ "padrao-3": [L(400)], "padrao-2": [L(350)] })[350], "2");
+}
+
 // Título do modal do item: âncora menor e maior da habilidade (aceita número ou texto do data-*)
 assert.equal(rotuloNiveis(556, 616), "níveis 556 a 616");
 assert.equal(rotuloNiveis("782", "1000"), "níveis 782 a 1000");

@@ -96,6 +96,10 @@ function montarFaixasRegua({ min, max, cortes, escala }) {
     // preenchimento acima de um padrão vazio pertence ao padrão de cima
     if (e.conteudo === null)
       e.padrao = PADROES_DE_CIMA.find((p) => limites[p][1] <= e.base) || e.padrao;
+    // habilidade que cruza um corte tem a cor do padrão da âncora maior (topo); o topo é limite
+    // aberto: um topo exatamente no corte não sobe de padrão
+    else if (!ehVazia(e.conteudo))
+      e.padrao = PADROES_DE_CIMA.find((p) => limites[p][1] < topo) || e.padrao;
     faixas.push({ ...e, topo });
     topo = e.base;
   }
