@@ -7,7 +7,7 @@ Funcionando: API 135 testes + tsc; editor 71 testes + typecheck + lint; régua o
 Quebrado/pendente: conferência visual não feita (navegador do Playwright ocupado por outra sessão): layout do campo "Intervalo mínimo", diálogo de cores e planilha gerada vs `revista/modelo/`. Sem push/merge. Pendências pós-merge: `overrides` do uuid (aviso moderado via exceljs, não explorável); minors adiados (testes extras, variante não destrutiva do `Confirmacao`, hex salvo em maiúsculas, `montarPlanilhas` no service).
 
 ## Próxima ação
-Selos de corte sem sobreposição feitos (D-042, `revista/` sem commit, API reconstruída): abrir o preview real do 2º EF e conferir a olho o 500 e o 400. Pendente de antes: rebuild (`docker compose up -d --build api editor`), anexar um PNG e um PDF a duas linhas no editor, gerar a revista e clicar em "Ver item" nas duas. Commits feitos na `dev` (sem push): 81e0c6f demo-escala, 59f2450 item com imagem, 90446dc legenda, 163c31e CSS/rótulos.
+Ler `docs/Modelagem_Banco_Conceitos_Essenciais.pdf` (cerca de 50 min), responder as 10 questões por escrito e levar à sessão de modelagem de amanhã (nela se fecham a regra de conflito da herança e a lista de perfis). Pendente do trabalho anterior: abrir o preview real do 2º EF e conferir a olho o 500 e o 400 (D-042, `revista/` sem commit, API reconstruída); rebuild (`docker compose up -d --build api editor`), anexar um PNG e um PDF a duas linhas no editor, gerar a revista e clicar em "Ver item" nas duas. Commits feitos na `dev` (sem push): 81e0c6f demo-escala, 59f2450 item com imagem, 90446dc legenda, 163c31e CSS/rótulos.
 
 ## Plano
 <!-- plano completo: ~/.claude/plans/pasted-content-id-aef3-proponha-5-federated-castle.md -->
@@ -382,6 +382,14 @@ Selos de corte sem sobreposição feitos (D-042, `revista/` sem commit, API reco
 - **Arquivos afetados:** `revista/script.js`, `revista/regua.test.mjs`
 - **Status:** ativa. Teste da régua ok; conferência visual pendente. Sem commit. Na linha mais alta o topo é o máximo da escala (P04 se o máximo passa do corte do P04).
 
+### D-045 — Herança viva entre templates/projetos no redesenho Django + PostgreSQL (2026-10-26)
+- **Contexto:** o usuário avalia refazer a API em Django + PostgreSQL por causa de herança entre projetos, templates de escala por parceiro, perfis/auth fortes e auditoria de texto para a equipe do impresso. Faltava definir se o filho acompanha o pai.
+- **Decisão:** herança **viva**: mudou algo no template (ou projeto pai) usado por X, X reflete a mudança. Resolução na leitura (sem copiar nem propagar escritas); o filho guarda só o que sobrescreveu.
+- **Motivo:** pedido do usuário; evita revista de um parceiro divergir do template sem aviso.
+- **Descartadas:** cópia na criação com rastreio de origem — o filho não acompanharia o pai (o D-031 já fazia isso para cores, mas aqui não serve).
+- **Arquivos afetados:** nenhum ainda (só desenho). Futuro: modelos Django `TemplateEscala`, `Projeto`, `Descritor`, `LinhaEscala`.
+- **Status:** ativa. Em aberto: o que vale quando X sobrescreveu o campo que o pai mudou (padrão proposto: sobrescrita local vence e a interface avisa "pai mudou").
+
 ## Perguntas em aberto
 - [x] Propostas 1, 2, 5, 6 da revisão `make-interfaces-feel-better` aplicadas (D-040). Pendentes: 3 (`:active` do botão), 4 (feedback de toque), 7–10 — depende de: usuário
 - [ ] Alternativa de exibição (régua proporcional ou lista por padrão) — só se a equipe pedagógica quiser; recomendação foi manter a régua.
@@ -389,6 +397,9 @@ Selos de corte sem sobreposição feitos (D-042, `revista/` sem commit, API reco
 - [ ] `skills[]` → "relacionadas" vs "correspondente" na planilha: heurística pelo "(" serve à impressão? — depende de: equipe de impressão
 - [ ] Levar a opção 1 ajustada (D-032) para `revista/`? — depende de: usuário ver `demo-escala/opcao-1.html`
 - [x] Cortes do 5º ano corretos? — confirmados pelo usuário
+- [ ] Lista real de perfis e matriz papel × ação (tabela da seção 9 do PDF de modelagem) — depende de: usuário
+- [ ] Onde guardar o status "aplicado no impresso" (cada modelo terá a própria tabela de histórico) e o formato do marcador de padrão sobrescrito — depende de: sessão de modelagem
+- [ ] Migrar `api/` (Express + Mongo) para Django + PostgreSQL, mantendo o React de `editor/`? Motivos do usuário (2026-10-26): herança entre projetos, templates de escala por parceiro (com parentesco entre si), auth/perfis mais fortes (uso amplo todo ano), auditoria de mudanças de texto para avisar a equipe do impresso; equipe já sabe Django. Proposta de modelo apresentada, sem decisão — herança viva decidida (D-045); depende de: usuário confirmar a regra de conflito (sobrescrita local do filho vence ou o pai vence?)
 
 ## Sessões
 ### 2026-10-07
@@ -458,3 +469,10 @@ Selos de corte sem sobreposição feitos (D-042, `revista/` sem commit, API reco
 - Ajuste pedido: rótulos "Padrão 0X" da régua espremidos nas faixas estreitas (ex.: Padrão 01). `revista/styles.css` `.padrao-label`: nome `clamp(0.75rem, 0.62rem + 0.5vw, 0.9375rem)` (antes `--escala-texto-size`, até 1.1rem), `small` 0.75rem/1rem, padding-block 0.125rem, line-height do nome 1.25. Conferência visual pendente. Sem commit.
 - Ajuste pedido: dica "Quem alcança uma habilidade..." virou callout (`.escala-legenda` em `revista/styles.css` + ícone de seta e `<strong>` em `revista/escala.hbs`): fundo branco, borda cinza, barra amarela `--color-primary` à esquerda, raio 0.5rem. Texto inalterado. Conferência visual pendente. Sem commit.
 - Ajuste pedido: cor da linha que cruza um corte = padrão da âncora maior (D-044). `montarFaixasRegua` + 2 asserts; sem commit.
+
+### 2026-10-26
+- Pergunta do usuário: refazer o sistema com Django + banco SQL + React. Achado: o editor já é React 19; a mudança real seria `api/` (Express 5 + Mongoose, ~3,2 mil linhas, 10 módulos) → Django e Mongo → PostgreSQL. Nenhuma decisão tomada; pergunta registrada em "Perguntas em aberto".
+- Usuário deu o motivo: herança entre projetos, templates de escala por parceiro, perfis/auth mais fortes, trilha de mudanças de texto para a equipe do impresso. Estrutura atual lida: `ProjetoModel` é um documento único com `cadernos[]` aninhado, `bloqueio` embutido, 2 perfis (`admin`/`editor`). Proposta: tabelas normalizadas (Projeto com `base`, TemplateEscala com `base`, Membro com papel por projeto, django-simple-history, Marco de entrega ao impresso).
+- Usuário decidiu herança viva (D-045). Estimativa só da modelagem, juntos: 3 a 4 h (teto 5 h).
+- PDF de estudo gerado para a sessão de modelagem: `docs/Modelagem_Banco_Conceitos_Essenciais.pdf` (12 páginas, não versionado; gerador em scratchpad, não guardado no repo). Trechos de código testados num venv do scratchpad com Django 6.1 + django-simple-history 3.13 em SQLite: herança por NULL (`''` é vazio intencional), UNIQUE composto e parcial, PROTECT, CHECK, histórico com `diff_against`, CTE recursiva. Achados: `CHECK` barra A→A mas não ciclo longo; `history_user` do simple-history usa `SET_NULL` (desativar usuários, nunca apagar).
+- Commits na `dev` (sem push), a pedido do usuário: PDF de modelagem e, por último, este `state.md`. Os `.~lock…xlsx#` de `revista/modelo/` ficaram de fora (planilhas abertas no LibreOffice).
