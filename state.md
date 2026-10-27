@@ -8,7 +8,7 @@ Quebrado/pendente: diagrama ER e modelos Django não escritos; lista de blocos d
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Abrir `docs/modelo-er.md` e responder os 3 "Pontos para decidir na sessão" no fim do arquivo.
+Imprimir `docs/Modelagem_Banco_Conceitos_Essenciais.pdf` (v2, 13 páginas) e ler a Parte 1 (seções 1 a 6, cerca de 30 min).
 
 ## Plano
 <!-- plano completo: ~/.claude/plans/pasted-content-id-aef3-proponha-5-federated-castle.md -->
@@ -728,6 +728,9 @@ Abrir `docs/modelo-er.md` e responder os 3 "Pontos para decidir na sessão" no f
 - **Status:** ativa.
 
 ## Perguntas em aberto
+- [ ] Escolha de matriz/texto-modelo mora no Projeto (D-084), mas projetos não são clonados (D-085): em 2027 o CE renasceria sem a matriz CE. Onde guardar a escolha por parceiro × ano para sobreviver ao clone? — depende de: sessão de modelagem (é o desafio do PDF v2)
+- [ ] Intervalo mínimo e cor sobrescritos não têm `versao_base`: mudança no padrão não avisa o projeto que sobrescreveu. Precisa? — depende de: usuário
+- [ ] Admin pode clicar "Revista Impressa Atualizada"? (D-083 dá ao admin as permissões da Pedagógica, não as do Impresso) — depende de: usuário
 - [x] (D-062) Textos da revista: modelo comum + edição por projeto com "diff tipo git". Proposta do Claude: sobrescrita por bloco, guardando a versão do modelo usada; se o modelo mudar, avisar e mostrar o diff, sem fusão automática — depende de: usuário
 - [x] Propostas 1, 2, 5, 6 da revisão `make-interfaces-feel-better` aplicadas (D-040). Pendentes: 3 (`:active` do botão), 4 (feedback de toque), 7–10 — depende de: usuário
 - [ ] Alternativa de exibição (régua proporcional ou lista por padrão) — só se a equipe pedagógica quiser; recomendação foi manter a régua.
@@ -830,3 +833,4 @@ Abrir `docs/modelo-er.md` e responder os 3 "Pontos para decidir na sessão" no f
 - Commits na `dev` (sem push), a pedido do usuário: modelo ER, PDFs da matriz comunitária + planilha de cortes, `.trail/` (learnings) e, por último, este `state.md`. `.claude/settings.json` fica fora (`.claude/` está no `.gitignore`).
 - PDF para impressão: `docs/Modelo_ER_Revista.pdf` (5 páginas A4: visão geral, 3 diagramas por domínio, restrições). Gerado de `docs/modelo-er.md` com Mermaid 11.6.0 + Playwright (Chrome); gerador no scratchpad, não versionado.
 - Pontos em aberto do ER fechados: D-085 a D-087; `docs/modelo-er.md` e PDF atualizados.
+- PDF de estudo reescrito (v2): `docs/Modelagem_Banco_Conceitos_Essenciais.pdf`, 13 páginas, ancorado em D-046 a D-087. Trechos testados em PostgreSQL 17 (Docker descartável) + Django 6.1.2: UNIQUE por ano, UNIQUE parcial de projeto ativo, CHECK de 1 a 4 cortes em ArrayField, XOR do bloqueio, PROTECT, FK composta de mesmo ano, clone do ano com remapeamento, Coalesce da sobrescrita, `versao_base`, grupos com dados reais (batem com as correções). Achados: JSONB reordena chaves (hash precisa de `sort_keys`); FK do Django no banco é NO ACTION (`on_delete` roda em Python; Django 6.1 tem `DB_CASCADE`/`DB_SET_NULL`/`DB_SET_DEFAULT`); lacuna da matriz no clone (ver Perguntas em aberto).
