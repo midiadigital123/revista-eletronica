@@ -697,11 +697,35 @@ Abrir `docs/modelo-er.md` e responder os 3 "Pontos para decidir na sessão" no f
 
 ### D-084 — Rascunho do diagrama ER (2026-10-27)
 - **Contexto:** grill-me encerrado (D-046 a D-083); usuário pediu o rascunho do ER.
-- **Decisão (proposta, a revisar):** `docs/modelo-er.md` com 20 tabelas. Escolhas do rascunho: cortes ligados a parceiro × ano (não ao projeto, que nasce depois); matriz e texto-modelo escolhidos no Projeto; `valores` dos cortes como array de inteiros; "Validado" = hash da revista resolvida guardado no clique (qualquer mudança, de qualquer origem, invalida sem sinal por tabela); bloqueio com dois alvos opcionais e CHECK de exatamente um; perfis como `Group` do Django.
+- **Decisão (proposta, a revisar):** `docs/modelo-er.md` com 18 tabelas. Escolhas do rascunho: cortes ligados a parceiro × ano (não ao projeto, que nasce depois); matriz e texto-modelo escolhidos no Projeto; `valores` dos cortes como array de inteiros; "Validado" = hash da revista resolvida guardado no clique (qualquer mudança, de qualquer origem, invalida sem sinal por tabela); bloqueio com dois alvos opcionais e CHECK de exatamente um; perfis como `Group` do Django.
 - **Motivo:** menos tabelas e menos código de invalidação; a revista resolvida já é calculada para o preview e para a foto do impresso.
 - **Descartadas:** tabela de grupos de corte (calculado); tabela de participação parceiro × etapa (deduzida dos cortes); flag `validado` derrubado por sinais em cada tabela.
 - **Arquivos afetados:** `docs/modelo-er.md`.
-- **Status:** proposta. Em aberto no arquivo: clonar projetos ao abrir ano; Etapa/CC/CorPadrao globais ou por ano; bloco desatualizado bloqueia ou só avisa o "Validado".
+- **Status:** proposta; os 3 pontos em aberto foram fechados em D-085 a D-087.
+
+### D-085 — Ano novo não clona projetos; eles renascem pela cascata (2026-10-27)
+- **Contexto:** D-054 clona o ano; faltava dizer se os projetos entram no clone.
+- **Decisão:** projetos não são clonados. Os cortes clonados recriam os projetos em cascata com "PARCEIRO - NOME DO PROJETO" (D-065); nome, sobrescritas e cores do ano anterior não passam.
+- **Motivo:** escolha do usuário; força revisar o projeto a cada ano.
+- **Descartadas:** clonar projeto com nome, sobrescritas e cores.
+- **Arquivos afetados:** `docs/modelo-er.md`.
+- **Status:** ativa.
+
+### D-086 — Etapa, ComponenteCurricular e CorPadrao são por ano (2026-10-27)
+- **Contexto:** rascunho ER os deixava globais.
+- **Decisão:** as três tabelas ganham `ano_id`; UNIQUE (ano, codigo) e (ano, padrao). Entram no clone do ano.
+- **Motivo:** tudo pode mudar de um ano para outro (D-046).
+- **Descartadas:** tabelas globais.
+- **Arquivos afetados:** `docs/modelo-er.md`.
+- **Status:** ativa.
+
+### D-087 — Bloco sobrescrito desatualizado só avisa; não bloqueia o "Validado" (2026-10-27)
+- **Contexto:** `ProjetoBloco.versao_base` < `BlocoTexto.versao` (D-062).
+- **Decisão:** o projeto mostra o aviso e o bloco fica marcado até o usuário revisar; o "Validado" continua permitido.
+- **Motivo:** escolha do usuário.
+- **Descartadas:** impedir o "Validado".
+- **Arquivos afetados:** `docs/modelo-er.md`.
+- **Status:** ativa.
 
 ## Perguntas em aberto
 - [x] (D-062) Textos da revista: modelo comum + edição por projeto com "diff tipo git". Proposta do Claude: sobrescrita por bloco, guardando a versão do modelo usada; se o modelo mudar, avisar e mostrar o diff, sem fusão automática — depende de: usuário
@@ -804,3 +828,5 @@ Abrir `docs/modelo-er.md` e responder os 3 "Pontos para decidir na sessão" no f
 - Rodada 8 respondida: D-081 a D-083. Grill-me encerrado.
 - Rascunho ER escrito em `docs/modelo-er.md` (D-084); Mermaid validado renderizando com mermaid 11.4.1 no navegador.
 - Commits na `dev` (sem push), a pedido do usuário: modelo ER, PDFs da matriz comunitária + planilha de cortes, `.trail/` (learnings) e, por último, este `state.md`. `.claude/settings.json` fica fora (`.claude/` está no `.gitignore`).
+- PDF para impressão: `docs/Modelo_ER_Revista.pdf` (5 páginas A4: visão geral, 3 diagramas por domínio, restrições). Gerado de `docs/modelo-er.md` com Mermaid 11.6.0 + Playwright (Chrome); gerador no scratchpad, não versionado.
+- Pontos em aberto do ER fechados: D-085 a D-087; `docs/modelo-er.md` e PDF atualizados.
