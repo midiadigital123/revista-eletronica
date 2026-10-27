@@ -8,6 +8,9 @@ erDiagram
     Ano ||--o{ TextoModelo : tem
     Ano ||--o{ Corte : tem
     Ano ||--o{ Projeto : tem
+    Ano ||--o{ Etapa : tem
+    Ano ||--o{ ComponenteCurricular : tem
+    Ano ||--o{ CorPadrao : tem
 
     Parceiro ||--o{ Corte : recebe
     Parceiro ||--o{ Projeto : tem
@@ -42,12 +45,14 @@ erDiagram
         string nome UK "GO, JOINVILLE, Florianopolis"
     }
     Etapa {
-        string codigo UK "2EF, 5EF, 9EF, 3EM"
+        int ano_id FK
+        string codigo "2EF, 5EF, 9EF, 3EM"
         int escala_max "1000 no 2EF, 500 nas demais"
         int ordem
     }
     ComponenteCurricular {
-        string codigo UK "LP, MT"
+        int ano_id FK
+        string codigo "LP, MT"
         string nome
     }
     Matriz {
@@ -120,7 +125,8 @@ erDiagram
         int intervalo_minimo
     }
     CorPadrao {
-        int padrao UK "1 a 5"
+        int ano_id FK
+        int padrao "1 a 5"
         string cor "padrao 5 = #FFF"
     }
     ProjetoCor {
@@ -146,6 +152,8 @@ erDiagram
 
 | Tabela | Restrição | Decisão |
 |---|---|---|
+| Etapa / ComponenteCurricular | UNIQUE (ano, codigo) | D-086 |
+| CorPadrao | UNIQUE (ano, padrao) | D-086 |
 | Matriz | UNIQUE (ano, nome) | D-057 |
 | MatrizEtapaCC | UNIQUE (matriz, etapa, cc) | D-053 |
 | Descritor | UNIQUE (matriz_etapa_cc, codigo) | — |
@@ -165,8 +173,8 @@ erDiagram
 - **Perfis:** `Group` do Django (Admin, Pedagógica, Impresso, Mídias Digitais). D-073, D-083.
 - **"Validado" e "mudou para o impresso":** comparação da revista resolvida atual com `hash_validado` e com a última `FotoRevista`. Qualquer caminho (matriz, texto, corte, cor, nome) invalida sozinho, sem sinalização por tabela. D-074, D-077, D-078.
 
-## Pontos para decidir na sessão
+## Decidido depois do rascunho
 
-1. Ao clonar o ano (D-054), os projetos também são clonados (nome, sobrescritas, cores) ou renascem pela cascata com "PARCEIRO - NOME DO PROJETO"?
-2. `Etapa`, `ComponenteCurricular` e `CorPadrao` ficam globais ou por ano?
-3. `ProjetoBloco` desatualizado (versao_base < versao do bloco) bloqueia o "Validado" ou só avisa?
+1. Ao abrir um ano novo, os projetos **não** são clonados: renascem pela cascata dos cortes com "PARCEIRO - NOME DO PROJETO". D-085.
+2. `Etapa`, `ComponenteCurricular` e `CorPadrao` são **por ano** (clonados com o ano). D-086.
+3. `ProjetoBloco` desatualizado (`versao_base` < `versao` do bloco) **não** bloqueia o "Validado": só avisa e fica marcado. D-087.
