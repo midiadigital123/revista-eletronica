@@ -2,12 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo 9 de 9 concluído: preenchimento manual (passo, cores por projeto, planilhas .xlsx) pronto na branch `feat/preenchimento-manual` (13 commits sobre `redesign-shadcn` 1ac55aa, último b958283). Cada task revisada por subagente; revisão final da branch (opus) liberou com correções, já feitas e re-revisadas.
-Funcionando: API 135 testes + tsc; editor 71 testes + typecheck + lint; régua ok; extrator 8 ok. Passo + "Gerar linhas vazias"; cores no diálogo, na revista e herdadas ao copiar; `planilhas.zip`, planilhas dentro do `pacote.zip` e botão "Exportar planilhas".
-Quebrado/pendente: conferência visual não feita (navegador do Playwright ocupado por outra sessão): layout do campo "Intervalo mínimo", diálogo de cores e planilha gerada vs `revista/modelo/`. Sem push/merge. Pendências pós-merge: `overrides` do uuid (aviso moderado via exceljs, não explorável); minors adiados (testes extras, variante não destrutiva do `Confirmacao`, hex salvo em maiúsculas, `montarPlanilhas` no service).
+Grill-me do novo modelo concluído (8 rodadas): D-046 a D-083 descrevem o redesenho (Django + PostgreSQL). Entidades levantadas: Ano, Parceiro, Matriz (por ano, etapa × CC, tarefa com intervalo, intervalo mínimo), Texto-modelo e blocos com marcadores, Cortes (parceiro × ano × etapa × CC, 1 a 4, grupos calculados), Projeto (cascata, nome, sobrescritas de bloco/cor/intervalo mínimo, Validado), Paleta global, Foto da revista (diff para o impresso), Bloqueio de escrita, 4 perfis.
+Funcionando: nada novo em código; o sistema atual (Express + Mongo) segue como estava.
+Quebrado/pendente: diagrama ER e modelos Django não escritos; lista de blocos de texto e de campos do projeto incompleta (aceitas como flexíveis); conferências visuais antigas (ver sessões anteriores).
 
 ## Próxima ação
-Ler `docs/Modelagem_Banco_Conceitos_Essenciais.pdf` (cerca de 50 min), responder as 10 questões por escrito e levar à sessão de modelagem de amanhã (nela se fecham a regra de conflito da herança e a lista de perfis). Pendente do trabalho anterior: abrir o preview real do 2º EF e conferir a olho o 500 e o 400 (D-042, `revista/` sem commit, API reconstruída); rebuild (`docker compose up -d --build api editor`), anexar um PNG e um PDF a duas linhas no editor, gerar a revista e clicar em "Ver item" nas duas. Commits feitos na `dev` (sem push): 81e0c6f demo-escala, 59f2450 item com imagem, 90446dc legenda, 163c31e CSS/rótulos.
+<!-- sobrescrever: UMA ação concreta -->
+Abrir `docs/modelo-er.md` e responder os 3 "Pontos para decidir na sessão" no fim do arquivo.
 
 ## Plano
 <!-- plano completo: ~/.claude/plans/pasted-content-id-aef3-proponha-5-federated-castle.md -->
@@ -382,15 +383,328 @@ Ler `docs/Modelagem_Banco_Conceitos_Essenciais.pdf` (cerca de 50 min), responder
 - **Arquivos afetados:** `revista/script.js`, `revista/regua.test.mjs`
 - **Status:** ativa. Teste da régua ok; conferência visual pendente. Sem commit. Na linha mais alta o topo é o máximo da escala (P04 se o máximo passa do corte do P04).
 
-### D-045 — Herança viva entre templates/projetos no redesenho Django + PostgreSQL (2026-10-26)
+### ~~D-045 — Herança viva entre templates/projetos no redesenho Django + PostgreSQL (2026-10-26)
 - **Contexto:** o usuário avalia refazer a API em Django + PostgreSQL por causa de herança entre projetos, templates de escala por parceiro, perfis/auth fortes e auditoria de texto para a equipe do impresso. Faltava definir se o filho acompanha o pai.
 - **Decisão:** herança **viva**: mudou algo no template (ou projeto pai) usado por X, X reflete a mudança. Resolução na leitura (sem copiar nem propagar escritas); o filho guarda só o que sobrescreveu.
 - **Motivo:** pedido do usuário; evita revista de um parceiro divergir do template sem aviso.
 - **Descartadas:** cópia na criação com rastreio de origem — o filho não acompanharia o pai (o D-031 já fazia isso para cores, mas aqui não serve).
 - **Arquivos afetados:** nenhum ainda (só desenho). Futuro: modelos Django `TemplateEscala`, `Projeto`, `Descritor`, `LinhaEscala`.
-- **Status:** ativa. Em aberto: o que vale quando X sobrescreveu o campo que o pai mudou (padrão proposto: sobrescrita local vence e a interface avisa "pai mudou").
+- **Status:** ~~substituída por D-051~~. Em aberto (já sem efeito): o que vale quando X sobrescreveu o campo que o pai mudou (padrão proposto: sobrescrita local vence e a interface avisa "pai mudou").
+
+### D-046 — Ano (edição) é dimensão do modelo, com histórico (2026-10-27)
+- **Contexto:** o sistema será reutilizado todo ano; o trabalho atual é 2026.
+- **Decisão:** guardar dados por ano e manter o histórico. Matriz, cortes e etapas/CC avaliadas podem mudar de um ano para outro.
+- **Motivo:** pedido do usuário; tudo pode mudar entre anos.
+- **Descartadas:** só o ano corrente, sobrescrevendo — perde histórico.
+- **Arquivos afetados:** nenhum ainda (desenho).
+- **Status:** ativa.
+
+### D-047 — Parceiro tem no máximo um projeto; cidades são parceiros independentes (2026-10-27)
+- **Contexto:** a planilha mistura UFs e municípios (ex.: SC e JOINVILLE).
+- **Decisão:** parceiro ↔ projeto é 1:1 (no máximo um). Município é parceiro próprio, sem vínculo com a UF (matriz e cortes independentes).
+- **Motivo:** regra de negócio informada pelo usuário.
+- **Descartadas:** hierarquia UF → município — não existe no negócio.
+- **Arquivos afetados:** nenhum ainda.
+- **Status:** ativa.
+
+### D-048 — Quatro matrizes independentes: comunitária, CE, ES, JOINVILLE (2026-10-27)
+- **Contexto:** a maioria dos parceiros usa a mesma matriz (base SAEGO); 3 exceções.
+- **Decisão:** cada exceção tem matriz própria e completa, sem relação com a comunitária. Projeto não edita conteúdo (habilidade, descritor, tarefa); só referencia uma matriz.
+- **Motivo:** como o impresso já trabalha (4 fontes de dados para todos os parceiros).
+- **Descartadas:** exceção como comunitária + sobrescritas (herança) — usuário confirmou que não há relação.
+- **Arquivos afetados:** nenhum ainda.
+- **Status:** ativa. Efeito na D-045: sem sobrescrita por projeto, a regra de conflito pai × filho deixa de existir (a confirmar com o usuário).
+
+### D-049 — Cortes cadastrados no sistema; grupos calculados; planilha só exportada (2026-10-27)
+- **Contexto:** hoje a pedagógica escreve a planilha de cortes à mão para o impresso; ela tem erros de grupo (9EF-MT SE deveria ser grupo 6 e SALVADOR 7; 5EF-MT SALVADOR deveria ser 6).
+- **Decisão:** UI própria para preencher cortes por parceiro × etapa × CC, antes mesmo de existir projeto. O sistema numera os grupos (cortes iguais = mesmo grupo); o usuário não informa grupo. O sistema é a fonte da verdade e gera a planilha na mesma estrutura (abas ETAPA - CC) para o impresso. Não há importação dessa planilha.
+- **Motivo:** inverter o fluxo: a pedagógica alimenta o sistema, o sistema escreve as planilhas do impresso; grupo digitado à mão gera erro.
+- **Descartadas:** grupo como cadastro manual (tabela de grupos das anotações) — gera os erros vistos; importar a planilha — o sistema passa a ser a origem.
+- **Arquivos afetados:** nenhum ainda.
+- **Status:** ativa.
+
+### D-050 — Quantidade de cortes variável; padrões = cortes + 1 (2026-10-27)
+- **Contexto:** 2EF-LP SE tem só 2 cortes (725, 800), gerando 3 padrões; não é erro.
+- **Decisão:** aceitar menos de 3 cortes por parceiro × etapa × CC; a única consequência é ter menos padrões na escala.
+- **Motivo:** o parceiro decide; não assumir que só o SE fará isso.
+- **Descartadas:** fixar 3 cortes.
+- **Arquivos afetados:** nenhum ainda.
+- **Status:** ativa. Mínimo e máximo de cortes em aberto.
+
+### D-051 — Projeto só referencia a matriz; conteúdo se ajusta na matriz (substitui D-045) (2026-10-27)
+- **Contexto:** D-048 tirou a edição de conteúdo dos projetos.
+- **Decisão:** não há herança de conteúdo entre projetos: o projeto aponta para uma das matrizes e todo ajuste de habilidade/descritor/tarefa é feito na matriz. A regra de conflito pai × filho da D-045 deixa de existir.
+- **Motivo:** confirmado pelo usuário.
+- **Descartadas:** herança viva com sobrescrita por projeto (D-045).
+- **Arquivos afetados:** nenhum ainda.
+- **Status:** ativa.
+
+### D-052 — Projeto tem tabela própria: nome, textos da revista, intervalo mínimo (2026-10-27)
+- **Contexto:** saber se "projeto" ainda é entidade, já que cortes e conteúdo vivem fora dele.
+- **Decisão:** tabela Projeto com nome, textos da revista (editados por projeto) e sobrescrita do intervalo mínimo; lista completa de campos ainda incompleta (o usuário não lembra de todos).
+- **Motivo:** os textos variam por projeto.
+- **Descartadas:** projeto = só parceiro + ano + matriz.
+- **Arquivos afetados:** nenhum ainda.
+- **Status:** ativa.
+
+### D-053 — Intervalo mínimo: padrão na matriz, sobrescrita por projeto × etapa × CC (2026-10-27)
+- **Contexto:** o extrator (`scripts/extrair_descritores.py`) não distingue linha vazia comum de linha vazia vinda do intervalo mínimo.
+- **Decisão:** a matriz guarda o intervalo mínimo de cada etapa × CC (informado na criação, a partir do PDF/XLSX que já tem as linhas vazias). O projeto pode sobrescrever em uma etapa e/ou CC; as linhas vazias são recalculadas.
+- **Motivo:** permitir ajuste local sem mexer na matriz.
+- **Descartadas:** só na matriz — sem ajuste local; só no projeto — repetiria o mesmo valor em todos.
+- **Arquivos afetados:** futuro: modelos Django; extrator.
+- **Status:** ativa.
+
+### D-054 — Ano novo nasce clonando o ano anterior (2026-10-27)
+- **Contexto:** D-046 (dados por ano).
+- **Decisão:** abrir um ano copia o anterior inteiro (matrizes, cortes, participação); edita-se só o que mudou.
+- **Motivo:** a maior parte se repete.
+- **Descartadas:** começar vazio — retrabalho.
+- **Arquivos afetados:** nenhum ainda.
+- **Status:** ativa.
+
+### D-055 — Limites e validação dos cortes (2026-10-27)
+- **Contexto:** UI de cortes (D-049, D-050).
+- **Decisão:** 1 a 4 cortes (2 a 5 padrões); inteiros estritamente crescentes; faixa 0–1000 no 2EF e 0–500 nas demais etapas.
+- **Motivo:** regra informada pelo usuário.
+- **Descartadas:** fixar 3 cortes.
+- **Arquivos afetados:** futuro: UI de cortes; escala precisa de cor/estilo para o 5º padrão (hoje há 4).
+- **Status:** ativa.
+
+### D-056 — Numeração dos grupos (2026-10-27)
+- **Contexto:** grupos calculados (D-049).
+- **Decisão:** por aba (etapa × CC), ordenar as listas de cortes distintas comparando corte a corte (lexicográfico) e numerar a partir de 1. A ordem dos parceiros dentro do grupo não importa.
+- **Motivo:** reproduz a planilha atual (com as correções do usuário).
+- **Descartadas:** número manual.
+- **Arquivos afetados:** futuro: gerador da planilha de cortes.
+- **Status:** ativa.
+
+### D-057 — Matriz é cadastro por ano; parceiro × ano aponta a matriz (2026-10-27)
+- **Contexto:** pode surgir 5ª matriz ou um parceiro trocar de matriz entre anos.
+- **Decisão:** matrizes são cadastradas por ano (não lista fixa de 4); a matriz usada é dado de parceiro × ano.
+- **Motivo:** confirmado pelo usuário (opção a).
+- **Descartadas:** 4 matrizes fixas.
+- **Arquivos afetados:** nenhum ainda.
+- **Status:** ativa.
+
+### D-058 — Regra da D-044 vale para corte em qualquer valor (2026-10-27)
+- **Contexto:** cortes fora do passo (ex.: SALVADOR 5EF-LP 175, 210, 228) caem dentro de um intervalo da régua.
+- **Decisão:** tarefa cujo intervalo cruza um corte usa a cor do padrão da âncora maior, qualquer que seja o corte.
+- **Motivo:** confirmado pelo usuário.
+- **Descartadas:** partir a linha em duas.
+- **Arquivos afetados:** futuro: cálculo de padrão na renderização.
+- **Status:** ativa.
+
+### D-059 — Importação da matriz descarta os cortes do PDF (2026-10-27)
+- **Contexto:** o PDF do SAEGO traz os cortes de GO; o extrator exige 3 cortes e já distribui as tarefas por padrão.
+- **Decisão:** a matriz guarda só o intervalo de cada tarefa; os cortes impressos no PDF são descartados. Padrão é calculado na renderização com os cortes do parceiro. Importação principal: PDF; XLSX no mesmo layout da exportação (uma planilha por etapa × CC) fica como alternativa.
+- **Motivo:** os cortes são do parceiro, não da matriz.
+- **Descartadas:** guardar os cortes do PDF como referência.
+- **Arquivos afetados:** futuro: `scripts/extrair_descritores.py` (tirar a exigência de 3 cortes e a distribuição por padrão).
+- **Status:** ativa.
+
+### D-060 — Cores dos padrões: global com sobrescrita por projeto (2026-10-27)
+- **Contexto:** D-031 copiava as cores por projeto.
+- **Decisão:** cores atuais viram o padrão global; o projeto só define cor quando diverge (sobrescrita).
+- **Motivo:** a maioria dos projetos não muda as cores.
+- **Descartadas:** cor obrigatória em cada projeto.
+- **Arquivos afetados:** futuro: modelos Django; diálogo de cores do editor.
+- **Status:** ativa. Em aberto: existe um nível intermediário (na definição de cortes/etapa)? Cor do 5º padrão.
+
+### D-061 — Projetos criados em cascata a partir do preenchimento dos cortes (2026-10-27)
+- **Contexto:** os cortes são preenchidos antes dos projetos (D-049).
+- **Decisão:** preencher cortes de um parceiro no ano gera o projeto dele automaticamente; associação de matriz e textos por parceiro numa página própria (o usuário propôs "Templates").
+- **Motivo:** evitar criar projeto a projeto.
+- **Descartadas:** criação manual de cada projeto.
+- **Arquivos afetados:** nenhum ainda.
+- **Status:** ativa.
+
+### D-062 — Textos da revista: modelo + sobrescrita por bloco com aviso, sem fusão automática (2026-10-27)
+- **Contexto:** usuário queria um "diff tipo git" entre texto-modelo e texto do projeto.
+- **Decisão:** texto-modelo dividido em blocos; projeto herda ou sobrescreve o bloco inteiro e guarda a versão do modelo usada (`versao_base`). Se o modelo mudar naquele bloco, o projeto mostra "modelo mudou desde sua edição" com o diff; o usuário resolve.
+- **Motivo:** fusão automática de texto corrido pode gerar frase quebrada sem ninguém ver, e isso vai impresso.
+- **Descartadas:** fusão de três vias automática (estilo git) — risco e custo; sem aviso — projeto ficaria defasado sem saber.
+- **Arquivos afetados:** nenhum ainda.
+- **Status:** ativa. Lista de blocos em aberto.
+
+### D-063 — Matriz e texto-modelo são escolhas separadas por parceiro × ano (2026-10-27)
+- **Contexto:** proposta de Template = par matriz + texto-modelo.
+- **Decisão:** o parceiro escolhe a matriz e o texto-modelo separadamente.
+- **Motivo:** flexibilidade; na empresa as regras mudam rápido.
+- **Descartadas:** Template como par fixo — engessa.
+- **Arquivos afetados:** nenhum ainda.
+- **Status:** ativa.
+
+### D-064 — Cores em 2 níveis; padrões usam as cores 1..n; 5º padrão #FFF provisório (2026-10-27)
+- **Contexto:** D-060 deixou em aberto nível intermediário e cor do 5º padrão.
+- **Decisão:** global → projeto (sobrescrita). Com n padrões, usam-se as cores 1..n da paleta. Cor do 5º padrão: #FFF até definirem outra.
+- **Motivo:** confirmado pelo usuário.
+- **Descartadas:** nível intermediário na definição de cortes.
+- **Arquivos afetados:** futuro: paleta global, CSS da escala.
+- **Status:** ativa.
+
+### D-065 — Ciclo de vida do projeto criado em cascata (2026-10-27)
+- **Contexto:** projeto nasce do preenchimento de cortes (D-061).
+- **Decisão:** parceiro retirado de uma etapa × CC → a etapa some da revista. Retirado de todas → projeto arquivado. Nome inicial = valor da coluna Parceiro + " - NOME DO PROJETO" (string literal, ex.: "GO - NOME DO PROJETO"); o usuário edita o nome depois de criado.
+- **Motivo:** forçar o usuário a revisar o nome real do projeto.
+- **Descartadas:** apagar o projeto; pedir o nome antes de criar.
+- **Arquivos afetados:** nenhum ainda.
+- **Status:** ativa.
+
+### D-066 — Matriz editável após o envio, com relatório "o que mudou desde o envio" (2026-10-27)
+- **Contexto:** mudar a matriz comunitária afeta ~25 revistas; o impresso precisa saber.
+- **Decisão:** a matriz continua editável; toda mudança fica no histórico e o sistema lista o que mudou desde o envio ao impresso.
+- **Motivo:** acordado com o time do impresso.
+- **Descartadas:** travar a matriz após o envio; não registrar nada.
+- **Arquivos afetados:** futuro: histórico (django-simple-history) + marco de envio.
+- **Status:** ativa.
+
+### D-067 — Blocos de texto são dados, não estrutura fixa (2026-10-27)
+- **Contexto:** o usuário não sabe a lista de blocos e exige flexibilidade extrema.
+- **Decisão:** blocos do texto-modelo são cadastráveis (criar, remover, reordenar) em vez de campos fixos no modelo de dados.
+- **Motivo:** mudanças vão surgir no meio do caminho.
+- **Descartadas:** uma coluna por seção da revista — engessa.
+- **Arquivos afetados:** nenhum ainda.
+- **Status:** ativa.
+
+### D-068 — Projeto arquivado não volta; parceiro readicionado gera projeto novo (2026-10-27)
+- **Contexto:** ciclo de vida da D-065.
+- **Decisão:** se o parceiro volta a ter cortes no mesmo ano, nasce outro projeto ("PARCEIRO - NOME DO PROJETO"); o arquivado fica como está.
+- **Motivo:** escolha do usuário (opção b).
+- **Descartadas:** desarquivar o mesmo projeto.
+- **Arquivos afetados:** nenhum ainda.
+- **Status:** ativa.
+
+### ~~D-069 — Envio ao impresso = download pelo perfil Impresso; mudança posterior marca o projeto (complementa D-066) (2026-10-27)
+- **Contexto:** hoje a pedagógica comenta o PDF do impresso e espera reexportação. No sistema, ela edita e valida no preview em tempo real; só depois o impresso recebe as planilhas prontas.
+- **Decisão:** perfil dedicado ao impresso baixa as planilhas. A data/hora do download é o marco; qualquer mudança posterior marca o projeto como "mudou" para todos os perfis. Não há relatório separado.
+- **Motivo:** fluxo acordado com o impresso; menos correções chegando lá.
+- **Descartadas:** relatório formal de mudanças (página/planilha/PDF) — não pedido.
+- **Arquivos afetados:** futuro: perfil Impresso, registro de download, histórico.
+- **Status:** ~~substituída por D-072~~.
+
+### D-070 — Textos-modelo com marcadores preenchidos pelo projeto (2026-10-27)
+- **Contexto:** partes variáveis dos textos (nome do projeto etc.).
+- **Decisão:** texto-modelo usa marcadores (ex.: {NOME DO PROJETO}) que o sistema preenche com os dados do projeto.
+- **Motivo:** reduz sobrescritas de bloco (D-062).
+- **Descartadas:** texto fixo editado à mão em cada projeto.
+- **Arquivos afetados:** nenhum ainda.
+- **Status:** ativa. Lista de marcadores em aberto.
+
+### D-071 — Matriz é editada no sistema; reimportar substitui tudo (2026-10-27)
+- **Contexto:** correções na matriz depois da importação.
+- **Decisão:** edição no sistema (fonte da verdade). Reimportar o PDF/XLSX substitui a matriz inteira, com confirmação forte.
+- **Motivo:** coerente com D-049; evita casar tarefa a tarefa entre importações.
+- **Descartadas:** reimportação com aplicação só das diferenças.
+- **Arquivos afetados:** nenhum ainda.
+- **Status:** ativa.
+
+### D-072 — Impresso vê só o que mudou e confirma com "Revista Impressa Atualizada" (substitui D-069) (2026-10-27)
+- **Contexto:** o impresso não quer baixar de novo; quer saber exatamente o que mudar no InDesign.
+- **Decisão:** sem segundo download e sem marco por data de download. Cada projeto mostra ao impresso o que mudou (texto antigo → novo); o botão "Revista Impressa Atualizada" zera as mudanças daquele projeto. Mudança só nos cortes do PE marca só o PE.
+- **Motivo:** pedido do time de impresso.
+- **Descartadas:** marco pela data/hora do download (D-069); reenviar planilhas.
+- **Arquivos afetados:** nenhum ainda.
+- **Status:** ativa.
+
+### D-073 — Quatro perfis (2026-10-27)
+- **Contexto:** lista de perfis estava em aberto.
+- **Decisão:** admin; Equipe Pedagógica; Equipe de Impresso; Equipe de Mídias Digitais (mesmas permissões da Pedagógica).
+- **Motivo:** informado pelo usuário.
+- **Descartadas:** 2 perfis atuais (admin/editor).
+- **Arquivos afetados:** futuro: auth/permissões.
+- **Status:** ativa. Matriz papel × ação detalhada em aberto.
+
+### D-074 — Botão "Validado" (pedagógica) libera "Revista Impressa Atualizada" (impresso) (2026-10-27)
+- **Contexto:** o impresso não deve agir sobre dados ainda não revisados.
+- **Decisão:** cada projeto tem o botão "Validado" para a pedagógica. Só depois dele o impresso pode clicar em "Revista Impressa Atualizada" (antes disso, só vê). Qualquer alteração após "Validado" exige validar de novo.
+- **Motivo:** fluxo informado pelo usuário.
+- **Descartadas:** impresso atualizar a qualquer momento.
+- **Arquivos afetados:** nenhum ainda.
+- **Status:** ativa.
+
+### D-075 — Marcadores iniciais: {PARCEIRO}, {NOME DO PROJETO}, {ANO} (2026-10-27)
+- **Contexto:** D-070.
+- **Decisão:** só esses 3 por enquanto; lista aberta para crescer.
+- **Motivo:** outros vão surgir no projeto.
+- **Descartadas:** lista fechada.
+- **Arquivos afetados:** nenhum ainda.
+- **Status:** ativa.
+
+### D-076 — Aviso de impacto ao editar matriz; 2026 começa do zero (2026-10-27)
+- **Contexto:** mudança na matriz comunitária afeta ~25 revistas; dados atuais no Mongo.
+- **Decisão:** antes de salvar uma edição de matriz, o sistema mostra quantos projetos ela afeta. Sem migração do Mongo: 2026 começa importando os 3 PDFs do SAEGO como matriz comunitária e preenchendo os cortes pela UI nova.
+- **Motivo:** escolhas do usuário (4a, 5a).
+- **Descartadas:** salvar sem aviso; script de migração do Mongo.
+- **Arquivos afetados:** nenhum ainda.
+- **Status:** ativa.
+
+### D-077 — "O que mudou" = diferença entre fotos da revista montada (2026-10-27)
+- **Contexto:** o texto final muda por vários caminhos (matriz, texto-modelo, marcador, corte que troca o padrão); rastrear por tabela é complexo.
+- **Decisão:** ao clicar em "Revista Impressa Atualizada", guardar uma foto (JSON) da revista resolvida do projeto. O impresso vê a diferença entre essa foto e a revista atual. A comparação é sempre contra o último clique do impresso, independentemente de quantas validações houve no meio. Primeira vez: impresso baixa as planilhas e clica, criando a primeira foto.
+- **Motivo:** pega qualquer caminho de mudança; garante que nenhum ajuste passe.
+- **Descartadas:** reconstruir as mudanças pelo histórico de cada tabela.
+- **Arquivos afetados:** nenhum ainda.
+- **Status:** ativa.
+
+### D-078 — Mudança compartilhada derruba "Validado" dos afetados, com validação em lote (2026-10-27)
+- **Contexto:** correção na matriz comunitária afeta ~25 projetos (D-074).
+- **Decisão:** todos os projetos afetados perdem o "Validado"; há botão "validar todos os afetados". O impresso pode baixar as planilhas a qualquer momento (o normal é usar a tela de mudanças).
+- **Motivo:** escolha do usuário (opção a).
+- **Descartadas:** validar um por um; mudança de matriz não derrubar a validação.
+- **Arquivos afetados:** nenhum ainda.
+- **Status:** ativa.
+
+### D-079 — Permissões fora dos projetos (2026-10-27)
+- **Contexto:** D-073.
+- **Decisão:** Pedagógica e Mídias Digitais: abrir ano novo, criar/importar matriz, preencher cortes, editar textos-modelo e paleta global. Admin: gerenciar usuários.
+- **Motivo:** informado pelo usuário.
+- **Descartadas:** concentrar essas ações no admin.
+- **Arquivos afetados:** futuro: permissões Django.
+- **Status:** ativa.
+
+### D-080 — Bloqueio de edição (quem abriu primeiro edita) para matriz e projeto (2026-10-27)
+- **Contexto:** a matriz comunitária é compartilhada; dois usuários podem editar ao mesmo tempo.
+- **Decisão:** bloqueio: o primeiro edita, o outro só vê.
+- **Motivo:** evita colisão sem rastrear edições simultâneas.
+- **Descartadas:** quem salva por último vence; recusa por versão (controle otimista).
+- **Arquivos afetados:** futuro: modelo de bloqueio (hoje `bloqueio` embutido no projeto, na `api/`).
+- **Status:** ativa. Granularidade e expiração do bloqueio em aberto.
+
+### D-081 — Granularidade e expiração do bloqueio de escrita (2026-10-27)
+- **Contexto:** D-080 deixou granularidade e expiração em aberto.
+- **Decisão:** bloqueio é só de escrita (todos continuam vendo). Matriz: trava por matriz × etapa × CC. Projeto: trava o projeto inteiro. Expira em 30 s sem renovação (hoje 2 min, `BLOQUEIO_TTL_MS`); a renovação do editor precisa rodar bem abaixo disso (ex.: a cada 10 s).
+- **Motivo:** permitir trabalho paralelo em partes diferentes da mesma matriz; liberar rápido quem saiu.
+- **Descartadas:** travar a matriz inteira; manter 2 min.
+- **Arquivos afetados:** futuro: modelo de bloqueio; renovação no editor.
+- **Status:** ativa.
+
+### D-082 — Manter histórico por tabela (django-simple-history) para auditoria (2026-10-27)
+- **Contexto:** a foto da revista (D-077) já cobre o impresso.
+- **Decisão:** manter o histórico por modelo para responder quem mudou o quê e quando.
+- **Motivo:** custo de uma linha por modelo.
+- **Descartadas:** sem histórico por enquanto.
+- **Arquivos afetados:** futuro: modelos Django.
+- **Status:** ativa.
+
+### D-083 — Admin tem as permissões da Pedagógica + gerenciar usuários (2026-10-27)
+- **Contexto:** D-079.
+- **Decisão:** admin é superconjunto.
+- **Motivo:** escolha do usuário.
+- **Descartadas:** admin só gerencia usuários.
+- **Arquivos afetados:** futuro: permissões Django.
+- **Status:** ativa.
+
+### D-084 — Rascunho do diagrama ER (2026-10-27)
+- **Contexto:** grill-me encerrado (D-046 a D-083); usuário pediu o rascunho do ER.
+- **Decisão (proposta, a revisar):** `docs/modelo-er.md` com 20 tabelas. Escolhas do rascunho: cortes ligados a parceiro × ano (não ao projeto, que nasce depois); matriz e texto-modelo escolhidos no Projeto; `valores` dos cortes como array de inteiros; "Validado" = hash da revista resolvida guardado no clique (qualquer mudança, de qualquer origem, invalida sem sinal por tabela); bloqueio com dois alvos opcionais e CHECK de exatamente um; perfis como `Group` do Django.
+- **Motivo:** menos tabelas e menos código de invalidação; a revista resolvida já é calculada para o preview e para a foto do impresso.
+- **Descartadas:** tabela de grupos de corte (calculado); tabela de participação parceiro × etapa (deduzida dos cortes); flag `validado` derrubado por sinais em cada tabela.
+- **Arquivos afetados:** `docs/modelo-er.md`.
+- **Status:** proposta. Em aberto no arquivo: clonar projetos ao abrir ano; Etapa/CC/CorPadrao globais ou por ano; bloco desatualizado bloqueia ou só avisa o "Validado".
 
 ## Perguntas em aberto
+- [x] (D-062) Textos da revista: modelo comum + edição por projeto com "diff tipo git". Proposta do Claude: sobrescrita por bloco, guardando a versão do modelo usada; se o modelo mudar, avisar e mostrar o diff, sem fusão automática — depende de: usuário
 - [x] Propostas 1, 2, 5, 6 da revisão `make-interfaces-feel-better` aplicadas (D-040). Pendentes: 3 (`:active` do botão), 4 (feedback de toque), 7–10 — depende de: usuário
 - [ ] Alternativa de exibição (régua proporcional ou lista por padrão) — só se a equipe pedagógica quiser; recomendação foi manter a régua.
 - [ ] Modo de execução do plano: subagentes ou nativo? — depende de: usuário
@@ -476,3 +790,17 @@ Ler `docs/Modelagem_Banco_Conceitos_Essenciais.pdf` (cerca de 50 min), responder
 - Usuário decidiu herança viva (D-045). Estimativa só da modelagem, juntos: 3 a 4 h (teto 5 h).
 - PDF de estudo gerado para a sessão de modelagem: `docs/Modelagem_Banco_Conceitos_Essenciais.pdf` (12 páginas, não versionado; gerador em scratchpad, não guardado no repo). Trechos de código testados num venv do scratchpad com Django 6.1 + django-simple-history 3.13 em SQLite: herança por NULL (`''` é vazio intencional), UNIQUE composto e parcial, PROTECT, CHECK, histórico com `diff_against`, CTE recursiva. Achados: `CHECK` barra A→A mas não ciclo longo; `history_user` do simple-history usa `SET_NULL` (desativar usuários, nunca apagar).
 - Commits na `dev` (sem push), a pedido do usuário: PDF de modelagem e, por último, este `state.md`. Os `.~lock…xlsx#` de `revista/modelo/` ficaram de fora (planilhas abertas no LibreOffice).
+
+### 2026-10-27
+- Usuário trouxe anotações (papel) + planilha `Cortes dos Padrões por Etapa e Parceiro.xlsx`: matriz comunitária única (base SAEGO) para todos os parceiros, exceto CE, ES e JOINVILLE; projeto difere só pelos cortes e pelas etapas/CC avaliadas (ausência na planilha = não avalia). Grill-me iniciado antes de remodelar o banco; nenhuma decisão registrada ainda.
+- Achados na planilha: 9EF-MT SE (250,300,350) sem grupo próprio, herdando o grupo 5 (225,300,350); 5EF-MT SALVADOR (200,235,253) dentro do grupo 5 (175,225,300); 2EF-LP SE = "725, 800" (fora da faixa das demais 2EF).
+- Rodada 1 respondida: D-046 a D-050. "2EF sem valores mínimos" = 2EF não usa intervalo mínimo (linhas vazias da escala); 5EF/9EF/3EM usam.
+- Rodada 2 respondida: D-051 a D-056 (D-045 substituída). Formato XLSX de descritores/tarefas visto: colunas Etapa, Cód. Descritor, Descritor, Pré-requisito e uma coluna por intervalo ("125 a 150"...).
+- Rodada 3 respondida: D-057 a D-061.
+- Rodada 4 respondida: D-062 a D-066.
+- Rodada 5 respondida: D-067 a D-071.
+- Rodada 6 respondida: D-072 a D-076 (D-069 substituída).
+- Rodada 7 respondida: D-077 a D-080.
+- Rodada 8 respondida: D-081 a D-083. Grill-me encerrado.
+- Rascunho ER escrito em `docs/modelo-er.md` (D-084); Mermaid validado renderizando com mermaid 11.4.1 no navegador.
+- Commits na `dev` (sem push), a pedido do usuário: modelo ER, PDFs da matriz comunitária + planilha de cortes, `.trail/` (learnings) e, por último, este `state.md`. `.claude/settings.json` fica fora (`.claude/` está no `.gitignore`).
