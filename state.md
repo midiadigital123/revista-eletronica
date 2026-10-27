@@ -8,7 +8,7 @@ Quebrado/pendente: diagrama ER e modelos Django não escritos; lista de blocos d
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Imprimir `docs/Modelagem_Banco_Conceitos_Essenciais.pdf` (v2, 13 páginas) e ler a Parte 1 (seções 1 a 6, cerca de 30 min).
+Imprimir `docs/Modelagem_Banco_Conceitos_Essenciais.pdf` (v2 corrigido, 13 páginas) e ler a seção 1 (4 min).
 
 ## Plano
 <!-- plano completo: ~/.claude/plans/pasted-content-id-aef3-proponha-5-federated-castle.md -->
@@ -727,8 +727,68 @@ Imprimir `docs/Modelagem_Banco_Conceitos_Essenciais.pdf` (v2, 13 páginas) e ler
 - **Arquivos afetados:** `docs/modelo-er.md`.
 - **Status:** ativa.
 
+### D-088 — Escolha de matriz e texto-modelo mora em ParceiroAno (2026-10-27)
+- **Contexto:** revisão do ER: no Projeto, a escolha não existe quando a cascata cria o projeto e some no clone do ano (D-085).
+- **Decisão:** nova tabela ParceiroAno(parceiro, ano, matriz nula, texto_modelo nulo), UNIQUE (parceiro, ano). Corte e Projeto apontam para ela. Ela entra no clone do ano; "Validado" exige matriz e texto-modelo escolhidos.
+- **Motivo:** a escolha é dado de parceiro × ano (D-057, D-063) e precisa sobreviver ao clone.
+- **Descartadas:** matriz/texto-modelo no Projeto (rascunho D-084); default comunitária na cascata — escolheria pelo usuário.
+- **Arquivos afetados:** `docs/modelo-er.md`, `docs/Modelo_ER_Revista.pdf`.
+- **Status:** ativa.
+
+### D-089 — Cliques de estado levam o hash da versão vista (2026-10-27)
+- **Contexto:** revisão: o impresso via o diff de V1, a pedagógica validava V2, o clique gravava V2 e a mudança V1→V2 nunca chegava ao InDesign.
+- **Decisão:** "Validado" e "Revista Impressa Atualizada" enviam o hash da revista exibida; o servidor recusa se a atual for outra. FotoRevista guarda o hash.
+- **Motivo:** garantir que ninguém confirma o que não viu.
+- **Descartadas:** gravar o estado do momento do clique.
+- **Arquivos afetados:** `docs/modelo-er.md`.
+- **Status:** ativa.
+
+### D-090 — Coerência de ano por FK composta (2026-10-27)
+- **Contexto:** revisão: FKs simples aceitam corte 2027 com etapa 2026 ou matriz 2026.
+- **Decisão:** tabelas por ano ganham UNIQUE (id, ano); ParceiroAno, MatrizEtapaCC e Corte carregam ano_id e usam FKs compostas (RunSQL). Sobrescritas do projeto validam o ano no `clean()`.
+- **Motivo:** o banco recusa mistura de anos (testado em PostgreSQL 17).
+- **Descartadas:** só validação na aplicação — não cobre outros clientes.
+- **Arquivos afetados:** `docs/modelo-er.md`.
+- **Status:** ativa.
+
+### D-091 — "Intervalo mínimo" é o passo; um campo só (substitui o campo da D-053) (2026-10-27)
+- **Contexto:** o rascunho tinha `intervalo_minimo` e `passo` em MatrizEtapaCC; no editor atual o rótulo "Intervalo mínimo" é o campo `passo`.
+- **Decisão:** um campo `passo` (NULL = sem linhas vazias). Sobrescrita em ProjetoPasso; a existência da linha diz "sobrescrevi" e `passo` NULL nela diz "sem linhas vazias, de propósito". A regra da D-053 (padrão na matriz + sobrescrita no projeto) continua.
+- **Motivo:** dois campos para o mesmo conceito divergiriam.
+- **Descartadas:** manter os dois.
+- **Arquivos afetados:** `docs/modelo-er.md`. O PDF de estudo v2 (seção 8 e questão 10) ainda usa o conceito antigo.
+- **Status:** ativa.
+
+### D-092 — Blocos de texto tipados: texto, parágrafos ou imagem (2026-10-27)
+- **Contexto:** a página atual tem `heroTitulo` (texto), `introParagrafos` (lista) e `heroImagem` (imagem); BlocoTexto só tinha texto.
+- **Decisão:** BlocoTexto e ProjetoBloco têm `tipo` e colunas texto / paragrafos / imagem; CHECK deixa só a coluna do tipo preenchida.
+- **Motivo:** cobrir o que a revista já tem.
+- **Descartadas:** JSONB genérico — perde o CHECK por tipo.
+- **Arquivos afetados:** `docs/modelo-er.md`.
+- **Status:** ativa.
+
+### D-093 — Regras de integridade da revisão (2026-10-27)
+- **Contexto:** achados médios da revisão do ER.
+- **Decisão:** "Validado" recusado se houver corte sem MatrizEtapaCC na matriz escolhida ou nome terminando em " - NOME DO PROJETO"; cascata de projetos num único serviço transacional; arquivar grava FotoRevista(motivo=arquivamento) e congela o projeto; trocar texto-modelo lista e descarta sobrescritas com confirmação; remover bloco com sobrescritas é PROTECT; Bloqueio guarda `sessao_edicao` (aba) e fica fora do histórico.
+- **Motivo:** cada regra fecha um cenário de erro silencioso.
+- **Descartadas:** resolver projeto arquivado com cortes vivos; CASCADE em bloco removido.
+- **Arquivos afetados:** `docs/modelo-er.md`.
+- **Status:** ativa.
+
+### D-094 — Respostas da revisão: revert, herança de foto, reimportação (2026-10-27)
+- **Contexto:** perguntas de negócio da revisão do ER.
+- **Decisão:** desfazer uma mudança faz o "Validado" voltar (hash basta); projeto readicionado (D-068) herda a última FotoRevista(motivo=impresso) do arquivado; reimportar matriz recriando ids e perdendo auditoria por registro é aceito.
+- **Motivo:** respostas do usuário.
+- **Descartadas:** contador de revisão no lugar do hash.
+- **Arquivos afetados:** `docs/modelo-er.md`.
+- **Status:** ativa.
+
 ## Perguntas em aberto
-- [ ] Escolha de matriz/texto-modelo mora no Projeto (D-084), mas projetos não são clonados (D-085): em 2027 o CE renasceria sem a matriz CE. Onde guardar a escolha por parceiro × ano para sobreviver ao clone? — depende de: sessão de modelagem (é o desafio do PDF v2)
+- [x] (corrigido) PDF de estudo v2 desatualizado em 4 pontos: seção 8 e questão 10 (intervalo mínimo × passo, D-091), desafio (ParceiroAno já resolvido, D-088), bloqueio sem `sessao_edicao` (D-093) — depende de: usuário pedir a correção
+- [x] (D-088 a D-094) Revisão do ER (2026-10-27), alta: (1) escolha de matriz/texto-modelo em ParceiroAno, não no Projeto; (2) clique "Validado" e "Revista Impressa Atualizada" devem enviar o hash da versão que a pessoa viu, e o servidor recusa se o atual for outro (senão um ajuste passa sem ser visto); (3) coerência de ano entre FKs (Corte, Projeto, MEC, sobrescritas) por FK composta ou derivando o ano do pai; (4) `passo` e `intervalo_minimo` são o mesmo campo ("Intervalo mínimo" na UI é o passo) — erro do rascunho; o PDF v2 (seção 8, questão 10) usa 125/100 como se fosse outro conceito; (5) blocos de texto só têm texto, mas a página hoje tem imagem (`heroImagem`) e parágrafos — depende de: usuário decidir
+- [x] (D-088 a D-094) Revisão do ER, média: corte sem MatrizEtapaCC na matriz escolhida; projeto arquivado deve congelar (não resolver com cortes vivos); ProjetoBloco ao trocar de texto-modelo ou remover bloco; bloquear "Validado" com nome "… - NOME DO PROJETO"; Bloqueio precisa da sessão de edição (aba), como hoje, e ficar fora do histórico — depende de: usuário
+- [x] (D-088 a D-094) Revisão do ER, negócio: valor revertido faz o "Validado" voltar sozinho (hash) — aceitável?; projeto readicionado (D-068) herda a última foto do arquivado?; reimportar matriz (D-071) recria ids e perde auditoria por registro — depende de: usuário
+- [x] (D-088 a D-094) Escolha de matriz/texto-modelo mora no Projeto (D-084), mas projetos não são clonados (D-085): em 2027 o CE renasceria sem a matriz CE. Onde guardar a escolha por parceiro × ano para sobreviver ao clone? — depende de: sessão de modelagem (é o desafio do PDF v2)
 - [ ] Intervalo mínimo e cor sobrescritos não têm `versao_base`: mudança no padrão não avisa o projeto que sobrescreveu. Precisa? — depende de: usuário
 - [ ] Admin pode clicar "Revista Impressa Atualizada"? (D-083 dá ao admin as permissões da Pedagógica, não as do Impresso) — depende de: usuário
 - [x] (D-062) Textos da revista: modelo comum + edição por projeto com "diff tipo git". Proposta do Claude: sobrescrita por bloco, guardando a versão do modelo usada; se o modelo mudar, avisar e mostrar o diff, sem fusão automática — depende de: usuário
@@ -834,3 +894,6 @@ Imprimir `docs/Modelagem_Banco_Conceitos_Essenciais.pdf` (v2, 13 páginas) e ler
 - PDF para impressão: `docs/Modelo_ER_Revista.pdf` (5 páginas A4: visão geral, 3 diagramas por domínio, restrições). Gerado de `docs/modelo-er.md` com Mermaid 11.6.0 + Playwright (Chrome); gerador no scratchpad, não versionado.
 - Pontos em aberto do ER fechados: D-085 a D-087; `docs/modelo-er.md` e PDF atualizados.
 - PDF de estudo reescrito (v2): `docs/Modelagem_Banco_Conceitos_Essenciais.pdf`, 13 páginas, ancorado em D-046 a D-087. Trechos testados em PostgreSQL 17 (Docker descartável) + Django 6.1.2: UNIQUE por ano, UNIQUE parcial de projeto ativo, CHECK de 1 a 4 cortes em ArrayField, XOR do bloqueio, PROTECT, FK composta de mesmo ano, clone do ano com remapeamento, Coalesce da sobrescrita, `versao_base`, grupos com dados reais (batem com as correções). Achados: JSONB reordena chaves (hash precisa de `sort_keys`); FK do Django no banco é NO ACTION (`on_delete` roda em Python; Django 6.1 tem `DB_CASCADE`/`DB_SET_NULL`/`DB_SET_DEFAULT`); lacuna da matriz no clone (ver Perguntas em aberto).
+- Revisão do ER: revisor independente (database-reviewer) + comparação com o sistema atual. 10 achados (5 altos, 5 médios) e 3 perguntas em "Perguntas em aberto". Refutados: "bloqueio expirado trava para sempre" (a aquisição sobrescreve o expirado, testado no lab) e "ordem dos grupos com tamanhos diferentes" (prefixo menor vem antes, bate com 2EF-MT).
+- 10 correções da revisão aplicadas ao ER (D-088 a D-094): ParceiroAno, hash da versão vista, FKs compostas de ano, passo único, blocos tipados, regras médias. `docs/modelo-er.md` e PDF (6 páginas) regerados; Mermaid conferido renderizado.
+- PDF de estudo v2 corrigido para D-088 a D-094: ParceiroAno na FK composta e no clone (seção 7), passo = "Intervalo mínimo" (seção 8), hash da versão vista (seção 9), bloqueio por usuário + aba (seção 10), questões 6, 10 e desafio reescritos. Reverificado em PostgreSQL 17: FK composta com matriz NULL é aceita; `Coalesce` erra a sobrescrita NULL de propósito (devolveu 25), `Exists` + `Case` acerta (NULL); aba 2 da mesma usuária é recusada.
