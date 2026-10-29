@@ -11,6 +11,7 @@ class Ano(models.Model):
 
     class Meta:
         db_table = "ano"
+        permissions = [("abrir_ano", "Pode abrir ano novo")]
 
     def __str__(self):
         return str(self.ano)
