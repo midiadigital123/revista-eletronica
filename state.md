@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo 4 de 22: Fase A concluída e juntada em `refatoracao-django` (merge local 1125cdb; sem push nem PR).
-Funcionando: em `refatoracao-django`, `docker compose run --rm app python manage.py test` roda 29 testes OK, `makemigrations --check` limpo; `node app/nucleo/static/revista/f1/regua.test.mjs` ok; `cd app/e2e && npx playwright test f1-fixture` 8/8.
-Quebrado/pendente: `docs/modelo-er.md` precisa dos ajustes listados em D-129 e D-133; menores do S01 (container root, aviso de senha no `.env.example`).
+Passo 10 de 22: Fase B concluída e juntada em `refatoracao-django` (commits eb03018, d2ae77e, 2e48508, 198764f, a31b9b5, fc4377e; merges --no-ff 6cd2583…9ce2bd6; sem push nem PR).
+Funcionando: em `refatoracao-django`, `docker compose run --rm -v "$PWD/examples:/pdfs:ro" -v "$HOME/Documentos:/pdfs-alfa:ro" app python manage.py test` roda 152 testes OK; `makemigrations --check` limpo; régua ok; Playwright f1-fixture 8/8; `trail check` sem conflito; carga 2026 de ponta a ponta (cadastros, 3 PDFs, 4 templates) conferida.
+Quebrado/pendente: seeds de 2026 aguardam a Pedagógica; `docs/modelo-er.md` com os ajustes da D-129/D-133; perguntas abertas: inatividade do bloqueio, SVG com DOCTYPE, autor da foto herdada.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Aguardando o usuário liberar a Fase B (S04, S05, S06, S09, S10, S14 em paralelo, a partir de `refatoracao-django`).
+Liberar a Fase C: S07 (resolver, foto, hash, pendências), a partir de `refatoracao-django`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -16,13 +16,13 @@ Aguardando o usuário liberar a Fase B (S04, S05, S06, S09, S10, S14 em paralelo
 2. [x] S02 — Modelos de cadastro e matriz + FK composta
 3. [x] S03 — Parceiro_ano, corte, projeto, revista, texto, controle
 4. [x] S03b — Revista JS/CSS para 2 a 5 padrões
-5. [ ] S04 — Cadastros iniciais + importador de matriz  ← próximo (Fase B)
-6. [ ] S05 — Templates: formato, validação, seed
-7. [ ] S06 — Cascata dos cortes
-8. [ ] S09 — Serviço de SVG e capa
-9. [ ] S10 — Bloqueio
-10. [ ] S14 — Perfis e permissões
-11. [ ] S07 — Resolver, foto, hash, pendências
+5. [x] S04 — Cadastros iniciais + importador de matriz
+6. [x] S05 — Templates: formato, validação, seed
+7. [x] S06 — Cascata dos cortes
+8. [x] S09 — Serviço de SVG e capa
+9. [x] S10 — Bloqueio
+10. [x] S14 — Perfis e permissões
+11. [ ] S07 — Resolver, foto, hash, pendências  ← próximo (Fase C)
 12. [ ] S08 — Página única F1 + F2
 13. [ ] S15 — Zip por revista
 14. [ ] S11a — Admin: cadastros, cortes, matriz
@@ -1107,12 +1107,120 @@ Aguardando o usuário liberar a Fase B (S04, S05, S06, S09, S10, S14 em paralelo
 - **Arquivos afetados:** `app/nucleo/models/{projeto,texto,revista,controle}.py`, `app/nucleo/variaveis.py`, `app/nucleo/db.py`, `app/nucleo/migrations/000{3,4,5}*.py`, `app/nucleo/tests/test_{revista,constraints}.py`
 - **Status:** ativa. Revisão (database-reviewer): 0 críticos; `template_versao` ainda aceitava UPDATE por `QuerySet.update()`/`save()` com pk explícito → trigger `BEFORE UPDATE OR DELETE` no banco (substitui o "trigger só se outro cliente gravar" desta decisão); testes de recusa por FK composta. `criada_por` nulo mantido só para o seed. Ajustar no `docs/modelo-er.md`: CASCADE de `bloqueio` (só no ORM; no banco NO ACTION); `projeto_cor` sem `ano_id`; `projeto_passo.ano_id`; colunas "só para FK composta" marcadas como FK; `criada_por` nulo; tamanhos dos textos curtos; índice próprio por FK composta.
 
+### D-134 — Fase B sem commit; um worktree por passo a partir de `refatoracao-django` (2026-10-29 17:00)
+- **Contexto:** o usuário pediu a Fase B sem commit, push nem PR. Os 6 passos (S04, S05, S06, S09, S10, S14) só dependem de S03, que já está em `refatoracao-django` (be15a50).
+- **Decisão:** cada passo roda num subagente com worktree próprio, na branch `feat/sNN-<nome>` criada a partir de be15a50, e termina com as mudanças não commitadas no worktree. Não há encadeamento de branches. Os PDFs SAEGO (10–11 MB cada) não são copiados para `app/`: o teste do S04 lê de um diretório montado e é pulado se o arquivo faltar. Só o S14 cria migração (0007).
+- **Motivo:** sem dependência entre os passos, o worktree já nasce com tudo que precisa; a D-127 só existia por causa da cadeia S01 → S02 → S03.
+- **Descartadas:** commit local por passo (D-127) — desnecessário aqui e contra o pedido; copiar os PDFs para `app/nucleo/tests/fixtures/` — 31 MB no git.
+- **Arquivos afetados:** nenhum (fluxo de git).
+- **Status:** ativa. D-127 continua valendo para a Fase A.
+
+### D-135 — Cascata dos cortes (S06) (2026-10-29 17:20)
+- **Contexto:** o plano não fixava a assinatura nem o formato das linhas; `FotoRevista.criada_por` é NOT NULL e a Fase B não pode criar migração.
+- **Decisão:** `gravar_cortes(parceiro_ano, linhas, usuario)`, com `linhas` = lista de `(Etapa, Componente, valores)` e sempre o conjunto completo do parceiro_ano (corte ausente é apagado). Cortes gravados por upsert (só o que mudou entra no histórico). Validação antes da transação, com todos os erros juntos (D-055 + par etapa × componente repetido); coerência de ano fica com as FKs compostas. Trava: `select_for_update(of=("self",))` no ParceiroAno. Revista nova herda a última foto de impresso do mesmo componente em projetos arquivados do mesmo parceiro_ano, inclusive as já herdadas, com `herdada=True` e `criada_por` = usuário da cascata. Stub de `fotografar(revista, motivo, usuario)` grava `{}` com o sha256 de `{}` (o CHECK recusa hash vazio).
+- **Motivo:** a grade do S11a envia a linha inteira do parceiro; histórico sem ruído; `of=` evita travar a linha do parceiro junto.
+- **Descartadas:** lista só com mudanças (teria de dizer o que apagar); `criada_por` anulável (migração); apagar e recriar cortes (duplica o histórico); depender só dos UNIQUE (a 2ª aba recebe erro em vez de esperar); manter o autor original na foto herdada.
+- **Arquivos afetados:** `app/nucleo/servicos/cascata.py`, `app/nucleo/servicos/foto.py`, `app/nucleo/tests/test_cascata.py`
+- **Status:** ativa. Verificado: 42 testes, `makemigrations --check` limpo. S07 troca o corpo de `fotografar` e o teste que confere `SHA256_DE_VAZIO`.
+
+### D-136 — Perfis e permissões (S14) (2026-10-29 17:35)
+- **Contexto:** a migração não pode importar código que muda depois; banco novo não tem as permissões de modelo durante a migração.
+- **Decisão:** `app/nucleo/permissoes.py` é a fonte única da tabela papel × ação; a migração `0007_perfis` guarda listas literais congeladas e o teste `GruposNoBancoTest` compara banco × tabela (mudou a tabela sem migração nova → teste falha). A 0007 chama `create_permissions` para `auth` e `nucleo` (com `models_module = True` temporário no stub da migração) e falha alto se faltar permissão; o reverso apaga os 4 grupos e as 3 permissões customizadas. Mínimo privilégio: Ano só por `abrir_ano` (sem `add_ano`), `templateversao` só `add`, `fotorevista` e `bloqueio` só `view`. Admin = Pedagógica + CRUD de `auth.user`/`auth.group`; não marca impressa (`ADMIN_MARCA_IMPRESSA = False`). Impresso: `view_*` + `marcar_impressa`. Mídias = Pedagógica. Contagens: Admin 83, Pedagógica 75, Mídias 75, Impresso 22.
+- **Motivo:** migração reproduzível; os fluxos (abrir ano, clique do impresso, bloqueio) não podem ser contornados pelo CRUD do admin.
+- **Descartadas:** migração importando `permissoes.py` (histórico quebra quando o arquivo muda); comando `sincronizar_perfis` pós-migrate (passo manual); CRUD em todos os modelos.
+- **Arquivos afetados:** `app/nucleo/permissoes.py`, `app/nucleo/migrations/0007_perfis.py`, `app/nucleo/models/{cadastro,revista}.py` (`Meta.permissions`), `app/nucleo/tests/test_permissoes.py`
+- **Status:** ativa. Verificado: 35 testes, `makemigrations --check` limpo, ciclo `migrate nucleo 0006` ↔ `0007` recria os 4 grupos. Revisão (django-reviewer) em andamento. A conferir no S11: Pedagógica/Mídias com `delete_*` (o fluxo previsto é arquivar, D-117); Admin com `auth.change_user` pode marcar superusuário.
+
+### D-137 — Serviço de SVG e capa (S09) (2026-10-29 17:35)
+- **Contexto:** o SVG real do Illustrator traz PNG embutido; cada troca de arquivo com nome uuid deixaria o anterior órfão; o S05 (seções) roda em paralelo.
+- **Decisão:** arquivo antigo apagado em `transaction.on_commit`, só se o caminho mudou (limite `ponytail:`: se a transação falhar, o novo fica órfão). `<image href>` aceita `data:image/(png|jpeg|gif|webp);base64`; fora isso `href` só `#id` interno. `xlink:href` vira `href` (SVG 2). Elemento fora da lista sai com os filhos (inclui `a`, `animate`/`set`, comentários, outros namespaces); filtros `fe*` ficam na lista. CSS com `\`, `expression`, `image-set` ou `url(` malformada é recusado no `<style>` e removido nos atributos. `<!DOCTYPE>` é recusado. `ids_faltando(revista, secoes)` recebe as seções efetivas; a regra fica em `ids_esperados` (`passoN` → `passoN`, `dlg-xx` → `btn-action-xx`). Capa: tipo só pela assinatura mágica, extensão segue o conteúdo; arquivos em `f2/<uuid>.svg` e `capas/<uuid>.<ext>` via `default_storage`; erros como `ValidationError` em PT-BR.
+- **Motivo:** imagem rasterizada não executa script; escapes de CSS escondem `@import`/`url(`; o S07 só precisa passar a lista de seções.
+- **Descartadas:** manter arquivos antigos (storage sem limite); apagar antes do commit (rollback perderia o vigente); `href` só `#id` sempre (apagaria a imagem); `register_namespace` (estado global); parser de template neste passo.
+- **Arquivos afetados:** `app/nucleo/servicos/arquivos.py`, `app/nucleo/tests/test_arquivos.py`, `app/nucleo/tests/fixtures/f2-lp.svg`
+- **Status:** ativa. Verificado: 45 testes, `makemigrations --check` limpo. Revisão (security-reviewer) em andamento. S08 procura os ids com prefixo `f2-`.
+
+### D-138 — Correções da revisão do S06 (2026-10-29 17:35)
+- **Contexto:** revisão de banco do S06: 0 críticos; a foto de arquivamento era tirada depois de apagar os cortes, e `save()` completo podia desfazer edições concorrentes.
+- **Decisão:** fotografar as revistas que vão ser arquivadas antes de apagar os cortes; `update_fields` nos saves da cascata; `fotografar` dentro de transação aberta usa a transação do chamador, e REPEATABLE READ só quando chamado fora de `atomic` (clique do impresso) — regra para o S07; `_history_user` nos registros da cascata; `FOR NO KEY UPDATE`; etapa e componente de outro ano viram `ValidationError`.
+- **Motivo:** `SET TRANSACTION ISOLATION LEVEL` falha depois da primeira query; a foto precisa ver os cortes que estão saindo.
+- **Descartadas:** foto fora da transação da cascata (a revista poderia mudar entre a foto e o arquivamento).
+- **Arquivos afetados:** `app/nucleo/servicos/{cascata,foto}.py`, `app/nucleo/tests/test_cascata.py`
+- **Status:** ativa. Aplicada: 48 testes, `makemigrations --check` limpo. `validar_linhas(linhas, ano_id)`; ordem: trava → foto das que serão arquivadas → grava cortes → arquiva → projeto → revistas; `_history_user` por `_salvar(obj, usuario)`.
+
+### D-139 — Templates: formato, validação e seed (S05) (2026-10-29 17:45)
+- **Contexto:** o marcador da variável não pode ser lido pelo markdown-it nem colidir com texto; `secoes(texto)` não recebe o fascículo; os PDFs de 2025 não têm texto depois das escalas.
+- **Decisão:** (1) cada `{{var}}` vira um marcador de caracteres Unicode de uso privado (removidos do corpo antes) e o valor entra com `html.escape` depois do render. (2) Dois parsers: renderização com `MarkdownIt("zero", html=False)` + `emphasis`, `list`, `newline`, `escape`, `entity`; validação com `commonmark` e lista branca de tokens (parágrafo, listas, texto, quebra, `strong`, `em`) — crase, citação e linha horizontal também são recusadas. (3) A 1ª linha é título em toda seção, F1 inclusive (`introducao`: "ANÁLISE DOS RESULTADOS PARA INTERVENÇÃO PEDAGÓGICA"; `fechamento`: "Utilização dos resultados"). (4) F1: exatamente `introducao` e `fechamento`; F2: `abertura` + ao menos um `passoN`, ids `abertura|passoN|dlg-[a-z0-9-]+`; seção repetida e texto antes da 1ª seção recusados; todos os erros num `ValidationError(lista)`. (5) Variável sem valor sai como `<span class="variavel-vazia">{{nome}}</span>`. (6) `carregar_templates`: template "Padrão", `origem="templates_seed/<ano>/<arquivo>"`, `get_or_create` pela unique, nunca cria versão nova, uma transação, valida antes de gravar, erro claro sem Ano/Componente; o aviso `<!-- revisar com a Pedagógica... -->` é removido por regex. (7) Fechamento do F1 = seção "09 Utilização dos resultados" (texto igual nos PDFs de LP e MT). (8) F2 convertido de `revista.json` + `revista-modais.html` por script de uso único fora do repo.
+- **Motivo:** caracteres de uso privado são letras para o markdown-it (`**{{x}}**` continua negrito); lista branca não deixa passar construção nova; uma regra de título só; o preview mostra a variável vazia (D-100) em vez de quebrar.
+- **Descartadas:** marcadores ASCII (`@@0@@`, `VAR0`); motor Handlebars (D-125); lista negra de tokens; `secoes(texto, fasciculo)`; `KeyError` na variável vazia; chave por `origem` (não é unique); parágrafo final da seção 3 do LP como fechamento (não existe no MT).
+- **Arquivos afetados:** `app/nucleo/texto.py`, `app/nucleo/management/commands/carregar_templates.py`, `app/templates_seed/2026/*.hbs`, `app/nucleo/tests/test_texto.py`
+- **Status:** ativa. Verificado: 46 testes, `makemigrations --check` limpo. Revisão do parser (python-reviewer) em andamento.
+
+### D-140 — Bloqueio de edição (S10) (2026-10-29 18:00)
+- **Contexto:** o mixin precisa adquirir já no GET do change form, antes do JS rodar; cada carga de página é uma aba nova.
+- **Decisão:** a sessão da aba é gerada no servidor (`secrets.token_hex(16)`, hidden `_bloqueio_sessao`) e o JS só a reutiliza (desvia da tarefa 3 do plano, que gerava no JS). Rota extra `POST /bloqueio/liberar` por `sendBeacon` no `pagehide`; o mixin também libera após save 302. Serviço com assinatura `(alvo, usuario, sessao)`; `alvo` é instância de MatrizEtapaCC, Projeto ou Template. Rota sem login responde 403 JSON; perda do bloqueio = 409; o JS desliga o form com 403/409. `renovar` nunca readquire. Mixin: `changeform_view` sobrescrito, somente leitura por `has_change_permission=False` no objeto, POST num `atomic` com `conferir_na_transacao`, gancho `alvo_do_bloqueio(obj)` (revista trava o projeto), template `nucleo/bloqueio_change_form.html` para os admins do S11 estenderem; `quem_bloqueia(alvo)` para os lotes pularem travados (D-121).
+- **Motivo:** somente leitura renderizado pelo servidor e testável pelo client; sem `crypto.randomUUID` em http; recarregar não tranca o próprio usuário por 30 s; `fetch` seguiria o redirect do login como 200; bloqueio expirado = form possivelmente velho.
+- **Descartadas:** sessão no `sessionStorage` (o GET não a conhece); sessão por cookie (é do navegador, não da aba); esperar 30 s ao recarregar.
+- **Arquivos afetados:** `app/nucleo/servicos/bloqueio.py`, `app/nucleo/urls/{__init__,bloqueio}.py`, `app/nucleo/admin/bloqueio.py`, `app/nucleo/templates/nucleo/bloqueio_change_form.html`, `app/nucleo/static/nucleo/bloqueio.js`, `app/nucleo/tests/test_bloqueio.py`
+- **Status:** ativa. Verificado: 47 testes, `makemigrations --check` limpo, `node --check` ok. Revisão (django-reviewer) em andamento. Não portado: saída por inatividade do editor React (`BLOQUEIO_INATIVIDADE_MS`). `delete_view` não confere o bloqueio (S11). POST recusado descarta o que foi digitado.
+
+### D-141 — Cadastros e importador de matriz (S04) (2026-10-29 18:00)
+- **Contexto:** a Comunitária 2026 vem de 3 PDFs importados na mesma matriz; o plano deixava abertos `substituir=False`, o mapeamento dos campos e as linhas "---".
+- **Decisão:** a importação só mexe nas etapa × CC presentes no arquivo; `substituir=False` com alguma MEC existente recusa tudo (`ImportacaoRecusada`); `substituir=True` apaga essas MECs (`select_for_update`) e recria descritores e tarefas. `passo` com sentinela `MANTER` (omitido = mantém o da MEC substituída; `None` = sem linhas vazias). Linhas "---" (e "–", "..." na planilha) não viram Tarefa. `level→inicio`, `fim→fim`, `content→texto`, `arquivo=None`; ordem da tarefa de cima para baixo; código de descritor repetido fica com a última ocorrência; `relacionadas`/`correspondente` com a heurística do extrator. Recusa se a escala máxima do arquivo ≠ `Etapa.escala_max` ou faltar etapa/componente no ano. XLSX: lê abas com A1 "Etapa" e B1 "Descritor"/"Cód. Descritor", tarefas e pré-requisitos separados por "#", aba "Escala" ignorada. `carregar_cadastros` usa `get_or_create` (edição no admin sobrevive): 2EF=1 (1000), 5EF=2, 9EF=3, 3EM=4 (500); LP "Língua Portuguesa", MT "Matemática"; cores `#F72628`, `#FF8D43`, `#B3CCFF`, `#0ED3FF`, `#FFFFFF`. `bulk_create_with_history`; matriz criada na mesma transação da importação. Testes dos PDFs leem `SAEGO_PDFS` (padrão `/pdfs:/pdfs-alfa`) e são pulados sem os arquivos.
+- **Motivo:** substituir a matriz inteira faria o PDF de LP apagar o Alfa; confirmação forte da D-071; linhas vazias vêm do `passo` (D-091).
+- **Descartadas:** substituir a matriz inteira (leitura literal da D-071); mesclar; gravar Tarefa "---"; heurística `separarHabilidades` da API; `update_or_create`.
+- **Arquivos afetados:** `app/nucleo/management/commands/{carregar_cadastros,importar_matriz}.py`, `app/nucleo/importacao/{pdf,xlsx}.py`, `app/nucleo/servicos/importar_matriz.py`, `app/nucleo/tests/test_importacao.py`
+- **Status:** ativa. Verificado: extrator antigo = novo (descritores Alfa LP 8/15, MT 33/28; LP 21/21; MT 37/35; tarefas também); 46 testes com os PDFs montados; `makemigrations --check` limpo. Revisão (python-reviewer) em andamento. Efeito colateral: a faixa de uma linha vazia some (ex.: MT 2EF D27, 596–635). Limite: o `fim` da planilha é a coluna, não o original. Upload pelo admin (S11a) precisa gravar em arquivo temporário.
+
+### D-142 — Correções da revisão do S14 (2026-10-29 18:00)
+- **Contexto:** revisão (django-reviewer): Admin com `auth.change_user`/`change_group` podia virar superusuário ou entrar no grupo Impresso; a reversa da 0007 apagava os Groups e, com eles, os vínculos usuário↔grupo; `delete_*` sem decisão que pedisse (D-117: revista nunca é apagada).
+- **Decisão:** Admin só com `view_group` e `view/add/change_user` (sem `delete_user`: desativa, não apaga); o S11 registra `User` sem `is_superuser`, `is_staff` e `user_permissions` editáveis e com grupos limitados aos 4. Nenhum papel recebe `delete_*`. `hash_validado`, `validado_*` e `arquivada_em` serão `readonly_fields` no admin; só os serviços os escrevem. A reversa da 0007 apaga só as 3 permissões customizadas e mantém os Groups. Teste que confere `MODELOS_NUCLEO` contra os modelos do app.
+- **Motivo:** sem isso, "Admin não marca impressa" é só aparência; rollback e redeploy não podem tirar o papel dos usuários.
+- **Descartadas:** aceitar o risco e documentar como regra organizacional.
+- **Arquivos afetados:** `app/nucleo/permissoes.py`, `app/nucleo/migrations/0007_perfis.py`, `app/nucleo/tests/test_permissoes.py`
+- **Status:** ativa. Aplicada: 37 testes; contagens Admin 60, Pedagógica 56, Mídias 56, Impresso 22; ciclo 0006↔0007 mantém os grupos.
+
+### D-143 — Correções da revisão do S10 (2026-10-29 18:15)
+- **Contexto:** revisão (django-reviewer) do S10: 0 críticos; `delete_view` e inlines escapavam do bloqueio; aba em segundo plano perdia o bloqueio e o form `disabled` perdia o texto; F5 podia mostrar "somente leitura" contra o próprio usuário.
+- **Decisão:** `has_delete_permission` nega com bloqueio alheio, e o mixin proíbe `list_editable` e actions de escrita nos admins que o usam; inlines sem change/add/delete no modo somente leitura; JS renova no `visibilitychange`, desliga com `readOnly` + aviso e reseta o envio no `pageshow`; aviso próprio quando quem bloqueia é o mesmo usuário; ids da rota validados (400); `liberar` pós-save não derruba a resposta.
+- **Motivo:** a regra "escrita com bloqueio de outra sessão é recusada" (D-081) vale para qualquer caminho de escrita; renovar nunca readquire, então o texto digitado precisa continuar copiável.
+- **Descartadas:** aceitar o mesmo usuário em outra aba (quebra "mesma aba", D-093); readquirir no 409 (o form pode estar velho).
+- **Arquivos afetados:** `app/nucleo/admin/bloqueio.py`, `app/nucleo/static/nucleo/bloqueio.js`, `app/nucleo/urls/bloqueio.py`, `app/nucleo/tests/test_bloqueio.py`
+- **Status:** ativa. Aplicada: 51 testes, `node --check` ok. Excluir é negado só com bloqueio de OUTRO usuário (a página de exclusão não tem sessão e o próprio usuário cairia na corrida do `sendBeacon`); a exclusão não confere com `FOR SHARE` (S11 adiciona se a corrida importar). JS: `readOnly` em campos de texto, `disabled` no resto, submit bloqueado. Inlines só para ver trocando os métodos de permissão na instância + `max_num=0`. Resolve a pergunta "`delete_view` confere o bloqueio?" da D-140.
+
+### D-144 — Correções da revisão do S05 (2026-10-29 18:15)
+- **Contexto:** revisão do parser do S05: 0 críticos, sem XSS; entidade `&#xE000;` forjava o marcador (IndexError ou valor de outra variável); regex `CHAVES` quadrática (40 KB = 16 s).
+- **Decisão:** marcador com nonce por chamada; `CHAVES = \{\{[^{}]*\}\}|\{\{|\}\}`; recusar chaves soltas (`{{{x}}}`), caracteres de controle e bidi e definição de referência de link; BOM ignorado; valor só com espaços conta como vazio; `variaveis_usadas` só devolve nomes da lista; `carregar_templates` avisa seed divergente da versão 1 e seed faltando.
+- **Motivo:** template persistido não pode derrubar a página nem o impresso.
+- **Descartadas:** recusar só a entidade na validação (frágil).
+- **Arquivos afetados:** `app/nucleo/texto.py`, `app/nucleo/management/commands/carregar_templates.py`, `app/nucleo/tests/test_texto.py`
+- **Status:** ativa. Aplicada: 51 testes; `CHAVES` também recusa `{`/`}` soltos.
+
+### D-145 — Correções da revisão de segurança do S09 (2026-10-29 18:25)
+- **Contexto:** security-reviewer reproduziu 3 críticos no sanitizador: CSS no `tail` de filho de `<style>` escapava do filtro (exfiltração por seletor de atributo + `url()` externo, `@import`); regex `url(` com `.*?` e busca de ids em lista davam DoS quadrático (3 MB = horas); XML profundo virava `RecursionError` (500). Importantes: `<style>` global (`body{}`, `*`, `@layer`), `style` do `<svg>` raiz com `position:fixed` cobrindo o admin, funções CSS que buscam recurso sem `url(`, ids sem formato.
+- **Decisão:** `<style>`, `<title>` e `<desc>` só com texto e `tail` zerado em todo elemento; só `url(#id)`; ids em `dict`; limites de 1 MB por `<style>`, 4 KB por atributo, 200 mil nós e profundidade 100; seletores só de `.classe`/`#id` com combinadores, qualquer at-rule recusa o arquivo; raiz sem `style`/`width`/`height`/`x`/`y`; propriedades de posicionamento e animação recusadas; `image(`, `cross-fade`, `src(` e afins e qualquer `//` ou esquema recusados; ids `[A-Za-z][\w.:-]{0,100}`; sem declaração `<?xml?>`; arquivo novo apagado se o save falhar.
+- **Motivo:** o SVG vai inline no preview autenticado e no zip; lista branca estreita é mais fácil de garantir que lista negra.
+- **Descartadas:** parser de CSS (`tinycss2`, dependência nova); prefixar o seletor inteiro com um escopo (mais código, mesmo efeito para o SVG do Illustrator); re-encode da capa com Pillow (dependência nova) — no lugar, S08/S15 servem capas com `nosniff` e `Content-Type` fixo.
+- **Arquivos afetados:** `app/nucleo/servicos/arquivos.py`, `app/nucleo/tests/test_arquivos.py`
+- **Status:** ativa. Aplicada: 54 testes; DoS (`url(` ×10 mil, 5 mil níveis) recusado em ~0,02 s, 50 mil ids em 0,33 s; o SVG real passa sem ampliar a lista (só `.stN`, `fill`, `stroke*`, `clip-path`, `mask`, `opacity`, `display`). Detalhes: CSS inválido recusa o arquivo inteiro (antes era removido em silêncio); atributo/tag fora da lista, `on*` e `href` externo continuam só removidos; `:` em valor de CSS conta como esquema (regex de esquema seria quadrática); `data:image/...;base64` em `<image>` fica fora do limite de 4 KB por regex linear (o PNG embutido do SVG real tem 496 KB); texto misto em `<text>` perde o trecho depois do filho (o F2 não tem `<text>`, D-103). Segunda revisão de segurança: C1, C2, C3, I1, I3, I5 fechados; I2 reaberto (raiz com `class`/`overflow`/`transform` + CSS de layout ainda cobria a página) → lista branca de propriedades CSS, raiz sem `class`/`overflow`/`transform`, `tail` zerado só sob `style`/`title`/`desc`, `data-*` com `:` descartado em vez de recusar, limites de 1.000 `<use>` e 5.000 ids; aplicadas: 57 testes; o SVG real passa (só `fill`, `stroke*`, `clip-path`, `mask`, `opacity`, `display:none`; nenhum `<use>`). Lista branca CSS: exatas `fill`, `stroke`, `opacity`, `text-anchor`, `letter-spacing`, `clip-path`, `clip-rule`, `mask`, `filter`, `mix-blend-mode`, `isolation`, `shape-rendering`, `visibility`, `display` (`none`/`inline`); prefixos `fill-`, `stroke-`, `font-`, `stop-`, `flood-`.
+
+### D-146 — Correções da revisão do S04 (2026-10-29 18:40)
+- **Contexto:** revisão (python-reviewer) do S04: 0 críticos; substituir apagava a MEC e, pelo CASCADE, a trava de quem edita; a planilha deixava código repetido e intervalo invertido chegarem ao banco (IntegrityError); exceções reais saíam como traceback.
+- **Decisão:** a substituição mantém a linha da MEC (id, histórico e trava preservados), apaga só descritores e tarefas e recria; `passo` só muda quando informado; com bloqueio não expirado numa MEC a substituir, a importação é recusada dizendo quem edita; a `Matriz` é travada no início; o arquivo é lido fora da transação; XLSX valida intervalos, contiguidade e código repetido antes do banco; `pdftotext` com timeout de 120 s e UTF-8; `--passo` ≤ 0 recusado; código repetido no PDF com conteúdo diferente vira erro.
+- **Motivo:** quem edita não pode perder a trava nem receber 404 no meio; erro de dado vira mensagem, não traceback.
+- **Descartadas:** apagar e recriar a MEC (texto original do plano S04); flag `--forcar` para passar por cima do bloqueio.
+- **Arquivos afetados:** `app/nucleo/servicos/importar_matriz.py`, `app/nucleo/importacao/{pdf,xlsx}.py`, `app/nucleo/management/commands/importar_matriz.py`, `app/nucleo/tests/test_importacao.py`
+- **Status:** ativa. Aplicada: 53 testes com os PDFs montados, sem pulos; contagens iguais. Serviço dividido em `ler(arquivo)` (fora da transação) e `gravar_matriz(matriz, dados, substituir, passo, origem)`; `importar_matriz` chama os dois. Travas: Matriz → MECs (`of=self`) → recusa com `Bloqueio` não expirado ("em edição agora: LP 5EF (pedagogica)"). Histórico com `history_change_reason="importação de <arquivo>"`. Responde a pergunta "reimportar apaga a trava" da D-141. Limite registrado: o `fim` vindo da planilha é a coluna (união dos níveis), não o original; `#` dentro de texto da planilha é separador.
+
 ## Perguntas em aberto
 - [x] (D-115 a D-124) Varredura 7 agentes (2026-10-29), perguntas 55–70: cópia por seção; juntar lado a lado × proposta; preview sem template; ciclo de vida da revista sem cortes; SVG/capa derrubam Validado; variável com escopo parceiro; sugestão do ano anterior; painel da temporada; copiar em lote; validar em lote com hash; React × Django admin; bloqueio × otimista; fascículo fixo; editor textarea × etiquetas; FK composta; matriz duplicada entre anos — depende de: usuário
 - [x] (D-125) Correções técnicas da varredura (sem decisão do usuário): ER sem TextoModelo/BlocoTexto/ProjetoBloco e com Revista/RevistaFasciculo/Projeto.ano_id; TemplateVersao só de inserção como base da fusão; hash em Python com JSON canônico (só cai a revista que usa a variável, corrige D-097); bloqueio por `INSERT … ON CONFLICT … WHERE expira_em < now()`; cascata com `FOR UPDATE` em ParceiroAno, foto em REPEATABLE READ, clone em uma transação; SVG sanitizado (defusedxml, lista de tags, 3 MB, ids prefixados); Markdown com `html: false` e `{{var}}` validado por regex; zip com JSON/SVG embutidos no index.html; atalhos do F1 só fora do F2; revalidar seções × ids do SVG no Validado e ao salvar template; marcar D-063 (texto), D-070 e D-088 (texto_modelo) como substituídas e reescrever D-093 — depende de: aprovação das perguntas 55–70
 - [x] (D-114) Template F1: o texto aparece antes e depois das escalas; usar seções fixas (`## introducao`, `## fechamento`) como no F2? — depende de: usuário
 - [x] (D-110 a D-113) Grill-me fascículos, rodada 4 (2026-10-29): 8 perguntas (juntar textos, estrutura do template F2, sobrescrita no F2, revista incompleta, SVG/capa no impresso) — depende de: usuário
 - [ ] Lista completa de variáveis (D-107) — depende de: equipe pedagógica
+- [ ] Seeds 2026 para a Pedagógica (D-139): `f1-mt.hbs` diz "Para Língua Portuguesa…" no 3º parágrafo (igual ao escala.hbs e ao PDF de MT 2025); fechamento do F1 = "Utilização dos resultados"?; `f2-mt.hbs` é cópia do LP; modais `dlg-p4-i1..i4` com "Conteúdo em breve."; nome do template "Padrão" — depende de: Pedagógica
+- [ ] Bloqueio (D-140): portar a saída por inatividade do editor React?; POST recusado re-renderizar em vez de descartar o digitado? — depende de: usuário
+- [ ] SVG com `<!DOCTYPE>` é recusado (D-137): o design exporta sem DOCTYPE? — depende de: usuário/design
+- [ ] Autor da foto herdada (D-135): usuário da cascata (atual) ou autor da foto original? — depende de: usuário
 - [x] (D-104 a D-109) Grill-me fascículos, rodada 3 (2026-10-29): 20 perguntas (template × sobrescrita, clone do ano, variáveis, SVG do F2, pacote, impresso, bloqueio) — depende de: usuário
 - [x] (D-095 a D-103) Grill-me fascículos/templates (2026-10-29), rodadas 1 e 2 (25 perguntas, enviadas juntas a pedido do usuário): unidade revista × projeto; template no código ou no banco; blocos × documento .hbs; variáveis por parceiro ou projeto; escolha de matriz/template por revista ou por ParceiroAno; repositório do infográfico — depende de: usuário
 - [x] (corrigido) PDF de estudo v2 desatualizado em 4 pontos: seção 8 e questão 10 (intervalo mínimo × passo, D-091), desafio (ParceiroAno já resolvido, D-088), bloqueio sem `sessao_edicao` (D-093) — depende de: usuário pedir a correção
@@ -1244,3 +1352,22 @@ Aguardando o usuário liberar a Fase B (S04, S05, S06, S09, S10, S14 em paralelo
 - S02 concluído: 44b9283 + 8137471 (15 testes). S03 verificado: 57aafb7 em `feat/s03-projeto-revista` (27 testes, ciclo migrate OK); revisão de banco em andamento.
 - S03 concluído: 57aafb7 + abc9e5c (29 testes; trigger só-INSERT em `template_versao`; uma recusa testada por FK composta). Fase A concluída.
 - Merge local da Fase A em `refatoracao-django` a pedido do usuário: ff até abc9e5c + merge de `feat/s03b-revista-n-padroes` (1125cdb), sem conflito; reverificado (29 testes, régua, Playwright 8/8).
+### 2026-10-29 17:00
+- Fase B iniciada: S04, S05, S06, S09, S10 e S14 em paralelo, cada um num subagente com worktree próprio, sem commit (D-134).
+- S06 verificado (42 testes, migrações limpas) em `feat/s06-cascata`, sem commit; revisão de banco em andamento.
+- S14 verificado (35 testes, ciclo 0006↔0007) e S09 verificado (45 testes); revisões django-reviewer e security-reviewer em andamento.
+- Revisão do S06: 0 críticos; correções importantes enviadas ao subagente (D-138).
+- S05 verificado (46 testes, migrações limpas) em `feat/s05-templates`; revisão do parser em andamento.
+- S06 concluído: correções da revisão aplicadas e reverificadas (48 testes).
+- S10 verificado (47 testes) e S04 verificado (46 testes com PDFs; contagens do extrator antigo conferidas por mim); revisões em andamento. Revisão do S14: 1 crítico (escalada de privilégio do Admin), correções enviadas (D-142).
+- Revisões S05 (0 críticos, 2 importantes) e S10 (0 críticos, 4 importantes): correções enviadas aos subagentes (D-143, D-144).
+- Revisão de segurança do S09: 3 críticos (CSS fora do filtro, DoS, recursão); correções enviadas (D-145).
+- S05 concluído (51 testes) e S14 concluído (37 testes, ciclo da 0007 mantém grupos), reverificados por mim após as correções.
+- Revisão do S04: 0 críticos, 4 importantes; correções enviadas (D-146).
+- S10 concluído: correções da revisão aplicadas e reverificadas (51 testes, `node --check` ok).
+- S09: correções aplicadas e reverificadas (54 testes); segunda revisão de segurança em andamento.
+- S04 concluído: correções aplicadas e reverificadas (53 testes com PDFs, contagens iguais).
+- 2ª revisão do S09: 1 importante (lista negra de CSS não cobria layout); troca para lista branca enviada.
+- S09 concluído: 2ª rodada aplicada e reverificada (57 testes).
+- Fase B concluída. As 6 mudanças juntadas numa cópia descartável (sem conflito de arquivo): 152 testes OK, `makemigrations --check` limpo, régua ok; carga 2026 de ponta a ponta OK. Cópia removida. Nada commitado.
+- A pedido do usuário: um commit por passo nas 6 branches, merge --no-ff de cada uma em `refatoracao-django` (S14 primeiro), sem conflito; reverificado (152 testes, migrações, régua, Playwright 8/8). Depois, commits do plano, do ER revisado, do design do impresso, dos learnings do trail e deste `state.md`.
