@@ -6,7 +6,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Defaults só de desenvolvimento local; em produção vêm do .env.
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-inseguro-nao-usar-em-producao")
-DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
+DEBUG = os.environ.get("DJANGO_DEBUG", "1").lower() in {"1", "true"}
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 INSTALLED_APPS = [
@@ -50,7 +50,7 @@ TEMPLATES = [
 ]
 
 # DATABASE_URL no formato postgres://usuario:senha@host:porta/banco
-_db = urlparse(os.environ.get("DATABASE_URL", "postgres://revista:revista@db:5432/revista"))
+_db = urlparse(os.environ.get("DATABASE_URL") or "postgres://revista:revista@db:5432/revista")
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",

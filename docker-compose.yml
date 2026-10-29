@@ -58,7 +58,9 @@ services:
     volumes:
       - pg-dados:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "revista", "-d", "revista"]
+      # -h 127.0.0.1: o servidor temporário do initdb só escuta no socket.
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "revista", "-d", "revista"]
+      start_period: 10s
       interval: 2s
       timeout: 5s
       retries: 30
@@ -73,7 +75,7 @@ services:
     volumes:
       - ./app:/app
     ports:
-      - "8000:8000"
+      - "127.0.0.1:${APP_PORT:-8000}:8000"
     depends_on:
       db:
         condition: service_healthy
