@@ -171,9 +171,9 @@ assert.equal(rotuloAnoLongo("outro"), "outro");
   );
 }
 
-// Texto sobre a cor do padrão: branco só onde contrasta mais que o preto
+// Texto sobre a cor do padrão: o de maior razão WCAG 2 (D-158)
 const { corTextoSobre } = createRequire(import.meta.url)("./script.js");
-assert.equal(corTextoSobre("#f72628"), "#fff"); // padrão 1 (vermelho)
+assert.equal(corTextoSobre("#f72628"), "#000"); // padrão 1 (vermelho): preto 5,3:1, branco 4,0:1
 assert.equal(corTextoSobre("#ff8d43"), "#000"); // padrão 2
 assert.equal(corTextoSobre("#b3ccff"), "#000"); // padrão 3
 assert.equal(corTextoSobre("#0ed3ff"), "#000"); // padrão 4
