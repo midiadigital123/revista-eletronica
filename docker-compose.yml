@@ -46,5 +46,38 @@ services:
       - api
     restart: unless-stopped
 
+  # Sistema novo (Django + PostgreSQL). Sem container_name e sem porta do
+  # Postgres no host: cada worktree roda como um projeto compose separado.
+  # Defaults só de desenvolvimento; o .env da raiz sobrescreve (ver app/.env.example).
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: revista
+      POSTGRES_USER: revista
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-revista}
+    volumes:
+      - pg-dados:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "revista", "-d", "revista"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  app:
+    build: ./app
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgres://revista:${POSTGRES_PASSWORD:-revista}@db:5432/revista}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-inseguro-nao-usar-em-producao}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-1}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
+    volumes:
+      - ./app:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   mongo-dados:
+  pg-dados:
