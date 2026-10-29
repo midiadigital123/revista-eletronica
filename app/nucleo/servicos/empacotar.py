@@ -111,9 +111,11 @@ def zip_revista(revista):
         raise Pendente(erros)
 
     capa = "arquivos/capa" + PurePosixPath(revista.capa).suffix
-    html = render_to_string(
-        "revista/index.html", contexto_pagina(revista, preview=False, estaticos="revista/", capa=capa)
-    )
+    try:  # SVG sumiu entre o exists() e a leitura em contexto_pagina
+        ctx = contexto_pagina(revista, preview=False, estaticos="revista/", capa=capa)
+    except FileNotFoundError:
+        raise Pendente([Pendencia("zip_arquivo", f"Arquivo ausente no storage: {revista.svg_f2}.")]) from None
+    html = render_to_string("revista/index.html", ctx)
     # ponytail: zip em memória (SVG ~1 MB + capa ≤ 5 MB + itens PDF sem limite de tamanho);
     # quando pesar, trocar o BytesIO por tempfile.SpooledTemporaryFile e devolver FileResponse.
     saida = io.BytesIO()
