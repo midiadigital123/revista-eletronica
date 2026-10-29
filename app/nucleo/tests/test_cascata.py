@@ -21,8 +21,8 @@ from nucleo.models import (
 from nucleo.models.revista import Motivo
 from nucleo.servicos.cascata import gravar_cortes
 from nucleo.servicos.foto import fotografar
+from nucleo.servicos.resolver import resolver, sha256
 
-SHA256_DE_VAZIO = "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"  # sha256("{}")
 
 
 class CascataTest(TransactionTestCase):
@@ -73,9 +73,13 @@ class CascataTest(TransactionTestCase):
         e5_27 = Etapa.objects.create(ano=Ano.objects.create(ano=2027), codigo="5EF", escala_max=500, ordem=2)
         self.recusa([100, 200], etapa=e5_27)
 
-    def test_aceita_limites(self):
-        self.gravar((self.e5, self.lp, [0, 500]))
-        self.assertEqual(Corte.objects.get().valores, [0, 500])
+    def test_recusa_corte_nos_limites(self):  # D-153
+        self.recusa([0, 100])
+        self.recusa([100, 500])
+
+    def test_aceita_dentro_dos_limites(self):
+        self.gravar((self.e5, self.lp, [1, 499]))
+        self.assertEqual(Corte.objects.get().valores, [1, 499])
 
     # Cascata.
 
@@ -104,7 +108,10 @@ class CascataTest(TransactionTestCase):
         mt = Revista.objects.get(componente=self.mt)
         self.assertIsNotNone(mt.arquivada_em)
         foto = FotoRevista.objects.get()
-        self.assertEqual((foto.revista, foto.motivo, foto.hash), (mt, "arquivamento", SHA256_DE_VAZIO))
+        self.assertEqual((foto.revista, foto.motivo, foto.hash), (mt, "arquivamento", sha256(foto.conteudo)))
+        # A foto viu os cortes do MT antes de serem apagados, e a revista arquivada devolve a foto (D-117).
+        self.assertEqual(foto.conteudo["f1"]["dados"]["5ef"]["cortes"], {"padrao-1": 150, "padrao-2": 200, "padrao-3": 250})
+        self.assertEqual(resolver(mt), foto.conteudo)
         lp_depois = Revista.objects.get(componente=self.lp)
         self.assertIsNone(lp_depois.arquivada_em)
         self.assertEqual(lp_depois.history.count(), lp.history.count())
