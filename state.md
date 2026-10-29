@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo 13 de 22: Fase C (S07, S08, S15) e S16 concluídos e juntados em `refatoracao-django` (merges --no-ff f418c10, 470c86c, 5eb9cbd, 51b329f; sem push nem PR).
-Funcionando: em `refatoracao-django`, 217 testes OK (8 de PDF pulados), `makemigrations --check` limpo, régua ok, Playwright f1-fixture + pagina + zip 18/18, `trail check` sem conflito. Preview `preview/<id>/` (comando `criar_demo`, usuário `demo-preview`), zip por revista, `abrir_ano 2027`.
-Quebrado/pendente: cor da linha com `passo` nulo (JS × Python); preview sem rota para itens; alt dos itens; foco no SVG em 390px; seeds de 2026 aguardam a Pedagógica.
+Passo 16 de 22: S11a (5e22020), S11b1 (975c5fd) e S11c (5de1a91) concluídos com commit local. S11b2 com 1º commit 95c6790 em `feat/s11b2-copia-secao` (sobre o merge 2b1f8b2 de S11c), verificado; correções da revisão (D-171) NÃO aplicadas — subagente parado a pedido do usuário, worktree limpo.
+Funcionando: em cada `feat/s11*`, suíte OK (8 de PDF pulados), `makemigrations --check` limpo; Playwright cortes, templates-admin e revista-textos passam. Nada entrou em `refatoracao-django`; nada no GitHub.
+Quebrado/pendente: D-171 (trava do fascículo na troca com cópias; aba Textos de revista arquivada mostra o template ao vivo); S12 e S13 não iniciados; merge da Fase D em `refatoracao-django` + push pedidos para o fim da fase.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Liberar a Fase D: S11a, S11b1 e S11c em paralelo, a partir de `refatoracao-django`.
+Retomar: disparar um subagente no worktree do S11b2 (`/home/otavio.peres/dev/revista-eletronica/.claude/worktrees/agent-aac9ba4e9419426aa`, branch `feat/s11b2-copia-secao`) com as correções da D-171 e o 2º commit `fix(s11b2)`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -25,10 +25,10 @@ Liberar a Fase D: S11a, S11b1 e S11c em paralelo, a partir de `refatoracao-djang
 11. [x] S07 — Resolver, foto, hash, pendências
 12. [x] S08 — Página única F1 + F2
 13. [x] S15 — Zip por revista
-14. [ ] S11a — Admin: cadastros, cortes, matriz  ← próximo (Fase D)
-15. [ ] S11b1 — Admin: templates
-16. [ ] S11b2 — Admin: cópia por seção
-17. [ ] S11c — Admin: projeto, variáveis, arquivos, lote
+14. [x] S11a — Admin: cadastros, cortes, matriz
+15. [x] S11b1 — Admin: templates
+16. [ ] S11b2 — Admin: cópia por seção  ← agora
+17. [x] S11c — Admin: projeto, variáveis, arquivos, lote
 18. [ ] S12 — Painel + Validado
 19. [ ] S13 — Impresso + planilhas
 20. [x] S16 — Abrir ano
@@ -1323,6 +1323,94 @@ Liberar a Fase D: S11a, S11b1 e S11c em paralelo, a partir de `refatoracao-djang
 - **Arquivos afetados:** `app/nucleo/servicos/empacotar.py`, `app/nucleo/admin/revista.py`, `app/nucleo/tests/test_empacotar.py`, `app/e2e/tests/zip.spec.ts`, `app/e2e/fixtures/revista.zip`
 - **Status:** aplicada. Commits locais em `feat/s15-zip`, rebaseados sobre d070ae9: 68f2cf4 (feat), 7d1af9a (fix da revisão), b961b98 (ajustes do rebase: `FileNotFoundError` do `html.py` vira `Pendente`, gabarito regerado; 3º commit porque o hook bloqueou `--amend`). Reverificado por mim: 202 testes OK (8 de PDF pulados), `makemigrations --check` limpo, régua ok, Playwright f1-fixture + pagina + zip 18/18. CSP do `<meta>` no `file://` (Chromium): 0 violações; scripts, estilos, capa, item PNG e iframe de PDF passam; Firefox não testado. Arquivo ausente conferido com `default_storage.exists` antes de montar; mesmo caminho repetido não é colisão (D-150); ação do admin com 2 queries.
 
+### D-161 — Fase D com commit local por passo encadeado (2026-10-29 23:05)
+- **Contexto:** o usuário pediu a Fase D sem commit. S11a, S11b1 e S11c só dependem de `refatoracao-django` (33e0621), mas S11b2 depende de S11b1, S12 de S11b2 + S11c e S13 de S12; um worktree novo nasce do último commit (mesmo problema das D-127 e D-147).
+- **Decisão:** cada passo da Fase D faz 1 commit local na própria `feat/sNN-*`, sem push nem PR. `feat/s11b2-*` sai de `feat/s11b1-admin-templates`; `feat/s12-*` nasce de um merge local de `feat/s11b2-*` + `feat/s11c-admin-projeto` (e `feat/s11a-admin-cadastros`, para o painel ter as telas de cortes) feito na própria `feat/s12-*`; `feat/s13-*` sai de `feat/s12-*`. Nada entra em `refatoracao-django` sem pedido do usuário.
+- **Motivo:** escolha do usuário entre 3 opções. Mantém uma branch por passo sem parar a cadeia.
+- **Descartadas:** parar a cada passo para o usuário commitar (a cadeia espera); empilhar tudo num worktree sem commit (passos misturados).
+- **Arquivos afetados:** nenhum (fluxo de git).
+- **Status:** ativa.
+
+### D-162 — Admin de templates (S11b1) (2026-10-29 23:20)
+- **Contexto:** o plano não fixava o fluxo salvar → impacto → confirmar, a marcação das variáveis no preview nem o que fazer com texto igual.
+- **Decisão:** o 1º POST com texto mudado valida, confere o bloqueio e mostra a tela de impacto sem gravar; a tela reenvia o POST inteiro em campos hidden com a mesma sessão de bloqueio; "Confirmar" (`_confirmar`) passa pelo mixin (bloqueio na transação), revalida e cria a versão N+1 com `criada_por`. "Voltar e editar" reenvia com `_voltar` e o form recusa de propósito para reabrir com o texto (`ponytail:`). Texto igual ao atual (`strip=False`, `\r\n`→`\n`) salva só o nome, sem versão. Preview `POST /templates/preview` renderiza sem valores: cada variável sai como `<span class="variavel-vazia">{{nome}}</span>`, colorida por CSS, e devolve os erros do `validar`. Na edição, ano/componente/fascículo só leitura; editar exige `change_template` + `add_templateversao`; `actions = None`; template novo nasce com a versão 1; abas Matrizes/Variáveis só aparecem quando os admins do S11a/S11c existirem; link "usado por" = `/painel/<ano>/?template=<id>` à mão (`ponytail:`, o S12 cria a rota). Revista sem SVG não entra como "SVG incompleto" no impacto (já é outra pendência).
+- **Motivo:** dados pendentes ficam na página (sem estado no servidor); `history.back()` dispararia o `pagehide` e liberaria o bloqueio; valor de exemplo seria escapado e perderia o span.
+- **Descartadas:** texto pendente na sessão do Django; `history.back()`; rótulo da variável como valor de exemplo.
+- **Arquivos afetados:** `app/nucleo/admin/templates.py`, `app/nucleo/urls/templates.py`, `app/nucleo/templates/nucleo/{template_change_list,template_impacto}.html`, `app/nucleo/templates/nucleo/widgets/editor_texto.html`, `app/nucleo/static/nucleo/template_editor.{js,css}`, `app/nucleo/tests/test_admin_templates.py`, `app/nucleo/{admin,urls}/__init__.py`
+- **Status:** ativa. Verificado por mim: 229 testes OK (8 de PDF pulados), `makemigrations --check` limpo, `node --check` ok. Sem commit em `feat/s11b1-admin-templates`. Revisão (django-reviewer) em andamento. JS não testado em navegador.
+
+### D-163 — Correções da revisão do S11b1 (2026-10-29 23:40)
+- **Contexto:** revisão (django-reviewer) do S11b1: 1 crítico, 3 importantes. (1) O JS do editor nunca inicializava: `{{ media }}` sai no `<head>` e o script síncrono rodava antes do `<body>`. (2) Duplo "Confirmar" com a mesma sessão passava pelo `FOR SHARE` e o 2º dava `IntegrityError` (500). (3) `texto.validar` com `ids.count` era O(n²) (40 mil seções = 23 s), alcançável pelo preview. (4) A confirmação não estava amarrada ao texto e à versão-base mostrados no impacto.
+- **Decisão:** script com `defer` + teste Playwright do editor; `save_model` trava o Template (`select_for_update`), relê a versão atual e é idempotente com texto igual; botão desabilitado no submit; `Counter` em `texto.validar` + teto `TEXTO_MAX` no form e no preview (400); hidden assinado (`signing`) com hash do texto e número da versão-base, e confirmação que não bate reabre o impacto; testes de bloqueio de outro usuário, Impresso, XSS no preview, CSRF e dupla confirmação.
+- **Motivo:** o editor é a tela principal da Pedagógica; o impacto mostrado tem de ser o que grava.
+- **Descartadas:** —
+- **Arquivos afetados:** `app/nucleo/admin/templates.py`, `app/nucleo/texto.py`, `app/nucleo/urls/templates.py`, `app/nucleo/static/nucleo/template_editor.js`, testes e e2e
+- **Status:** aplicada no commit local 975c5fd (`feat(s11b1)`). Reverificado por mim: suíte OK (8 de PDF pulados), `makemigrations --check` limpo, Playwright `templates-admin` 1/1 (servidor na 8012, derrubado). Detalhes: `TEXTO_MAX = 100_000` (maior seed ~9,6 mil); assinatura com `max_age` de 30 min (a tela fica aberta sob o bloqueio renovado); duplo envio barrado por `form[data-envio-unico]` (botão desabilitado sairia do POST); o spec libera o bloqueio no fim. Fica: "Voltar e editar" mostra o cabeçalho "Corrija os erros".
+
+### D-164 — Admin de projeto, variáveis, uploads e lotes (S11c) (2026-10-29 23:40)
+- **Contexto:** o plano não fixava o que fazer com SVG com ids faltando, onde ficam a planilha de Variáveis e os lotes (o mixin proíbe `list_editable` e actions de escrita) nem como pular travados sem corrida.
+- **Decisão:** SVG com ids faltando é gravado com aviso (faltantes, esperados e "Baixar gabarito de ids", CSV `id_no_svg,secao_do_template`); arquivo inválido é erro no campo; validação no `clean` (`sanitizar_svg`, `tipo_imagem`) e gravação no `save_model` (`receber_*`; sanitiza 2 vezes, `ponytail:`). Variáveis e lotes são views em `get_urls()` do ProjetoAdmin/RevistaAdmin (sem proxy model, que criaria migração); "Escolher matriz" em `/admin/nucleo/projeto/escolher-matriz/`. Lotes adquirem o bloqueio do projeto com sessão nova dentro da transação, gravam e liberam (`escrever_travado`); a mesma pessoa com o projeto aberto também é pulada. Planilha grava só as células alteradas (`show_hidden_initial` + `update_fields`), só projetos ativos. Template com cópias: pulado no lote, erro no form da revista. Ano anterior = projeto do mesmo parceiro em `ano - 1`, maior pk, mesmo arquivado. `RevistaAdmin` passa a usar o mixin (alvo = projeto), com fieldsets para o S11b2. Mixin: `changeform_view` usa `self.has_change_permission` (objeto só leitura não trava o alvo por 30 s). Permissões: Variáveis ver `view_projeto`/gravar `change_projeto`; matriz `change_parceiroano`; template `change_revistafasciculo`; gabarito `view_revista`.
+- **Motivo:** o template pode ganhar seções depois e a pendência `ids_svg` já bloqueia o Validado; adquirir o bloqueio fecha a corrida entre conferir e gravar.
+- **Descartadas:** recusar o upload com ids faltando; proxy model; action com página intermediária; só `quem_bloqueia`.
+- **Arquivos afetados:** `app/nucleo/admin/{projeto,variaveis,lote,revista,bloqueio,__init__}.py`, `app/nucleo/templates/nucleo/{variaveis,lote,_filtros,change_list_lotes}.html`, `app/nucleo/tests/test_admin_projeto.py`
+- **Status:** ativa. Verificado por mim: suíte OK (8 de PDF pulados), `makemigrations --check` limpo. Sem commit em `feat/s11c-admin-projeto`. Revisão (django-reviewer) em andamento. Telas não conferidas no navegador. Pergunta ao usuário: `delete_projetopasso`/`delete_projetocor` (sem eles, não há como voltar ao passo/cor da matriz).
+
+### D-165 — Admin de cadastros, matriz e grade de cortes (S11a) (2026-10-29 23:40)
+- **Contexto:** o plano não fixava a forma das telas de duplicar/reimportar, o aviso de impacto, a grade nem o admin de usuários.
+- **Decisão:** Duplicar, Reimportar, Diferenças e Abrir ano são páginas em `get_urls()`. Duplicar exige `add_matriz`, trava a origem com `FOR NO KEY UPDATE`, casa etapa/componente do ano destino por `codigo` e reaproveita `clonar(queryset, usuario, motivo, **trocas)` extraído de `abrir_ano.py`; diff = tabela (onde, campo, origem, cópia) por código de descritor. Reimportar: digitar o nome exato da matriz, só quando o arquivo traz etapa × CC existentes; `passo` vazio mantém. Aviso D-076 = caixa "Confirmo: afeta N revista(s) ativa(s)" no form da MEC e do Descritor (N = revistas não arquivadas do componente cujo ParceiroAno usa a matriz e tem corte na etapa × CC; N = 0 salva direto). MEC nasce só por importação/duplicação; Tarefa é inline do Descritor (alvo do bloqueio = MEC); sem exclusão. Grade substitui o changelist de Corte (`?ano=`, padrão maior ano): todos os parceiros × etapa × CC, célula com vírgula/espaço/ponto e vírgula, grava só as linhas mudadas numa transação única, hidden do valor original detecta conflito entre abas, ParceiroAno nasce no 1º corte; exige `add_corte` + `change_corte`. Planilha com todas as abas "ETAPA - CC" do ano, grupo só na 1ª linha. Usuários: sem `is_superuser`/`is_staff`/`user_permissions`, grupos só os 4, novo nasce `is_staff=True`, não-superusuário não vê superusuários, sem exclusão. `MatrizEtapaCC.__str__`.
+- **Motivo:** duplicar e reimportar pedem formulário; tela intermediária para o aviso exigiria repostar inlines; trava na origem resolve a corrida com menos código.
+- **Descartadas:** actions do changelist; REPEATABLE READ na duplicação; segunda função de cópia; `difflib` no diff; confirmação em 2 passos guardando o upload.
+- **Arquivos afetados:** `app/nucleo/admin/{cadastro,matriz,cortes,usuarios,__init__}.py`, `app/nucleo/servicos/{matriz,abrir_ano}.py`, `app/nucleo/models/matriz.py`, `app/nucleo/templates/admin/`, `app/nucleo/templates/nucleo/{admin_form,cortes,matriz_diferencas}.html`, `app/nucleo/tests/test_admin_cadastro.py`, `app/e2e/tests/cortes.spec.ts`
+- **Status:** ativa. Verificado por mim: suíte OK (8 de PDF pulados), `makemigrations --check` limpo, Playwright `cortes` 1/1 (servidor na 8011, derrubado). Sem commit em `feat/s11a-admin-cadastros`. Revisão (django-reviewer) em andamento. Achado: a planilha real também erra os grupos do 2EF-LP (MA, PI e SALVADOR no 8, iguais ao AM no 7; SE 9 em vez de 8). Pergunta ao usuário: `delete_tarefa`/`delete_descritor` para a Pedagógica.
+
+### D-166 — Exclusão só das sobrescritas do projeto; impacto do template ignora revista sem SVG (2026-10-29 23:55)
+- **Contexto:** nenhum papel tinha `delete_*` (D-142), então ninguém voltava do passo/cor sobrescrito ao valor da matriz/paleta, e a Pedagógica não apagava tarefa ou descritor. Na tela de impacto do template, revista sem SVG não aparecia como "SVG incompleto" (D-162).
+- **Decisão:** (1) Pedagógica, Mídias Digitais e Admin ganham `delete_projetopasso` e `delete_projetocor` ("voltar ao valor da matriz"), por migração de dados `0008` no S11c; Tarefa e Descritor continuam sem exclusão (só reimportação ou superusuário). (2) A tela de impacto lista só os SVGs enviados que perderiam ids; a falta de SVG aparece no painel.
+- **Motivo:** escolhas do usuário (opções recomendadas). Uma exclusão errada na Comunitária afetaria ~25 revistas.
+- **Descartadas:** liberar também Tarefa/Descritor; manter tudo sem exclusão; listar "sem SVG" no impacto.
+- **Arquivos afetados:** `app/nucleo/permissoes.py`, `app/nucleo/migrations/0008_*.py`, `app/nucleo/tests/test_permissoes.py`
+- **Status:** ativa. Ajusta a D-142 (só esses dois `delete_*`).
+
+### D-167 — Correções da revisão do S11c (2026-10-29 23:55)
+- **Contexto:** revisão (django-reviewer) do S11c: 0 críticos, 4 importantes. (1) A cascata arquiva sem pegar o Bloqueio: lote, planilha e "Copiar" podiam gravar em projeto/revista arquivado. (2) Inlines pareciam editáveis em objeto arquivado (o POST já dava 403). (3) Sem como remover sobrescrita (resolvido pela D-166). (4) Nome/variável acima de 200 caracteres virava `IntegrityError` (500) no change form.
+- **Decisão:** `select_for_update` com `arquivado_em/arquivada_em IS NULL` dentro da transação de `escrever_travado`, do lote de template, da planilha e do "Copiar" (arquivado é pulado); inlines só leitura quando o objeto é só leitura; `ProjetoForm` com `MaxLengthValidator(TAMANHO_MAX)`; menores: `update_fields` filtrado por `EDITAVEIS`, `try/except` por alvo no lote, `__str__` de Revista/RevistaFasciculo, prefetch nos lotes, CSV do gabarito à prova de fórmula, help text do upload. Ficam `ponytail:`: sanitizar uma vez só e varredura de arquivos órfãos.
+- **Motivo:** D-093: arquivado é congelado; o 500 vira mensagem.
+- **Descartadas:** a cascata pegar o Bloqueio de cada projeto (mais código no caminho quente e corrida com quem edita).
+- **Arquivos afetados:** `app/nucleo/admin/{lote,variaveis,projeto,revista,bloqueio}.py`, `app/nucleo/models/revista.py` (`__str__`), testes
+- **Status:** aplicada no commit local 5de1a91 (`feat(s11c)`), com a migração `0008_excluir_passo_cor`. Reverificado por mim: suíte OK (8 de PDF pulados), `makemigrations --check` limpo. Detalhes: `escrever_travado` devolve `None` ou o motivo do pulo; revista com cópia num fascículo entra em "Pulados", o outro fascículo é trocado; fascículos lidos dentro da trava (sem prefetch antes do bloqueio). Contagens da D-142 mudam: Admin, Pedagógica e Mídias com +2 permissões.
+
+### D-168 — Correções da revisão do S11a (2026-10-30 00:10)
+- **Contexto:** revisão (django-reviewer) do S11a: 0 críticos, 7 importantes. (1) O Admin podia se pôr no grupo Impresso e ganhar `marcar_impressa` (anula a D-142), e editar senha/grupos de outro Admin. (2) Nome de parceiro começando com `=` virava fórmula na planilha do impresso. (3) Upload da reimportação sem limite de tamanho nem de tipo; erro do `pdftotext` virava 500. (4) `history_change_reason` (varchar 100) estourava com nome longo. (5) UNIQUE com campo readonly virava 500 na edição. (6) Corrida na grade de cortes e `IntegrityError` no 1º corte simultâneo. (7) A grade passava do limite de 1000 campos do POST com ~60 parceiros.
+- **Decisão:** não-superusuário não oferece os grupos Impresso e Admin, não mexe nos próprios grupos/`is_active` e não edita outro Admin (atribuir Impresso/Admin fica com o superusuário); células de texto da planilha forçadas a string e nome de aba sanitizado; upload até ~20 MB com assinatura `%PDF-`/`PK`, erros do `pdftotext` viram `ImportacaoRecusada`; motivo do histórico truncado em 100; `codigo`/`padrao` readonly na edição, `nome` da matriz e `codigo` do descritor conferidos no `clean`, `escala_max` readonly com cortes ou MEC; grade trava os ParceiroAno em ordem de pk e relê sob trava, `get_or_create` do ParceiroAno; um campo de conferência por parceiro e célula ausente = erro. Menores baratos aplicados; ficam `ponytail:` o snapshot misto na duplicação, reimportar × editor e `escala_max` entre anos.
+- **Motivo:** a regra "Admin não marca impressa" só vale se o Admin não puder entrar no Impresso; a planilha é aberta no Excel pelo impresso.
+- **Descartadas:** Admin atribuir Impresso (exigiria abandonar a D-142); subir `DATA_UPLOAD_MAX_NUMBER_FIELDS` (adia o problema).
+- **Arquivos afetados:** `app/nucleo/admin/{usuarios,cortes,matriz,cadastro}.py`, `app/nucleo/servicos/{matriz,importar_matriz,abrir_ano}.py`, `app/nucleo/templates/nucleo/cortes.html`, testes
+- **Status:** aplicada no commit local 5e22020 (`feat(s11a)`). Reverificado por mim: suíte OK (8 de PDF pulados), `makemigrations --check` limpo, Playwright `cortes` 1/1 (servidor na 8011, derrubado). Detalhes: Admin só oferece Pedagógica e Mídias; usuário com grupo fora dos permitidos fica com `groups` readonly; outro Admin e `/password/` dele dão 403; planilha com `data_type = "s"` e aba sanitizada (31 caracteres); `LIMITE_UPLOAD` 20 MB e conversão de erro em `ler()` (vale também para o comando); corte de 100 caracteres em `clonar`, `duplicar_matriz` e `gravar_matriz`; conflito na grade mantém o digitado e o 2º salvar sobrescreve de propósito; um `o-` por parceiro (teto ~110 parceiros); "Abrir ano" sem valor inicial. Confirmado pelo usuário: só o superusuário põe alguém no Impresso ou no Admin.
+
+### D-169 — S11b2 parte do merge local de S11b1 + S11c (2026-10-30 00:30)
+- **Contexto:** a D-161 tirava `feat/s11b2-*` só de `feat/s11b1-admin-templates`, mas o S11b2 edita o `RevistaAdmin` que o S11c reescreveu (mixin, fieldsets, inline de template por fascículo).
+- **Decisão:** `feat/s11b2-copia-secao` sai de 975c5fd e recebe um merge local `--no-ff` de `feat/s11c-admin-projeto` (5de1a91) antes do trabalho; o conflito em `admin/__init__.py` (imports dos dois lados) é trivial. O S12 sai de `feat/s11b2-*` + merge de `feat/s11a-admin-cadastros`.
+- **Motivo:** evita refazer a parte de texto sobre um `revista.py` antigo e um conflito grande no S12. Mesmo fluxo escolhido pelo usuário (commit e merge locais nas `feat/*`, nada em `refatoracao-django`).
+- **Descartadas:** S11b2 só sobre o S11b1 e conflito resolvido no S12.
+- **Arquivos afetados:** nenhum (fluxo de git).
+- **Status:** ativa. Ajusta a D-161.
+
+### D-170 — Cópia de texto por seção na revista (S11b2) (2026-10-30 01:00)
+- **Contexto:** o plano não fixava onde editar as seções, de qual versão a cópia nasce nem o formato da confirmação forte.
+- **Decisão:** cada seção é um campo no change form da revista (rótulo `id · título` não editável), salvo pelo `BloqueioAdminMixin`; `versao_base` = versão mostrada na tela (hidden `versao__F1/F2`), para o aviso aparecer se o template mudou entre abrir e salvar; cópia só quando o texto muda (`show_hidden_initial` + normalização de quebras e pontas), e texto igual ao template ao vivo não cria cópia; seção desatualizada mostra `difflib.HtmlDiff` "Seu texto | Template novo" com "Manter meu texto" (atualiza `versao_base`) e "Descartar cópia" (vale para qualquer cópia); editar e descartar no mesmo envio é erro; troca de template pede digitar "descartar N cópia(s)", apaga as cópias antes do UPDATE na transação do admin; editar textos exige `change_revista` + `add/change_revistasecao`, e o descarte roda sob essas permissões (grupos intactos); `select_for_update` nos fascículos; `texto.validar_corpo(corpo)`; preview da seção isolada pelo atributo `data-cabecalho`. Cópia que a pessoa deixa igual ao template continua cópia (só o descarte explícito apaga) — confirmado pelo usuário (sugestão do revisor de apagar sozinha descartada).
+- **Motivo:** tela separada perderia o bloqueio na navegação (`pagehide`); uma transação só para texto, troca e bloqueio.
+- **Descartadas:** tela de diff por GET; POST interceptado como o impacto do template; `versao_base` = versão atual no salvar (o aviso sumiria sem ninguém ver); assinatura do hidden.
+- **Arquivos afetados:** `app/nucleo/admin/revista.py`, `app/nucleo/texto.py`, `app/nucleo/templates/nucleo/widgets/editor_texto.html`, `app/nucleo/static/nucleo/template_editor.{js,css}`, `app/nucleo/tests/test_admin_revista_textos.py`, `app/e2e/tests/revista-textos.spec.ts`
+- **Status:** ativa. Commit local 95c6790 em `feat/s11b2-copia-secao` (sobre o merge 2b1f8b2 de S11c em S11b1). Verificado por mim: suíte OK (8 de PDF pulados), `makemigrations --check` limpo, Playwright `revista-textos` + `templates-admin` 2/2 (servidor na 8014, derrubado). Revisão (django-reviewer) em andamento. Sem teste de concorrência para o duplo envio.
+
+### D-171 — Correções da revisão do S11b2 (2026-10-30 01:20)
+- **Contexto:** revisão (django-reviewer) do S11b2: 0 críticos, 2 importantes. (1) A contagem "descartar N cópia(s)" podia ficar velha com duas abas: apagava cópia não confirmada ou dava `IntegrityError` (500). (2) A aba Textos só leitura mostrava o texto ao vivo numa revista arquivada, diferente da foto congelada (D-117). Sem XSS no `HtmlDiff` (testado), sem bypass de bloqueio; `versao__F1/F2` sem assinatura é seguro (validado contra o template do próprio fascículo + FK composta).
+- **Decisão:** travar o fascículo (`select_for_update`) no `clean` antes de contar; revista arquivada mostra as seções do resolvido (foto); `gravar_textos` trava a revista e recusa arquivada; troca que apaga cópias exige `add/change_revistasecao` e avisa quantas saíram; menores baratos (`update_fields`, mensagens, preview com erros de `validar_corpo`, faixa "Sem template"). 2º commit local em `feat/s11b2-copia-secao`.
+- **Motivo:** confirmação forte só vale se a contagem confirmada for a que se apaga; o Impresso revisa o que sai no zip.
+- **Descartadas:** só avisar "texto congelado" na arquivada (mostraria o texto errado).
+- **Arquivos afetados:** `app/nucleo/admin/revista.py`, testes
+- **Status:** pendente. Subagente parado antes de aplicar (pedido do usuário, 2026-10-30); worktree em 95c6790, limpo.
+
 ## Perguntas em aberto
 - [x] (D-115 a D-124) Varredura 7 agentes (2026-10-29), perguntas 55–70: cópia por seção; juntar lado a lado × proposta; preview sem template; ciclo de vida da revista sem cortes; SVG/capa derrubam Validado; variável com escopo parceiro; sugestão do ano anterior; painel da temporada; copiar em lote; validar em lote com hash; React × Django admin; bloqueio × otimista; fascículo fixo; editor textarea × etiquetas; FK composta; matriz duplicada entre anos — depende de: usuário
 - [x] (D-125) Correções técnicas da varredura (sem decisão do usuário): ER sem TextoModelo/BlocoTexto/ProjetoBloco e com Revista/RevistaFasciculo/Projeto.ano_id; TemplateVersao só de inserção como base da fusão; hash em Python com JSON canônico (só cai a revista que usa a variável, corrige D-097); bloqueio por `INSERT … ON CONFLICT … WHERE expira_em < now()`; cascata com `FOR UPDATE` em ParceiroAno, foto em REPEATABLE READ, clone em uma transação; SVG sanitizado (defusedxml, lista de tags, 3 MB, ids prefixados); Markdown com `html: false` e `{{var}}` validado por regex; zip com JSON/SVG embutidos no index.html; atalhos do F1 só fora do F2; revalidar seções × ids do SVG no Validado e ao salvar template; marcar D-063 (texto), D-070 e D-088 (texto_modelo) como substituídas e reescrever D-093 — depende de: aprovação das perguntas 55–70
@@ -1334,6 +1422,10 @@ Liberar a Fase D: S11a, S11b1 e S11c em paralelo, a partir de `refatoracao-djang
 - [ ] Cor da linha com `passo` nulo: JS pinta pelo topo (base da entrada de cima) e diverge do Python (âncora maior) com tarefas esparsas (D-154). Corrigir no `script.js` depois do S08 — depende de: S08 terminar
 - [x] (D-158) Número destacado da régua: branco sobre o vermelho do padrão 1 (#f72628) dá 3,99:1, abaixo do AA (4,5:1). Trocar para preto (5,3:1) ou escurecer o vermelho? (D-157) — depende de: usuário/design
 - [ ] Itens de tarefa (imagem/PDF) sem texto alternativo: o modelo não tem campo (D-157) — depende de: usuário
+- [x] (D-166) Liberar exclusão de sobrescritas do projeto e de tarefa/descritor? — só as sobrescritas
+- [x] (D-166) Impacto do template sem listar revista sem SVG? — fica assim
+- [x] (D-168) Só o superusuário põe alguém nos grupos Impresso e Admin — confirmado
+- [x] (D-170) Cópia de seção editada até ficar igual ao template continua cópia — confirmado pelo usuário
 - [ ] Lista completa de variáveis (D-107) — depende de: equipe pedagógica
 - [ ] Seeds 2026 para a Pedagógica (D-139): `f1-mt.hbs` diz "Para Língua Portuguesa…" no 3º parágrafo (igual ao escala.hbs e ao PDF de MT 2025); fechamento do F1 = "Utilização dos resultados"?; `f2-mt.hbs` é cópia do LP; modais `dlg-p4-i1..i4` com "Conteúdo em breve."; nome do template "Padrão" — depende de: Pedagógica
 - [ ] Bloqueio (D-140): portar a saída por inatividade do editor React?; POST recusado re-renderizar em vez de descartar o digitado? — depende de: usuário
@@ -1511,3 +1603,24 @@ Liberar a Fase D: S11a, S11b1 e S11c em paralelo, a partir de `refatoracao-djang
 - S15 concluído: b961b98 reverificado por mim (202 testes, migrações, régua, Playwright 18/18; CSP ok no `file://`). Fase C concluída.
 - Conferência de integração: `feat/s15-zip` + mudanças do S16 numa cópia descartável: 217 testes OK, migrações limpas. Cópia removida.
 - A pedido do usuário: commit do S16 (9109b28) e merge --no-ff de `feat/s07-resolver`, `feat/s08-pagina`, `feat/s15-zip` e `feat/s16-abrir-ano` em `refatoracao-django`, sem conflito; reverificado (217 testes, migrações, régua, Playwright 18/18, `trail check` sem conflito). Depois, commit dos 2 learnings do trail e deste `state.md`.
+### 2026-10-29 23:00
+- Fase D iniciada: S11a, S11b1 e S11c em paralelo, cada um num subagente com worktree próprio (`feat/s11a-admin-cadastros`, `feat/s11b1-admin-templates`, `feat/s11c-admin-projeto`) a partir de 33e0621, sem commit. Nenhum dos três cria migração. Depois: S11b2 → S12 → S13.
+- Git da cadeia S11b2 → S12 → S13: commit local por passo (D-161), escolha do usuário.
+- S11b1 verificado por mim (229 testes, migrações limpas, `node --check`), sem commit (D-162); revisão django-reviewer em andamento.
+- Revisão do S11b1: 1 crítico (JS do editor não inicializa), 3 importantes; correções enviadas (D-163).
+- S11c verificado por mim (suíte OK, migrações limpas), sem commit (D-164); revisão em andamento.
+- S11a verificado por mim (suíte OK, migrações, Playwright cortes 1/1), sem commit (D-165); revisão em andamento.
+- Usuário: exclusão só de ProjetoPasso/ProjetoCor; impacto do template ignora revista sem SVG (D-166).
+- Revisão do S11c: 0 críticos, 4 importantes; correções + migração 0008 enviadas (D-167).
+- Revisão do S11a: 0 críticos, 7 importantes (escalada para Impresso, fórmula na planilha, upload); correções enviadas (D-168).
+- S11b1 concluído: 975c5fd reverificado por mim (suíte, migrações, Playwright templates-admin 1/1).
+- S11c concluído: 5de1a91 reverificado por mim (suíte, migrações; migração 0008).
+- S11b2 disparado em `feat/s11b2-copia-secao` = S11b1 + merge de S11c (D-169).
+- Usuário confirmou: só o superusuário põe alguém nos grupos Impresso e Admin (D-168).
+- S11a concluído: 5e22020 reverificado por mim (suíte, migrações, Playwright cortes 1/1).
+- Pedido do usuário: ao fim da Fase D (depois do S13), merge em `refatoracao-django` do que foi feito e push da branch para o GitHub; último commit da leva só o `state.md`.
+- S11b2 relatado (95c6790); minha verificação e revisão django-reviewer em andamento (D-170).
+- S11b2 verificado por mim (suíte, migrações, Playwright 2/2); revisão em andamento.
+- Revisão do S11b2: 0 críticos, 2 importantes; correções enviadas (D-171).
+- Usuário: cópia editada até ficar igual ao template continua cópia (D-170).
+- Sessão encerrada a pedido do usuário: subagente das correções do S11b2 parado sem mudanças; retomar pela D-171.
