@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo 10 de 22: Fase B concluída e juntada em `refatoracao-django` (commits eb03018, d2ae77e, 2e48508, 198764f, a31b9b5, fc4377e; merges --no-ff 6cd2583…9ce2bd6; sem push nem PR).
-Funcionando: em `refatoracao-django`, `docker compose run --rm -v "$PWD/examples:/pdfs:ro" -v "$HOME/Documentos:/pdfs-alfa:ro" app python manage.py test` roda 152 testes OK; `makemigrations --check` limpo; régua ok; Playwright f1-fixture 8/8; `trail check` sem conflito; carga 2026 de ponta a ponta (cadastros, 3 PDFs, 4 templates) conferida.
-Quebrado/pendente: seeds de 2026 aguardam a Pedagógica; `docs/modelo-er.md` com os ajustes da D-129/D-133; perguntas abertas: inatividade do bloqueio, SVG com DOCTYPE, autor da foto herdada.
+Passo 13 de 22: Fase C (S07, S08, S15) e S16 concluídos e juntados em `refatoracao-django` (merges --no-ff f418c10, 470c86c, 5eb9cbd, 51b329f; sem push nem PR).
+Funcionando: em `refatoracao-django`, 217 testes OK (8 de PDF pulados), `makemigrations --check` limpo, régua ok, Playwright f1-fixture + pagina + zip 18/18, `trail check` sem conflito. Preview `preview/<id>/` (comando `criar_demo`, usuário `demo-preview`), zip por revista, `abrir_ano 2027`.
+Quebrado/pendente: cor da linha com `passo` nulo (JS × Python); preview sem rota para itens; alt dos itens; foco no SVG em 390px; seeds de 2026 aguardam a Pedagógica.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Liberar a Fase C: S07 (resolver, foto, hash, pendências), a partir de `refatoracao-django`.
+Liberar a Fase D: S11a, S11b1 e S11c em paralelo, a partir de `refatoracao-django`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -22,16 +22,16 @@ Liberar a Fase C: S07 (resolver, foto, hash, pendências), a partir de `refatora
 8. [x] S09 — Serviço de SVG e capa
 9. [x] S10 — Bloqueio
 10. [x] S14 — Perfis e permissões
-11. [ ] S07 — Resolver, foto, hash, pendências  ← próximo (Fase C)
-12. [ ] S08 — Página única F1 + F2
-13. [ ] S15 — Zip por revista
-14. [ ] S11a — Admin: cadastros, cortes, matriz
+11. [x] S07 — Resolver, foto, hash, pendências
+12. [x] S08 — Página única F1 + F2
+13. [x] S15 — Zip por revista
+14. [ ] S11a — Admin: cadastros, cortes, matriz  ← próximo (Fase D)
 15. [ ] S11b1 — Admin: templates
 16. [ ] S11b2 — Admin: cópia por seção
 17. [ ] S11c — Admin: projeto, variáveis, arquivos, lote
 18. [ ] S12 — Painel + Validado
 19. [ ] S13 — Impresso + planilhas
-20. [ ] S16 — Abrir ano
+20. [x] S16 — Abrir ano
 21. [ ] S17 — Carga 2026 + desligar o antigo
 22. [ ] S18 — E2E da temporada
 
@@ -1211,11 +1211,129 @@ Liberar a Fase C: S07 (resolver, foto, hash, pendências), a partir de `refatora
 - **Arquivos afetados:** `app/nucleo/servicos/importar_matriz.py`, `app/nucleo/importacao/{pdf,xlsx}.py`, `app/nucleo/management/commands/importar_matriz.py`, `app/nucleo/tests/test_importacao.py`
 - **Status:** ativa. Aplicada: 53 testes com os PDFs montados, sem pulos; contagens iguais. Serviço dividido em `ler(arquivo)` (fora da transação) e `gravar_matriz(matriz, dados, substituir, passo, origem)`; `importar_matriz` chama os dois. Travas: Matriz → MECs (`of=self`) → recusa com `Bloqueio` não expirado ("em edição agora: LP 5EF (pedagogica)"). Histórico com `history_change_reason="importação de <arquivo>"`. Responde a pergunta "reimportar apaga a trava" da D-141. Limite registrado: o `fim` vindo da planilha é a coluna (união dos níveis), não o original; `#` dentro de texto da planilha é separador.
 
+### D-147 — Fase C com commit local por passo encadeado; S16 sem commit (2026-10-29 19:05)
+- **Contexto:** o usuário pediu a Fase C sem commit. O S08 depende do S07 e o S15 do S08, e um worktree novo nasce do último commit (mesmo problema da D-127).
+- **Decisão:** S07, S08 e S15 fazem um commit local cada um na própria `feat/sNN-*`, sem push nem PR. `feat/s08-*` sai de `feat/s07-resolver` e `feat/s15-*` sai de `feat/s08-*`. O S16 não depende de ninguém da fase e fica sem commit (D-134). O merge em `refatoracao-django` fica para quando o usuário pedir.
+- **Motivo:** escolha do usuário entre 3 opções. É a única que mantém uma branch por passo sem parar entre eles.
+- **Descartadas:** empilhar S07, S08 e S15 no mesmo worktree sem commit (passos misturados); parar a cada passo para o usuário commitar (mais lento).
+- **Arquivos afetados:** nenhum (fluxo de git).
+- **Status:** ativa.
+
+### D-148 — Serviço e comando abrir_ano (S16) (2026-10-29 19:20)
+- **Contexto:** o plano não fixava de qual ano copiar, a assinatura do serviço nem para onde aponta `duplicada_de` de uma matriz que já era exceção.
+- **Decisão:** copia do maior ano menor que o novo, sem `--de`; sem ano anterior, `AnoRecusado` e nada é criado. `abrir_ano(ano, usuario=None) -> (novo, origem)`: `usuario` vai ao histórico e a `TemplateVersao.criada_por`; o serviço não confere a permissão `abrir_ano` (a ação do S11a confere; o comando roda sem usuário). Uma `atomic()` que começa por `Ano.save()` num savepoint: o `IntegrityError` do UNIQUE vira `AnoRecusado("2027 já está aberto")`, o que também cobre duas execuções simultâneas. `copiar(modelo, **trocas)` clona com `bulk_create_with_history` e devolve o mapa id velho → novo, na ordem Etapa, Componente, CorPadrao, Matriz, MEC, Descritor, Tarefa, Template; `TemplateVersao` (só INSERT, sem histórico) com `bulk_create` e `DISTINCT ON (template_id)`. Toda matriz copiada aponta `duplicada_de` para a matriz de mesmo nome no ano anterior (exceção de 2026 vira, em 2027, cópia da exceção de 2026). `Template.origem` e `Tarefa.arquivo` copiados como estão (mesmo arquivo no storage). Motivo no histórico: "abrir ano 2027 a partir de 2026".
+- **Motivo:** a virada é sempre a partir do ano anterior; o diff da D-113 mostra o que mudou desde o ano passado.
+- **Descartadas:** `--de` opcional (sem caso de uso); conferir permissão no serviço (o comando de ops não tem usuário); `TransactionTestCase` (não há teste de concorrência).
+- **Arquivos afetados:** `app/nucleo/servicos/abrir_ano.py`, `app/nucleo/management/commands/abrir_ano.py`, `app/nucleo/tests/test_abrir_ano.py`, `app/nucleo/models/texto.py` (só comentário)
+- **Status:** ativa. Verificado por mim: 162 testes OK (8 de PDF pulados), `makemigrations --check` limpo. Revisão (django-reviewer) em andamento. Limite `ponytail:`: leitura da origem sem trava (edição concorrente pode entrar pela metade). A confirmar com o usuário: `Tarefa.arquivo` compartilhado entre anos.
+
+### D-149 — Correções da revisão do S16 (2026-10-29 19:35)
+- **Contexto:** revisão (django-reviewer) do S16: 0 críticos, 3 importantes. Uma substituição de matriz concorrente recria descritores e tarefas com ids novos, e a cópia em READ COMMITTED quebrava com `KeyError` (500). Um ano digitado errado (`20277`) criava milhares de linhas que nada apaga (FKs PROTECT). Nenhum teste provava que uma falha no meio desfaz tudo.
+- **Decisão:** a cópia lê a origem em REPEATABLE READ (fora de `atomic`, mesma regra do `foto.py`, D-138); o ano novo tem de ser `maior ano existente + 1`, sem buracos (resolve também a corrida 2027 × 2028); ano repetido responde "já está aberto" antes de "nenhum ano anterior"; teste de falha no meio com `mock.patch`; testes do mapa com 2 etapas × 2 componentes e histórico conferido por modelo, inclusive sem usuário.
+- **Motivo:** o abrir ano não tem desfazer; erro de entrada ou corrida não pode deixar um ano errado no banco.
+- **Descartadas:** `pg_advisory_xact_lock` (o ano consecutivo já resolve a corrida); `--forcar` para pular ano (sem caso de uso).
+- **Arquivos afetados:** `app/nucleo/servicos/abrir_ano.py`, `app/nucleo/tests/test_abrir_ano.py`
+- **Status:** enviada ao subagente do S16. `Tarefa.arquivo` resolvido na D-150.
+
+### D-150 — Arquivo de tarefa compartilhado entre anos; só se apaga sem outra referência (2026-10-29 19:45)
+- **Contexto:** o abrir ano (D-148) copia `Tarefa.arquivo` como caminho, então 2026 e 2027 apontam para o mesmo arquivo. Hoje o campo é sempre nulo (o importador grava `None`) e nenhum código escreve ou apaga esse arquivo.
+- **Decisão:** manter o caminho compartilhado. Quem um dia implementar a troca do arquivo de uma tarefa só apaga o antigo se nenhuma outra `Tarefa` usar o mesmo caminho. A regra fica no comentário do campo.
+- **Motivo:** escolha do usuário (opção 1). A proteção fica no único ponto onde o arquivo pode sumir, e o disco não duplica a cada ano.
+- **Descartadas:** copiar o arquivo no abrir ano (o disco dobra a cada ano, para arquivos que hoje nem existem); nunca apagar arquivo de tarefa (órfãos sem limite).
+- **Arquivos afetados:** `app/nucleo/models/matriz.py` (comentário de `Tarefa.arquivo`)
+- **Status:** ativa.
+
+### D-151 — Resolver, foto, hash e pendências (S07) (2026-10-29 20:10)
+- **Contexto:** o mesmo dict serve ao preview, ao hash e à foto; a foto vai para jsonb, que não guarda ordem de chaves; o plano não fixava o formato, o marcador de template ausente nem os códigos de pendência.
+- **Decisão:** (1) resolvido = `{f1: {etapas[], dados, cores, secoes}, f2: {secoes, svg_sha256, svg_ids}, capa_sha256, lacunas[]}`; `f1.dados` é o JSON da D-130; `etapas` guarda a ordem das abas; seções em lista `[{id, titulo, corpo}]` com HTML pronto. (2) `hash_validado` = sha256 do JSON canônico do resolvido inteiro; o resolvido leva só os textos renderizados (não os valores crus nem o nome do projeto), então variável usada só na LP não derruba a MT; o caminho do SVG/capa fica fora (reenviar o mesmo arquivo não muda o hash). (3) A foto guarda sempre o resolvido inteiro, nos dois motivos, com `hash` = `hash_validado` do momento; o S13 compara `impresso_de(foto.conteudo)` com `conteudo_impresso(revista)`; fora de `atomic`, `BEGIN` + `SET TRANSACTION ISOLATION LEVEL REPEATABLE READ` (testado com `TransactionTestCase`). (4) Template ausente: `secoes: None` + `faixa` (`<div class="faixa-vermelha" role="alert">…`) e lacuna `{tipo: template}`; variável vazia vira lacuna só se usada nos textos efetivos. (5) `RevistaSecao.texto` é só o corpo; o título vem do template (o S11b2 grava nesse formato); `secoes_desatualizadas` só avisa quando a seção mudou entre a versão-base e a atual. (6) Tarefa vai para o padrão 1 + nº de cortes menores que `fim` (âncora maior, topo aberto, igual ao JS); linha vazia segue o contrato (nível igual ao corte é do padrão de cima); `item` (arquivo da tarefa) fica para o S15. (7) `conteudo_impresso` inclui as cores do F1, além de escalas e textos. (8) Pendências: `matriz`, `corte_sem_matriz`, `template_f1`, `template_f2`, `svg`, `ids_svg`, `capa`, `variaveis`, `nome_projeto`; `link` nulo até existirem as telas (`ponytail:`). (9) Gabarito `tests/fixtures/resolver-4cortes.json` conferido por teste Django (`REGERAR_FIXTURES=1` regrava) e lido pelo Playwright f1-fixture.
+- **Motivo:** ordem de abas e seções sobrevive ao jsonb; uma foto só serve a arquivamento, impresso e herança; o hash cai só na revista cujo conteúdo mudou (D-125).
+- **Descartadas:** seções em dict (`passo10` antes de `passo2`); foto só com a parte do impresso (a arquivada precisa do resolvido inteiro); comando para gerar o gabarito.
+- **Arquivos afetados:** `app/nucleo/servicos/{resolver,foto}.py`, `app/nucleo/tests/{test_resolver,test_cascata}.py`, `app/nucleo/tests/fixtures/resolver-4cortes.json`, `app/e2e/tests/f1-fixture.spec.ts`
+- **Status:** ativa. Commit local 4ce2428 em `feat/s07-resolver` (D-147). Verificado por mim: suíte OK (8 de PDF pulados), `makemigrations --check` limpo, régua ok, Playwright f1-fixture 9/9 (resolvido de 4 cortes: 0 erros, 5 faixas). Revisão (python-reviewer) em andamento. A decidir com o usuário: cores no "o que mudou"; corte igual a 0 ou a `escala_max`.
+
+### D-152 — Correções da revisão do S16 aplicadas (2026-10-29 20:10)
+- **Contexto:** aplicação da D-149 e da D-150.
+- **Decisão:** checagem `fora_de_atomic` antes do bloco e `SET TRANSACTION ISOLATION LEVEL REPEATABLE READ` como 1ª instrução; `ComandoAbrirAnoTest` virou `TransactionTestCase` para passar pelo `SET`; ordem das mensagens: "2027 já está aberto" → "nenhum ano anterior a 2027 para copiar" → "2028 recusado: o próximo ano que pode ser aberto é 2027"; atomicidade testada com `mock.patch.object(TemplateVersao.objects, "bulk_create")` falhando depois da cópia das tarefas; fixture com 4 MECs (5EF/9EF × LP/MT, passos 25, 50, nulo, 30); histórico conferido por modelo, inclusive com `usuario=None`; comentário de `Tarefa.arquivo` com a regra da D-150.
+- **Motivo:** revisão (D-149).
+- **Descartadas:** —
+- **Arquivos afetados:** `app/nucleo/servicos/abrir_ano.py`, `app/nucleo/tests/test_abrir_ano.py`, `app/nucleo/models/matriz.py` (comentário)
+- **Status:** ativa. Reverificado por mim: 167 testes OK (8 de PDF pulados), `makemigrations --check` limpo. S16 concluído, sem commit em `feat/s16-abrir-ano` (D-147).
+
+### D-153 — Cores entram no "o que mudou"; corte nos limites da escala é recusado (2026-10-29 20:25)
+- **Contexto:** perguntas do S07 (D-151). `conteudo_impresso` incluía as cores do F1, embora o impresso use uma rampa verde própria. A D-055 aceitava corte igual a 0 ou a `escala_max`, o que cria um padrão vazio que o JS recusa (D-131).
+- **Decisão:** (1) as cores do F1 continuam em `conteudo_impresso` e aparecem no diff do impresso. (2) A cascata recusa corte ≤ 0 ou ≥ `escala_max`: cada corte fica estritamente dentro da escala. Ajuste em `validar_linhas` e no teste `test_aceita_limites` do S06, aplicado junto com as correções da revisão do S07 (2º commit em `feat/s07-resolver`).
+- **Motivo:** escolhas do usuário. Recusar na entrada mostra o erro na tela de cortes, em vez de a escala sumir no preview.
+- **Descartadas:** tirar as cores do impresso (recomendação do Claude: o impresso não usa essas cores); JS aceitar padrão vazio.
+- **Arquivos afetados:** `app/nucleo/servicos/cascata.py`, `app/nucleo/tests/test_cascata.py`
+- **Status:** ativa. Ajusta a D-055 (intervalo aberto nas pontas).
+
+### D-154 — Correções da revisão do S07 (2026-10-29 20:40)
+- **Contexto:** revisão (python-reviewer) do S07: 0 críticos, 4 importantes. (1) Corte nos limites gerava JSON que o JS recusa, sem pendência. (2) A foto lia SVG/capa/arquivamento da instância em memória, fora do retrato REPEATABLE READ. (3) ~35 queries por revista no painel (resolver + pendências + hash refazendo tudo). (4) Cópias de seção órfãs sem `order_by`: a ordem física do Postgres mudava o hash sozinha. Menores: `item` da tarefa fora do hash; linhas vazias caindo dentro de `[inicio, fim)` de tarefa larga; `titulo` é HTML, não texto.
+- **Decisão:** além da D-153 (cascata recusa os limites), pendência defensiva `corte_invalido` espelhando o `problemaDaEtapa` do JS; `fotografar` fora de `atomic` recarrega a revista depois do `SET TRANSACTION`; `pendencias` e `hash_validado` aceitam `resolvido` pronto, `select_related` e descritores só das etapas com corte, com teto de queries em teste; `.order_by("secao")`; `item` (caminho de `Tarefa.arquivo`) na linha quando não nulo; nenhuma linha vazia dentro de `[inicio, fim)` de uma tarefa (decisão do orquestrador: o modelo novo tem `fim`; com `fim` = próximo nível o resultado é igual ao do TS); docstring: `titulo` e `corpo` são HTML escapado. 2º commit local em `feat/s07-resolver`; o S08 faz rebase.
+- **Motivo:** o hash não pode cair sem edição; a foto precisa ser um retrato só; o painel do S12 resolve ~50 revistas.
+- **Descartadas:** corrigir agora a cor com `passo` nulo (o JS pinta pelo topo = base da entrada de cima e diverge do Python com tarefas esparsas) — mexe no `script.js`, que o S08 está editando; fica para depois do S08. Teste de escrita concorrente na foto (o `SET TRANSACTION` testado basta).
+- **Arquivos afetados:** `app/nucleo/servicos/{resolver,foto,cascata}.py`, `app/nucleo/tests/{test_resolver,test_cascata}.py`, `app/nucleo/tests/fixtures/resolver-4cortes.json`, `app/e2e/tests/f1-fixture.spec.ts`
+- **Status:** aplicada no commit local 32d91db (`fix(s07)`). Reverificado por mim: 175 testes OK (8 de PDF pulados), `makemigrations --check` limpo, régua ok, Playwright f1-fixture 9/9; gabarito `resolver-4cortes.json` igual ao do 1º commit. `item = {id, tipo}` (nome do arquivo sem extensão + extensão), o formato que o JS já lê (`arquivos/itens/<id>.<tipo>`); o S15 grava o arquivo nesse caminho. `resolver.carregar(pk)` é o jeito de obter a revista antes de resolver (`select_related`). Tetos testados: `resolver` ≤ 12 queries; `pendencias` + `hash` com resolvido pronto ≤ 2.
+
+### D-155 — Linhas vazias em todo nível do intervalo mínimo, mesmo dentro de uma tarefa (substitui parte da D-154) (2026-10-29 20:50)
+- **Contexto:** a D-154 suprimia as linhas vazias dentro de `[inicio, fim)` de uma tarefa. O usuário corrigiu.
+- **Decisão:** toda linha do passo efetivo que não tem tarefa começando naquele nível vira `---`, mesmo dentro do intervalo de uma tarefa mais larga, igual ao TS antigo. O intervalo mínimo é definido globalmente na matriz por etapa × componente (`MatrizEtapaCC.passo`). O código confere se a matriz traz todos os níveis do intervalo e gera os que faltam, mesmo quando a base já tem linhas. O usuário pode mudar o intervalo na matriz (S11a) e por projeto (`ProjetoPasso`, S11c), como na D-053 e na D-091.
+- **Motivo:** palavras do usuário: "é necessário que haja essas linhas vazias com os intervalos mínimos definidos".
+- **Descartadas:** suprimir as linhas vazias dentro do intervalo da tarefa (D-154, item das linhas vazias).
+- **Arquivos afetados:** `app/nucleo/servicos/resolver.py`, `app/nucleo/tests/test_resolver.py`
+- **Status:** ativa. Substitui só o item das linhas vazias da D-154. O resto da D-154 continua valendo.
+
+### D-156 — Página única F1 + F2 (S08) (2026-10-29 21:30)
+- **Contexto:** a mesma página serve ao preview (com faixas vermelhas, servidor) e ao zip (sem faixas, `file://`); o svg-tour usa `textContent`; o plano não fixava como testar sem servidor nem como o usuário vê o preview.
+- **Decisão:** (1) um template só, `templates/revista/index.html`, com `contexto_pagina(revista, *, preview, estaticos, capa)` em `servicos/html.py` (com `json_seguro` e `css_das_cores` para N padrões); o preview passa `static("revista/")` e a rota da capa, o S15 passa `"revista/"` e `"arquivos/capa.<ext>"` com `preview=False`. (2) Playwright sem servidor: o Django renderiza em modo zip o gabarito `e2e/fixtures/pagina.html` (conferido por `test_preview`, `REGERAR_FIXTURES=1` regrava) com um SVG pequeno (`passo1`, `passo2`, `btn-action-p2`); `page.route` serve os estáticos (como D-130). (3) Título e texto do tour derivados com `unescape(strip_tags(html))` (negrito/itálico dos passos se perdem); `<dialog>` e seções do F1 recebem o HTML do resolver com `|safe`. (4) Config do tour como constantes em `f2-init.js` (`helpOnStart: false`); `BOTOES_MODAL` vem das seções `dlg-*`; `<dialog>` com id sem prefixo (`dlg-p2`). (5) `dialog[id^="dlg-"] { margin: auto }` contra o reset do F1. (6) Capa servida por `preview/<id>/capa` com `Content-Type` da extensão gravada e `nosniff`. (7) Comando `criar_demo` idempotente: parceiro "DEMONSTRAÇÃO" (`--ano`, padrão 2026), matriz própria, LP 5EF/9EF, templates do seed, SVG real da fixture, capa PNG gerada com a stdlib, usuário `demo` (`is_staff`) com senha nova impressa a cada execução. (8) `svg-tour.js` e `svg-tour-modal.js` copiados sem alteração (svg-tour bcadc29); `revista.css` com os estilos de `revista-modais.html` e seletores `f2-`.
+- **Motivo:** um template evita divergência entre preview e zip; `{% static %}` quebra no `file://`; o teste não depende de servidor nem de credenciais.
+- **Descartadas:** dois templates; servidor + login no Playwright (pularia sem variáveis); SVG real (850 KB) no gabarito; `innerHTML` no texto do tour (`<p>` dentro de `<p>`); capa por MEDIA.
+- **Arquivos afetados:** `app/nucleo/servicos/html.py`, `app/nucleo/templates/revista/index.html`, `app/nucleo/static/revista/f2/*`, `app/nucleo/static/revista/f1/script.js` (guarda do Ctrl+setas), `app/nucleo/urls/{__init__,preview}.py`, `app/nucleo/management/commands/criar_demo.py`, `app/nucleo/tests/test_preview.py`, `app/e2e/tests/pagina.spec.ts`, `app/e2e/fixtures/pagina.html`, `app/.gitignore`
+- **Status:** ativa. Commit local f1ec6e2 em `feat/s08-pagina` (sobre 32d91db). Verificado por mim: 183 testes OK (8 de PDF pulados), `makemigrations --check` limpo, régua ok, Playwright f1-fixture + pagina 14/14 (o subagente rodou também o `fumaca` com servidor: 16/16). Revisões a11y-architect e security-reviewer em andamento. Pendente: o preview não serve `arquivos/itens/<id>.<tipo>` (os itens de tarefa ainda não existem; o zip do S15 grava nesse caminho).
+
+### D-157 — Correções das revisões de acessibilidade e segurança do S08 (2026-10-29 21:50)
+- **Contexto:** a11y-architect: 3 críticos (abas de etapa com ARIA inválido e estado congelado; escala sem estrutura para leitor de tela; foco invisível nas bolinhas do SVG do F2), 5 importantes, 2 menores. security-reviewer: 0 críticos, 3 importantes (preview só com login, sem `view_revista`; `criar_demo` sem guarda de DEBUG e trocando senha de usuário existente; sem CSP), 5 menores.
+- **Decisão:** aplicar no 2º commit de `feat/s08-pagina`: abas como grupo de botões com `aria-pressed`; texto oculto com padrão e faixa em cada linha da escala e `aria-hidden` no que é só visual; tour segue o foco e outline de 3px; seletor de descritores com foco devolvido, Esc, `aria-current` e região `role="status"`; contraste do `.descritor-btn`; foco ao sumir "Anterior"; guarda do Ctrl+setas com o modal "Ver item"; reflow do F2 em zoom; `prefers-reduced-motion`; faixas com `role="status"`; h2 no F1. Segurança: `view_revista` no preview e na capa; `criar_demo` só com DEBUG, usuário `demo-preview` e recusa de usuário que o comando não criou; CSP por meta tag; capa com `no-store`/`sandbox` e 404 sem arquivo; `css_das_cores` mais estrito; teste das chaves do tour; `faixa` sem `mark_safe` de dado guardado; `DEBUG` padrão desligado e erro com `SECRET_KEY` padrão fora do DEBUG.
+- **Motivo:** a revista é lida por professores e vai ao zip; a defesa contra XSS não pode ser uma camada só.
+- **Descartadas:** editar `svg-tour.js` (cópia fiel, D-103; contornado em `f2-init.js`); trocar já o branco sobre vermelho do número destacado (3,99:1) — decisão de design, pergunta ao usuário; validação de cor no `clean` dos modelos (S11).
+- **Arquivos afetados:** `app/nucleo/templates/revista/index.html`, `app/nucleo/static/revista/{f1,f2}/*` (sem os arquivos do svg-tour), `app/nucleo/servicos/html.py`, `app/nucleo/urls/preview.py`, `app/nucleo/management/commands/criar_demo.py`, `app/sistema/settings.py`, testes e gabarito
+- **Status:** aplicada no commit local d070ae9 (`fix(s08)`). Reverificado por mim: 187 testes OK (8 de PDF pulados), `makemigrations --check` limpo, régua ok, Playwright f1-fixture + pagina 15/15 (com CSP, 0 erros no console). Desvios: foco após "Anterior" por `click` no botão (no `svgtour:change` o Chrome já tirou o foco); faixas como flags (`sem_template_f1/f2`), texto fixo no template; `FileNotFoundError` do SVG sobe de `html.py` e a view devolve 404; usuário de demonstração agora é `demo-preview`, só com `view_revista`. Ficou de fora: CSP no `file://` (teste no S15); foco no SVG em 390px com o bloco maior que o palco (2.4.11); links de itens no preview. Pendências: texto alternativo dos itens de tarefa (o modelo não tem campo); contraste branco sobre `#f72628` no número destacado.
+
+### D-158 — Número destacado da régua com texto preto (contraste WCAG) (2026-10-29 22:00)
+- **Contexto:** branco sobre o vermelho do padrão 1 (#f72628) dá 3,99:1, abaixo do AA (4,5:1). `corTextoSobre` escolhia branco por APCA.
+- **Decisão:** a cor do texto do número destacado sai da razão de contraste do WCAG 2 (preto ou branco, a maior). Com as 5 cores atuais, sempre preto (#f72628 → 5,3:1).
+- **Motivo:** escolha do usuário (opção 1). Muda uma função e mantém as cores dos padrões.
+- **Descartadas:** escurecer o vermelho do padrão 1 mantendo o branco (muda a cor em toda a revista).
+- **Arquivos afetados:** `app/nucleo/static/revista/f1/script.js` (`corTextoSobre`), `app/nucleo/static/revista/f1/regua.test.mjs`
+- **Status:** ativa. Enviada ao subagente do S08 (2º commit).
+
+### D-159 — Zip por revista (S15) (2026-10-29 22:20)
+- **Contexto:** a ação de admin podia aceitar várias revistas; ainda não havia admin de Revista; o plano não fixava onde ficam os itens das tarefas nem como testar `file://` sem servidor.
+- **Decisão:** `zip_revista(revista) -> (nome, bytes)`, `nome_zip` (NFKD → ASCII, minúsculas, fora de `[a-z0-9]` vira `-`; ex.: `sao-paulo-demonstracao-lp-2026.zip`) e exceção `Pendente` com a lista de pendências. Uma revista por zip ("Escolha uma revista por vez"). `RevistaAdmin` só leitura em `nucleo/admin/revista.py` (`has_add/change/delete` falsos; `hash_validado`, `validado_*`, `arquivada_em` em `readonly_fields`, D-142), ação com `permissions=["view"]`. Itens: tarefas da matriz e do componente da revista com `arquivo`, gravadas como `arquivos/itens/<nome do arquivo>` (só o nome: sem `../`), sem repetição. `*.test.mjs` fora do zip. Zip em memória (`BytesIO`, `ponytail:`; trocar por `SpooledTemporaryFile` se crescer). Playwright: o teste Django grava o gabarito `e2e/fixtures/revista.zip` (48 KB, `REGERAR_FIXTURES=1`); o spec extrai com ~15 linhas de `node:zlib` e abre `index.html` por `pathToFileURL`.
+- **Motivo:** o caminho mais simples; o S11c só precisa liberar `has_change_permission`; nenhuma dependência nova.
+- **Descartadas:** zip de zips para várias revistas (lote fica para S11c/S12); alterar `html.py` para aceitar o resolvido pronto (arquivo do S08; a revista é resolvida duas vezes); diretório extraído versionado; `unzip`/`python` externos no teste.
+- **Arquivos afetados:** `app/nucleo/servicos/empacotar.py`, `app/nucleo/admin/{__init__,revista}.py`, `app/nucleo/tests/test_empacotar.py`, `app/e2e/tests/zip.spec.ts`, `app/e2e/fixtures/revista.zip`
+- **Status:** ativa. Commit local 9fab07c em `feat/s15-zip` (sobre f1ec6e2). Verificado por mim: 191 testes OK (8 de PDF pulados), `makemigrations --check` limpo, régua ok, Playwright f1-fixture + pagina + zip 16/16. Revisão (django-reviewer) em andamento. Falta rebase sobre o 2º commit do S08 e regerar o gabarito. `svg-tour.js` mantém `SvgTour.load` com `fetch(`, nunca chamado. Item com extensão maiúscula (`.PDF`) não abre no JS.
+
+### D-160 — Correções da revisão do S15 (2026-10-29 22:40)
+- **Contexto:** revisão (django-reviewer) do S15: 0 críticos, 4 importantes. O zip levava itens de etapas sem corte; na revista arquivada o HTML vinha da foto e os itens da matriz atual; `PurePosixPath(c).name` devolvia `..` e a barra invertida passava (zip slip em extrator de Windows); dois caminhos com o mesmo nome se sobrescreviam; arquivo ausente virava 500.
+- **Decisão:** itens derivados do resolvido (`item` das linhas), inclusive na arquivada; arquivada com `svg_sha256`/`capa_sha256` diferentes dos da foto é recusada; nome do item só `[A-Za-z0-9_-]+\.(pdf|png|jpg)`, colisão vira `Pendente`, `order_by("pk")`; arquivo ausente vira `Pendente`; cópia por `copyfileobj`; zip reprodutível (data fixa 1980-01-01, atributos fixos, `ZIP_STORED` para pdf/png/jpg); estáticos por lista de permissão de extensões; testes dos casos novos, 403 nas rotas de alteração do admin, gabarito com 1 item PNG aberto por `file://`.
+- **Motivo:** o zip vai a outras pessoas e é aberto por duplo clique; tem de levar só o que o HTML usa e ser igual a cada geração.
+- **Descartadas:** `SpooledTemporaryFile` + `FileResponse` já agora (fica marcado `ponytail:` para quando os itens pesarem).
+- **Arquivos afetados:** `app/nucleo/servicos/empacotar.py`, `app/nucleo/admin/revista.py`, `app/nucleo/tests/test_empacotar.py`, `app/e2e/tests/zip.spec.ts`, `app/e2e/fixtures/revista.zip`
+- **Status:** aplicada. Commits locais em `feat/s15-zip`, rebaseados sobre d070ae9: 68f2cf4 (feat), 7d1af9a (fix da revisão), b961b98 (ajustes do rebase: `FileNotFoundError` do `html.py` vira `Pendente`, gabarito regerado; 3º commit porque o hook bloqueou `--amend`). Reverificado por mim: 202 testes OK (8 de PDF pulados), `makemigrations --check` limpo, régua ok, Playwright f1-fixture + pagina + zip 18/18. CSP do `<meta>` no `file://` (Chromium): 0 violações; scripts, estilos, capa, item PNG e iframe de PDF passam; Firefox não testado. Arquivo ausente conferido com `default_storage.exists` antes de montar; mesmo caminho repetido não é colisão (D-150); ação do admin com 2 queries.
+
 ## Perguntas em aberto
 - [x] (D-115 a D-124) Varredura 7 agentes (2026-10-29), perguntas 55–70: cópia por seção; juntar lado a lado × proposta; preview sem template; ciclo de vida da revista sem cortes; SVG/capa derrubam Validado; variável com escopo parceiro; sugestão do ano anterior; painel da temporada; copiar em lote; validar em lote com hash; React × Django admin; bloqueio × otimista; fascículo fixo; editor textarea × etiquetas; FK composta; matriz duplicada entre anos — depende de: usuário
 - [x] (D-125) Correções técnicas da varredura (sem decisão do usuário): ER sem TextoModelo/BlocoTexto/ProjetoBloco e com Revista/RevistaFasciculo/Projeto.ano_id; TemplateVersao só de inserção como base da fusão; hash em Python com JSON canônico (só cai a revista que usa a variável, corrige D-097); bloqueio por `INSERT … ON CONFLICT … WHERE expira_em < now()`; cascata com `FOR UPDATE` em ParceiroAno, foto em REPEATABLE READ, clone em uma transação; SVG sanitizado (defusedxml, lista de tags, 3 MB, ids prefixados); Markdown com `html: false` e `{{var}}` validado por regex; zip com JSON/SVG embutidos no index.html; atalhos do F1 só fora do F2; revalidar seções × ids do SVG no Validado e ao salvar template; marcar D-063 (texto), D-070 e D-088 (texto_modelo) como substituídas e reescrever D-093 — depende de: aprovação das perguntas 55–70
 - [x] (D-114) Template F1: o texto aparece antes e depois das escalas; usar seções fixas (`## introducao`, `## fechamento`) como no F2? — depende de: usuário
 - [x] (D-110 a D-113) Grill-me fascículos, rodada 4 (2026-10-29): 8 perguntas (juntar textos, estrutura do template F2, sobrescrita no F2, revista incompleta, SVG/capa no impresso) — depende de: usuário
+- [x] (D-150) `Tarefa.arquivo` copiado no abrir ano aponta para o mesmo arquivo nos dois anos (D-148); se um passo futuro apagar o arquivo ao trocá-lo, o outro ano perde. Aceitável? — depende de: usuário
+- [x] (D-153) As cores do F1 entram no "o que mudou" do impresso (D-151)? — depende de: usuário
+- [x] (D-153) Corte igual a 0 ou à escala máxima: a cascata aceita (D-055), o JS recusa a etapa (D-131). Fechar onde? — depende de: usuário
+- [ ] Cor da linha com `passo` nulo: JS pinta pelo topo (base da entrada de cima) e diverge do Python (âncora maior) com tarefas esparsas (D-154). Corrigir no `script.js` depois do S08 — depende de: S08 terminar
+- [x] (D-158) Número destacado da régua: branco sobre o vermelho do padrão 1 (#f72628) dá 3,99:1, abaixo do AA (4,5:1). Trocar para preto (5,3:1) ou escurecer o vermelho? (D-157) — depende de: usuário/design
+- [ ] Itens de tarefa (imagem/PDF) sem texto alternativo: o modelo não tem campo (D-157) — depende de: usuário
 - [ ] Lista completa de variáveis (D-107) — depende de: equipe pedagógica
 - [ ] Seeds 2026 para a Pedagógica (D-139): `f1-mt.hbs` diz "Para Língua Portuguesa…" no 3º parágrafo (igual ao escala.hbs e ao PDF de MT 2025); fechamento do F1 = "Utilização dos resultados"?; `f2-mt.hbs` é cópia do LP; modais `dlg-p4-i1..i4` com "Conteúdo em breve."; nome do template "Padrão" — depende de: Pedagógica
 - [ ] Bloqueio (D-140): portar a saída por inatividade do editor React?; POST recusado re-renderizar em vez de descartar o digitado? — depende de: usuário
@@ -1371,3 +1489,25 @@ Liberar a Fase C: S07 (resolver, foto, hash, pendências), a partir de `refatora
 - S09 concluído: 2ª rodada aplicada e reverificada (57 testes).
 - Fase B concluída. As 6 mudanças juntadas numa cópia descartável (sem conflito de arquivo): 152 testes OK, `makemigrations --check` limpo, régua ok; carga 2026 de ponta a ponta OK. Cópia removida. Nada commitado.
 - A pedido do usuário: um commit por passo nas 6 branches, merge --no-ff de cada uma em `refatoracao-django` (S14 primeiro), sem conflito; reverificado (152 testes, migrações, régua, Playwright 8/8). Depois, commits do plano, do ER revisado, do design do impresso, dos learnings do trail (inclui o do sanitizador de SVG) e deste `state.md`.
+### 2026-10-29 19:00
+- Fase C iniciada: S07 (resolver) e S16 (abrir ano, paralelo) disparados, cada um num subagente com worktree próprio a partir de 7a0bfcc, sem commit. S08 → S15 seguem o S07 em sequência.
+- Git da Fase C: commit local por passo encadeado (D-147), escolha do usuário.
+- S16 verificado por mim (162 testes, migrações limpas) em `feat/s16-abrir-ano`, sem commit (D-148); revisão django-reviewer em andamento.
+- Revisão do S16: 0 críticos, 3 importantes; correções enviadas (D-149).
+- `Tarefa.arquivo`: usuário escolheu a opção 1 (D-150); comentário enviado ao subagente do S16.
+- S07 verificado por mim (suíte OK, migrações, régua, Playwright 9/9), commit 4ce2428 (D-151); revisão python-reviewer em andamento. S08 disparado a partir de `feat/s07-resolver`.
+- S16 concluído: correções da revisão reverificadas por mim (167 testes, migrações limpas), sem commit (D-152).
+- Usuário: cores entram no impresso; cascata recusa corte nos limites da escala (D-153).
+- Revisão do S07: 0 críticos, 4 importantes; correções + D-153 enviadas (D-154). S08 avisado: `titulo` é HTML e rebase sobre o 2º commit do S07.
+- Usuário corrigiu a D-154: linhas vazias em todo nível do intervalo mínimo, mesmo dentro de uma tarefa (D-155); subagente do S07 avisado.
+- S07 concluído: 2º commit 32d91db reverificado por mim (175 testes, migrações, régua, Playwright 9/9). S08 avisado para rebase.
+- S08 verificado por mim (183 testes, migrações, régua, Playwright 14/14), commit f1ec6e2 (D-156); revisões a11y-architect e security-reviewer em andamento. S15 disparado a partir de `feat/s08-pagina`.
+- Revisão de segurança do S08: 0 críticos, 3 importantes (preview sem `view_revista`; `criar_demo` sem guarda de DEBUG e redefinindo senha; sem CSP). Correções aguardam a revisão de acessibilidade para irem juntas ao subagente do S08.
+- Revisão de acessibilidade do S08: 3 críticos, 5 importantes; correções das duas revisões enviadas ao subagente do S08 (D-157).
+- Usuário: número destacado da régua em preto pelo contraste WCAG (D-158); enviado ao subagente do S08.
+- S15 verificado por mim (191 testes, migrações, régua, Playwright 16/16 com `file://`), commit 9fab07c (D-159); revisão django-reviewer em andamento.
+- Revisão do S15: 0 críticos, 4 importantes; correções enviadas (D-160).
+- S08 concluído: 2º commit d070ae9 reverificado por mim (187 testes, migrações, régua, Playwright 15/15). S15 avisado para rebase e teste da CSP no `file://`.
+- S15 concluído: b961b98 reverificado por mim (202 testes, migrações, régua, Playwright 18/18; CSP ok no `file://`). Fase C concluída.
+- Conferência de integração: `feat/s15-zip` + mudanças do S16 numa cópia descartável: 217 testes OK, migrações limpas. Cópia removida.
+- A pedido do usuário: commit do S16 (9109b28) e merge --no-ff de `feat/s07-resolver`, `feat/s08-pagina`, `feat/s15-zip` e `feat/s16-abrir-ano` em `refatoracao-django`, sem conflito; reverificado (217 testes, migrações, régua, Playwright 18/18, `trail check` sem conflito). Depois, commit dos 2 learnings do trail e deste `state.md`.
