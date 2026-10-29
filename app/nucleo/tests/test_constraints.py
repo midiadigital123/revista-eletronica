@@ -10,7 +10,28 @@ FKS_COMPOSTAS = {
     "fk_matriz_etapa_cc_matriz_ano": "FOREIGN KEY (matriz_id, ano_id) REFERENCES matriz(id, ano_id)",
     "fk_matriz_etapa_cc_etapa_ano": "FOREIGN KEY (etapa_id, ano_id) REFERENCES etapa(id, ano_id)",
     "fk_matriz_etapa_cc_componente_ano": "FOREIGN KEY (componente_id, ano_id) REFERENCES componente(id, ano_id)",
+    "fk_parceiro_ano_matriz_ano": "FOREIGN KEY (matriz_id, ano_id) REFERENCES matriz(id, ano_id)",
+    "fk_corte_parceiro_ano_ano": "FOREIGN KEY (parceiro_ano_id, ano_id) REFERENCES parceiro_ano(id, ano_id)",
+    "fk_corte_etapa_ano": "FOREIGN KEY (etapa_id, ano_id) REFERENCES etapa(id, ano_id)",
+    "fk_corte_componente_ano": "FOREIGN KEY (componente_id, ano_id) REFERENCES componente(id, ano_id)",
+    "fk_projeto_parceiro_ano_ano": "FOREIGN KEY (parceiro_ano_id, ano_id) REFERENCES parceiro_ano(id, ano_id)",
+    "fk_projeto_passo_projeto_ano": "FOREIGN KEY (projeto_id, ano_id) REFERENCES projeto(id, ano_id)",
+    "fk_projeto_passo_etapa_ano": "FOREIGN KEY (etapa_id, ano_id) REFERENCES etapa(id, ano_id)",
+    "fk_projeto_passo_componente_ano": "FOREIGN KEY (componente_id, ano_id) REFERENCES componente(id, ano_id)",
+    "fk_template_componente_ano": "FOREIGN KEY (componente_id, ano_id) REFERENCES componente(id, ano_id)",
+    "fk_revista_projeto_ano": "FOREIGN KEY (projeto_id, ano_id) REFERENCES projeto(id, ano_id)",
+    "fk_revista_componente_ano": "FOREIGN KEY (componente_id, ano_id) REFERENCES componente(id, ano_id)",
+    "fk_revista_fasciculo_revista_ano": "FOREIGN KEY (revista_id, ano_id, componente_id) "
+    "REFERENCES revista(id, ano_id, componente_id)",
+    "fk_revista_fasciculo_template_ano": "FOREIGN KEY (template_id, ano_id, componente_id, fasciculo) "
+    "REFERENCES template(id, ano_id, componente_id, fasciculo)",
+    "fk_revista_secao_fasciculo_template": "FOREIGN KEY (revista_fasciculo_id, template_id) "
+    "REFERENCES revista_fasciculo(id, template_id)",
+    "fk_revista_secao_versao_template": "FOREIGN KEY (template_versao_id, template_id) "
+    "REFERENCES template_versao(id, template_id)",
 }
+# Colunas de FK composta que podem ser nulas (MATCH SIMPLE desliga a checagem).
+ANULAVEIS = {("parceiro_ano", "matriz_id"), ("revista_fasciculo", "template_id")}
 # Toda FK que o Django não cria: compostas e as com ação de banco (D-124).
 FKS_MANUAIS = {
     **FKS_COMPOSTAS,
@@ -28,6 +49,31 @@ CHECKS = {
     "parceiro_nome_tamanho",
     "tarefa_arquivo_tamanho",
     "tarefa_inicio_menor_fim",
+    "bloqueio_sessao_edicao_tamanho",
+    "bloqueio_um_alvo",
+    "corte_valores_1a4",
+    "corte_valores_sem_nulo",
+    "foto_revista_hash_sha256",
+    "foto_revista_motivo",
+    "projeto_cor_cor_hex",
+    "projeto_cor_padrao_1a5",
+    "projeto_gentilico_fem_plur_tamanho",
+    "projeto_gentilico_fem_sing_tamanho",
+    "projeto_gentilico_masc_plur_tamanho",
+    "projeto_gentilico_masc_sing_tamanho",
+    "projeto_nome_tamanho",
+    "revista_capa_com_hash",
+    "revista_capa_sha256_sha256",
+    "revista_capa_tamanho",
+    "revista_fasciculo_fasciculo_f1_f2",
+    "revista_hash_validado_sha256",
+    "revista_secao_secao_tamanho",
+    "revista_svg_f2_com_hash",
+    "revista_svg_f2_tamanho",
+    "revista_svg_sha256_sha256",
+    "template_fasciculo_f1_f2",
+    "template_nome_tamanho",
+    "template_origem_tamanho",
 }
 UNIQUES = {
     "componente_ano_codigo_uniq",
@@ -39,6 +85,28 @@ UNIQUES = {
     "matriz_ano_nome_uniq",
     "matriz_etapa_cc_uniq",
     "matriz_id_ano_uniq",
+    "corte_uniq",
+    "parceiro_ano_id_ano_uniq",
+    "parceiro_ano_parceiro_ano_uniq",
+    "projeto_cor_uniq",
+    "projeto_id_ano_uniq",
+    "projeto_passo_uniq",
+    "revista_alvo_uniq",
+    "revista_fasciculo_alvo_uniq",
+    "revista_fasciculo_uniq",
+    "revista_secao_uniq",
+    "revista_uniq",
+    "template_alvo_uniq",
+    "template_nome_uniq",
+    "template_versao_alvo_uniq",
+    "template_versao_uniq",
+}
+# UNIQUE parciais viram índice único, não constraint.
+UNIQUES_PARCIAIS = {
+    "projeto_um_ativo_por_parceiro_ano",
+    "bloqueio_matriz_etapa_cc_uniq",
+    "bloqueio_projeto_uniq",
+    "bloqueio_template_uniq",
 }
 
 
@@ -83,6 +151,27 @@ class CatalogoTest(TestCase):
     def test_uniques(self):
         # Inclui também os UNIQUE de coluna única (ano.ano, parceiro.nome), com nome gerado.
         self.assertLessEqual(UNIQUES, set(constraints("u")))
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT indexname FROM pg_indexes WHERE indexname = ANY(%s) "
+                "AND indexdef LIKE 'CREATE UNIQUE INDEX%%WHERE%%'",
+                [list(UNIQUES_PARCIAIS)],
+            )
+            self.assertEqual({r[0] for r in cursor.fetchall()}, UNIQUES_PARCIAIS)
+
+    def test_colunas_de_fk_composta_not_null(self):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT DISTINCT t.relname, a.attname
+                FROM pg_constraint c
+                JOIN pg_class t ON t.oid = c.conrelid
+                JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey)
+                WHERE c.conname = ANY(%s) AND NOT a.attnotnull
+                """,
+                [list(FKS_COMPOSTAS)],
+            )
+            self.assertEqual(set(cursor.fetchall()), ANULAVEIS)
 
 
 class RecusaTest(TestCase):

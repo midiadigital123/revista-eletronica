@@ -1,15 +1,8 @@
 from django.db import models
 from django.db.models import Q
-from django.db.models.functions import Length
-from django.db.models.lookups import LessThanOrEqual
 from simple_history.models import HistoricalRecords
 
-
-def max_len(tabela, campo, n):
-    # Convenção do ER: text + CHECK de tamanho, sem varchar(n).
-    return models.CheckConstraint(
-        condition=LessThanOrEqual(Length(campo), n), name=f"{tabela}_{campo}_tamanho"
-    )
+from nucleo.db import max_len
 
 
 class Ano(models.Model):

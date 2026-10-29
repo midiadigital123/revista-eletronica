@@ -3,7 +3,9 @@ from django.db import models
 from django.db.models import F, Q
 from simple_history.models import HistoricalRecords
 
-from .cadastro import Ano, Componente, Etapa, max_len
+from nucleo.db import max_len
+
+from .cadastro import Ano, Componente, Etapa
 
 
 class Matriz(models.Model):
