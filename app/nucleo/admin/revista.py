@@ -32,10 +32,11 @@ class RevistaAdmin(admin.ModelAdmin):
     @admin.action(description="Baixar zip", permissions=["view"])
     def baixar_zip(self, request, queryset):
         # Uma por vez: zip de zips só empacotaria os mesmos bytes; o lote é o S11c/S12.
-        if queryset.count() != 1:
+        pks = list(queryset.values_list("pk", flat=True)[:2])
+        if len(pks) != 1:
             self.message_user(request, "Escolha uma revista por vez para baixar o zip.", messages.ERROR)
             return None
-        revista = resolver.carregar(queryset.get().pk)
+        revista = resolver.carregar(pks[0])
         try:
             nome, dados = zip_revista(revista)
         except Pendente as e:

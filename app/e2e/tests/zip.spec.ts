@@ -52,6 +52,16 @@ test("F1: file:// renderiza a escala", async ({ page }) => {
   expect(erros).toEqual([]);
 });
 
+test("F1: file:// abre o item da tarefa (arquivos/itens/item1.png)", async ({ page }) => {
+  const erros = await abrir(page);
+  await page.locator(".ver-item-btn").first().click();
+  const imagem = page.locator("#itemModalImagem");
+  await expect(imagem).toBeVisible();
+  await expect(imagem).toHaveAttribute("src", "arquivos/itens/item1.png");
+  await expect.poll(() => imagem.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+  expect(erros).toEqual([]);
+});
+
 test("F2: file:// abre o tour e o dlg-p2", async ({ page }) => {
   const erros = await abrir(page);
   const f2 = page.locator("#revista");
