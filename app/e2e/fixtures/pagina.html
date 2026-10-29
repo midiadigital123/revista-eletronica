@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise de GO</title>
+    <link rel="stylesheet" href="revista/f2/revista.css">
+    <link rel="stylesheet" href="revista/f1/styles.css">
+    <style>:root{--color-padrao-1:#F72628;--color-padrao-1-bg:rgba(247, 38, 40, 0.1);--color-padrao-2:#FF8D43;--color-padrao-2-bg:rgba(255, 141, 67, 0.1);--color-padrao-3:#B3CCFF;--color-padrao-3-bg:rgba(179, 204, 255, 0.1);--color-padrao-4:#0ED3FF;--color-padrao-4-bg:rgba(14, 211, 255, 0.1);--color-padrao-5:#FFFFFF;--color-padrao-5-bg:rgba(255, 255, 255, 0.1);}</style>
+    <style>
+        .rv-pular { position: absolute; left: -9999px; }
+        .rv-pular:focus { left: 1rem; top: 1rem; z-index: 2000; padding: .5rem 1rem; background: #fff; outline: 3px solid #000; }
+        .capitulos { position: sticky; top: 0; z-index: 1100; background: var(--color-white); border-bottom: 1px solid var(--color-gray-200); }
+        .capitulos ul { display: flex; gap: var(--spacing-xs); justify-content: center; list-style: none; padding: var(--spacing-xs); }
+        .capitulos a { display: inline-block; min-height: 44px; padding: .6rem 1.25rem; border-radius: 999px; color: var(--color-black); font-weight: 600; text-decoration: none; background: var(--color-gray-100); }
+        .capitulos a:hover { background: var(--color-primary); }
+        .capitulos a:focus-visible { outline: 3px solid #000; outline-offset: 2px; }
+        .capitulo { scroll-margin-top: 4rem; }
+        .fechamento-section { max-width: 48.75rem; margin: 0 auto; padding: var(--spacing-xl) var(--spacing-md); }
+        .fechamento-section h2 { font-size: var(--font-size-h2); margin-bottom: var(--spacing-sm); }
+        .fechamento-section p, .f2-abertura p { font-size: var(--font-size-p); margin-bottom: var(--spacing-sm); }
+        .f2-section { max-width: 1366px; margin: 0 auto; padding: var(--spacing-xl) var(--spacing-md); }
+        .f2-section > h2 { font-size: var(--font-size-h2); margin-bottom: var(--spacing-sm); }
+        dialog[id^="dlg-"] { margin: auto; } /* o reset do f1/styles.css (* {margin:0}) tirava a centralização */
+        dialog[id^="dlg-"] .modal-body p { margin-bottom: var(--spacing-sm); }
+        
+    </style>
+</head>
+<body>
+    <a class="rv-pular" href="#conteudo">Pular para o conteúdo</a>
+    <header>
+        <section class="hero-section">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>Análise de GO</h1>
+                </div>
+                <div class="hero-image">
+                    <img src="arquivos/capa.png" alt="">
+                </div>
+            </div>
+        </section>
+        <nav class="capitulos" aria-label="Capítulos">
+            <ul>
+                <li><a href="#f1">Escalas de proficiência</a></li>
+                <li><a href="#f2">Infográfico</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main id="conteudo">
+    <section id="f1" class="capitulo" aria-label="Escalas de proficiência">
+        
+        
+        <section class="intro-section">
+            <div class="intro-content"><p>Texto <strong>Projeto GO</strong>.</p>
+</div>
+        </section>
+        
+
+        <section class="interactive-section">
+            <div class="interactive-container">
+                <div class="descriptors-area">
+                    <div class="descritores-menu" id="filtro">
+                        <div class="tab-bar" role="tablist">
+                            
+                            <button class="filtro-btn tab active" data-filter="5ef" role="tab" aria-selected="true">5ef</button>
+                            
+                            <button class="filtro-btn tab" data-filter="9ef" role="tab" aria-selected="false">9ef</button>
+                            
+                        </div>
+
+                        <div class="descritores-card" id="descritoresCard">
+                            <div class="controls-row">
+                                <button class="dropdown-toggle" id="dropdownToggle" type="button" aria-haspopup="true" aria-expanded="false">
+                                    <span class="dropdown-label" id="dropdownLabel"></span>
+                                    <svg class="chevron" id="chevronIcon" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                        <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div class="tag-panel" id="tagPanel" hidden>
+                                <div class="descritores-grid tag-grid"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="titulo-topico">
+                        <h3></h3>
+                    </div>
+
+                    <div class="content-wrapper">
+                        <div class="descritor-detalhado">
+                            <span class="descritor-badge"></span>
+                            <p></p>
+                        </div>
+                    </div>
+
+                    <div class="prerequisitos-box">
+                        <div class="prerequisitos-content">
+                            <p class="prerequisitos-title"><strong>Pré-requisitos necessários para o desenvolvimento desta habilidade:</strong></p>
+                            <ul></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="escala-proficiencia">
+                    <p class="escala-legenda">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="m6 13 6 6 6-6"/></svg>
+                        <span>Quem alcança uma tarefa <strong>já domina todas as que estão abaixo dela</strong>.</span>
+                    </p>
+                    <div class="escala-header">
+                        <p class="escala-label-top"></p>
+                    </div>
+                    <div class="escala-content"></div>
+                    <div class="escala-footer">
+                        <p class="escala-label-bottom"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bncc-section">
+                <div class="bncc-header">
+                    <div class="bncc-icon"></div>
+                    <h2>BNCC</h2>
+                </div>
+                <div class="bncc-content">
+                    <div class="bncc-row">
+                        <div class="bncc-label">Práticas de linguagem:</div>
+                        <div class="bncc-value"></div>
+                    </div>
+                    <div class="bncc-row">
+                        <div class="bncc-label">Objeto de conhecimento:</div>
+                        <div class="bncc-value"></div>
+                    </div>
+                    <div class="bncc-row">
+                        <div class="bncc-label">Habilidades relacionadas:</div>
+                        <div class="bncc-value"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="navigation-buttons">
+                <button class="nav-btn prev-btn">
+                    <img src="revista/f1/assets/seta-anterior.svg" alt="">
+                    <span>Descritor anterior</span>
+                </button>
+                <a class="nav-btn top-btn" href="#filtro">
+                    <svg width="16" height="16" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M3.5 8.75L7 5.25L10.5 8.75" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>Voltar ao filtro</span>
+                </a>
+                <button class="nav-btn next-btn">
+                    <span>Próximo descritor</span>
+                    <img src="revista/f1/assets/seta-proxima.svg" alt="">
+                </button>
+            </div>
+        </section>
+
+        
+        <section class="fechamento-section" aria-labelledby="fechamento-titulo">
+            <h2 id="fechamento-titulo">Utilização</h2>
+            <p>Fim.</p>
+
+        </section>
+        
+    </section>
+
+    <section id="f2" class="capitulo f2-section" aria-labelledby="f2-titulo">
+        <h2 id="f2-titulo">Infográfico</h2>
+        
+        <div id="revista"><svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+<style>.f2-bolinha { fill: #ffeb00; stroke: #000 }</style>
+<rect id="f2-fundo" width="800" height="400" fill="#f8f9fa" />
+<g id="f2-passo1"><rect x="40" y="40" width="340" height="320" fill="#b3ccff" /></g>
+<g id="f2-passo2"><rect x="420" y="40" width="340" height="320" fill="#ff8d43" />
+<g id="f2-btn-action-p2"><circle class="f2-bolinha" cx="590" cy="200" r="24" /></g></g>
+</svg></div>
+    </section>
+    </main>
+
+    <aside class="menu-lateral" aria-label="Descritores">
+        <p class="menu-lateral-title">Descritores</p>
+        <div class="menu-lateral-grid"></div>
+    </aside>
+
+    <div class="modal-overlay" id="itemModal" hidden>
+        <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="itemModalTitle">
+            <button type="button" class="modal-close" id="itemModalClose" aria-label="Fechar">&times;</button>
+            <h3 class="modal-title" id="itemModalTitle"></h3>
+            <iframe class="modal-pdf" id="itemModalFrame" title="PDF do item"></iframe>
+            <img class="modal-imagem" id="itemModalImagem" alt="" hidden>
+        </div>
+    </div>
+
+    
+    <dialog id="dlg-p2" aria-labelledby="dlgTitle-p2">
+        <div class="modal-body">
+            <form method="dialog" class="modal-close-row">
+                <button type="submit" aria-label="Fechar">&times;</button>
+            </form>
+            <h3 id="dlgTitle-p2">Itens por ano</h3>
+            <p>Detalhe do item.</p>
+
+        </div>
+    </dialog>
+    
+
+    <script type="application/json" id="dados-revista">{"5ef": {"scaleRange": {"min": 0, "max": 500}, "cortes": {"padrao-1": 100, "padrao-2": 200, "padrao-3": 250, "padrao-4": 300}, "padroes": [{"chave": "padrao-1", "rotulo": "Padrão 01"}, {"chave": "padrao-2", "rotulo": "Padrão 02"}, {"chave": "padrao-3", "rotulo": "Padrão 03"}, {"chave": "padrao-4", "rotulo": "Padrão 04"}, {"chave": "padrao-5", "rotulo": "Padrão 05"}], "D01": {"description": "Descritor 1 LP", "prerequisites": ["Pré 1;", "Pré 2."], "bncc": {"practices": "Leitura", "knowledge": "Estratégia", "skills": ["EF15LP02"]}, "scale": {"padrao-1": [{"level": 75, "fim": 100, "content": "---"}, {"level": 50, "fim": 75, "content": "---"}, {"level": 25, "fim": 50, "content": "---"}, {"level": 0, "fim": 25, "content": "---"}], "padrao-2": [{"level": 175, "fim": 200, "content": "---"}, {"level": 150, "fim": 175, "content": "---"}, {"level": 125, "fim": 150, "content": "---"}, {"level": 100, "fim": 150, "content": "Localiza."}], "padrao-3": [{"level": 200, "fim": 225, "content": "---"}], "padrao-4": [{"level": 275, "fim": 300, "content": "---"}, {"level": 250, "fim": 275, "content": "---"}, {"level": 225, "fim": 275, "content": "Cruza o corte 250."}], "padrao-5": [{"level": 475, "fim": 500, "content": "---"}, {"level": 450, "fim": 475, "content": "---"}, {"level": 425, "fim": 450, "content": "---"}, {"level": 400, "fim": 425, "content": "---"}, {"level": 375, "fim": 400, "content": "---"}, {"level": 350, "fim": 375, "content": "---"}, {"level": 325, "fim": 350, "content": "---"}, {"level": 300, "fim": 325, "content": "---"}]}}, "D02": {"description": "Descritor 2", "prerequisites": [], "bncc": {"practices": "", "knowledge": "", "skills": []}, "scale": {"padrao-1": [{"level": 75, "fim": 100, "content": "---"}, {"level": 50, "fim": 75, "content": "---"}, {"level": 25, "fim": 50, "content": "---"}, {"level": 0, "fim": 25, "content": "---"}], "padrao-2": [{"level": 175, "fim": 200, "content": "---"}, {"level": 150, "fim": 175, "content": "---"}, {"level": 125, "fim": 150, "content": "---"}, {"level": 100, "fim": 125, "content": "---"}], "padrao-3": [{"level": 225, "fim": 250, "content": "---"}, {"level": 200, "fim": 225, "content": "---"}], "padrao-4": [{"level": 275, "fim": 300, "content": "---"}, {"level": 250, "fim": 275, "content": "---"}], "padrao-5": [{"level": 475, "fim": 500, "content": "---"}, {"level": 450, "fim": 475, "content": "---"}, {"level": 425, "fim": 450, "content": "---"}, {"level": 400, "fim": 425, "content": "---"}, {"level": 375, "fim": 400, "content": "---"}, {"level": 350, "fim": 375, "content": "---"}, {"level": 325, "fim": 350, "content": "---"}, {"level": 300, "fim": 350, "content": "Infere."}]}}}, "9ef": {"scaleRange": {"min": 0, "max": 500}, "cortes": {"padrao-1": 100, "padrao-2": 200, "padrao-3": 250, "padrao-4": 300}, "padroes": [{"chave": "padrao-1", "rotulo": "Padrão 01"}, {"chave": "padrao-2", "rotulo": "Padrão 02"}, {"chave": "padrao-3", "rotulo": "Padrão 03"}, {"chave": "padrao-4", "rotulo": "Padrão 04"}, {"chave": "padrao-5", "rotulo": "Padrão 05"}], "D01": {"description": "Descritor 1 LP", "prerequisites": ["Pré 1;", "Pré 2."], "bncc": {"practices": "Leitura", "knowledge": "Estratégia", "skills": ["EF15LP02"]}, "scale": {"padrao-1": [{"level": 75, "fim": 100, "content": "---"}, {"level": 50, "fim": 75, "content": "---"}, {"level": 25, "fim": 50, "content": "---"}, {"level": 0, "fim": 25, "content": "---"}], "padrao-2": [{"level": 175, "fim": 200, "content": "---"}, {"level": 150, "fim": 175, "content": "---"}, {"level": 125, "fim": 150, "content": "---"}, {"level": 100, "fim": 150, "content": "Localiza."}], "padrao-3": [{"level": 200, "fim": 225, "content": "---"}], "padrao-4": [{"level": 275, "fim": 300, "content": "---"}, {"level": 250, "fim": 275, "content": "---"}, {"level": 225, "fim": 275, "content": "Cruza o corte 250."}], "padrao-5": [{"level": 475, "fim": 500, "content": "---"}, {"level": 450, "fim": 475, "content": "---"}, {"level": 425, "fim": 450, "content": "---"}, {"level": 400, "fim": 425, "content": "---"}, {"level": 375, "fim": 400, "content": "---"}, {"level": 350, "fim": 375, "content": "---"}, {"level": 325, "fim": 350, "content": "---"}, {"level": 300, "fim": 325, "content": "---"}]}}, "D02": {"description": "Descritor 2", "prerequisites": [], "bncc": {"practices": "", "knowledge": "", "skills": []}, "scale": {"padrao-1": [{"level": 75, "fim": 100, "content": "---"}, {"level": 50, "fim": 75, "content": "---"}, {"level": 25, "fim": 50, "content": "---"}, {"level": 0, "fim": 25, "content": "---"}], "padrao-2": [{"level": 175, "fim": 200, "content": "---"}, {"level": 150, "fim": 175, "content": "---"}, {"level": 125, "fim": 150, "content": "---"}, {"level": 100, "fim": 125, "content": "---"}], "padrao-3": [{"level": 225, "fim": 250, "content": "---"}, {"level": 200, "fim": 225, "content": "---"}], "padrao-4": [{"level": 275, "fim": 300, "content": "---"}, {"level": 250, "fim": 275, "content": "---"}], "padrao-5": [{"level": 475, "fim": 500, "content": "---"}, {"level": 450, "fim": 475, "content": "---"}, {"level": 425, "fim": 450, "content": "---"}, {"level": 400, "fim": 425, "content": "---"}, {"level": 375, "fim": 400, "content": "---"}, {"level": 350, "fim": 375, "content": "---"}, {"level": 325, "fim": 350, "content": "---"}, {"level": 300, "fim": 350, "content": "Infere."}]}}}}</script>
+    <script type="application/json" id="dados-tour">{"label": "Infográfico: tour guiado", "intro": {"title": "Avaliação \u0026 Currículo", "text": "Siga o tour."}, "steps": [{"target": "f2-passo1", "title": "Descritor", "text": "Primeiro bloco."}, {"target": "f2-passo2", "title": "Itens", "text": "Segundo bloco."}], "modais": ["dlg-p2"]}</script>
+    <script src="revista/f1/script.js"></script>
+    <script src="revista/f2/svg-tour.js"></script>
+    <script src="revista/f2/svg-tour-modal.js"></script>
+    <script src="revista/f2/f2-init.js"></script>
+</body>
+</html>

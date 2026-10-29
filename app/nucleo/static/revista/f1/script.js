@@ -1018,6 +1018,8 @@ class AccessibilityManager {
 
   init() {
     document.addEventListener("keydown", (e) => {
+      // Página única (S08): no F2 as setas são do tour; com <dialog> aberto, de ninguém.
+      if (e.target.closest?.("#f2") || document.querySelector("dialog[open]")) return;
       if (e.ctrlKey && e.key === "ArrowLeft")
         this.navigationManager.navigate(-1);
       if (e.ctrlKey && e.key === "ArrowRight")
