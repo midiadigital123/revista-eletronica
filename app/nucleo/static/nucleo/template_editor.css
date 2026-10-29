@@ -1,0 +1,29 @@
+/* Página Templates e editor de texto (nucleo/admin/templates.py). Cores do admin via
+   variáveis dele, para o modo escuro funcionar. A variável no preview é o próprio
+   <span class="variavel-vazia">{{nome}}</span> do texto.renderizar, colorido aqui. */
+
+.abas-templates { display: flex; gap: 4px; margin: 0 0 16px; border-bottom: 1px solid var(--hairline-color); }
+.abas-templates a { padding: 8px 14px; border: 1px solid transparent; border-bottom: 0; border-radius: 4px 4px 0 0; }
+.abas-templates a[aria-current="page"] { border-color: var(--hairline-color); background: var(--body-bg); font-weight: 600; }
+
+.editor-template { flex: 1; min-width: 0; }
+.editor-template-barra { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.editor-template-colunas { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.editor-template textarea { width: 100%; box-sizing: border-box; font-family: ui-monospace, monospace; font-size: 13px; }
+.editor-template-preview { border: 1px solid var(--hairline-color); border-radius: 4px; padding: 8px 16px; max-height: 70vh; overflow: auto; }
+.editor-template-preview .secao-id { font-family: ui-monospace, monospace; color: var(--body-quiet-color); margin: 12px 0 0; }
+.editor-template-preview h3 { margin: 4px 0 8px; }
+.editor-template-erros:empty { display: none; }
+
+.editor-template-preview .variavel-vazia {
+  background: #fde68a; color: #713f12; border-radius: 3px; padding: 0 3px;
+  font-family: ui-monospace, monospace; font-size: 0.92em;
+}
+
+.impacto-template table { margin: 16px 0; }
+.impacto-alerta { color: var(--error-fg); }
+pre.texto-template { white-space: pre-wrap; font-size: 13px; }
+
+@media (max-width: 1024px) {
+  .editor-template-colunas { grid-template-columns: 1fr; }
+}

@@ -9,6 +9,7 @@ título (texto puro) e o resto é o corpo em Markdown.
 """
 
 import re
+from collections import Counter
 import secrets
 from html import escape
 
@@ -24,6 +25,10 @@ VAR = re.compile(r"\{\{([a-z_][a-z0-9_]*)\}\}")
 CHAVES = re.compile(r"\{\{[^{}]*\}\}|\{\{|\}\}|[{}]")  # linear: sem .*? (ReDoS)
 CONTROLE = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f‪-‮⁦-⁩]")  # controle e bidi
 REF_LINK = re.compile(r"^ {0,3}\[[^\]]+\]:", re.M)  # definição de referência some do token stream
+
+# Teto do texto de um template, em caracteres (form do admin e preview recusam acima).
+# O maior seed de 2026 (f2-mt.hbs) tem ~9,6 mil: 100 mil dá folga de 10x.
+TEXTO_MAX = 100_000
 
 SECOES_F1 = ("introducao", "fechamento")
 ID_F2 = re.compile(r"abertura|passo[1-9][0-9]*|dlg-[a-z0-9]+(-[a-z0-9]+)*")
@@ -99,7 +104,7 @@ def validar(texto, fasciculo):
         erros.append("Há definição de referência de link ([x]: ...).")
 
     ids = [b[0] for b in blocos]
-    for id_ in sorted({i for i in ids if ids.count(i) > 1}):
+    for id_ in sorted(i for i, n in Counter(ids).items() if n > 1):  # Counter: linear (o preview chama a cada digitação)
         erros.append(f"Seção repetida: {id_}.")
 
     if fasciculo == "F1":
