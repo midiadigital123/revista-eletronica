@@ -97,6 +97,22 @@ html {
   scroll-behavior: smooth;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Só para leitor de tela (rótulos da escala, anúncio do descritor) */
+.rv-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 body {
   font-family: var(--font-family);
   background-color: var(--color-white);
@@ -341,9 +357,10 @@ body {
   font-family: var(--font-family);
   line-height: 1.5rem;
   /* 24px */
-  border: 0.5px solid var(--color-gray-500);
+  /* 1.4.3: texto #4b5563 (7,6:1) e borda #6b7280 (3:1 sobre branco, 1.4.11) */
+  border: 0.5px solid #6b7280;
   background-color: var(--color-white);
-  color: var(--color-gray-500);
+  color: var(--color-tab-inactive-text);
   cursor: pointer;
   transition:
     background-color var(--transition-normal),

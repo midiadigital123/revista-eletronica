@@ -9,6 +9,7 @@ Títulos e corpos das seções vêm prontos e escapados do resolver (|safe só n
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; frame-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
     <title>{% if introducao %}{{ introducao.titulo|striptags|safe }}{% else %}Análise dos Resultados para Intervenção Pedagógica{% endif %}</title>
     <link rel="stylesheet" href="{{ estaticos }}f2/revista.css">
     <link rel="stylesheet" href="{{ estaticos }}f1/styles.css">
@@ -55,8 +56,9 @@ Títulos e corpos das seções vêm prontos e escapados do resolver (|safe só n
     </header>
 
     <main id="conteudo">
-    <section id="f1" class="capitulo" aria-label="Escalas de proficiência">
-        {% if preview %}{{ faixa_f1 }}{% endif %}
+    <section id="f1" class="capitulo" aria-labelledby="f1-titulo">
+        <h2 id="f1-titulo" class="rv-sr-only">Escalas de proficiência</h2>
+        {% if preview and sem_template_f1 %}<div class="faixa-vermelha" role="status">Falta escolher o template do F1.</div>{% endif %}
         {% if introducao %}
         <section class="intro-section">
             <div class="intro-content">{{ introducao.corpo|safe }}</div>
@@ -67,16 +69,16 @@ Títulos e corpos das seções vêm prontos e escapados do resolver (|safe só n
             <div class="interactive-container">
                 <div class="descriptors-area">
                     <div class="descritores-menu" id="filtro">
-                        <div class="tab-bar" role="tablist">
+                        <div class="tab-bar" role="group" aria-label="Etapa de ensino">
                             {% for etapa in etapas %}
-                            <button class="filtro-btn tab{% if forloop.first %} active{% endif %}" data-filter="{{ etapa }}" role="tab" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">{{ etapa }}</button>
+                            <button class="filtro-btn tab{% if forloop.first %} active{% endif %}" data-filter="{{ etapa }}" aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}">{{ etapa }}</button>
                             {% endfor %}
                         </div>
 
                         <div class="descritores-card" id="descritoresCard">
                             <div class="controls-row">
-                                <button class="dropdown-toggle" id="dropdownToggle" type="button" aria-haspopup="true" aria-expanded="false">
-                                    <span class="dropdown-label" id="dropdownLabel"></span>
+                                <button class="dropdown-toggle" id="dropdownToggle" type="button" aria-controls="tagPanel" aria-expanded="false">
+                                    <span class="rv-sr-only">Descritor: </span><span class="dropdown-label" id="dropdownLabel"></span>
                                     <svg class="chevron" id="chevronIcon" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                         <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                                     </svg>
@@ -89,7 +91,9 @@ Títulos e corpos das seções vêm prontos e escapados do resolver (|safe só n
                         </div>
                     </div>
 
-                    <div class="titulo-topico">
+                    <div class="rv-sr-only" role="status" id="anuncio"></div>
+
+                <div class="titulo-topico">
                         <h3></h3>
                     </div>
 
@@ -172,7 +176,8 @@ Títulos e corpos das seções vêm prontos e escapados do resolver (|safe só n
 
     <section id="f2" class="capitulo f2-section" aria-labelledby="f2-titulo">
         <h2 id="f2-titulo">Infográfico</h2>
-        {% if preview %}{{ faixa_f2 }}{{ faixa_svg }}{% endif %}
+        {% if preview and sem_template_f2 %}<div class="faixa-vermelha" role="status">Falta escolher o template do F2.</div>{% endif %}
+        {% if preview and not svg %}<div class="faixa-vermelha" role="status">Falta o SVG do F2.</div>{% endif %}
         <div id="revista">{{ svg }}</div>
     </section>
     </main>

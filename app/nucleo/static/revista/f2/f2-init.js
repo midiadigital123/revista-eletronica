@@ -49,5 +49,22 @@
     el.setAttribute("aria-labelledby", "dlgTitle-" + dlg.slice(4));
   });
 
+  // 2.4.7: Tab até um botão do SVG fora da vista leva o tour ao passo que o contém.
+  t.stage.addEventListener("focusin", function (e) {
+    if (t.mode !== "tour") return;
+    var i = t.steps.findIndex(function (s) {
+      var alvo = t.svg.getElementById(s.target);
+      return alvo && alvo.contains(e.target);
+    });
+    if (i >= 0 && i !== t.index) t.go(i);
+  });
+
+  // 2.4.3: "Anterior" some na visão geral; quem o acionou continua no botão principal.
+  // Não dá para usar svgtour:change: o Chrome já tirou o foco do botão escondido (activeElement = body)
+  // quando o evento sai. Este listener roda depois do onclick do svg-tour (registrado antes).
+  t.btnPrev.addEventListener("click", function () {
+    if (t.btnPrev.hidden) t.btnMain.focus();
+  });
+
   SvgTourModal(t);
 })();

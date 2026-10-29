@@ -23,7 +23,6 @@ from nucleo.servicos.resolver import resolver
 COR = re.compile(r"#[0-9A-Fa-f]{6}")
 # Config do tour (antes em svg-tour/avaliacao-e-curriculo/revista.json); os textos vêm das seções.
 ROTULO_TOUR = "Infográfico: tour guiado"
-FAIXA_SEM_SVG = '<div class="faixa-vermelha" role="alert">Falta o SVG do F2.</div>'
 
 
 def json_seguro(valor):
@@ -43,10 +42,11 @@ def css_das_cores(cores):
 
     Revalida o formato: o valor vai cru para o <style>.
     """
-    vars_ = []
-    for chave, cor in sorted(cores.items(), key=lambda kv: int(kv[0].removeprefix("padrao-"))):
-        if not (re.fullmatch(r"padrao-\d", chave) and COR.fullmatch(cor)):
+    for chave, cor in cores.items():
+        if not (re.fullmatch(r"padrao-[0-9]", chave) and COR.fullmatch(cor)):
             raise ValueError(f"Cor inválida: {chave}={cor!r}")
+    vars_ = []
+    for chave, cor in sorted(cores.items(), key=lambda kv: int(kv[0][7:])):
         r, g, b = (int(cor[i : i + 2], 16) for i in (1, 3, 5))
         vars_.append(f"--color-{chave}:{cor};--color-{chave}-bg:rgba({r}, {g}, {b}, 0.1);")
     return mark_safe(f":root{{{''.join(vars_)}}}" if vars_ else "")
@@ -79,7 +79,7 @@ def contexto_pagina(revista, *, preview, estaticos, capa):
     f1_secoes = {s["id"]: s for s in f1["secoes"] or []}
     f2_secoes = f2["secoes"] or []
     svg = None
-    if revista.svg_f2:
+    if revista.svg_f2:  # arquivo sumido do storage: FileNotFoundError (a view responde 404)
         with default_storage.open(revista.svg_f2) as arquivo:
             # Só este conteúdo vai com |safe: é o SVG sanitizado e prefixado no upload (D-145).
             svg = mark_safe(arquivo.read().decode())
@@ -92,9 +92,9 @@ def contexto_pagina(revista, *, preview, estaticos, capa):
         "css_cores": css_das_cores(f1["cores"]),
         "introducao": f1_secoes.get("introducao"),
         "fechamento": f1_secoes.get("fechamento"),
-        "faixa_f1": mark_safe(f1.get("faixa", "")),  # FAIXA_SEM_TEMPLATE do resolver
-        "faixa_f2": mark_safe(f2.get("faixa", "")),
-        "faixa_svg": mark_safe("" if svg else FAIXA_SEM_SVG),
+        # Faixas vermelhas (D-116): o texto fica no template; nada do resolvido/foto vira HTML aqui.
+        "sem_template_f1": f1["secoes"] is None,
+        "sem_template_f2": f2["secoes"] is None,
         "svg": svg,
         "tour": json_seguro(_tour(f2_secoes)),
         "modais": [s for s in f2_secoes if s["id"].startswith("dlg-")],

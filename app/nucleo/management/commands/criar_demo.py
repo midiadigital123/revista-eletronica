@@ -2,8 +2,9 @@
 
 Cria (idempotente) o parceiro "DEMONSTRAÇÃO" no ano, com matriz pequena, cortes de LP,
 templates do seed, o SVG real do F2 (fixture dos testes) e uma capa lisa; cria ou atualiza
-o usuário `demo` com senha nova a cada execução e imprime a URL do preview.
-Não toca em outros parceiros. Só para desenvolvimento.
+o usuário `demo-preview` (só `view_revista`) com senha nova a cada execução e imprime a URL.
+Não toca em outros parceiros. Só com DEBUG; recusa trocar a senha de um `demo-preview`
+que não foi criado por este comando (marca em `first_name`).
 """
 
 import secrets
@@ -12,9 +13,10 @@ import zlib
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from nucleo.models import (
@@ -34,6 +36,8 @@ from nucleo.servicos.arquivos import receber_capa, receber_svg
 from nucleo.servicos.cascata import gravar_cortes
 
 PARCEIRO = "DEMONSTRAÇÃO"
+USUARIO = "demo-preview"
+MARCA = "demo criado por criar_demo"
 SVG = settings.BASE_DIR / "nucleo" / "tests" / "fixtures" / "f2-lp.svg"
 CORTES = [150, 200, 250, 300]
 TAREFAS = [(100, 150, "Localiza informação explícita."), (225, 275, "Infere o sentido de uma palavra."),
@@ -57,19 +61,24 @@ class Command(BaseCommand):
         parser.add_argument("--ano", type=int, default=2026)
 
     def handle(self, *args, ano, **opcoes):
+        if not settings.DEBUG:
+            raise CommandError("criar_demo só roda com DEBUG (desenvolvimento).")
+        usuario, _ = get_user_model().objects.get_or_create(
+            username=USUARIO, defaults={"is_staff": True, "first_name": MARCA}
+        )
+        if usuario.first_name != MARCA or usuario.is_superuser:
+            raise CommandError(f"O usuário {USUARIO} já existe e não foi criado por este comando.")
         call_command("carregar_cadastros", ano=ano)
         call_command("carregar_templates", ano=ano)
-        usuario, _ = get_user_model().objects.get_or_create(
-            username="demo", defaults={"is_staff": True}
-        )
         senha = secrets.token_urlsafe(9)
         usuario.set_password(senha)
         usuario.save()
+        usuario.user_permissions.add(Permission.objects.get(codename="view_revista", content_type__app_label="nucleo"))
 
         with transaction.atomic():
             revista = self.revista(ano, usuario)
         url = f"http://localhost:8000/preview/{revista.pk}/"
-        self.stdout.write(self.style.SUCCESS(f"Preview: {url}\nUsuário: demo  Senha: {senha}"))
+        self.stdout.write(self.style.SUCCESS(f"Preview: {url}\nUsuário: {USUARIO}  Senha: {senha}"))
 
     def revista(self, ano, usuario):
         lp = Componente.objects.get(ano__ano=ano, codigo="LP")

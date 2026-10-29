@@ -5,8 +5,14 @@ from urllib.parse import unquote, urlparse
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Defaults só de desenvolvimento local; em produção vêm do .env.
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-inseguro-nao-usar-em-producao")
-DEBUG = os.environ.get("DJANGO_DEBUG", "1").lower() in {"1", "true"}
+# DEBUG desligado por padrão: o docker-compose de desenvolvimento liga (DJANGO_DEBUG=1, D-128).
+CHAVE_DEV = "dev-inseguro-nao-usar-em-producao"
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY") or CHAVE_DEV
+DEBUG = os.environ.get("DJANGO_DEBUG", "0").lower() in {"1", "true"}
+if not DEBUG and SECRET_KEY == CHAVE_DEV:
+    from django.core.exceptions import ImproperlyConfigured
+
+    raise ImproperlyConfigured("Sem DEBUG, defina DJANGO_SECRET_KEY (a chave padrão é só de desenvolvimento).")
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 INSTALLED_APPS = [

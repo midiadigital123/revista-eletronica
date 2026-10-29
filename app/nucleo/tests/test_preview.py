@@ -5,7 +5,11 @@ import shutil
 import tempfile
 from pathlib import Path
 
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
+from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import CommandError, call_command
 from django.template.loader import render_to_string
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -39,6 +43,7 @@ class PaginaTest(TestCase):
     def setUpTestData(cls):
         Mundo.montar(cls)
         cls.rev = cls.go["LP"]
+        cls.usuario.user_permissions.add(Permission.objects.get(codename="view_revista"))
         TemplateVersao.objects.create(template=cls.templates["LP", "F2"], numero=2, texto=F2)
 
     def setUp(self):
@@ -58,6 +63,21 @@ class PaginaTest(TestCase):
         self.assertEqual(r.status_code, 302)
         self.assertIn("/admin/login/", r["Location"])
 
+    def test_sem_view_revista_403(self):
+        staff = get_user_model().objects.create(username="staff", is_staff=True)  # sem grupo
+        self.client.force_login(staff)
+        self.assertEqual(self.get(self.rev).status_code, 403)
+        self.assertEqual(self.client.get(reverse("preview_capa", args=[self.rev.pk])).status_code, 403)
+
+    def test_arquivo_sumido_404(self):
+        receber_svg(self.rev, SimpleUploadedFile("x.svg", SVG))
+        receber_capa(self.rev, SimpleUploadedFile("capa.png", PNG))
+        self.rev.refresh_from_db()
+        default_storage.delete(self.rev.svg_f2)
+        default_storage.delete(self.rev.capa)
+        self.assertEqual(self.get(self.rev).status_code, 404)
+        self.assertEqual(self.client.get(reverse("preview_capa", args=[self.rev.pk])).status_code, 404)
+
     def test_200_com_f1_f2_e_dados_inline(self):
         receber_svg(self.rev, SimpleUploadedFile("x.svg", SVG))
         r = self.get(self.rev)
@@ -74,6 +94,10 @@ class PaginaTest(TestCase):
         self.assertEqual(tour["intro"]["title"], "Avaliação & Currículo")  # texto puro (textContent)
         self.assertEqual([s["target"] for s in tour["steps"]], ["f2-passo1", "f2-passo2"])
         self.assertEqual(tour["modais"], ["dlg-p2"])
+        # Chaves que o svg-tour lê (contrato com f2-init.js)
+        self.assertEqual(set(tour), {"label", "intro", "steps", "modais"})
+        self.assertEqual(set(tour["intro"]), {"title", "text"})
+        self.assertTrue(all(set(s) == {"target", "title", "text"} for s in tour["steps"]))
 
     def test_faixa_vermelha_sem_template(self):
         RevistaFasciculo.objects.filter(revista=self.rev, fasciculo="F1").update(template=None)
@@ -104,6 +128,8 @@ class PaginaTest(TestCase):
         r = self.client.get(reverse("preview_capa", args=[self.rev.pk]))
         self.assertEqual((r.status_code, r["Content-Type"]), (200, "image/png"))
         self.assertEqual(r["X-Content-Type-Options"], "nosniff")
+        self.assertEqual(r["Cache-Control"], "private, no-store")
+        self.assertEqual(r["Content-Security-Policy"], "default-src 'none'; sandbox")
 
     def test_gabarito_do_playwright(self):
         """Modo zip (S15): caminhos relativos e sem faixas; o Playwright abre este HTML."""
@@ -133,3 +159,18 @@ class HtmlTest(TestCase):
         self.assertEqual(css_das_cores({}), "")
         with self.assertRaises(ValueError):
             css_das_cores({"padrao-1": "red;}body{x:y"})
+        with self.assertRaises(ValueError):
+            css_das_cores({"padrao-١": "#FFFFFF"})  # dígito árabe: \d aceitaria
+
+
+class CriarDemoTest(TestCase):
+    def test_recusa_sem_debug(self):
+        with self.assertRaisesMessage(CommandError, "DEBUG"):
+            call_command("criar_demo")
+
+    @override_settings(DEBUG=True)
+    def test_nao_troca_senha_de_usuario_alheio(self):
+        get_user_model().objects.create(username="demo-preview", password="x")
+        with self.assertRaisesMessage(CommandError, "não foi criado por este comando"):
+            call_command("criar_demo")
+        self.assertEqual(get_user_model().objects.get(username="demo-preview").password, "x")

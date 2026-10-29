@@ -39,6 +39,31 @@ test("F1: troca a etapa", async ({ page }) => {
   await abas.nth(1).click();
   await expect(abas.nth(1)).toHaveClass(/active/);
   await expect(abas.nth(1)).toHaveText("9º Ano do Ensino Fundamental");
+  await expect(abas.nth(1)).toHaveAttribute("aria-pressed", "true");
+  await expect(abas.first()).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByRole("group", { name: "Etapa de ensino" })).toBeVisible();
+  expect(erros).toEqual([]);
+});
+
+test("F1: seletor de descritores devolve o foco e anuncia", async ({ page }) => {
+  const erros = await abrir(page);
+  const toggle = page.locator("#dropdownToggle");
+  await toggle.click();
+  await page.locator("#tagPanel .descritor-btn", { hasText: "D02" }).click();
+  await expect(toggle).toBeFocused();
+  await expect(page.locator("#tagPanel")).toBeHidden();
+  await expect(page.locator('#tagPanel .descritor-btn[aria-current="true"]')).toHaveText("D02");
+  await expect(page.locator("#anuncio")).toHaveText(/^D02: /);
+
+  await toggle.click();
+  await page.locator("#tagPanel .descritor-btn").first().focus();
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#tagPanel")).toBeHidden();
+  await expect(toggle).toBeFocused();
+
+  // Escala: cada linha com texto diz padrão e níveis ao leitor de tela
+  await expect(page.locator(".linha-conteudo p .rv-sr-only").first()).toHaveText(/^Padrão 0\d, níve/);
+  await expect(page.locator(".escala-label-top")).toContainText("Máximo da escala");
   expect(erros).toEqual([]);
 });
 
@@ -57,11 +82,20 @@ test("F2: menu de capítulos, tour completo e dlg-p2", async ({ page }) => {
   await expect(principal).toHaveText("Concluir");
   await principal.click();
   await expect(f2.locator(".svg-tour__title")).toHaveText("Tour concluído");
+  await principal.click(); // Recomeçar tour
+  await expect(f2.locator(".svg-tour__title")).toHaveText("Descritor");
+  // "Anterior" some na visão geral: o foco vai para o botão principal
+  const anterior = f2.locator(".svg-tour__actions .svg-tour__btn:not(.svg-tour__btn--primary)");
+  await anterior.focus();
+  await page.keyboard.press("Enter");
+  await expect(f2.locator(".svg-tour__title")).toHaveText("Avaliação & Currículo");
+  await expect(principal).toBeFocused();
 
   // Botão do SVG (prefixo f2-) abre o <dialog> da seção dlg-p2, com título e foco dentro
   const botao = page.locator("#f2-btn-action-p2");
   await expect(botao).toHaveAttribute("role", "button");
-  await botao.focus();
+  await botao.focus(); // foco leva o tour ao passo que contém o botão
+  await expect(f2.locator(".svg-tour__title")).toHaveText("Itens");
   await page.keyboard.press("Enter");
   const dialogo = page.getByRole("dialog", { name: "Itens por ano" });
   await expect(dialogo).toBeVisible();
@@ -69,6 +103,10 @@ test("F2: menu de capítulos, tour completo e dlg-p2", async ({ page }) => {
   await page.keyboard.press("Escape");
   await expect(dialogo).toBeHidden();
   await expect(botao).toBeFocused(); // foco volta ao botão
+  // Fechar pelo × (form method=dialog, com CSP form-action 'none')
+  await page.keyboard.press("Enter");
+  await dialogo.getByRole("button", { name: "Fechar" }).click();
+  await expect(dialogo).toBeHidden();
   expect(erros).toEqual([]);
 });
 

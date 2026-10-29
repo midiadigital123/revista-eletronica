@@ -1,6 +1,7 @@
 /* Origem: svg-tour/avaliacao-e-curriculo/revista.css (commit bcadc29) + o <style> de
    revista-modais.html no fim (S08, D-103). Único ajuste: ids e classes do SVG com o prefixo
-   f2- do sanitizador (D-145): [id^="f2-btn-action-"] e .f2-st20. */
+   f2- do sanitizador (D-145): [id^="f2-btn-action-"] e .f2-st20. Revisão a11y do S08: foco dos
+   botões do SVG com outline, reflow com zoom/tela estreita e fontes do painel em rem (fim do arquivo). */
 /* Identidade da revista aplicada ao tour (referência: revista-express/revista/styles.css).
    Não altera a lógica de common/svg-tour.js: usa as variáveis --svg-tour-* e sobrescreve com #revista (maior especificidade).
    Tamanhos: tudo deriva de --u (≈ 1rem), que cresce com a menor dimensão da janela, então botões, textos e
@@ -449,8 +450,10 @@ body {
 #revista svg [id^="f2-btn-action-"]:focus-visible {
   outline: none;
 }
+/* 2.4.7 (revisão a11y do S08): contorno visível em vez do drop-shadow, fraco no zoom de tour */
 #revista svg [id^="f2-btn-action-"]:focus-visible {
-  filter: drop-shadow(0 0 2px #000) drop-shadow(0 0 2px #000);
+  outline: 3px solid #000;
+  outline-offset: 3px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -527,3 +530,28 @@ body {
       transition: none;
     }
   }
+
+/* --- Revisão a11y do S08 --- */
+/* 1.4.10: com zoom/tela estreita o tour deixa de ocupar a janela inteira e a página rola */
+@media (max-height: 520px), (max-width: 480px) {
+  #revista {
+    height: auto;
+  }
+  #revista .svg-tour__stage {
+    flex: none;
+    height: 20rem;
+  }
+  #revista .svg-tour__panel {
+    max-height: none;
+  }
+}
+/* Piso em rem: o texto do painel acompanha a fonte do navegador (o --u depende só da janela) */
+#revista .svg-tour__title {
+  font-size: max(1.25rem, calc(var(--u) * 1.5));
+}
+#revista .svg-tour__text {
+  font-size: max(1rem, calc(var(--u) * 1.125));
+}
+#revista .svg-tour__btn {
+  font-size: max(1rem, calc(var(--u) * 1.125));
+}

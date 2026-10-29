@@ -31,6 +31,11 @@
 
 const ETAPA = /^(\d+)(ef|em)$/;
 
+/** prefers-reduced-motion: sem animações em linha e rolagem instantânea. */
+const reduzMovimento = () =>
+  typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+const comportamento = () => (reduzMovimento() ? "auto" : "smooth");
+
 /** Rótulo curto da etapa: "5ef" → "5º EF", "3em" → "3ª EM"; fora do formato, a própria chave. */
 function rotuloAno(ano) {
   const m = ETAPA.exec(ano);
@@ -210,21 +215,20 @@ function montarFaixasRegua({ min, max, cortes, escala }) {
 }
 
 /**
- * Cor do texto sobre um fundo "#rgb"/"#rrggbb": branco só quando contrasta mais que o preto.
- * Usa APCA (contraste perceptual, W3 0.0.98G): no vermelho #f72628 a razão WCAG 2 aprova o preto
- * (5,3:1), mas a leitura é bem melhor em branco (|Lc| 72 contra 45). Preto no que não der para ler.
+ * Cor do texto sobre um fundo "#rgb"/"#rrggbb": preto ou branco, o de maior razão de contraste
+ * WCAG 2 (D-158). Com as 5 cores atuais dá sempre preto (ex.: #f72628 → preto, 5,3:1).
  */
 function corTextoSobre(hex) {
   const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(hex).trim());
   if (!m) return "#000";
   const h = m[1].length === 3 ? [...m[1]].map((c) => c + c).join("") : m[1];
-  const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
-  const luz = (y) => (y < 0.022 ? y + (0.022 - y) ** 1.414 : y);
-  const yFundo = luz(0.2126729 * r ** 2.4 + 0.7151522 * g ** 2.4 + 0.072175 * b ** 2.4);
-  // |Lc| de texto preto (y≈0) e branco (y=1) sobre o fundo
-  const preto = Math.max(0, (yFundo ** 0.56 - luz(0) ** 0.57) * 114 - 2.7);
-  const branco = Math.max(0, (1 - yFundo ** 0.65) * 114 - 2.7);
-  return branco > preto ? "#fff" : "#000";
+  const canal = (i) => {
+    const c = parseInt(h.slice(i, i + 2), 16) / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  const L = 0.2126 * canal(0) + 0.7152 * canal(2) + 0.0722 * canal(4); // luminância relativa
+  // razão sobre branco (L=1) contra razão sobre preto (L=0); empate fica no preto
+  return 1.05 / (L + 0.05) > (L + 0.05) / 0.05 ? "#fff" : "#000";
 }
 
 const TIPOS_ITEM = ["pdf", "png", "jpg"];
@@ -325,12 +329,13 @@ class FilterManager {
     this.filterButtons.forEach((btn) => {
       const filter = btn.getAttribute("data-filter");
       const isActive = btn.classList.contains("active");
-      btn.setAttribute("aria-selected", String(isActive));
+      btn.setAttribute("aria-pressed", String(isActive));
       btn.textContent = isActive ? rotuloAnoLongo(filter) : rotuloAno(filter);
     });
   }
 
   animateFilterChange() {
+    if (reduzMovimento()) return;
     const contentWrapper = document.querySelector(".content-wrapper");
     if (contentWrapper) {
       contentWrapper.style.opacity = "0";
@@ -454,6 +459,13 @@ class DescriptorManager {
       toggle.addEventListener("click", () => {
         this.dropdownOpen = !this.dropdownOpen;
         this.updateDropdownUI();
+      });
+      // Esc fecha o painel e devolve o foco ao botão
+      card?.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape" || !this.dropdownOpen) return;
+        this.dropdownOpen = false;
+        this.updateDropdownUI();
+        toggle.focus();
       });
     }
 
@@ -675,7 +687,7 @@ class DescriptorManager {
       grid.innerHTML = descriptors
         .map(
           (d) =>
-            `<button class="descritor-btn${d === appState.currentDescriptor ? " active" : ""}" data-descritor="${escapeHtml(d)}">${escapeHtml(d)}</button>`,
+            `<button class="descritor-btn${d === appState.currentDescriptor ? " active" : ""}"${d === appState.currentDescriptor ? ' aria-current="true"' : ""} data-descritor="${escapeHtml(d)}">${escapeHtml(d)}</button>`,
         )
         .join("");
       grid.querySelectorAll(".descritor-btn").forEach((btn) => {
@@ -722,6 +734,8 @@ class DescriptorManager {
       this.scrollToContent();
     }
 
+    // Escolha no painel: fecha e devolve o foco ao botão do seletor
+    if (this.dropdownOpen && button.closest("#tagPanel")) document.getElementById("dropdownToggle")?.focus();
     this.dropdownOpen = false;
     this.updateDropdownUI();
   }
@@ -730,10 +744,10 @@ class DescriptorManager {
     document
       .querySelectorAll(".descritor-btn, .descritor-btn-lateral")
       .forEach((btn) => {
-        btn.classList.toggle(
-          "active",
-          btn.getAttribute("data-descritor") === descriptor,
-        );
+        const ativo = btn.getAttribute("data-descritor") === descriptor;
+        btn.classList.toggle("active", ativo);
+        if (ativo) btn.setAttribute("aria-current", "true");
+        else btn.removeAttribute("aria-current");
       });
     this.updateDropdownLabel();
   }
@@ -760,6 +774,8 @@ class DescriptorManager {
 
     const descriptorDetail = document.querySelector(".descritor-detalhado p");
     if (descriptorDetail) descriptorDetail.textContent = data.description;
+    const anuncio = document.getElementById("anuncio");
+    if (anuncio) anuncio.textContent = `${descriptor}: ${data.description ?? ""}`;
 
     if (data.prerequisites) this.updatePrerequisites(data.prerequisites);
     if (appState.etapasInvalidas.has(appState.currentFilter)) {
@@ -776,8 +792,11 @@ class DescriptorManager {
   updateScaleRange({ min, max }) {
     const top = document.querySelector(".escala-label-top");
     const bottom = document.querySelector(".escala-label-bottom");
-    if (top) top.textContent = max;
-    if (bottom) bottom.textContent = min;
+    const comRotulo = (el, rotulo, v) => {
+      el.innerHTML = `<span class="rv-sr-only">${rotulo}: </span>${escapeHtml(v)}`;
+    };
+    if (top) comRotulo(top, "Máximo da escala", max);
+    if (bottom) comRotulo(bottom, "Mínimo da escala", min);
   }
 
   updatePrerequisites(prerequisites) {
@@ -818,9 +837,9 @@ class DescriptorManager {
                 <div class="linha${ehVazia(conteudo) ? " preenchimento" : ""}${mesmoNivel ? " mesmo-nivel" : ""}${cortesDentro ? " tem-corte" : ""}" style="--p:var(--color-${padrao})${cortesDentro ? `;--cortes:${cortesDentro}` : ""}">
                     <div class="linha-cor"></div>
                     <div class="linha-marcador"></div>
-                    <span class="proficiencia-valor">${tick}</span>
+                    <span class="proficiencia-valor" aria-hidden="true">${tick}</span>
                     <div class="linha-conteudo${texto ? " tem-texto" : ""}${temItem ? " tem-ver-item" : ""}">
-                        <p>${escapeHtml(texto)}</p>
+                        <p>${texto ? `<span class="rv-sr-only">${escapeHtml(`${labels[padrao] ?? ""}, ${rotuloNiveis(base, topo)}: `)}</span>` : ""}${escapeHtml(texto)}</p>
                     </div>
                     ${
                       temItem
@@ -841,18 +860,18 @@ class DescriptorManager {
 
     // Linhas só pelos níveis; rótulos, barra de cor e cortes ficam por cima, posicionados por y.
     const faixaDoPadrao = (classe) => ({ padrao, y0, y1 }) =>
-      `<div class="${classe} ${padrao}" style="top:${emLinhas(y0)};height:${emLinhas(y1 - y0)}" data-y="${y0},${y1 - y0}">${
+      `<div class="${classe} ${padrao}" aria-hidden="true" style="top:${emLinhas(y0)};height:${emLinhas(y1 - y0)}" data-y="${y0},${y1 - y0}">${
         classe === "padrao-label" ? `<span>${escapeHtml(labels[padrao] ?? "")}</span><small>${escapeHtml(intervalos[padrao])}</small>` : ""
       }</div>`;
     escalaContent.innerHTML = `
-                <div class="escala-rotulos">${regua.padroes.map(faixaDoPadrao("padrao-label")).join("")}</div>
+                <div class="escala-rotulos" aria-hidden="true">${regua.padroes.map(faixaDoPadrao("padrao-label")).join("")}</div>
                 <div class="padrao-linhas">
                     ${regua.faixas.map(faixaHTML).join("")}
                     ${regua.padroes.map(faixaDoPadrao("escala-barra")).join("")}
                     ${regua.cortes
                       .filter((c) => !c.exato)
                       .map(
-                        (c) => `<div class="escala-corte" style="top:${emLinhas(c.y)}" data-y="${c.y}"><span class="proficiencia-valor-numero eh-corte">${escapeHtml(c.valor)}</span></div>`,
+                        (c) => `<div class="escala-corte" aria-hidden="true" style="top:${emLinhas(c.y)}" data-y="${c.y}"><span class="proficiencia-valor-numero eh-corte">${escapeHtml(c.valor)}</span></div>`,
                       )
                       .join("")}
                 </div>`;
@@ -912,6 +931,7 @@ class DescriptorManager {
   }
 
   animateContentChange() {
+    if (reduzMovimento()) return;
     const selectors = [
       ".titulo-topico",
       ".descritor-detalhado",
@@ -936,7 +956,7 @@ class DescriptorManager {
     appState.scrolling = true;
     const contentWrapper = document.querySelector(".content-wrapper");
     if (contentWrapper) {
-      contentWrapper.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      contentWrapper.scrollIntoView({ behavior: comportamento(), block: "nearest" });
     }
     setTimeout(() => {
       appState.scrolling = false;
@@ -986,7 +1006,7 @@ class StickyMenuManager {
   constructor() {
     this.menu = document.querySelector(".menu-lateral");
     if (!this.menu) return;
-    this.menu.style.scrollBehavior = "smooth";
+    this.menu.style.scrollBehavior = comportamento();
     window.addEventListener("scroll", () => this.updateMenuPosition());
   }
 
@@ -995,7 +1015,7 @@ class StickyMenuManager {
       ".descritor-btn-lateral.active",
     );
     if (activeButton && !this.isInViewport(activeButton)) {
-      activeButton.scrollIntoView({ block: "center", behavior: "smooth" });
+      activeButton.scrollIntoView({ block: "center", behavior: comportamento() });
     }
   }
 
@@ -1018,17 +1038,13 @@ class AccessibilityManager {
 
   init() {
     document.addEventListener("keydown", (e) => {
-      // Página única (S08): no F2 as setas são do tour; com <dialog> aberto, de ninguém.
-      if (e.target.closest?.("#f2") || document.querySelector("dialog[open]")) return;
+      // Página única (S08): no F2 as setas são do tour; com modal aberto, de ninguém.
+      if (e.target.closest?.("#f2") || document.querySelector("dialog[open]") || !document.getElementById("itemModal")?.hidden)
+        return;
       if (e.ctrlKey && e.key === "ArrowLeft")
         this.navigationManager.navigate(-1);
       if (e.ctrlKey && e.key === "ArrowRight")
         this.navigationManager.navigate(1);
-    });
-
-    document.querySelectorAll(".filtro-btn").forEach((btn) => {
-      btn.setAttribute("role", "button");
-      btn.setAttribute("aria-pressed", btn.classList.contains("active"));
     });
   }
 }
