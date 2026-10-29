@@ -41,6 +41,10 @@ class Revista(models.Model):
 
     class Meta:
         db_table = "revista"
+        permissions = [
+            ("validar_revista", "Pode clicar em Validado"),
+            ("marcar_impressa", "Pode clicar em Revista Impressa Atualizada"),
+        ]
         constraints = [
             models.UniqueConstraint(fields=["projeto", "componente"], name="revista_uniq"),
             models.UniqueConstraint(fields=["id", "ano", "componente"], name="revista_alvo_uniq"),
