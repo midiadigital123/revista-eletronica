@@ -1,0 +1,368 @@
+"""Admin da matriz (S11a): Matriz, MatrizEtapaCC (MEC), Descritor e Tarefa.
+
+- Matriz: "Duplicar" (de qualquer ano, D-101, D-124), "Diferenças da origem" (só consulta,
+  D-113) e "Reimportar" com confirmação forte (D-071, D-141, D-146).
+- MEC e Descritor usam o BloqueioAdminMixin com alvo = MEC (D-081): a tarefa é inline
+  do descritor, o descritor é inline da MEC. Sem actions nem list_editable (o mixin proíbe).
+- Antes de salvar, o formulário pede confirmação quando a edição afeta revistas ativas (D-076).
+- MEC nasce pela importação ou pela duplicação; ninguém exclui (D-136).
+"""
+
+import tempfile
+from pathlib import Path
+
+from django import forms
+from django.contrib import admin, messages
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.shortcuts import get_object_or_404, redirect
+from django.template.response import TemplateResponse
+from django.urls import path
+
+from nucleo.admin.bloqueio import BloqueioAdminMixin
+from nucleo.models import Ano, Descritor, Matriz, MatrizEtapaCC, Tarefa
+from nucleo.servicos.importar_matriz import MANTER, ImportacaoRecusada, gravar_matriz, ler
+from nucleo.servicos.matriz import DuplicacaoRecusada, diferencas, duplicar_matriz, revistas_afetadas
+
+
+# --- Matriz -------------------------------------------------------------------------------
+
+
+class MecInline(admin.TabularInline):
+    model = MatrizEtapaCC
+    fields = ("etapa", "componente", "passo")
+    readonly_fields = fields
+    show_change_link = True
+    extra = max_num = 0
+    can_delete = False
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("etapa", "componente")
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+class DuplicarForm(forms.Form):
+    ano = forms.ModelChoiceField(Ano.objects.order_by("-ano"), label="Ano da cópia", empty_label=None)
+    nome = forms.CharField(max_length=200)
+
+
+LIMITE_UPLOAD = 20 * 2**20  # os PDFs do SAEGO têm 10–12 MB
+
+
+class ReimportarForm(forms.Form):
+    arquivo = forms.FileField(help_text="PDF do SAEGO ou planilha .xlsx.")
+    passo = forms.IntegerField(
+        label="Intervalo mínimo", required=False, min_value=1,
+        help_text="Vazio: mantém o das etapa × CC que já existem (as novas ficam sem linhas vazias).",
+    )  # fmt: skip
+    confirmacao = forms.CharField(
+        label="Confirmação", required=False,
+        help_text="Para substituir etapa × CC que já existem, digite o nome da matriz.",
+    )  # fmt: skip
+
+    def clean_arquivo(self):
+        arquivo = self.cleaned_data["arquivo"]
+        if arquivo.size > LIMITE_UPLOAD:
+            raise ValidationError(f"Arquivo maior que {LIMITE_UPLOAD // 2**20} MB.")
+        inicio = arquivo.read(5)
+        arquivo.seek(0)
+        if not inicio.startswith((b"%PDF-", b"PK\x03\x04")):
+            raise ValidationError("O arquivo não é um PDF nem uma planilha .xlsx.")
+        return arquivo
+
+
+def ler_upload(arquivo):
+    """O leitor de PDF chama `pdftotext` num caminho: grava o upload num arquivo temporário."""
+    with tempfile.NamedTemporaryFile(suffix=Path(arquivo.name).suffix.lower()) as tmp:
+        for parte in arquivo.chunks():
+            tmp.write(parte)
+        tmp.flush()
+        try:
+            return ler(tmp.name)
+        except ImportacaoRecusada as e:  # mensagem com o nome que o usuário enviou
+            raise ImportacaoRecusada(str(e).replace(Path(tmp.name).name, arquivo.name)) from e
+
+
+class MatrizForm(forms.ModelForm):
+    def clean(self):
+        dados = super().clean()
+        # Na edição o ano é readonly e o Django pula o UNIQUE (ano, nome): confere aqui.
+        ano_id = self.instance.ano_id if self.instance.pk else getattr(dados.get("ano"), "pk", None)
+        nome = dados.get("nome")
+        if ano_id and nome and Matriz.objects.filter(ano_id=ano_id, nome=nome).exclude(pk=self.instance.pk).exists():
+            self.add_error("nome", "Já existe uma matriz com este nome neste ano.")
+        return dados
+
+
+@admin.register(Matriz)
+class MatrizAdmin(admin.ModelAdmin):
+    form = MatrizForm
+    list_display = ("nome", "ano", "duplicada_de")
+    list_filter = ("ano",)
+    list_select_related = ("ano", "duplicada_de__ano")
+    search_fields = ("nome",)
+    inlines = [MecInline]
+
+    def get_fields(self, request, obj=None):
+        return ("nome", "ano", "duplicada_de") if obj else ("nome", "ano")
+
+    def get_readonly_fields(self, request, obj=None):
+        return ("ano", "duplicada_de") if obj else ()
+
+    def get_urls(self):
+        def rota(sufixo, view, nome):
+            return path(f"<int:pk>/{sufixo}/", self.admin_site.admin_view(view), name=f"nucleo_matriz_{nome}")
+
+        return [
+            rota("duplicar", self.duplicar_view, "duplicar"),
+            rota("reimportar", self.reimportar_view, "reimportar"),
+            rota("diferencas", self.diferencas_view, "diferencas"),
+            *super().get_urls(),
+        ]
+
+    def _pagina(self, request, matriz, template, **contexto):
+        contexto = {**self.admin_site.each_context(request), "opts": self.opts, "original": matriz, **contexto}
+        return TemplateResponse(request, template, contexto)
+
+    def _matriz(self, request, pk, permissao):
+        matriz = get_object_or_404(Matriz.objects.select_related("ano", "duplicada_de__ano"), pk=pk)
+        if not self.has_view_permission(request, matriz) or not permissao(request, matriz):
+            raise PermissionDenied
+        return matriz
+
+    def duplicar_view(self, request, pk):
+        origem = self._matriz(request, pk, lambda r, m: self.has_add_permission(r))
+        form = DuplicarForm(request.POST or None, initial={"nome": f"{origem.nome} (cópia)"})
+        if request.method == "POST" and form.is_valid():
+            try:
+                nova = duplicar_matriz(origem, form.cleaned_data["ano"], form.cleaned_data["nome"], request.user)
+            except DuplicacaoRecusada as e:
+                form.add_error(None, str(e))
+            else:
+                messages.success(request, f"Matriz {nova} criada como cópia de {origem}.")
+                return redirect("admin:nucleo_matriz_change", nova.pk)
+        return self._pagina(
+            request, origem, "nucleo/admin_form.html", form=form, title=f"Duplicar {origem}",
+            botao="Duplicar", aviso="Copia etapas × CC, descritores e tarefas. A cópia só guarda de onde veio.",
+        )  # fmt: skip
+
+    def reimportar_view(self, request, pk):
+        matriz = self._matriz(request, pk, self.has_change_permission)
+        form = ReimportarForm(request.POST or None, request.FILES or None)
+        if request.method == "POST" and form.is_valid():
+            if self._reimportar(request, matriz, form):
+                return redirect("admin:nucleo_matriz_change", matriz.pk)
+        return self._pagina(
+            request, matriz, "nucleo/admin_form.html", form=form, title=f"Reimportar {matriz}",
+            botao="Importar",
+            aviso="Só as etapa × CC do arquivo são tocadas. Nelas, descritores e tarefas são "
+            "apagados e recriados a partir do arquivo; edições feitas no sistema se perdem.",
+        )  # fmt: skip
+
+    def _reimportar(self, request, matriz, form):
+        arquivo, d = form.cleaned_data["arquivo"], form.cleaned_data
+        try:
+            dados = ler_upload(arquivo)
+        except (ImportacaoRecusada, ValueError) as e:
+            form.add_error("arquivo", str(e))
+            return False
+        existentes = sorted(
+            {
+                (cc, e)
+                for cc, e in MatrizEtapaCC.objects.filter(matriz=matriz).values_list(
+                    "componente__codigo", "etapa__codigo"
+                )
+            }
+            & set(dados)
+        )
+        if existentes and d["confirmacao"] != matriz.nome:
+            lista = ", ".join(" ".join(k) for k in existentes)
+            mecs = MatrizEtapaCC.objects.filter(matriz=matriz).select_related("etapa", "componente")
+            n = revistas_afetadas(*[m for m in mecs if (m.componente.codigo, m.etapa.codigo) in set(existentes)])
+            form.add_error(
+                "confirmacao",
+                f"Vai substituir descritores e tarefas de {lista} (afeta {n} revista(s) ativa(s)). "
+                f"Digite {matriz.nome} para confirmar (e escolha o arquivo de novo).",
+            )
+            return False
+        passo = MANTER if d["passo"] is None else d["passo"]
+        try:
+            resumo = gravar_matriz(matriz, dados, bool(existentes), passo, origem=arquivo.name)
+        except ImportacaoRecusada as e:
+            form.add_error(None, str(e))
+            return False
+        partes = ", ".join(f"{cc} {e}: {n} descritores" for (cc, e), n in sorted(resumo.items()))
+        messages.success(request, f"Importado em {matriz}: {partes}.")
+        return True
+
+    def diferencas_view(self, request, pk):
+        matriz = self._matriz(request, pk, lambda r, m: True)
+        return self._pagina(
+            request, matriz, "nucleo/matriz_diferencas.html",
+            title=f"Diferenças de {matriz} para {matriz.duplicada_de or 'a origem'}",
+            linhas=diferencas(matriz),
+        )  # fmt: skip
+
+
+# --- Impacto (D-076) ----------------------------------------------------------------------
+
+
+class ImpactoForm(forms.ModelForm):
+    """Pede confirmação quando a edição afeta revistas ativas. `afetadas` vem do admin."""
+
+    confirmar_impacto = forms.BooleanField(required=False)
+    afetadas = 0
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        campo = self.fields["confirmar_impacto"]
+        if self.afetadas:
+            campo.label = f"Confirmo: afeta {self.afetadas} revista(s) ativa(s)"
+        else:
+            campo.widget = forms.HiddenInput()
+
+    def clean(self):
+        dados = super().clean()
+        if self.afetadas and not dados.get("confirmar_impacto"):
+            raise ValidationError(
+                f"Esta edição afeta {self.afetadas} revista(s) ativa(s) (parceiros com corte nesta "
+                "etapa × CC que usam esta matriz). Marque a confirmação e salve de novo."
+            )
+        return dados
+
+
+class MatrizEditAdmin(BloqueioAdminMixin, admin.ModelAdmin):
+    """Base de MEC e Descritor: bloqueio por MEC + confirmação de impacto."""
+
+    form = ImpactoForm
+    actions = None
+
+    def mec(self, obj):
+        raise NotImplementedError
+
+    def alvo_do_bloqueio(self, obj):
+        return self.mec(obj)
+
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        form = super().get_form(request, obj, change=change, **kwargs)
+        # get_form devolve uma classe nova por chamada: o atributo não vaza entre pedidos.
+        form.afetadas = self.afetadas(request, obj) if obj is not None else 0
+        return form
+
+    def afetadas(self, request, obj):
+        """Uma contagem por pedido: o admin chama get_form mais de uma vez."""
+        cache = request.__dict__.setdefault("_revistas_afetadas", {})
+        mec = self.mec(obj)
+        if mec.pk not in cache:
+            cache[mec.pk] = revistas_afetadas(mec)
+        return cache[mec.pk]
+
+    def has_add_permission(self, request):
+        return False  # MEC nasce na importação/duplicação; descritor, no inline da MEC
+
+
+class LinhasField(forms.CharField):
+    """Lista de textos, um por linha (vírgula pode aparecer dentro do pré-requisito)."""
+
+    widget = forms.Textarea(attrs={"rows": 3})
+
+    def prepare_value(self, value):
+        return "\n".join(value) if isinstance(value, list) else value
+
+    def to_python(self, value):
+        return [linha.strip() for linha in (value or "").splitlines() if linha.strip()]
+
+
+class DescritorInline(admin.TabularInline):
+    model = Descritor
+    fields = ("codigo", "descricao", "ordem")
+    show_change_link = True
+    extra = 0
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == "descricao":
+            kwargs["widget"] = forms.Textarea(attrs={"rows": 2, "cols": 60})
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
+
+
+@admin.register(MatrizEtapaCC)
+class MatrizEtapaCCAdmin(MatrizEditAdmin):
+    list_display = ("matriz", "etapa", "componente", "passo")
+    list_filter = ("ano", "matriz", "componente")
+    list_select_related = ("matriz__ano", "etapa__ano", "componente__ano")
+    fields = ("matriz", "etapa", "componente", "passo", "confirmar_impacto")
+    readonly_fields = ("matriz", "etapa", "componente")
+    inlines = [DescritorInline]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("matriz__ano", "etapa", "componente")
+
+    def mec(self, obj):
+        return obj
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == "passo":  # D-155: intervalo mínimo; vazio = sem linhas vazias
+            return forms.IntegerField(
+                label="Intervalo mínimo", required=False, min_value=1,
+                help_text="Vazio = sem linhas vazias. Os projetos podem sobrescrever.",
+            )  # fmt: skip
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
+
+
+class TarefaInline(admin.TabularInline):
+    model = Tarefa
+    fields = ("inicio", "fim", "texto", "ordem")
+    extra = 0
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == "texto":
+            kwargs["widget"] = forms.Textarea(attrs={"rows": 2, "cols": 60})
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
+
+
+class DescritorForm(ImpactoForm):
+    def clean_codigo(self):
+        codigo = self.cleaned_data["codigo"]
+        # A MEC é readonly aqui: o Django pula o UNIQUE (mec, código).
+        if Descritor.objects.filter(matriz_etapa_cc_id=self.instance.matriz_etapa_cc_id, codigo=codigo).exclude(
+            pk=self.instance.pk
+        ).exists():
+            raise ValidationError("Já existe um descritor com este código nesta etapa × CC.")
+        return codigo
+
+
+@admin.register(Descritor)
+class DescritorAdmin(MatrizEditAdmin):
+    list_display = ("codigo", "matriz_etapa_cc_rotulo", "ordem")
+    list_filter = ("matriz_etapa_cc__matriz", "matriz_etapa_cc__etapa__codigo", "matriz_etapa_cc__componente__codigo")
+    list_select_related = ("matriz_etapa_cc__matriz", "matriz_etapa_cc__etapa", "matriz_etapa_cc__componente")
+    search_fields = ("codigo", "descricao")
+    fields = (
+        "matriz_etapa_cc", "codigo", "descricao", "prerequisitos", "praticas", "conhecimento",
+        "habilidades_relacionadas", "habilidade_correspondente", "ordem", "confirmar_impacto",
+    )  # fmt: skip
+    readonly_fields = ("matriz_etapa_cc",)
+    inlines = [TarefaInline]
+    form = DescritorForm
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            "matriz_etapa_cc__matriz__ano", "matriz_etapa_cc__etapa", "matriz_etapa_cc__componente"
+        )
+
+    def mec(self, obj):
+        return obj.matriz_etapa_cc
+
+    @admin.display(description="Etapa × CC")
+    def matriz_etapa_cc_rotulo(self, obj):
+        m = obj.matriz_etapa_cc
+        return f"{m.matriz.nome} · {m.etapa.codigo} {m.componente.codigo}"
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == "prerequisitos":
+            return LinhasField(label="Pré-requisitos", required=False, help_text="Um por linha.")
+        return super().formfield_for_dbfield(db_field, request, **kwargs)

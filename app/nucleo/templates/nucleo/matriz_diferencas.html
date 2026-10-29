@@ -1,0 +1,15 @@
+{% extends "nucleo/admin_form.html" %}
+{% comment %}Diferenças entre a matriz e a origem (D-113): só consulta.{% endcomment %}
+
+{% block content %}
+{% if not original.duplicada_de_id %}<p>Esta matriz não foi duplicada de outra.</p>
+{% elif not linhas %}<p>Nenhuma diferença para {{ original.duplicada_de }}.</p>
+{% else %}
+<table id="diferencas">
+  <thead><tr><th>Onde</th><th>O quê</th><th>Na origem ({{ original.duplicada_de }})</th><th>Nesta matriz</th></tr></thead>
+  <tbody>{% for onde, campo, antes, depois in linhas %}
+    <tr><td>{{ onde }}</td><td>{{ campo }}</td><td>{{ antes|linebreaksbr }}</td><td>{{ depois|linebreaksbr }}</td></tr>
+  {% endfor %}</tbody>
+</table>
+{% endif %}
+{% endblock %}

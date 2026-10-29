@@ -1,0 +1,7 @@
+{% extends "admin/change_list.html" %}
+
+{% block object-tools-items %}
+{% if pode_abrir_ano %}<li><a href="{% url 'admin:nucleo_ano_abrir' %}" class="addlink">Abrir ano</a></li>{% endif %}
+<li><a href="{% url 'admin:nucleo_corte_changelist' %}">Cortes</a></li>
+{{ block.super }}
+{% endblock %}
