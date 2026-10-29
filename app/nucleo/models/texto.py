@@ -67,7 +67,7 @@ class TemplateVersao(models.Model):
         ]
 
     def save(self, *args, **kwargs):
-        # ponytail: só o save() recusa; QuerySet.update() passa. Trigger se outro cliente escrever.
+        # Mensagem amigável; o trigger da migração 0006 barra update e delete por qualquer caminho.
         if not self._state.adding:
             raise ValueError("template_versao é só INSERT: salve uma versão nova")
         super().save(*args, **kwargs)

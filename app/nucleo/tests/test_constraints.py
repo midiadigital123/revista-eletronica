@@ -232,6 +232,15 @@ class RecusaTest(TestCase):
             self.assertIsNone(cursor.fetchone()[0])
 
 
+def triggers():
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT tgname FROM pg_trigger WHERE NOT tgisinternal")
+        return {r[0] for r in cursor.fetchall()}
+
+
+TRIGGERS = {"template_versao_so_insert"}
+
+
 class ReverseSqlTest(TransactionTestCase):
     """Desfaz e refaz as migrações com RunSQL: prova cada reverse_sql."""
 
@@ -239,6 +248,8 @@ class ReverseSqlTest(TransactionTestCase):
         call_command("migrate", "nucleo", "0001", verbosity=0)
         self.assertEqual(fks_manuais(), {})
         self.assertEqual(indices_ix(), set())
+        self.assertEqual(triggers(), set())
         call_command("migrate", "nucleo", verbosity=0)
+        self.assertEqual(triggers(), TRIGGERS)
         self.assertEqual(fks_manuais(), FKS_MANUAIS)
         self.assertEqual(indices_ix(), {"ix_" + n.removeprefix("fk_") for n in FKS_COMPOSTAS})
