@@ -1,6 +1,7 @@
 from django.apps import apps
+from django.core.management import call_command
 from django.db import IntegrityError, connection, transaction
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 
 from nucleo.models import Ano, Componente, CorPadrao, Etapa, Matriz, MatrizEtapaCC
 
@@ -9,6 +10,11 @@ FKS_COMPOSTAS = {
     "fk_matriz_etapa_cc_matriz_ano": "FOREIGN KEY (matriz_id, ano_id) REFERENCES matriz(id, ano_id)",
     "fk_matriz_etapa_cc_etapa_ano": "FOREIGN KEY (etapa_id, ano_id) REFERENCES etapa(id, ano_id)",
     "fk_matriz_etapa_cc_componente_ano": "FOREIGN KEY (componente_id, ano_id) REFERENCES componente(id, ano_id)",
+}
+# Toda FK que o Django não cria: compostas e as com ação de banco (D-124).
+FKS_MANUAIS = {
+    **FKS_COMPOSTAS,
+    "fk_matriz_duplicada_de": "FOREIGN KEY (duplicada_de_id) REFERENCES matriz(id) ON DELETE SET NULL",
 }
 CHECKS = {
     "componente_codigo_tamanho",
@@ -36,32 +42,40 @@ UNIQUES = {
 }
 
 
-def constraints(tipo):
+def constraints(tipo, filtro="true"):
     """Constraints do tipo dado ('f', 'c', 'u') nas tabelas do app nucleo."""
     tabelas = [m._meta.db_table for m in apps.get_app_config("nucleo").get_models()]
     with connection.cursor() as cursor:
         cursor.execute(
-            """
+            f"""
             SELECT c.conname, pg_get_constraintdef(c.oid)
             FROM pg_constraint c JOIN pg_namespace n ON n.oid = c.connamespace
             JOIN pg_class t ON t.oid = c.conrelid
             WHERE n.nspname = current_schema() AND c.contype = %s AND t.relname = ANY(%s)
+              AND {filtro}
             """,
             [tipo, tabelas],
         )
         return dict(cursor.fetchall())
 
 
+def fks_manuais():
+    # O Django só cria FK de uma coluna e NO ACTION; o resto veio de RunSQL.
+    return constraints("f", "(cardinality(c.conkey) > 1 OR c.confdeltype <> 'a')")
+
+
+def indices_ix():
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT indexname FROM pg_indexes WHERE indexname LIKE 'ix\\_%'")
+        return {r[0] for r in cursor.fetchall()}
+
+
 class CatalogoTest(TestCase):
-    def test_fks_compostas(self):
-        fks = {k: v for k, v in constraints("f").items() if k.startswith("fk_")}
-        self.assertEqual(fks, FKS_COMPOSTAS)
+    def test_fks_manuais(self):
+        self.assertEqual(fks_manuais(), FKS_MANUAIS)
 
     def test_indice_proprio_por_fk_composta(self):
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT indexname FROM pg_indexes WHERE indexname LIKE 'ix\\_%'")
-            indices = {r[0] for r in cursor.fetchall()}
-        self.assertEqual(indices, {"ix_" + n.removeprefix("fk_") for n in FKS_COMPOSTAS})
+        self.assertEqual(indices_ix(), {"ix_" + n.removeprefix("fk_") for n in FKS_COMPOSTAS})
 
     def test_checks(self):
         self.assertEqual(set(constraints("c")), CHECKS)
@@ -98,6 +112,12 @@ class RecusaTest(TestCase):
             matriz=self.matriz, etapa=self.e5_27, componente=self.lp, ano=self.a27
         ))
 
+    def test_mec_com_componente_de_outro_ano(self):
+        mt27 = Componente.objects.create(ano=self.a27, codigo="MT", nome="Matemática")
+        self.recusa(lambda: MatrizEtapaCC.objects.create(
+            matriz=self.matriz, etapa=self.e5, componente=mt27, ano=self.a26
+        ))
+
     def test_cor_fora_do_formato(self):
         for cor in ("#FFF", "FFFFFF", "#GGGGGG", "#FFFFFF0"):
             with self.subTest(cor=cor):
@@ -114,3 +134,22 @@ class RecusaTest(TestCase):
 
     def test_matriz_duplicada_de_outro_ano_passa(self):
         Matriz.objects.create(ano=self.a27, nome="Comunitária", duplicada_de=self.matriz)
+
+    def test_apagar_origem_anula_duplicada_de_no_banco(self):
+        copia = Matriz.objects.create(ano=self.a27, nome="Cópia", duplicada_de=self.matriz)
+        with connection.cursor() as cursor:  # SQL direto: sem o SET_NULL do ORM
+            cursor.execute("DELETE FROM matriz WHERE id = %s", [self.matriz.pk])
+            cursor.execute("SELECT duplicada_de_id FROM matriz WHERE id = %s", [copia.pk])
+            self.assertIsNone(cursor.fetchone()[0])
+
+
+class ReverseSqlTest(TransactionTestCase):
+    """Desfaz e refaz as migrações com RunSQL: prova cada reverse_sql."""
+
+    def test_migrate_ida_e_volta(self):
+        call_command("migrate", "nucleo", "0001", verbosity=0)
+        self.assertEqual(fks_manuais(), {})
+        self.assertEqual(indices_ix(), set())
+        call_command("migrate", "nucleo", verbosity=0)
+        self.assertEqual(fks_manuais(), FKS_MANUAIS)
+        self.assertEqual(indices_ix(), {"ix_" + n.removeprefix("fk_") for n in FKS_COMPOSTAS})

@@ -9,9 +9,16 @@ from .cadastro import Ano, Componente, Etapa, max_len
 class Matriz(models.Model):
     ano = models.ForeignKey(Ano, on_delete=models.PROTECT)
     nome = models.TextField()
-    # Só consulta (D-113); origem de qualquer ano (D-124).
+    # Só consulta (D-113); origem de qualquer ano (D-124). A FK do banco, com
+    # ON DELETE SET NULL, vem da migração 0003: DB_SET_NULL daria fields.E323,
+    # porque o resto da cadeia usa on_delete em Python.
     duplicada_de = models.ForeignKey(
-        "self", on_delete=models.SET_NULL, null=True, blank=True, related_name="duplicatas"
+        "self",
+        on_delete=models.SET_NULL,
+        db_constraint=False,
+        null=True,
+        blank=True,
+        related_name="duplicatas",
     )
     history = HistoricalRecords()
 
