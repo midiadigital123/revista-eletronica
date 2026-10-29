@@ -1,0 +1,282 @@
+"""Admin de templates de texto (S11b1; D-099, D-102, D-109, D-115, D-123, D-125).
+
+Página "Templates": abas Textos F1 e F2 (esta changelist filtrada por fascículo),
+Matrizes e Variáveis (links para os admins do S11a e do S11c).
+
+Editar o texto = nova `TemplateVersao` (só INSERT). Fluxo do salvar, todo sob o
+`BloqueioAdminMixin` (alvo = o template):
+1. POST do change form com o texto mudado: `validar` (no form) e, se passou,
+   a tela de impacto. Nada é gravado; o POST inteiro volta em campos hidden.
+2. "Confirmar": o mesmo POST com `_confirmar` e a assinatura da tela (hash do
+   texto + versão-base) passa pelo mixin (confere o bloqueio na transação),
+   revalida e grava a versão nova. Assinatura que não bate (texto editado no
+   hidden, versão-base mudou, expirou): reabre a tela de impacto.
+3. "Voltar e editar": o mesmo POST com `_voltar` reabre o form com o texto pendente.
+Texto igual ao da versão atual (só o nome mudou): salva direto, sem versão nova.
+"""
+
+import hashlib
+
+from django import forms
+from django.contrib import admin, messages
+from django.contrib.admin.utils import unquote
+from django.core import signing
+from django.core.exceptions import ValidationError
+from django.db import router, transaction
+from django.db.models import Count, Exists, IntegerField, Max, OuterRef, Subquery
+from django.db.models.functions import Coalesce
+from django.template.response import TemplateResponse
+from django.urls import NoReverseMatch, reverse
+from django.utils.html import format_html
+
+from nucleo import texto
+from nucleo.admin.bloqueio import CAMPO_SESSAO, BloqueioAdminMixin
+from nucleo.models import FotoRevista, RevistaFasciculo, Template, TemplateVersao
+from nucleo.models.revista import Motivo
+from nucleo.servicos import bloqueio
+from nucleo.servicos.arquivos import ids_faltando
+from nucleo.servicos.resolver import versao_atual
+from nucleo.variaveis import VARIAVEIS
+
+
+class EditorTexto(forms.Textarea):
+    """Textarea + "Inserir variável" + preview ao vivo (static/nucleo/template_editor.js)."""
+
+    template_name = "nucleo/widgets/editor_texto.html"
+    fasciculo = ""  # o form preenche; no "adicionar" o JS lê o select de fascículo
+
+    class Media:
+        js = [forms.Script("nucleo/template_editor.js", defer=True)]  # {{ media }} sai no <head>
+        css = {"all": ["nucleo/template_editor.css"]}
+
+    def get_context(self, name, value, attrs):
+        contexto = super().get_context(name, value, attrs)
+        contexto["widget"].update(
+            variaveis=VARIAVEIS, fasciculo=self.fasciculo, preview=reverse("template_preview")
+        )
+        return contexto
+
+
+class TemplateForm(forms.ModelForm):
+    # strip=False: o texto volta igual ao salvo e não gera versão nova à toa.
+    texto = forms.CharField(
+        strip=False, max_length=texto.TEXTO_MAX, widget=EditorTexto(attrs={"rows": 30, "spellcheck": "true"})
+    )
+
+    class Meta:
+        model = Template
+        fields = ["ano", "componente", "fasciculo", "nome"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.atual = versao_atual(self.instance.pk) if self.instance.pk else None
+        if self.atual is not None:
+            self.fields["texto"].initial = self.atual.texto
+        self.fields["texto"].widget.fasciculo = self.instance.fasciculo or ""
+
+    def clean_texto(self):
+        return self.cleaned_data["texto"].replace("\r\n", "\n").replace("\r", "\n")
+
+    def clean(self):
+        dados = super().clean()
+        if "_voltar" in self.data:
+            # ponytail: "voltar" reaproveita o caminho do form inválido (mantém bloqueio e texto).
+            raise ValidationError("Voltou da tela de impacto: nada foi salvo. Revise e salve de novo.")
+        fasciculo = self.instance.fasciculo if self.instance.pk else dados.get("fasciculo")
+        if "texto" in dados and fasciculo:
+            try:
+                texto.validar(dados["texto"], fasciculo)
+            except ValidationError as e:
+                self.add_error("texto", e)
+        return dados
+
+    @property
+    def texto_mudou(self):
+        return self.atual is None or self.cleaned_data["texto"] != self.atual.texto
+
+
+ASSINATURA = "_impacto"  # hidden da tela de impacto
+SAL = "nucleo.admin.templates.impacto"
+VALIDADE = 30 * 60  # segundos; a tela fica aberta sob o bloqueio, que se renova
+
+
+def _assinatura(request):
+    """Conteúdo assinado pela tela de impacto, ou None (adulterado, ausente ou expirado)."""
+    try:
+        return signing.loads(request.POST.get(ASSINATURA, ""), salt=SAL, max_age=VALIDADE)
+    except signing.BadSignature:  # SignatureExpired é subclasse
+        return None
+
+
+def _url(nome):
+    """URL de admin de outro passo (S11a/S11c), ou None enquanto não estiver registrado."""
+    try:
+        return reverse(nome)
+    except NoReverseMatch:
+        return None
+
+
+def _contar(qs):
+    """Subquery COUNT por template (sem JOIN na changelist, que multiplicaria as linhas)."""
+    sub = qs.filter(template=OuterRef("pk")).order_by().values("template")
+    return Coalesce(Subquery(sub.annotate(n=Count("pk", distinct=True)).values("n")), 0)
+
+
+@admin.register(Template)
+class TemplateAdmin(BloqueioAdminMixin, admin.ModelAdmin):
+    form = TemplateForm
+    change_list_template = "nucleo/template_change_list.html"
+    list_display = ("nome", "ano", "componente", "fasciculo", "versao", "usado_por")
+    list_select_related = ("ano", "componente")
+    list_filter = ("fasciculo", "ano", "componente")
+    ordering = ("-ano__ano", "componente__codigo", "fasciculo", "nome")
+    search_fields = ("nome",)
+    actions = None  # o mixin proíbe actions de escrita (delete_selected incluso)
+
+    def get_queryset(self, request):
+        ativas = RevistaFasciculo.objects.filter(revista__arquivada_em__isnull=True)
+        versao = TemplateVersao.objects.filter(template=OuterRef("pk")).order_by().values("template")
+        return (
+            super()
+            .get_queryset(request)
+            .annotate(
+                n_usado=_contar(ativas),
+                n_copia=_contar(ativas.filter(revistasecao__isnull=False)),
+                n_versao=Subquery(versao.annotate(m=Max("numero")).values("m"), output_field=IntegerField()),
+            )
+        )
+
+    @admin.display(description="Versão", ordering="n_versao")
+    def versao(self, obj):
+        return obj.n_versao
+
+    @admin.display(description="Uso", ordering="n_usado")
+    def usado_por(self, obj):
+        # ponytail: rota do painel do S12 (ainda não existe); href à mão até lá.
+        return format_html(
+            '<a href="/painel/{}/?template={}">usado por {} ({} com cópia)</a>',
+            obj.ano.ano, obj.pk, obj.n_usado, obj.n_copia,
+        )
+
+    def changelist_view(self, request, extra_context=None):
+        abas = [
+            ("Textos F1", "?fasciculo__exact=F1", request.GET.get("fasciculo__exact") == "F1"),
+            ("Textos F2", "?fasciculo__exact=F2", request.GET.get("fasciculo__exact") == "F2"),
+            ("Matrizes", _url("admin:nucleo_matriz_changelist"), False),
+            ("Variáveis", _url("admin:nucleo_projeto_changelist"), False),  # variáveis = colunas de Projeto (D-100)
+        ]
+        return super().changelist_view(request, {**(extra_context or {}), "abas": abas})
+
+    # --- Permissões: salvar o texto cria TemplateVersao, então exige add_templateversao também.
+
+    def has_add_permission(self, request):
+        return super().has_add_permission(request) and request.user.has_perm("nucleo.add_templateversao")
+
+    def has_change_permission(self, request, obj=None):
+        return super().has_change_permission(request, obj) and request.user.has_perm(
+            "nucleo.add_templateversao"
+        )
+
+    def get_readonly_fields(self, request, obj=None):
+        # Trocar ano/componente/fascículo quebraria as FKs compostas das revistas (D-098).
+        return ("ano", "componente", "fasciculo") if obj else ()
+
+    def get_fields(self, request, obj=None):
+        if obj is not None and not self.has_change_permission(request, obj):
+            return ["ano", "componente", "fasciculo", "nome", "texto_atual"]  # só leitura
+        return ["ano", "componente", "fasciculo", "nome", "texto"]
+
+    @admin.display(description="Texto")
+    def texto_atual(self, obj):
+        atual = versao_atual(obj.pk)
+        return format_html('<pre class="texto-template">{}</pre>', atual.texto if atual else "")
+
+    # --- Salvar -> tela de impacto -> confirmar
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        if not form.texto_mudou:
+            return
+        # Serializa a numeração (duplo "Confirmar" da mesma aba passa junto pelo FOR SHARE)
+        # e relê a versão atual já com a trava: texto igual ao que acabou de entrar = nada a fazer.
+        Template.objects.select_for_update().get(pk=obj.pk)
+        novo, atual = form.cleaned_data["texto"], versao_atual(obj.pk)
+        if atual is not None and atual.texto == novo:
+            return
+        numero = atual.numero + 1 if atual else 1
+        TemplateVersao.objects.create(template=obj, numero=numero, texto=novo, criada_por=request.user)
+        self.message_user(request, f"Versão {numero} criada.")
+
+    def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
+        if request.method == "POST" and object_id and "_voltar" not in request.POST:
+            obj = self.get_object(request, unquote(object_id))
+            if obj is not None and self.has_change_permission(request, obj):
+                resposta = self._tela_impacto(request, obj)
+                if resposta is not None:
+                    return resposta
+        return super().changeform_view(request, object_id, form_url, extra_context)
+
+    def _tela_impacto(self, request, obj):
+        """Resposta da tela de impacto, ou None para seguir o fluxo normal do admin
+        (form inválido, texto igual, confirmação com assinatura válida ou bloqueio
+        perdido: o mixin trata)."""
+        form = self.get_form(request, obj, change=True)(request.POST, instance=obj)
+        if not form.is_valid() or not form.texto_mudou:
+            return None
+        novo = form.cleaned_data["texto"]
+        assinatura = {"h": hashlib.sha256(novo.encode()).hexdigest(), "base": form.atual.numero if form.atual else 0}
+        if "_confirmar" in request.POST and _assinatura(request) == assinatura:
+            return None
+        sessao = request.POST.get(CAMPO_SESSAO, "")
+        with transaction.atomic(using=router.db_for_write(Template)):
+            if not bloqueio.conferir_na_transacao(obj, request.user, sessao):
+                return None
+        if "_confirmar" in request.POST:
+            messages.warning(request, "O texto ou a versão atual mudou desde a tela de impacto: confira de novo.")
+        obj.refresh_from_db()  # o form alterou a instância em memória
+        dados = [
+            (k, v)
+            for k, valores in request.POST.lists()
+            # _continue etc. seguem para o confirmar; sessão e assinatura saem à parte.
+            if k not in ("csrfmiddlewaretoken", CAMPO_SESSAO, ASSINATURA, "_confirmar")
+            for v in valores
+        ]
+        dados.append((ASSINATURA, signing.dumps(assinatura, salt=SAL)))
+        contexto = {
+            **self.admin_site.each_context(request),
+            "opts": self.opts,
+            "original": obj,
+            "title": f"Impacto da mudança em {obj}",
+            "revistas": self.impacto(obj, form.cleaned_data["texto"]),
+            "dados": dados,
+            "bloqueio": {"alvo": bloqueio.campo(obj), "id": obj.pk, "sessao": sessao},
+            "bloqueio_campo_sessao": CAMPO_SESSAO,
+        }
+        return TemplateResponse(request, "nucleo/template_impacto.html", contexto)
+
+    @staticmethod
+    def impacto(template, novo):
+        """Revistas ativas que usam o template, com o que muda para cada uma (D-099, D-118)."""
+        novas = list(texto.secoes(novo))
+        fascs = (
+            RevistaFasciculo.objects.filter(template=template, revista__arquivada_em__isnull=True)
+            .select_related("revista__projeto", "revista__componente")
+            .annotate(
+                impresso=Exists(
+                    FotoRevista.objects.filter(revista=OuterRef("revista"), motivo=Motivo.IMPRESSO)
+                )
+            )
+            .prefetch_related("revistasecao_set")
+            .order_by("revista__projeto__nome", "revista__componente__codigo")
+        )
+        saida = []
+        for rf in fascs:
+            copias = sorted(c.secao for c in rf.revistasecao_set.all())
+            faltando = []
+            if template.fasciculo == "F2" and rf.revista.svg_f2:
+                # Seções efetivas com o texto novo: as do template + as cópias (órfãs continuam).
+                faltando = ids_faltando(rf.revista, novas + [c for c in copias if c not in novas])
+            saida.append(
+                {"revista": rf.revista, "copias": copias, "impresso": rf.impresso, "ids_faltando": faltando}
+            )
+        return saida

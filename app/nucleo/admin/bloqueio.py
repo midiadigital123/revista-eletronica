@@ -58,7 +58,10 @@ class BloqueioAdminMixin:
 
     def get_inline_instances(self, request, obj=None):
         inlines = super().get_inline_instances(request, obj)
-        if getattr(request, "_bloqueio_somente_leitura", False):
+        # Também quando o admin já diz "só leitura" (ex.: arquivado): o POST daria 403.
+        if getattr(request, "_bloqueio_somente_leitura", False) or (
+            obj is not None and not self.has_change_permission(request, obj)
+        ):
             for inline in inlines:  # instâncias desta requisição: pode trocar o método
                 inline.has_change_permission = inline.has_add_permission = _nega
                 inline.has_delete_permission = _nega
@@ -67,7 +70,8 @@ class BloqueioAdminMixin:
 
     def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
         obj = self.get_object(request, unquote(object_id)) if object_id else None
-        if obj is None or not super().has_change_permission(request, obj):
+        # self (não super): o admin que já diz "só leitura" (ex.: arquivado) não trava o alvo.
+        if obj is None or not self.has_change_permission(request, obj):
             # Inclusão, objeto inexistente ou sem permissão: fluxo normal do admin.
             return super().changeform_view(request, object_id, form_url, extra_context)
 

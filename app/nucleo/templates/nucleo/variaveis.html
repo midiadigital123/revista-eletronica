@@ -1,0 +1,57 @@
+{% extends "admin/base_site.html" %}
+{% comment %}Aba Variáveis (D-107): projetos do ano × variáveis, como planilha.{% endcomment %}
+{% block content %}
+<div id="content-main">
+{% include "nucleo/_filtros.html" %}
+
+<div class="module">
+<table>
+  <caption>Variáveis</caption>
+  <thead><tr><th>Variável</th><th>Descrição</th><th>Onde aparece (última versão dos templates)</th></tr></thead>
+  <tbody>
+  {% for v, usos in legenda %}
+  <tr>
+    <td><code>{% templatetag openvariable %}{{ v.nome }}{% templatetag closevariable %}</code>{% if v.automatica %} <em>(automática, do cadastro)</em>{% endif %}</td>
+    <td>{{ v.descricao }}</td>
+    <td>{{ usos|join:", "|default:"—" }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% if formset.forms %}
+<form method="post" id="variaveis">{% csrf_token %}
+  {{ formset.management_form }}
+  {% if formset.errors %}<p class="errornote">Corrija os erros abaixo.</p>{% endif %}
+  <div class="module">
+  <table>
+    <thead><tr>
+      <th>Parceiro</th><th>Nome do projeto</th><th>Ano</th>
+      {% for v in colunas %}<th>{{ v.rotulo }}</th>{% endfor %}
+      {% if pode_editar %}<th></th>{% endif %}
+    </tr></thead>
+    <tbody>
+    {% for form in formset %}
+    <tr>
+      <td>{{ form.instance.parceiro_ano.parceiro }}{% for h in form.hidden_fields %}{{ h }}{% endfor %}</td>
+      <td>{{ form.instance.nome }}</td>
+      <td>{{ form.instance.ano }}</td>
+      {% for campo in form.visible_fields %}<td>{{ campo.errors }}{{ campo }}</td>{% endfor %}
+      {% if pode_editar %}<td><button type="submit" form="copiar-{{ form.instance.pk }}" class="button">Copiar valores do ano anterior</button></td>{% endif %}
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% if pode_editar %}<div class="submit-row"><input type="submit" class="default" value="Salvar"></div>{% endif %}
+</form>
+{% if pode_editar %}{% for form in formset %}
+<form method="post" id="copiar-{{ form.instance.pk }}">{% csrf_token %}<input type="hidden" name="copiar" value="{{ form.instance.pk }}"></form>
+{% endfor %}{% endif %}
+<p class="help">"Copiar valores do ano anterior" preenche só as variáveis vazias, com o projeto do mesmo parceiro no ano anterior. Edições não salvas na tabela se perdem.</p>
+{% else %}
+<p>Nenhum projeto ativo neste ano.</p>
+{% endif %}
+</div>
+{% endblock %}

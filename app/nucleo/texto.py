@@ -9,6 +9,7 @@ título (texto puro) e o resto é o corpo em Markdown.
 """
 
 import re
+from collections import Counter
 import secrets
 from html import escape
 
@@ -24,6 +25,10 @@ VAR = re.compile(r"\{\{([a-z_][a-z0-9_]*)\}\}")
 CHAVES = re.compile(r"\{\{[^{}]*\}\}|\{\{|\}\}|[{}]")  # linear: sem .*? (ReDoS)
 CONTROLE = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f‪-‮⁦-⁩]")  # controle e bidi
 REF_LINK = re.compile(r"^ {0,3}\[[^\]]+\]:", re.M)  # definição de referência some do token stream
+
+# Teto do texto de um template, em caracteres (form do admin e preview recusam acima).
+# O maior seed de 2026 (f2-mt.hbs) tem ~9,6 mil: 100 mil dá folga de 10x.
+TEXTO_MAX = 100_000
 
 SECOES_F1 = ("introducao", "fechamento")
 ID_F2 = re.compile(r"abertura|passo[1-9][0-9]*|dlg-[a-z0-9]+(-[a-z0-9]+)*")
@@ -99,7 +104,7 @@ def validar(texto, fasciculo):
         erros.append("Há definição de referência de link ([x]: ...).")
 
     ids = [b[0] for b in blocos]
-    for id_ in sorted({i for i in ids if ids.count(i) > 1}):
+    for id_ in sorted(i for i, n in Counter(ids).items() if n > 1):  # Counter: linear (o preview chama a cada digitação)
         erros.append(f"Seção repetida: {id_}.")
 
     if fasciculo == "F1":
@@ -122,15 +127,37 @@ def validar(texto, fasciculo):
             erros.append(f"Seção {id_}: falta o título (1ª linha).")
         elif ruins := _proibidos(titulo, {"paragraph_open", "paragraph_close", "text", "text_special"}):
             erros.append(f"Seção {id_}: o título é texto puro; tem {', '.join(ruins)}.")
-        if not corpo:
-            erros.append(f"Seção {id_}: corpo vazio.")
-        elif ruins := _proibidos(corpo, TOKENS_BLOCO | TOKENS_INLINE):
-            erros.append(f"Seção {id_}: recurso não permitido: {', '.join(ruins)}.")
+        erros += _erros_corpo(corpo, f"Seção {id_}: ")
 
+    erros += _erros_variaveis(texto)
+    if erros:
+        raise ValidationError(erros)
+
+
+def _erros_corpo(corpo, prefixo=""):
+    if not corpo:
+        return [f"{prefixo}corpo vazio."]
+    if ruins := _proibidos(corpo, TOKENS_BLOCO | TOKENS_INLINE):
+        return [f"{prefixo}recurso não permitido: {', '.join(ruins)}."]
+    return []
+
+
+def _erros_variaveis(texto):
     sobras = CHAVES.findall(VAR.sub(lambda m: "" if m[1] in NOMES else m[0], texto))
     if sobras:
-        erros.append(f"Variáveis fora da lista ou chaves soltas: {', '.join(dict.fromkeys(sobras))}.")
+        return [f"Variáveis fora da lista ou chaves soltas: {', '.join(dict.fromkeys(sobras))}."]
+    return []
 
+
+def validar_corpo(corpo):
+    """Corpo de uma seção sozinho (cópia da revista, D-115): as regras do `validar`, sem título.
+    Uma linha `## id` no corpo partiria a seção; o Markdown já a recusa como título (#)."""
+    erros = []
+    if CONTROLE.search(corpo):
+        erros.append("Há caracteres de controle ou de direção de texto (bidi).")
+    if REF_LINK.search(corpo):
+        erros.append("Há definição de referência de link ([x]: ...).")
+    erros += _erros_corpo(corpo.strip(), "Corpo: ") + _erros_variaveis(corpo)
     if erros:
         raise ValidationError(erros)
 
