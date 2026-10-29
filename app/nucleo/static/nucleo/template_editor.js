@@ -1,7 +1,9 @@
 // Editor de template no admin (widget EditorTexto, nucleo/admin/templates.py; D-123).
 // "Inserir variável" põe {{nome}} no cursor; o preview chama a rota template_preview
 // com debounce. O HTML do preview vem de texto.renderizar (o servidor já escapou);
-// os erros de validação entram como texto.
+// os erros de validação entram como texto. Seção da revista (EditorSecao, data-cabecalho):
+// manda "## id + título" + o corpo, sem fascículo (não valida o documento), e só faz o
+// 1º preview no foco (a revista tem uma caixa por seção).
 (() => {
   "use strict";
   for (const caixa of document.querySelectorAll(".editor-template")) {
@@ -10,7 +12,8 @@
     const erros = caixa.querySelector(".editor-template-erros");
     const csrf = area.form.querySelector("[name=csrfmiddlewaretoken]").value;
     // No "adicionar" o fascículo ainda é um select; na edição vem fixo no data-.
-    const select = document.getElementById("id_fasciculo");
+    const cabecalho = caixa.dataset.cabecalho;
+    const select = cabecalho === undefined ? document.getElementById("id_fasciculo") : null;
     let pedido = 0;
     let espera;
 
@@ -18,8 +21,8 @@
       const meu = ++pedido;
       const dados = new FormData();
       dados.append("csrfmiddlewaretoken", csrf);
-      dados.append("texto", area.value);
-      dados.append("fasciculo", select ? select.value : caixa.dataset.fasciculo);
+      dados.append("texto", (cabecalho ?? "") + area.value);
+      if (cabecalho === undefined) dados.append("fasciculo", select ? select.value : caixa.dataset.fasciculo);
       try {
         const r = await fetch(caixa.dataset.preview, { method: "POST", body: dados, credentials: "same-origin" });
         if (meu !== pedido || !r.ok) return; // resposta velha ou erro: mantém o último preview
@@ -44,7 +47,8 @@
     });
     area.addEventListener("input", agendar);
     if (select) select.addEventListener("change", agendar);
-    void atualizar();
+    if (cabecalho === undefined) void atualizar();
+    else area.addEventListener("focus", () => void atualizar(), { once: true });
   }
 
   // Tela de impacto: um envio só (o 2º "Confirmar" viraria versão duplicada; o servidor

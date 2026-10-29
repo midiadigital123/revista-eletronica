@@ -24,6 +24,15 @@
 .impacto-alerta { color: var(--error-fg); }
 pre.texto-template { white-space: pre-wrap; font-size: 13px; }
 
+/* Diff "seu texto | template novo" da seção desatualizada (difflib.HtmlDiff, admin/revista.py). */
+table.diff { margin: 8px 0; font-family: ui-monospace, monospace; font-size: 12px; border: 1px solid var(--hairline-color); }
+table.diff td { white-space: pre-wrap; vertical-align: top; }
+table.diff .diff_header { color: var(--body-quiet-color); }
+table.diff .diff_next { display: none; }
+table.diff .diff_add { background: #bbf7d0; color: #14532d; }
+table.diff .diff_chg { background: #fde68a; color: #713f12; }
+table.diff .diff_sub { background: #fecaca; color: #7f1d1d; }
+
 @media (max-width: 1024px) {
   .editor-template-colunas { grid-template-columns: 1fr; }
 }

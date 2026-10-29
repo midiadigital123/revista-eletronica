@@ -1,5 +1,5 @@
 {% comment %}Widget EditorTexto (nucleo/admin/templates.py): textarea, "Inserir variável" e preview.{% endcomment %}
-<div class="editor-template" data-preview="{{ widget.preview }}" data-fasciculo="{{ widget.fasciculo }}">
+<div class="editor-template" data-preview="{{ widget.preview }}" data-fasciculo="{{ widget.fasciculo }}"{% if widget.cabecalho %} data-cabecalho="{{ widget.cabecalho }}"{% endif %}>
   <div class="editor-template-barra">
     <label>Variável
       <select class="editor-template-variavel">

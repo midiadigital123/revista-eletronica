@@ -127,15 +127,37 @@ def validar(texto, fasciculo):
             erros.append(f"Seção {id_}: falta o título (1ª linha).")
         elif ruins := _proibidos(titulo, {"paragraph_open", "paragraph_close", "text", "text_special"}):
             erros.append(f"Seção {id_}: o título é texto puro; tem {', '.join(ruins)}.")
-        if not corpo:
-            erros.append(f"Seção {id_}: corpo vazio.")
-        elif ruins := _proibidos(corpo, TOKENS_BLOCO | TOKENS_INLINE):
-            erros.append(f"Seção {id_}: recurso não permitido: {', '.join(ruins)}.")
+        erros += _erros_corpo(corpo, f"Seção {id_}: ")
 
+    erros += _erros_variaveis(texto)
+    if erros:
+        raise ValidationError(erros)
+
+
+def _erros_corpo(corpo, prefixo=""):
+    if not corpo:
+        return [f"{prefixo}corpo vazio."]
+    if ruins := _proibidos(corpo, TOKENS_BLOCO | TOKENS_INLINE):
+        return [f"{prefixo}recurso não permitido: {', '.join(ruins)}."]
+    return []
+
+
+def _erros_variaveis(texto):
     sobras = CHAVES.findall(VAR.sub(lambda m: "" if m[1] in NOMES else m[0], texto))
     if sobras:
-        erros.append(f"Variáveis fora da lista ou chaves soltas: {', '.join(dict.fromkeys(sobras))}.")
+        return [f"Variáveis fora da lista ou chaves soltas: {', '.join(dict.fromkeys(sobras))}."]
+    return []
 
+
+def validar_corpo(corpo):
+    """Corpo de uma seção sozinho (cópia da revista, D-115): as regras do `validar`, sem título.
+    Uma linha `## id` no corpo partiria a seção; o Markdown já a recusa como título (#)."""
+    erros = []
+    if CONTROLE.search(corpo):
+        erros.append("Há caracteres de controle ou de direção de texto (bidi).")
+    if REF_LINK.search(corpo):
+        erros.append("Há definição de referência de link ([x]: ...).")
+    erros += _erros_corpo(corpo.strip(), "Corpo: ") + _erros_variaveis(corpo)
     if erros:
         raise ValidationError(erros)
 

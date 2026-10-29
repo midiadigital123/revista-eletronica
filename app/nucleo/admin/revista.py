@@ -2,14 +2,23 @@
 
 Edita com o bloqueio do projeto (D-140, D-143). `hash_validado`, `validado_*` e `arquivada_em`
 são só leitura: só os serviços os escrevem (D-142). Nunca inclui nem exclui (D-117).
-S11b2: o texto por seção entra como mais um fieldset em `fieldsets`.
+Textos (S11b2, D-104, D-115): um fieldset por fascículo, um campo por seção (o título vem do
+template e não se edita). Salvar uma seção mudada cria a cópia (`RevistaSecao`) com a versão do
+template mostrada na página (hidden `versao__F1`), então uma versão nova entre abrir e salvar
+ainda aparece como aviso. Seção desatualizada mostra o diff "seu texto | template novo"; mexer
+no texto ou marcar "Manter meu texto" salva a cópia com a versão nova (o aviso some); "Descartar
+cópia" apaga a cópia (volta ao vivo). Tudo grava dentro da transação do mixin (bloqueio).
+Trocar o template de um fascículo com cópias exige digitar "descartar N cópia(s)" no inline;
+apaga as cópias e troca o template na mesma transação (D-093, D-104).
 
 Upload com ids faltando GRAVA e avisa (decisão do S11c): o template pode ganhar ou perder
 seções depois, e a pendência `ids_svg` do resolver já bloqueia o "Validado".
 """
 
 import csv
+import difflib
 import io
+from typing import NamedTuple
 
 from django import forms
 from django.contrib import admin, messages
@@ -17,11 +26,14 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
+from django.utils.safestring import mark_safe
 
+from nucleo import texto
 from nucleo.admin import lote
 from nucleo.admin.bloqueio import BloqueioAdminMixin
-from nucleo.models import Revista, RevistaFasciculo, Template
+from nucleo.admin.templates import EditorTexto
+from nucleo.models import Revista, RevistaFasciculo, RevistaSecao, Template
 from nucleo.servicos import arquivos, resolver
 from nucleo.servicos.empacotar import Pendente, zip_revista
 
@@ -37,9 +49,31 @@ class RevistaForm(forms.ModelForm):
         required=False, label="Trocar capa", help_text="Substitui a capa anterior. PNG, JPG ou WebP até 5 MB."
     )
 
+    blocos = ()  # get_form põe os da revista
+
     class Meta:
         model = Revista
         fields = []
+
+    def clean(self):
+        dados = super().clean()
+        for b in self.blocos:
+            f = b.rf.fasciculo
+            versao = dados.get(nome("versao", f))
+            if versao is not None and versao != b.versao.pk and not b.rf.template.templateversao_set.filter(pk=versao).exists():
+                raise ValidationError(f"O template do {f} foi trocado depois que a página abriu: recarregue a página.")
+            for s in b.secoes:
+                campo = nome("secao", f, s.id)
+                if campo not in self.changed_data or campo not in dados:
+                    continue
+                if dados.get(nome("descartar", f, s.id)):
+                    self.add_error(campo, "Editou e marcou “Descartar cópia”: escolha um dos dois.")
+                    continue
+                try:
+                    texto.validar_corpo(dados[campo])
+                except ValidationError as e:
+                    self.add_error(campo, e)
+        return dados
 
     def clean_arquivo_svg(self):
         f = self.cleaned_data.get("arquivo_svg")
@@ -72,24 +106,182 @@ class FasciculoForm(forms.ModelForm):
             ano_id=rf.ano_id, componente_id=rf.componente_id, fasciculo=rf.fasciculo
         ).order_by("nome")
 
-    def clean_template(self):
-        novo = self.cleaned_data["template"]
-        rf = self.instance
-        if novo != rf.template and rf.pk and rf.revistasecao_set.exists():
-            raise ValidationError("Este fascículo tem textos editados (cópias de seção): o template não pode mudar.")
-        return novo
+    confirmacao = forms.CharField(
+        required=False, label="Confirmação", help_text="Só para trocar o template de um fascículo com textos editados."
+    )
+
+    def clean(self):
+        dados = super().clean()
+        rf, self.descartar = self.instance, False
+        if rf.pk and "template" in dados and dados["template"] != rf.template:
+            secoes = sorted(rf.revistasecao_set.values_list("secao", flat=True))
+            if secoes:
+                frase = frase_descarte(len(secoes))
+                if " ".join(dados.get("confirmacao", "").split()).lower() != frase:
+                    raise ValidationError(
+                        f"Este fascículo tem textos editados (cópias de seção: {', '.join(secoes)}). "
+                        f"Trocar o template apaga essas cópias: para confirmar, digite “{frase}” em Confirmação."
+                    )
+                self.descartar = True
+        return dados
+
+    def save(self, commit=True):
+        if self.descartar:  # mesma transação do admin; antes do UPDATE (FK composta NO ACTION)
+            RevistaSecao.objects.filter(revista_fasciculo=self.instance).delete()
+        return super().save(commit)
+
+
+def frase_descarte(n):
+    return f"descartar {n} cópia" + ("s" if n > 1 else "")
 
 
 class FasciculoInline(admin.TabularInline):
     model = RevistaFasciculo
     form = FasciculoForm
-    fields = ("fasciculo", "template")
+    fields = ("fasciculo", "template", "confirmacao")
     readonly_fields = ("fasciculo",)
     extra = 0
     can_delete = False
 
+    def get_fields(self, request, obj=None):
+        if not self.has_change_permission(request, obj):
+            return ("fasciculo", "template")  # só leitura: sem o campo de confirmação
+        return self.fields
+
     def has_add_permission(self, request, obj=None):
         return False  # nascem com a revista (S06)
+
+
+# --- Textos por seção (S11b2) ---------------------------------------------------
+
+
+class Secao(NamedTuple):
+    id: str
+    titulo: str
+    corpo: str  # efetivo: a cópia, ou o do template
+    copia: RevistaSecao | None
+    desatualizada: bool
+    do_template: str | None  # corpo na versão atual; None se a seção saiu do template
+
+
+class Bloco(NamedTuple):
+    rf: RevistaFasciculo
+    versao: object  # TemplateVersao atual
+    secoes: list
+
+
+def blocos_de_texto(revista):
+    """Um Bloco por fascículo com template (F1, F2), na ordem."""
+    desatualizadas = {(c.revista_fasciculo_id, c.secao) for c in resolver.secoes_desatualizadas(revista)}
+    blocos = []
+    for rf in RevistaFasciculo.objects.filter(revista=revista, template__isnull=False).order_by("fasciculo"):
+        versao = resolver.versao_atual(rf.template_id)
+        efetivas = resolver.secoes_efetivas(rf)
+        if versao is None or efetivas is None:
+            continue
+        do_template = texto.secoes(versao.texto)
+        copias = {c.secao: c for c in rf.revistasecao_set.all()}
+        secoes = [
+            Secao(id_, titulo, corpo, copias.get(id_), (rf.pk, id_) in desatualizadas, do_template.get(id_, (None, None))[1])
+            for id_, titulo, corpo in efetivas
+        ]
+        blocos.append(Bloco(rf, versao, secoes))
+    return blocos
+
+
+def nome(tipo, fasciculo, secao=""):
+    return f"{tipo}__{fasciculo}__{secao}" if secao else f"{tipo}__{fasciculo}"
+
+
+class EditorSecao(EditorTexto):
+    """EditorTexto de um corpo só: o preview recebe `## id` + título + corpo, sem validar o documento."""
+
+    cabecalho = ""
+
+    def get_context(self, name, value, attrs):
+        contexto = super().get_context(name, value, attrs)
+        contexto["widget"]["cabecalho"] = self.cabecalho
+        return contexto
+
+
+class CorpoField(forms.CharField):
+    """Corpo da seção como `texto.secoes` o devolve: `\n` e sem espaço nas pontas.
+    Assim o has_changed (contra o hidden do valor inicial) não vê `\r\n` do navegador como edição."""
+
+    def to_python(self, value):
+        return super().to_python(value).replace("\r\n", "\n").replace("\r", "\n")
+
+
+def diff(seu, novo):
+    """Tabela lado a lado do difflib (escapa &, < e >)."""
+    tabela = difflib.HtmlDiff(wrapcolumn=70).make_table(seu.splitlines(), (novo or "").splitlines(), "Seu texto", "Template novo")
+    return mark_safe(tabela)
+
+
+def campos_de_texto(blocos):
+    """Campos declarados do form (o modelform_factory recusa campo que não seja declarado)."""
+    campos = {}
+    for b in blocos:
+        f = b.rf.fasciculo
+        campos[nome("versao", f)] = forms.IntegerField(required=False, widget=forms.HiddenInput, initial=b.versao.pk)
+        for s in b.secoes:
+            widget = EditorSecao(attrs={"rows": 6, "spellcheck": "true"})
+            widget.cabecalho = f"## {s.id}\n{s.titulo}\n\n"
+            if s.desatualizada:
+                ajuda = format_html(
+                    '<strong class="impacto-alerta">O template mudou nesta seção depois da sua cópia.</strong> '
+                    "Edite o texto ou marque “Manter meu texto” para salvar a cópia sobre a versão nova; "
+                    "ou descarte a cópia.{}",
+                    diff(s.corpo, s.do_template),
+                )
+            elif s.copia is not None:
+                ajuda = "Texto editado nesta revista (cópia). Descarte para voltar ao texto do template."
+            else:
+                ajuda = "Texto do template. Salvar com o texto mudado cria uma cópia só desta seção."
+            campos[nome("secao", f, s.id)] = CorpoField(
+                label=f"{s.id} · {s.titulo}", required=False, max_length=texto.TEXTO_MAX,
+                initial=s.corpo, show_hidden_initial=True, widget=widget, help_text=ajuda,
+            )  # fmt: skip
+            if s.desatualizada:
+                campos[nome("manter", f, s.id)] = forms.BooleanField(required=False, label="Manter meu texto (o aviso some)")
+            if s.copia is not None:
+                campos[nome("descartar", f, s.id)] = forms.BooleanField(
+                    required=False, label="Descartar cópia (volta ao texto do template)"
+                )
+    return campos
+
+
+def gravar_textos(request, form):
+    """Cria, atualiza ou descarta as cópias de seção (D-104, D-115). Roda na transação do mixin."""
+    dados = form.cleaned_data
+    # Trava os fascículos: duplo envio da mesma aba passa junto pelo FOR SHARE do bloqueio.
+    rfs = {rf.pk: rf for rf in RevistaFasciculo.objects.select_for_update().filter(pk__in=[b.rf.pk for b in form.blocos])}
+    for b in form.blocos:
+        f, rf = b.rf.fasciculo, rfs[b.rf.pk]
+        mexeu = [s.id for s in b.secoes if any(n in form.changed_data for n in (nome(t, f, s.id) for t in ("secao", "manter", "descartar")))]
+        if rf.template_id != b.rf.template_id:
+            if mexeu:
+                messages.warning(request, f"Textos do {f} não salvos: o template do {f} foi trocado.")
+            continue
+        versao_id = dados.get(nome("versao", f)) or b.versao.pk  # a versão que a pessoa viu
+        copias = {c.secao: c for c in RevistaSecao.objects.filter(revista_fasciculo=rf)}
+        for s in b.secoes:
+            copia, corpo = copias.get(s.id), dados.get(nome("secao", f, s.id))
+            if dados.get(nome("descartar", f, s.id)):
+                if copia is not None:
+                    copia.delete()
+            elif nome("secao", f, s.id) in form.changed_data:
+                if copia is None and corpo == s.do_template:
+                    continue  # igual ao template ao vivo: não congela a seção
+                RevistaSecao.objects.update_or_create(
+                    revista_fasciculo=rf, secao=s.id,
+                    defaults={"texto": corpo, "template_id": rf.template_id, "template_versao_id": versao_id},
+                )  # fmt: skip
+            elif copia is not None and dados.get(nome("manter", f, s.id)):
+                copia.template_versao_id = versao_id
+                copia.save()
+        if mexeu:
+            messages.info(request, f"Textos do {f} salvos: {', '.join(mexeu)}.")
 
 
 def celula(valor):
@@ -124,7 +316,7 @@ class RevistaAdmin(BloqueioAdminMixin, admin.ModelAdmin):
     list_filter = ("ano", "componente")
     readonly_fields = (
         "projeto", "componente", "ano", "svg_f2", "svg_sha256", "conferencia_ids", "capa", "capa_sha256",
-        "hash_validado", "validado_em", "validado_por", "arquivada_em",
+        "hash_validado", "validado_em", "validado_por", "arquivada_em", "textos",
     )  # fmt: skip
     fieldsets = (
         (None, {"fields": ("projeto", "componente", "ano")}),
@@ -138,11 +330,55 @@ class RevistaAdmin(BloqueioAdminMixin, admin.ModelAdmin):
     def alvo_do_bloqueio(self, obj):
         return obj.projeto  # revista trava o projeto dela (D-140)
 
+    def pode_editar_textos(self, request, obj):
+        return self.has_change_permission(request, obj) and request.user.has_perms(
+            ["nucleo.add_revistasecao", "nucleo.change_revistasecao"]
+        )
+
+    def _blocos(self, request, obj):
+        """Blocos de texto da revista, lidos uma vez por requisição (fieldsets e form usam)."""
+        if getattr(request, "_blocos_revista", (None,))[0] != obj.pk:
+            request._blocos_revista = (obj.pk, blocos_de_texto(obj))
+        return request._blocos_revista[1]
+
     def get_fieldsets(self, request, obj=None):
         if obj is not None and not self.has_change_permission(request, obj):
             # Sem os campos de upload: o admin os mostraria como "-" na tela só leitura.
-            return [(nome, {**op, "fields": [f for f in op["fields"] if f not in UPLOADS]}) for nome, op in self.fieldsets]
-        return self.fieldsets
+            return [
+                (titulo, {**op, "fields": [f for f in op["fields"] if f not in UPLOADS]}) for titulo, op in self.fieldsets
+            ] + [("Textos", {"fields": ["textos"]})]
+        if obj is None:
+            return self.fieldsets
+        if not self.pode_editar_textos(request, obj):
+            return [*self.fieldsets, ("Textos", {"fields": ["textos"]})]
+        textos = []
+        for b in self._blocos(request, obj):
+            f, campos = b.rf.fasciculo, [nome("versao", b.rf.fasciculo)]
+            for s in b.secoes:
+                campos.append(nome("secao", f, s.id))
+                campos += [nome(t, f, s.id) for t, sim in (("manter", s.desatualizada), ("descartar", s.copia)) if sim]
+            velhas = [s.id for s in b.secoes if s.desatualizada]
+            descricao = (
+                format_html('<strong class="impacto-alerta">Seções desatualizadas: {}.</strong>', ", ".join(velhas))
+                if velhas
+                else ""
+            )
+            textos.append((f"Textos do {f} ({b.rf.template.nome}, versão {b.versao.numero})", {"fields": campos, "description": descricao}))
+        return [*self.fieldsets, *textos]
+
+    def get_form(self, request, obj=None, **kwargs):
+        if obj is not None and self.pode_editar_textos(request, obj):
+            blocos = self._blocos(request, obj)
+            kwargs["form"] = type("RevistaForm", (self.form,), {**campos_de_texto(blocos), "blocos": blocos})
+        return super().get_form(request, obj, **kwargs)
+
+    @admin.display(description="Textos")
+    def textos(self, obj):
+        return format_html_join(
+            "",
+            '<h4>{} {} · {}</h4><pre class="texto-template">{}</pre>',
+            ((b.rf.fasciculo, s.id, s.titulo, s.corpo) for b in blocos_de_texto(obj) for s in b.secoes),
+        ) or "Sem template."
 
     @admin.display(description="Ids do SVG")
     def conferencia_ids(self, obj):
@@ -168,8 +404,7 @@ class RevistaAdmin(BloqueioAdminMixin, admin.ModelAdmin):
         return False
 
     def save_model(self, request, obj, form, change):
-        if any(n not in UPLOADS for n in form.changed_data):  # S11b2: campos do modelo
-            super().save_model(request, obj, form, change)
+        # Nenhum campo do modelo é editável aqui (todos readonly): só uploads e textos.
         if form.cleaned_data.get("arquivo_svg"):
             arquivos.receber_svg(obj, form.cleaned_data["arquivo_svg"])
             ids = ids_do_f2(obj)
@@ -177,6 +412,10 @@ class RevistaAdmin(BloqueioAdminMixin, admin.ModelAdmin):
                 messages.warning(request, aviso_ids(obj, ids[1], ids[0]))
         if form.cleaned_data.get("arquivo_capa"):
             arquivos.receber_capa(obj, form.cleaned_data["arquivo_capa"])
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)  # inline antes: troca de template
+        gravar_textos(request, form)
 
     def get_urls(self):
         def rota(caminho, view, nome):
