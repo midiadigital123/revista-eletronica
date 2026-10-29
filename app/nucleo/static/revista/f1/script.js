@@ -77,6 +77,29 @@ function padroesDeCima(cortes) {
 }
 
 /**
+ * Motivo pelo qual o JSON de uma etapa não serve para a régua; null se está certo.
+ * Sem rótulo ou corte de reserva: JSON errado é bug do resolver e tem que aparecer.
+ */
+function problemaDaEtapa({ scaleRange, cortes, padroes }) {
+  if (!scaleRange) return "scaleRange ausente";
+  const k = Object.keys(cortes || {}).length;
+  if (k < 1 || k > 4) return `cortes deve ter de 1 a 4 chaves (veio ${k})`;
+  let anterior = scaleRange.min;
+  for (let i = 1; i <= k; i++) {
+    const v = cortes[`padrao-${i}`];
+    if (v === undefined) return `cortes sem a chave padrao-${i}`;
+    if (typeof v !== "number" || v <= anterior || v >= scaleRange.max)
+      return `cortes.padrao-${i} = ${v}: os cortes devem crescer dentro de (${scaleRange.min}, ${scaleRange.max})`;
+    anterior = v;
+  }
+  if (!Array.isArray(padroes)) return "padroes ausente";
+  if (padroes.length !== k + 1) return `padroes deve ter ${k + 1} itens (veio ${padroes.length})`;
+  const i = padroes.findIndex((p, j) => !p || p.chave !== `padrao-${j + 1}`);
+  if (i >= 0) return `padroes[${i}].chave deve ser padrao-${i + 1}`;
+  return null;
+}
+
+/**
  * Régua da escala, de cima para baixo.
  * n padrões contíguos (n = cortes + 1, de 2 a 5): P01 = [min, cortes.padrao-1],
  * Pk = [padrao-(k-1), padrao-k], Pn = [padrao-(n-1), max].
@@ -228,7 +251,7 @@ function alturaLinhaColapsada() {
 }
 
 // Exporta para o teste em Node; no navegador (script clássico) `module` não existe.
-if (typeof module !== "undefined") module.exports = { montarFaixasRegua, padroesDeCima, rotuloAno, rotuloAnoLongo, corTextoSobre, tipoDoItem, urlDoItem, rotuloNiveis };
+if (typeof module !== "undefined") module.exports = { montarFaixasRegua, padroesDeCima, problemaDaEtapa, rotuloAno, rotuloAnoLongo, corTextoSobre, tipoDoItem, urlDoItem, rotuloNiveis };
 
 // ==========================================
 // ESTADO DA APLICAÇÃO
@@ -238,6 +261,8 @@ const appState = {
   currentFilter: null, // definido em App.bootstrap (primeiro ano presente)
   currentDescriptor: null,
   scrolling: false,
+  etapasInvalidas: new Set(), // etapas cujo JSON falhou em problemaDaEtapa: sem escala
+
 };
 
 // ==========================================
@@ -737,7 +762,10 @@ class DescriptorManager {
     if (descriptorDetail) descriptorDetail.textContent = data.description;
 
     if (data.prerequisites) this.updatePrerequisites(data.prerequisites);
-    if (data.scale && filterData.scaleRange)
+    if (appState.etapasInvalidas.has(appState.currentFilter)) {
+      const escala = document.querySelector(".escala-content");
+      if (escala) escala.innerHTML = "";
+    } else if (data.scale && filterData.scaleRange)
       this.updateScale(data.scale, filterData.cortes, filterData.scaleRange, filterData.padroes);
     if (data.bncc) this.updateBNCC(data.bncc);
     if (filterData.scaleRange) this.updateScaleRange(filterData.scaleRange);
@@ -1045,6 +1073,13 @@ class App {
 
     try {
       const data = new DataService().load();
+      for (const [etapa, dados] of Object.entries(data)) {
+        if (etapa === "pagina") continue;
+        const motivo = problemaDaEtapa(dados);
+        if (!motivo) continue;
+        appState.etapasInvalidas.add(etapa);
+        console.error(`Etapa ${etapa}: JSON da revista inválido: ${motivo}`);
+      }
       // Primeira aba (já na ordem das etapas, vinda do template) com dados.
       const primeira = [...document.querySelectorAll(".filtro-btn")].find(
         (btn) => data[btn.dataset.filter],

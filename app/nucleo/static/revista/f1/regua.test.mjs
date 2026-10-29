@@ -264,7 +264,9 @@ assert.equal(rotuloNiveis(300, undefined), "nível 300");
     ["1", 250, 100, 100, false, "Lorem"],
     ["1", 100, 0, null, false, null],
   ]);
-  assert.deepEqual(r.cortes.map((c) => [c.padrao, c.valor, c.y, c.exato]), [["padrao-1", 250, 1.5, true]]);
+  assert.equal(r.faixas.length, 4);
+  assert.deepEqual(r.cortes.map((c) => [c.y, c.exato]), [[1.5, true]]);
+  assert.deepEqual(r.cortes.map((c) => [c.padrao, c.valor]), [["padrao-1", 250]]);
   assert.deepEqual(r.padroes.map((p) => [p.padrao, p.y0, p.y1]), [["padrao-2", 0, 1.5], ["padrao-1", 1.5, 3]]);
   // 200→300 cruza o corte 250: cor do P02 (âncora maior)
   const cruza = montarFaixasRegua({ min: 0, max: 500, cortes: { "padrao-1": 250 }, escala: { "padrao-2": [L(300)], "padrao-1": [L(200)] } });
@@ -296,6 +298,24 @@ assert.equal(rotuloNiveis(300, undefined), "nível 300");
     r.padroes.map((p) => [p.padrao, p.y0, p.y1]),
     [["padrao-5", 0, 1.5], ["padrao-4", 1.5, 2], ["padrao-3", 2, 3.5], ["padrao-2", 3.5, 4.5], ["padrao-1", 4.5, 5]],
   );
+}
+
+// Validação do JSON da etapa (sem reserva: falha explícita)
+{
+  const { problemaDaEtapa } = createRequire(import.meta.url)("./script.js");
+  const pad = (n) => Array.from({ length: n }, (_, i) => ({ chave: `padrao-${i + 1}`, rotulo: `Padrão 0${i + 1}` }));
+  const etapa = (cortes, padroes) => ({ scaleRange: { min: 0, max: 500 }, cortes, padroes });
+  assert.equal(problemaDaEtapa(etapa({ "padrao-1": 250 }, pad(2))), null);
+  assert.equal(problemaDaEtapa(etapa({ "padrao-1": 1, "padrao-2": 2, "padrao-3": 3, "padrao-4": 4 }, pad(5))), null);
+  assert.equal(problemaDaEtapa(etapa({}, pad(1))), "cortes deve ter de 1 a 4 chaves (veio 0)");
+  assert.equal(problemaDaEtapa(etapa({ "padrao-1": 1, "padrao-2": 2, "padrao-3": 3, "padrao-4": 4, "padrao-5": 5 }, pad(6))), "cortes deve ter de 1 a 4 chaves (veio 5)");
+  assert.equal(problemaDaEtapa(etapa({ "padrao-1": 100, "padrao-3": 300 }, pad(3))), "cortes sem a chave padrao-2");
+  assert.match(problemaDaEtapa(etapa({ "padrao-1": 300, "padrao-2": 200 }, pad(3))), /^cortes\.padrao-2 = 200: os cortes devem crescer/);
+  assert.match(problemaDaEtapa(etapa({ "padrao-1": 500 }, pad(2))), /^cortes\.padrao-1 = 500/); // max é aberto
+  assert.match(problemaDaEtapa(etapa({ "padrao-1": 0 }, pad(2))), /^cortes\.padrao-1 = 0/); // min é aberto
+  assert.equal(problemaDaEtapa(etapa({ "padrao-1": 250 })), "padroes ausente");
+  assert.equal(problemaDaEtapa(etapa({ "padrao-1": 250 }, pad(3))), "padroes deve ter 2 itens (veio 3)");
+  assert.equal(problemaDaEtapa(etapa({ "padrao-1": 250 }, pad(2).reverse())), "padroes[0].chave deve ser padrao-1");
 }
 
 console.log("regua.test.mjs: ok");
