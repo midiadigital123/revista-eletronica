@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<!-- HTML mínimo da revista F1 para o teste f1-fixture: mesma estrutura do revista/escala.hbs
+     (sem hero e intro). O teste troca os marcadores de abas, cores e dados (ABAS, CORES, DADOS entre "__"). -->
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revista F1 (fixture)</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>__CORES__</style>
+</head>
+<body>
+    <section class="interactive-section">
+        <div class="interactive-container">
+            <div class="descriptors-area">
+                <div class="descritores-menu" id="filtro">
+                    <div class="tab-bar" role="tablist">__ABAS__</div>
+                    <div class="descritores-card" id="descritoresCard">
+                        <div class="controls-row">
+                            <button class="dropdown-toggle" id="dropdownToggle" type="button" aria-haspopup="true" aria-expanded="false">
+                                <span class="dropdown-label" id="dropdownLabel"></span>
+                                <svg class="chevron" id="chevronIcon" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                            </button>
+                        </div>
+                        <div class="tag-panel" id="tagPanel" hidden>
+                            <div class="descritores-grid tag-grid"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="titulo-topico"><h3></h3></div>
+                <div class="content-wrapper">
+                    <div class="descritor-detalhado">
+                        <span class="descritor-badge"></span>
+                        <p></p>
+                    </div>
+                </div>
+                <div class="prerequisitos-box">
+                    <div class="prerequisitos-content">
+                        <p class="prerequisitos-title"><strong>Pré-requisitos necessários para o desenvolvimento desta habilidade:</strong></p>
+                        <ul></ul>
+                    </div>
+                </div>
+            </div>
+            <div class="escala-proficiencia">
+                <div class="escala-header"><p class="escala-label-top"></p></div>
+                <div class="escala-content"></div>
+                <div class="escala-footer"><p class="escala-label-bottom"></p></div>
+            </div>
+        </div>
+        <div class="bncc-section">
+            <div class="bncc-header"><div class="bncc-icon"></div><h2>BNCC</h2></div>
+            <div class="bncc-content">
+                <div class="bncc-row"><div class="bncc-label">Práticas de linguagem:</div><div class="bncc-value"></div></div>
+                <div class="bncc-row"><div class="bncc-label">Objeto de conhecimento:</div><div class="bncc-value"></div></div>
+                <div class="bncc-row"><div class="bncc-label">Habilidades relacionadas:</div><div class="bncc-value"></div></div>
+            </div>
+        </div>
+        <div class="navigation-buttons">
+            <button class="nav-btn prev-btn"><img src="assets/seta-anterior.svg" alt="Anterior"><span>Descritor anterior</span></button>
+            <a class="nav-btn top-btn" href="#filtro"><span>Voltar ao filtro</span></a>
+            <button class="nav-btn next-btn"><span>Próximo descritor</span><img src="assets/seta-proxima.svg" alt="Próximo"></button>
+        </div>
+    </section>
+    <aside class="menu-lateral">
+        <p class="menu-lateral-title">Descritores</p>
+        <div class="menu-lateral-grid"></div>
+    </aside>
+    <script type="application/json" id="dados-revista">__DADOS__</script>
+    <script src="script.js"></script>
+</body>
+</html>
