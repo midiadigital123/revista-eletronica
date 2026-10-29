@@ -4,6 +4,7 @@ O alcance é o conjunto de etapa × CC presentes no arquivo: o PDF de LP não me
 etapas que vieram do PDF Alfa. Dentro desse alcance, reimportar substitui descritores e
 tarefas (D-071); a linha da MEC fica (mesmo id, `passo` e travas preservados).
 """
+import subprocess
 from pathlib import Path
 
 from django.db import transaction
@@ -27,7 +28,10 @@ def ler(arquivo):
     leitor = LEITORES.get(Path(arquivo).suffix.lower())
     if not leitor:
         raise ImportacaoRecusada(f"formato não suportado: {Path(arquivo).name} (use .pdf ou .xlsx)")
-    return leitor(str(arquivo))
+    try:
+        return leitor(str(arquivo))
+    except (subprocess.SubprocessError, OSError) as e:  # pdftotext falhou ou passou de 120 s
+        raise ImportacaoRecusada(f"não foi possível ler {Path(arquivo).name}: {type(e).__name__}") from e
 
 
 def importar_matriz(matriz, arquivo, substituir=False, passo=MANTER):
@@ -59,7 +63,7 @@ def gravar_matriz(matriz, dados, substituir=False, passo=MANTER, origem="arquivo
                 f"{cc} {e}: escala do arquivo vai até {d['escala']['max']}, "
                 f"a etapa até {etapas[e].escala_max}"
             )
-    motivo = f"importação de {origem}"
+    motivo = f"importação de {origem}"[:100]  # history_change_reason é varchar(100)
 
     with transaction.atomic():
         # Dois imports na mesma matriz: o segundo espera aqui em vez de bater no UNIQUE da MEC.
@@ -80,6 +84,8 @@ def gravar_matriz(matriz, dados, substituir=False, passo=MANTER, origem="arquivo
                 f"a matriz {matriz} já tem {', '.join(' '.join(k) for k in sorted(existentes))}; "
                 "reimportar substitui descritores e tarefas (confirme com substituir)"
             )
+        # ponytail: Bloqueio lido sem lock; um editor que adquire logo depois desta leitura
+        # salva sobre descritores recriados (o form dele falha ou grava em linha nova).
         travas = [
             f"{b.matriz_etapa_cc.componente.codigo} {b.matriz_etapa_cc.etapa.codigo} ({b.usuario})"
             for b in Bloqueio.objects.select_related(

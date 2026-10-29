@@ -56,6 +56,9 @@ class MatrizEtapaCC(models.Model):
             ),
         ]
 
+    def __str__(self):
+        return f"{self.matriz} · {self.etapa.codigo} {self.componente.codigo}"
+
 
 class Descritor(models.Model):
     matriz_etapa_cc = models.ForeignKey(MatrizEtapaCC, on_delete=models.CASCADE)

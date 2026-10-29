@@ -1,0 +1,42 @@
+{% extends "admin/base_site.html" %}
+{% comment %}Grade de cortes do ano: parceiro × (etapa × CC). Ver nucleo/admin/cortes.py.{% endcomment %}
+
+{% block extrastyle %}{{ block.super }}
+<style>
+  #cortes td, #cortes th { vertical-align: top; white-space: nowrap; }
+  #cortes input[type=text] { width: 9em; }
+  #cortes tr.com-erro td { background: var(--message-error-bg); }
+  #cortes .erros td { white-space: normal; color: var(--error-fg); }
+  .anos a.atual { font-weight: bold; text-decoration: underline; }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if not ano %}<p>Nenhum ano aberto.</p>{% else %}
+<p class="anos">Ano:{% for a in anos %} <a href="?ano={{ a.ano }}" class="{% if a.pk == ano.pk %}atual{% endif %}">{{ a.ano }}</a>{% endfor %}
+  · <a href="{% url 'admin:nucleo_corte_exportar' %}?ano={{ ano.ano }}">Baixar planilha de grupos</a></p>
+<p class="help">De 1 a 4 cortes inteiros, crescentes, separados por vírgula, maiores que 0 e menores que o máximo da escala. Célula vazia apaga o corte.</p>
+<form method="post" action="?ano={{ ano.ano }}">{% csrf_token %}
+<table id="cortes">
+  <thead>
+    <tr><th rowspan="2">Parceiro</th>{% for e, c in colunas %}<th>{{ e.codigo }} {{ c.codigo }}</th>{% endfor %}</tr>
+    <tr>{% for e, c in colunas %}<th class="help">até {{ e.escala_max }}</th>{% endfor %}</tr>
+  </thead>
+  <tbody>
+  {% for linha in linhas %}
+    <tr{% if linha.erros %} class="com-erro"{% endif %} data-parceiro="{{ linha.parceiro.nome }}">
+      <th>{{ linha.parceiro.nome }}<input type="hidden" name="o-{{ linha.parceiro.pk }}" value="{{ linha.original }}"></th>
+      {% for cel in linha.celulas %}<td>
+        <input type="text" name="c-{{ cel.chave }}" value="{{ cel.texto }}" aria-label="{{ cel.titulo }}"{% if not pode_gravar %} readonly{% endif %}>
+      </td>{% endfor %}
+    </tr>
+    {% if linha.erros %}<tr class="erros"><td colspan="{{ colunas|length|add:1 }}"><ul class="errorlist">{% for erro in linha.erros %}<li>{{ linha.parceiro.nome }} — {{ erro }}</li>{% endfor %}</ul></td></tr>{% endif %}
+  {% empty %}
+    <tr><td colspan="{{ colunas|length|add:1 }}">Nenhum parceiro cadastrado.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% if pode_gravar %}<div class="submit-row"><input type="submit" class="default" value="Salvar cortes"></div>{% endif %}
+</form>
+{% endif %}
+{% endblock %}

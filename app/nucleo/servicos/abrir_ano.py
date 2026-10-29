@@ -19,6 +19,27 @@ class AnoRecusado(ValueError):
     pass
 
 
+def clonar(queryset, usuario, motivo, **trocas):
+    """Clona as linhas do queryset trocando campos (também usado por duplicar matriz).
+    Cada troca é um dict {valor antigo: novo}, uma função do objeto de origem ou uma
+    constante. Devolve {id antigo: id novo}."""
+    antigos, objs = [], []
+    for obj in queryset.order_by("pk"):
+        valores = {
+            campo: t[getattr(obj, campo)] if isinstance(t, dict) else t(obj) if callable(t) else t
+            for campo, t in trocas.items()
+        }
+        antigos.append(obj.pk)
+        obj.pk, obj._state.adding = None, True
+        for campo, valor in valores.items():
+            setattr(obj, campo, valor)
+        objs.append(obj)
+    objs = bulk_create_with_history(
+        objs, queryset.model, default_user=usuario, default_change_reason=motivo[:100]
+    )
+    return {a: o.pk for a, o in zip(antigos, objs)}
+
+
 def abrir_ano(ano, usuario=None):
     """Cria `ano`, que precisa ser o seguinte ao maior existente, copiando esse ano.
     Devolve (ano novo, ano de origem).
@@ -55,28 +76,11 @@ def abrir_ano(ano, usuario=None):
             raise AnoRecusado(f"{ano} já está aberto") from None
 
         def copiar(modelo, **trocas):
-            """Clona as linhas do ano de origem trocando campos. Cada troca é um dict
-            {valor antigo: novo}, uma função do objeto de origem ou uma constante.
-            Devolve {id antigo: id novo}."""
             filtro = {
                 MatrizEtapaCC: "ano", Descritor: "matriz_etapa_cc__ano",
                 Tarefa: "descritor__matriz_etapa_cc__ano",
             }.get(modelo, "ano")  # fmt: skip
-            antigos, objs = [], []
-            for obj in modelo.objects.filter(**{filtro: origem}).order_by("pk"):
-                valores = {
-                    campo: t[getattr(obj, campo)] if isinstance(t, dict) else t(obj) if callable(t) else t
-                    for campo, t in trocas.items()
-                }
-                antigos.append(obj.pk)
-                obj.pk, obj._state.adding = None, True
-                for campo, valor in valores.items():
-                    setattr(obj, campo, valor)
-                objs.append(obj)
-            objs = bulk_create_with_history(
-                objs, modelo, default_user=usuario, default_change_reason=motivo
-            )
-            return {a: o.pk for a, o in zip(antigos, objs)}
+            return clonar(modelo.objects.filter(**{filtro: origem}), usuario, motivo, **trocas)
 
         etapas = copiar(Etapa, ano_id=novo.pk)
         componentes = copiar(Componente, ano_id=novo.pk)
