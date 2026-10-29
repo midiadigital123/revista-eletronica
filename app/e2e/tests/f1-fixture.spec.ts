@@ -69,6 +69,8 @@ const CASOS = [
   { nome: "revista-4cortes.json", comCores: true },
   { nome: "revista-4cortes.json", comCores: false }, // cor do 5º vinda só do styles.css
   { nome: "revista-misto.json", comCores: true }, // 5ef com 1 corte, 9ef com 4
+  // Gerado pelo resolver do S07 (test_resolver.py confere o gabarito; REGERAR_FIXTURES=1 regrava): 4 cortes, 5 faixas
+  { nome: "resolver-4cortes.json", comCores: true },
 ];
 
 for (const { nome, comCores } of CASOS) {
