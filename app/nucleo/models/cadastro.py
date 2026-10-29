@@ -1,0 +1,95 @@
+from django.db import models
+from django.db.models import Q
+from django.db.models.functions import Length
+from django.db.models.lookups import LessThanOrEqual
+from simple_history.models import HistoricalRecords
+
+
+def max_len(tabela, campo, n):
+    # Convenção do ER: text + CHECK de tamanho, sem varchar(n).
+    return models.CheckConstraint(
+        condition=LessThanOrEqual(Length(campo), n), name=f"{tabela}_{campo}_tamanho"
+    )
+
+
+class Ano(models.Model):
+    ano = models.IntegerField(unique=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        db_table = "ano"
+
+    def __str__(self):
+        return str(self.ano)
+
+
+class Parceiro(models.Model):
+    nome = models.TextField(unique=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        db_table = "parceiro"
+        constraints = [max_len("parceiro", "nome", 200)]
+
+    def __str__(self):
+        return self.nome
+
+
+class Etapa(models.Model):
+    ano = models.ForeignKey(Ano, on_delete=models.PROTECT)
+    codigo = models.TextField()
+    escala_max = models.IntegerField()
+    ordem = models.IntegerField()
+    history = HistoricalRecords()
+
+    class Meta:
+        db_table = "etapa"
+        constraints = [
+            models.UniqueConstraint(fields=["ano", "codigo"], name="etapa_ano_codigo_uniq"),
+            models.UniqueConstraint(fields=["id", "ano"], name="etapa_id_ano_uniq"),
+            max_len("etapa", "codigo", 20),
+        ]
+
+    def __str__(self):
+        return f"{self.codigo} ({self.ano})"
+
+
+class Componente(models.Model):
+    ano = models.ForeignKey(Ano, on_delete=models.PROTECT)
+    codigo = models.TextField()
+    nome = models.TextField()
+    history = HistoricalRecords()
+
+    class Meta:
+        db_table = "componente"
+        constraints = [
+            models.UniqueConstraint(fields=["ano", "codigo"], name="componente_ano_codigo_uniq"),
+            models.UniqueConstraint(fields=["id", "ano"], name="componente_id_ano_uniq"),
+            max_len("componente", "codigo", 20),
+            max_len("componente", "nome", 200),
+        ]
+
+    def __str__(self):
+        return f"{self.codigo} ({self.ano})"
+
+
+class CorPadrao(models.Model):
+    ano = models.ForeignKey(Ano, on_delete=models.PROTECT)
+    padrao = models.IntegerField()
+    cor = models.TextField()
+    history = HistoricalRecords()
+
+    class Meta:
+        db_table = "cor_padrao"
+        constraints = [
+            models.UniqueConstraint(fields=["ano", "padrao"], name="cor_padrao_ano_padrao_uniq"),
+            models.CheckConstraint(
+                condition=Q(padrao__gte=1, padrao__lte=5), name="cor_padrao_padrao_1a5"
+            ),
+            models.CheckConstraint(
+                condition=Q(cor__regex=r"^#[0-9A-Fa-f]{6}$"), name="cor_padrao_cor_hex"
+            ),
+        ]
+
+    def __str__(self):
+        return f"Padrão {self.padrao} {self.cor} ({self.ano})"
