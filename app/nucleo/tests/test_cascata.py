@@ -73,9 +73,13 @@ class CascataTest(TransactionTestCase):
         e5_27 = Etapa.objects.create(ano=Ano.objects.create(ano=2027), codigo="5EF", escala_max=500, ordem=2)
         self.recusa([100, 200], etapa=e5_27)
 
-    def test_aceita_limites(self):
-        self.gravar((self.e5, self.lp, [0, 500]))
-        self.assertEqual(Corte.objects.get().valores, [0, 500])
+    def test_recusa_corte_nos_limites(self):  # D-153
+        self.recusa([0, 100])
+        self.recusa([100, 500])
+
+    def test_aceita_dentro_dos_limites(self):
+        self.gravar((self.e5, self.lp, [1, 499]))
+        self.assertEqual(Corte.objects.get().valores, [1, 499])
 
     # Cascata.
 

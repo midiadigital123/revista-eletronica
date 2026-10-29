@@ -18,7 +18,7 @@ from nucleo.servicos.foto import fotografar
 
 
 def validar_linhas(linhas, ano_id):
-    """D-055: de 1 a 4 inteiros estritamente crescentes, dentro de 0..escala_max."""
+    """D-055: de 1 a 4 inteiros estritamente crescentes, estritamente dentro de (0, escala_max) (D-153)."""
     erros = []
     vistos = set()
     for etapa, componente, valores in linhas:
@@ -35,8 +35,8 @@ def validar_linhas(linhas, ano_id):
             continue
         if any(a >= b for a, b in zip(valores, valores[1:])):
             erros.append(f"{rotulo}: cortes precisam ser crescentes.")
-        if any(not 0 <= v <= etapa.escala_max for v in valores):
-            erros.append(f"{rotulo}: cortes precisam estar entre 0 e {etapa.escala_max}.")
+        if any(not 0 < v < etapa.escala_max for v in valores):  # o JS do F1 recusa corte no limite (D-131)
+            erros.append(f"{rotulo}: cortes precisam estar entre 1 e {etapa.escala_max - 1}.")
     if erros:
         raise ValidationError(erros)
 

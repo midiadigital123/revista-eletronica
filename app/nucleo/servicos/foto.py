@@ -1,7 +1,7 @@
 from django.db import connection, transaction
 
 from nucleo.models import FotoRevista
-from nucleo.servicos.resolver import resolver, sha256
+from nucleo.servicos.resolver import carregar, resolver, sha256
 
 
 def fotografar(revista, motivo, usuario):
@@ -18,7 +18,8 @@ def fotografar(revista, motivo, usuario):
     with transaction.atomic():
         with connection.cursor() as cursor:
             cursor.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ")
-        return _gravar(revista, motivo, usuario)
+        # Relida dentro do retrato: SVG, capa e arquivada_em vêm do mesmo instante que o resto.
+        return _gravar(carregar(revista.pk), motivo, usuario)
 
 
 def _gravar(revista, motivo, usuario):

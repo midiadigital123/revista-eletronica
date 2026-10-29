@@ -35,6 +35,7 @@ from nucleo.servicos.foto import fotografar
 from nucleo.servicos.resolver import (
     FAIXA_SEM_TEMPLATE,
     conteudo_impresso,
+    carregar,
     escala,
     hash_validado,
     niveis_do_passo,
@@ -127,17 +128,30 @@ class EscalaTest(TestCase):
         self.assertEqual((len(n), n[0], n[-1]), (20, 0, 475))
 
     def test_passo_25_linhas_vazias(self):
-        # contrato: 150 manual no padrão 3. Aqui é uma tarefa 150→250, que a âncora maior põe no 3.
-        r = escala([(150, 250, "manual")], [150, 200, 250], 0, 500, 25)
-        niveis = {p: [linha["level"] for linha in linhas] for p, linhas in r.items()}
-        self.assertEqual(niveis["padrao-1"], [125, 100, 75, 50, 25, 0])
-        self.assertEqual(niveis["padrao-2"], [175])  # 150 já existe
-        self.assertEqual(niveis["padrao-3"], [225, 200, 150])
-        self.assertEqual(len(r["padrao-4"]), 10)
+        # contrato: nível 150 já ocupado. Aqui por uma tarefa 150→175 (fim = próximo nível).
+        r = escala([(150, 175, "manual", None)], [150, 200, 250], 0, 500, 25)
+        vazias = {p: [linha["level"] for linha in linhas if linha["content"] == "---"] for p, linhas in r.items()}
+        self.assertEqual(vazias["padrao-1"], [125, 100, 75, 50, 25, 0])
+        self.assertEqual(vazias["padrao-2"], [175])  # 150 já existe
+        self.assertEqual(vazias["padrao-3"], [225, 200])
+        self.assertEqual(len(vazias["padrao-4"]), 10)
         self.assertEqual(r["padrao-4"][0], {"level": 475, "fim": 500, "content": "---"})
+        self.assertEqual(r["padrao-2"][1], {"level": 150, "fim": 175, "content": "manual"})
+
+    def test_linha_vazia_mesmo_dentro_de_tarefa_larga(self):  # D-155: fiel ao TS, só o início conta
+        r = escala([(100, 200, "longa", None)], [300], 0, 500, 25)
+        vazias = [linha["level"] for linha in r["padrao-1"] if linha["content"] == "---"]
+        self.assertTrue({125, 150, 175}.issubset(vazias))
+        self.assertNotIn(100, vazias)
+
+    def test_item_da_tarefa(self):
+        r = escala([(100, 150, "com", "itens/abc.pdf"), (200, 250, "sem", None)], [300], 0, 500, None)
+        com, sem = sorted(r["padrao-1"], key=lambda linha: linha["level"])
+        self.assertEqual(com["item"], {"id": "abc", "tipo": "pdf"})
+        self.assertNotIn("item", sem)
 
     def test_n_padroes_e_ancora_maior(self):
-        r = escala([(190, 260, "cruza dois cortes"), (150, 200, "topo no corte")], [200, 250], 0, 500, None)
+        r = escala([(190, 260, "cruza dois cortes", None), (150, 200, "topo no corte", None)], [200, 250], 0, 500, None)
         self.assertEqual(list(r), ["padrao-1", "padrao-2", "padrao-3"])
         self.assertEqual([linha["content"] for linha in r["padrao-3"]], ["cruza dois cortes"])
         self.assertEqual([linha["content"] for linha in r["padrao-1"]], ["topo no corte"])  # topo aberto
@@ -275,6 +289,35 @@ class ResolverTest(TestCase):
         self.assertEqual([c.secao for c in secoes_desatualizadas(lp)], ["fechamento"])
         self.assertEqual(resolver(lp)["f1"]["secoes"][1]["corpo"], "<p>Meu fim.</p>\n")  # a cópia vale
 
+    def test_corte_invalido_vira_pendencia(self):  # gravado por outro caminho que não a cascata
+        Corte.objects.filter(
+            parceiro_ano=self.go["LP"].projeto.parceiro_ano, etapa=self.e9, componente=self.lp
+        ).update(valores=[200, 500])
+        p = [x for x in pendencias(recarregar(self.go["LP"])) if x.codigo == "corte_invalido"]
+        self.assertEqual(p[0].mensagem, "Cortes fora de ordem ou da escala: 9EF.")
+        Corte.objects.filter(componente=self.lp).update(valores=[300, 200])
+        self.assertIn("5EF, 9EF", [x for x in pendencias(recarregar(self.go["LP"])) if x.codigo == "corte_invalido"][0].mensagem)
+
+    def test_teto_de_consultas(self):
+        lp = carregar(self.go["LP"].pk)
+        with CaptureQueriesContext(connection) as so_resolver:
+            resolvido = resolver(lp)
+        with CaptureQueriesContext(connection) as resto:
+            pendencias(lp, resolvido)
+            hash_validado(lp, resolvido)
+        self.assertLessEqual(len(so_resolver), 12, "\n".join(q["sql"][:120] for q in so_resolver))
+        self.assertLessEqual(len(resto), 2)  # só a conferência de MEC por etapa
+        self.assertEqual(hash_validado(lp, resolvido), hash_validado(lp))
+
+    def test_copias_orfas_em_ordem(self):
+        t = self.templates["LP", "F2"]
+        rf = RevistaFasciculo.objects.get(revista=self.go["LP"], fasciculo="F2")
+        v1 = TemplateVersao.objects.get(template=t)
+        for secao in ("dlg-zz", "dlg-aa"):  # fora do template: órfãs
+            RevistaSecao.objects.create(revista_fasciculo=rf, template=t, secao=secao, texto=secao, template_versao=v1)
+        ids = [s["id"] for s in resolver(self.go["LP"])["f2"]["secoes"]]
+        self.assertEqual(ids, ["abertura", "passo1", "dlg-p2", "dlg-aa", "dlg-zz"])
+
     def test_arquivada_devolve_a_foto_de_arquivamento(self):
         mt = self.go["MT"]
         foto = fotografar(mt, Motivo.ARQUIVAMENTO, self.usuario)
@@ -296,3 +339,9 @@ class FotoRepeatableReadTest(TransactionTestCase):
         self.assertEqual(sqls[:2], ["BEGIN", "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ"])
         self.assertEqual(foto.hash, hash_validado(self.go["LP"]))
         self.assertEqual(FotoRevista.objects.get().conteudo, resolver(self.go["LP"]))
+
+    def test_fora_de_atomic_relê_a_revista(self):
+        velha = self.go["LP"]  # instância de antes da troca do SVG
+        Revista.objects.filter(pk=velha.pk).update(svg_f2="f2/x.svg", svg_sha256="d" * 64)
+        foto = fotografar(velha, Motivo.IMPRESSO, self.usuario)
+        self.assertEqual(foto.conteudo["f2"]["svg_sha256"], "d" * 64)

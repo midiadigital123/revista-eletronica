@@ -7,13 +7,17 @@ Só leitura; quem grava é `foto.fotografar`. Formato de `resolver(revista)`:
         "etapas": ["5ef", "9ef"],     # ordem das abas: o jsonb da foto não guarda a ordem das chaves
         "dados": {"5ef": {...}},      # exatamente o JSON que o JS do F1 lê (D-130, D-131)
         "cores": {"padrao-1": "#F72628", ...},   # efetivas, até o maior n das etapas (D-060, D-064)
-        "secoes": [{"id", "titulo", "corpo"}],   # HTML pronto; None sem template
+        "secoes": [{"id", "titulo", "corpo"}],   # None sem template
       },
       "f2": {"secoes": [...] ou None, "svg_sha256": ..., "svg_ids": [...]},
       "capa_sha256": ...,
       "lacunas": [{"tipo": "template", "fasciculo": "F1"}, {"tipo": "variavel", "nome": "..."}],
     }
 
+`titulo` e `corpo` são HTML já escapado (o `titulo` pode ter o `<span class="variavel-vazia">`):
+quem consome usa `|safe`/innerHTML, nunca como texto.
+Linha da tarefa com arquivo: `item: {"id": <nome sem extensão>, "tipo": <extensão>}` (o JS monta
+`arquivos/itens/<id>.<tipo>`); sem arquivo, sem a chave.
 Fascículo sem template: `secoes` None e `faixa` com o HTML da faixa vermelha (D-116).
 Variável vazia: já sai de `texto.renderizar` como `<span class="variavel-vazia">` (D-139).
 Os valores das variáveis e o nome do projeto não entram aqui, só os textos renderizados:
@@ -22,6 +26,7 @@ assim uma variável usada só no LP não muda o hash do MT (D-125).
 
 import hashlib
 import json
+from pathlib import PurePosixPath
 from typing import NamedTuple
 
 from django.db.models import Prefetch
@@ -35,6 +40,7 @@ from nucleo.models import (
     MatrizEtapaCC,
     ProjetoCor,
     ProjetoPasso,
+    Revista,
     RevistaFasciculo,
     RevistaSecao,
     Tarefa,
@@ -46,6 +52,11 @@ from nucleo.variaveis import VARIAVEIS
 
 VAZIO = "---"  # linha sem habilidade (CONTEUDO_VAZIO do contrato)
 FAIXA_SEM_TEMPLATE = '<div class="faixa-vermelha" role="alert">Falta escolher o template do {}.</div>'
+
+
+def carregar(pk):
+    """Revista com projeto, parceiro_ano, parceiro e ano num SELECT só (o resolver lê todos)."""
+    return Revista.objects.select_related("projeto__parceiro_ano__parceiro", "projeto__ano").get(pk=pk)
 
 
 def canonico(obj):
@@ -78,17 +89,20 @@ def niveis_do_passo(minimo, maximo, passo):
 def escala(tarefas, cortes, minimo, maximo, passo):
     """`scale` de um descritor: {"padrao-1".."padrao-n": linhas de cima para baixo}, n = cortes + 1.
 
-    `tarefas`: [(inicio, fim, texto)]. Cada uma vai para o padrão da âncora maior.
-    Com passo, cada nível do passo sem tarefa vira uma linha "---" no padrão do nível
-    (linhasVaziasDoPasso); passo nulo = sem linhas vazias (D-091).
+    `tarefas`: [(inicio, fim, texto, arquivo)]. Cada uma vai para o padrão da âncora maior.
+    Com passo, cada nível do passo sem tarefa começando nele vira uma linha "---" no padrão
+    do nível, mesmo dentro do intervalo de uma tarefa mais larga (linhasVaziasDoPasso, D-155);
+    passo nulo = sem linhas vazias (D-091).
     """
     saida = {f"padrao-{k}": [] for k in range(1, len(cortes) + 2)}
-    for inicio, fim, conteudo in tarefas:
-        saida[f"padrao-{padrao_da_tarefa(fim, cortes)}"].append(
-            {"level": inicio, "fim": fim, "content": conteudo}
-        )
+    for inicio, fim, conteudo, arquivo in tarefas:
+        linha = {"level": inicio, "fim": fim, "content": conteudo}
+        if arquivo:
+            caminho = PurePosixPath(arquivo)
+            linha["item"] = {"id": caminho.stem, "tipo": caminho.suffix.lstrip(".")}
+        saida[f"padrao-{padrao_da_tarefa(fim, cortes)}"].append(linha)
     if passo:
-        existentes = {inicio for inicio, _, _ in tarefas}
+        existentes = {inicio for inicio, _, _, _ in tarefas}
         for nivel in niveis_do_passo(minimo, maximo, passo):
             if nivel not in existentes:
                 saida[f"padrao-{padrao_do_nivel(nivel, cortes)}"].append(
@@ -101,16 +115,20 @@ def escala(tarefas, cortes, minimo, maximo, passo):
 
 def _f1_escalas(revista, projeto):
     pa = projeto.parceiro_ano
-    cortes = (
+    cortes = list(
         Corte.objects.filter(parceiro_ano=pa, componente_id=revista.componente_id)
         .select_related("etapa")
         .order_by("etapa__ordem", "etapa__codigo")
     )
     mecs = {}
-    if pa.matriz_id is not None:
+    if pa.matriz_id is not None and cortes:
         mecs = {
             m.etapa_id: m
-            for m in MatrizEtapaCC.objects.filter(matriz_id=pa.matriz_id, componente_id=revista.componente_id)
+            for m in MatrizEtapaCC.objects.filter(
+                matriz_id=pa.matriz_id,
+                componente_id=revista.componente_id,
+                etapa_id__in=[c.etapa_id for c in cortes],
+            )
         }
     # D-053, D-091: existir a linha é "sobrescrevi"; passo nulo nela é "sem linhas vazias".
     passos = {
@@ -119,7 +137,7 @@ def _f1_escalas(revista, projeto):
     }
     descritores = {}
     for d in (
-        Descritor.objects.filter(matriz_etapa_cc__in=list(mecs.values()))
+        Descritor.objects.filter(matriz_etapa_cc__in=list(mecs.values()))  # lista vazia: sem SELECT
         .prefetch_related(Prefetch("tarefa_set", queryset=Tarefa.objects.order_by("ordem", "pk")))
         .order_by("ordem", "codigo")
     ):
@@ -139,7 +157,7 @@ def _f1_escalas(revista, projeto):
             "padroes": [{"chave": f"padrao-{k}", "rotulo": f"Padrão {k:02d}"} for k in range(1, n + 1)],
         }
         for d in descritores.get(mec.pk if mec else None, []):
-            tarefas = [(t.inicio, t.fim, t.texto) for t in d.tarefa_set.all()]
+            tarefas = [(t.inicio, t.fim, t.texto, t.arquivo) for t in d.tarefa_set.all()]
             dados[chave][d.codigo] = {
                 "description": d.descricao,
                 "prerequisites": list(d.prerequisitos),
@@ -181,7 +199,9 @@ def secoes_efetivas(fasciculo):
         return None
     copias = {
         c.secao: c
-        for c in RevistaSecao.objects.filter(revista_fasciculo=fasciculo).select_related("template_versao")
+        for c in RevistaSecao.objects.filter(revista_fasciculo=fasciculo)
+        .select_related("template_versao")
+        .order_by("secao")  # ordem estável das órfãs: entra no hash
     }
     saida = []
     for id_, (titulo, corpo) in texto.secoes(versao.texto).items():
@@ -203,7 +223,10 @@ def valores_das_variaveis(projeto):
 
 
 def resolver(revista):
-    """Revista montada (formato no topo do módulo). Arquivada: a foto de arquivamento (D-117)."""
+    """Revista montada (formato no topo do módulo). Arquivada: a foto de arquivamento (D-117).
+
+    Passe a revista de `carregar(pk)`: com outra instância, cada FK do projeto é um SELECT a mais.
+    """
     if revista.arquivada_em is not None:
         foto = (
             FotoRevista.objects.filter(revista=revista, motivo=Motivo.ARQUIVAMENTO)
@@ -248,10 +271,10 @@ def resolver(revista):
     return {"f1": f1, "f2": f2, "capa_sha256": revista.capa_sha256, "lacunas": lacunas}
 
 
-def hash_validado(revista):
+def hash_validado(revista, resolvido=None):
     """sha256 do JSON canônico do resolvido. O resolvido já traz svg_sha256 e capa_sha256,
-    então trocar o SVG ou a capa muda o hash (D-118)."""
-    return sha256(resolver(revista))
+    então trocar o SVG ou a capa muda o hash (D-118). `resolvido`: reaproveita um já montado."""
+    return sha256(resolver(revista) if resolvido is None else resolvido)
 
 
 def impresso_de(resolvido):
@@ -278,11 +301,25 @@ class Pendencia(NamedTuple):
     link: str | None = None
 
 
-def pendencias(revista):
-    """O que bloqueia o "Validado" (D-112, D-116, D-125). Lista vazia = pode validar."""
+def problema_dos_cortes(dados):
+    """Espelho do problemaDaEtapa do JS (D-131): cortes estritamente crescentes em (min, max).
+    Defensivo: a cascata já recusa (D-153), mas o dado pode ter entrado por outro caminho."""
+    anterior, maximo = dados["scaleRange"]["min"], dados["scaleRange"]["max"]
+    for i in range(1, len(dados["cortes"]) + 1):
+        v = dados["cortes"].get(f"padrao-{i}")
+        if v is None or not anterior < v < maximo:
+            return True
+        anterior = v
+    return False
+
+
+def pendencias(revista, resolvido=None):
+    """O que bloqueia o "Validado" (D-112, D-116, D-125). Lista vazia = pode validar.
+    `resolvido`: reaproveita um já montado (o painel monta uma vez para pendências e hash)."""
     projeto = revista.projeto
     pa = projeto.parceiro_ano
-    resolvido = resolver(revista)
+    if resolvido is None:
+        resolvido = resolver(revista)
     saida = []
     if pa.matriz_id is None:
         saida.append(Pendencia("matriz", "Falta escolher a matriz do parceiro no ano."))
@@ -300,6 +337,12 @@ def pendencias(revista):
         ]
         if sem_mec:
             saida.append(Pendencia("corte_sem_matriz", f"A matriz não tem a etapa: {', '.join(sem_mec)}."))
+    dados = resolvido["f1"]["dados"]
+    invalidas = [e.upper() for e in resolvido["f1"]["etapas"] if problema_dos_cortes(dados[e])]
+    if invalidas:
+        saida.append(
+            Pendencia("corte_invalido", f"Cortes fora de ordem ou da escala: {', '.join(invalidas)}.")
+        )
     for lacuna in resolvido["lacunas"]:
         if lacuna["tipo"] == "template":
             saida.append(
