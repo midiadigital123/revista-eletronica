@@ -1370,4 +1370,4 @@ Liberar a Fase C: S07 (resolver, foto, hash, pendências), a partir de `refatora
 - 2ª revisão do S09: 1 importante (lista negra de CSS não cobria layout); troca para lista branca enviada.
 - S09 concluído: 2ª rodada aplicada e reverificada (57 testes).
 - Fase B concluída. As 6 mudanças juntadas numa cópia descartável (sem conflito de arquivo): 152 testes OK, `makemigrations --check` limpo, régua ok; carga 2026 de ponta a ponta OK. Cópia removida. Nada commitado.
-- A pedido do usuário: um commit por passo nas 6 branches, merge --no-ff de cada uma em `refatoracao-django` (S14 primeiro), sem conflito; reverificado (152 testes, migrações, régua, Playwright 8/8). Depois, commits do plano, do ER revisado, do design do impresso, dos learnings do trail e deste `state.md`.
+- A pedido do usuário: um commit por passo nas 6 branches, merge --no-ff de cada uma em `refatoracao-django` (S14 primeiro), sem conflito; reverificado (152 testes, migrações, régua, Playwright 8/8). Depois, commits do plano, do ER revisado, do design do impresso, dos learnings do trail (inclui o do sanitizador de SVG) e deste `state.md`.
