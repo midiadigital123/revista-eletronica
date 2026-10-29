@@ -53,7 +53,7 @@ class TemplateVersao(models.Model):
     numero = models.IntegerField()
     texto = models.TextField()
     criada_em = models.DateTimeField(auto_now_add=True)
-    # Nulo só no seed (carregar_templates), que não tem usuário.
+    # Nulo só sem usuário: seed (carregar_templates) e o comando abrir_ano.
     criada_por = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True
     )

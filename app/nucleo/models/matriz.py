@@ -87,7 +87,9 @@ class Tarefa(models.Model):
     inicio = models.IntegerField()
     fim = models.IntegerField()
     texto = models.TextField()
-    arquivo = models.TextField(null=True, blank=True)  # caminho no storage
+    # Caminho no storage, compartilhado entre anos pelo abrir_ano: quem trocar o arquivo
+    # só apaga o antigo se nenhuma outra Tarefa usar o mesmo caminho.
+    arquivo = models.TextField(null=True, blank=True)
     ordem = models.IntegerField()
     history = HistoricalRecords()
 
