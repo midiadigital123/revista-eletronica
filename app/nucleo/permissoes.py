@@ -5,8 +5,10 @@ desta tabela (migração não importa código que muda depois). Mudou aqui?
 Crie uma migração de dados nova que sincronize os grupos; o teste
 `test_permissoes.GruposNoBancoTest` falha até isso acontecer.
 
-Nenhum papel tem `delete_*`: nada pede exclusão e revista nunca é apagada
-(D-117, arquiva). Usuário se desativa, não se apaga (histórico usa SET_NULL).
+Só `delete_projetopasso` e `delete_projetocor` existem (S11c, decisão do usuário):
+excluir a linha = voltar ao passo da matriz / à paleta do ano. Fora isso, nenhum
+`delete_*`: revista nunca é apagada (D-117, arquiva). Usuário se desativa, não se
+apaga (histórico usa SET_NULL). Migração 0008.
 """
 
 # Pergunta em aberto: admin pode clicar "Revista Impressa Atualizada"?
@@ -51,8 +53,8 @@ ACOES = {
         "nucleo",
         {
             "projeto": EDITA,
-            "projetopasso": EDITA,
-            "projetocor": EDITA,
+            "projetopasso": (*EDITA, "delete"),  # excluir = voltar ao da matriz
+            "projetocor": (*EDITA, "delete"),  # excluir = voltar à paleta do ano
             "revista": ("change", "view"),
             "revistafasciculo": ("change", "view"),
             "revistasecao": EDITA,

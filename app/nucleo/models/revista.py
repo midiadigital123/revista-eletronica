@@ -57,6 +57,9 @@ class Revista(models.Model):
             max_len("revista", "svg_f2", 500),
         ]
 
+    def __str__(self):
+        return f"{self.projeto} · {self.componente.codigo}"
+
 
 class RevistaFasciculo(models.Model):
     revista = models.ForeignKey(Revista, on_delete=models.CASCADE)
@@ -75,6 +78,9 @@ class RevistaFasciculo(models.Model):
             models.UniqueConstraint(fields=["id", "template"], name="revista_fasciculo_alvo_uniq"),
             check_fasciculo("revista_fasciculo"),
         ]
+
+    def __str__(self):
+        return f"{self.revista} {self.fasciculo}"
 
 
 class RevistaSecao(models.Model):
