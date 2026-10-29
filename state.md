@@ -2,26 +2,38 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Grill-me do novo modelo concluído (8 rodadas): D-046 a D-083 descrevem o redesenho (Django + PostgreSQL). Entidades levantadas: Ano, Parceiro, Matriz (por ano, etapa × CC, tarefa com intervalo, intervalo mínimo), Texto-modelo e blocos com marcadores, Cortes (parceiro × ano × etapa × CC, 1 a 4, grupos calculados), Projeto (cascata, nome, sobrescritas de bloco/cor/intervalo mínimo, Validado), Paleta global, Foto da revista (diff para o impresso), Bloqueio de escrita, 4 perfis.
-Funcionando: nada novo em código; o sistema atual (Express + Mongo) segue como estava.
-Quebrado/pendente: diagrama ER e modelos Django não escritos; lista de blocos de texto e de campos do projeto incompleta (aceitas como flexíveis); conferências visuais antigas (ver sessões anteriores).
+Passo 4 de 22: Fase A concluída e juntada em `refatoracao-django` (merge local 1125cdb; sem push nem PR).
+Funcionando: em `refatoracao-django`, `docker compose run --rm app python manage.py test` roda 29 testes OK, `makemigrations --check` limpo; `node app/nucleo/static/revista/f1/regua.test.mjs` ok; `cd app/e2e && npx playwright test f1-fixture` 8/8.
+Quebrado/pendente: `docs/modelo-er.md` precisa dos ajustes listados em D-129 e D-133; menores do S01 (container root, aviso de senha no `.env.example`).
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Imprimir `docs/Modelagem_Banco_Conceitos_Essenciais.pdf` (v2 corrigido, 13 páginas) e ler a seção 1 (4 min).
+Aguardando o usuário liberar a Fase B (S04, S05, S06, S09, S10, S14 em paralelo, a partir de `refatoracao-django`).
 
 ## Plano
-<!-- plano completo: ~/.claude/plans/pasted-content-id-aef3-proponha-5-federated-castle.md -->
-1. [x] Task 1 — contrato do passo (`niveisDoPasso`, `linhasVaziasDoPasso`, limite 200)
-2. [x] Task 2 — API: gravar passo e `POST …/gerar-linhas`
-3. [x] Task 3 — editor: "Intervalo mínimo" + "Gerar linhas vazias"
-4. [x] Task 4 — contrato das cores (`Cores`, `CORES_PADRAO`)
-5. [x] Task 5 — API: gravar, devolver e copiar cores
-6. [x] Task 6 — revista: `<style>` com as cores do projeto
-7. [x] Task 7 — editor: diálogo "Cores dos padrões"
-8. [x] Task 8 — gerador de planilha (`exceljs`)
-9. [x] Task 9 — planilhas no zip, `planilhas.zip` e botão no editor
-10. [ ] Conferência visual (passos 8–10 de `docs/e2e.md`) e decidir merge/PR  ← agora
+<!-- plano completo: plans/revista-express-django.md -->
+1. [x] S01 — Esqueleto Django + PostgreSQL + Playwright
+2. [x] S02 — Modelos de cadastro e matriz + FK composta
+3. [x] S03 — Parceiro_ano, corte, projeto, revista, texto, controle
+4. [x] S03b — Revista JS/CSS para 2 a 5 padrões
+5. [ ] S04 — Cadastros iniciais + importador de matriz  ← próximo (Fase B)
+6. [ ] S05 — Templates: formato, validação, seed
+7. [ ] S06 — Cascata dos cortes
+8. [ ] S09 — Serviço de SVG e capa
+9. [ ] S10 — Bloqueio
+10. [ ] S14 — Perfis e permissões
+11. [ ] S07 — Resolver, foto, hash, pendências
+12. [ ] S08 — Página única F1 + F2
+13. [ ] S15 — Zip por revista
+14. [ ] S11a — Admin: cadastros, cortes, matriz
+15. [ ] S11b1 — Admin: templates
+16. [ ] S11b2 — Admin: cópia por seção
+17. [ ] S11c — Admin: projeto, variáveis, arquivos, lote
+18. [ ] S12 — Painel + Validado
+19. [ ] S13 — Impresso + planilhas
+20. [ ] S16 — Abrir ano
+21. [ ] S17 — Carga 2026 + desligar o antigo
+22. [ ] S18 — E2E da temporada
 
 ## Decisões
 
@@ -461,7 +473,7 @@ Imprimir `docs/Modelagem_Banco_Conceitos_Essenciais.pdf` (v2 corrigido, 13 pági
 - **Motivo:** a maior parte se repete.
 - **Descartadas:** começar vazio — retrabalho.
 - **Arquivos afetados:** nenhum ainda.
-- **Status:** ativa.
+- **Status:** ativa só para cadastros; cortes e participação ~~substituídos por D-119~~
 
 ### D-055 — Limites e validação dos cortes (2026-10-27)
 - **Contexto:** UI de cortes (D-049, D-050).
@@ -525,7 +537,7 @@ Imprimir `docs/Modelagem_Banco_Conceitos_Essenciais.pdf` (v2 corrigido, 13 pági
 - **Motivo:** fusão automática de texto corrido pode gerar frase quebrada sem ninguém ver, e isso vai impresso.
 - **Descartadas:** fusão de três vias automática (estilo git) — risco e custo; sem aviso — projeto ficaria defasado sem saber.
 - **Arquivos afetados:** nenhum ainda.
-- **Status:** ativa. Lista de blocos em aberto.
+- **Status:** ~~substituída por D-099~~
 
 ### D-063 — Matriz e texto-modelo são escolhas separadas por parceiro × ano (2026-10-27)
 - **Contexto:** proposta de Template = par matriz + texto-modelo.
@@ -533,7 +545,7 @@ Imprimir `docs/Modelagem_Banco_Conceitos_Essenciais.pdf` (v2 corrigido, 13 pági
 - **Motivo:** flexibilidade; na empresa as regras mudam rápido.
 - **Descartadas:** Template como par fixo — engessa.
 - **Arquivos afetados:** nenhum ainda.
-- **Status:** ativa.
+- **Status:** ativa para a matriz; parte do texto-modelo ~~substituída por D-098/D-125~~
 
 ### D-064 — Cores em 2 níveis; padrões usam as cores 1..n; 5º padrão #FFF provisório (2026-10-27)
 - **Contexto:** D-060 deixou em aberto nível intermediário e cor do 5º padrão.
@@ -565,7 +577,7 @@ Imprimir `docs/Modelagem_Banco_Conceitos_Essenciais.pdf` (v2 corrigido, 13 pági
 - **Motivo:** mudanças vão surgir no meio do caminho.
 - **Descartadas:** uma coluna por seção da revista — engessa.
 - **Arquivos afetados:** nenhum ainda.
-- **Status:** ativa.
+- **Status:** ~~substituída por D-098~~
 
 ### D-068 — Projeto arquivado não volta; parceiro readicionado gera projeto novo (2026-10-27)
 - **Contexto:** ciclo de vida da D-065.
@@ -589,7 +601,7 @@ Imprimir `docs/Modelagem_Banco_Conceitos_Essenciais.pdf` (v2 corrigido, 13 pági
 - **Motivo:** reduz sobrescritas de bloco (D-062).
 - **Descartadas:** texto fixo editado à mão em cada projeto.
 - **Arquivos afetados:** nenhum ainda.
-- **Status:** ativa. Lista de marcadores em aberto.
+- **Status:** ~~substituída por D-100/D-125~~
 
 ### D-071 — Matriz é editada no sistema; reimportar substitui tudo (2026-10-27)
 - **Contexto:** correções na matriz depois da importação.
@@ -629,7 +641,7 @@ Imprimir `docs/Modelagem_Banco_Conceitos_Essenciais.pdf` (v2 corrigido, 13 pági
 - **Motivo:** outros vão surgir no projeto.
 - **Descartadas:** lista fechada.
 - **Arquivos afetados:** nenhum ainda.
-- **Status:** ativa.
+- **Status:** ~~substituída por D-100~~
 
 ### D-076 — Aviso de impacto ao editar matriz; 2026 começa do zero (2026-10-27)
 - **Contexto:** mudança na matriz comunitária afeta ~25 revistas; dados atuais no Mongo.
@@ -733,7 +745,7 @@ Imprimir `docs/Modelagem_Banco_Conceitos_Essenciais.pdf` (v2 corrigido, 13 pági
 - **Motivo:** a escolha é dado de parceiro × ano (D-057, D-063) e precisa sobreviver ao clone.
 - **Descartadas:** matriz/texto-modelo no Projeto (rascunho D-084); default comunitária na cascata — escolheria pelo usuário.
 - **Arquivos afetados:** `docs/modelo-er.md`, `docs/Modelo_ER_Revista.pdf`.
-- **Status:** ativa.
+- **Status:** ativa para a matriz; `texto_modelo` ~~substituído por D-125~~; clone da escolha ~~substituído por D-106~~
 
 ### D-089 — Cliques de estado levam o hash da versão vista (2026-10-27)
 - **Contexto:** revisão: o impresso via o diff de V1, a pedagógica validava V2, o clique gravava V2 e a mudança V1→V2 nunca chegava ao InDesign.
@@ -765,7 +777,7 @@ Imprimir `docs/Modelagem_Banco_Conceitos_Essenciais.pdf` (v2 corrigido, 13 pági
 - **Motivo:** cobrir o que a revista já tem.
 - **Descartadas:** JSONB genérico — perde o CHECK por tipo.
 - **Arquivos afetados:** `docs/modelo-er.md`.
-- **Status:** ativa.
+- **Status:** ~~substituída por D-098~~
 
 ### D-093 — Regras de integridade da revisão (2026-10-27)
 - **Contexto:** achados médios da revisão do ER.
@@ -783,7 +795,326 @@ Imprimir `docs/Modelagem_Banco_Conceitos_Essenciais.pdf` (v2 corrigido, 13 pági
 - **Arquivos afetados:** `docs/modelo-er.md`.
 - **Status:** ativa.
 
+### D-095 — Revista = projeto × componente; nasce dos cortes (2026-10-29)
+- **Contexto:** a revista tem dois fascículos (escalas e infográfico) e é separada por componente (LP, MAT).
+- **Decisão:** o projeto continua sendo parceiro × ano (nome e variáveis ficam nele). Cada projeto gera uma revista por componente em que o parceiro tem cortes; cada revista traz os fascículos em ordem (F1, F2).
+- **Motivo:** respostas 1a e 3a do grill-me de fascículos.
+- **Descartadas:** projeto = parceiro × ano × componente; toda revista sempre com LP e MAT.
+- **Arquivos afetados:** futuro: `docs/modelo-er.md` (tabela Revista).
+- **Status:** ativa.
+
+### D-096 — Fascículo é cadastro ordenado (2026-10-29)
+- **Contexto:** hoje F1 e F2; pode surgir F3.
+- **Decisão:** tabela de fascículos com ordem; fascículo novo entra sem mudar código.
+- **Motivo:** resposta 2a.
+- **Descartadas:** F1/F2 fixos no código.
+- **Arquivos afetados:** futuro: `docs/modelo-er.md`.
+- **Status:** ~~substituída por D-122~~
+
+### D-097 — "Validado" e "Revista Impressa Atualizada" valem por revista (F1 + F2) (2026-10-29)
+- **Contexto:** D-074 e D-089 tinham o projeto como unidade.
+- **Decisão:** os dois cliques, o hash e a foto do impresso passam a ser por revista. Mudar uma variável do projeto derruba o "Validado" das duas revistas dele.
+- **Motivo:** resposta 4a.
+- **Descartadas:** por fascículo.
+- **Arquivos afetados:** futuro: `docs/modelo-er.md` (FotoRevista, hash).
+- **Status:** ativa. Complementa D-074/D-089 (unidade muda de projeto para revista).
+
+### D-098 — Template de texto = documento Handlebars único por fascículo × componente (2026-10-29)
+- **Contexto:** textos fora das escalas e do infográfico mudam por projeto; D-067/D-092 tratavam o texto como blocos tipados.
+- **Decisão:** cada template é um documento só, por fascículo × componente (hoje 2 no F1 e 2 no F2: LP e MAT), por ano (clonado no ano novo). Versão inicial em `.hbs` no repositório, carregada no banco; depois a fonte é o banco e a edição é pela interface. Formatação: negrito, itálico, parágrafos, listas. Sem lógica (`if`/`each`): caso diferente vira outro template. Revista de LP só oferece templates de LP.
+- **Motivo:** respostas 5a, 6, 7a, 9, 14a, 18a, 21a.
+- **Descartadas:** blocos cadastráveis e tipados (D-067, D-092); template só no código; lógica no template.
+- **Arquivos afetados:** futuro: `templates/*.hbs`, `docs/modelo-er.md`.
+- **Status:** ativa. Substitui D-067 e D-092.
+
+### D-099 — Projeto sobrescreve o texto inteiro do template; edição do template propaga com aviso (2026-10-29)
+- **Contexto:** D-062 previa sobrescrita por bloco.
+- **Decisão:** a revista usa o template; o projeto pode editar o texto para si (só ele muda). Editar o template muda todas as revistas que o usam, com aviso de quantas antes de salvar (como D-076) e queda do "Validado". Matriz é diferente: só muda na própria matriz e vale para todos.
+- **Motivo:** respostas 6 e 8a.
+- **Descartadas:** sobrescrita por bloco (D-062).
+- **Arquivos afetados:** futuro: `docs/modelo-er.md`.
+- **Status:** ativa. Substitui D-062. Em aberto: efeito da edição do template numa revista que já sobrescreveu.
+
+### D-100 — Variáveis: lista fixa no código, valores por projeto, falta bloqueia "Validado" (2026-10-29)
+- **Contexto:** D-075 tinha 3 marcadores com chaves simples e lista aberta.
+- **Decisão:** lista fixa no código (parceiro, nome do projeto, adjetivo pátrio em 4 variáveis: masc./fem. × sing./plural…). Valores só no projeto, que renasce vazio a cada ano. Sintaxe Handlebars `{{variavel}}`. Variável usada sem valor: destaque vermelho no preview e "Validado" bloqueado.
+- **Motivo:** respostas 10b, 11b, 12b, 13a.
+- **Descartadas:** valores no parceiro (durariam entre anos); lista criada pela interface; uma variável com 4 formas.
+- **Arquivos afetados:** futuro: código das variáveis, `docs/modelo-er.md`.
+- **Status:** ativa. Substitui D-075.
+
+### D-101 — Matriz continua por parceiro × ano; exceção nasce duplicando uma matriz (2026-10-29)
+- **Contexto:** "matriz como template".
+- **Decisão:** escolha de matriz fica em ParceiroAno (D-088), valendo para LP e MAT. Projeto que mudou no ano: duplicar uma matriz, ajustar a cópia e apontar o parceiro para ela (mais uma exceção à comunitária).
+- **Motivo:** respostas 15b e 16a.
+- **Descartadas:** matriz por revista; editar a matriz em uso.
+- **Arquivos afetados:** futuro: ação "Duplicar matriz".
+- **Status:** ativa.
+
+### D-102 — Página "Templates" com abas, atribuição em lote, quem edita (2026-10-29)
+- **Contexto:** onde ver, editar e atribuir templates e matrizes.
+- **Decisão:** página "Templates" com abas Textos F1, Textos F2, Matrizes, Variáveis. Atribuição de template e matriz selecionando vários projetos/revistas de uma vez; nada atribuído automaticamente. Editam: Pedagógica, Mídias Digitais e admin.
+- **Motivo:** respostas 17a, 24a, 25a.
+- **Descartadas:** páginas separadas; atribuição um a um; só admin.
+- **Arquivos afetados:** futuro: editor.
+- **Status:** ativa.
+
+### D-103 — F2 é o infográfico do svg-tour; vai ao impresso; entrega em zip por revista (2026-10-29)
+- **Contexto:** código do F2 em `~/dev/svg-tour` (JS puro, sem build: `common/svg-tour.js`, `svg-tour-modal.js`; página `avaliacao-e-curriculo/` com SVG nomeado à mão, `revista.json` com os passos do tour, `revista-modais.html` com os textos dos modais; empacotador `scripts/empacotar-avaliacao.py`). O SVG não tem `<text>`: os textos do desenho estão em curvas.
+- **Decisão:** trazer esse código para este repositório. Textos dos modais vão ao impresso com o "o que mudou". Entrega: um site estático por revista (LP e MAT separadas), F1 e F2 em sequência com navegação, em `.zip`.
+- **Motivo:** respostas 19, 20, 22, 23a.
+- **Descartadas:** site único com todas as revistas.
+- **Arquivos afetados:** futuro: cópia de `common/` do svg-tour, gerador do zip.
+- **Status:** ativa. Origem do SVG por parceiro em aberto.
+
+### D-104 — Template é usado ao vivo; vira cópia só quando o projeto edita (2026-10-29)
+- **Contexto:** resposta 6 falava em "cópia reclamada na associação", o que anularia a propagação da D-099.
+- **Decisão:** a revista lê o template ao vivo; a cópia nasce na primeira edição do texto pelo projeto. Template mudou e a revista tem cópia: o texto dela não muda, aparece aviso com diff, "Validado" segue permitido (D-087), e o usuário pode juntar os textos ou descartar a cópia e ficar com o template. Trocar de template descarta a cópia com confirmação forte (D-093).
+- **Motivo:** respostas 26a, 27a, 28a.
+- **Descartadas:** cópia na associação; template novo substituir a cópia sem perguntar.
+- **Arquivos afetados:** futuro: `docs/modelo-er.md`.
+- **Status:** ativa. Como funciona o "juntar" em aberto (rodada 4).
+
+### D-105 — Editor com "Inserir variável"; texto guardado em Markdown restrito + Handlebars (2026-10-29)
+- **Contexto:** resposta 29a; resposta 30 pediu sugestão do Claude.
+- **Decisão:** variável entra por menu e aparece como etiqueta colorida. Armazenamento: Markdown restrito (negrito, itálico, parágrafos, listas) com `{{variavel}}`, no `.hbs` e no banco. O editor só oferece esses 4 recursos.
+- **Motivo:** diff legível no git e na tela "o que mudou" do impresso (HTML mostraria tags); limita a formatação ao que o InDesign recebe; o mesmo arquivo serve para editar no código e na interface.
+- **Descartadas:** HTML — diff poluído e permite formatação fora do combinado.
+- **Arquivos afetados:** futuro: editor de template, `templates/*.hbs`.
+- **Status:** ativa.
+
+### D-106 — Ano novo: escolha de matriz e de template nasce vazia (2026-10-29)
+- **Contexto:** D-088 clonava a escolha de matriz/texto-modelo com ParceiroAno.
+- **Decisão:** no clone do ano, ParceiroAno nasce sem matriz e as revistas nascem sem template; "Validado" fica bloqueado até alguém escolher (atribuição em lote, D-102).
+- **Motivo:** resposta 31b: nada é atribuído automaticamente.
+- **Descartadas:** clonar a escolha do ano anterior.
+- **Arquivos afetados:** futuro: serviço de clone do ano, `docs/modelo-er.md`.
+- **Status:** ativa. Substitui a parte de clone da escolha da D-088.
+
+### D-107 — Variáveis: automáticas do cadastro, cópia manual do ano anterior, aba em planilha (2026-10-29)
+- **Contexto:** valores por projeto renascem vazios todo ano (D-100).
+- **Decisão:** parceiro, nome do projeto e ano são variáveis preenchidas sozinhas pelo cadastro. Botão "Copiar valores do ano anterior" por projeto (clique manual). Aba "Variáveis": tabela projetos × variáveis editável como planilha, com descrição de cada variável e templates onde aparece.
+- **Motivo:** respostas 32a, 33a, 34a.
+- **Descartadas:** digitar tudo de novo; aba só de documentação.
+- **Arquivos afetados:** futuro: editor (aba Variáveis).
+- **Status:** ativa. Lista completa de variáveis em aberto (resposta 35: ainda não se sabe).
+
+### D-108 — F2: SVG por revista com ids por convenção; template F2 = abertura, tour e modais (2026-10-29)
+- **Contexto:** SVG do infográfico tem textos em curvas e ids colocados à mão.
+- **Decisão:** o design entrega um SVG por parceiro × componente, já nomeado pela convenção; o upload na revista confere os ids e lista os que faltam. O template F2 contém o texto de abertura, os passos do tour e os textos dos modais; a quantidade de botões/modais é fixa por template. Os modais não têm dados do parceiro.
+- **Motivo:** respostas 36a, 37a, 38a, 39a, 40.
+- **Descartadas:** SVG único por template; sistema ou desenvolvedor nomeando ids.
+- **Arquivos afetados:** futuro: upload de SVG, validação de ids, template F2.
+- **Status:** ativa.
+
+### D-109 — Entrega e código: capa como campo, página única, planilha F2, svg-tour arquivado, bloqueio de template (2026-10-29)
+- **Contexto:** grupo J do grill-me.
+- **Decisão:** imagem de capa é campo da revista (fora do template). A revista é uma página só com menu de capítulos (F1, F2). O impresso recebe planilha com textos dos modais e do tour, como no F1. O código do svg-tour é copiado para cá e o repositório é arquivado. Template ganha bloqueio de escrita inteiro (D-081).
+- **Motivo:** respostas 41a, 42b, 43a, 44a, 45a.
+- **Descartadas:** capa no template; duas páginas; manter os dois repositórios.
+- **Arquivos afetados:** futuro: gerador do zip e das planilhas, cópia de `common/svg-tour*.js`.
+- **Status:** ativa.
+
+### D-110 — "Juntar" texto do projeto com template novo: proposta revisada, nunca automática (2026-10-29)
+- **Contexto:** D-104 deixou o "juntar" em aberto; D-062 recusou fusão sem revisão.
+- **Decisão:** o sistema propõe o texto juntado (fusão de três vias: versão do template usada na cópia, template novo, cópia do projeto), destaca cada trecho e só grava no clique "Aplicar". Trecho mexido pelos dois lados: o usuário escolhe "meu", "template" ou "editar à mão". A cópia guarda a versão do template de onde saiu (`versao_base`). Formato confirmado: Markdown restrito com `{{variavel}}` (D-105).
+- **Motivo:** resposta 46a; a revisão obrigatória resolve o risco de frase quebrada que motivou a D-062.
+- **Descartadas:** lado a lado sem proposta; fusão aplicada sem revisão.
+- **Arquivos afetados:** futuro: serviço de fusão, tela de juntar, `docs/modelo-er.md`.
+- **Status:** ~~substituída por D-115~~
+
+### D-111 — Template F2: um `.hbs` com uma seção por id; as seções são o gabarito do SVG (2026-10-29)
+- **Contexto:** o F2 tem ~11 textos (abertura, passos do tour, modais).
+- **Decisão:** um `.hbs` com seções `## passo1`, `## dlg-p2`…; o upload do SVG exige o id correspondente a cada seção (ex.: `## dlg-p2` → `btn-action-p2`). O projeto pode sobrescrever o texto do F2 com a mesma regra do F1 (D-104).
+- **Motivo:** respostas 47a, 48a, 49a.
+- **Descartadas:** um arquivo por texto; lista de ids cadastrada à parte; F2 sem sobrescrita.
+- **Arquivos afetados:** futuro: `templates/*.hbs`, validação do upload.
+- **Status:** ativa.
+
+### D-112 — Revista incompleta: sem template não há preview; faltar template, SVG ou capa bloqueia "Validado" (2026-10-29)
+- **Contexto:** D-106 faz a revista nascer sem template no ano novo.
+- **Decisão:** "Validado" bloqueado se faltar template, SVG do F2 ou imagem de capa. Sem template escolhido, o preview não abre. Novo upload de SVG não entra no "o que mudou" do impresso (só textos).
+- **Motivo:** respostas 50a, 51a, 52b.
+- **Descartadas:** preview com faixa no lugar do texto; aviso "SVG trocado" ao impresso.
+- **Arquivos afetados:** futuro: regras do "Validado", preview.
+- **Status:** ativa.
+
+### D-113 — Matriz duplicada guarda "duplicada de", só para consulta (2026-10-29)
+- **Contexto:** D-101 (exceção nasce duplicando uma matriz).
+- **Decisão:** a cópia guarda a matriz de origem e mostra o que difere dela, sem herdar nada.
+- **Motivo:** resposta 53a; coerente com "projeto não herda de outro projeto".
+- **Descartadas:** cópia sem referência à origem.
+- **Arquivos afetados:** futuro: `docs/modelo-er.md` (Matriz.duplicada_de).
+- **Status:** ativa.
+
+### D-114 — Template F1 com seções fixas `## introducao` e `## fechamento` (2026-10-29)
+- **Contexto:** o texto do F1 aparece antes e depois das escalas.
+- **Decisão:** o template F1 usa seções fixas, como o F2 (D-111); o sistema põe cada seção no seu lugar; sobrescrita pelo projeto segue a D-104.
+- **Motivo:** resposta 54a.
+- **Descartadas:** F1 com texto único antes das escalas.
+- **Arquivos afetados:** futuro: `templates/*.hbs`.
+- **Status:** ativa.
+
+### D-115 — Cópia do texto é por seção; "juntar" é lado a lado com edição à mão (substitui D-110) (2026-10-29)
+- **Contexto:** varredura com 7 agentes: cópia do documento inteiro deixava a revista fora de todas as seções por causa de uma correção; fusão de três vias custava serviço e tela de conflitos.
+- **Decisão:** só a seção editada vira cópia (guarda a versão do template de onde saiu); as demais leem o template ao vivo. Template mudou numa seção com cópia: aviso + tela "seu texto | template novo com diff", edição à mão ou "descartar cópia". Títulos de seção não são editáveis.
+- **Motivo:** respostas 55a e 56a.
+- **Descartadas:** cópia do documento inteiro (D-104 no ponto da granularidade); fusão de três vias automática (D-110).
+- **Arquivos afetados:** `docs/modelo-er.md` (revista_secao, template_versao).
+- **Status:** ativa. Substitui D-110; ajusta a granularidade da D-104.
+
+### D-116 — Preview abre sempre; seção sem template vira faixa vermelha (2026-10-29)
+- **Contexto:** D-112 fechava o preview sem template; no ano novo ninguém via nem as escalas.
+- **Decisão:** preview sempre abre; texto sem template aparece como faixa vermelha (mesmo destaque da variável sem valor). "Validado" continua bloqueado.
+- **Motivo:** resposta 57a.
+- **Descartadas:** preview fechado (resposta 52b).
+- **Arquivos afetados:** futuro: preview.
+- **Status:** ativa. Substitui a parte de preview da D-112.
+
+### D-117 — Revista sem cortes do componente é arquivada na mesma linha e volta sozinha (2026-10-29)
+- **Contexto:** nada dizia o que acontecia com a revista quando o parceiro perdia o componente.
+- **Decisão:** revista nunca é apagada: sem cortes do componente, fica arquivada (grava foto de arquivamento, congela), mantendo SVG, capa, cópias e fotos. Voltando os cortes no mesmo ano, a mesma linha é reativada. O projeto só é arquivado quando todas as revistas dele estão arquivadas.
+- **Motivo:** resposta 58a.
+- **Descartadas:** revista nova vazia herdando só a foto.
+- **Arquivos afetados:** `docs/modelo-er.md` (revista.arquivada_em).
+- **Status:** ativa. Complementa D-065/D-068/D-093/D-094 no nível da revista.
+
+### D-118 — Trocar SVG ou capa derruba o "Validado"; o impresso continua vendo só textos (2026-10-29)
+- **Contexto:** SVG de outro parceiro passaria pela checagem de ids sem ninguém revisar.
+- **Decisão:** o hash do "Validado" inclui o sha256 do SVG e da capa; a foto do impresso (diff) contém só textos (D-112).
+- **Motivo:** resposta 59a.
+- **Descartadas:** troca de arquivo sem revalidação.
+- **Arquivos afetados:** `docs/modelo-er.md`.
+- **Status:** ativa.
+
+### D-119 — Ano novo nasce em branco: cortes e escolhas são preenchidos de novo (substitui D-054 em parte) (2026-10-29)
+- **Contexto:** sugestão do ano anterior (pergunta 61) e variáveis por parceiro (60).
+- **Decisão:** o clone do ano copia só cadastros (etapas, componentes, cores, matrizes, templates). Cortes não são clonados: são preenchidos todos de novo, e os projetos nascem da cascata desses cortes novos. Sem sugestões do ano anterior. Valores das variáveis continuam só no projeto (D-100); "Copiar valores do ano anterior" só por projeto (D-107).
+- **Motivo:** respostas 60b, 61b, 63b ("o preenchimento dos cortes precisará ser feito todo de novo").
+- **Descartadas:** sugestão cinza do ano anterior; variável com escopo parceiro; cópia em lote; clonar cortes e participação (D-054).
+- **Arquivos afetados:** futuro: comando de abrir ano.
+- **Status:** ativa. Substitui a parte "cortes e participação" da D-054 e o mecanismo da D-085 (cascata dos cortes clonados → cascata dos cortes novos).
+
+### D-120 — Painel da temporada; validação em lote envia o hash de cada revista (2026-10-29)
+- **Contexto:** "Validado" bloqueado por vários motivos espalhados; D-078 validava em lote sem ninguém ver.
+- **Decisão:** tela principal com uma linha por revista (Matriz, Template F1, Template F2, Variáveis, SVG, Capa, Validado, Impresso; ✓ ou "falta" com link para a correção) e ações em lote. Validação em lote mostra o diff de cada revista e envia os pares (revista, hash visto); o servidor recusa as que mudaram.
+- **Motivo:** respostas 62a e 64a.
+- **Descartadas:** pendências espalhadas por aba; lote sem hash.
+- **Arquivos afetados:** futuro: admin.
+- **Status:** ativa. Complementa D-078 e D-089.
+
+### D-121 — Interface no Django admin; bloqueio de edição mantido (2026-10-29)
+- **Contexto:** ponytail: planilha de variáveis, ações em lote e cadastros saem quase de graça no admin.
+- **Decisão:** a interface nova é o Django admin com páginas do servidor; o editor React atual não segue. Bloqueio de edição continua (D-080/D-081/D-109); a renovação passa a ser um JS pequeno na página do admin. Ações em lote pulam projetos travados e listam os pulados.
+- **Motivo:** respostas 65b e 66a.
+- **Descartadas:** manter o React (`editor/`); controle otimista.
+- **Arquivos afetados:** futuro: app Django; `editor/` aposentado.
+- **Status:** ativa.
+
+### D-122 — Fascículo é lista fixa no código (F1, F2) (substitui D-096) (2026-10-29)
+- **Contexto:** F1 e F2 têm renderizadores próprios; um F3 exigiria código de qualquer jeito.
+- **Decisão:** coluna `fasciculo` com CHECK ('F1', 'F2'), sem tabela.
+- **Motivo:** resposta 67a.
+- **Descartadas:** tabela de fascículos (D-096).
+- **Arquivos afetados:** `docs/modelo-er.md`.
+- **Status:** ativa. Substitui D-096.
+
+### D-123 — Editor é caixa de texto Markdown com "Inserir variável" e preview ao vivo (2026-10-29)
+- **Contexto:** etiquetas coloridas dentro do texto exigem editor rico (semanas).
+- **Decisão:** textarea em Markdown restrito; botão "Inserir variável" põe `{{var}}` no cursor; preview ao lado com as variáveis coloridas; ao salvar, recusa formatação fora do combinado e `{{` fora da lista.
+- **Motivo:** resposta 68a.
+- **Descartadas:** editor rico com etiquetas (parte da D-105).
+- **Arquivos afetados:** futuro: widget do admin.
+- **Status:** ativa. Formato guardado da D-105 continua.
+
+### D-124 — FKs compostas de ano mantidas; matriz pode ser duplicada de qualquer ano (2026-10-29)
+- **Contexto:** ponytail propôs cortar a D-090; os dois agentes de banco defenderam.
+- **Decisão:** manter FKs compostas (RunSQL com `reverse_sql`, nome `fk_<tabela>_<alvo>_ano`, índice próprio, teste que lista as constraints em `pg_constraint`). `matriz.duplicada_de` é FK simples, `ON DELETE SET NULL`, origem de qualquer ano.
+- **Motivo:** respostas 69a e 70b.
+- **Descartadas:** validar ano só no código; duplicar só do mesmo ano.
+- **Arquivos afetados:** `docs/modelo-er.md`.
+- **Status:** ativa.
+
+### D-125 — Correções técnicas da varredura (2026-10-29)
+- **Contexto:** achados sem decisão de negócio; aprovados junto com as perguntas 55–70.
+- **Decisão:** (1) ER sem blocos; tabelas revista, revista_fasciculo, revista_secao, template, template_versao, `projeto.ano_id`. (2) Base da cópia vem de `template_versao` (só inserção), não do histórico. (3) Hash em Python sobre JSON canônico (`sort_keys`); "Validado" cai só na revista cujo conteúdo mudou (corrige "derruba as duas" da D-097). (4) Bloqueio por `INSERT … ON CONFLICT … WHERE expira_em < now()`; cascata com `SELECT … FOR UPDATE` em parceiro_ano; foto em REPEATABLE READ; abrir ano em uma transação. (5) SVG lido com defusedxml, lista de tags/atributos, até 3 MB, ids/classes prefixados; Markdown com HTML desligado; zip com JSON/SVG embutidos; atalhos do F1 fora do F2; seções × ids do SVG conferidas no "Validado" e ao salvar template.
+- **Motivo:** varredura de 7 agentes.
+- **Descartadas:** texto-base pelo django-simple-history; hash do JSONB guardado; motor Handlebars aberto.
+- **Arquivos afetados:** `docs/modelo-er.md`.
+- **Status:** ativa. Reescreve a D-093 sem blocos; substitui D-063 (parte do texto), D-070 e o campo `texto_modelo` da D-088.
+
+### D-126 — Plano de construção S01–S18 numa branch exclusiva (2026-10-29)
+- **Contexto:** muitas decisões (D-046 a D-125) geram tarefas distintas; usuário pediu cronologia do código com `/ecc:blueprint`.
+- **Decisão:** plano em `plans/revista-express-django.md`, 5 fases (A fundação, B serviços paralelos, C montagem, D admin, E ano e virada), 22 passos (S01–S18 com S03b, S11a, S11b1, S11b2, S11c). Integração na branch `refatoracao-django` (a partir de `dev`); `dev` e `main` ficam intactas; cada passo em `feat/sNN-*` com PR para `refatoracao-django`. App em `app/` (projeto `sistema`, app `nucleo`). Código antigo é copiado, nunca movido, até S17. Escolhas que a revisão adversarial trouxe: JS/CSS da revista generalizados para 2 a 5 padrões (S03b); foto do impresso inclui escalas do F1 e textos, sem SVG e capa (corrige a leitura "só textos" da D-112); seções do F2 têm a 1ª linha como título e há seção `abertura`; `svg_ids` guardados sem o prefixo `f2-`; variáveis como colunas de `projeto`; na Fase B só S14 cria migração.
+- **Motivo:** pedido do usuário ("criar uma branch nova exclusivamente para essa refatoração; mantemos a dev e a main como estão").
+- **Descartadas:** integrar direto na `dev`; partir da branch antiga `django` (Django 5.2 + JORNADA).
+- **Arquivos afetados:** `plans/revista-express-django.md`, `state.md`.
+- **Status:** ativa.
+
+### D-127 — Fase A com commit local por passo, branches encadeadas (2026-10-29 15:00)
+- **Contexto:** o usuário pediu a Fase A sem commit, com subagentes em worktree. Um worktree nasce do último commit e não vê arquivos não commitados, então S02/S03/S03b não receberiam o S01 e as branches `feat/sNN` ficariam vazias.
+- **Decisão:** cada passo faz um commit local na sua `feat/sNN-*`, sem push e sem PR. As branches são encadeadas: `feat/s01-esqueleto` sai de `refatoracao-django`; `feat/s02-*` e `feat/s03b-*` saem de `feat/s01-esqueleto`; `feat/s03-*` sai de `feat/s02-*`. O merge em `refatoracao-django` fica para quando o usuário pedir. O `state.md` continua não commitado no checkout principal.
+- **Motivo:** escolha do usuário entre 3 opções; é a única que mantém as branches por passo e permite worktrees em paralelo.
+- **Descartadas:** tudo sem commit no checkout principal (passos misturados, sem branches); parar após cada passo para o usuário commitar (bloqueia o paralelismo).
+- **Arquivos afetados:** nenhum (fluxo de git).
+- **Status:** ativa.
+
+### D-128 — Configuração do esqueleto S01 (2026-10-29 15:10)
+- **Contexto:** decisões do subagente do S01, sem impacto de negócio.
+- **Decisão:** `DATABASE_URL` lida com `urllib.parse`; defaults de dev no compose (`POSTGRES_PASSWORD:-revista`, `DATABASE_URL` → `db`, `DJANGO_SECRET_KEY` só de dev), sobrescrevíveis pelo `.env`; CMD do Dockerfile roda `migrate` e `runserver`; `PYTHONDONTWRITEBYTECODE=1`; login do admin no Playwright só roda com `E2E_ADMIN_USUARIO`/`E2E_ADMIN_SENHA`; `HistoryRequestMiddleware`; `TIME_ZONE=America/Sao_Paulo`; `db`/`app` sem `container_name` e Postgres sem porta no host.
+- **Motivo:** `run --rm app ...` funciona sem `.env`, em vários worktrees ao mesmo tempo, sem segredo versionado e sem dependência nova.
+- **Descartadas:** `dj-database-url` (dependência nova); `env_file: .env` no `app` (quebra sem `.env`); superusuário em migration/fixture (segredo no repositório); gunicorn (fora do escopo de dev).
+- **Arquivos afetados:** `docker-compose.yml`, `app/Dockerfile`, `app/sistema/settings.py`, `app/e2e/*`, `app/.env.example`
+- **Status:** ativa. Revisão (django-reviewer): 0 críticos; aplicados healthcheck por TCP (`pg_isready -h 127.0.0.1`), porta `127.0.0.1:${APP_PORT:-8000}`, `E2E_BASE_URL`, versões com limite (simple-history 3.13, markdown-it-py 4.2…), parsing de `DJANGO_DEBUG`/`DATABASE_URL` vazio. Não aplicados (menores): usuário não-root no container, aviso de senha no `.env.example`.
+
+### D-129 — Modelos de cadastro e matriz (S02) (2026-10-29 15:40)
+- **Contexto:** decisões do subagente do S02 que o ER não fixava.
+- **Decisão:** `fk_composta(tabela, alvo, colunas=None, colunas_alvo=None, nome=None)` devolve um `RunSQL` que cria FK (NO ACTION, MATCH SIMPLE: nulo passa) e índice `ix_*`, e o `reverse_sql` derruba os dois; FKs compostas ficam em migração escrita à mão separada da gerada (0002); `db_table` com os nomes do ER (`matriz_etapa_cc`…); `IntegerField` com CHECK nomeado em vez de `PositiveIntegerField` (CHECKs automáticos fora do ER); CHECK de tamanho só em `codigo` (20), `nome` (200), `tarefa.arquivo` (500), textos longos sem limite; MEC com PROTECT em matriz/etapa/componente/ano, CASCADE só em descritor e tarefa; `django.contrib.postgres` em `INSTALLED_APPS` (`ArrayField`).
+- **Motivo:** caso comum de FK composta em uma linha; catálogo do banco igual à lista do ER; não barrar importação real.
+- **Descartadas:** assinatura de `fk_composta` com tupla obrigatória (verbosa); nomes padrão `nucleo_*`; CHECK em textos longos.
+- **Arquivos afetados:** `app/nucleo/models/{cadastro,matriz}.py`, `app/nucleo/db.py`, `app/nucleo/migrations/000{1,2}*.py`, `app/nucleo/tests/test_constraints.py`, `app/sistema/settings.py`
+- **Status:** ativa. Divergências do ER a corrigir no doc: índice próprio da FK composta (D-124 vence o "nenhum índice extra"); n do CHECK de tamanho não definido; apagar matriz duplicada com MEC é recusado (PROTECT).
+
+### D-130 — Formato do JSON do F1 para N padrões (S03b) (2026-10-29 15:50)
+- **Contexto:** o JS da revista só tratava 4 padrões; o resolver do S07 vai gerar o JSON que ele lê.
+- **Decisão:** por etapa: `scaleRange {min,max}`, `cortes {"padrao-1".."padrao-<n-1>"}` (1 a 4, crescentes), `padroes [{chave, rotulo}]` (n = cortes + 1, de baixo para cima) e cada descritor com `scale` dividido em `padrao-1..n`, com as linhas `---` prontas. O número de padrões sai de `cortes` (`padroesDeCima(cortes)`); `padroes[]` só dá os rótulos, escapados. Cores por `--color-padrao-k` e `--color-padrao-k-bg`; CSS vai até o 5º (`#ffffff`). Teste Playwright sem servidor: `page.route` num host fictício monta a página a partir de `app/e2e/fixtures/f1.html`.
+- **Motivo:** a assinatura de `montarFaixasRegua` não muda (testes antigos intactos); uma fonte só para n; teste não disputa a porta 8000.
+- **Descartadas:** passar a lista de padrões à régua (duas fontes para n); cor inline por `--p`; `webServer` estático (outro processo e outra porta).
+- **Arquivos afetados:** `app/nucleo/static/revista/f1/*`, `app/nucleo/tests/fixtures/revista-*.json`, `app/e2e/fixtures/f1.html`, `app/e2e/tests/f1-fixture.spec.ts`
+- **Status:** ativa. Contrato com o S07: o resolver sempre gera `padroes[]` com n = cortes + 1.
+
+### D-131 — JSON inválido do F1 falha de forma explícita (2026-10-29 16:00)
+- **Contexto:** revisão do S03b: `padroes[]` ausente ou com tamanho errado deixava rótulos vazios sem aviso, e cortes fora de sequência punham `NaN` na régua.
+- **Decisão:** o JS valida cada etapa ao carregar (1 a 4 cortes `padrao-1..k` crescentes dentro de (min, max); `padroes` com k+1 chaves em ordem). Inválido: `console.error` com etapa e motivo, e a escala da etapa não é renderizada.
+- **Motivo:** JSON errado é bug do resolver (S07); numa página que vai ao impresso, rótulo inventado esconderia o bug.
+- **Descartadas:** rótulo de reserva "Padrão 0N" (mascara o erro).
+- **Arquivos afetados:** `app/nucleo/static/revista/f1/script.js`, `app/e2e/tests/f1-fixture.spec.ts`
+- **Status:** ativa. Etapa inválida: só a escala some; descritor, pré-requisitos, BNCC e as outras etapas renderizam.
+
+### D-132 — Revisões do S02 aplicadas no S02/S03 (2026-10-29 16:00)
+- **Contexto:** revisão de banco do S02 (0 críticos): `duplicada_de` ficava NO ACTION no banco (contradiz D-124); `DB_SET_NULL` é recusado pelo Django 6.1 ao misturar com PROTECT (fields.E323).
+- **Decisão:** `duplicada_de` com `db_constraint=False` + `RunSQL` `fk_matriz_duplicada_de … ON DELETE SET NULL`; teste que roda o `reverse_sql`; teste de componente de outro ano. No S03: `nome` obrigatório em `fk_composta` quando há `colunas` (FKs sem ano não ganham sufixo `_ano`); colunas de FK composta NOT NULL, exceto as anuláveis do ER (MATCH SIMPLE desliga a checagem com nulo), conferido por `attnotnull`; teste de catálogo sem depender do prefixo `fk_`.
+- **Motivo:** o banco é quem garante a coerência (D-090, D-124).
+- **Descartadas:** `DB_SET_NULL` (E323); `NOT VALID` em `fk_composta` (tabelas nascem vazias; fica para quando houver dados).
+- **Arquivos afetados:** `app/nucleo/models/matriz.py`, `app/nucleo/migrations/*`, `app/nucleo/db.py`, `app/nucleo/tests/test_constraints.py`
+- **Status:** ativa.
+
+### D-133 — Modelos de projeto, revista, texto e controle (S03) (2026-10-29 16:30)
+- **Contexto:** decisões do subagente do S03 que o ER não fixava.
+- **Decisão:** `projeto_passo` ganha `ano_id` e 3 FKs compostas (projeto, etapa, componente); `projeto_cor` sem FK composta (só aponta para o projeto); `revista_fasciculo.componente_id/ano_id` e `revista_secao.template_id` como `ForeignKey` (FK simples e índice); variáveis como `TextField` declarados à mão com CHECK de 200 (`variaveis.TAMANHO_MAX`), conferidos contra `VARIAVEIS` por teste; corte com dois CHECKs (`corte_valores_1a4` por `cardinality`, `corte_valores_sem_nulo`); troca de template com cópias recusada pela FK `(revista_fasciculo_id, template_id)` NO ACTION no UPDATE; CASCADE em revista → fascículo → seção e nos alvos/usuário de `Bloqueio`, PROTECT no resto; `TemplateVersao.criada_por` anulável (seed sem usuário); `TemplateVersao.save()` recusa update.
+- **Motivo:** o banco garante coerência de ano e de template; trava vencida não pode impedir apagar o alvo; histórico precisa das colunas de variável.
+- **Descartadas:** `add_to_class` para as variáveis (a tabela de histórico nasce sem elas); `valores__len` (`array_length` de `[]` é NULL e passaria); `ON UPDATE CASCADE` na FK da seção (o ER não prevê); trigger de imutabilidade em `template_versao` (marcado `ponytail:`; entra se outro cliente gravar no banco).
+- **Arquivos afetados:** `app/nucleo/models/{projeto,texto,revista,controle}.py`, `app/nucleo/variaveis.py`, `app/nucleo/db.py`, `app/nucleo/migrations/000{3,4,5}*.py`, `app/nucleo/tests/test_{revista,constraints}.py`
+- **Status:** ativa. Revisão (database-reviewer): 0 críticos; `template_versao` ainda aceitava UPDATE por `QuerySet.update()`/`save()` com pk explícito → trigger `BEFORE UPDATE OR DELETE` no banco (substitui o "trigger só se outro cliente gravar" desta decisão); testes de recusa por FK composta. `criada_por` nulo mantido só para o seed. Ajustar no `docs/modelo-er.md`: CASCADE de `bloqueio` (só no ORM; no banco NO ACTION); `projeto_cor` sem `ano_id`; `projeto_passo.ano_id`; colunas "só para FK composta" marcadas como FK; `criada_por` nulo; tamanhos dos textos curtos; índice próprio por FK composta.
+
 ## Perguntas em aberto
+- [x] (D-115 a D-124) Varredura 7 agentes (2026-10-29), perguntas 55–70: cópia por seção; juntar lado a lado × proposta; preview sem template; ciclo de vida da revista sem cortes; SVG/capa derrubam Validado; variável com escopo parceiro; sugestão do ano anterior; painel da temporada; copiar em lote; validar em lote com hash; React × Django admin; bloqueio × otimista; fascículo fixo; editor textarea × etiquetas; FK composta; matriz duplicada entre anos — depende de: usuário
+- [x] (D-125) Correções técnicas da varredura (sem decisão do usuário): ER sem TextoModelo/BlocoTexto/ProjetoBloco e com Revista/RevistaFasciculo/Projeto.ano_id; TemplateVersao só de inserção como base da fusão; hash em Python com JSON canônico (só cai a revista que usa a variável, corrige D-097); bloqueio por `INSERT … ON CONFLICT … WHERE expira_em < now()`; cascata com `FOR UPDATE` em ParceiroAno, foto em REPEATABLE READ, clone em uma transação; SVG sanitizado (defusedxml, lista de tags, 3 MB, ids prefixados); Markdown com `html: false` e `{{var}}` validado por regex; zip com JSON/SVG embutidos no index.html; atalhos do F1 só fora do F2; revalidar seções × ids do SVG no Validado e ao salvar template; marcar D-063 (texto), D-070 e D-088 (texto_modelo) como substituídas e reescrever D-093 — depende de: aprovação das perguntas 55–70
+- [x] (D-114) Template F1: o texto aparece antes e depois das escalas; usar seções fixas (`## introducao`, `## fechamento`) como no F2? — depende de: usuário
+- [x] (D-110 a D-113) Grill-me fascículos, rodada 4 (2026-10-29): 8 perguntas (juntar textos, estrutura do template F2, sobrescrita no F2, revista incompleta, SVG/capa no impresso) — depende de: usuário
+- [ ] Lista completa de variáveis (D-107) — depende de: equipe pedagógica
+- [x] (D-104 a D-109) Grill-me fascículos, rodada 3 (2026-10-29): 20 perguntas (template × sobrescrita, clone do ano, variáveis, SVG do F2, pacote, impresso, bloqueio) — depende de: usuário
+- [x] (D-095 a D-103) Grill-me fascículos/templates (2026-10-29), rodadas 1 e 2 (25 perguntas, enviadas juntas a pedido do usuário): unidade revista × projeto; template no código ou no banco; blocos × documento .hbs; variáveis por parceiro ou projeto; escolha de matriz/template por revista ou por ParceiroAno; repositório do infográfico — depende de: usuário
 - [x] (corrigido) PDF de estudo v2 desatualizado em 4 pontos: seção 8 e questão 10 (intervalo mínimo × passo, D-091), desafio (ParceiroAno já resolvido, D-088), bloqueio sem `sessao_edicao` (D-093) — depende de: usuário pedir a correção
 - [x] (D-088 a D-094) Revisão do ER (2026-10-27), alta: (1) escolha de matriz/texto-modelo em ParceiroAno, não no Projeto; (2) clique "Validado" e "Revista Impressa Atualizada" devem enviar o hash da versão que a pessoa viu, e o servidor recusa se o atual for outro (senão um ajuste passa sem ser visto); (3) coerência de ano entre FKs (Corte, Projeto, MEC, sobrescritas) por FK composta ou derivando o ano do pai; (4) `passo` e `intervalo_minimo` são o mesmo campo ("Intervalo mínimo" na UI é o passo) — erro do rascunho; o PDF v2 (seção 8, questão 10) usa 125/100 como se fosse outro conceito; (5) blocos de texto só têm texto, mas a página hoje tem imagem (`heroImagem`) e parágrafos — depende de: usuário decidir
 - [x] (D-088 a D-094) Revisão do ER, média: corte sem MatrizEtapaCC na matriz escolhida; projeto arquivado deve congelar (não resolver com cortes vivos); ProjetoBloco ao trocar de texto-modelo ou remover bloco; bloquear "Validado" com nome "… - NOME DO PROJETO"; Bloqueio precisa da sessão de edição (aba), como hoje, e ficar fora do histórico — depende de: usuário
@@ -897,3 +1228,19 @@ Imprimir `docs/Modelagem_Banco_Conceitos_Essenciais.pdf` (v2 corrigido, 13 pági
 - Revisão do ER: revisor independente (database-reviewer) + comparação com o sistema atual. 10 achados (5 altos, 5 médios) e 3 perguntas em "Perguntas em aberto". Refutados: "bloqueio expirado trava para sempre" (a aquisição sobrescreve o expirado, testado no lab) e "ordem dos grupos com tamanhos diferentes" (prefixo menor vem antes, bate com 2EF-MT).
 - 10 correções da revisão aplicadas ao ER (D-088 a D-094): ParceiroAno, hash da versão vista, FKs compostas de ano, passo único, blocos tipados, regras médias. `docs/modelo-er.md` e PDF (6 páginas) regerados; Mermaid conferido renderizado.
 - PDF de estudo v2 corrigido para D-088 a D-094: ParceiroAno na FK composta e no clone (seção 7), passo = "Intervalo mínimo" (seção 8), hash da versão vista (seção 9), bloqueio por usuário + aba (seção 10), questões 6, 10 e desafio reescritos. Reverificado em PostgreSQL 17: FK composta com matriz NULL é aceita; `Coalesce` erra a sobrescrita NULL de propósito (devolveu 25), `Exists` + `Case` acerta (NULL); aba 2 da mesma usuária é recusada.
+### 2026-10-28
+- Design system da revista impressa extraído dos 3 PDFs SAEGO 2025 (Alfa, LP, MT) com /impeccable document → `docs/design-revista-impressa.md` (tokens, tipografia, layout, componentes). `DESIGN.md` do editor não foi alterado. Achado: o impresso usa rampa verde nos padrões (#b8ffd8 → #00662e), diferente do padrão vermelho→azul do editor.
+### 2026-10-29 12:20
+- Novo grill-me: fascículos 1 (escalas) e 2 (infográfico) na mesma revista por componente (LP/MAT), templates de texto por fascículo escolhidos pelo usuário, matrizes como template, página de Templates, variáveis por projeto. Rodada 1 enviada; 25 respostas registradas (D-095 a D-103); rodada 3 enviada; conflita com D-088 (escolha em ParceiroAno, não no projeto) e D-070/D-075 (marcadores `{X}` × Handlebars).
+- Varredura com 7 agentes (modelagem, contradições, UX, ponytail, casos-limite, postgres-patterns, postgres-best-practices): achados consolidados em 16 perguntas e 1 lista de correções técnicas.
+- ER reescrito com postgres-best-practices (D-115 a D-125). Blueprint S01–S18 revisado por agente adversarial (5 críticos, 7 importantes corrigidos) e aprovado; branch `refatoracao-django` criada (D-126).
+### 2026-10-29 15:00
+- Fase A iniciada (S01, S02, S03, S03b). Decisão de git: commit local por passo, branches encadeadas (D-127). S01 rodando num subagente em worktree.
+- S01 verificado e revisado (0 críticos, 4 correções em 7c278b4). S02 e S03b disparados em paralelo.
+- S02 verificado (12 testes, ciclo migrate zero/migrate OK), commit 44b9283 em `feat/s02-cadastro-matriz`; revisão de banco em andamento.
+- S03b verificado (régua ok, Playwright 4/4), commit fcdf714 em `feat/s03b-revista-n-padroes`; revisão de JS em andamento.
+- Revisões S02 (banco) e S03b (JS): 0 críticos. Correções importantes enviadas aos agentes (D-131, D-132); S03 começa logo após o fix do S02.
+- S03b concluído: fcdf714 + 877c96d em `feat/s03b-revista-n-padroes`; régua ok, Playwright f1-fixture 8/8.
+- S02 concluído: 44b9283 + 8137471 (15 testes). S03 verificado: 57aafb7 em `feat/s03-projeto-revista` (27 testes, ciclo migrate OK); revisão de banco em andamento.
+- S03 concluído: 57aafb7 + abc9e5c (29 testes; trigger só-INSERT em `template_versao`; uma recusa testada por FK composta). Fase A concluída.
+- Merge local da Fase A em `refatoracao-django` a pedido do usuário: ff até abc9e5c + merge de `feat/s03b-revista-n-padroes` (1125cdb), sem conflito; reverificado (29 testes, régua, Playwright 8/8).
