@@ -1,0 +1,24 @@
+{% extends "admin/base_site.html" %}
+{% comment %}Lote "Escolher matriz" / "Escolher template F1/F2" (D-102, D-121).{% endcomment %}
+{% block content %}
+<div id="content-main">
+{% include "nucleo/_filtros.html" %}
+<p>Projetos em edição por outra sessão são pulados e listados na mensagem.</p>
+{% if form %}
+<form method="post">{% csrf_token %}
+  {% if form.non_field_errors %}<p class="errornote">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+  <fieldset class="module aligned">
+    {% for campo in form %}
+    <div class="form-row">
+      {{ campo.errors }}
+      <div class="flex-container"><label>{{ campo.label }}:</label> {{ campo }}</div>
+    </div>
+    {% endfor %}
+  </fieldset>
+  <div class="submit-row"><input type="submit" class="default" value="Aplicar aos selecionados"></div>
+</form>
+{% else %}
+<p>{{ vazio }}</p>
+{% endif %}
+</div>
+{% endblock %}
