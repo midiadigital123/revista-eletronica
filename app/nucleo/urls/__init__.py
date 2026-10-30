@@ -13,6 +13,7 @@ def inicio(request):
 urlpatterns = [
     path("", inicio, name="inicio"),
     path("bloqueio/", include("nucleo.urls.bloqueio")),
+    path("conta/", include("nucleo.urls.conta")),
     path("impresso/", include("nucleo.urls.impresso")),
     path("painel/", include("nucleo.urls.painel")),
     path("preview/", include("nucleo.urls.preview")),
