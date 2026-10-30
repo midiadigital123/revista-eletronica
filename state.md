@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo 16 de 22: S11a (5e22020), S11b1 (975c5fd) e S11c (5de1a91) concluídos com commit local. S11b2 com 1º commit 95c6790 em `feat/s11b2-copia-secao` (sobre o merge 2b1f8b2 de S11c), verificado; correções da revisão (D-171) NÃO aplicadas — subagente parado a pedido do usuário, worktree limpo.
-Funcionando: em cada `feat/s11*`, suíte OK (8 de PDF pulados), `makemigrations --check` limpo; Playwright cortes, templates-admin e revista-textos passam. Nada entrou em `refatoracao-django`; nada no GitHub.
-Quebrado/pendente: D-171 (trava do fascículo na troca com cópias; aba Textos de revista arquivada mostra o template ao vivo); S12 e S13 não iniciados; merge da Fase D em `refatoracao-django` + push pedidos para o fim da fase.
+Passo 17 de 22: Fase D até S11c concluída e no GitHub (D-171 = 74bf143 juntada em `refatoracao-django`). Próximo: S12.
+Funcionando: em cada `feat/s11*`, suíte OK (8 de PDF pulados), `makemigrations --check` limpo; Playwright cortes, templates-admin e revista-textos passam.
+Quebrado/pendente: S12, S13, S17, S18 não iniciados; auditoria de código com cara de IA rodando.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Retomar: disparar um subagente no worktree do S11b2 (`/home/otavio.peres/dev/revista-eletronica/.claude/worktrees/agent-aac9ba4e9419426aa`, branch `feat/s11b2-copia-secao`) com as correções da D-171 e o 2º commit `fix(s11b2)`.
+Disparar o S12 (painel da temporada + Validado) numa branch `feat/s12-painel` a partir de `refatoracao-django`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -27,9 +27,9 @@ Retomar: disparar um subagente no worktree do S11b2 (`/home/otavio.peres/dev/rev
 13. [x] S15 — Zip por revista
 14. [x] S11a — Admin: cadastros, cortes, matriz
 15. [x] S11b1 — Admin: templates
-16. [ ] S11b2 — Admin: cópia por seção  ← agora
+16. [x] S11b2 — Admin: cópia por seção
 17. [x] S11c — Admin: projeto, variáveis, arquivos, lote
-18. [ ] S12 — Painel + Validado
+18. [ ] S12 — Painel + Validado  ← agora
 19. [ ] S13 — Impresso + planilhas
 20. [x] S16 — Abrir ano
 21. [ ] S17 — Carga 2026 + desligar o antigo
@@ -1409,7 +1409,7 @@ Retomar: disparar um subagente no worktree do S11b2 (`/home/otavio.peres/dev/rev
 - **Motivo:** confirmação forte só vale se a contagem confirmada for a que se apaga; o Impresso revisa o que sai no zip.
 - **Descartadas:** só avisar "texto congelado" na arquivada (mostraria o texto errado).
 - **Arquivos afetados:** `app/nucleo/admin/revista.py`, testes
-- **Status:** pendente. Subagente parado antes de aplicar (pedido do usuário, 2026-10-30); worktree em 95c6790, limpo.
+- **Status:** ativa. Commit local 74bf143 em `feat/s11b2-copia-secao`. Verificado por mim: suíte 279 OK (8 pulados), `makemigrations --check` limpo; Playwright revista-textos + templates-admin 2/2 (subagente). Fora do escopo: troca de template em revista arquivada no mesmo envio não é travada (só `gravar_textos` recusa); nesse caso ainda sai o "alterado com sucesso" do Django.
 
 ## Perguntas em aberto
 - [x] (D-115 a D-124) Varredura 7 agentes (2026-10-29), perguntas 55–70: cópia por seção; juntar lado a lado × proposta; preview sem template; ciclo de vida da revista sem cortes; SVG/capa derrubam Validado; variável com escopo parceiro; sugestão do ano anterior; painel da temporada; copiar em lote; validar em lote com hash; React × Django admin; bloqueio × otimista; fascículo fixo; editor textarea × etiquetas; FK composta; matriz duplicada entre anos — depende de: usuário
@@ -1624,3 +1624,12 @@ Retomar: disparar um subagente no worktree do S11b2 (`/home/otavio.peres/dev/rev
 - Revisão do S11b2: 0 críticos, 2 importantes; correções enviadas (D-171).
 - Usuário: cópia editada até ficar igual ao template continua cópia (D-170).
 - Sessão encerrada a pedido do usuário: subagente das correções do S11b2 parado sem mudanças; retomar pela D-171.
+### 2026-10-30 09:30
+- Usuário pediu "concluir a Fase D". Eu não li o `state.md` atualizado (só o da minha sessão anterior) e perguntei se era a Fase C; o usuário respondeu que sim, com base na minha premissa errada. Disparei um S07 duplicado: o subagente rodou `checkout -B feat/s07-resolver 7a0bfcc` e moveu a branch já juntada. Desfeito: ponteiro de volta em 32d91db (contido em `refatoracao-django`), worktree do S07 duplicado em detached HEAD (2a13061, descartável), minha edição do `state.md` descartada. Nada de `refatoracao-django` foi alterado.
+- Fase D retomada pela D-171: subagente das correções no worktree do S11b2.
+### 2026-10-30 10:30
+- Conferência do plano: Fase D (S11a/b1/b2/c) já em `refatoracao-django` e no GitHub; D-171 pendente; "Estado atual" corrigido.
+- D-171 disparada: subagente no worktree do S11b2.
+- Auditoria de código com cara de IA (ponytail + tech-debt) disparada, só leitura, em `app/`; relatório no scratchpad da sessão.
+- D-171 concluída: 74bf143, suíte 279 OK (8 pulados) verificada por mim.
+- D-171 juntada em `refatoracao-django` e push feito.
