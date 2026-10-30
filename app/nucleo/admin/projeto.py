@@ -7,7 +7,7 @@ leitura (D-093). Rotas próprias (fora do mixin): aba Variáveis e lote "Escolhe
 from django import forms
 from django.contrib import admin
 from django.db import models
-from django.urls import path, reverse
+from django.urls import reverse
 
 from nucleo.admin import lote, variaveis
 from nucleo.admin.bloqueio import BloqueioAdminMixin
@@ -110,12 +110,9 @@ class ProjetoAdmin(BloqueioAdminMixin, admin.ModelAdmin):
         return super().has_change_permission(request, obj)
 
     def get_urls(self):
-        def rota(caminho, view, nome):
-            return path(caminho, self.admin_site.admin_view(lambda r: view(self, r)), name=f"nucleo_projeto_{nome}")
-
         return [
-            rota("variaveis/", variaveis.variaveis, "variaveis"),
-            rota("escolher-matriz/", lote.escolher_matriz, "escolher_matriz"),
+            lote.rota(self, "variaveis/", lambda r: variaveis.variaveis(self, r), "variaveis"),
+            lote.rota(self, "escolher-matriz/", lambda r: lote.escolher_matriz(self, r), "escolher_matriz"),
         ] + super().get_urls()
 
     def changelist_view(self, request, extra_context=None):

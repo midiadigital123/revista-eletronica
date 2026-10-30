@@ -14,6 +14,7 @@ from django.db import transaction
 from django.db.models import Exists, OuterRef, Prefetch
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
+from django.urls import path
 from django.utils.http import urlencode
 
 from nucleo.models import (
@@ -93,6 +94,11 @@ def escolher_ano(request):
     pedido = request.GET.get("ano", "")
     ano = next((a for a in anos if str(a.ano) == pedido), anos[0] if anos else None)
     return anos, ano
+
+
+def rota(model_admin, caminho, view, nome):
+    """path() de uma view extra do admin, com login/permissão e nome "nucleo_<modelo>_<nome>"."""
+    return path(caminho, model_admin.admin_site.admin_view(view), name=f"nucleo_{model_admin.opts.model_name}_{nome}")
 
 
 def filtro(rotulo, opcoes, ativo, chave, extra=None):

@@ -7,17 +7,7 @@
 // Os parceiros são criados pelo próprio teste, com nome único por execução, e ficam no banco:
 // rode só contra um banco descartável (o do seu worktree), nunca contra dados reais.
 import { expect, test, type Page } from "@playwright/test";
-
-const usuario = process.env.E2E_ADMIN_USUARIO;
-const senha = process.env.E2E_ADMIN_SENHA;
-
-async function entrar(page: Page) {
-  await page.goto("/admin/login/");
-  await page.fill("#id_username", usuario!);
-  await page.fill("#id_password", senha!);
-  await page.click("input[type=submit]");
-  await expect(page).toHaveURL(/\/admin\/$/);
-}
+import { entrar } from "./helpers";
 
 async function criarParceiro(page: Page, nome: string) {
   await page.goto("/admin/nucleo/parceiro/add/");
@@ -27,7 +17,6 @@ async function criarParceiro(page: Page, nome: string) {
 }
 
 test("preenche os cortes de 2 parceiros", async ({ page }) => {
-  test.skip(!usuario || !senha, "defina E2E_ADMIN_USUARIO e E2E_ADMIN_SENHA");
   const sufixo = Date.now().toString(36).toUpperCase();
   const a = `E2E A ${sufixo}`;
   const b = `E2E B ${sufixo}`;

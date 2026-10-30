@@ -16,9 +16,9 @@ from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
-from django.urls import path
 
 from nucleo.admin.bloqueio import BloqueioAdminMixin
+from nucleo.admin.lote import rota
 from nucleo.models import Ano, Descritor, Matriz, MatrizEtapaCC, Tarefa
 from nucleo.servicos.importar_matriz import MANTER, ImportacaoRecusada, gravar_matriz, ler
 from nucleo.servicos.matriz import DuplicacaoRecusada, diferencas, duplicar_matriz, revistas_afetadas
@@ -114,13 +114,10 @@ class MatrizAdmin(admin.ModelAdmin):
         return ("ano", "duplicada_de") if obj else ()
 
     def get_urls(self):
-        def rota(sufixo, view, nome):
-            return path(f"<int:pk>/{sufixo}/", self.admin_site.admin_view(view), name=f"nucleo_matriz_{nome}")
-
         return [
-            rota("duplicar", self.duplicar_view, "duplicar"),
-            rota("reimportar", self.reimportar_view, "reimportar"),
-            rota("diferencas", self.diferencas_view, "diferencas"),
+            rota(self, "<int:pk>/duplicar/", self.duplicar_view, "duplicar"),
+            rota(self, "<int:pk>/reimportar/", self.reimportar_view, "reimportar"),
+            rota(self, "<int:pk>/diferencas/", self.diferencas_view, "diferencas"),
             *super().get_urls(),
         ]
 

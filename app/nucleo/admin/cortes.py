@@ -14,10 +14,11 @@ from django.db import transaction
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
-from django.urls import path, reverse
+from django.urls import reverse
 from openpyxl import Workbook
 
-from nucleo.models import Ano, Componente, Corte, Etapa, Parceiro, ParceiroAno
+from nucleo.admin.lote import escolher_ano, rota
+from nucleo.models import Componente, Corte, Etapa, Parceiro, ParceiroAno
 from nucleo.servicos.cascata import gravar_cortes, validar_linhas
 
 SEPARADOR = re.compile(r"[\s,;]+")
@@ -73,11 +74,8 @@ def planilha(ano):
 @admin.register(Corte)
 class CorteAdmin(admin.ModelAdmin):
     def get_urls(self):
-        def rota(sufixo, view, nome):
-            return path(sufixo, self.admin_site.admin_view(view), name=f"nucleo_corte_{nome}")
-
         # Só a grade e a exportação: corte não se edita um a um (a linha do parceiro é inteira).
-        return [rota("", self.changelist_view, "changelist"), rota("exportar/", self.exportar_view, "exportar")]
+        return [rota(self, "", self.changelist_view, "changelist"), rota(self, "exportar/", self.exportar_view, "exportar")]
 
     def has_add_permission(self, request):
         return False  # some o "incluir" do índice; a grade confere add + change por conta própria
@@ -88,13 +86,10 @@ class CorteAdmin(admin.ModelAdmin):
     def _ano(self, request):
         if not self.has_view_permission(request):
             raise PermissionDenied
-        anos = list(Ano.objects.order_by("-ano"))
-        pedido = request.GET.get("ano", "")
-        ano = next((a for a in anos if str(a.ano) == pedido), anos[0] if anos else None)
-        return ano, anos
+        return escolher_ano(request)
 
     def exportar_view(self, request):
-        ano, _ = self._ano(request)
+        _, ano = self._ano(request)
         if ano is None:
             raise Http404("Nenhum ano aberto.")
         resposta = HttpResponse(
@@ -104,7 +99,7 @@ class CorteAdmin(admin.ModelAdmin):
         return resposta
 
     def changelist_view(self, request, extra_context=None):
-        ano, anos = self._ano(request)
+        anos, ano = self._ano(request)
         contexto = {
             **self.admin_site.each_context(request), "opts": self.opts, "title": "Cortes",
             "ano": ano, "anos": anos,

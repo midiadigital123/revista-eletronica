@@ -31,7 +31,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
-from django.urls import path, reverse
+from django.urls import reverse
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 from django.views.decorators.http import require_POST
@@ -475,13 +475,10 @@ class RevistaAdmin(BloqueioAdminMixin, admin.ModelAdmin):
         gravar_textos(request, form)
 
     def get_urls(self):
-        def rota(caminho, view, nome):
-            return path(caminho, self.admin_site.admin_view(view), name=f"nucleo_revista_{nome}")
-
         return [
-            rota("escolher-template/", lambda r: lote.escolher_template(self, r), "escolher_template"),
-            rota("<int:pk>/gabarito-ids/", self.gabarito_ids, "gabarito_ids"),
-            rota("<int:pk>/validar/", require_POST(self.validar_view), "validar"),
+            lote.rota(self, "escolher-template/", lambda r: lote.escolher_template(self, r), "escolher_template"),
+            lote.rota(self, "<int:pk>/gabarito-ids/", self.gabarito_ids, "gabarito_ids"),
+            lote.rota(self, "<int:pk>/validar/", require_POST(self.validar_view), "validar"),
         ] + super().get_urls()
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
