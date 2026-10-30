@@ -1,0 +1,108 @@
+{% extends "ui/base.html" %}
+{% comment %}Grade de cortes fora do admin (opção B). Regra em nucleo/cortes.py; view em nucleo/urls/cortes.py.{% endcomment %}
+{% block titulo %}Cortes{% if ano %} {{ ano.ano }}{% endif %}{% endblock %}
+
+{% block conteudo %}
+<header class="pagina-cab">
+  <div>
+    <h1>Cortes</h1>
+    <p class="mudo">Cortes dos padrões de cada parceiro, por etapa e componente.</p>
+  </div>
+  {% if ano %}
+  <div class="acoes">
+    <a class="btn btn-outline" href="{% url 'admin:nucleo_corte_exportar' %}?ano={{ ano.ano }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>
+      Baixar planilha de grupos
+    </a>
+    <a class="btn btn-ghost" href="{% url 'painel' ano.ano %}">Ver painel de {{ ano.ano }}</a>
+  </div>
+  {% endif %}
+</header>
+
+{% if not ano %}
+<div class="aviso" role="status">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+  <span>Nenhum ano aberto. Abra um ano no <a class="link" href="{% url 'admin:nucleo_ano_changelist' %}">admin</a> para lançar os cortes.</span>
+</div>
+{% else %}
+
+<nav aria-label="Ano" class="segmentos">
+  {% for a in anos %}<a href="{% url 'cortes' a.ano %}"{% if a.pk == ano.pk %} aria-current="page"{% endif %}>{{ a.ano }}</a>{% endfor %}
+</nav>
+
+{% if not pode_gravar %}
+<div class="aviso aviso-alerta" role="status">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+  <span>Só leitura: seu perfil vê os cortes, mas não altera. Para editar, peça a permissão de cortes a um administrador.</span>
+</div>
+{% endif %}
+
+<form method="post" class="grade" data-grade>{% csrf_token %}
+  {% if pode_gravar %}<p class="mudo">De 1 a 4 cortes inteiros e crescentes, separados por vírgula, maiores que 0 e menores que o máximo da escala da etapa. Célula vazia apaga o corte.</p>{% endif %}
+  <div class="tabela-caixa grade-caixa">
+    <table class="tabela">
+      <thead>
+        <tr>
+          <th rowspan="2" scope="col" class="grade-parceiro">Parceiro</th>
+          {% for e in etapas %}<th colspan="{{ componentes|length }}" scope="colgroup" class="grade-etapa">{{ e.codigo }} <span class="mudo">até {{ e.escala_max }}</span></th>{% endfor %}
+        </tr>
+        <tr>{% for e, c in colunas %}<th scope="col" class="grade-cc{% if c.pk == componentes.0.pk %} grade-inicio{% endif %}">{{ c.codigo }}</th>{% endfor %}</tr>
+      </thead>
+      <tbody>
+      {% for linha in linhas %}
+        <tr{% if linha.erros %} class="grade-com-erro"{% endif %} data-parceiro="{{ linha.parceiro.nome }}">
+          <th scope="row" class="grade-parceiro">{{ linha.parceiro.nome }}<input type="hidden" name="o-{{ linha.parceiro.pk }}" value="{{ linha.original }}"></th>
+          {% for cel in linha.celulas %}<td{% if cel.inicio %} class="grade-inicio"{% endif %}><input class="input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" name="c-{{ cel.chave }}" value="{{ cel.texto }}" aria-label="{{ cel.titulo }}"{% if cel.invalida %} aria-invalid="true"{% endif %}{% if linha.erros %} aria-describedby="erros-{{ linha.parceiro.pk }}"{% endif %}{% if not pode_gravar %} readonly{% endif %}></td>{% endfor %}
+        </tr>
+        {% if linha.erros %}
+        <tr class="grade-erros"><td colspan="{{ colunas|length|add:1 }}">
+          <ul id="erros-{{ linha.parceiro.pk }}">{% for erro in linha.erros %}<li>{{ linha.parceiro.nome }}: {{ erro }}</li>{% endfor %}</ul>
+        </td></tr>
+        {% endif %}
+      {% empty %}
+        <tr><td colspan="{{ colunas|length|add:1 }}" class="mudo">Nenhum parceiro cadastrado. Cadastre os parceiros no <a class="link" href="{% url 'admin:nucleo_parceiro_changelist' %}">admin</a>.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if pode_gravar %}
+  <div class="barra-salvar">
+    <span class="mudo" aria-live="polite" data-alteradas>Nenhuma alteração.</span>
+    <button class="btn" type="submit">Salvar cortes</button>
+  </div>
+  {% endif %}
+</form>
+
+{% if pode_gravar %}
+<script>
+// Marca as células que diferem do gravado, conta as linhas e avisa antes de sair sem salvar.
+// O gravado vem do "o-" da linha (células unidas por "|"), então vale também depois de um erro.
+(() => {
+  const form = document.querySelector("[data-grade]");
+  const aviso = form.querySelector("[data-alteradas]");
+  const normal = (v) => v.split(/[\s,;]+/).filter(Boolean).join(", ");
+  let enviando = false;
+  const contar = () => {
+    let linhas = 0;
+    for (const tr of form.querySelectorAll("tbody tr[data-parceiro]")) {
+      const gravado = tr.querySelector("input[type=hidden]").value.split("|");
+      let mudou = false;
+      for (const [n, i] of tr.querySelectorAll("input.input").entries()) {
+        const alterada = normal(i.value) !== (gravado[n] ?? "");
+        i.toggleAttribute("data-alterada", alterada);
+        mudou ||= alterada;
+      }
+      linhas += mudou;
+    }
+    aviso.textContent = linhas ? `${linhas} parceiro(s) com alteração não salva.` : "Nenhuma alteração.";
+    return linhas;
+  };
+  form.addEventListener("input", contar);
+  form.addEventListener("submit", () => { enviando = true; });
+  addEventListener("beforeunload", (e) => { if (!enviando && contar()) e.preventDefault(); });
+  contar();
+})();
+</script>
+{% endif %}
+{% endif %}
+{% endblock %}

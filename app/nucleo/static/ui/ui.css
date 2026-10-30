@@ -1,0 +1,217 @@
+/*
+ * Base visual das páginas próprias (opção B): o mesmo visual do editor React, sem build.
+ * Tokens copiados de editor/src/index.css (preset shadcn vega/neutral + Inter); as classes
+ * reproduzem as do shadcn em editor/src/components/ui/*.tsx (valores do Tailwind em rem).
+ */
+
+:root {
+  /* editor/src/index.css:134-171 (:root) */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.5 0 0);
+  --destructive: oklch(0.5 0.2 27.325);
+  --warning: #7a4f00;
+  --warning-bg: #fff3d6;
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.6 0 0);
+  --ring: oklch(0.45 0 0);
+  --radius: 0.625rem;
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  /* editor/src/index.css:15-18 (padrões) e :25 (movimento) */
+  --padrao-1: #f72628;
+  --padrao-2: #ff8d43;
+  --padrao-3: #b3ccff;
+  --padrao-4: #0ed3ff;
+  --ease-saida: cubic-bezier(0.16, 1, 0.3, 1);
+  --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --shadow-xs: 0 1px 2px 0 oklch(0 0 0 / 0.05);
+  color-scheme: light;
+}
+
+/* --- base (editor/src/index.css:64-82) --- */
+*, *::before, *::after { box-sizing: border-box; border: 0 solid var(--border); }
+html {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  accent-color: var(--primary);
+  scrollbar-color: var(--border) transparent;
+  -webkit-text-size-adjust: 100%;
+}
+body { margin: 0; background: var(--background); color: var(--foreground); font-size: 1rem; line-height: 1.5; }
+h1, h2, h3, p, ul, dl, dd, fieldset { margin: 0; padding: 0; }
+fieldset { border: 0; min-width: 0; }
+a { color: inherit; text-decoration: none; }
+button, input, select, textarea { font: inherit; color: inherit; }
+::selection { background: var(--primary); color: var(--primary-foreground); }
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.mudo { color: var(--muted-foreground); font-size: 0.875rem; line-height: 1.25rem; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+}
+
+/* --- casca (editor/src/layout/AppLayout.tsx) --- */
+.cab { border-bottom-width: 1px; }
+.cab-in {
+  max-width: 80rem; margin: 0 auto; padding: 0.75rem 1.5rem;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 2rem;
+}
+.marca { font-weight: 600; }
+.nav { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+.nav a {
+  border-radius: var(--radius-md); padding: 0.375rem 0.75rem;
+  font-size: 0.875rem; line-height: 1.25rem; font-weight: 500;
+  color: var(--muted-foreground); transition: color 150ms var(--ease-saida);
+}
+.nav a:hover { color: var(--foreground); }
+.nav a[aria-current="page"] { background: var(--muted); color: var(--foreground); }
+.usuario { margin-left: auto; display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+.usuario > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.usuario form { display: contents; }
+.principal { max-width: 80rem; margin: 0 auto; padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
+
+/* --- cabeçalho de página (ListaProjetos.tsx:31-34) --- */
+.pagina-cab { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.pagina-cab h1 { font-size: 1.875rem; line-height: 2.25rem; font-weight: 600; letter-spacing: -0.025em; }
+.pagina-cab > div:first-child { display: flex; flex-direction: column; gap: 0.25rem; }
+.acoes { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+/* --- botão (components/ui/button.tsx) --- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem; flex-shrink: 0;
+  height: 2.25rem; padding: 0 0.625rem; border: 1px solid transparent; border-radius: var(--radius-md);
+  background: var(--primary); color: var(--primary-foreground);
+  font-size: 0.875rem; font-weight: 500; white-space: nowrap; cursor: pointer; user-select: none;
+  transition: background-color 150ms, box-shadow 150ms;
+}
+.btn:hover { background: color-mix(in oklch, var(--primary) 80%, transparent); }
+.btn:active { translate: 0 1px; }
+.btn:focus-visible { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px var(--ring); }
+.btn:disabled { opacity: 0.5; pointer-events: none; }
+.btn svg { width: 1rem; height: 1rem; flex-shrink: 0; }
+.btn-outline { background: var(--background); color: var(--foreground); border-color: var(--border); box-shadow: var(--shadow-xs); }
+.btn-outline:hover { background: var(--muted); }
+.btn-ghost { background: transparent; color: var(--foreground); }
+.btn-ghost:hover { background: var(--muted); }
+.btn-sm { height: 2rem; border-radius: min(var(--radius-md), 10px); }
+
+/* --- input (components/ui/input.tsx) --- */
+.input {
+  height: 2.25rem; width: 100%; min-width: 0; padding: 0.25rem 0.625rem;
+  border: 1px solid var(--input); border-radius: var(--radius-md); background: transparent;
+  font-size: 0.875rem; box-shadow: var(--shadow-xs); transition: border-color 150ms, box-shadow 150ms;
+}
+.input::placeholder { color: var(--muted-foreground); }
+.input:focus-visible { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px var(--ring); }
+.input[readonly] { background: var(--muted); border-color: var(--border); box-shadow: none; }
+.input[aria-invalid="true"] { border-color: var(--destructive); box-shadow: 0 0 0 3px color-mix(in oklch, var(--destructive) 20%, transparent); }
+
+/* --- tabela (components/ui/table.tsx) --- */
+.tabela-caixa { position: relative; width: 100%; overflow-x: auto; }
+.tabela { width: 100%; border-collapse: collapse; font-size: 0.875rem; line-height: 1.25rem; }
+.tabela tr { border-bottom-width: 1px; transition: background-color 150ms; }
+.tabela tbody tr:last-child { border-bottom-width: 0; }
+.tabela tbody tr:hover { background: color-mix(in oklch, var(--muted) 50%, transparent); }
+.tabela th { height: 2.5rem; padding: 0 0.5rem; text-align: left; vertical-align: middle; font-weight: 500; white-space: nowrap; }
+.tabela td { padding: 0.5rem; vertical-align: middle; white-space: nowrap; }
+
+/* --- badge (components/ui/badge.tsx) --- */
+.badge {
+  display: inline-flex; align-items: center; gap: 0.25rem; height: 1.25rem; padding: 0.125rem 0.5rem;
+  border: 1px solid transparent; border-radius: calc(var(--radius) * 2.6);
+  font-size: 0.75rem; line-height: 1rem; font-weight: 500; white-space: nowrap;
+  background: var(--primary); color: var(--primary-foreground);
+}
+.badge-secundario { background: var(--secondary); color: var(--secondary-foreground); }
+.badge-contorno { background: transparent; color: var(--foreground); border-color: var(--border); }
+.badge-alerta { background: var(--warning-bg); color: var(--warning); border-color: color-mix(in srgb, var(--warning) 30%, transparent); }
+.badge-erro { background: color-mix(in oklch, var(--destructive) 10%, transparent); color: var(--destructive); }
+
+/* --- card (components/ui/card.tsx) --- */
+.card {
+  display: flex; flex-direction: column; gap: 1.5rem; padding: 1.5rem; overflow: hidden;
+  border-radius: var(--radius-xl); background: var(--card); font-size: 0.875rem;
+  box-shadow: var(--shadow-xs), 0 0 0 1px color-mix(in oklch, var(--foreground) 10%, transparent);
+}
+
+/* --- aviso (ui/Aviso.tsx + components/ui/alert.tsx) e mensagens do Django --- */
+.aviso {
+  display: grid; grid-template-columns: auto 1fr; gap: 0.125rem 0.625rem; align-items: start;
+  padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-lg);
+  background: var(--card); font-size: 0.875rem; line-height: 1.25rem;
+}
+.aviso svg { width: 1rem; height: 1rem; translate: 0 0.125rem; }
+.aviso-alerta { background: var(--warning-bg); color: var(--warning); border-color: color-mix(in srgb, var(--warning) 30%, transparent); }
+.aviso-erro { color: var(--destructive); }
+.mensagens { display: flex; flex-direction: column; gap: 0.5rem; list-style: none; animation: entra 120ms var(--ease-saida) both; }
+@keyframes entra { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* --- controle segmentado (ProjetoLayout.tsx:121-136, seletor de ano) --- */
+.segmentos { align-self: flex-start; display: inline-flex; align-items: center; gap: 0.125rem; padding: 0.25rem; border-radius: var(--radius-lg); background: var(--muted); max-width: 100%; overflow-x: auto; }
+.segmentos a {
+  border-radius: var(--radius-md); padding: 0.25rem 0.75rem; font-size: 0.875rem; line-height: 1.25rem;
+  font-weight: 500; white-space: nowrap; color: var(--muted-foreground); transition: color 150ms var(--ease-saida);
+}
+.segmentos a:hover { color: var(--foreground); }
+.segmentos a[aria-current="page"] { background: var(--background); color: var(--foreground); box-shadow: 0 1px 2px oklch(0 0 0 / 0.08); }
+
+@media (max-width: 40rem) {
+  .cab-in, .principal { padding-left: 1rem; padding-right: 1rem; }
+  .principal { padding-top: 1.5rem; }
+  .pagina-cab h1 { font-size: 1.5rem; line-height: 2rem; }
+}
+
+/* --- link de texto (button.tsx variant "link") --- */
+.link { text-decoration: underline; text-underline-offset: 4px; }
+
+/* --- grade editável (cortes; serve à planilha de Variáveis) --- */
+.grade { display: flex; flex-direction: column; gap: 0.75rem; }
+.grade-caixa {
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+  max-height: calc(100dvh - 12rem); overflow: auto;
+}
+/* separate: com collapse, as bordas das células fixas (sticky) somem ao rolar. */
+.grade .tabela { border-collapse: separate; border-spacing: 0; }
+.grade .tabela tr { border-bottom-width: 0; }
+.grade .tabela th, .grade .tabela td { border-bottom-width: 1px; }
+.grade .tabela tbody tr:last-child > * { border-bottom-width: 0; }
+.grade .tabela thead th { position: sticky; top: 0; z-index: 1; background: var(--background); }
+.grade .tabela thead tr:nth-child(2) th { top: 2.5rem; }
+.grade-etapa { font-weight: 600; border-left-width: 1px; }
+.grade-etapa .mudo { font-weight: 400; margin-left: 0.25rem; }
+.grade-cc { color: var(--muted-foreground); height: 2rem; }
+.grade-inicio { border-left-width: 1px; }
+.grade-parceiro {
+  position: sticky; left: 0; z-index: 1; background: var(--background);
+  min-width: 10rem; max-width: 16rem; overflow: hidden; text-overflow: ellipsis;
+  border-right-width: 1px;
+}
+.grade thead .grade-parceiro { z-index: 2; }
+.grade tbody tr:hover .grade-parceiro { background: var(--muted); }
+.grade td { padding: 0.375rem; }
+.grade .input { width: 8.5rem; height: 2rem; }
+.grade .input[data-alterada] { border-color: var(--foreground); background: var(--muted); }
+.grade .input[aria-invalid="true"] { border-color: var(--destructive); background: var(--background); }
+.grade-com-erro, .grade tbody tr.grade-com-erro:hover { background: color-mix(in oklch, var(--destructive) 6%, transparent); }
+.grade-com-erro .grade-parceiro { background: color-mix(in oklch, var(--destructive) 6%, var(--background)); }
+.grade-erros td { white-space: normal; color: var(--destructive); padding: 0.25rem 0.75rem 0.75rem; }
+.grade-erros ul { list-style: disc; padding-left: 1.25rem; }
+.grade tbody tr.grade-erros:hover { background: transparent; }
+.barra-salvar {
+  position: sticky; bottom: 0; z-index: 3;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.75rem;
+  padding: 0.75rem 0; background: var(--background); border-top-width: 1px;
+}
+@media (max-width: 40rem) {
+  .grade-parceiro { min-width: 7rem; max-width: 8rem; }
+  .grade-caixa { max-height: calc(100dvh - 9rem); }
+  .barra-salvar .btn { flex: 1; }
+}
