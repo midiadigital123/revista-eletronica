@@ -1,0 +1,58 @@
+/* Tela Templates (T12-T14): só o que ui.css não tem. Tokens de ui.css (editor React). */
+
+.tpl-nome { font-weight: 500; text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 4px; transition: text-decoration-color 150ms; }
+.tpl-nome:hover { text-decoration-color: currentColor; }
+.tabela th[scope="row"] { font-weight: 400; }
+
+/* --- editor --- */
+.tpl-form { display: flex; flex-direction: column; gap: 1.25rem; }
+.tpl-nome-campo { max-width: 32rem; }
+.tpl-editor { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.5rem; }
+.tpl-barra { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; min-height: 2.25rem; }
+.tpl-barra > label { font-size: 0.875rem; font-weight: 500; }
+.tpl-inserir { display: flex; gap: 0.375rem; min-width: 0; }
+.tpl-inserir .select { width: auto; max-width: 15rem; }
+.tpl-texto { min-height: 32rem; max-height: calc(100dvh - 14rem); field-sizing: fixed; tab-size: 2; }
+.tpl-texto[readonly] { color: var(--foreground); }
+.ajuda code, .tpl-render code { font-family: var(--font-mono); font-size: 0.92em; }
+
+/* --- pré-visualização: a "página" como o leitor verá, ao lado do Markdown --- */
+.tpl-previa {
+  position: sticky; top: 1rem; display: flex; flex-direction: column; min-width: 0;
+  border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--card);
+  max-height: calc(100dvh - 6rem);
+}
+.tpl-previa > header {
+  display: flex; align-items: center; gap: 0.75rem; min-height: 2.75rem; padding: 0 1rem;
+  border-bottom-width: 1px; background: color-mix(in oklch, var(--muted) 60%, transparent);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.tpl-previa h2 { font-size: 0.875rem; font-weight: 600; }
+.tpl-previa > header .girando { margin-left: auto; color: var(--muted-foreground); }
+#previa { overflow: auto; padding: 1rem 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+.tpl-validacao { display: flex; gap: 0.5rem; align-items: flex-start; font-size: 0.8125rem; line-height: 1.25rem; }
+.tpl-validacao svg { width: 1rem; height: 1rem; flex-shrink: 0; translate: 0 0.125rem; }
+.tpl-validacao-ok { color: oklch(0.45 0.13 150); }
+.tpl-validacao-erro { padding: 0.625rem 0.75rem; border-radius: var(--radius-md); color: var(--destructive); background: color-mix(in oklch, var(--destructive) 6%, transparent); }
+.tpl-validacao-erro ul { list-style: disc; padding-left: 1.125rem; }
+.tpl-render { font-size: 0.9375rem; line-height: 1.6; max-width: 38rem; }
+.tpl-render .secao + .secao { margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px dashed var(--border); }
+.tpl-render .secao-id { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted-foreground); }
+.tpl-render h3 { margin: 0.125rem 0 0.5rem; font-size: 1.0625rem; line-height: 1.4; font-weight: 600; letter-spacing: -0.01em; }
+.tpl-render p + p, .tpl-render p + ul, .tpl-render ul + p { margin-top: 0.5rem; }
+.tpl-render ul, .tpl-render ol { padding-left: 1.25rem; }
+
+/* --- impacto --- */
+.tpl-impacto { display: flex; flex-direction: column; gap: 0.75rem; }
+.tpl-atencao th[scope="row"] { box-shadow: inset 3px 0 0 var(--warning); }
+
+@media (max-width: 50rem) {
+  .tpl-editor { grid-template-columns: minmax(0, 1fr); }  /* a regra acima ganha da de ui.css */
+  .tpl-previa { position: static; max-height: none; }
+  .tpl-texto { min-height: 18rem; }
+  .tpl-inserir { flex: 1 1 100%; }
+  .tpl-inserir .select { flex: 1; max-width: none; }
+}
+
+/* Abas com badge: o margin-bottom -1px dos links + overflow-x gera barra de rolagem vertical (subir para ui.css). */
+.abas { overflow-y: hidden; }
