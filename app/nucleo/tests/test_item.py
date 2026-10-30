@@ -1,4 +1,4 @@
-"""Arquivo do item na matriz (D-180)."""
+"""Arquivo do item na matriz (D-180) e exclusão de tarefa/descritor com confirmação forte (D-181)."""
 
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
@@ -157,9 +157,76 @@ class DiscoTest(Base):
         with self.captureOnCommitCallbacks(execute=True):
             remover_item(self.tarefa)
         self.assertTrue(default_storage.exists(caminho))
+        # Troca e exclusão da tarefa também não apagam o que o outro ano usa.
+        self.receber(self.tarefa, upload("a.pdf", PDF, "application/pdf"), "")
+        self.tarefa.arquivo = caminho
+        self.tarefa.save()
+        with self.captureOnCommitCallbacks(execute=True):
+            self.tarefa.delete()
+        self.assertTrue(default_storage.exists(caminho))
 
-    def test_sem_referencia_sai_na_troca(self):
+    def test_sem_referencia_sai_na_troca_e_na_exclusao(self):
         self.receber(self.tarefa, upload("a.png", PNG, "image/png"), "")
         primeiro = self.tarefa.arquivo
         self.receber(self.tarefa, upload("a.jpg", JPG, "image/jpeg"), "")
         self.assertFalse(default_storage.exists(primeiro))
+        segundo = self.tarefa.arquivo
+        with self.captureOnCommitCallbacks(execute=True):
+            self.tarefa.descritor.delete()  # em cascata
+        self.assertFalse(default_storage.exists(segundo))
+
+
+class ExclusaoTest(Base):
+    def url_tarefa(self):
+        return reverse("admin:nucleo_descritor_excluir_tarefa", args=[self.tarefa.descritor_id, self.tarefa.pk])
+
+    def test_tarefa_sem_o_codigo_nao_exclui(self):
+        resp = self.client.get(self.url_tarefa())
+        self.assertContains(resp, "Revistas ativas afetadas: 2")
+        self.assertContains(resp, "Digite D01 100-150 para confirmar.")
+        resp = self.client.post(self.url_tarefa(), {"confirmacao": "D01"})
+        self.assertContains(resp, "Nada foi excluído: o código não confere")
+        self.assertTrue(Tarefa.objects.filter(pk=self.tarefa.pk).exists())
+
+    def test_tarefa_com_o_codigo_exclui_e_a_validada_perde_o_validado(self):
+        rev = carregar(self.go["LP"].pk)
+        Revista.objects.filter(pk=rev.pk).update(hash_validado=hash_validado(rev))
+        self.assertContains(self.client.get(self.url_tarefa()), "perdem o “Validado”: 1")
+        resp = self.client.post(self.url_tarefa(), {"confirmacao": " D01 100-150 "})
+        self.assertRedirects(resp, reverse("admin:nucleo_descritor_change", args=[self.tarefa.descritor_id]))
+        self.assertFalse(Tarefa.objects.filter(pk=self.tarefa.pk).exists())
+        rev = carregar(rev.pk)
+        self.assertFalse(validada(rev, hash_validado(rev)))
+
+    def test_descritor_pela_pagina_de_delete(self):
+        d = self.tarefa.descritor
+        url = reverse("admin:nucleo_descritor_delete", args=[d.pk])
+        self.assertContains(self.client.get(url), "Digite D01 para confirmar.")
+        self.client.post(url, {"confirmacao": "D02"})
+        self.assertTrue(Descritor.objects.filter(pk=d.pk).exists())
+        self.client.post(url, {"confirmacao": "D01"})
+        self.assertFalse(Descritor.objects.filter(pk=d.pk).exists())
+
+    def test_pedagogica_exclui_e_impresso_leva_403(self):
+        d = self.tarefa.descritor
+        self.client.force_login(usuario("imp", "Impresso"))
+        self.assertEqual(self.client.post(self.url_tarefa(), {"confirmacao": "D01 100-150"}).status_code, 403)
+        url = reverse("admin:nucleo_descritor_delete", args=[d.pk])
+        self.assertEqual(self.client.post(url, {"confirmacao": "D01"}).status_code, 403)
+        self.assertTrue(Tarefa.objects.filter(pk=self.tarefa.pk).exists())
+        self.client.force_login(usuario("ped", "Pedagógica"))
+        self.client.post(self.url_tarefa(), {"confirmacao": "D01 100-150"})
+        self.assertFalse(Tarefa.objects.filter(pk=self.tarefa.pk).exists())
+
+    def test_bloqueio_de_outro_impede(self):
+        bia = usuario("bia", "Pedagógica")
+        self.assertTrue(bloqueio.adquirir(self.tarefa.descritor.matriz_etapa_cc, bia, "aba-bia"))
+        self.assertEqual(self.client.post(self.url_tarefa(), {"confirmacao": "D01 100-150"}).status_code, 403)
+        url = reverse("admin:nucleo_descritor_delete", args=[self.tarefa.descritor_id])
+        self.assertEqual(self.client.post(url, {"confirmacao": "D01"}).status_code, 403)
+        self.assertTrue(Tarefa.objects.filter(pk=self.tarefa.pk).exists())
+
+    def test_inline_sem_excluir(self):
+        resp = self.client.get(reverse("admin:nucleo_descritor_change", args=[self.tarefa.descritor_id]))
+        self.assertNotContains(resp, "tarefa_set-0-DELETE")
+        self.assertContains(resp, "Excluir tarefa D01 100-150")

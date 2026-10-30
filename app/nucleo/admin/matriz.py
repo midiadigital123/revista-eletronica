@@ -8,6 +8,8 @@
 - MEC nasce pela importação ou pela duplicação; ninguém exclui (D-136).
 - Arquivo do item (D-180): botão "Arquivo do item" em cada tarefa abre um <dialog> que posta
   em `item_view`, com a sessão do bloqueio da página e a confirmação de impacto.
+- Tarefa e descritor se excluem só pela tela de confirmação forte (D-181): revistas afetadas,
+  as que perdem o "Validado" e o código digitado. Os inlines não têm "Excluir?".
 """
 
 import tempfile
@@ -15,13 +17,14 @@ from pathlib import Path, PurePosixPath
 
 from django import forms
 from django.contrib import admin, messages
+from django.contrib.admin.utils import unquote
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.storage import default_storage
 from django.db import router, transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
-from django.urls import path
+from django.urls import path, reverse
 from django.utils.html import format_html, format_html_join
 
 from nucleo.admin.bloqueio import CAMPO_SESSAO, BloqueioAdminMixin
@@ -291,6 +294,7 @@ class DescritorInline(admin.TabularInline):
     fields = ("codigo", "descricao", "ordem")
     show_change_link = True
     extra = 0
+    can_delete = False  # só pela confirmação forte do DescritorAdmin (D-181)
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         if db_field.name == "descricao":
@@ -327,9 +331,10 @@ class TarefaInline(admin.TabularInline):
     fields = ("inicio", "fim", "texto", "ordem", "acoes")
     readonly_fields = ("acoes",)
     extra = 0
-    editavel = False  # o DescritorAdmin preenche por pedido (instância nova a cada um)
+    can_delete = False  # só pela confirmação forte (D-181)
+    editavel = pode_excluir = False  # o DescritorAdmin preenche por pedido (instância nova a cada um)
 
-    @admin.display(description="Arquivo do item")
+    @admin.display(description="Item e exclusão")
     def acoes(self, obj):
         if obj.pk is None:
             return ""
@@ -341,6 +346,9 @@ class TarefaInline(admin.TabularInline):
                 '<button type="button" class="button" data-dialogo="item-{}" '
                 'aria-label="Arquivo do item da tarefa {}">Arquivo do item</button> ', obj.pk, obj.codigo,
             ))  # fmt: skip
+        if self.pode_excluir:
+            url = reverse("admin:nucleo_descritor_excluir_tarefa", args=[obj.descritor_id, obj.pk])
+            partes.append(format_html('<a href="{}" class="deletelink">Excluir tarefa {}</a>', url, obj.codigo))
         return format_html_join("", "{}", ((p,) for p in partes))
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
@@ -403,18 +411,23 @@ class DescritorAdmin(MatrizEditAdmin):
 
         return [
             rota("item", self.item_view, "item"),
+            rota("excluir", self.excluir_tarefa_view, "excluir_tarefa"),
             *super().get_urls(),
         ]
 
     def get_inline_instances(self, request, obj=None):
         inlines = super().get_inline_instances(request, obj)
         editavel = obj is not None and self._edita_tarefa(request, obj)
+        pode_excluir = obj is not None and self._exclui_tarefa(request, obj)
         for inline in inlines:
-            inline.editavel = editavel
+            inline.editavel, inline.pode_excluir = editavel, pode_excluir
         return inlines
 
     def _edita_tarefa(self, request, descritor):
         return self.has_change_permission(request, descritor) and request.user.has_perm("nucleo.change_tarefa")
+
+    def _exclui_tarefa(self, request, descritor):
+        return request.user.has_perm("nucleo.delete_tarefa") and not _de_outro(request, descritor.matriz_etapa_cc)
 
     def render_change_form(self, request, context, add=False, change=False, form_url="", obj=None):
         # Os <dialog> do item ficam fora do form do admin (form não aninha); só com o bloqueio.
@@ -483,6 +496,31 @@ class DescritorAdmin(MatrizEditAdmin):
             return " ".join(e.messages) + " Escolha outro arquivo e envie de novo."
         return None
 
+    # --- Exclusão com confirmação forte (D-181) --------------------------------------
+
+    def delete_view(self, request, object_id, extra_context=None):
+        descritor = self.get_object(request, unquote(object_id))
+        if descritor is None:
+            raise Http404
+        if not self.has_delete_permission(request, descritor):
+            raise PermissionDenied
+        mec = descritor.matriz_etapa_cc
+        voltar = reverse("admin:nucleo_matrizetapacc_change", args=[mec.pk])
+        return _excluir(self, request, descritor, "descritor", mec, voltar)
+
+    def excluir_tarefa_view(self, request, pk, tarefa_pk):
+        descritor, tarefa = self._descritor_e_tarefa(request, pk, tarefa_pk)
+        if not self._exclui_tarefa(request, descritor):
+            raise PermissionDenied
+        voltar = reverse("admin:nucleo_descritor_change", args=[descritor.pk])
+        return _excluir(self, request, tarefa, "tarefa", descritor.matriz_etapa_cc, voltar)
+
+
+def _de_outro(request, mec):
+    """Outro usuário edita a MEC: excluir fica negado (mesma regra do BloqueioAdminMixin)."""
+    atual = bloqueio.quem_bloqueia(mec)
+    return atual is not None and atual.usuario_id != request.user.pk
+
 
 class ItemForm(ImpactoForm):
     arquivo = forms.FileField(
@@ -501,3 +539,41 @@ class ItemForm(ImpactoForm):
 
 def _item_form(afetadas):
     return type("ItemForm", (ItemForm,), {"afetadas": afetadas})
+
+
+class ExcluirForm(forms.Form):
+    confirmacao = forms.CharField(label="Confirmação")
+
+    def __init__(self, *args, codigo, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.codigo = codigo
+        self.fields["confirmacao"].help_text = f"Digite {codigo} para confirmar."
+
+    def clean_confirmacao(self):
+        if self.cleaned_data["confirmacao"].strip() != self.codigo:
+            raise ValidationError(f"Nada foi excluído: o código não confere. Digite {self.codigo} exatamente.")
+        return self.cleaned_data["confirmacao"]
+
+
+def _excluir(model_admin, request, obj, rotulo, mec, voltar):
+    """Tela intermediária: revistas afetadas, as que perdem o "Validado" e o código digitado."""
+    codigo = obj.codigo
+    form = ExcluirForm(request.POST or None, codigo=codigo)
+    if request.method == "POST" and form.is_valid():
+        # ponytail: o bloqueio é conferido sem FOR SHARE; quem adquirir no mesmo instante perde a corrida.
+        with transaction.atomic(using=router.db_for_write(type(obj))):
+            if _de_outro(request, mec):
+                messages.error(request, f"Nada foi excluído: outra pessoa está editando {mec}. Tente quando ela terminar.")
+                return redirect(voltar)
+            obj.delete()
+        excluido = "excluída" if rotulo == "tarefa" else "excluído"
+        messages.success(request, f"{rotulo.capitalize()} {codigo} {excluido}.")
+        return redirect(voltar)
+    revistas = impacto(mec)
+    contexto = {
+        **model_admin.admin_site.each_context(request),
+        "opts": model_admin.opts, "original": obj, "title": f"Excluir {rotulo} {codigo}",
+        "rotulo": rotulo, "form": form, "revistas": revistas, "voltar": voltar, "mec": mec,
+        "validadas": sum(v for _, v in revistas),
+    }  # fmt: skip
+    return TemplateResponse(request, "nucleo/excluir_confirmar.html", contexto)

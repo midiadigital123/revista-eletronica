@@ -1,0 +1,52 @@
+{% extends "admin/base_site.html" %}
+{% load static admin_urls %}
+{% comment %}Confirmação forte da exclusão de tarefa ou descritor (D-181): impacto + código digitado.{% endcomment %}
+
+{% block extrahead %}{{ block.super }}
+<link rel="stylesheet" href="{% static 'nucleo/template_editor.css' %}">
+{% endblock %}
+
+{% block breadcrumbs %}<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">Início</a>
+&rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+&rsaquo; <a href="{{ voltar }}">Voltar</a>
+&rsaquo; {{ title }}
+</div>{% endblock %}
+
+{% block content %}
+<div id="content-main" class="impacto-template">
+  <p>Excluir {{ rotulo }} {{ original.codigo }} de {{ mec }}{% if rotulo == "descritor" %}, com as tarefas dele{% endif %}.
+  A exclusão vale para toda revista que usa esta matriz e não se desfaz pela tela.</p>
+
+  {% if revistas %}
+  <table>
+    <caption>Revistas ativas afetadas: {{ revistas|length }}; perdem o “Validado”: {{ validadas }}</caption>
+    <thead><tr><th scope="col">Revista</th><th scope="col">Validado</th></tr></thead>
+    <tbody>
+    {% for revista, validada in revistas %}
+      <tr>
+        <td>{{ revista }}</td>
+        <td>{% if validada %}<strong class="impacto-alerta">Perde o “Validado”</strong>{% else %}—{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>Nenhuma revista ativa usa esta etapa × CC.</p>
+  {% endif %}
+
+  <form method="post" novalidate>{% csrf_token %}
+    {% if form.errors %}<p class="errornote">{{ form.confirmacao.errors|join:" " }}</p>{% endif %}
+    <fieldset class="module aligned">
+      <div class="form-row{% if form.confirmacao.errors %} errors{% endif %}">
+        <div class="flex-container">{{ form.confirmacao.label_tag }} {{ form.confirmacao }}</div>
+        <div class="help">{{ form.confirmacao.help_text }}</div>
+      </div>
+    </fieldset>
+    <div class="submit-row">
+      <input type="submit" class="default" value="Excluir {{ rotulo }}">
+      <a href="{{ voltar }}" class="button cancel-link">Voltar sem excluir</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -18,6 +18,8 @@ from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.db import transaction
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 
 from nucleo.models import Tarefa
 
@@ -349,6 +351,12 @@ def apagar_item_orfao(caminho):
 
     if caminho:
         transaction.on_commit(apagar)
+
+
+@receiver(post_delete, sender=Tarefa)
+def _tarefa_excluida(sender, instance, **kwargs):
+    """Qualquer exclusão de tarefa (pela tela, em cascata do descritor, na reimportação)."""
+    apagar_item_orfao(instance.arquivo)
 
 
 # --- Conferência seções × ids -------------------------------------------------
