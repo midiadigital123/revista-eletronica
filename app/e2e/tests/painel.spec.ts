@@ -11,6 +11,7 @@
 // cópia do fechamento do F1 com uma marca nova (para o hash mudar a cada execução), valida e
 // descarta a cópia no fim (a revista volta ao texto do template, sem "Validado").
 import { expect, test, type Page } from "@playwright/test";
+import { filtrarPainel } from "./helpers";
 
 const FECHAMENTO = "#id_secao__F1__fechamento";
 
@@ -38,17 +39,18 @@ test("painel: filtrar e validar uma revista", async ({ page }) => {
   await page.fill("#id_username", usuario!);
   await page.fill("#id_password", senha!);
   await page.click("input[type=submit]");
-  await expect(page.locator("#painel")).toBeVisible();
+  await expect(page.locator("#painel-corpo table")).toBeVisible();
 
   // 1. Filtros: parceiro DEMONSTRAÇÃO e "falta Validado" (o fim da execução anterior deixa sem).
-  await page.locator("p.filtro", { hasText: "Parceiro" }).getByRole("link", { name: "DEMONSTRAÇÃO" }).click();
-  await page.locator("p.filtro", { hasText: "Falta" }).getByRole("link", { name: "Validado", exact: true }).click();
-  expect(new URL(page.url()).searchParams.get("falta")).toBe("validado");
-  const linhas = page.locator("#painel tbody tr");
+  // Painel B: os selects trocam o corpo pelo HTMX e empurram a URL.
+  await filtrarPainel(page, "#filtro-parceiro", { label: "DEMONSTRAÇÃO" });
+  await filtrarPainel(page, "#filtro-falta", "validado");
+  await expect(page).toHaveURL(/falta=validado/);
+  const linhas = page.locator("#painel-corpo tbody tr");
   await expect(linhas).toHaveCount(1);
   const linha = linhas.first();
   await expect(linha).toContainText("DEMONSTRAÇÃO");
-  await expect(linha.locator("td.coluna-validado")).toHaveText("falta");
+  await expect(linha.locator("td.coluna-validado .status-falta")).toBeVisible();
   const urlPainel = page.url();
 
   // 2. Nome padrão do projeto é pendência (Variáveis): o "falta" leva ao projeto.
@@ -59,11 +61,11 @@ test("painel: filtrar e validar uma revista", async ({ page }) => {
     await page.click("input[name=_save]");
     await expect(page.locator(".messagelist")).toContainText("alterado com sucesso");
     await page.goto(urlPainel);
-    await expect(linha.locator("td.coluna-variaveis")).toHaveText("✓");
+    await expect(linha.locator("td.coluna-variaveis .status-ok")).toBeVisible();
   }
 
   // 3. Revista: muda um texto (hash novo), salva e clica em "Validado".
-  await linha.locator("td").nth(1).getByRole("link").first().click(); // o 2º link é o preview
+  await linha.locator("th a.link-linha").click(); // o outro link da célula é o preview
   const urlRevista = page.url();
   await page.fill(FECHAMENTO, `Fechamento ${marca}.`);
   await page.click("input[name=_continue]");
@@ -75,9 +77,9 @@ test("painel: filtrar e validar uma revista", async ({ page }) => {
 
   // 4. O painel com "falta Validado" não mostra mais a revista; sem o filtro, ✓.
   await page.goto(urlPainel);
-  await expect(page.locator("#painel tbody")).toContainText("Nenhuma revista ativa com esse filtro.");
-  await page.locator("p.filtro", { hasText: "Falta" }).getByRole("link", { name: "Tudo" }).click();
-  await expect(page.locator("#painel tbody tr").first().locator("td.coluna-validado")).toHaveText("✓");
+  await expect(page.locator("#painel-corpo")).toContainText("Nenhuma revista com esse filtro");
+  await filtrarPainel(page, "#filtro-falta", "");
+  await expect(page.locator("#painel-corpo tbody tr").first().locator("td.coluna-validado .status-ok")).toBeVisible();
 
   // 5. Limpa: descarta a cópia (o hash muda e o "Validado" cai).
   await page.goto(urlRevista);
