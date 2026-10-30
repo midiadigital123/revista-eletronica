@@ -55,7 +55,7 @@
         </td></tr>
         {% endif %}
       {% empty %}
-        <tr><td colspan="{{ colunas|length|add:1 }}" class="mudo">Nenhum parceiro cadastrado. Cadastre os parceiros no <a class="link" href="{% url 'admin:nucleo_parceiro_changelist' %}">admin</a>.</td></tr>
+        <tr><td colspan="{{ colunas|length|add:1 }}" class="mudo">Nenhum parceiro cadastrado.{% if perms.nucleo.add_parceiro %} Adicione o primeiro abaixo.{% endif %}</td></tr>
       {% endfor %}
       </tbody>
     </table>
@@ -67,6 +67,15 @@
   </div>
   {% endif %}
 </form>
+
+{% if perms.nucleo.add_parceiro %}
+{# Fora do form da grade (form não aninha). Com cortes não salvos, o beforeunload da grade avisa antes de recarregar. #}
+<form method="post" action="{% url 'cortes_novo_parceiro' ano.ano %}" class="acoes">{% csrf_token %}
+  <label for="novo-parceiro">Nova linha</label>
+  <input class="input" id="novo-parceiro" name="nome" required maxlength="200" placeholder="Nome do parceiro (ex.: SAEGO)">
+  <button class="btn btn-outline" type="submit">Adicionar parceiro</button>
+</form>
+{% endif %}
 
 {% if pode_gravar %}
 <script>

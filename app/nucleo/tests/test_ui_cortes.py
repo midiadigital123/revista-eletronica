@@ -24,6 +24,27 @@ class GradeUiTest(Base):
         self.assertNotContains(resp, "readonly")
         self.assertRedirects(self.client.get(reverse("cortes_inicio")), self.url)
 
+    def test_todos_os_grupos_menos_impresso_gravam(self):
+        Parceiro.objects.create(nome="GO")
+        for grupo in ("Admin", "Pedagógica", "Mídias Digitais"):
+            with self.subTest(grupo):
+                self.client.force_login(usuario(f"u-{grupo}", grupo))
+                resp = self.client.get(self.url)
+                self.assertContains(resp, "Salvar cortes")
+                self.assertNotContains(resp, "readonly")
+
+    def test_adicionar_parceiro_cria_linha(self):
+        url = reverse("cortes_novo_parceiro", args=[2026])
+        self.client.force_login(usuario("md", "Mídias Digitais"))
+        self.assertContains(self.client.get(self.url), "Adicionar parceiro")
+        resp = self.client.post(url, {"nome": "SAEGO"}, follow=True)
+        self.assertContains(resp, 'data-parceiro="SAEGO"')
+        self.assertContains(self.client.post(url, {"nome": "SAEGO"}, follow=True), "Parceiro não criado")
+        self.assertEqual(Parceiro.objects.filter(nome="SAEGO").count(), 1)
+        self.client.force_login(usuario("imp2", "Impresso"))
+        self.assertNotContains(self.client.get(self.url), "Adicionar parceiro")
+        self.assertEqual(self.client.post(url, {"nome": "X"}).status_code, 403)
+
     def test_so_leitura_sem_permissao(self):
         Parceiro.objects.create(nome="GO")
         self.client.force_login(usuario("imp", "Impresso"))
