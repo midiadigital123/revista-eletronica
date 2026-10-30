@@ -7,18 +7,15 @@ BloqueioAdminMixin. Cada projeto alterado é gravado com o bloqueio dele; travad
 from django import forms
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
-from django.core.validators import MaxLengthValidator
 from django.forms import modelformset_factory
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
 
 from nucleo import texto
 from nucleo.admin.lote import avisar_pulados, contexto, escolher_ano, escrever_travado, filtro
-from nucleo.models import CorPadrao, Projeto, TemplateVersao
-from nucleo.variaveis import TAMANHO_MAX, VARIAVEIS
-
-EDITAVEIS = [v.nome for v in VARIAVEIS if not v.automatica]
-
+from nucleo.models import Projeto, TemplateVersao
+from nucleo.projeto import limitar, mostrar_nome_do_ano
+from nucleo.variaveis import EDITAVEIS, TAMANHO_MAX, VARIAVEIS
 
 def vazio(valor):
     return valor is None or not str(valor).strip()  # mesmo critério de texto._valor
@@ -63,23 +60,6 @@ def copiar_do_ano_anterior(projeto):
     for n in copiadas:
         setattr(projeto, n, getattr(anterior, n))
     return anterior, copiadas
-
-
-def limitar(form, limites):
-    """Tamanho máximo no form (validador + maxlength): sem isso o CHECK do banco vira 500."""
-    for nome, limite in limites.items():
-        campo = form.fields.get(nome)  # ausente quando só leitura
-        if campo is not None:
-            campo.validators.append(MaxLengthValidator(limite))
-            campo.widget.attrs["maxlength"] = limite
-
-
-def mostrar_nome_do_ano(form, ano_id):
-    """Placeholder dos `pdNN`: o nome do padrão no ano, que vale quando o campo fica vazio (D-175)."""
-    for k, nome in CorPadrao.objects.filter(ano_id=ano_id).exclude(nome="").values_list("padrao", "nome"):
-        campo = form.fields.get(f"pd{k:02d}")  # ausente quando só leitura
-        if campo is not None:
-            campo.widget.attrs["placeholder"] = f"padrão do ano: {nome}"
 
 
 class VariaveisForm(forms.ModelForm):

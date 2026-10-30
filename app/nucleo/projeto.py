@@ -6,13 +6,30 @@ existir = sobrescrevi; excluir a linha = voltar ao passo da matriz / à cor da p
 """
 
 from django import forms
+from django.core.validators import MaxLengthValidator
 from django.forms import BaseInlineFormSet, inlineformset_factory
 
-from nucleo.admin.variaveis import EDITAVEIS, limitar, mostrar_nome_do_ano
-from nucleo.models import Componente, Etapa, Projeto, ProjetoCor, ProjetoPasso
-from nucleo.variaveis import TAMANHO_MAX
+from nucleo.models import Componente, CorPadrao, Etapa, Projeto, ProjetoCor, ProjetoPasso
+from nucleo.variaveis import EDITAVEIS, TAMANHO_MAX
 
 MAX_CORES = 5  # um por padrão (1 a 5)
+
+
+def limitar(form, limites):
+    """Tamanho máximo no form (validador + maxlength): sem isso o CHECK do banco vira 500."""
+    for nome, limite in limites.items():
+        campo = form.fields.get(nome)  # ausente quando só leitura
+        if campo is not None:
+            campo.validators.append(MaxLengthValidator(limite))
+            campo.widget.attrs["maxlength"] = limite
+
+
+def mostrar_nome_do_ano(form, ano_id):
+    """Placeholder dos `pdNN`: o nome do padrão no ano, que vale quando o campo fica vazio (D-175)."""
+    for k, nome in CorPadrao.objects.filter(ano_id=ano_id).exclude(nome="").values_list("padrao", "nome"):
+        campo = form.fields.get(f"pd{k:02d}")  # ausente quando só leitura
+        if campo is not None:
+            campo.widget.attrs["placeholder"] = f"padrão do ano: {nome}"
 
 
 class ProjetoForm(forms.ModelForm):
@@ -41,6 +58,8 @@ class PassoForm(forms.ModelForm):
         # D-053: só etapa e componente do ano do projeto (a FK composta recusa os outros no banco).
         self.fields["etapa"].queryset = Etapa.objects.filter(ano_id=ano_id).order_by("ordem")
         self.fields["componente"].queryset = Componente.objects.filter(ano_id=ano_id).order_by("codigo")
+        for nome in ("etapa", "componente"):  # o __str__ repete o ano, que aqui é sempre o do projeto
+            self.fields[nome].label_from_instance = lambda o: o.codigo
 
     def clean(self):
         self.instance.ano_id = self.instance.projeto.ano_id  # o ano que a FK composta precisa

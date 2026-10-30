@@ -14,7 +14,7 @@ o botão "Adicionar" desligado quando chega a 5.
   {% endif %}
   {% if pode_gravar or nova %}<td class="pj-remover"><label class="marcar">{{ f.DELETE }} {% if f.instance.pk %}Remover{% else %}Descartar{% endif %}</label></td>{% endif %}
 </tr>
-{% if f.errors %}<tr class="pj-erros"><td colspan="4"><ul>{% for campo in f %}{% for e in campo.errors %}<li>{{ campo.label }}: {{ e }}</li>{% endfor %}{% endfor %}{% for e in f.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul></td></tr>{% endif %}
+{% if f.errors %}<tr class="pj-erros"><td colspan="{% if tipo == "passos" %}{% if pode_gravar or nova %}4{% else %}3{% endif %}{% elif pode_gravar or nova %}3{% else %}2{% endif %}"><ul>{% for campo in f %}{% for e in campo.errors %}<li>{{ campo.label }}: {{ e }}</li>{% endfor %}{% endfor %}{% for e in f.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul></td></tr>{% endif %}
 {% if nova %}
 <input type="hidden" name="{{ tipo }}-TOTAL_FORMS" id="id_{{ tipo }}-TOTAL_FORMS" value="{{ total }}" hx-swap-oob="true">
 {% if tipo == "cores" and cheio %}{% include "ui/parciais/projeto_adicionar.html" with tipo="cores" oob=True desligado=True %}{% endif %}

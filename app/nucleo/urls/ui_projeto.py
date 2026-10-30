@@ -7,6 +7,7 @@ Regra em `nucleo/projeto.py` (os mesmos forms do change form do admin); bloqueio
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.forms.utils import pretty_name
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
@@ -15,7 +16,7 @@ from django.views.decorators.http import require_GET, require_http_methods
 
 from nucleo.models import Ano, CorPadrao, MatrizEtapaCC, Projeto
 from nucleo.projeto import MAX_CORES, ProjetoForm, formsets
-from nucleo.servicos.resolver import _cores, valores_das_variaveis
+from nucleo.servicos.resolver import cores_efetivas, valores_das_variaveis
 from nucleo.ui_bloqueio import com_bloqueio
 from nucleo.variaveis import VARIAVEIS
 
@@ -63,13 +64,18 @@ def lista(request, ano):
 
 
 def _vestir(*forms, desabilitar=False):
-    """Classes do design system nos widgets, `aria-invalid` no campo com erro; só leitura: disabled."""
+    """Classes do design system nos widgets, `aria-invalid` no campo com erro; só leitura: disabled.
+
+    Linha de formset (prefixo `passos-0`): o <th> não rotula o controle, então vai `aria-label`.
+    O checkbox Remover já tem <label>."""
     for f in forms:
         for nome, campo in f.fields.items():
             tipo = campo.widget.attrs.get("type") or getattr(campo.widget, "input_type", "")
             classe = {"select": "select", "checkbox": "", "color": "pj-cor"}.get(tipo, "input")
             if classe:
                 campo.widget.attrs["class"] = classe
+            if "-" in (f.prefix or "") and tipo not in ("checkbox", "hidden"):
+                campo.widget.attrs.setdefault("aria-label", campo.label or pretty_name(nome))
             if f.is_bound and nome in f.errors:
                 campo.widget.attrs["aria-invalid"] = "true"
             campo.disabled |= desabilitar
@@ -102,7 +108,7 @@ def projeto(request, pk):
         passos, cores = formsets(projeto)
     _vestir(form, *passos.forms, *cores.forms, desabilitar=not pode)
 
-    efetivas = _cores(projeto, projeto, MAX_CORES)  # mesma regra da revista (D-060)
+    efetivas = cores_efetivas(projeto, projeto, MAX_CORES)  # mesma regra da revista (D-060)
     nomes = valores_das_variaveis(projeto)
     sobrescritas = {c.instance.padrao for c in cores.forms if c.instance.pk}
     contexto = {
@@ -119,7 +125,6 @@ def projeto(request, pk):
             {"padrao": k, "cor": efetivas[f"padrao-{k}"], "nome": nomes.get(f"pd{k:02d}", ""), "projeto": k in sobrescritas}
             for k in range(1, MAX_CORES + 1) if f"padrao-{k}" in efetivas
         ],
-        "paleta": CorPadrao.objects.filter(ano_id=projeto.ano_id).order_by("padrao"),
         "passos_matriz": MatrizEtapaCC.objects.filter(matriz_id=projeto.parceiro_ano.matriz_id)
         .select_related("etapa", "componente").order_by("etapa__ordem", "componente__codigo"),
         "ano": projeto.ano,

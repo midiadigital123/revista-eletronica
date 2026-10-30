@@ -145,13 +145,14 @@ Escolha visual: o resto da página é quieto (cartões do editor, tipografia Int
 8. Arquivado: aviso, sem salvar, sem travar; envio recusado mesmo com permissão.
 9. Outra pessoa editando: aviso de quem edita, sem salvar; envio com sessão de outra aba: "Não salvo: você perdeu o bloqueio…" e nada grava.
 10. "Sobrescrever uma cor" traz a linha com o primeiro padrão livre e a cor do ano dele; a 5ª linha desliga o botão; sem o bloqueio o pedido é recusado.
-11. Só etapas e componentes do ano do projeto aparecem nas listas da tabela de passo.
+11. Só etapas e componentes do ano do projeto aparecem nas listas da tabela de passo, pelo código (`5EF`, `LP`), sem o ano.
 12. Lista do ano: projetos com link, "Escolher matriz" só para quem pode; ano vazio mostra o estado vazio; a raiz `/ui/projeto/` abre o ano mais recente.
+13. Cada controle das tabelas de passo e cor tem nome acessível (`aria-label` com o rótulo do campo: Etapa, Componente, Passo, Padrão, Cor).
 
 ## Referências técnicas
 
-- Regra: `app/nucleo/projeto.py` (ProjetoForm, PassoForm, PassoFormSet, CorForm, `formsets`), usada também por `app/nucleo/admin/projeto.py`. Limites e dica do `pdNN`: `admin/variaveis.py` (`limitar`, `mostrar_nome_do_ano`, `EDITAVEIS`).
-- Cores e nomes efetivos da faixa: `servicos/resolver.py` (`_cores`, `valores_das_variaveis`).
+- Regra: `app/nucleo/projeto.py` (ProjetoForm, PassoForm, PassoFormSet, CorForm, `formsets`), usada também por `app/nucleo/admin/projeto.py`. Limites e dica do `pdNN` no mesmo módulo (`limitar`, `mostrar_nome_do_ano`), também usados pela aba Variáveis do admin; `EDITAVEIS` em `nucleo/variaveis.py`.
+- Cores e nomes efetivos da faixa: `servicos/resolver.py` (`cores_efetivas`, `valores_das_variaveis`).
 - View: `app/nucleo/urls/ui_projeto.py` (rotas `ui_projeto_inicio`, `ui_projeto_lista`, `ui_projeto`, `ui_projeto_linha`).
 - Templates: `templates/ui/projeto/{projeto,lista}.html`, `templates/ui/parciais/projeto_{linha,adicionar}.html`; CSS `static/ui/telas/projeto.css`.
 - Testes: `app/nucleo/tests/test_ui_projeto.py`.

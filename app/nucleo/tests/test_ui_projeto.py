@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from nucleo.admin.bloqueio import CAMPO_SESSAO
-from nucleo.admin.variaveis import EDITAVEIS
+from nucleo.variaveis import EDITAVEIS
 from nucleo.models import Ano, Projeto, ProjetoCor, ProjetoPasso
 from nucleo.tests.test_admin_projeto import Base, mensagens
 from nucleo.tests.test_resolver import usuario
@@ -131,7 +131,11 @@ class ProjetoUiTest(Base):
         resp = self.client.get(url, {"cores-TOTAL_FORMS": 4, CAMPO_SESSAO: sessao}, **HTMX)
         self.assertContains(resp, "disabled")  # a 5ª cor desliga o botão (oob)
         url = reverse("ui_projeto_linha", args=[self.projeto_go.pk, "passos"])
-        self.assertContains(self.client.get(url, {"passos-TOTAL_FORMS": 0, CAMPO_SESSAO: sessao}, **HTMX), 'name="passos-0-etapa"')
+        self.assertContains(resp, 'aria-label="Padrão"')  # o <th> não rotula o controle
+        resp = self.client.get(url, {"passos-TOTAL_FORMS": 0, CAMPO_SESSAO: sessao}, **HTMX)
+        self.assertContains(resp, 'name="passos-0-etapa"')
+        self.assertContains(resp, 'aria-label="Passo"')
+        self.assertContains(resp, ">5EF</option>")  # só o código: o ano é sempre o do projeto
         self.assertEqual(self.client.get(url, {"passos-TOTAL_FORMS": 0, CAMPO_SESSAO: "outra"}, **HTMX).status_code, 403)
 
     def test_etapa_de_outro_ano_nao_e_oferecida(self):

@@ -79,7 +79,7 @@
       <table class="tabela pj-tabela">
         <thead><tr><th scope="col">Etapa</th><th scope="col">Componente</th><th scope="col">Passo</th>{% if pode_gravar %}<th scope="col"><span class="sr-only">Remover</span></th>{% endif %}</tr></thead>
         <tbody id="passos-linhas">
-          <tr class="pj-vazio"><td colspan="4" class="mudo">Nenhuma sobrescrita: vale o passo da matriz em todas as etapas e componentes.</td></tr>
+          <tr class="pj-vazio"><td colspan="{% if pode_gravar %}4{% else %}3{% endif %}" class="mudo">Nenhuma sobrescrita: vale o passo da matriz em todas as etapas e componentes.</td></tr>
           {% for f in passos %}{% include "ui/parciais/projeto_linha.html" with tipo="passos" %}{% endfor %}
         </tbody>
       </table>
@@ -110,7 +110,7 @@
       <table class="tabela pj-tabela">
         <thead><tr><th scope="col">Padrão</th><th scope="col">Cor</th>{% if pode_gravar %}<th scope="col"><span class="sr-only">Remover</span></th>{% endif %}</tr></thead>
         <tbody id="cores-linhas">
-          <tr class="pj-vazio"><td colspan="3" class="mudo">Nenhuma sobrescrita: valem as cores do ano.</td></tr>
+          <tr class="pj-vazio"><td colspan="{% if pode_gravar %}3{% else %}2{% endif %}" class="mudo">Nenhuma sobrescrita: valem as cores do ano.</td></tr>
           {% for f in cores %}{% include "ui/parciais/projeto_linha.html" with tipo="cores" %}{% endfor %}
         </tbody>
       </table>
