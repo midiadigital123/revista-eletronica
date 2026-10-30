@@ -26,7 +26,7 @@ from django.db import router, transaction
 from django.db.models import Count, Exists, IntegerField, Max, OuterRef, Subquery
 from django.db.models.functions import Coalesce
 from django.template.response import TemplateResponse
-from django.urls import NoReverseMatch, reverse
+from django.urls import reverse
 from django.utils.html import format_html
 
 from nucleo import texto
@@ -108,14 +108,6 @@ def _assinatura(request):
         return None
 
 
-def _url(nome):
-    """URL de admin de outro passo (S11a/S11c), ou None enquanto não estiver registrado."""
-    try:
-        return reverse(nome)
-    except NoReverseMatch:
-        return None
-
-
 def _contar(qs):
     """Subquery COUNT por template (sem JOIN na changelist, que multiplicaria as linhas)."""
     sub = qs.filter(template=OuterRef("pk")).order_by().values("template")
@@ -162,8 +154,8 @@ class TemplateAdmin(BloqueioAdminMixin, admin.ModelAdmin):
         abas = [
             ("Textos F1", "?fasciculo__exact=F1", request.GET.get("fasciculo__exact") == "F1"),
             ("Textos F2", "?fasciculo__exact=F2", request.GET.get("fasciculo__exact") == "F2"),
-            ("Matrizes", _url("admin:nucleo_matriz_changelist"), False),
-            ("Variáveis", _url("admin:nucleo_projeto_changelist"), False),  # variáveis = colunas de Projeto (D-100)
+            ("Matrizes", reverse("admin:nucleo_matriz_changelist"), False),
+            ("Variáveis", reverse("admin:nucleo_projeto_changelist"), False),  # variáveis = colunas de Projeto (D-100)
         ]
         return super().changelist_view(request, {**(extra_context or {}), "abas": abas})
 

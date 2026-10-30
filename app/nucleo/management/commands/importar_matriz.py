@@ -1,5 +1,4 @@
 from pathlib import Path
-from subprocess import CalledProcessError, SubprocessError
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import IntegrityError, transaction
@@ -31,13 +30,9 @@ class Command(BaseCommand):
                 resumo = gravar_matriz(
                     matriz, dados, substituir, MANTER if passo is None else passo, origem=Path(arquivo).name
                 )
-        except CalledProcessError as e:
-            raise CommandError(f"pdftotext falhou: {(e.stderr or '').strip() or e}") from e
-        except SubprocessError as e:  # inclui o timeout
-            raise CommandError(f"pdftotext falhou: {e}") from e
         except IntegrityError as e:
             raise CommandError(f"o banco recusou a importação: {e}") from e
-        except (ValueError, OSError) as e:
+        except ValueError as e:  # inclui ImportacaoRecusada (ler() já converte as falhas do pdftotext)
             raise CommandError(str(e)) from e
         for (cc, etapa), n in resumo.items():
             self.stdout.write(f"{matriz} {cc} {etapa}: {n} descritores")
