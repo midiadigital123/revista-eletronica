@@ -526,7 +526,7 @@ class ValidacaoTest(Base):
         self.assertEqual(set(form.fields), {"escala_max", "ordem"})
         cor = CorPadrao.objects.get(ano=self.a26, padrao=2)
         form = self.client.get(reverse("admin:nucleo_corpadrao_change", args=[cor.pk])).context["adminform"].form
-        self.assertEqual(set(form.fields), {"cor"})
+        self.assertEqual(set(form.fields), {"cor", "nome"})
         comp = self.c["LP"]
         form = self.client.get(reverse("admin:nucleo_componente_change", args=[comp.pk])).context["adminform"].form
         self.assertEqual(set(form.fields), {"nome"})

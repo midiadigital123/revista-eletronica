@@ -156,6 +156,13 @@ class VariaveisTest(Base):
         self.assertIn("não há projeto do parceiro em 2025", mensagens(r)[0])
         self.assertEqual(Projeto.objects.filter(pk=self.projeto_pe.pk).values().get(), antes)
 
+    def test_pdnn_mostra_o_nome_do_ano_e_a_escala(self):  # D-175
+        r = self.client.get(self.URL)
+        self.assertContains(r, 'placeholder="padrão do ano: Padrão 02"', count=2)  # GO e PE
+        self.assertContains(r, "escala do F1 (nome do padrão)", count=5)
+        r = self.client.get(reverse("admin:nucleo_projeto_change", args=[self.projeto_go.pk]))
+        self.assertContains(r, 'placeholder="padrão do ano: Padrão 05"')
+
     def test_planilha_grava_e_pula_travado(self):
         r = self.client.get(self.URL)
         self.assertContains(r, "LP F2 Padrão")  # adjetivo_patrio_plural_masculino aparece no F2 do LP

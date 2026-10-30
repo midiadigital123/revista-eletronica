@@ -23,7 +23,8 @@ Variável vazia: já sai de `texto.renderizar` como `<span class="variavel-vazia
 Os valores das variáveis e o nome do projeto não entram aqui, só os textos renderizados:
 assim uma variável usada só no LP não muda o hash do MT (D-125). Exceção: `pd01`..`pdNN`
 são os rótulos dos padrões em `dados[etapa]["padroes"]`, então mudam o hash de toda revista
-que tem aquele padrão.
+que tem aquele padrão. `pdNN` vazio no projeto vale `CorPadrao.nome` do ano (D-175): mudar o
+nome do ano muda o hash só das revistas que não sobrescrevem.
 """
 
 import hashlib
@@ -116,8 +117,8 @@ def escala(tarefas, cortes, minimo, maximo, passo):
 
 
 def rotulo_do_padrao(k, valores):
-    """Rótulo do padrão k na escala: `pdNN` do projeto. Vazio: o próprio `{{pdNN}}`, que o JS
-    destaca como variável vazia (D-116). Texto puro: o JS escapa."""
+    """Rótulo do padrão k na escala: `pdNN` efetivo (projeto, senão o nome do ano: D-175).
+    Vazio: o próprio `{{pdNN}}`, que o JS destaca como variável vazia (D-116). Texto puro: o JS escapa."""
     nome = f"pd{k:02d}"
     valor = valores.get(nome)
     return f"{{{{{nome}}}}}" if valor is None or not str(valor).strip() else str(valor)
@@ -225,6 +226,10 @@ def secoes_efetivas(fasciculo):
 def valores_das_variaveis(projeto):
     pa = projeto.parceiro_ano
     valores = {v.nome: getattr(projeto, v.nome) for v in VARIAVEIS if not v.automatica}
+    # pdNN vazio no projeto: vale o nome do padrão no ano (D-175), no rótulo da escala e nos textos.
+    for k, nome in CorPadrao.objects.filter(ano_id=projeto.ano_id).values_list("padrao", "nome"):
+        if not str(valores[f"pd{k:02d}"] or "").strip():
+            valores[f"pd{k:02d}"] = nome
     valores.update(nome_parceiro=pa.parceiro.nome, nome_projeto=projeto.nome, ano=str(projeto.ano.ano))
     return valores
 

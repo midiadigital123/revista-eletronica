@@ -14,7 +14,7 @@ from django.template.response import TemplateResponse
 
 from nucleo import texto
 from nucleo.admin.lote import avisar_pulados, contexto, escolher_ano, escrever_travado, filtro
-from nucleo.models import Projeto, TemplateVersao
+from nucleo.models import CorPadrao, Projeto, TemplateVersao
 from nucleo.variaveis import TAMANHO_MAX, VARIAVEIS
 
 EDITAVEIS = [v.nome for v in VARIAVEIS if not v.automatica]
@@ -74,6 +74,14 @@ def limitar(form, limites):
             campo.widget.attrs["maxlength"] = limite
 
 
+def mostrar_nome_do_ano(form, ano_id):
+    """Placeholder dos `pdNN`: o nome do padrão no ano, que vale quando o campo fica vazio (D-175)."""
+    for k, nome in CorPadrao.objects.filter(ano_id=ano_id).exclude(nome="").values_list("padrao", "nome"):
+        campo = form.fields.get(f"pd{k:02d}")  # ausente quando só leitura
+        if campo is not None:
+            campo.widget.attrs["placeholder"] = f"padrão do ano: {nome}"
+
+
 class VariaveisForm(forms.ModelForm):
     class Meta:
         model = Projeto
@@ -83,6 +91,8 @@ class VariaveisForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         limitar(self, dict.fromkeys(EDITAVEIS, TAMANHO_MAX))
+        # ponytail: 1 SELECT por linha da planilha; passar os nomes por form_kwargs se pesar.
+        mostrar_nome_do_ano(self, self.instance.ano_id)
         for campo in self.fields.values():
             # Valor da carga da página no POST: `changed_data` = só o que este usuário mexeu,
             # e não sobrescreve o que outro gravou depois em outra coluna.
@@ -165,7 +175,8 @@ def variaveis(model_admin, request):
                 campo.disabled = True
 
     usos = templates_por_variavel(ano) if ano else {}
-    legenda = [(v, usos.get(v.nome, [])) for v in VARIAVEIS]
+    escala = ["escala do F1 (nome do padrão)"]  # pdNN também é o rótulo do padrão (D-173, D-175)
+    legenda = [(v, (escala if v.nome.startswith("pd") else []) + usos.get(v.nome, [])) for v in VARIAVEIS]
     ctx = contexto(
         model_admin, request, "Variáveis dos projetos",
         formset=formset, legenda=legenda, pode_editar=pode_editar,

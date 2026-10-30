@@ -77,10 +77,14 @@ class CorPadrao(models.Model):
     ano = models.ForeignKey(Ano, on_delete=models.PROTECT)
     padrao = models.IntegerField("Padrão", validators=PADRAO_1A5)
     cor = models.TextField(validators=COR_HEX)
+    # Nome do padrão no ano; o `pdNN` do projeto sobrescreve quando preenchido (D-175).
+    nome = models.TextField(blank=True, default="", max_length=200)
     history = HistoricalRecords()
 
     class Meta:
         db_table = "cor_padrao"
+        verbose_name = "padrão do ano"
+        verbose_name_plural = "padrões do ano (cor e nome)"
         constraints = [
             models.UniqueConstraint(fields=["ano", "padrao"], name="cor_padrao_ano_padrao_uniq"),
             models.CheckConstraint(
@@ -89,6 +93,7 @@ class CorPadrao(models.Model):
             models.CheckConstraint(
                 condition=Q(cor__regex=r"^#[0-9A-Fa-f]{6}$"), name="cor_padrao_cor_hex"
             ),
+            max_len("cor_padrao", "nome", 200),
         ]
 
     def __str__(self):

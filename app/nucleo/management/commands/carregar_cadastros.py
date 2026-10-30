@@ -10,7 +10,7 @@ CORES = ["#F72628", "#FF8D43", "#B3CCFF", "#0ED3FF", "#FFFFFF"]
 
 
 class Command(BaseCommand):
-    help = "Cria ano, etapas, componentes e cores dos padrões. Idempotente: não altera o que já existe."
+    help = "Cria ano, etapas, componentes e cores e nomes dos padrões. Idempotente: não altera o que já existe."
 
     def add_arguments(self, parser):
         parser.add_argument("--ano", type=int, required=True)
@@ -27,5 +27,7 @@ class Command(BaseCommand):
         for codigo, nome in COMPONENTES:
             criados += Componente.objects.get_or_create(ano=ano_obj, codigo=codigo, defaults={"nome": nome})[1]
         for padrao, cor in enumerate(CORES, start=1):
-            criados += CorPadrao.objects.get_or_create(ano=ano_obj, padrao=padrao, defaults={"cor": cor})[1]
+            criados += CorPadrao.objects.get_or_create(
+                ano=ano_obj, padrao=padrao, defaults={"cor": cor, "nome": f"Padrão {padrao:02d}"}
+            )[1]
         self.stdout.write(f"{ano}: {criados} registro(s) criado(s).")

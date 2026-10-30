@@ -54,14 +54,28 @@ ou na aba Variáveis ("Copiar valores do ano anterior" preenche as vazias).
 
 ## Padrões de desempenho (`pd01`..`pd05`)
 
-`pd01`..`pd05` são o nome de cada padrão na escala do F1 (no lugar de "Padrão 01".."Padrão 05")
-e também podem ser usados nos textos, como qualquer variável. Só contam os padrões que a
-revista tem (2 a 5, conforme os cortes): numa revista de 4 padrões, `pd05` vazio não pesa,
-mas `pd01`..`pd04` vazios geram a pendência abaixo. A cor de cada padrão continua separada.
+`pd01`..`pd05` são o nome de cada padrão na escala do F1 e também podem ser usados nos
+textos (F1 e F2), como qualquer variável.
+
+Regra: **nome do ano, sobrescrito pelo `pdNN` do projeto.** Cada ano tem um nome por padrão,
+guardado junto da cor do padrão. O projeto só preenche `pdNN` quando quer outro nome; com
+`pdNN` vazio, vale o nome do ano, tanto na escala quanto em `{{pdNN}}` nos textos. É o mesmo
+modelo da cor (cor do ano + cor do projeto).
+
+- **Nome do ano:** admin > Núcleo > "Padrões do ano (cor e nome)" (`CorPadrao`, filtre pelo ano), campo "Nome". Começa como
+  "Padrão 01".."Padrão 05" e é copiado ao abrir o ano seguinte. Mudar esse nome muda todas
+  as revistas do ano que não sobrescrevem (e elas precisam ser validadas de novo).
+- **Nome do projeto:** form do projeto ou aba Variáveis. O campo vazio mostra o nome do ano
+  ("padrão do ano: …").
+
+Só contam os padrões que a revista tem (2 a 5, conforme os cortes): numa revista de 4
+padrões, `pd05` não pesa. Um padrão que a revista tem gera a pendência abaixo só se o
+projeto e o ano estiverem vazios.
 
 ## Variável vazia
 
-Variável usada no template (ou `pdNN` de um padrão da revista) e sem valor no projeto aparece no preview com o mesmo
+Variável usada no template (ou `pdNN` de um padrão da revista) e sem valor no projeto
+(para `pdNN`: nem no projeto nem no ano) aparece no preview com o mesmo
 destaque vermelho da faixa de "falta template" (D-116) e gera a pendência "variáveis",
 que impede marcar a revista como "Validado".
 

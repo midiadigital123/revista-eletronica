@@ -87,6 +87,15 @@ class AbrirAnoTest(TestCase):
         self.assertEqual(contagens(2026), antes)  # origem intacta
         self.assertEqual(depois["Tarefa"], 16)
 
+    def test_copia_nome_e_cor_dos_padroes(self):  # D-175
+        CorPadrao.objects.filter(ano__ano=2026, padrao=1).update(nome="Abaixo do básico")
+        abrir_ano(2027, usuario=self.usuario)
+        self.assertEqual(
+            list(do_ano(CorPadrao, 2027).order_by("padrao").values_list("cor", "nome")),
+            list(do_ano(CorPadrao, 2026).order_by("padrao").values_list("cor", "nome")),
+        )
+        self.assertEqual(do_ano(CorPadrao, 2027).get(padrao=1).nome, "Abaixo do básico")
+
     def test_mapa_de_ids_preserva_mec_e_templates(self):
         abrir_ano(2027)
         self.assertEqual(len(mecs(2026)), 4)
