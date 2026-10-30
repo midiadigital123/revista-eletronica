@@ -12,6 +12,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
+from django.utils.cache import patch_vary_headers
 from django.views.decorators.http import require_POST
 
 from nucleo.models import Ano, Revista
@@ -27,6 +28,12 @@ def _detalhe(request, s):
 
 @protegida
 def impresso(request, ano=None):
+    resp = _impresso(request, ano)
+    patch_vary_headers(resp, ["HX-Request"])  # mesma URL, dois corpos: o Voltar não reaproveita o fragmento
+    return resp
+
+
+def _impresso(request, ano):
     anos = list(Ano.objects.order_by("-ano"))
     if ano is None:  # /ui/impresso/ → ano mais recente
         return redirect("ui_impresso", anos[0].ano) if anos else redirect("admin:index")

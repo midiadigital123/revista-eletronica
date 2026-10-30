@@ -34,7 +34,8 @@ PERDEU = "Não salvo: você perdeu o bloqueio de edição (outra pessoa ou aba a
 
 
 def e_htmx(request):
-    return request.headers.get("HX-Request") == "true"
+    # Restauração de histórico (falta no cache do htmx) pede a página inteira, não o fragmento.
+    return request.headers.get("HX-Request") == "true" and not request.headers.get("HX-History-Restore-Request")
 
 
 def _dados(alvo, sessao):

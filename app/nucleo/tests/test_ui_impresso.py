@@ -53,7 +53,19 @@ class ImpressoUiTest(Base):
         self.assertTemplateUsed(r, "ui/parciais/impresso_detalhe.html")
         self.assertTemplateNotUsed(r, "ui/base.html")
         self.assertContains(r, str(self.rev))
+        self.assertIn("HX-Request", r["Vary"])  # o Voltar não reaproveita o fragmento como página
         self.assertEqual(self.client.get(self.url, {"revista": 999999}, **HTMX).status_code, 404)
+        # Revista de 2026 pedida por outro ano: 404 no detalhe e no marcar.
+        Ano.objects.create(ano=2025)
+        outro = reverse("ui_impresso", args=[2025])
+        self.assertEqual(self.client.get(outro, {"revista": self.rev.pk}, **HTMX).status_code, 404)
+        self.client.force_login(self.imp)
+        self.assertEqual(self.client.post(reverse("ui_impresso_marcar", args=[2025, self.rev.pk])).status_code, 404)
+
+    def test_restauracao_de_historico_devolve_a_pagina_inteira(self):
+        r = self.abrir(**HTMX, HTTP_HX_HISTORY_RESTORE_REQUEST="true")
+        self.assertTemplateUsed(r, "ui/base.html")
+        self.assertIn("HX-Request", r["Vary"])
 
     def test_so_leitura_para_quem_nao_marca(self):
         self.validar()

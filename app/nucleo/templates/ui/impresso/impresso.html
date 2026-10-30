@@ -29,7 +29,7 @@ Lista + detalhe: a lista é só links (?revista=pk); o HTMX troca o #detalhe e p
 </p>
 
 <div class="lado-a-lado">
-  <nav class="lista" aria-label="Revistas do ano" data-lista-impresso>
+  <nav class="lista" aria-label="Revistas do ano" data-lista>
     {% for i in itens %}
     <a href="?revista={{ i.revista.pk }}" hx-get="?revista={{ i.revista.pk }}" hx-target="#detalhe" hx-push-url="true" hx-indicator="#detalhe"{% if i.revista.pk == detalhe.revista.pk %} aria-current="page"{% endif %}>
       <span class="impresso-nome">{{ i.revista }}</span>
@@ -37,32 +37,9 @@ Lista + detalhe: a lista é só links (?revista=pk); o HTMX troca o #detalhe e p
     </a>
     {% endfor %}
   </nav>
-  <section class="detalhe" id="detalhe" aria-live="polite">
+  <section class="detalhe" id="detalhe">
     {% include "ui/parciais/impresso_detalhe.html" %}
   </section>
 </div>
-
-<script>
-// Item ativo da lista acompanha o detalhe trocado pelo HTMX; "Copiar texto novo" usa a área de
-// transferência e, sem ela (http, navegador antigo), seleciona o texto para o Ctrl+C.
-(() => {
-  const lista = document.querySelector("[data-lista-impresso]");
-  lista.addEventListener("click", (e) => {
-    const a = e.target.closest("a");
-    if (!a) return;
-    lista.querySelectorAll("[aria-current]").forEach((x) => x.removeAttribute("aria-current"));
-    a.setAttribute("aria-current", "page");
-  });
-  document.addEventListener("click", (e) => {
-    const b = e.target.closest("[data-copiar]");
-    if (!b) return;
-    const t = b.closest(".impresso-item").querySelector("textarea");
-    const rotulo = b.querySelector("span");
-    const selecionar = () => { t.focus(); t.select(); rotulo.textContent = "Selecionado: use Ctrl+C"; };
-    const p = navigator.clipboard?.writeText(t.value);
-    p ? p.then(() => { rotulo.textContent = "Copiado"; b.dataset.copiado = ""; }, selecionar) : selecionar();
-  });
-})();
-</script>
 {% endif %}
 {% endblock %}

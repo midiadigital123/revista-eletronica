@@ -80,7 +80,8 @@ Só um: a foto "impresso" da revista (o registro da "Revista Impressa Atualizada
 
 ## HTMX
 
-- Clicar numa revista da lista: `hx-get` do mesmo endereço com `?revista=<id>`, troca só o detalhe e põe o endereço no histórico. Sem JavaScript, o link recarrega a página inteira no mesmo estado.
+- Clicar numa revista da lista: `hx-get` do mesmo endereço com `?revista=<id>`, troca só o detalhe e põe o endereço no histórico. Sem JavaScript, o link recarrega a página inteira no mesmo estado. O foco vai para o título da revista escolhida (o leitor de tela não lê o diff inteiro). Voltar/avançar do navegador mostra a página inteira, nunca só o detalhe.
+- "Copiar texto novo" copia o texto do campo; sem área de transferência, seleciona o texto e avisa "Selecionado: use Ctrl+C" (o rótulo é anunciado ao leitor de tela).
 - Marcar é um formulário comum (envia, volta para a mesma revista com a mensagem). O botão é desabilitado no envio para não clicar duas vezes.
 
 ## Wireframe (1440 px)

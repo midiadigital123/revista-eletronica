@@ -22,7 +22,6 @@
 .impresso-item-cab h5 { font-size: 0.875rem; font-weight: 600; font-family: var(--font-mono); }
 .impresso-item .textarea { max-height: 16rem; }
 .impresso-removido { padding: 0.5rem 0.75rem; border-radius: var(--radius-md); }
-.impresso-item [data-copiado] { border-color: oklch(0.45 0.13 150); color: oklch(0.45 0.13 150); }
 
 /* a barra de marcar fica no rodapé do detalhe enquanto o diff rola */
 .detalhe > .barra-salvar { padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: 0 -4px 12px oklch(0 0 0 / 0.04); }

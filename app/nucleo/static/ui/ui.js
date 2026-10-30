@@ -36,6 +36,29 @@
     if (abrir) document.getElementById(abrir.dataset.abrir)?.showModal();
     const fechar = e.target.closest("dialog [data-fechar]");
     if (fechar) fechar.closest("dialog").close();
+
+    // <button data-copiar="#id-do-campo"><span role="status">rótulo</span></button>: copia o valor do campo;
+    // sem área de transferência (http, navegador antigo), seleciona o texto para o Ctrl+C.
+    const copiar = e.target.closest("[data-copiar]");
+    const campo = copiar && document.querySelector(copiar.dataset.copiar);
+    if (campo) {
+      const rotulo = copiar.querySelector("span") || copiar;
+      const selecionar = () => { campo.focus(); campo.select(); rotulo.textContent = "Selecionado: use Ctrl+C"; };
+      const p = navigator.clipboard?.writeText(campo.value);
+      p ? p.then(() => { rotulo.textContent = "Copiado"; copiar.dataset.copiado = ""; }, selecionar) : selecionar();
+    }
+  });
+
+  // Lista + detalhe: link de <nav data-lista> com hx-get troca o detalhe; o link fica ativo
+  // (aria-current) e o foco vai ao título do detalhe novo, sem ler o detalhe inteiro.
+  document.addEventListener("htmx:afterSwap", (e) => {
+    const link = e.detail.requestConfig?.elt;
+    const lista = link?.closest?.("[data-lista]");
+    if (!lista) return;
+    lista.querySelectorAll("[aria-current]").forEach((x) => x.removeAttribute("aria-current"));
+    link.setAttribute("aria-current", "page");
+    const titulo = e.detail.target.querySelector("h1, h2, h3");
+    if (titulo) { titulo.tabIndex = -1; titulo.focus(); }
   });
 
   // Confirmação forte: <input data-confirmar="texto exato"> libera o botão [data-confirmado] do form.

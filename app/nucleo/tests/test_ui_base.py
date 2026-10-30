@@ -136,4 +136,5 @@ class CascaTest(TestCase):
         self.assertContains(r, 'href="/painel/2026/"')
         self.assertContains(r, 'href="/admin/nucleo/projeto/variaveis/?ano=2026"')
         self.assertContains(r, 'href="/admin/nucleo/matriz/"')
+        self.assertContains(r, 'href="/ui/impresso/2026/"')
         self.assertContains(r, 'id="mensagens"')
