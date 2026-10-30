@@ -1,0 +1,34 @@
+/* Validar revistas (templates/ui/validar/pagina.html). Só o que a base (ui.css) não tem. */
+
+.validar-lote { display: flex; flex-direction: column; gap: 1rem; }
+
+/* Cartão: a borda esquerda diz o estado (lê-se o lote de relance); sempre com selo de texto ao lado. */
+.validar-cartao {
+  --estado: var(--border);
+  gap: 0.75rem; padding: 1rem 1.25rem;
+  box-shadow: inset 3px 0 0 var(--estado), var(--shadow-xs), 0 0 0 1px color-mix(in oklch, var(--foreground) 10%, transparent);
+}
+.validar-validada { --estado: oklch(0.45 0.13 150); }
+.validar-pendente { --estado: var(--destructive); }
+.validar-cartao.htmx-request { opacity: 0.6; transition: opacity 150ms; }
+
+.validar-cab { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; }
+.validar-nome { font-size: 1rem; line-height: 1.5rem; font-weight: 600; letter-spacing: -0.01em; }
+.validar-nome .marcar { font-size: inherit; }
+.validar-esta { margin-left: auto; }
+.validar-esta .htmx-indicator { display: none; }
+.htmx-request .validar-esta .htmx-indicator { display: inline; }
+
+/* Selo "validada": o verde do status ✓ da base. */
+.validar-badge-ok { background: color-mix(in oklch, oklch(0.45 0.13 150) 12%, transparent); color: oklch(0.4 0.13 150); }
+.validar-badge-ok svg { width: 0.75rem; height: 0.75rem; }
+
+.validar-diff summary { cursor: pointer; width: fit-content; font-size: 0.875rem; font-weight: 500; }
+.validar-diff summary:hover { text-decoration: underline; text-underline-offset: 4px; }
+.validar-diff[open] summary { margin-bottom: 0.5rem; }
+
+@media (max-width: 40rem) {
+  .validar-cartao { padding: 0.875rem 1rem; }
+  .validar-esta { margin-left: 0; width: 100%; }
+  .validar-lote .barra-salvar .mudo { flex-basis: 100%; }
+}
