@@ -11,8 +11,8 @@ from django.urls import reverse
 
 from nucleo.admin import lote, variaveis
 from nucleo.admin.bloqueio import BloqueioAdminMixin
-from nucleo.admin.variaveis import limitar
 from nucleo.models import Componente, Etapa, Projeto, ProjetoCor, ProjetoPasso
+from nucleo.planilha_variaveis import EDITAVEIS, limitar, mostrar_nome_do_ano
 from nucleo.variaveis import TAMANHO_MAX, VARIAVEIS
 
 
@@ -65,8 +65,8 @@ class CorInline(admin.TabularInline):
 class ProjetoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        limitar(self, {"nome": 200, **dict.fromkeys(variaveis.EDITAVEIS, TAMANHO_MAX)})  # CHECKs do banco
-        variaveis.mostrar_nome_do_ano(self, self.instance.ano_id)
+        limitar(self, {"nome": 200, **dict.fromkeys(EDITAVEIS, TAMANHO_MAX)})  # CHECKs do banco
+        mostrar_nome_do_ano(self, self.instance.ano_id)
 
 
 @admin.register(Projeto)

@@ -134,7 +134,7 @@ class CascaTest(TestCase):
         self.assertNotContains(r, "fonts.googleapis.com")
         # Telas B ainda vazias: a navegação cai no admin equivalente.
         self.assertContains(r, 'href="/painel/2026/"')
-        self.assertContains(r, 'href="/admin/nucleo/projeto/variaveis/?ano=2026"')
+        self.assertContains(r, 'href="/ui/variaveis/2026/"')  # tela B de variáveis já entrou
         self.assertContains(r, 'href="/admin/nucleo/matriz/"')
         self.assertContains(r, 'href="/painel/2026/?falta=impresso"')
         self.assertContains(r, 'id="mensagens"')
