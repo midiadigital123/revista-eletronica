@@ -23,7 +23,7 @@ from django.views.decorators.http import require_http_methods
 from nucleo.admin import lote
 from nucleo.models import Ano, FotoRevista, Parceiro, Revista, Template
 from nucleo.models.revista import Motivo
-from nucleo.servicos import resolver, validacao
+from nucleo.servicos import bloqueio, resolver, validacao
 from nucleo.urls.preview import protegida
 
 # Coluna → códigos de `pendencias` que ela mostra (ordem das colunas da tela).
@@ -155,27 +155,25 @@ def diff(revista, resolvido):
     return mark_safe(tabela)  # o HtmlDiff escapa &, < e >
 
 
-@require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
-@permission_required("nucleo.validar_revista", raise_exception=True)
-def validar_lote(request, ano):
-    ano = get_object_or_404(Ano, ano=ano)
-    if request.method == "POST":
-        pares = {}
-        for par in request.POST.getlist("par"):  # "pk:hash"
-            pk, _, hash_visto = par.partition(":")
-            if pk.isdigit():
-                pares[int(pk)] = hash_visto
-        revistas = revistas_do_ano(ano).filter(pk__in=pares)
-        itens = [
-            (str(r), r.projeto, lambda r=r: validacao.validar(r.pk, pares[r.pk], request.user)) for r in revistas
-        ]
-        feitos = lote.aplicar(request, itens)  # recusadas: "Pulados: revista (motivo)"
-        lote.avisar_pulados(request, [f"revista {pk} (não encontrada ou arquivada)" for pk in set(pares) - {r.pk for r in revistas}])
-        if feitos:
-            messages.success(request, f"Validadas {feitos} revista(s).")
-        return HttpResponseRedirect(reverse("painel", args=[ano.ano]))
-    ids = [int(x) for x in request.GET.getlist("revista") if x.isdigit()]
+def validar_pares(request, ano, pedidos):
+    """Grava os pares "pk:hash" (cada um sozinho, sob o bloqueio do projeto: D-121) e avisa
+    pelo `messages`. Serve ao admin e à tela B (urls/ui_validar.py). Devolve os pks pedidos."""
+    pares = {}
+    for par in pedidos:
+        pk, _, hash_visto = par.partition(":")
+        if pk.isdigit():
+            pares[int(pk)] = hash_visto
+    revistas = revistas_do_ano(ano).filter(pk__in=pares)
+    itens = [(str(r), r.projeto, lambda r=r: validacao.validar(r.pk, pares[r.pk], request.user)) for r in revistas]
+    feitos = lote.aplicar(request, itens)  # recusadas: "Pulados: revista (motivo)"
+    lote.avisar_pulados(request, [f"revista {pk} (não encontrada ou arquivada)" for pk in set(pares) - {r.pk for r in revistas}])
+    if feitos:
+        messages.success(request, f"Validadas {feitos} revista(s).")
+    return list(pares)
+
+
+def itens_validar(ano, ids):
+    """O que a validação mostra de cada revista ativa do ano em `ids` (admin e tela B)."""
     itens = []
     for revista in revistas_do_ano(ano).filter(pk__in=ids):
         resolvido = resolver.resolver(revista)
@@ -184,12 +182,27 @@ def validar_lote(request, ano):
                 "revista": revista,
                 "hash": (atual := resolver.hash_validado(revista, resolvido)),
                 "validada": validacao.validada(revista, atual),
-                "pendencias": resolver.pendencias(revista, resolvido),
+                "pendencias": [p._replace(link=link(p.codigo, revista)) for p in resolver.pendencias(revista, resolvido)],
                 "desatualizadas": resolver.secoes_desatualizadas(revista),  # D-087: só avisa
                 "diff": diff(revista, resolvido),
+                "editando": bloqueio.quem_bloqueia(revista.projeto),  # o lote vai pular (D-121)
             }
         )
-    ctx = contexto(request, f"Validar em lote ({ano.ano})", itens=itens, url_painel=reverse("painel", args=[ano.ano]))
+    return itens
+
+
+@require_http_methods(["GET", "POST"])
+@login_required(login_url="admin:login")
+@permission_required("nucleo.validar_revista", raise_exception=True)
+def validar_lote(request, ano):
+    ano = get_object_or_404(Ano, ano=ano)
+    if request.method == "POST":
+        validar_pares(request, ano, request.POST.getlist("par"))
+        return HttpResponseRedirect(reverse("painel", args=[ano.ano]))
+    ids = [int(x) for x in request.GET.getlist("revista") if x.isdigit()]
+    ctx = contexto(
+        request, f"Validar em lote ({ano.ano})", itens=itens_validar(ano, ids), url_painel=reverse("painel", args=[ano.ano])
+    )
     return TemplateResponse(request, "nucleo/painel_validar.html", ctx)
 
 
