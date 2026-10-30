@@ -1,25 +1,37 @@
 """S11b2: texto por seção na revista (cópia, aviso com diff, descartar, troca de template)."""
 
+import threading
+from unittest import mock
+
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
+from django.db import connection, transaction
+from django.test import Client, TransactionTestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from nucleo.admin.bloqueio import CAMPO_SESSAO
-from nucleo.models import Bloqueio, RevistaFasciculo, RevistaSecao, Template, TemplateVersao
+from nucleo.admin.revista import RevistaAdmin
+from nucleo.models import Bloqueio, Revista, RevistaFasciculo, RevistaSecao, Template, TemplateVersao
+from nucleo.models.revista import Motivo
+from nucleo.servicos.foto import fotografar
 from nucleo.servicos.resolver import carregar, hash_validado, resolver, secoes_desatualizadas
 from nucleo.tests.test_admin_projeto import Base, mensagens
-from nucleo.tests.test_resolver import F1
+from nucleo.tests.test_resolver import F1, Mundo
 
 INTRO = "secao__F1__introducao"
 
 
-class TextosTest(Base):
-    def setUp(self):
-        super().setUp()
+class Postar:
+    """Monta o POST do change form da revista (TextosTest e o teste de concorrência)."""
+
+    def preparar(self):
         self.rev = self.go["LP"]
         self.url = reverse("admin:nucleo_revista_change", args=[self.rev.pk])
         self.rf = RevistaFasciculo.objects.get(revista=self.rev, fasciculo="F1")
 
     def abrir(self):
-        Bloqueio.objects.filter(usuario=self.ped).delete()  # o pagehide da carga anterior
+        Bloqueio.objects.all().delete()  # o pagehide da carga anterior
         r = self.client.get(self.url)
         self.assertEqual(r.status_code, 200)
         return r
@@ -38,9 +50,24 @@ class TextosTest(Base):
         rfs = RevistaFasciculo.objects.filter(revista=self.rev).order_by("pk")
         dados.update({"revistafasciculo_set-TOTAL_FORMS": len(rfs), "revistafasciculo_set-INITIAL_FORMS": len(rfs)})
         for i, rf in enumerate(rfs):
-            dados.update({f"revistafasciculo_set-{i}-id": rf.pk, f"revistafasciculo_set-{i}-template": rf.template_id})
+            dados.update({f"revistafasciculo_set-{i}-id": rf.pk, f"revistafasciculo_set-{i}-template": rf.template_id or ""})
         dados.update(troca)
         return self.client.post(self.url, dados, follow=True)
+
+    def campo_template(self):
+        i = list(RevistaFasciculo.objects.filter(revista=self.rev).order_by("pk")).index(self.rf)
+        return f"revistafasciculo_set-{i}"
+
+    def outro_template(self):
+        outro = Template.objects.create(ano=self.ano, componente=self.lp, fasciculo="F1", nome="Outro")
+        TemplateVersao.objects.create(template=outro, numero=1, texto=F1.replace("Fim.", "Outro fim."))
+        return outro
+
+
+class TextosTest(Postar, Base):
+    def setUp(self):
+        super().setUp()
+        self.preparar()
 
     def nova_versao(self, texto):
         atual = TemplateVersao.objects.filter(template=self.rf.template).order_by("-numero").first()
@@ -123,7 +150,7 @@ class TextosTest(Base):
         self.assertContains(r, "cópias de seção: introducao")
         self.assertContains(r, "digite “descartar 1 cópia”")
         r = self.postar(**{campo: outro.pk, f"revistafasciculo_set-{i}-confirmacao": "descartar 2 cópias"})
-        self.assertContains(r, "Este fascículo tem textos editados")
+        self.assertContains(r, "A confirmação não confere com as cópias de agora.")
         self.assertEqual(RevistaFasciculo.objects.get(pk=self.rf.pk).template, self.templates["LP", "F1"])
         self.assertTrue(RevistaSecao.objects.exists())
 
@@ -132,7 +159,46 @@ class TextosTest(Base):
         self.assertEqual(RevistaFasciculo.objects.get(pk=self.rf.pk).template, outro)
         self.assertFalse(RevistaSecao.objects.exists())
         self.assertIn("Textos do F1 não salvos: o template do F1 foi trocado.", mensagens(r))
+        self.assertIn("Template do F1 trocado: 1 cópia de seção descartada.", mensagens(r))
         self.assertIn("Outro fim.", self.secao_resolvida("fechamento")["corpo"])
+
+    def test_troca_que_apaga_copias_exige_permissao_de_texto(self):
+        self.postar(**{INTRO: "Meu texto."})
+        sem_texto = get_user_model().objects.create(username="sem-texto", is_staff=True)
+        sem_texto.user_permissions.set(
+            Group.objects.get(name="Pedagógica").permissions.exclude(codename__endswith="revistasecao")
+        )
+        self.client.force_login(sem_texto)
+        campo, outro = self.campo_template(), self.outro_template()
+        r = self.postar(**{f"{campo}-template": outro.pk, f"{campo}-confirmacao": "descartar 1 cópia"})
+        self.assertContains(r, "exige permissão de editar textos")
+        self.assertEqual(RevistaFasciculo.objects.get(pk=self.rf.pk).template, self.templates["LP", "F1"])
+        self.assertTrue(RevistaSecao.objects.exists())
+
+    def test_arquivada_mostra_a_foto_e_nao_grava_textos(self):
+        self.postar(**{INTRO: "Meu texto."})
+        RevistaFasciculo.objects.filter(revista=self.rev, fasciculo="F2").update(template=None)
+        fotografar(carregar(self.rev.pk), Motivo.ARQUIVAMENTO, self.usuario)
+        Revista.objects.filter(pk=self.rev.pk).update(arquivada_em=timezone.now())
+        self.nova_versao(F1.replace("Fim.", "Fim ao vivo."))  # o template muda depois da foto
+        r = self.client.get(self.url)
+        self.assertContains(r, "Meu texto.")
+        self.assertContains(r, "Fim.")
+        self.assertNotContains(r, "Fim ao vivo.")
+        self.assertContains(r, "Falta escolher o template do F2.")  # faixa da foto
+        Bloqueio.objects.all().delete()
+
+        # Arquivada entre a checagem da permissão e a gravação: gravar_textos relê travado e recusa.
+        with mock.patch.object(RevistaAdmin, "has_change_permission", return_value=True):
+            r = self.postar(**{INTRO: "Outro."})
+        self.assertIn("Textos não salvos: a revista foi arquivada (só leitura).", mensagens(r))
+        self.assertEqual(RevistaSecao.objects.get().texto, "Meu texto.")
+
+    def test_faixa_sem_template_e_preview_valida_o_corpo(self):
+        RevistaFasciculo.objects.filter(revista=self.rev, fasciculo="F2").update(template=None)
+        self.assertContains(self.abrir(), "Falta escolher o template do F2.")
+        r = self.client.post(reverse("template_preview"), {"texto": "## introducao\nT\n\nOi {{x}}.", "corpo": "1"})
+        self.assertTrue(any("{{x}}" in e for e in r.json()["erros"]))
 
     def test_impresso_so_le_os_textos(self):
         self.postar(**{INTRO: "Meu texto."})
@@ -142,3 +208,42 @@ class TextosTest(Base):
         self.assertContains(r, "Meu texto.")
         self.assertEqual(self.client.post(self.url, {INTRO: "y"}).status_code, 403)
         self.assertEqual(RevistaSecao.objects.get().texto, "Meu texto.")
+
+
+class ContagemConcorrenteTest(Postar, TransactionTestCase):
+    """Troca de template com cópias × outra aba criando cópia (D-171): a trava do fascículo no
+    clean faz a troca esperar e recontar; a contagem velha vira erro de formulário, não 500."""
+
+    def test_copia_criada_durante_a_troca_recusa_a_confirmacao_velha(self):
+        Mundo.montar(self)
+        self.client = Client()
+        self.client.force_login(get_user_model().objects.create_superuser("su", password="x"))
+        self.preparar()
+        self.postar(**{INTRO: "Meu texto."})
+        campo, outro = self.campo_template(), self.outro_template()
+        aberta = self.abrir()  # a página mostra 1 cópia
+        copia = RevistaSecao.objects.get()
+        travou, solta = threading.Event(), threading.Event()
+
+        def outra_aba():  # gravar_textos no meio da transação: travou o fascículo, criou a 2ª cópia
+            try:
+                with transaction.atomic():
+                    RevistaFasciculo.objects.select_for_update().get(pk=self.rf.pk)
+                    RevistaSecao.objects.create(
+                        revista_fasciculo=self.rf, secao="fechamento", texto="Outro.",
+                        template_id=copia.template_id, template_versao_id=copia.template_versao_id,
+                    )  # fmt: skip
+                    travou.set()
+                    solta.wait(10)
+            finally:
+                connection.close()
+
+        t = threading.Thread(target=outra_aba)
+        t.start()
+        self.assertTrue(travou.wait(10))
+        threading.Timer(0.5, solta.set).start()  # a troca espera a trava e só então conta
+        r = self.postar(aberta, **{f"{campo}-template": outro.pk, f"{campo}-confirmacao": "descartar 1 cópia"})
+        t.join()
+        self.assertContains(r, "digite “descartar 2 cópias”")
+        self.assertEqual(RevistaFasciculo.objects.get(pk=self.rf.pk).template, self.templates["LP", "F1"])
+        self.assertEqual(RevistaSecao.objects.count(), 2)

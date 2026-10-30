@@ -2,7 +2,7 @@
 // "Inserir variável" põe {{nome}} no cursor; o preview chama a rota template_preview
 // com debounce. O HTML do preview vem de texto.renderizar (o servidor já escapou);
 // os erros de validação entram como texto. Seção da revista (EditorSecao, data-cabecalho):
-// manda "## id + título" + o corpo, sem fascículo (não valida o documento), e só faz o
+// manda "## id + título" + o corpo, sem fascículo (valida só o corpo), e só faz o
 // 1º preview no foco (a revista tem uma caixa por seção).
 (() => {
   "use strict";
@@ -23,6 +23,7 @@
       dados.append("csrfmiddlewaretoken", csrf);
       dados.append("texto", (cabecalho ?? "") + area.value);
       if (cabecalho === undefined) dados.append("fasciculo", select ? select.value : caixa.dataset.fasciculo);
+      else dados.append("corpo", "1"); // valida só o corpo (texto.validar_corpo)
       try {
         const r = await fetch(caixa.dataset.preview, { method: "POST", body: dados, credentials: "same-origin" });
         if (meu !== pedido || !r.ok) return; // resposta velha ou erro: mantém o último preview
