@@ -43,10 +43,10 @@ test("revista: cópia por seção, aviso com diff e descartar", async ({ page })
 
   // 1. Editar só a introdução do F1: o preview da seção funciona e a cópia nasce ao salvar.
   const area = page.locator(INTRO);
-  await area.fill(`Meu texto ${marca} para {{parceiro}}.`);
+  await area.fill(`Meu texto ${marca} para {{nome_parceiro}}.`);
   const caixa = page.locator(".editor-template", { has: area });
   await expect(caixa.locator(".editor-template-preview")).toContainText(`Meu texto ${marca}`);
-  await expect(caixa.locator(".editor-template-preview .variavel-vazia")).toHaveText("{{parceiro}}");
+  await expect(caixa.locator(".editor-template-preview .variavel-vazia")).toHaveText("{{nome_parceiro}}");
   await page.click("input[name=_continue]");
   await expect(page.locator(".messagelist")).toContainText("Textos do F1 salvos: introducao.");
   await expect(page.locator(".field-secao__F1__introducao .help")).toContainText("Texto editado nesta revista (cópia)");

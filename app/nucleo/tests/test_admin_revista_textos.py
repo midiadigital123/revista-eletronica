@@ -78,11 +78,11 @@ class TextosTest(Postar, Base):
 
     def test_copia_so_na_secao_editada_e_hash_muda(self):
         antes = hash_validado(carregar(self.rev.pk))
-        r = self.postar(**{INTRO: "Meu **texto** de {{parceiro}}."})
+        r = self.postar(**{INTRO: "Meu **texto** de {{nome_parceiro}}."})
         self.assertIn("Textos do F1 salvos: introducao.", mensagens(r))
         copia = RevistaSecao.objects.get()
         self.assertEqual((copia.revista_fasciculo, copia.secao), (self.rf, "introducao"))
-        self.assertEqual(copia.texto, "Meu **texto** de {{parceiro}}.")
+        self.assertEqual(copia.texto, "Meu **texto** de {{nome_parceiro}}.")
         self.assertEqual(copia.template_versao.numero, 1)
         self.assertIn("<strong>texto</strong> de GO", self.secao_resolvida("introducao")["corpo"])
         self.assertEqual(self.secao_resolvida("introducao")["titulo"], "Análise de GO")  # título do template

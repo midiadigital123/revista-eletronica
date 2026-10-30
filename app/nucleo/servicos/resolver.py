@@ -21,7 +21,9 @@ Linha da tarefa com arquivo: `item: {"id": <nome sem extensão>, "tipo": <extens
 Fascículo sem template: `secoes` None e `faixa` com o HTML da faixa vermelha (D-116).
 Variável vazia: já sai de `texto.renderizar` como `<span class="variavel-vazia">` (D-139).
 Os valores das variáveis e o nome do projeto não entram aqui, só os textos renderizados:
-assim uma variável usada só no LP não muda o hash do MT (D-125).
+assim uma variável usada só no LP não muda o hash do MT (D-125). Exceção: `pd01`..`pdNN`
+são os rótulos dos padrões em `dados[etapa]["padroes"]`, então mudam o hash de toda revista
+que tem aquele padrão.
 """
 
 import hashlib
@@ -113,7 +115,15 @@ def escala(tarefas, cortes, minimo, maximo, passo):
     return saida
 
 
-def _f1_escalas(revista, projeto):
+def rotulo_do_padrao(k, valores):
+    """Rótulo do padrão k na escala: `pdNN` do projeto. Vazio: o próprio `{{pdNN}}`, que o JS
+    destaca como variável vazia (D-116). Texto puro: o JS escapa."""
+    nome = f"pd{k:02d}"
+    valor = valores.get(nome)
+    return f"{{{{{nome}}}}}" if valor is None or not str(valor).strip() else str(valor)
+
+
+def _f1_escalas(revista, projeto, variaveis):
     pa = projeto.parceiro_ano
     cortes = list(
         Corte.objects.filter(parceiro_ano=pa, componente_id=revista.componente_id)
@@ -154,7 +164,7 @@ def _f1_escalas(revista, projeto):
         dados[chave] = {
             "scaleRange": {"min": 0, "max": etapa.escala_max},
             "cortes": {f"padrao-{i}": v for i, v in enumerate(valores, 1)},
-            "padroes": [{"chave": f"padrao-{k}", "rotulo": f"Padrão {k:02d}"} for k in range(1, n + 1)],
+            "padroes": [{"chave": f"padrao-{k}", "rotulo": rotulo_do_padrao(k, variaveis)} for k in range(1, n + 1)],
         }
         for d in descritores.get(mec.pk if mec else None, []):
             tarefas = [(t.inicio, t.fim, t.texto, t.arquivo) for t in d.tarefa_set.all()]
@@ -215,7 +225,7 @@ def secoes_efetivas(fasciculo):
 def valores_das_variaveis(projeto):
     pa = projeto.parceiro_ano
     valores = {v.nome: getattr(projeto, v.nome) for v in VARIAVEIS if not v.automatica}
-    valores.update(parceiro=pa.parceiro.nome, nome_projeto=projeto.nome, ano=str(projeto.ano.ano))
+    valores.update(nome_parceiro=pa.parceiro.nome, nome_projeto=projeto.nome, ano=str(projeto.ano.ano))
     return valores
 
 
@@ -258,8 +268,9 @@ def resolver(revista):
             )
         return {"secoes": secoes}
 
-    etapas, dados = _f1_escalas(revista, projeto)
+    etapas, dados = _f1_escalas(revista, projeto, valores)
     padroes = max((len(d["padroes"]) for d in dados.values()), default=0)
+    usadas.update(f"pd{k:02d}" for k in range(1, padroes + 1))  # rótulos da escala: só os padrões que a revista tem
     f1 = {"etapas": etapas, "dados": dados, "cores": _cores(revista, projeto, padroes), **textos("F1")}
     f2 = {**textos("F2"), "svg_sha256": revista.svg_sha256, "svg_ids": sorted(revista.svg_ids or [])}
     # Mesmo critério de "vazio" de texto._valor.

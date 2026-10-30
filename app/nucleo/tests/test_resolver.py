@@ -50,7 +50,7 @@ from nucleo.texto import renderizar
 # JSON do F1 que o Playwright f1-fixture carrega (gabarito). Regerar: REGERAR_FIXTURES=1.
 GABARITO = Path(__file__).parent / "fixtures" / "resolver-4cortes.json"
 
-F1 = "## introducao\nAnálise de {{parceiro}}\n\nTexto **{{nome_projeto}}**.\n\n## fechamento\nUtilização\n\nFim.\n"
+F1 = "## introducao\nAnálise de {{nome_parceiro}}\n\nTexto **{{nome_projeto}}**.\n\n## fechamento\nUtilização\n\nFim.\n"
 F2_LP = (
     "## abertura\nAbertura\n\nBem-vindo.\n\n## passo1\nPasso um\n\nPara os {{adjetivo_patrio_plural_masculino}}.\n\n"
     "## dlg-p2\nItens\n\nDetalhe.\n"
@@ -111,6 +111,8 @@ class Mundo:
         projeto = Projeto.objects.get(parceiro_ano=pa, arquivado_em__isnull=True)
         projeto.nome = f"Projeto {nome}"
         projeto.adjetivo_patrio_plural_masculino = "goianos"
+        for k in range(1, 6):  # rótulos da escala do F1: o gabarito continua com "Padrão 0k"
+            setattr(projeto, f"pd{k:02d}", f"Padrão {k:02d}")
         projeto.save()
         for rf in RevistaFasciculo.objects.filter(revista__projeto=projeto).select_related("revista"):
             rf.template = alvo.templates[rf.revista.componente.codigo, rf.fasciculo]
@@ -193,10 +195,39 @@ class ResolverTest(TestCase):
         self.assertEqual([s["id"] for s in r["f2"]["secoes"]], ["abertura", "passo1", "dlg-p2"])
 
     def test_variaveis_oficiais_renderizam_o_valor_do_projeto(self):
-        Projeto.objects.filter(pk=self.go["LP"].projeto_id).update(nome_parceiro="Goiás", pd05="Avançado")
+        Projeto.objects.filter(pk=self.go["LP"].projeto_id).update(pd05="Avançado")
         valores = valores_das_variaveis(recarregar(self.go["LP"]).projeto)
         corpo = renderizar("Estudantes de {{nome_parceiro}}: {{pd05}}.", valores)
-        self.assertEqual(corpo, "<p>Estudantes de Goiás: Avançado.</p>\n")
+        self.assertEqual(corpo, "<p>Estudantes de GO: Avançado.</p>\n")  # nome_parceiro = Parceiro.nome
+
+    def test_rotulo_do_padrao_sai_do_pdnn(self):
+        Projeto.objects.filter(pk=self.go["LP"].projeto_id).update(pd02="Básico")
+        padroes = resolver(recarregar(self.go["LP"]))["f1"]["dados"]["5ef"]["padroes"]
+        self.assertEqual(padroes[1], {"chave": "padrao-2", "rotulo": "Básico"})
+
+    def com_cortes(self, valores, **pd):
+        """LP do GO com `valores` em todas as etapas e os pdNN dados; devolve a revista recarregada."""
+        Corte.objects.filter(parceiro_ano=self.go["LP"].projeto.parceiro_ano, componente=self.lp).update(valores=valores)
+        Projeto.objects.filter(pk=self.go["LP"].projeto_id).update(**pd)
+        return recarregar(self.go["LP"])
+
+    def test_pdnn_vazio_de_padrao_existente_e_pendencia(self):
+        lp = self.com_cortes([200, 300], pd03=" ")  # 3 padrões
+        r = resolver(lp)
+        self.assertEqual(r["f1"]["dados"]["5ef"]["padroes"][2]["rotulo"], "{{pd03}}")  # o JS destaca
+        self.assertEqual(r["lacunas"], [{"tipo": "variavel", "nome": "pd03"}])
+        self.assertIn(("variaveis", "Variáveis sem valor: pd03."), [(p.codigo, p.mensagem) for p in pendencias(lp)])
+
+    def test_pdnn_vazio_de_padrao_que_nao_existe_nao_e_pendencia(self):
+        lp = self.com_cortes([200, 250, 300], pd05="")  # 4 padrões
+        self.assertEqual(resolver(lp)["lacunas"], [])
+        self.assertNotIn("variaveis", [p.codigo for p in pendencias(lp)])
+
+    def test_rotulo_muda_o_hash_e_o_impresso(self):  # o rótulo é texto impresso
+        antes = hash_validado(self.go["LP"]), conteudo_impresso(self.go["LP"])
+        lp = self.com_cortes([100, 200, 250, 300], pd01="Abaixo do básico")
+        self.assertNotEqual(antes[0], hash_validado(lp))
+        self.assertNotEqual(antes[1], conteudo_impresso(lp))
 
     def test_passo_do_projeto_sobrescreve_e_cor_do_projeto(self):
         projeto = self.go["LP"].projeto

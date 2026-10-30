@@ -74,7 +74,6 @@ class Projeto(models.Model):
     adjetivo_patrio_singular_feminino = models.TextField(blank=True, default="")
     adjetivo_patrio_plural_masculino = models.TextField(blank=True, default="")
     adjetivo_patrio_plural_feminino = models.TextField(blank=True, default="")
-    nome_parceiro = models.TextField(blank=True, default="")
     do_da_de_nome_parceiro = models.TextField(blank=True, default="")
     no_na_em_nome_parceiro = models.TextField(blank=True, default="")
     nome_programa = models.TextField(blank=True, default="")

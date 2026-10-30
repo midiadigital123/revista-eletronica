@@ -12,7 +12,7 @@ from nucleo.management.commands.carregar_templates import AVISO
 from nucleo.models import Ano, Componente, Template, TemplateVersao
 from nucleo.texto import renderizar, renderizar_texto_puro, secoes, validar, variaveis_usadas
 
-F1 = "## introducao\nTítulo\n\nCorpo da {{parceiro}}.\n\n## fechamento\nFim\n\n- um\n- dois\n"
+F1 = "## introducao\nTítulo\n\nCorpo da {{nome_parceiro}}.\n\n## fechamento\nFim\n\n- um\n- dois\n"
 ORIGINAL = Path.read_text
 SEED = settings.BASE_DIR / "templates_seed" / "2026"
 
@@ -29,7 +29,7 @@ class ValidarTest(SimpleTestCase):
 
     def test_secoes_titulo_e_corpo(self):
         self.assertEqual(secoes(F1)["fechamento"], ("Fim", "- um\n- dois"))
-        self.assertEqual(variaveis_usadas(F1), {"parceiro"})
+        self.assertEqual(variaveis_usadas(F1), {"nome_parceiro"})
 
     def test_secao_faltando(self):
         self.assertIn("fechamento", self.erros("## introducao\nT\n\nx\n"))
@@ -42,10 +42,11 @@ class ValidarTest(SimpleTestCase):
         self.assertIn("não previstas no F1: extra", e)
 
     def test_variavel_inexistente(self):
-        self.assertIn("{{inexistente}}", self.erros(F1 + "{{inexistente}} {{ parceiro }} {{x"))
+        self.assertIn("{{inexistente}}", self.erros(F1 + "{{inexistente}} {{ nome_parceiro }} {{x"))
 
     def test_gentilico_saiu_da_lista(self):  # virou adjetivo_patrio_* (lista oficial)
         self.assertIn("{{gentilico_masc_sing}}", self.erros(F1 + "{{gentilico_masc_sing}}"))
+        self.assertIn("{{parceiro}}", self.erros(F1 + "{{parceiro}}"))  # virou nome_parceiro
         validar(F1 + "{{adjetivo_patrio_singular_masculino}} {{issn}} {{no_na_em_nome_parceiro}}", "F1")
 
     def test_recusa_recursos_fora_do_formato(self):
@@ -64,14 +65,14 @@ class ValidarTest(SimpleTestCase):
                 self.assertIn(nome, self.erros(F1.replace("- dois", f"- dois\n\n{trecho}")))
 
     def test_chaves_soltas_controle_bidi_e_referencia(self):
-        self.assertIn("chaves soltas", self.erros(F1 + "{{{parceiro}}}"))
+        self.assertIn("chaves soltas", self.erros(F1 + "{{{nome_parceiro}}}"))
         self.assertIn("bidi", self.erros(F1 + "a\u202eb"))
         self.assertIn("controle", self.erros(F1 + "a\x07b"))
         self.assertIn("referência de link", self.erros(F1 + "\n[x]: http://mal\n"))
 
     def test_bom_e_variaveis_usadas_so_da_lista(self):
         validar("\ufeff" + F1, "F1")
-        self.assertEqual(variaveis_usadas(F1 + "{{inexistente}}"), {"parceiro"})
+        self.assertEqual(variaveis_usadas(F1 + "{{inexistente}}"), {"nome_parceiro"})
 
     def test_chaves_sem_redos(self):
         inicio = time.monotonic()
@@ -97,37 +98,37 @@ class RenderizarTest(SimpleTestCase):
         self.assertIn("&lt;script&gt;", html)
 
     def test_valor_nao_vira_formatacao(self):
-        html = renderizar("Oi {{parceiro}}", {"parceiro": "_a_ *b* **c** <i>d</i>"})
+        html = renderizar("Oi {{nome_parceiro}}", {"nome_parceiro": "_a_ *b* **c** <i>d</i>"})
         self.assertEqual(html, "<p>Oi _a_ *b* **c** &lt;i&gt;d&lt;/i&gt;</p>\n")
 
     def test_negrito_com_valor_escapado(self):
-        html = renderizar("**{{parceiro}}** e _{{ano}}_", {"parceiro": "A<B", "ano": 2026})
+        html = renderizar("**{{nome_parceiro}}** e _{{ano}}_", {"nome_parceiro": "A<B", "ano": 2026})
         self.assertEqual(html, "<p><strong>A&lt;B</strong> e <em>2026</em></p>\n")
 
     def test_sem_escape_duplo(self):
-        html = renderizar("P & Q: {{parceiro}}", {"parceiro": "Pais & Filhos"})
+        html = renderizar("P & Q: {{nome_parceiro}}", {"nome_parceiro": "Pais & Filhos"})
         self.assertEqual(html, "<p>P &amp; Q: Pais &amp; Filhos</p>\n")
         self.assertNotIn("&amp;amp;", html)
 
     def test_marcador_do_usuario_nao_colide(self):
-        html = renderizar("x0 {{parceiro}}", {"parceiro": "GO"})
+        html = renderizar("x0 {{nome_parceiro}}", {"nome_parceiro": "GO"})
         self.assertEqual(html, "<p>x0 GO</p>\n")
 
     def test_entidade_nao_forja_marcador(self):
         html = renderizar("&#xE000;99&#xE001;", {})  # antes: IndexError
         self.assertIn("99", html)
-        html = renderizar("x &#xE000;0&#xE001; {{parceiro}}", {"parceiro": "GO"})
+        html = renderizar("x &#xE000;0&#xE001; {{nome_parceiro}}", {"nome_parceiro": "GO"})
         self.assertEqual(html.count("GO"), 1)  # antes: "x GO GO"
 
     def test_valor_so_com_espacos_e_vazio(self):
-        self.assertIn("variavel-vazia", renderizar("{{parceiro}}", {"parceiro": "  "}))
+        self.assertIn("variavel-vazia", renderizar("{{nome_parceiro}}", {"nome_parceiro": "  "}))
 
     def test_lista_e_variavel_vazia(self):
-        html = renderizar("- {{parceiro}}\n- b", {})
-        self.assertIn('<li><span class="variavel-vazia">{{parceiro}}</span></li>', html)
+        html = renderizar("- {{nome_parceiro}}\n- b", {})
+        self.assertIn('<li><span class="variavel-vazia">{{nome_parceiro}}</span></li>', html)
 
     def test_titulo_texto_puro(self):
-        self.assertEqual(renderizar_texto_puro("**R&D** {{parceiro}}", {"parceiro": "<GO>"}), "**R&amp;D** &lt;GO&gt;")
+        self.assertEqual(renderizar_texto_puro("**R&D** {{nome_parceiro}}", {"nome_parceiro": "<GO>"}), "**R&amp;D** &lt;GO&gt;")
 
 
 class CarregarTemplatesTest(TestCase):

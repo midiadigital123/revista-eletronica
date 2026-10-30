@@ -19,7 +19,7 @@ class Variavel(NamedTuple):
 TAMANHO_MAX = 200  # o ER fixa length <= 200 para as variáveis
 
 VARIAVEIS = (
-    Variavel("parceiro", "Parceiro", "Nome do parceiro (GO, JOINVILLE).", automatica=True),
+    Variavel("nome_parceiro", "Nome do parceiro", "Nome do parceiro no cadastro (GO, JOINVILLE).", automatica=True),
     Variavel("nome_projeto", "Nome do projeto", "Nome do projeto no ano.", automatica=True),
     Variavel("ano", "Ano", "Ano da edição (2026).", automatica=True),
     # Lista oficial da equipe (planilha com <<x>>; aqui a sintaxe continua {{x}}, D-123).
@@ -28,7 +28,6 @@ VARIAVEIS = (
     Variavel("adjetivo_patrio_singular_feminino", "Adjetivo pátrio fem. sing.", "Ex.: mineira.", grupo="Adjetivo pátrio"),
     Variavel("adjetivo_patrio_plural_masculino", "Adjetivo pátrio masc. plural", "Ex.: mineiros.", grupo="Adjetivo pátrio"),
     Variavel("adjetivo_patrio_plural_feminino", "Adjetivo pátrio fem. plural", "Ex.: mineiras.", grupo="Adjetivo pátrio"),
-    Variavel("nome_parceiro", "Nome do parceiro", "Nome por extenso do parceiro: Alagoas, Joinville etc.", grupo="Parceiro"),
     Variavel("do_da_de_nome_parceiro", "do/da/de + parceiro", 'Preposição "de" antes do nome do parceiro (do, da, de).', grupo="Parceiro"),
     Variavel("no_na_em_nome_parceiro", "no/na/em + parceiro", 'Preposição "em" antes do nome do parceiro (no, na, em).', grupo="Parceiro"),
     Variavel("nome_programa", "Nome do programa", "Nome por extenso do programa.", grupo="Programa"),

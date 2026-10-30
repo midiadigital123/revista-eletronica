@@ -68,7 +68,6 @@ CHECKS = {
     "projeto_no_na_em_nome_parceiro_tamanho",
     "projeto_no_na_nome_programa_tamanho",
     "projeto_no_na_sigla_programa_tamanho",
-    "projeto_nome_parceiro_tamanho",
     "projeto_nome_programa_tamanho",
     "projeto_nome_regional_tamanho",
     "projeto_nome_secretaria_tamanho",
@@ -310,4 +309,4 @@ class RenomearGentilicoTest(TransactionTestCase):
              p.adjetivo_patrio_plural_masculino, p.adjetivo_patrio_plural_feminino),
             ("goiano", "goiana", "goianos", "goianas"),
         )  # fmt: skip
-        self.assertEqual(p.nome_parceiro, "")  # coluna nova nasce vazia
+        self.assertEqual(p.issn, "")  # coluna nova nasce vazia

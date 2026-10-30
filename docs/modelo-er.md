@@ -139,7 +139,6 @@ erDiagram
         text adjetivo_patrio_singular_feminino
         text adjetivo_patrio_plural_masculino
         text adjetivo_patrio_plural_feminino
-        text nome_parceiro
         text do_da_de_nome_parceiro
         text no_na_em_nome_parceiro
         text nome_programa
