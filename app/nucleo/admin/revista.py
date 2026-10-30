@@ -11,8 +11,8 @@ cópia" apaga a cópia (volta ao vivo). Tudo grava dentro da transação do mixi
 Trocar o template de um fascículo com cópias exige digitar "descartar N cópia(s)" no inline;
 apaga as cópias e troca o template na mesma transação (D-093, D-104).
 
-"Validado" (S12, D-074, D-089): o change form leva o hash da revista exibida num hidden, ao lado
-do botão, que envia o próprio formulário (com a sessão do bloqueio) para `validar/`.
+"Validado" (S12, D-074, D-089): um form separado do change form (não reenvia uploads nem textos
+não salvos) leva o hash da revista exibida e a sessão do bloqueio da aba para `validar/`.
 
 Upload com ids faltando GRAVA e avisa (decisão do S11c): o template pode ganhar ou perder
 seções depois, e a pendência `ids_svg` do resolver já bloqueia o "Validado".
@@ -21,6 +21,7 @@ seções depois, e a pendência `ids_svg` do resolver já bloqueia o "Validado".
 import csv
 import difflib
 import io
+import logging
 from typing import NamedTuple
 
 from django import forms
@@ -44,6 +45,7 @@ from nucleo.servicos import arquivos, bloqueio, resolver, validacao
 from nucleo.servicos.empacotar import Pendente, zip_revista
 
 UPLOADS = ("arquivo_svg", "arquivo_capa")
+log = logging.getLogger(__name__)
 
 
 class RevistaForm(forms.ModelForm):
@@ -483,8 +485,9 @@ class RevistaAdmin(BloqueioAdminMixin, admin.ModelAdmin):
         ] + super().get_urls()
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
-        obj = self.get_object(request, unquote(object_id))
-        if obj is not None:
+        obj = self.get_object(request, unquote(object_id)) if request.method == "GET" else None
+        # Só no GET (no POST o resultado se perderia) e depois da permissão de ver.
+        if obj is not None and self.has_view_or_change_permission(request, obj):
             revista = resolver.carregar(obj.pk)
             resolvido = resolver.resolver(revista)
             atual = resolver.hash_validado(revista, resolvido)
@@ -508,17 +511,20 @@ class RevistaAdmin(BloqueioAdminMixin, admin.ModelAdmin):
         """POST do botão "Validado": confere o bloqueio da aba e o hash visto (D-089)."""
         if not request.user.has_perm("nucleo.validar_revista"):
             raise PermissionDenied
-        revista = get_object_or_404(Revista.objects.select_related("projeto"), pk=pk)
+        alvo = self.alvo_do_bloqueio(get_object_or_404(Revista.objects.select_related("projeto"), pk=pk))
         sessao = request.POST.get(CAMPO_SESSAO, "")
         with transaction.atomic():
-            if bloqueio.conferir_na_transacao(revista.projeto, request.user, sessao):
+            if bloqueio.conferir_na_transacao(alvo, request.user, sessao):
                 motivo = validacao.validar(pk, request.POST.get("hash_visto", ""), request.user)
             else:
                 motivo = "você não tem o bloqueio de edição desta revista; recarregue a página"
-        # O botão envia o change form: o bloqueio.js não libera no pagehide; liberamos aqui.
-        bloqueio.liberar(revista.projeto, request.user, sessao)
+        # Libera para a próxima carga readquirir (o beacon do pagehide pode chegar depois).
+        try:
+            bloqueio.liberar(alvo, request.user, sessao)
+        except Exception:  # o clique já gravou; o bloqueio expira sozinho em 30 s
+            log.exception("Falha ao liberar o bloqueio depois de validar")
         if motivo:
-            messages.error(request, f"Não validada: {motivo}.")
+            messages.error(request, f"Não validada: {motivo.rstrip('.')}.")
         else:
             messages.success(request, "Revista validada.")
         return HttpResponseRedirect(reverse("admin:nucleo_revista_change", args=[pk]))

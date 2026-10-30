@@ -8,7 +8,7 @@
 <form method="post">{% csrf_token %}
 {% for i in itens %}
 <fieldset class="module" id="lote-{{ i.revista.pk }}">
-  <h2><label><input type="checkbox" name="par" value="{{ i.revista.pk }}:{{ i.hash }}"{% if not i.pendencias %} checked{% endif %}> {{ i.revista }}</label></h2>
+  <h2><label><input type="checkbox" name="par" value="{{ i.revista.pk }}:{{ i.hash }}"{% if not i.pendencias and not i.validada %} checked{% endif %}> {{ i.revista }}</label>{% if i.validada %} (já validada nesta versão){% endif %}</h2>
   {% if i.pendencias %}<p class="errornote">Pendências (será recusada): {% for p in i.pendencias %}{{ p.mensagem }} {% endfor %}</p>{% endif %}
   {% if i.desatualizadas %}<p class="impacto-alerta">Aviso: seções desatualizadas ({% for c in i.desatualizadas %}{{ c.revista_fasciculo.fasciculo }} {{ c.secao }}{% if not forloop.last %}, {% endif %}{% endfor %}). Não impede o “Validado”.</p>{% endif %}
   {% if i.diff is None %}<p>Sem foto do impresso para comparar (primeira impressão).</p>

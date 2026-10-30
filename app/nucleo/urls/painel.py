@@ -12,18 +12,19 @@ import json
 
 from django.contrib import admin, messages
 from django.contrib.auth.decorators import login_required, permission_required
-from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.http import urlencode
 from django.utils.safestring import mark_safe
+from django.views.decorators.http import require_http_methods
 
 from nucleo.admin import lote
 from nucleo.models import Ano, FotoRevista, Parceiro, Revista
 from nucleo.models.revista import Motivo
 from nucleo.servicos import resolver, validacao
+from nucleo.urls.preview import protegida
 
 # Coluna → códigos de `pendencias` que ela mostra (ordem das colunas da tela).
 COLUNAS = {
@@ -36,12 +37,6 @@ COLUNAS = {
     "validado": ("Validado", ()),
     "impresso": ("Impresso", ()),
 }
-
-
-def protegida(view):
-    """Login (redireciona ao admin) e view_revista (403), como o preview."""
-    view = permission_required("nucleo.view_revista", raise_exception=True)(view)
-    return login_required(view, login_url="admin:login")
 
 
 def link(codigo, revista):
@@ -59,6 +54,8 @@ def link(codigo, revista):
 
 
 def ultima_impressa(revista):
+    # ponytail: carrega o JSON inteiro da foto; comparar por hash pede uma coluna hash_impresso
+    # (o `hash` da foto inclui SVG e capa, D-118) = migração. Fazer se o painel ficar lento.
     return FotoRevista.objects.filter(revista=revista, motivo=Motivo.IMPRESSO).order_by("-criada_em", "-pk").first()
 
 
@@ -122,26 +119,22 @@ def painel(request, ano):
     return TemplateResponse(request, "nucleo/painel.html", ctx)
 
 
-def linhas_do_diff(conteudo):
-    return json.dumps(conteudo, indent=1, sort_keys=True, ensure_ascii=False).splitlines()
-
-
 def diff(revista, resolvido):
     """Tabela do difflib: última foto do impresso | agora (só os trechos que mudaram)."""
     foto = ultima_impressa(revista)
     if foto is None:
         return None
-    antes, agora = linhas_do_diff(foto.conteudo), linhas_do_diff(resolvido)
+    antes, agora = (json.dumps(c, indent=1, sort_keys=True, ensure_ascii=False).splitlines() for c in (foto.conteudo, resolvido))
     if antes == agora:
         return ""
     tabela = difflib.HtmlDiff(wrapcolumn=70).make_table(antes, agora, "Última impressa", "Agora", context=True, numlines=2)
     return mark_safe(tabela)  # o HtmlDiff escapa &, < e >
 
 
-@protegida
+@require_http_methods(["GET", "POST"])
+@login_required(login_url="admin:login")
+@permission_required("nucleo.validar_revista", raise_exception=True)
 def validar_lote(request, ano):
-    if not request.user.has_perm("nucleo.validar_revista"):
-        raise PermissionDenied
     ano = get_object_or_404(Ano, ano=ano)
     if request.method == "POST":
         pares = {}
@@ -154,7 +147,9 @@ def validar_lote(request, ano):
             (str(r), r.projeto, lambda r=r: validacao.validar(r.pk, pares[r.pk], request.user)) for r in revistas
         ]
         feitos = lote.aplicar(request, itens)  # recusadas: "Pulados: revista (motivo)"
-        messages.success(request, f"Validadas {feitos} revista(s).")
+        lote.avisar_pulados(request, [f"revista {pk} (não encontrada ou arquivada)" for pk in set(pares) - {r.pk for r in revistas}])
+        if feitos:
+            messages.success(request, f"Validadas {feitos} revista(s).")
         return HttpResponseRedirect(reverse("painel", args=[ano.ano]))
     ids = [int(x) for x in request.GET.getlist("revista") if x.isdigit()]
     itens = []
@@ -163,7 +158,8 @@ def validar_lote(request, ano):
         itens.append(
             {
                 "revista": revista,
-                "hash": resolver.hash_validado(revista, resolvido),
+                "hash": (atual := resolver.hash_validado(revista, resolvido)),
+                "validada": validacao.validada(revista, atual),
                 "pendencias": resolver.pendencias(revista, resolvido),
                 "desatualizadas": resolver.secoes_desatualizadas(revista),  # D-087: só avisa
                 "diff": diff(revista, resolvido),

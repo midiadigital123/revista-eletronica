@@ -4,12 +4,14 @@ import re
 from unittest import mock
 
 from django.contrib.auth import get_user_model
+from django.db import connection, transaction
+from django.test.utils import CaptureQueriesContext
 from django.test import TransactionTestCase
 from django.urls import reverse
 
 from nucleo.admin.bloqueio import CAMPO_SESSAO
 from nucleo.models import Bloqueio, Revista, RevistaFasciculo, RevistaSecao, TemplateVersao
-from nucleo.servicos import bloqueio, resolver
+from nucleo.servicos import bloqueio, resolver, validacao
 from nucleo.servicos.resolver import carregar, hash_validado
 from nucleo.tests.test_admin_projeto import Base, mensagens
 from nucleo.tests.test_resolver import F1, Mundo
@@ -80,7 +82,7 @@ class ValidadoTest(Base):
         aberta = self.abrir()
         self.assertContains(aberta, "Falta a imagem de capa.")
         r = self.validar(aberta)
-        self.assertIn("Não validada: pendências: Falta a imagem de capa..", mensagens(r))
+        self.assertIn("Não validada: pendências: Falta a imagem de capa.", mensagens(r))
         self.assertIsNone(Revista.objects.get(pk=self.rev.pk).hash_validado)
 
     def test_sem_bloqueio_recusa(self):
@@ -160,6 +162,17 @@ class ValidadoTest(Base):
             r = self.client.get(self.painel)
         self.assertEqual(espiao.call_count, len(r.context["linhas"]))
 
+    def test_teto_de_queries_por_linha(self):
+        def consultas(**filtro):
+            with CaptureQueriesContext(connection) as c:
+                r = self.client.get(self.painel, filtro)
+            return len(c.captured_queries), len(r.context["linhas"])
+
+        todas, n_todas = consultas()
+        go, n_go = consultas(parceiro=self.go["LP"].projeto.parceiro_ano.parceiro_id)
+        por_linha = (todas - go) / (n_todas - n_go)
+        self.assertLessEqual(por_linha, 15, por_linha)  # medido no S12: 15 (resolver + pendências + foto)
+
 
 class LoteTest(TransactionTestCase):
     """Cada par (revista, hash) é gravado ou recusado sozinho; commits reais (escrever_travado)."""
@@ -188,6 +201,21 @@ class LoteTest(TransactionTestCase):
         self.assertTrue(any("Projeto PE · LP (a revista mudou depois que a página abriu" in m for m in msgs), msgs)
         validadas = set(Revista.objects.filter(hash_validado__isnull=False).values_list("pk", flat=True))
         self.assertEqual(validadas, {self.go["LP"].pk, self.go["MT"].pk})
+
+    def test_lote_com_ja_validada_mantem_quem_validou(self):
+        outro = get_user_model().objects.create(username="outro")
+        rev = carregar(self.go["LP"].pk)
+        with transaction.atomic():
+            self.assertIsNone(validacao.validar(rev.pk, hash_validado(rev), outro))
+        antes = Revista.objects.get(pk=rev.pk)
+        r = self.client.get(self.url, {"revista": [x.pk for x in self.alvos]})
+        self.assertNotContains(r, f'value="{rev.pk}:{antes.hash_validado}" checked')
+        pares = re.findall(r'name="par" value="([^"]+)"', r.content.decode())
+        msgs = mensagens(self.client.post(self.url, {"par": pares + ["999999:x"]}, follow=True))
+        depois = Revista.objects.get(pk=rev.pk)
+        self.assertEqual((depois.validado_por, depois.validado_em), (outro, antes.validado_em))
+        self.assertIn("Validadas 3 revista(s).", msgs)
+        self.assertTrue(any("revista 999999 (não encontrada ou arquivada)" in m for m in msgs), msgs)
 
     def test_lote_pula_projeto_em_edicao(self):
         pares = self.pares()

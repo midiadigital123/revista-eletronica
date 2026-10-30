@@ -33,6 +33,8 @@ def validar(revista_pk, hash_visto, usuario):
     atual = resolver.hash_validado(revista, resolvido)
     if hash_visto != atual:
         return "a revista mudou depois que a página abriu; confira de novo"
+    if validada(revista, atual):
+        return None  # já validada nesta versão: mantém quem e quando validou
     if pendentes := resolver.pendencias(revista, resolvido):
         return "pendências: " + " ".join(p.mensagem for p in pendentes)
     revista.hash_validado, revista.validado_em, revista.validado_por = atual, timezone.now(), usuario
