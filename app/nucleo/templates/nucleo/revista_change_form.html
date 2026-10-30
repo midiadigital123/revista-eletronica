@@ -1,0 +1,26 @@
+{% extends "nucleo/bloqueio_change_form.html" %}
+{% comment %}Change form da revista: estado do "Validado" e o botão com o hash exibido (S12, D-089).
+Form separado do change form: só csrf, hash_visto e a sessão do bloqueio (não reenvia uploads
+nem textos não salvos). A renovação do bloqueio segue no change form.{% endcomment %}
+
+{% block content %}{{ block.super }}
+{% if validacao %}<fieldset class="module aligned" id="validacao">
+  <h2>Validado</h2>
+  <div class="form-row">
+    {% if validacao.validada %}<p><strong>✓ Validado</strong> por {{ original.validado_por }} em {{ original.validado_em }}.</p>
+    {% elif original.hash_validado %}<p><strong>Não validado:</strong> a revista mudou depois do último “Validado” ({{ original.validado_em }}).</p>
+    {% else %}<p><strong>Ainda não validado.</strong></p>{% endif %}
+    {% if validacao.desatualizadas %}<p class="impacto-alerta">Aviso: seções desatualizadas ({{ validacao.desatualizadas|join:", " }}). Não impede o “Validado”.</p>{% endif %}
+    {% if validacao.pendencias %}<p>Pendências que impedem o “Validado”:</p>
+    <ul>{% for p in validacao.pendencias %}<li>{{ p.mensagem }}</li>{% endfor %}</ul>{% endif %}
+    {% if validacao.pode and bloqueio and not validacao.validada %}
+    <form method="post" action="{{ validacao.url }}" onsubmit="this.querySelector('[type=submit]').disabled = true">{% csrf_token %}
+      <input type="hidden" name="hash_visto" value="{{ validacao.hash }}">
+      <input type="hidden" name="{{ bloqueio_campo_sessao }}" value="{{ bloqueio.sessao }}">
+      <p class="help">Valida a revista como foi aberta nesta página. Alterações não salvas não entram: salve antes.</p>
+      <input type="submit" id="botao-validado" value="Validado"{% if validacao.pendencias %} disabled{% endif %}>
+    </form>
+    {% endif %}
+  </div>
+</fieldset>{% endif %}
+{% endblock %}
