@@ -146,9 +146,9 @@ class CorteAdmin(admin.ModelAdmin):
                     valores.append((e, c, lista))
             # Parceiro criado depois de a página abrir não tem "o-": fica como está.
             nova = [cel["texto"] for cel in celulas]
-            if original is not None and (erros or juntar(map(formatar_texto, nova)) != original):
-                if not erros and original != juntar(atual):
-                    erros.append(CONFLITO.format(juntar(atual).replace(SEP, " | ") or "vazia"))
+            if original is not None and (erros or SEP.join(map(formatar_texto, nova)) != original):
+                if not erros and original != SEP.join(atual):
+                    erros.append(CONFLITO.format(SEP.join(atual).replace(SEP, " | ") or "vazia"))
                 elif not erros:
                     try:
                         validar_linhas(valores, ano.pk)
@@ -158,7 +158,7 @@ class CorteAdmin(admin.ModelAdmin):
                     mudadas[p.pk] = (p, valores, original)
             com_erro |= bool(erros)
             # Com conflito, o "o-" passa a ser o estado atual: salvar de novo sobrescreve de propósito.
-            linhas.append({"parceiro": p, "celulas": celulas, "erros": erros, "original": juntar(atual)})
+            linhas.append({"parceiro": p, "celulas": celulas, "erros": erros, "original": SEP.join(atual)})
 
         if post is not None and not com_erro:
             try:
@@ -188,7 +188,7 @@ class CorteAdmin(admin.ModelAdmin):
             list(ParceiroAno.objects.select_for_update(no_key=True).filter(pk__in=[pa.pk for pa in pas.values()]).order_by("pk"))
             agora = linhas_atuais(ano, colunas, parceiro_ids=list(mudadas))
             for pk, (p, valores, original) in sorted(mudadas.items()):
-                atual = juntar(agora.get(pk, [""] * len(colunas)))
+                atual = SEP.join(agora.get(pk, [""] * len(colunas)))
                 if atual != original:
                     raise Conflito(p, atual)
                 gravar_cortes(pas[pk], valores, request.user)
@@ -205,10 +205,6 @@ class Conflito(Exception):
     def __init__(self, parceiro, agora):
         super().__init__(f"os cortes de {parceiro} mudaram desde que a página foi aberta.")
         self.parceiro, self.agora = parceiro, agora
-
-
-def juntar(textos):
-    return SEP.join(textos)
 
 
 def formatar_texto(texto):
