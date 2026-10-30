@@ -20,6 +20,7 @@ from nucleo.models import (
 )  # fmt: skip
 from nucleo.servicos.cascata import gravar_cortes
 from nucleo.tests.test_importacao import cadastrar, planilha
+from nucleo.tests.test_resolver import usuario
 
 # Planilha "Cortes dos Padrões por Etapa e Parceiro.xlsx" (2025), com os grupos corrigidos
 # (D-049): 9EF-MT SE 6 e SALVADOR 7; 5EF-MT SALVADOR 6. A aba 2EF-LP também tinha erro
@@ -55,13 +56,6 @@ GRUPOS = {
         (8, (725, 800), ["SE"]),
     ],
 }  # fmt: skip
-
-
-def usuario(papel=None, superuser=False):
-    u = User.objects.create_user(papel or "root", password="x", is_staff=True, is_superuser=superuser)
-    if papel:
-        u.groups.add(Group.objects.get(name=papel))
-    return u
 
 
 def dados_da_grade(resp):
@@ -106,7 +100,7 @@ class Base(TestCase):
                 prerequisitos=["Ler, escrever", "Contar"],
             )  # fmt: skip
             Tarefa.objects.create(descritor=d, inicio=100, fim=125, texto="t", ordem=1)
-        cls.root = usuario(superuser=True)
+        cls.root = usuario("root", is_superuser=True)
 
     def setUp(self):
         self.client.force_login(self.root)
@@ -353,7 +347,7 @@ class PlanilhaSeguraTest(Base):
 
 class SemAnoTest(TestCase):
     def test_exportar_sem_ano_404(self):
-        self.client.force_login(usuario(superuser=True))
+        self.client.force_login(usuario("root", is_superuser=True))
         self.assertEqual(self.client.get(reverse("admin:nucleo_corte_exportar")).status_code, 404)
         self.assertContains(self.client.get(reverse("admin:nucleo_corte_changelist")), "Nenhum ano aberto")
 
@@ -391,7 +385,7 @@ class PerfisTest(Base):
     """Permissões por perfil nas telas do S11a (D-079, D-136, D-142)."""
 
     def entrar(self, papel):
-        self.client.force_login(usuario(papel))
+        self.client.force_login(usuario(papel, papel))
 
     def test_impresso_so_ve(self):
         self.entrar("Impresso")
@@ -440,7 +434,7 @@ class PerfisTest(Base):
         self.root.refresh_from_db()
         self.assertTrue(self.root.check_password("x"))
 
-        ped = usuario("Pedagógica")
+        ped = usuario("Pedagógica", "Pedagógica")
         form = self.form_de(ped)
         for campo in ("is_superuser", "is_staff", "user_permissions"):
             self.assertNotIn(campo, form.fields)
@@ -461,7 +455,7 @@ class PerfisTest(Base):
         self.assertFalse(nova.is_superuser)
 
     def test_admin_nao_se_poe_no_impresso_nem_mexe_em_outro_admin(self):
-        eu = usuario("Admin")
+        eu = usuario("Admin", "Admin")
         self.client.force_login(eu)
         self.assertNotIn("groups", self.form_de(eu).fields)  # readonly para si mesmo
         self.assertNotIn("is_active", self.form_de(eu).fields)
@@ -478,7 +472,7 @@ class PerfisTest(Base):
         senha = reverse("admin:auth_user_password_change", args=[outro.pk])
         self.assertEqual(self.client.get(senha).status_code, 403)
 
-        imp = usuario("Impresso")  # grupo fora dos permitidos: grupos dele ficam readonly
+        imp = usuario("Impresso", "Impresso")  # grupo fora dos permitidos: grupos dele ficam readonly
         self.assertNotIn("groups", self.form_de(imp).fields)
         self.assertEqual(self.post_usuario(imp, first_name="Ana").status_code, 302)
         self.assertEqual(list(imp.groups.values_list("name", flat=True)), ["Impresso"])
@@ -490,7 +484,7 @@ class BloqueioMatrizTest(Base):
     def test_post_recusado_com_trava_alheia(self):
         from nucleo.servicos import bloqueio
 
-        bia = usuario("Pedagógica")
+        bia = usuario("Pedagógica", "Pedagógica")
         self.assertTrue(bloqueio.adquirir(self.mec, bia, "aba-bia"))
         d = Descritor.objects.get(matriz_etapa_cc=self.mec, codigo="D01")
         for url, campo, valor in (
@@ -573,7 +567,7 @@ class GradeConcorrenteTest(TransactionTestCase):
         e5 = Etapa.objects.get(ano=ano, codigo="5EF")
         lp = Componente.objects.get(ano=ano, codigo="LP")
         go = Parceiro.objects.create(nome="GO")
-        root = usuario(superuser=True)
+        root = usuario("root", is_superuser=True)
         url = reverse("admin:nucleo_corte_changelist") + "?ano=2026"
         clientes = [Client(), Client()]
         envios = []

@@ -1,6 +1,4 @@
 import hashlib
-import shutil
-import tempfile
 import time
 from pathlib import Path
 from unittest import mock
@@ -8,7 +6,7 @@ from unittest import mock
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase, override_settings
+from django.test import TestCase
 
 from nucleo.models import Ano, Componente, Parceiro, ParceiroAno, Projeto, Revista
 from nucleo.servicos.arquivos import (
@@ -18,6 +16,7 @@ from nucleo.servicos.arquivos import (
     receber_svg,
     sanitizar_svg,
 )
+from nucleo.tests.test_resolver import MediaTemporaria
 
 FIXTURE = Path(__file__).parent / "fixtures" / "f2-lp.svg"
 PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 32
@@ -204,7 +203,7 @@ class SanitizarSvgTest(TestCase):
             sanitizar_svg(b"<html/>")
 
 
-class RevistaComArquivosTest(TestCase):
+class RevistaComArquivosTest(MediaTemporaria, TestCase):
     @classmethod
     def setUpTestData(cls):
         ano = Ano.objects.create(ano=2026)
@@ -212,13 +211,6 @@ class RevistaComArquivosTest(TestCase):
         pa = ParceiroAno.objects.create(parceiro=Parceiro.objects.create(nome="GO"), ano=ano)
         projeto = Projeto.objects.create(parceiro_ano=pa, ano=ano, nome="GO - PROJETO")
         cls.revista = Revista.objects.create(projeto=projeto, componente=lp, ano=ano)
-
-    def setUp(self):
-        self.media = tempfile.mkdtemp()
-        self.addCleanup(shutil.rmtree, self.media)
-        ctx = override_settings(MEDIA_ROOT=self.media)
-        ctx.enable()
-        self.addCleanup(ctx.disable)
 
     def test_receber_svg_grava_sanitizado(self):
         r = receber_svg(self.revista, SimpleUploadedFile("x.svg", FIXTURE.read_bytes()))

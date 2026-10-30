@@ -9,7 +9,6 @@ import time
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 from django.db import connection, transaction
 from django.test import Client, TestCase, TransactionTestCase
 
@@ -18,18 +17,12 @@ from nucleo.management.commands.carregar_templates import AVISO
 from nucleo.models import Bloqueio, FotoRevista, RevistaFasciculo, RevistaSecao, Template, TemplateVersao
 from nucleo.models.revista import Motivo
 from nucleo.servicos.resolver import versao_atual
-from nucleo.tests.test_resolver import F1, F2_LP, Mundo
+from nucleo.tests.test_resolver import F1, F2_LP, Mundo, usuario
 from nucleo.texto import TEXTO_MAX
 
 # F2_LP com um passo2 a mais: as revistas com SVG só até passo1 ficariam sem o id.
 F2_NOVO = F2_LP + "\n## passo2\nPasso dois\n\nNovo {{ano}}.\n"
 IMPACTO = "nucleo/template_impacto.html"
-
-
-def usuario(nome, papel):
-    u = get_user_model().objects.create_user(nome, password="x", is_staff=True)
-    u.groups.add(Group.objects.get(name=papel))
-    return u
 
 
 class Base(TestCase):
