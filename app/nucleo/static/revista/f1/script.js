@@ -132,8 +132,8 @@ function montarFaixasRegua({ min, max, cortes, escala }) {
   const entradas = [];
   for (const padrao of PADROES_DE_CIMA) {
     const linhas = (escala && escala[padrao]) || [];
-    for (const { level, content, item } of linhas)
-      entradas.push({ padrao, base: level, conteudo: content || "---", item });
+    for (const { level, fim, content, item } of linhas)
+      entradas.push({ padrao, base: level, fim, conteudo: content || "---", item });
     if (!linhas.length) {
       const [topoPadrao, basePadrao] = limites[padrao];
       entradas.push({ padrao, base: topoPadrao, conteudo: null });
@@ -150,10 +150,11 @@ function montarFaixasRegua({ min, max, cortes, escala }) {
     // preenchimento acima de um padrão vazio pertence ao padrão de cima
     if (e.conteudo === null)
       e.padrao = PADROES_DE_CIMA.find((p) => limites[p][1] <= e.base) || e.padrao;
-    // habilidade que cruza um corte tem a cor do padrão da âncora maior (topo); o topo é limite
-    // aberto: um topo exatamente no corte não sobe de padrão
+    // habilidade que cruza um corte tem a cor do padrão da âncora maior: o `fim` da tarefa, como
+    // padrao_da_tarefa do resolver (D-154); sem `fim`, o topo da faixa. Limite aberto: âncora
+    // exatamente no corte não sobe de padrão
     else if (!ehVazia(e.conteudo))
-      e.padrao = PADROES_DE_CIMA.find((p) => limites[p][1] < topo) || e.padrao;
+      e.padrao = PADROES_DE_CIMA.find((p) => limites[p][1] < (e.fim ?? topo)) || e.padrao;
     faixas.push({ ...e, topo });
     topo = e.base;
   }

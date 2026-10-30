@@ -52,6 +52,7 @@ from nucleo.texto import renderizar
 
 # JSON do F1 que o Playwright f1-fixture carrega (gabarito). Regerar: REGERAR_FIXTURES=1.
 GABARITO = Path(__file__).parent / "fixtures" / "resolver-4cortes.json"
+GABARITO_PASSO_NULO = Path(__file__).parent / "fixtures" / "resolver-passo-nulo.json"
 
 F1 = "## introducao\nAnálise de {{nome_parceiro}}\n\nTexto **{{nome_projeto}}**.\n\n## fechamento\nUtilização\n\nFim.\n"
 F2_LP = (
@@ -279,6 +280,11 @@ class ResolverTest(TestCase):
         r = resolver(self.go["LP"])
         linhas = [linha for ls in r["f1"]["dados"]["5ef"]["D01"]["scale"].values() for linha in ls]
         self.assertNotIn("---", [linha["content"] for linha in linhas])  # passo nulo = sem linhas vazias
+        # Gabarito do regua.test.mjs: tarefas esparsas e passo nulo, cor da âncora maior (D-154).
+        dados = {"5ef": r["f1"]["dados"]["5ef"]}
+        if os.environ.get("REGERAR_FIXTURES"):
+            GABARITO_PASSO_NULO.write_text(json.dumps(dados, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        self.assertEqual(json.loads(GABARITO_PASSO_NULO.read_text(encoding="utf-8")), dados)
         self.assertIn("---", [linha["content"] for linha in r["f1"]["dados"]["9ef"]["D01"]["scale"]["padrao-1"]])
         self.assertEqual(r["f1"]["cores"]["padrao-5"], "#123456")
 
