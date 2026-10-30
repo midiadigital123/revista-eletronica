@@ -1,0 +1,15 @@
+{% comment %}Pré-visualização do editor de templates (HTMX: ui_templates_previa; também na carga da página).
+Contexto: previa_html (já escapado por texto.renderizar), previa_erros (texto.validar).{% endcomment %}{% if previa_erros %}
+<div class="tpl-validacao tpl-validacao-erro" role="alert">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+  <div><strong>Ainda não dá para salvar:</strong>
+    <ul>{% for e in previa_erros %}<li>{{ e }}</li>{% endfor %}</ul>
+  </div>
+</div>
+{% else %}
+<p class="tpl-validacao tpl-validacao-ok" role="status">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+  Texto válido para o fascículo.
+</p>
+{% endif %}
+<div class="tpl-render">{% if previa_html %}{{ previa_html }}{% else %}<p class="mudo">Nenhuma seção ainda. Comece uma com <code>## id</code> e o título na linha seguinte.</p>{% endif %}</div>

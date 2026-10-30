@@ -1,0 +1,103 @@
+{% extends "ui/base.html" %}{% load static %}
+{% comment %}T13 Editar template: Markdown + Inserir variável + pré-visualização ao vivo (HTMX).
+View: nucleo/urls/ui_templates.py (editar). Ficha: docs/telas/fichas/templates.md.{% endcomment %}
+{% block titulo %}{{ tpl.nome }} · Templates{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/templates.css' %}">{% endblock %}
+
+{% block conteudo %}
+<header class="pagina-cab">
+  <div>
+    <h1>{{ tpl.nome }}</h1>
+    <p class="mudo">
+      {{ tpl.componente.nome }} ({{ tpl.componente.codigo }}), fascículo {{ tpl.fasciculo }}, {{ tpl.ano.ano }}.
+      {% if atual %}Versão atual: {{ atual.numero }}, de {{ atual.criada_em|date:"d/m/Y H:i" }}{% if atual.criada_por %} por {{ atual.criada_por.get_full_name|default:atual.criada_por.username }}{% endif %}.{% else %}Ainda sem texto.{% endif %}
+    </p>
+  </div>
+  <div class="acoes">
+    <a class="btn btn-ghost" href="{% url 'ui_templates' tpl.ano.ano %}?aba={{ tpl.fasciculo }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+      Templates {{ tpl.fasciculo }}
+    </a>
+  </div>
+</header>
+
+{% if sem_permissao %}
+{% include "ui/_componentes/so_leitura.html" with texto="Só leitura: seu perfil vê os templates, mas não altera. Para editar, peça a permissão de templates a um administrador." %}
+{% endif %}
+
+<form method="post" class="tpl-form" data-editor>{% csrf_token %}
+  {% include "ui/_componentes/bloqueio.html" %}
+
+  <div class="campo tpl-nome-campo">
+    <label for="id_nome">Nome</label>
+    <input class="input" id="id_nome" name="nome" value="{{ form.nome.value|default:'' }}" maxlength="200" autocomplete="off"{% if form.nome.errors %} aria-invalid="true" aria-describedby="nome-erro"{% endif %}{% if not pode_gravar %} readonly{% endif %}>
+    {% if form.nome.errors %}<p class="erro" id="nome-erro">{{ form.nome.errors.0 }}</p>{% endif %}
+  </div>
+
+  <div class="duas-colunas tpl-editor">
+    <div class="campo">
+      <div class="tpl-barra">
+        <label for="id_texto">Texto</label>
+        {% if pode_gravar %}
+        <div class="tpl-inserir">
+          <label class="sr-only" for="tpl-variavel">Variável</label>
+          <select class="select" id="tpl-variavel">
+            {% for grupo, itens in grupos.items %}<optgroup label="{{ grupo }}">{% for v in itens %}<option value="{{ v.nome }}" title="{{ v.descricao }}">{{ v.rotulo }}</option>{% endfor %}</optgroup>{% endfor %}
+          </select>
+          <button class="btn btn-outline" type="button" data-inserir>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/></svg>
+            Inserir variável
+          </button>
+        </div>
+        {% endif %}
+      </div>
+      <textarea class="textarea mono tpl-texto" id="id_texto" name="texto" rows="28" spellcheck="true" aria-describedby="texto-ajuda"{% if form.texto.errors %} aria-invalid="true"{% endif %}{% if pode_gravar %}
+        hx-post="{% url 'ui_templates_previa' tpl.pk %}" hx-trigger="input changed delay:400ms" hx-target="#previa" hx-sync="this:replace" hx-indicator="#previa-carregando"{% else %} readonly{% endif %}>
+{{ form.texto.value|default:'' }}</textarea>
+      <p class="ajuda" id="texto-ajuda">Cada seção começa com <code>## id</code> e o título na linha seguinte. Variáveis entre chaves duplas, como <code>{% templatetag openvariable %}ano{% templatetag closevariable %}</code>. Negrito, itálico e listas valem; links, imagens, HTML e <code>#</code> no corpo, não.</p>
+    </div>
+
+    <section class="tpl-previa" aria-labelledby="previa-titulo">
+      <header>
+        <h2 id="previa-titulo">Pré-visualização</h2>
+        <span class="mudo">variáveis em <span class="variavel-vazia">amarelo</span></span>
+        <svg id="previa-carregando" class="girando htmx-indicator" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-label="Atualizando"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+      </header>
+      <div id="previa" aria-live="polite">{% include "ui/parciais/templates_previa.html" %}</div>
+    </section>
+  </div>
+
+  {% if pode_gravar %}
+  <div class="barra-salvar">
+    <span class="mudo" data-estado>Se o texto mudar, você vê o impacto nas revistas antes de criar a versão.</span>
+    <button class="btn" type="submit">Salvar</button>
+  </div>
+  {% endif %}
+</form>
+
+{% if pode_gravar %}
+<script>
+// "Inserir variável" põe a variável entre chaves duplas no cursor e avisa o HTMX (evento input = preview);
+// aviso antes de sair com texto não salvo.
+(() => {
+  const form = document.querySelector("[data-editor]");
+  const area = form.querySelector("#id_texto");
+  const nome = form.querySelector("#id_nome");
+  const estado = form.querySelector("[data-estado]");
+  let enviando = false;
+  const mudou = () => area.value !== area.defaultValue || nome.value !== nome.defaultValue;
+  form.querySelector("[data-inserir]").addEventListener("click", () => {
+    if (area.readOnly) return;
+    area.setRangeText("{" + "{" + form.querySelector("#tpl-variavel").value + "}" + "}", area.selectionStart, area.selectionEnd, "end");
+    area.focus();
+    area.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  form.addEventListener("input", () => {
+    estado.textContent = mudou() ? "Alteração não salva." : "Se o texto mudar, você vê o impacto nas revistas antes de criar a versão.";
+  });
+  form.addEventListener("submit", () => { enviando = true; });
+  addEventListener("beforeunload", (e) => { if (!enviando && mudou()) e.preventDefault(); });
+})();
+</script>
+{% endif %}
+{% endblock %}
