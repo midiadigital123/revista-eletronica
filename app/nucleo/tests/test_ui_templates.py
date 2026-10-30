@@ -46,7 +46,7 @@ class ListaTest(UiBase):
         self.assertContains(r, "usado por 2")
         self.assertContains(r, "(1 com cópia de seção)")
         self.assertContains(r, ">v1<")
-        self.assertContains(r, 'href="/admin/nucleo/projeto/variaveis/?ano=2026">Variáveis')
+        self.assertContains(r, 'href="/ui/variaveis/2026/">Variáveis')
         self.assertNotContains(self.ped.get(self.lista), f'href="{self.editar}"')  # aba padrão F1
         self.assertRedirects(self.ped.get(reverse("ui_templates_inicio")), self.lista)
 

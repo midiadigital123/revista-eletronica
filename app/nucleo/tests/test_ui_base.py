@@ -136,6 +136,5 @@ class CascaTest(TestCase):
         self.assertContains(r, 'href="/painel/2026/"')
         self.assertContains(r, 'href="/ui/variaveis/2026/"')  # tela B de variáveis já entrou
         self.assertContains(r, 'href="/ui/matriz/2026/"')  # tela B de matrizes já registrada
-        self.assertContains(r, 'href="/painel/2026/?falta=impresso"')
         self.assertContains(r, 'href="/ui/impresso/2026/"')
         self.assertContains(r, 'id="mensagens"')

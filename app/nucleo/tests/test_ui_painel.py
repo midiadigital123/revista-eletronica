@@ -23,7 +23,7 @@ class PainelUiTest(Base):
         rev = self.go["LP"]
         self.assertContains(r, f'name="revista" value="{rev.pk}"')
         self.assertContains(r, "Validar selecionadas")
-        self.assertContains(r, f'action="{reverse("painel_validar", args=[2026])}"')  # ui_validar ainda não existe
+        self.assertContains(r, f'action="{reverse("ui_validar", args=[2026])}"')  # lote vai à tela B de validar
         self.assertContains(r, f'href="{reverse("preview", args=[rev.pk])}" target="_blank"')
         self.assertContains(r, reverse("impresso", args=[rev.pk]))  # coluna Impresso leva à tela do impresso
         # Próxima tarefa da Pedagógica: revistas sem "Validado", com link para o filtro.
