@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo 20 de 22: telas B juntadas e no GitHub (7b55ee8). Compose sobe só `db` e `app` (D-187); React, API e Mongo desligados, volume do Mongo mantido. Compose commitado. Falta: README/docs/docker.md ainda falam do sistema antigo, carga real do S17 e S18.
-Funcionando: em cada `feat/s11*`, suíte OK (8 de PDF pulados), `makemigrations --check` limpo; Playwright cortes, templates-admin e revista-textos passam.
-Quebrado/pendente: 5 telas B corrigidas sem 2ª revisão; links "falta" ainda vão ao admin; polimento de CSS/HTMX/JS adiado pelo usuário; S17 executado só em ensaio; apagar `editor/` bloqueado até as telas B substituírem o uso; S18 não iniciado.
+Passo S3 de S0–S9 (+fechamento) do plano telas-b-lacunas concluído: abrir ano na tela B (`/ui/anos/`). Plano geral: passo 21 de 22 (S17) segue pendente.
+Funcionando: S1, S2 e S3 nas telas B; suíte 541 OK (8 de PDF pulados), `makemigrations --check` limpo; links "Abra um ano" das telas B vão para `/ui/anos/`, não ao admin.
+Quebrado/pendente: Playwright do S3 rodou só 19/26 (7 pulados: faltam `E2E_ADMIN_*`/`E2E_IMPRESSO_*` no ambiente); S4–S9 e fechamento; S17 executado só em ensaio; S18 não iniciado.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Executar S3 do plano telas-b-lacunas (abrir ano na tela B).
+Executar S4 do plano telas-b-lacunas (etapas e componentes na página do ano, `/ui/anos/`).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1573,6 +1573,14 @@ Executar S3 do plano telas-b-lacunas (abrir ano na tela B).
 - **Arquivos afetados:** `app/nucleo/servicos/bloqueio.py`, `app/nucleo/admin/bloqueio.py`, `app/nucleo/lotes.py`, `app/nucleo/tests/test_bloqueio.py`, `app/nucleo/templates/ui/parciais/impresso_detalhe.html`, `app/nucleo/static/ui/ui.js`, `app/e2e/playwright.config.ts`
 - **Status:** ativa
 
+### D-192 — Abrir ano na tela B: página `/ui/anos/` (2026-10-30 17:35)
+- **Contexto:** S3 de D-190. Só o admin abria ano; as telas B mandavam "Abra um ano no admin".
+- **Decisão:** rota `ui_anos` (`/ui/anos/`) com a lista dos anos e o form "Abrir ano" (digitar o ano, dica do próximo, o mesmo aviso do admin), chamando `servicos/abrir_ano.abrir_ano`. Ver exige `view_ano` (os 4 perfis); o form só aparece e o POST só passa com `abrir_ano` (403). O seletor de anos (`_componentes/anos.html`) ganha "+ Abrir ano" só com `abrir_ano`. As mensagens "Abra um ano no admin" e o `/` sem ano (antes `admin:index`) e `/ui/impresso/` sem ano passam a ir para `ui_anos`. Sem ano nenhum, a página diz que o primeiro ano entra pela carga (o serviço recusa abrir sem ano anterior).
+- **Motivo:** regra do usuário (toda função do back com controle na tela B); a página é a mesma que o S4 e o S5 vão estender (etapas, componentes, paleta), por isso o Impresso a lê.
+- **Descartadas:** importar `AbrirAnoForm` do admin — import circular (`admin` → `urls` → `admin`); o form de 1 campo foi copiado. Item "Anos" no menu principal — o menu já tem 9 itens e o seletor de anos já está em toda tela B.
+- **Arquivos afetados:** `app/nucleo/urls/ui_anos.py`, `app/nucleo/urls/__init__.py`, `app/nucleo/urls/ui_impresso.py`, `app/nucleo/templates/ui/anos/anos.html`, `app/nucleo/templates/ui/_componentes/anos.html`, `ui/cortes.html`, `ui/templates/lista.html`, `ui/variaveis/pagina.html`, `ui/matriz/lista.html`, `ui/revista/lista.html`, `app/nucleo/tests/test_ui_anos.py`, `test_ui_links.py`, `test_navegacao.py`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (D-189 → D-190) Auditoria das telas B: o que o back faz e a tela B não oferece. Bloqueia: abrir ano, criar matriz, criar template, paleta do ano, etapas/componentes. Leva a erro: links do painel vão ao admin (Impresso recebe 403 em "Matriz", `urls/painel.py:43`), renomear parceiro, "abra um ano no admin" para quem não pode. Menu sem Projetos e Lotes. Por onde começar — depende de: usuário
 - [x] (D-184) S17: os cortes de 2026 repetem os de 2025? Se sim, comando `importar_cortes` (~60 min) substituindo a D-119 nesse ponto — depende de: Pedagógica
@@ -1866,3 +1874,4 @@ Executar S3 do plano telas-b-lacunas (abrir ano na tela B).
 - D-190: blueprint das 21 lacunas aprovado (S0–S9); S0 em execução.
 - S1 (35d2cd0) + correção (5e8bf95): links do painel e mensagens sem admin nem 403. O Playwright achou o bloqueio de 30 s ao navegar entre ficha e revista: D-191 (mesma pessoa assume) + botão de copiar sem nome acessível. Suíte 527 OK; Playwright 26/26 numa pilha isolada (porta 8014). A pilha de dev foi encerrada à força (137) ao subir a isolada e foi religada.
 - S2: matriz atribuída pela ficha do projeto (sessão de bloqueio da ficha), faixa "Falta escolher a matriz (etapas)" no preview e na ficha da revista (fora do resolvido, hash intacto), nome do projeto editável na própria revista, renomear parceiro na grade com confirmação quando revistas validadas perdem o Validado (simulação em transação desfeita). Suíte OK, Playwright 26/26.
+- S3 (D-192): `/ui/anos/` abre o ano pela tela B; Pedagógica abre 2027, fora de sequência não grava, Impresso só lê (403 no POST). Suíte 541 OK; Playwright 19 OK, 7 pulados por falta de credenciais E2E no ambiente.
