@@ -10,6 +10,7 @@ nem textos não salvos). A renovação do bloqueio segue no change form.{% endco
     {% if validacao.validada %}<p><strong>✓ Validado</strong> por {{ original.validado_por }} em {{ original.validado_em }}.</p>
     {% elif original.hash_validado %}<p><strong>Não validado:</strong> a revista mudou depois do último “Validado” ({{ original.validado_em }}).</p>
     {% else %}<p><strong>Ainda não validado.</strong></p>{% endif %}
+    <p><a href="{% url 'impresso' original.pk %}">O que mudou para o impresso</a></p>
     {% if validacao.desatualizadas %}<p class="impacto-alerta">Aviso: seções desatualizadas ({{ validacao.desatualizadas|join:", " }}). Não impede o “Validado”.</p>{% endif %}
     {% if validacao.pendencias %}<p>Pendências que impedem o “Validado”:</p>
     <ul>{% for p in validacao.pendencias %}<li>{{ p.mensagem }}</li>{% endfor %}</ul>{% endif %}

@@ -11,9 +11,10 @@ título (texto puro) e o resto é o corpo em Markdown.
 import re
 from collections import Counter
 import secrets
-from html import escape
+from html import escape, unescape
 
 from django.core.exceptions import ValidationError
+from django.utils.html import strip_tags
 from markdown_it import MarkdownIt
 
 from nucleo.variaveis import VARIAVEIS
@@ -186,3 +187,19 @@ def renderizar(corpo, valores):
 def renderizar_texto_puro(texto, valores):
     """Título: texto escapado com as variáveis trocadas, sem Markdown."""
     return VAR.sub(lambda m: _valor(m[1], valores), escape(texto))
+
+
+def _lista(m):
+    itens = re.findall(r"<li>(.*?)</li>", m[2], re.S)
+    return "".join(f"{f'{i}.' if m[1] == 'ol' else '-'} {item.strip()}\n" for i, item in enumerate(itens, 1))
+
+
+def html_para_texto(html):
+    """HTML renderizado -> texto para o impresso (S13): volta a marcação do Markdown restrito
+    (**negrito**, *itálico*, "1." e "-" nas listas), para que mudar só a formatação apareça no diff
+    e o texto copiado a mantenha; fim de parágrafo e <br> viram quebra."""
+    html = re.sub(r"<strong>(.*?)</strong>", r"**\1**", html or "", flags=re.S)
+    html = re.sub(r"<em>(.*?)</em>", r"*\1*", html, flags=re.S)
+    html = re.sub(r"<(ol|ul)[^>]*>(.*?)</\1>", _lista, html, flags=re.S)
+    html = re.sub(r"</p>|<br\s*/?>", "\n", html)
+    return re.sub(r"\n{3,}", "\n\n", unescape(strip_tags(html))).strip()

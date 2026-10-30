@@ -1,0 +1,47 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% comment %}Tela do impresso (S13, D-072, D-077): o que mudou desde a última foto, por fascículo e etapa ou seção.
+"Revista Impressa Atualizada" num form só com csrf e o hash exibido (D-089), desabilitado no envio.{% endcomment %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'nucleo/template_editor.css' %}">{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Início</a> &rsaquo; <a href="{{ url_painel }}">Painel</a> &rsaquo; {{ title }}</div>{% endblock %}
+{% block content %}
+<div id="content-main">
+<p>
+  {% if foto %}Comparado com a última “Revista Impressa Atualizada”, de {{ foto.criada_em }} por {{ foto.criada_por }}{% if foto.herdada %} (foto herdada do projeto arquivado){% endif %}.
+  {% else %}Primeira entrega: ainda não há “Revista Impressa Atualizada”, então tudo aparece como novo.{% endif %}
+  <a class="button" href="{% url 'impresso_planilhas' revista.pk %}">Baixar planilhas</a>
+</p>
+
+{% for fasciculo, grupos in mudancas.items %}
+<h2>{{ fasciculo }}</h2>
+{% for grupo, itens in grupos.items %}
+<fieldset class="module" id="grupo-{{ fasciculo }}-{{ grupo|slugify }}">
+  <h2>{{ grupo }}</h2>
+  {% for i in itens %}<div class="form-row item-impresso">
+    <h3>{{ i.item }}{% if i.antes is None %} (novo){% elif i.depois is None %} (removido){% endif %}</h3>
+    {% if i.tabela %}{{ i.tabela }}{% elif i.depois is None %}<pre class="texto-template">{{ i.antes }}</pre>{% endif %}
+    {% if i.depois is not None %}
+    <textarea readonly rows="4" class="vLargeTextField" aria-label="Texto novo de {{ i.item }}">{{ i.depois }}</textarea>
+    <button type="button" class="button" onclick="const t = this.previousElementSibling, b = this, sel = () => { t.select(); b.textContent = 'Selecionado: use Ctrl+C'; }; const p = navigator.clipboard?.writeText(t.value); p ? p.then(() => b.textContent = 'Copiado', sel) : sel()">Copiar texto novo</button>
+    {% endif %}
+  </div>{% endfor %}
+</fieldset>
+{% endfor %}
+{% empty %}
+<p>{% if pendente %}Mudou algo que o diff de texto não mostra (formatação ou arquivo de item).{% else %}Sem mudanças desde a última “Revista Impressa Atualizada”.{% endif %}</p>
+{% endfor %}
+
+{% if pendente %}
+{% if not validada %}<p class="impacto-alerta">Aguardando o “Validado” da pedagógica nesta versão: só depois dele o impresso pode marcar.</p>
+{% elif pode %}
+<form method="post" action="{% url 'impresso_marcar' revista.pk %}" onsubmit="this.querySelector('[type=submit]').disabled = true">{% csrf_token %}
+  <input type="hidden" name="hash_visto" value="{{ hash }}">
+  <div class="submit-row">
+    <p class="help">Confirma que o InDesign recebeu as mudanças desta página. Se a revista mudar antes do envio, o clique é recusado.</p>
+    <input type="submit" class="default" id="botao-impressa" value="Revista Impressa Atualizada">
+  </div>
+</form>
+{% endif %}
+{% endif %}
+</div>
+{% endblock %}
