@@ -8,7 +8,7 @@ Quebrado/pendente: 5 telas B corrigidas sem 2ª revisão; links "falta" ainda v�
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Executar S2 do plano telas-b-lacunas (matriz na ficha do projeto, faixa sem matriz, nome do projeto na revista, renomear parceiro).
+Executar S3 do plano telas-b-lacunas (abrir ano na tela B).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1865,3 +1865,4 @@ Executar S2 do plano telas-b-lacunas (matriz na ficha do projeto, faixa sem matr
 - Auditoria das telas B concluída: 5 lacunas bloqueiam o trabalho, 1 link dá 403 ao Impresso (painel → escolher matriz no admin, confirmado por mim).
 - D-190: blueprint das 21 lacunas aprovado (S0–S9); S0 em execução.
 - S1 (35d2cd0) + correção (5e8bf95): links do painel e mensagens sem admin nem 403. O Playwright achou o bloqueio de 30 s ao navegar entre ficha e revista: D-191 (mesma pessoa assume) + botão de copiar sem nome acessível. Suíte 527 OK; Playwright 26/26 numa pilha isolada (porta 8014). A pilha de dev foi encerrada à força (137) ao subir a isolada e foi religada.
+- S2: matriz atribuída pela ficha do projeto (sessão de bloqueio da ficha), faixa "Falta escolher a matriz (etapas)" no preview e na ficha da revista (fora do resolvido, hash intacto), nome do projeto editável na própria revista, renomear parceiro na grade com confirmação quando revistas validadas perdem o Validado (simulação em transação desfeita). Suíte OK, Playwright 26/26.
