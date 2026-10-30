@@ -1,0 +1,37 @@
+{% comment %}
+Cartão de uma revista na tela Validar (urls/ui_validar.py). Contexto: `i` (item de itens_validar),
+`pode_validar`; `oob` quando vem do "Validar esta" pelo HTMX (troca também as mensagens).
+Estado na borda esquerda: pronta (neutra), validada (verde), pendente (vermelha).
+{% endcomment %}{% with r=i.revista par=i.revista.pk|stringformat:"d"|add:":"|add:i.hash %}
+<article class="card validar-cartao {% if i.pendencias %}validar-pendente{% elif i.validada %}validar-validada{% endif %}" id="validar-{{ r.pk }}" aria-labelledby="validar-{{ r.pk }}-nome">
+  <header class="validar-cab">
+    {% if pode_validar %}<input type="hidden" name="revista" value="{{ r.pk }}">{% endif %}
+    <h2 class="validar-nome" id="validar-{{ r.pk }}-nome">
+      {% if pode_validar %}<label class="marcar"><input type="checkbox" name="par" value="{{ par }}"{% if not i.pendencias and not i.validada %} checked{% endif %}{% if i.pendencias %} disabled{% endif %}> {{ r }}</label>
+      {% else %}{{ r }}{% endif %}
+    </h2>
+    {% if i.pendencias %}<span class="badge badge-erro">{{ i.pendencias|length }} pendência(s)</span>
+    {% elif i.validada %}<span class="badge validar-badge-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Validada nesta versão</span>{% if r.validado_por %}<span class="mudo">por {{ r.validado_por.get_full_name|default:r.validado_por.username }} em {{ r.validado_em|date:"d/m/Y H:i" }}</span>{% endif %}
+    {% else %}<span class="badge badge-secundario">Pronta para validar</span>{% endif %}
+    {% if i.editando %}<span class="badge badge-alerta">Em edição por {{ i.editando.usuario.get_full_name|default:i.editando.usuario.username }}: será pulada</span>{% endif %}
+    {% if pode_validar %}
+    <button class="btn btn-outline btn-sm validar-esta" type="submit" name="so" value="{{ par }}"
+      hx-post="{% url 'ui_validar' ano.ano %}" hx-target="#validar-{{ r.pk }}" hx-swap="outerHTML"
+      hx-vals='{"so": "{{ par }}"}' hx-indicator="#validar-{{ r.pk }}"{% if i.pendencias %} disabled{% endif %}>
+      {% include "ui/_componentes/girando.html" %}
+      Validar esta
+    </button>
+    {% endif %}
+  </header>
+  {% for p in i.pendencias %}{% include "ui/_componentes/faixa.html" with texto=p.mensagem url=p.link rotulo="Resolver" %}{% endfor %}
+  {% if i.desatualizadas %}
+  <div class="aviso aviso-alerta" role="status">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+    <span>Seções desatualizadas: {% for c in i.desatualizadas %}{{ c.revista_fasciculo.fasciculo }} {{ c.secao }}{% if not forloop.last %}, {% endif %}{% endfor %}. Não impede o “Validado”.</span>
+  </div>
+  {% endif %}
+  {% if i.diff is None %}<p class="mudo">Primeira impressão: não há versão impressa para comparar.</p>
+  {% elif i.diff %}<details class="recolhivel"><summary>Mudanças desde a última impressa</summary><div class="tabela-caixa">{{ i.diff }}</div></details>
+  {% else %}<p class="mudo">Sem mudanças desde a última impressa.</p>{% endif %}
+</article>
+{% endwith %}{% if oob %}{% include "ui/_componentes/mensagens.html" with oob=True %}{% endif %}

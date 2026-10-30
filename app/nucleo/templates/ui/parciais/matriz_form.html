@@ -1,0 +1,18 @@
+{% comment %}
+Form curto de modal (Duplicar, Renomear, Novo descritor). HTMX troca o próprio <form> quando há erro;
+sucesso vem com HX-Redirect. Sem JS, posta normal e cai em ui/matriz/form.html.
+Contexto: form, titulo, url, chave (id do modal). Mensagens de erro do servidor: form.non_field_errors.
+{% endcomment %}<form method="post" action="{{ url }}" hx-post="{{ url }}" hx-target="this" hx-swap="outerHTML" class="matriz-dialogo-form" novalidate>{% csrf_token %}
+  {% if request.bloqueio %}<input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">{% endif %}
+  <header>
+    <h2 id="dlg-{{ chave }}-titulo">{{ titulo }}</h2>
+    {% if chave == "duplicar" %}<p class="mudo">Copia etapas × componente, descritores e tarefas. A cópia só guarda de onde veio.</p>
+    {% elif chave == "novo" %}<p class="mudo">O descritor entra em toda revista que usa esta etapa × componente.</p>{% endif %}
+  </header>
+  {% for e in form.non_field_errors %}<p class="aviso aviso-erro" role="alert">{{ e }}</p>{% endfor %}
+  {% for campo in form %}{% include "ui/_componentes/matriz_campo.html" %}{% endfor %}
+  <footer>
+    <button type="button" class="btn btn-outline" data-fechar>Cancelar</button>
+    <button type="submit" class="btn">{% if chave == "duplicar" %}Duplicar{% elif chave == "renomear" %}Renomear{% else %}Criar descritor{% endif %}</button>
+  </footer>
+</form>

@@ -1,4 +1,5 @@
-// Renovação do bloqueio de edição no change form do admin (BloqueioAdminMixin).
+// Renovação do bloqueio de edição no change form do admin (BloqueioAdminMixin) e nas
+// páginas próprias (ui_bloqueio.com_bloqueio, include ui/_componentes/bloqueio.html).
 // Portado de editor/src/projetos/useBloqueio.ts: renova a cada 10 s (o bloqueio
 // expira em 30 s), libera no pagehide e, se o servidor disser que perdemos o
 // bloqueio (409, ou 403 por logout/CSRF), desliga o formulário (somente
@@ -26,14 +27,15 @@
   };
 
   const avisar = (texto) => {
-    let lista = document.querySelector("ul.messagelist");
+    // ul.messagelist/li.error no admin; ul.mensagens/li.aviso.aviso-erro nas páginas B.
+    let lista = document.querySelector("ul.messagelist, ul.mensagens");
     if (!lista) {
       lista = document.createElement("ul");
-      lista.className = "messagelist";
+      lista.className = "messagelist mensagens";
       form.before(lista);
     }
     const item = document.createElement("li");
-    item.className = "error";
+    item.className = "error aviso aviso-erro";
     item.setAttribute("role", "alert");
     item.textContent = texto;
     lista.append(item);
@@ -69,6 +71,17 @@
   // Ao enviar, o servidor confere e libera depois de salvar; liberar aqui criaria corrida.
   form.addEventListener("submit", () => {
     enviando = true;
+  });
+  // HTMX: todo pedido leva a sessão da aba (GET de fragmento e POST fora deste form); envio
+  // por HTMX não sai da página, então o pagehide volta a liberar; desligado, nada sai.
+  document.addEventListener("htmx:configRequest", (e) => {
+    e.detail.parameters[campo.name] = campo.value;
+  });
+  document.addEventListener("htmx:afterRequest", () => {
+    enviando = false;
+  });
+  document.addEventListener("htmx:confirm", (e) => {
+    if (desligado) e.preventDefault();
   });
   window.addEventListener("pagehide", () => {
     if (!enviando) navigator.sendBeacon(urlLiberar, dados());

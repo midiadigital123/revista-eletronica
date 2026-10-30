@@ -1,0 +1,128 @@
+{% extends "ui/base.html" %}
+{% load static ui %}
+{% comment %}Projeto (T16) fora do admin. Regra em nucleo/projeto.py; view em nucleo/urls/ui_projeto.py; ficha em docs/telas/fichas/projeto.md.{% endcomment %}
+{% block titulo %}{{ projeto.nome }}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/projeto.css' %}">{% endblock %}
+
+{% block conteudo %}
+<a class="mudo voltar" href="{% url 'ui_projeto_lista' projeto.ano.ano %}">‹ Projetos de {{ projeto.ano.ano }}</a>
+<header class="pagina-cab">
+  <div>
+    <h1>{{ projeto.nome }}{% if arquivado %} <span class="badge badge-contorno">Arquivado</span>{% endif %}</h1>
+    <p class="mudo">{{ projeto.parceiro_ano.parceiro.nome }} em {{ projeto.ano.ano }}, matriz {{ projeto.parceiro_ano.matriz.nome|default:"ainda não escolhida" }}.</p>
+  </div>
+  <div class="acoes">
+    {% rota_b "ui_variaveis" projeto.ano.ano as u %}
+    <a class="btn btn-outline" href="{% if u %}{{ u }}{% else %}{% url 'admin:nucleo_projeto_variaveis' %}?ano={{ projeto.ano.ano }}{% endif %}">Planilha de variáveis de {{ projeto.ano.ano }}</a>
+  </div>
+</header>
+
+{% if arquivado %}
+{% include "ui/_componentes/so_leitura.html" with texto="Só leitura: este projeto foi arquivado e as revistas dele estão congeladas. Para mudar algo, abra o projeto ativo do parceiro." %}
+{% elif not tem_permissao %}
+{% include "ui/_componentes/so_leitura.html" with texto="Só leitura: seu perfil vê o projeto, mas não altera. Para editar, peça a permissão de projeto a um administrador." %}
+{% endif %}
+
+<nav class="pj-indice" aria-label="Partes do projeto">
+  <a href="#nome">Nome</a><a href="#variaveis">Variáveis</a><a href="#passo">Passo</a><a href="#cores">Cores</a>
+</nav>
+
+<form method="post" class="pj-form" novalidate>{% csrf_token %}
+  {% include "ui/_componentes/bloqueio.html" %}
+  {% for e in form.non_field_errors %}<p class="erro">{{ e }}</p>{% endfor %}
+
+  <section class="card pj-secao" id="nome" aria-labelledby="nome-titulo">
+    <h2 class="secao-titulo" id="nome-titulo">Nome</h2>
+    <div class="campo pj-nome">
+      <label for="{{ form.nome.id_for_label }}">Nome do projeto</label>
+      {{ form.nome }}
+      <p class="ajuda">Aparece na capa e na variável <code>{% templatetag openvariable %}nome_projeto}}</code>. Até 200 caracteres.</p>
+      {% for e in form.nome.errors %}<p class="erro">{{ e }}</p>{% endfor %}
+    </div>
+  </section>
+
+  <section class="card pj-secao" id="variaveis" aria-labelledby="variaveis-titulo">
+    <div>
+      <h2 class="secao-titulo" id="variaveis-titulo">Variáveis</h2>
+      <p class="mudo">Os textos dos templates trocam <code>{% templatetag openvariable %}nome}}</code> por estes valores. Vazio aparece em amarelo na revista. Nome do parceiro, do projeto e ano saem do cadastro.</p>
+    </div>
+    {% for grupo, campos in grupos %}
+    <fieldset class="pj-grupo">
+      <legend>{{ grupo }}</legend>
+      <div class="pj-campos">
+        {% for campo, v in campos %}
+        <div class="campo">
+          <label for="{{ campo.id_for_label }}">{{ v.rotulo }}</label>
+          {{ campo }}
+          <p class="ajuda">{{ v.descricao }} <code>{% templatetag openvariable %}{{ v.nome }}}}</code></p>
+          {% for e in campo.errors %}<p class="erro">{{ e }}</p>{% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </fieldset>
+    {% endfor %}
+  </section>
+
+  <section class="card pj-secao" id="passo" aria-labelledby="passo-titulo">
+    <div>
+      <h2 class="secao-titulo" id="passo-titulo">Passo por etapa e componente</h2>
+      <p class="mudo">O passo define as linhas vazias da escala. Sem linha aqui, vale o passo da matriz. Passo vazio na linha = sem linhas vazias, de propósito. Remover a linha volta ao passo da matriz.</p>
+    </div>
+    {% if passos_matriz %}
+    <p class="pj-referencia"><span class="mudo">Na matriz {{ projeto.parceiro_ano.matriz.nome }}:</span>
+      {% for m in passos_matriz %}<span class="badge badge-secundario">{{ m.etapa.codigo }} {{ m.componente.codigo }}: {{ m.passo|default:"sem linhas vazias" }}</span>{% endfor %}
+    </p>
+    {% endif %}
+    <div class="tabela-caixa" id="passos-caixa">
+      {{ passos.management_form }}
+      {% for e in passos.non_form_errors %}<p class="erro">{{ e }}</p>{% endfor %}
+      <table class="tabela pj-tabela">
+        <thead><tr><th scope="col">Etapa</th><th scope="col">Componente</th><th scope="col">Passo</th>{% if pode_gravar %}<th scope="col"><span class="sr-only">Remover</span></th>{% endif %}</tr></thead>
+        <tbody id="passos-linhas">
+          <tr class="pj-vazio"><td colspan="{% if pode_gravar %}4{% else %}3{% endif %}" class="mudo">Nenhuma sobrescrita: vale o passo da matriz em todas as etapas e componentes.</td></tr>
+          {% for f in passos %}{% include "ui/parciais/projeto_linha.html" with tipo="passos" %}{% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if pode_gravar %}<div>{% include "ui/parciais/projeto_adicionar.html" with tipo="passos" %}</div>{% endif %}
+  </section>
+
+  <section class="card pj-secao" id="cores" aria-labelledby="cores-titulo">
+    <div>
+      <h2 class="secao-titulo" id="cores-titulo">Cores dos padrões</h2>
+      <p class="mudo">A paleta do ano vale para todos os projetos. Sobrescreva só o padrão que este projeto pinta diferente; remover a linha volta à cor do ano.</p>
+    </div>
+    {% if faixa %}
+    <ol class="pj-faixa" aria-label="Como os padrões saem na revista (gravado)">
+      {% for p in faixa %}
+      <li style="--cor: {{ p.cor }}">
+        <span class="pj-amostra" aria-hidden="true"></span>
+        <strong>Padrão {{ p.padrao }}</strong>
+        <span class="pj-faixa-nome">{{ p.nome|default:"sem nome" }}</span>
+        <span class="mudo">{{ p.cor|upper }} {% if p.projeto %}do projeto{% else %}do ano{% endif %}</span>
+      </li>
+      {% endfor %}
+    </ol>
+    {% endif %}
+    <div class="tabela-caixa" id="cores-caixa">
+      {{ cores.management_form }}
+      {% for e in cores.non_form_errors %}<p class="erro">{{ e }}</p>{% endfor %}
+      <table class="tabela pj-tabela">
+        <thead><tr><th scope="col">Padrão</th><th scope="col">Cor</th>{% if pode_gravar %}<th scope="col"><span class="sr-only">Remover</span></th>{% endif %}</tr></thead>
+        <tbody id="cores-linhas">
+          <tr class="pj-vazio"><td colspan="{% if pode_gravar %}3{% else %}2{% endif %}" class="mudo">Nenhuma sobrescrita: valem as cores do ano.</td></tr>
+          {% for f in cores %}{% include "ui/parciais/projeto_linha.html" with tipo="cores" %}{% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if pode_gravar %}<div>{% if cores.total_form_count >= max_cores %}{% include "ui/parciais/projeto_adicionar.html" with tipo="cores" desligado=True %}{% else %}{% include "ui/parciais/projeto_adicionar.html" with tipo="cores" %}{% endif %}</div>{% endif %}
+  </section>
+
+  {% if pode_gravar %}
+  <div class="barra-salvar">
+    <span class="mudo">Salva nome, variáveis, passos e cores juntos.</span>
+    <button class="btn" type="submit">Salvar projeto</button>
+  </div>
+  {% endif %}
+</form>
+{% endblock %}

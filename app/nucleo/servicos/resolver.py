@@ -185,7 +185,7 @@ def _f1_escalas(revista, projeto, variaveis):
     return etapas, dados
 
 
-def _cores(revista, projeto, padroes):
+def cores_efetivas(revista, projeto, padroes):
     """Cores 1..padroes: ProjetoCor sobrescreve CorPadrao do ano (D-060, D-064)."""
     cores = dict(CorPadrao.objects.filter(ano_id=revista.ano_id).values_list("padrao", "cor"))
     cores.update(ProjetoCor.objects.filter(projeto=projeto).values_list("padrao", "cor"))
@@ -279,7 +279,7 @@ def resolver(revista):
     etapas, dados = _f1_escalas(revista, projeto, valores)
     padroes = max((len(d["padroes"]) for d in dados.values()), default=0)
     usadas.update(f"pd{k:02d}" for k in range(1, padroes + 1))  # rótulos da escala: só os padrões que a revista tem
-    f1 = {"etapas": etapas, "dados": dados, "cores": _cores(revista, projeto, padroes), **textos("F1")}
+    f1 = {"etapas": etapas, "dados": dados, "cores": cores_efetivas(revista, projeto, padroes), **textos("F1")}
     f2 = {**textos("F2"), "svg_sha256": revista.svg_sha256, "svg_ids": sorted(revista.svg_ids or [])}
     # Mesmo critério de "vazio" de texto._valor.
     lacunas += [

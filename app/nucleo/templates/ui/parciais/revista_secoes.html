@@ -1,0 +1,16 @@
+{% comment %}
+Lista de seções da revista (lado esquerdo). Contexto: revista, blocos, chave (seção aberta).
+Com `oob` troca a lista fora do alvo (GET HTMX de uma seção marca o item ativo).
+{% endcomment %}<nav class="lista revista-secoes" id="secoes" aria-label="Seções"{% if oob %} hx-swap-oob="true"{% endif %}>
+  {% for b in blocos %}
+  <p class="revista-grupo"><strong>{{ b.rf.fasciculo }}</strong> <span class="mudo">{{ b.rf.template.nome }}, versão {{ b.versao.numero }}</span></p>
+  {% for s in b.secoes %}{% with k=b.rf.fasciculo|add:":"|add:s.id %}
+  <a href="?secao={{ k|urlencode }}" hx-get="?secao={{ k|urlencode }}" hx-target="#secao" hx-push-url="true"{% if k == chave %} aria-current="true"{% endif %}>
+    <span class="revista-secao-id">{{ s.id }}</span>
+    {% if s.desatualizada %}<span class="badge badge-alerta">desatualizada</span>{% elif s.copia %}<span class="badge badge-secundario">cópia</span>{% endif %}
+  </a>
+  {% endwith %}{% endfor %}
+  {% empty %}
+  <p class="mudo revista-grupo">Nenhum fascículo com template.</p>
+  {% endfor %}
+</nav>

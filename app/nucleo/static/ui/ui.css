@@ -1,0 +1,424 @@
+/*
+ * Base visual das páginas próprias (opção B): o mesmo visual do editor React, sem build.
+ * Tokens copiados de editor/src/index.css (preset shadcn vega/neutral + Inter); as classes
+ * reproduzem as do shadcn em editor/src/components/ui/*.tsx (valores do Tailwind em rem).
+ * Quando usar cada componente: docs/telas/design-system.md.
+ */
+
+/* Inter variável local (@fontsource-variable/inter 5.3.0, OFL: fontes/LICENSE-inter.txt), sem CDN.
+   Mesma família e unicode-range de node_modules/@fontsource-variable/inter/wght.css. */
+@font-face {
+  font-family: "Inter Variable"; font-style: normal; font-display: swap; font-weight: 100 900;
+  src: url("fontes/inter-latin-ext-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Inter Variable"; font-style: normal; font-display: swap; font-weight: 100 900;
+  src: url("fontes/inter-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  /* editor/src/index.css:134-171 (:root) */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.5 0 0);
+  --destructive: oklch(0.5 0.2 27.325);
+  --warning: #7a4f00;
+  --warning-bg: #fff3d6;
+  --sucesso: oklch(0.45 0.13 150); /* o verde do ✓ (status, validado, copiado) */
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.6 0 0);
+  --ring: oklch(0.45 0 0);
+  --radius: 0.625rem;
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  /* editor/src/index.css:15-18 (padrões) e :25 (movimento) */
+  --padrao-1: #f72628;
+  --padrao-2: #ff8d43;
+  --padrao-3: #b3ccff;
+  --padrao-4: #0ed3ff;
+  --ease-saida: cubic-bezier(0.16, 1, 0.3, 1);
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --shadow-xs: 0 1px 2px 0 oklch(0 0 0 / 0.05);
+  color-scheme: light;
+}
+
+/* --- base (editor/src/index.css:64-82) --- */
+*, *::before, *::after { box-sizing: border-box; border: 0 solid var(--border); }
+html {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  accent-color: var(--primary);
+  scrollbar-color: var(--border) transparent;
+  -webkit-text-size-adjust: 100%;
+}
+body { margin: 0; background: var(--background); color: var(--foreground); font-size: 1rem; line-height: 1.5; }
+h1, h2, h3, p, ul, dl, dd, fieldset { margin: 0; padding: 0; }
+fieldset { border: 0; min-width: 0; }
+a { color: inherit; text-decoration: none; }
+button, input, select, textarea { font: inherit; color: inherit; }
+::selection { background: var(--primary); color: var(--primary-foreground); }
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.mudo { color: var(--muted-foreground); font-size: 0.875rem; line-height: 1.25rem; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+}
+
+/* --- casca (editor/src/layout/AppLayout.tsx) --- */
+.cab { border-bottom-width: 1px; }
+.cab-in {
+  max-width: 80rem; margin: 0 auto; padding: 0.75rem 1.5rem;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 2rem;
+}
+.marca { font-weight: 600; }
+.nav { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+.nav a {
+  border-radius: var(--radius-md); padding: 0.375rem 0.75rem;
+  font-size: 0.875rem; line-height: 1.25rem; font-weight: 500;
+  color: var(--muted-foreground); transition: color 150ms var(--ease-saida);
+}
+.nav a:hover { color: var(--foreground); }
+.nav a[aria-current="page"] { background: var(--muted); color: var(--foreground); }
+.usuario { margin-left: auto; display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+.usuario > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.usuario form { display: contents; }
+.principal { max-width: 80rem; margin: 0 auto; padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
+
+/* --- cabeçalho de página (ListaProjetos.tsx:31-34) --- */
+.pagina-cab { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.pagina-cab h1 { font-size: 1.875rem; line-height: 2.25rem; font-weight: 600; letter-spacing: -0.025em; }
+.pagina-cab > div:first-child { display: flex; flex-direction: column; gap: 0.25rem; }
+.acoes { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+/* --- botão (components/ui/button.tsx) --- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem; flex-shrink: 0;
+  height: 2.25rem; padding: 0 0.625rem; border: 1px solid transparent; border-radius: var(--radius-md);
+  background: var(--primary); color: var(--primary-foreground);
+  font-size: 0.875rem; font-weight: 500; white-space: nowrap; cursor: pointer; user-select: none;
+  transition: background-color 150ms, box-shadow 150ms;
+}
+.btn:hover { background: color-mix(in oklch, var(--primary) 80%, transparent); }
+.btn:active { translate: 0 1px; }
+.btn:focus-visible { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px var(--ring); }
+.btn:disabled { opacity: 0.5; pointer-events: none; }
+.btn svg { width: 1rem; height: 1rem; flex-shrink: 0; }
+.btn-outline { background: var(--background); color: var(--foreground); border-color: var(--border); box-shadow: var(--shadow-xs); }
+.btn-outline:hover { background: var(--muted); }
+.btn-ghost { background: transparent; color: var(--foreground); }
+.btn-ghost:hover { background: var(--muted); }
+.btn-sm { height: 2rem; border-radius: min(var(--radius-md), 10px); }
+
+/* --- input (components/ui/input.tsx) --- */
+.input {
+  height: 2.25rem; width: 100%; min-width: 0; padding: 0.25rem 0.625rem;
+  border: 1px solid var(--input); border-radius: var(--radius-md); background: transparent;
+  font-size: 0.875rem; box-shadow: var(--shadow-xs); transition: border-color 150ms, box-shadow 150ms;
+}
+.input::placeholder { color: var(--muted-foreground); }
+.input:focus-visible { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px var(--ring); }
+.input[readonly] { background: var(--muted); border-color: var(--border); box-shadow: none; }
+.input[aria-invalid="true"] { border-color: var(--destructive); box-shadow: 0 0 0 3px color-mix(in oklch, var(--destructive) 20%, transparent); }
+
+/* --- tabela (components/ui/table.tsx) --- */
+.tabela-caixa { position: relative; width: 100%; overflow-x: auto; }
+.tabela { width: 100%; border-collapse: collapse; font-size: 0.875rem; line-height: 1.25rem; }
+.tabela tr { border-bottom-width: 1px; transition: background-color 150ms; }
+.tabela tbody tr:last-child { border-bottom-width: 0; }
+.tabela tbody tr:hover { background: color-mix(in oklch, var(--muted) 50%, transparent); }
+.tabela th { height: 2.5rem; padding: 0 0.5rem; text-align: left; vertical-align: middle; font-weight: 500; white-space: nowrap; }
+.tabela td { padding: 0.5rem; vertical-align: middle; white-space: nowrap; }
+
+/* --- badge (components/ui/badge.tsx) --- */
+.badge {
+  display: inline-flex; align-items: center; gap: 0.25rem; height: 1.25rem; padding: 0.125rem 0.5rem;
+  border: 1px solid transparent; border-radius: calc(var(--radius) * 2.6);
+  font-size: 0.75rem; line-height: 1rem; font-weight: 500; white-space: nowrap;
+  background: var(--primary); color: var(--primary-foreground);
+}
+.badge-secundario { background: var(--secondary); color: var(--secondary-foreground); }
+.badge-contorno { background: transparent; color: var(--foreground); border-color: var(--border); }
+.badge-alerta { background: var(--warning-bg); color: var(--warning); border-color: color-mix(in srgb, var(--warning) 30%, transparent); }
+.badge-erro { background: color-mix(in oklch, var(--destructive) 10%, transparent); color: var(--destructive); }
+
+/* --- card (components/ui/card.tsx) --- */
+.card {
+  display: flex; flex-direction: column; gap: 1.5rem; padding: 1.5rem; overflow: hidden;
+  border-radius: var(--radius-xl); background: var(--card); font-size: 0.875rem;
+  box-shadow: var(--shadow-xs), 0 0 0 1px color-mix(in oklch, var(--foreground) 10%, transparent);
+}
+
+/* --- aviso (ui/Aviso.tsx + components/ui/alert.tsx) e mensagens do Django --- */
+.aviso {
+  display: grid; grid-template-columns: auto 1fr; gap: 0.125rem 0.625rem; align-items: start;
+  padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-lg);
+  background: var(--card); font-size: 0.875rem; line-height: 1.25rem;
+}
+.aviso svg { width: 1rem; height: 1rem; translate: 0 0.125rem; }
+.aviso-alerta { background: var(--warning-bg); color: var(--warning); border-color: color-mix(in srgb, var(--warning) 30%, transparent); }
+.aviso-erro { color: var(--destructive); }
+.mensagens { display: flex; flex-direction: column; gap: 0.5rem; list-style: none; animation: entra 120ms var(--ease-saida) both; }
+@keyframes entra { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* --- controle segmentado (ProjetoLayout.tsx:121-136, seletor de ano) --- */
+.segmentos { align-self: flex-start; display: inline-flex; align-items: center; gap: 0.125rem; padding: 0.25rem; border-radius: var(--radius-lg); background: var(--muted); max-width: 100%; overflow-x: auto; }
+.segmentos a {
+  border-radius: var(--radius-md); padding: 0.25rem 0.75rem; font-size: 0.875rem; line-height: 1.25rem;
+  font-weight: 500; white-space: nowrap; color: var(--muted-foreground); transition: color 150ms var(--ease-saida);
+}
+.segmentos a:hover { color: var(--foreground); }
+.segmentos a[aria-current="page"] { background: var(--background); color: var(--foreground); box-shadow: 0 1px 2px oklch(0 0 0 / 0.08); }
+
+@media (max-width: 40rem) {
+  .cab-in, .principal { padding-left: 1rem; padding-right: 1rem; }
+  .principal { padding-top: 1.5rem; }
+  .pagina-cab h1 { font-size: 1.5rem; line-height: 2rem; }
+}
+
+/* --- link de texto (button.tsx variant "link") --- */
+.link { text-decoration: underline; text-underline-offset: 4px; }
+
+/* --- grade editável (cortes; serve à planilha de Variáveis) --- */
+.grade { display: flex; flex-direction: column; gap: 0.75rem; }
+.grade-caixa {
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+  max-height: calc(100dvh - 12rem); overflow: auto;
+}
+/* separate: com collapse, as bordas das células fixas (sticky) somem ao rolar. */
+.grade .tabela { border-collapse: separate; border-spacing: 0; }
+.grade .tabela tr { border-bottom-width: 0; }
+.grade .tabela th, .grade .tabela td { border-bottom-width: 1px; }
+.grade .tabela tbody tr:last-child > * { border-bottom-width: 0; }
+.grade .tabela thead th { position: sticky; top: 0; z-index: 1; background: var(--background); }
+.grade .tabela thead tr:nth-child(2) th { top: 2.5rem; }
+.grade-etapa { font-weight: 600; border-left-width: 1px; }
+.grade-etapa .mudo { font-weight: 400; margin-left: 0.25rem; }
+.grade-cc { color: var(--muted-foreground); height: 2rem; }
+.grade-inicio { border-left-width: 1px; }
+.grade-parceiro {
+  position: sticky; left: 0; z-index: 1; background: var(--background);
+  min-width: 10rem; max-width: 16rem; overflow: hidden; text-overflow: ellipsis;
+  border-right-width: 1px;
+}
+.grade .tabela thead th.grade-parceiro { z-index: 2; }
+.grade tbody tr:hover .grade-parceiro { background: var(--muted); }
+.grade td { padding: 0.375rem; }
+.grade .input { width: 8.5rem; height: 2rem; }
+.grade .input[data-alterada] { border-color: var(--foreground); background: var(--muted); }
+.grade .input[aria-invalid="true"] { border-color: var(--destructive); background: var(--background); }
+.grade-com-erro, .grade tbody tr.grade-com-erro:hover { background: color-mix(in oklch, var(--destructive) 6%, transparent); }
+.grade-com-erro .grade-parceiro { background: color-mix(in oklch, var(--destructive) 6%, var(--background)); }
+.grade-erros td { white-space: normal; color: var(--destructive); padding: 0.25rem 0.75rem 0.75rem; }
+.grade-erros ul { list-style: disc; padding-left: 1.25rem; }
+.grade tbody tr.grade-erros:hover { background: transparent; }
+.barra-salvar {
+  position: sticky; bottom: 0; z-index: 3;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.75rem;
+  padding: 0.75rem 0; background: var(--background); border-top-width: 1px;
+}
+@media (max-width: 40rem) {
+  .grade-parceiro { min-width: 7rem; max-width: 8rem; }
+  .grade-caixa { max-height: calc(100dvh - 9rem); }
+  .barra-salvar .btn { flex: 1; }
+}
+
+/* ======================================================================================
+ * Componentes comuns das telas B (docs/telas/design-system.md diz quando usar cada um).
+ * ====================================================================================== */
+
+.pular { position: absolute; left: 1rem; top: -3rem; z-index: 60; padding: 0.5rem 0.75rem; border-radius: var(--radius-md); background: var(--primary); color: var(--primary-foreground); font-size: 0.875rem; }
+.pular:focus { top: 0.5rem; }
+.aviso:not(:has(svg)) { display: block; }
+.mensagens-area:not(:has(li)) { display: none; }
+.secao-titulo { font-size: 1.125rem; line-height: 1.75rem; font-weight: 600; letter-spacing: -0.01em; }
+
+/* --- campos: rótulo, textarea, select, checkbox (components/ui/field, textarea, native-select, checkbox) --- */
+.campo { display: flex; flex-direction: column; gap: 0.375rem; min-width: 0; }
+.campo > label, .rotulo { font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; }
+.campo .ajuda { color: var(--muted-foreground); font-size: 0.8125rem; line-height: 1.125rem; }
+.erro { color: var(--destructive); font-size: 0.8125rem; line-height: 1.125rem; }
+.textarea {
+  width: 100%; min-height: 4rem; padding: 0.5rem 0.625rem; resize: vertical; field-sizing: content;
+  border: 1px solid var(--input); border-radius: var(--radius-md); background: transparent;
+  font-size: 0.875rem; line-height: 1.5; box-shadow: var(--shadow-xs); transition: border-color 150ms, box-shadow 150ms;
+}
+.textarea.mono { font-family: var(--font-mono); font-size: 0.8125rem; }
+.select {
+  height: 2.25rem; width: 100%; min-width: 0; padding: 0.25rem 2rem 0.25rem 0.625rem; appearance: none;
+  border: 1px solid var(--input); border-radius: var(--radius-md); font-size: 0.875rem; box-shadow: var(--shadow-xs);
+  background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 0.625rem center / 1rem;
+}
+.textarea:focus-visible, .select:focus-visible { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px var(--ring); }
+.textarea[readonly], .select:disabled { background-color: var(--muted); border-color: var(--border); box-shadow: none; }
+.textarea[aria-invalid="true"], .select[aria-invalid="true"] { border-color: var(--destructive); }
+input[type="checkbox"], input[type="radio"] { width: 1rem; height: 1rem; margin: 0; vertical-align: middle; }
+.marcar { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; cursor: pointer; }
+.btn-destrutivo { background: color-mix(in oklch, var(--destructive) 10%, transparent); color: var(--destructive); }
+.btn-destrutivo:hover { background: color-mix(in oklch, var(--destructive) 20%, transparent); }
+.btn-lg { height: 2.5rem; padding: 0 1rem; }
+form.inline { display: inline; }
+
+/* --- abas (links de página com aria-current; a aba ativa é a URL) --- */
+/* overflow-y: hidden: o margin-bottom -1px dos links + overflow-x gerava barra de rolagem vertical. */
+.abas { display: flex; gap: 0.25rem; border-bottom-width: 1px; overflow-x: auto; overflow-y: hidden; }
+.abas a {
+  margin-bottom: -1px; padding: 0.5rem 0.75rem; border-bottom: 2px solid transparent;
+  font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; white-space: nowrap;
+  color: var(--muted-foreground); transition: color 150ms var(--ease-saida), border-color 150ms;
+}
+.abas a:hover { color: var(--foreground); }
+.abas a[aria-current="page"] { color: var(--foreground); border-bottom-color: var(--foreground); }
+.abas .badge { margin-left: 0.375rem; }
+
+/* --- tabela densa (painel, listas longas): linhas baixas, cabeçalho fixo, coluna .fixa --- */
+.tabela-densa { position: relative; /* contém o .sr-only (absolute) na rolagem */ border: 1px solid var(--border); border-radius: var(--radius-lg); max-height: calc(100dvh - 14rem); overflow: auto; }
+.tabela-densa .tabela { border-collapse: separate; border-spacing: 0; font-size: 0.8125rem; }
+.tabela-densa .tabela tr { border-bottom-width: 0; }
+.tabela-densa .tabela th, .tabela-densa .tabela td { border-bottom-width: 1px; padding: 0.25rem 0.5rem; }
+.tabela-densa .tabela tbody tr:last-child > * { border-bottom-width: 0; }
+.tabela-densa .tabela thead th { position: sticky; top: 0; z-index: 1; height: 2.25rem; background: var(--background); color: var(--muted-foreground); }
+.tabela-densa .tabela .fixa { position: sticky; left: 0; z-index: 1; background: var(--background); border-right-width: 1px; }
+.tabela-densa .tabela thead .fixa { z-index: 2; }
+.tabela-densa .tabela tbody tr:hover .fixa { background: var(--muted); }
+.tabela .num { text-align: right; }
+.tabela .quebra { white-space: normal; min-width: 14rem; }
+.tabela tr[aria-selected="true"], .tabela tr[aria-selected="true"] .fixa { background: var(--muted); }
+
+/* --- status ✓ / falta (célula do painel; sempre com texto, nunca só cor) --- */
+.status { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.8125rem; font-weight: 500; white-space: nowrap; }
+.status-ok { color: var(--sucesso); }
+.btn[data-copiado] { border-color: var(--sucesso); color: var(--sucesso); } /* ui.js: [data-copiar] depois de copiar */
+.status-falta { color: var(--destructive); text-decoration: underline; text-underline-offset: 3px; }
+.status-aviso { color: var(--warning); }
+.status svg { width: 0.875rem; height: 0.875rem; }
+
+/* --- lista + detalhe lado a lado (matriz → descritores, templates, revista → seções) --- */
+.lado-a-lado { display: grid; grid-template-columns: minmax(14rem, 20rem) 1fr; gap: 1.5rem; align-items: start; }
+.lado-a-lado > .lista {
+  position: sticky; top: 1rem; display: flex; flex-direction: column; gap: 0.125rem;
+  max-height: calc(100dvh - 8rem); overflow: auto; padding: 0.25rem;
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+}
+.lista a, .lista button {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; width: 100%;
+  padding: 0.375rem 0.625rem; border-radius: var(--radius-md); background: transparent; cursor: pointer;
+  font-size: 0.875rem; line-height: 1.25rem; text-align: left; color: var(--foreground);
+}
+.lista a:hover, .lista button:hover { background: var(--muted); }
+.lista [aria-current="page"], .lista [aria-current="true"] { background: var(--muted); font-weight: 600; }
+.lado-a-lado > .detalhe { min-width: 0; display: flex; flex-direction: column; gap: 1rem; }
+.duas-colunas { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+/* Alvo do HTMX esmaece enquanto carrega (hx-indicator nele mesmo): .detalhe ou qualquer .alvo-htmx. */
+.detalhe.htmx-request, .alvo-htmx.htmx-request { opacity: 0.6; transition: opacity 150ms; }
+/* Link do nome na 1ª coluna de uma tabela: sublinhado discreto que escurece no hover. */
+.link-linha { font-weight: 500; text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 4px; transition: text-decoration-color 150ms; }
+.link-linha:hover { text-decoration-color: currentColor; }
+
+/* --- voltar: link "‹ página de cima" acima do título (_componentes/voltar.html) --- */
+.voltar { align-self: flex-start; margin-bottom: -0.75rem; }
+.voltar:hover { color: var(--foreground); }
+
+/* --- recolhível: <details class="recolhivel"> (diff do validar, legenda das variáveis) --- */
+.recolhivel > summary { cursor: pointer; width: fit-content; font-size: 0.875rem; font-weight: 500; padding: 0.25rem 0; }
+.recolhivel > summary:hover { text-decoration: underline; text-underline-offset: 4px; }
+.recolhivel[open] > summary { margin-bottom: 0.5rem; }
+
+/* --- caixa de erro: lista de pendências/erros dentro de um card (revista, prévia do template) --- */
+.caixa-erro { padding: 0.625rem 0.75rem; border-radius: var(--radius-md); color: var(--destructive); background: color-mix(in oklch, var(--destructive) 6%, transparent); }
+.caixa-erro ul { margin-top: 0.25rem; padding-left: 1.25rem; list-style: disc; }
+
+/* --- só leitura nativo: <fieldset disabled> (como o FieldSet do editor) --- */
+fieldset:disabled .input, fieldset:disabled .textarea, fieldset:disabled .select {
+  background-color: var(--muted); border-color: var(--border); box-shadow: none; color: var(--foreground);
+}
+
+/* --- modal: <dialog class="dialogo"> (components/ui/dialog.tsx) --- */
+.dialogo {
+  width: calc(100% - 2rem); max-width: 28rem; padding: 1.5rem; border-radius: var(--radius-xl);
+  background: var(--card); color: var(--foreground); font-size: 0.875rem;
+  box-shadow: 0 10px 30px oklch(0 0 0 / 0.12), 0 0 0 1px color-mix(in oklch, var(--foreground) 10%, transparent);
+}
+.dialogo[open] { display: flex; flex-direction: column; gap: 1.5rem; animation: entra 120ms var(--ease-saida) both; }
+.dialogo-largo { max-width: 48rem; }
+.dialogo::backdrop { background: oklch(0 0 0 / 0.1); backdrop-filter: blur(2px); }
+.dialogo h2 { font-size: 1rem; line-height: 1.25; font-weight: 500; }
+.dialogo header { display: flex; flex-direction: column; gap: 0.5rem; }
+.dialogo footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; }
+/* modal cujo conteúdo é um <form> (o HTMX troca o form inteiro) */
+.dialogo > form { display: flex; flex-direction: column; gap: 1.25rem; }
+
+/* --- diff antes/depois: difflib.HtmlDiff (table.diff) ou duas colunas próprias (.diff-lado) --- */
+table.diff { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.75rem; border: 1px solid var(--border); }
+table.diff td, table.diff th { white-space: pre-wrap; vertical-align: top; padding: 0.125rem 0.375rem; }
+table.diff .diff_header { color: var(--muted-foreground); text-align: right; }
+table.diff .diff_next { display: none; }
+.diff_add, .diff-novo { background: #dcfce7; color: #14532d; }
+.diff_chg { background: #fef3c7; color: #713f12; }
+.diff_sub, .diff-velho { background: #fee2e2; color: #7f1d1d; }
+.diff-lado { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.diff-lado > div { min-width: 0; padding: 0.75rem 1rem; }
+.diff-lado > div + div { border-left-width: 1px; }
+.diff-lado h3 { margin: 0 0 0.5rem; color: var(--muted-foreground); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.texto-md { white-space: pre-wrap; font-family: var(--font-mono); font-size: 0.8125rem; line-height: 1.5; margin: 0; }
+
+/* --- lacuna: faixa vermelha (D-116) e variável vazia (mesmas cores do preview e do editor) --- */
+.faixa-vermelha {
+  display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border-radius: var(--radius-md);
+  background: #b00020; color: #fff; font-size: 0.875rem; font-weight: 600;
+}
+.faixa-vermelha a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.variavel-vazia {
+  background: #fde68a; color: #713f12; border-radius: 3px; padding: 0 0.1875rem;
+  font-family: var(--font-mono); font-size: 0.92em;
+}
+.variavel { background: var(--muted); border-radius: 3px; padding: 0 0.1875rem; font-family: var(--font-mono); font-size: 0.92em; }
+
+/* --- confirmação forte: digitar o código/frase exata (ui.js libera o botão; o servidor confere) --- */
+.confirmar {
+  display: flex; flex-direction: column; gap: 0.5rem; padding: 1rem; border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in oklch, var(--destructive) 30%, transparent);
+  background: color-mix(in oklch, var(--destructive) 4%, var(--background));
+}
+.confirmar code { font-family: var(--font-mono); font-weight: 600; user-select: all; }
+
+/* --- barra de salvar (.barra-salvar acima, sticky): contador à esquerda, ações à direita --- */
+.barra-salvar > .mudo { margin-right: auto; }
+
+/* --- toasts (ui.js: erro de rede/servidor do HTMX ou uiToast(texto, tipo)) --- */
+.toasts { position: fixed; right: 1rem; bottom: 1rem; z-index: 50; display: flex; flex-direction: column; gap: 0.5rem; max-width: min(24rem, calc(100% - 2rem)); }
+.toast {
+  padding: 0.75rem 1rem; border-radius: var(--radius-lg); background: var(--primary); color: var(--primary-foreground);
+  font-size: 0.875rem; line-height: 1.25rem; box-shadow: 0 6px 20px oklch(0 0 0 / 0.15); animation: entra 120ms var(--ease-saida) both;
+}
+.toast-erro { background: var(--destructive); }
+
+/* --- estado vazio (components/ui/empty.tsx) --- */
+.vazio {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem;
+  padding: 3rem 1.5rem; border: 1px dashed var(--border); border-radius: var(--radius-lg); text-align: center; text-wrap: balance;
+}
+.vazio svg { width: 1.5rem; height: 1.5rem; color: var(--muted-foreground); }
+.vazio h2 { font-size: 1.125rem; font-weight: 500; letter-spacing: -0.01em; }
+.vazio p { max-width: 24rem; color: var(--muted-foreground); font-size: 0.875rem; line-height: 1.6; }
+
+/* --- carregando (o HTMX põe .htmx-request no elemento indicado por hx-indicator) --- */
+.htmx-indicator { opacity: 0; transition: opacity 150ms; }
+.htmx-request .htmx-indicator, .htmx-request.htmx-indicator { opacity: 1; }
+.girando { width: 1rem; height: 1rem; animation: girar 0.8s linear infinite; }
+@keyframes girar { to { rotate: 360deg; } }
+
+@media (max-width: 50rem) {
+  .lado-a-lado, .duas-colunas, .diff-lado { grid-template-columns: 1fr; }
+  .lado-a-lado > .lista { position: static; max-height: 16rem; }
+  .diff-lado > div + div { border-left-width: 0; border-top-width: 1px; }
+}

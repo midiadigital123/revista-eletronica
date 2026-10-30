@@ -48,3 +48,5 @@ VARIAVEIS = (
     Variavel("sigla_regional", "Sigla da regional", "Sigla da regional: DRE, CREDE etc.", grupo="Regional e secretaria"),
     Variavel("sigla_secretaria", "Sigla da secretaria", "Sigla da secretaria: SEDU, SEMED etc.", grupo="Regional e secretaria"),
 )
+
+EDITAVEIS = [v.nome for v in VARIAVEIS if not v.automatica]  # as que o usuário preenche

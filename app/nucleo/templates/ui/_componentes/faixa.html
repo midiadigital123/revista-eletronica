@@ -1,0 +1,7 @@
+{% comment %}
+Faixa vermelha de lacuna (D-116): o que falta para a revista sair completa, com link para resolver.
+  {% include "ui/_componentes/faixa.html" with texto="Falta escolher o template do F1." url=u rotulo="Escolher template" %}
+{% endcomment %}<div class="faixa-vermelha" role="status">
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+  <span>{{ texto }}{% if url %} <a href="{{ url }}">{{ rotulo|default:"Resolver" }}</a>{% endif %}</span>
+</div>

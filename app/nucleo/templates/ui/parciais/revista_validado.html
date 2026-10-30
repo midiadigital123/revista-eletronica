@@ -1,0 +1,37 @@
+{% comment %}
+Card "Validado" (D-074, D-089, D-174). Contexto: revista, validacao (nucleo.revista.estado_validacao + pode).
+O botão manda o hash da revista como a página a mostrou; salvar uma seção troca este card (hx-select-oob).
+{% endcomment %}<section class="card revista-validado{% if validacao.validada %} revista-validado-ok{% endif %}" id="validado" aria-labelledby="validado-titulo">
+  <div class="revista-validado-linha">
+    <div class="revista-validado-estado">
+      {% if validacao.validada %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+      {% else %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/></svg>{% endif %}
+      <div>
+        <h2 id="validado-titulo" class="secao-titulo">{% if validacao.validada %}Validado{% else %}Não validado{% endif %}</h2>
+        <p class="mudo">{% if validacao.validada %}Por {{ revista.validado_por.get_full_name|default:revista.validado_por }} em {{ revista.validado_em|date:"d/m/Y H:i" }}.{% elif revista.hash_validado %}A revista mudou depois do último “Validado” ({{ revista.validado_em|date:"d/m/Y H:i" }}).{% else %}Ainda não validado.{% endif %}
+        <a class="link" href="{% url 'impresso' revista.pk %}">O que mudou para o impresso</a></p>
+      </div>
+    </div>
+    {% if validacao.pode and not validacao.validada %}
+    <form method="post" action="{% url 'ui_revista_editar' revista.ano.ano revista.pk %}" hx-post="{% url 'ui_revista_editar' revista.ano.ano revista.pk %}" hx-disabled-elt="find button">{% csrf_token %}
+      <input type="hidden" name="acao" value="validar">
+      <input type="hidden" name="hash_visto" value="{{ validacao.hash }}">
+      <input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">
+      <button class="btn" type="submit" id="botao-validado"{% if validacao.pendencias %} disabled title="Resolva as pendências antes."{% endif %}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+        Validado
+      </button>
+    </form>
+    {% endif %}
+  </div>
+  {% if validacao.pendencias %}
+  <div class="caixa-erro">
+    <p><strong>Pendências que impedem o “Validado”</strong></p>
+    <ul>{% for p in validacao.pendencias %}<li>{{ p.mensagem }}</li>{% endfor %}</ul>
+  </div>
+  {% endif %}
+  {% if validacao.desatualizadas %}
+  <p class="revista-desatualizadas"><span class="badge badge-alerta">Aviso</span> Seções desatualizadas: {{ validacao.desatualizadas|join:", " }}. Não impede o “Validado”.</p>
+  {% endif %}
+  {% if validacao.pode and not validacao.validada %}<p class="mudo">Valida a revista como está nesta página. Texto digitado e não salvo não entra: salve a seção antes.</p>{% endif %}
+</section>

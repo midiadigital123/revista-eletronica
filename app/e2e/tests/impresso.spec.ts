@@ -8,6 +8,7 @@
 // Grava de verdade: cópia do fechamento do F1 com uma marca nova, "Validado", foto do impresso; no fim
 // descarta a cópia (a revista volta ao texto do template, sem "Validado").
 import { expect, test, type Browser, type Page } from "@playwright/test";
+import { filtrarPainel } from "./helpers";
 
 const FECHAMENTO = "#id_secao__F1__fechamento";
 
@@ -38,8 +39,9 @@ test("impresso: valida, vê o diff e marca impressa", async ({ browser }) => {
 
   // 1. Pedagógica: muda o fechamento (hash novo) e valida.
   const ped = await entrar(browser, adm!, admSenha!, "/painel/2026/");
-  await ped.locator("p.filtro", { hasText: "Parceiro" }).getByRole("link", { name: "DEMONSTRAÇÃO" }).click();
-  const linha = ped.locator("#painel tbody tr").first();
+  await filtrarPainel(ped, "#filtro-parceiro", { label: "DEMONSTRAÇÃO" });
+  await expect(ped).toHaveURL(/parceiro=/);
+  const linha = ped.locator("#painel-corpo tbody tr").first();
   const variaveis = linha.locator("td.coluna-variaveis a", { hasText: "falta" });
   const urlPainel = ped.url();
   if (await variaveis.count()) {
@@ -48,7 +50,8 @@ test("impresso: valida, vê o diff e marca impressa", async ({ browser }) => {
     await ped.click("input[name=_save]");
     await ped.goto(urlPainel);
   }
-  await linha.locator("td").nth(1).getByRole("link").first().click(); // o 2º link é o preview
+  // O nome leva à revista B; o roteiro edita no admin (mesma revista).
+  await ped.goto(`/admin/nucleo/revista/${await linha.getAttribute("data-revista")}/change/`);
   const urlRevista = ped.url();
   await ped.fill(FECHAMENTO, `Fechamento ${marca}.`);
   await ped.click("input[name=_continue]");
@@ -60,7 +63,7 @@ test("impresso: valida, vê o diff e marca impressa", async ({ browser }) => {
   const page = await entrar(browser, imp!, impSenha!, urlPainel.replace(/^https?:\/\/[^/]+/, ""));
   const erros: string[] = [];
   page.on("pageerror", (e) => erros.push(e.message));
-  await page.locator("#painel tbody tr").first().locator("td.coluna-impresso a").click();
+  await page.locator("#painel-corpo tbody tr").first().locator("td.coluna-impresso a").click();
   await expect(page.locator("h1")).toContainText("Impresso:");
   const fechamento = page.locator("fieldset", { has: page.locator("h2", { hasText: "fechamento" }) });
   await expect(fechamento.locator("textarea")).toHaveValue(new RegExp(`Fechamento ${marca}\\.`));
@@ -73,7 +76,7 @@ test("impresso: valida, vê o diff e marca impressa", async ({ browser }) => {
   await expect(page.locator("#content-main")).toContainText("Sem mudanças desde a última");
   await expect(page.locator("#botao-impressa")).toHaveCount(0);
   await page.goto(urlPainel.replace(/^https?:\/\/[^/]+/, ""));
-  await expect(page.locator("#painel tbody tr").first().locator("td.coluna-impresso")).toHaveText("✓");
+  await expect(page.locator("#painel-corpo tbody tr").first().locator("td.coluna-impresso .status-ok")).toBeVisible();
   expect(erros).toEqual([]);
 
   // 4. Limpa: descarta a cópia (o "Validado" cai; o impresso volta a ver o fechamento como mudança).

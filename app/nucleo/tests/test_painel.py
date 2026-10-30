@@ -145,7 +145,7 @@ class ValidadoTest(Base):
         self.assertEqual((falta_svg["ok"], falta_svg["dica"]), (False, "Falta o SVG do F2."))
         self.assertEqual(falta_svg["link"], reverse("admin:nucleo_revista_change", args=[go_mt.pk]))
         self.assertTrue(self.celula("svg")["ok"])
-        self.assertContains(r, f'<a href="{falta_svg["link"]}">falta</a>', html=True)
+        self.assertContains(r, f'<a class="status status-falta" href="{falta_svg["link"]}" title="Falta o SVG do F2.">')
         # Filtro por pendência: só as sem SVG (GO MT, PE LP, PE MT).
         r = self.client.get(self.painel, {"falta": "svg"})
         self.assertEqual(len(r.context["linhas"]), 3)

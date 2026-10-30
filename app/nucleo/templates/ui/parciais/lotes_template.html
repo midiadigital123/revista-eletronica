@@ -1,0 +1,60 @@
+{% comment %}
+Form do lote "Escolher template F1/F2": página inteira e resposta do hx-post (troca a si mesmo; mensagens oob).
+Contexto: form (nucleo.lotes.TemplateLoteForm), linhas [{revista, marcado, editando, fasciculos [("F1", rf), ("F2", rf)]}],
+pode_gravar, componente. rf.tem_copias = o fascículo tem texto próprio (trocar no lote é pulado).
+{% endcomment %}<form method="post" id="lote" class="lote" data-lote
+  {% if pode_gravar %}hx-post="{{ request.get_full_path }}" hx-target="this" hx-swap="outerHTML" hx-indicator="#lote-girando"{% endif %}>
+  {% csrf_token %}
+  <div class="tabela-caixa lote-caixa">
+    <table class="tabela">
+      <thead>
+        <tr>
+          {% if pode_gravar %}<th scope="col" class="lote-marca"><input type="checkbox" data-todos aria-label="Marcar todas as revistas"></th>{% endif %}
+          <th scope="col">Revista</th>
+          <th scope="col">Template F1</th>
+          <th scope="col">Template F2</th>
+          <th scope="col">Situação</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for l in linhas %}
+        <tr{% if l.marcado %} aria-selected="true"{% endif %}{% if l.editando %} data-pulado{% endif %}>
+          {% if pode_gravar %}<td class="lote-marca"><input type="checkbox" name="alvos" value="{{ l.revista.pk }}" id="alvo-{{ l.revista.pk }}"{% if l.marcado %} checked{% endif %}{% if form.alvos.errors %} aria-describedby="erro-alvos"{% endif %}></td>{% endif %}
+          <th scope="row" class="lote-nome">{% if pode_gravar %}<label for="alvo-{{ l.revista.pk }}">{{ l.revista.projeto.nome }}</label>{% else %}{{ l.revista.projeto.nome }}{% endif %}</th>
+          {% for f, rf in l.fasciculos %}
+          <td data-atual="{{ f }}" data-valor="{{ rf.template_id|default:'' }}"{% if rf.tem_copias %} data-copias{% endif %}>
+            {% if rf.template %}{{ rf.template.nome }}{% else %}<span class="mudo">sem template</span>{% endif %}
+            {% if rf.tem_copias %}<span class="badge badge-contorno" title="O projeto editou o texto deste fascículo: o lote não troca o template dele. Troque pela revista.">texto próprio</span>{% endif %}
+            <span class="lote-novo" data-novo hidden></span>
+          </td>
+          {% endfor %}
+          <td>{% if l.editando %}<span class="badge badge-alerta" title="O projeto está aberto; o lote não grava nele.">Em edição por {{ l.editando }}: será pulado</span>{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if form.alvos.errors %}<p class="erro" id="erro-alvos" role="alert">{{ form.alvos.errors.0 }}</p>{% endif %}
+  {% if form.non_field_errors %}<p class="erro" id="erro-templates" role="alert">{{ form.non_field_errors.0 }}</p>{% endif %}
+  {% if pode_gravar %}
+  <p class="mudo">Só templates de {{ componente.codigo }} deste ano. Projetos em edição e fascículos com texto próprio são pulados e listados.</p>
+  <div class="barra-salvar lote-barra">
+    <span class="mudo" data-contador aria-live="polite">{{ form.alvos.value|length|default:0 }} selecionado(s)</span>
+    {% for campo in form %}{% if campo.name != "alvos" %}
+    <div class="lote-campo">
+      <label class="rotulo" for="lote-{{ campo.name }}">{{ campo.label|cut:"Template " }}</label>
+      <select class="select" name="{{ campo.name }}" id="lote-{{ campo.name }}" data-previa="{{ campo.label|cut:'Template ' }}"{% if campo.errors or form.non_field_errors %} aria-invalid="true" aria-describedby="erro-templates"{% endif %}>
+        <option value="">Não mudar</option>
+        {% for t in campo.field.queryset %}<option value="{{ t.pk }}"{% if campo.value|stringformat:"s" == t.pk|stringformat:"s" %} selected{% endif %}>{{ t.nome }}</option>{% endfor %}
+      </select>
+    </div>
+    {% endif %}{% endfor %}
+    <button class="btn" type="submit">
+      {% include "ui/_componentes/girando.html" with id="lote-girando" %}
+      Aplicar aos selecionados
+    </button>
+    {% for campo in form %}{% if campo.name != "alvos" and campo.errors %}<p class="erro lote-erro" role="alert">{{ campo.label }}: {{ campo.errors.0 }}</p>{% endif %}{% endfor %}
+  </div>
+  {% endif %}
+</form>
+{% if htmx %}{% include "ui/_componentes/mensagens.html" with oob=True %}{% endif %}

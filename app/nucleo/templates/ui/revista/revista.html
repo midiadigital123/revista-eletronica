@@ -1,0 +1,139 @@
+{% extends "ui/base.html" %}{% load static %}
+{% comment %}
+T21: uma revista. View em nucleo/urls/ui_revista.py (revista); regra em nucleo/revista.py.
+Quatro formulários (acao): secao (HTMX, fica na página), templates, arquivos e validar (HTMX com
+HX-Redirect; erro devolve a página e o form escolhe o card e as mensagens com hx-select).
+O bloqueio do projeto (bloqueio.js) vive num form próprio, fora de qualquer alvo do HTMX.
+{% endcomment %}
+{% block titulo %}{{ revista.projeto }} · {{ revista.componente.codigo }}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/revista.css' %}">{% endblock %}
+
+{% block conteudo %}
+<a class="mudo voltar" href="{% url 'ui_revista' revista.ano.ano %}">‹ Revistas de {{ revista.ano.ano }}</a>
+<header class="pagina-cab">
+  <div>
+    <h1>{{ revista.projeto }}</h1>
+    <p class="mudo">{{ revista.componente.nome }}, {{ revista.ano.ano }}{% if arquivada %} <span class="badge badge-secundario">Arquivada</span>{% endif %}</p>
+  </div>
+  <div class="acoes">
+    <a class="btn btn-outline" href="{% url 'preview' revista.pk %}" target="_blank" rel="noopener" title="Abre mesmo com pendências; o que falta aparece em faixa vermelha.">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+      {% if arquivada %}Abrir versão arquivada{% else %}Abrir preview{% endif %}<span class="sr-only"> (nova aba)</span>
+    </a>
+    <a class="btn btn-outline" href="{% url 'impresso' revista.pk %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+      Tela do impresso
+    </a>
+    <a class="btn btn-ghost" href="{% url 'ui_revista_zip' revista.ano.ano revista.pk %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>
+      Baixar zip
+    </a>
+  </div>
+</header>
+
+{% if arquivada %}
+{% include "ui/_componentes/so_leitura.html" with texto="Só leitura: revista arquivada. O texto mostrado é a foto do arquivamento." %}
+{% elif not perms.nucleo.change_revista %}
+{% include "ui/_componentes/so_leitura.html" with texto="Só leitura: seu perfil vê a revista, mas não altera. Para editar, peça a permissão de revista a um administrador." %}
+{% endif %}
+{% if request.bloqueio %}<form class="sr-only" aria-hidden="true">{% csrf_token %}{% include "ui/_componentes/bloqueio.html" %}</form>{% endif %}
+
+{% include "ui/parciais/revista_validado.html" %}
+
+<section class="revista-bloco" aria-labelledby="textos-titulo">
+  <div class="revista-bloco-cab">
+    <h2 class="secao-titulo" id="textos-titulo">Textos</h2>
+    <p class="mudo">Uma seção por vez. O título vem do template e não se edita aqui.</p>
+  </div>
+  {% for f in sem_template %}{% include "ui/_componentes/faixa.html" with texto="Falta escolher o template do "|add:f|add:"." url="#templates" rotulo="Escolher template" %}{% endfor %}
+  {% if arquivada %}
+    {% for f, secoes in foto %}
+    <div class="card revista-foto">
+      <h3>{{ f }}</h3>
+      {% for s in secoes %}<article><h4>{{ s.id }} <span class="mudo">/</span> {{ s.titulo|safe }}</h4><div class="revista-foto-corpo">{{ s.corpo|safe }}</div></article>{% endfor %}
+    </div>
+    {% empty %}
+    {% include "ui/_componentes/vazio.html" with titulo="Sem textos na foto" texto="A revista foi arquivada sem template nos fascículos." %}
+    {% endfor %}
+  {% elif blocos %}
+  <div class="lado-a-lado">
+    {% include "ui/parciais/revista_secoes.html" %}
+    {% include "ui/parciais/revista_secao.html" %}
+  </div>
+  {% endif %}
+</section>
+
+<div class="duas-colunas revista-cards">
+  <section class="card" id="templates" aria-labelledby="templates-titulo">
+    <div class="revista-bloco-cab">
+      <h2 class="secao-titulo" id="templates-titulo">Templates</h2>
+      <p class="mudo">Só aparecem templates do mesmo ano, componente e fascículo.</p>
+    </div>
+    {% if pode_templates %}
+    <form method="post" class="revista-form" hx-post="{% url 'ui_revista_editar' revista.ano.ano revista.pk %}" hx-target="#templates" hx-select="#templates" hx-swap="outerHTML" hx-select-oob="#mensagens">{% csrf_token %}
+      <input type="hidden" name="acao" value="templates">
+      <input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">
+      {% for f in fasciculos %}
+      <div class="campo">
+        <label for="template-{{ f.prefix }}">Template do {{ f.prefix }}</label>
+        {{ f.template }}
+        {% for e in f.template.errors %}<p class="erro" role="alert">{{ e }}</p>{% endfor %}
+        {% if f.copias %}
+        <div class="confirmar">
+          <p>O {{ f.prefix }} tem {{ f.copias }} seção(ões) com texto editado. Trocar o template apaga essas cópias.</p>
+          <label class="rotulo" for="confirmar-{{ f.prefix }}">Só se trocar: para confirmar, digite <code>{{ f.frase }}</code></label>
+          <input class="input" id="confirmar-{{ f.prefix }}" name="{{ f.prefix }}-confirmacao" autocomplete="off" spellcheck="false" value="{{ f.confirmacao.value|default:'' }}"{% if f.non_field_errors %} aria-invalid="true"{% endif %}>
+        </div>
+        {% endif %}
+        {% for e in f.non_field_errors %}<p class="erro" role="alert">{{ e }}</p>{% endfor %}
+      </div>
+      {% endfor %}
+      <div class="revista-form-acoes"><button class="btn" type="submit">Salvar templates</button></div>
+    </form>
+    {% else %}
+    <dl class="revista-dl">
+      {% for f in fasciculos %}<div><dt>{{ f.prefix }}</dt><dd>{{ f.instance.template.nome|default:"Sem template" }}</dd></div>{% endfor %}
+    </dl>
+    {% endif %}
+  </section>
+
+  <section class="card" id="arquivos" aria-labelledby="arquivos-titulo">
+    <div class="revista-bloco-cab">
+      <h2 class="secao-titulo" id="arquivos-titulo">Arquivos</h2>
+      <p class="mudo">O SVG do F2 e a capa entram no preview e no zip.</p>
+    </div>
+    {% url 'admin:nucleo_revista_gabarito_ids' revista.pk as gabarito %}
+    <div class="revista-arquivo">
+      <h3>SVG do F2</h3>
+      {% if not revista.svg_f2 %}<p class="mudo">Sem SVG do F2.</p>
+      {% elif ids is None %}<p class="mudo">SVG enviado. Sem template do F2: nada a conferir.</p>
+      {% elif ids.1 %}<div class="aviso aviso-alerta" role="status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span>Ids que faltam no SVG: <strong>{{ ids.1|join:", " }}</strong>. Esperados: {{ ids.0|join:", " }}.</span></div>
+      {% else %}<p>{% include "ui/_componentes/status.html" with ok=True %} Todos os {{ ids.0|length }} ids esperados estão no SVG.</p>{% endif %}
+      <a class="link revista-gabarito" href="{{ gabarito }}">Baixar gabarito de ids</a>
+    </div>
+    <div class="revista-arquivo">
+      <h3>Capa</h3>
+      {% if revista.capa %}<img class="revista-capa" src="{% url 'preview_capa' revista.pk %}" alt="Capa atual da revista" width="120" loading="lazy">{% else %}<p class="mudo">Sem capa.</p>{% endif %}
+    </div>
+    {% if request.pode_gravar %}
+    <form method="post" enctype="multipart/form-data" class="revista-form" hx-post="{% url 'ui_revista_editar' revista.ano.ano revista.pk %}" hx-encoding="multipart/form-data" hx-target="#arquivos" hx-select="#arquivos" hx-swap="outerHTML" hx-select-oob="#mensagens">{% csrf_token %}
+      <input type="hidden" name="acao" value="arquivos">
+      <input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">
+      <div class="campo">
+        <label for="arquivo-svg">{{ arquivos.arquivo_svg.label }}</label>
+        <input class="input" type="file" id="arquivo-svg" name="arquivo_svg" accept=".svg,image/svg+xml"{% if arquivos.arquivo_svg.errors %} aria-invalid="true"{% endif %}>
+        <p class="ajuda">{{ arquivos.arquivo_svg.help_text }}</p>
+        {% for e in arquivos.arquivo_svg.errors %}<p class="erro" role="alert">{{ e }}</p>{% endfor %}
+      </div>
+      <div class="campo">
+        <label for="arquivo-capa">{{ arquivos.arquivo_capa.label }}</label>
+        <input class="input" type="file" id="arquivo-capa" name="arquivo_capa" accept="image/png,image/jpeg,image/webp"{% if arquivos.arquivo_capa.errors %} aria-invalid="true"{% endif %}>
+        <p class="ajuda">{{ arquivos.arquivo_capa.help_text }}</p>
+        {% for e in arquivos.arquivo_capa.errors %}<p class="erro" role="alert">{{ e }}</p>{% endfor %}
+      </div>
+      <div class="revista-form-acoes"><button class="btn" type="submit">Salvar arquivos</button></div>
+    </form>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

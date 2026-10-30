@@ -1,0 +1,15 @@
+{% extends "ui/base.html" %}
+{% load static %}
+{% comment %}Lote "Escolher matriz" (T18) fora do admin. Regra: nucleo/lotes.py; view: urls/ui_lotes.py; ficha: docs/telas/fichas/lotes.md.{% endcomment %}
+{% block titulo %}Escolher matriz {{ ano.ano }}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/lotes.css' %}"><script src="{% static 'ui/telas/lotes.js' %}" defer></script>{% endblock %}
+
+{% block conteudo %}
+{% include "ui/lotes/_cab.html" %}
+{% if linhas %}
+{% include "ui/parciais/lotes_matriz.html" %}
+{% else %}
+{% url 'cortes' ano.ano as u %}{% with a=ano.ano|stringformat:"d" %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhum parceiro em "|add:a texto="Os parceiros entram no ano pela grade de cortes." url=u rotulo="Abrir cortes" %}
+{% endwith %}{% endif %}
+{% endblock %}

@@ -1,0 +1,8 @@
+{% load static %}{% comment %}
+Bloqueio de edição (nucleo/ui_bloqueio.py, com_bloqueio): sessão da aba + renovação. Vai DENTRO
+do <form> que grava, depois do csrf_token, e FORA de qualquer hx-target (não pode ser trocado).
+Sem request.bloqueio (só leitura, sem permissão, alvo arquivado) não renderiza nada.
+{% endcomment %}{% with b=request.bloqueio %}{% if b %}<input type="hidden" id="bloqueio-sessao" name="{{ b.campo }}" value="{{ b.sessao }}"
+  data-alvo="{{ b.alvo }}" data-id="{{ b.id }}"
+  data-renovar="{% url 'bloqueio_renovar' %}" data-liberar="{% url 'bloqueio_liberar' %}">
+<script src="{% static 'nucleo/bloqueio.js' %}" defer></script>{% endif %}{% endwith %}

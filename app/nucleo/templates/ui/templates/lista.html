@@ -1,0 +1,63 @@
+{% extends "ui/base.html" %}{% load static ui %}
+{% comment %}T12 Templates (lista com abas). View: nucleo/urls/ui_templates.py (lista). Ficha: docs/telas/fichas/templates.md.{% endcomment %}
+{% block titulo %}Templates{% if ano %} {{ ano.ano }}{% endif %}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/templates.css' %}">{% endblock %}
+
+{% block conteudo %}
+<header class="pagina-cab">
+  <div>
+    <h1>Templates</h1>
+    <p class="mudo">Textos-modelo das revistas, por fascículo. Editar um texto cria uma versão nova; a anterior fica guardada.</p>
+  </div>
+  {% if ano and pode_criar %}
+  <div class="acoes">
+    <a class="btn btn-outline" href="{% url 'admin:nucleo_template_add' %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+      Novo template
+    </a>
+  </div>
+  {% endif %}
+</header>
+
+{% if not ano %}
+<div class="aviso" role="status">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+  <span>Nenhum ano aberto. Abra um ano no <a class="link" href="{% url 'admin:nucleo_ano_changelist' %}">admin</a> para ter templates.</span>
+</div>
+{% else %}
+
+{% include "ui/_componentes/anos.html" with rota="ui_templates" %}
+
+<nav class="abas" aria-label="Partes da temporada">
+  {% for f, n in abas %}<a href="?aba={{ f }}"{% if f == aba %} aria-current="page"{% endif %}>Textos {{ f }}<span class="badge badge-secundario">{{ n }}</span></a>{% endfor %}
+  {% rota_b "ui_matriz" ano.ano as u %}<a href="{% if u %}{{ u }}{% else %}{% url 'admin:nucleo_matriz_changelist' %}{% endif %}">Matrizes</a>
+  {% rota_b "ui_variaveis" ano.ano as u %}<a href="{% if u %}{{ u }}{% else %}{% url 'admin:nucleo_projeto_variaveis' %}?ano={{ ano.ano }}{% endif %}">Variáveis</a>
+</nav>
+
+{% if templates %}
+<div class="tabela-caixa">
+  <table class="tabela">
+    <thead><tr>
+      <th scope="col">Template</th>
+      <th scope="col">Componente</th>
+      <th scope="col" class="num">Versão</th>
+      <th scope="col">Uso nas revistas ativas</th>
+    </tr></thead>
+    <tbody>
+    {% for t in templates %}
+      <tr>
+        <th scope="row"><a class="link-linha" href="{% url 'ui_templates_editar' t.pk %}">{{ t.nome }}</a></th>
+        <td>{{ t.componente.codigo }} <span class="mudo">{{ t.componente.nome }}</span></td>
+        <td class="num">{% if t.n_versao %}<span class="badge badge-contorno">v{{ t.n_versao }}</span>{% else %}<span class="badge badge-alerta" title="Sem texto: abra e escreva a primeira versão.">sem texto</span>{% endif %}</td>
+        <td>{% if t.n_usado %}<a class="link" href="{% url 'painel' ano.ano %}?template={{ t.pk }}" title="Abre o Painel filtrado por este template.">usado por {{ t.n_usado }}</a>{% if t.n_copia %} <span class="mudo">({{ t.n_copia }} com cópia de seção)</span>{% endif %}{% else %}<span class="mudo">nenhuma revista</span>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+{% if pode_criar %}{% url 'admin:nucleo_template_add' as novo %}{% endif %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhum template "|add:aba|add:" neste ano" texto="Os templates chegam com o ano (Abrir ano copia os do ano anterior) ou pela carga inicial. Para criar um à mão, use Novo template." url=novo rotulo="Novo template" %}
+{% endif %}
+{% endif %}
+{% endblock %}

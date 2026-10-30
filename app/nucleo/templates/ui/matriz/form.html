@@ -1,0 +1,12 @@
+{% extends "ui/base.html" %}
+{% load static %}
+{% comment %}Form de modal aberto como página (sem JS ou erro sem HTMX): Duplicar, Renomear, Novo descritor.{% endcomment %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/matriz.css' %}">{% endblock %}
+
+{% block conteudo %}
+<a class="mudo voltar" href="{% url 'ui_matriz_detalhe' matriz.pk %}">‹ {{ matriz.nome }}</a>
+<div class="card matriz-cartao-form">
+  {% include "ui/parciais/matriz_form.html" %}
+</div>
+{% endblock %}

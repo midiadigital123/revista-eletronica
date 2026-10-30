@@ -1,4 +1,5 @@
-"""Painel da temporada e validação em lote (S12, D-078, D-120).
+"""Regra do painel da temporada e validação em lote (S12, D-078, D-120). A tela do painel é
+`urls/ui_painel.py` (rota `painel`); aqui ficam as linhas, os filtros e o validar em lote do admin.
 
 Uma linha por revista ativa do ano: ✓ ou "falta" por coluna, com link para a correção.
 O resolvido é montado uma vez por linha e serve ao hash e às pendências.
@@ -23,8 +24,7 @@ from django.views.decorators.http import require_http_methods
 from nucleo.admin import lote
 from nucleo.models import Ano, FotoRevista, Parceiro, Revista, Template
 from nucleo.models.revista import Motivo
-from nucleo.servicos import resolver, validacao
-from nucleo.urls.preview import protegida
+from nucleo.servicos import bloqueio, resolver, validacao
 
 # Coluna → códigos de `pendencias` que ela mostra (ordem das colunas da tela).
 COLUNAS = {
@@ -97,43 +97,23 @@ def contexto(request, titulo, **extra):
     return {**admin.site.each_context(request), "title": titulo, **extra}
 
 
-@protegida
-def painel(request, ano):
-    ano = get_object_or_404(Ano, ano=ano)
+def filtrar(ano, params):
+    """Linhas do painel com os filtros falta/parceiro/template (inválidos são ignorados).
+    `todas` = linhas antes do filtro de falta (serve às contagens por coluna da tela B)."""
     revistas = revistas_do_ano(ano)
     parceiros = list(Parceiro.objects.filter(parceiroano__ano=ano).order_by("nome"))
-    parceiro = next((p for p in parceiros if str(p.pk) == request.GET.get("parceiro")), None)
-    falta = request.GET.get("falta") if request.GET.get("falta") in COLUNAS else None
-    pedido = request.GET.get("template", "")
+    parceiro = next((p for p in parceiros if str(p.pk) == params.get("parceiro")), None)
+    falta = params.get("falta") if params.get("falta") in COLUNAS else None
+    pedido = params.get("template", "")
     # Inexistente ou de outro ano: ignorado, como o parceiro inválido.
     template = Template.objects.filter(ano=ano, pk=pedido).select_related("componente").first() if pedido.isdigit() else None
     if parceiro is not None:
         revistas = revistas.filter(projeto__parceiro_ano__parceiro=parceiro)
     if template is not None:
         revistas = revistas.filter(revistafasciculo__template=template)  # 1 fascículo por template: sem duplicar
-    linhas = [linha(r) for r in revistas]
-    if falta is not None:
-        linhas = [x for x in linhas if not x["faltas"][falta]["ok"]]
-    ativos = {"falta": falta, "parceiro": parceiro and parceiro.pk, "template": template and template.pk}
-
-    def mantendo(chave):  # cada filtro preserva os outros na URL
-        return {k: v for k, v in ativos.items() if v and k != chave}
-
-    filtros = [
-        lote.filtro("Falta", [("Tudo", "")] + [(r, c) for c, (r, _) in COLUNAS.items()],
-                    COLUNAS[falta][0] if falta else "Tudo", "falta", mantendo("falta")),
-        lote.filtro("Parceiro", [("Todos", "")] + [(p, p.pk) for p in parceiros],
-                    parceiro or "Todos", "parceiro", mantendo("parceiro")),
-    ]  # fmt: skip
-    if template is not None:
-        rotulo = f"{template.componente.codigo} · {template}"
-        filtros.append(lote.filtro("Template", [(rotulo, template.pk), ("limpar", "")], rotulo, "template", mantendo("template")))
-    ctx = contexto(
-        request, f"Painel da temporada {ano.ano}", linhas=linhas, colunas=[r for r, _ in COLUNAS.values()],
-        filtros=filtros, pode_validar=request.user.has_perm("nucleo.validar_revista"),
-        url_lote=reverse("painel_validar", args=[ano.ano]),
-    )  # fmt: skip
-    return TemplateResponse(request, "nucleo/painel.html", ctx)
+    todas = [linha(r) for r in revistas]
+    linhas = [x for x in todas if not x["faltas"][falta]["ok"]] if falta else todas
+    return {"linhas": linhas, "todas": todas, "parceiros": parceiros, "parceiro": parceiro, "falta": falta, "template": template}
 
 
 def diff(revista, resolvido):
@@ -148,27 +128,25 @@ def diff(revista, resolvido):
     return mark_safe(tabela)  # o HtmlDiff escapa &, < e >
 
 
-@require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
-@permission_required("nucleo.validar_revista", raise_exception=True)
-def validar_lote(request, ano):
-    ano = get_object_or_404(Ano, ano=ano)
-    if request.method == "POST":
-        pares = {}
-        for par in request.POST.getlist("par"):  # "pk:hash"
-            pk, _, hash_visto = par.partition(":")
-            if pk.isdigit():
-                pares[int(pk)] = hash_visto
-        revistas = revistas_do_ano(ano).filter(pk__in=pares)
-        itens = [
-            (str(r), r.projeto, lambda r=r: validacao.validar(r.pk, pares[r.pk], request.user)) for r in revistas
-        ]
-        feitos = lote.aplicar(request, itens)  # recusadas: "Pulados: revista (motivo)"
-        lote.avisar_pulados(request, [f"revista {pk} (não encontrada ou arquivada)" for pk in set(pares) - {r.pk for r in revistas}])
-        if feitos:
-            messages.success(request, f"Validadas {feitos} revista(s).")
-        return HttpResponseRedirect(reverse("painel", args=[ano.ano]))
-    ids = [int(x) for x in request.GET.getlist("revista") if x.isdigit()]
+def validar_pares(request, ano, pedidos):
+    """Grava os pares "pk:hash" (cada um sozinho, sob o bloqueio do projeto: D-121) e avisa
+    pelo `messages`. Serve ao admin e à tela B (urls/ui_validar.py). Devolve os pks pedidos."""
+    pares = {}
+    for par in pedidos:
+        pk, _, hash_visto = par.partition(":")
+        if pk.isdigit():
+            pares[int(pk)] = hash_visto
+    revistas = revistas_do_ano(ano).filter(pk__in=pares)
+    itens = [(str(r), r.projeto, lambda r=r: validacao.validar(r.pk, pares[r.pk], request.user)) for r in revistas]
+    feitos = lote.aplicar(request, itens)  # recusadas: "Pulados: revista (motivo)"
+    lote.avisar_pulados(request, [f"revista {pk} (não encontrada ou arquivada)" for pk in set(pares) - {r.pk for r in revistas}])
+    if feitos:
+        messages.success(request, f"Validadas {feitos} revista(s).")
+    return list(pares)
+
+
+def itens_validar(ano, ids):
+    """O que a validação mostra de cada revista ativa do ano em `ids` (admin e tela B)."""
     itens = []
     for revista in revistas_do_ano(ano).filter(pk__in=ids):
         resolvido = resolver.resolver(revista)
@@ -177,16 +155,30 @@ def validar_lote(request, ano):
                 "revista": revista,
                 "hash": (atual := resolver.hash_validado(revista, resolvido)),
                 "validada": validacao.validada(revista, atual),
-                "pendencias": resolver.pendencias(revista, resolvido),
+                "pendencias": [p._replace(link=link(p.codigo, revista)) for p in resolver.pendencias(revista, resolvido)],
                 "desatualizadas": resolver.secoes_desatualizadas(revista),  # D-087: só avisa
                 "diff": diff(revista, resolvido),
+                "editando": bloqueio.quem_bloqueia(revista.projeto),  # o lote vai pular (D-121)
             }
         )
-    ctx = contexto(request, f"Validar em lote ({ano.ano})", itens=itens, url_painel=reverse("painel", args=[ano.ano]))
+    return itens
+
+
+@require_http_methods(["GET", "POST"])
+@login_required(login_url="admin:login")
+@permission_required("nucleo.validar_revista", raise_exception=True)
+def validar_lote(request, ano):
+    ano = get_object_or_404(Ano, ano=ano)
+    if request.method == "POST":
+        validar_pares(request, ano, request.POST.getlist("par"))
+        return HttpResponseRedirect(reverse("painel", args=[ano.ano]))
+    ids = [int(x) for x in request.GET.getlist("revista") if x.isdigit()]
+    ctx = contexto(
+        request, f"Validar em lote ({ano.ano})", itens=itens_validar(ano, ids), url_painel=reverse("painel", args=[ano.ano])
+    )
     return TemplateResponse(request, "nucleo/painel_validar.html", ctx)
 
 
 urlpatterns = [
-    path("<int:ano>/", painel, name="painel"),
     path("<int:ano>/validar/", validar_lote, name="painel_validar"),
 ]

@@ -58,9 +58,11 @@ class EntradaTest(Base):
         self.assertNotContains(r, "Validar no Painel")
 
     def test_painel_no_topo_de_todas_as_paginas(self):
-        for url in (reverse("admin:nucleo_parceiro_changelist"), reverse("painel", args=[2026])):
-            topo = re.search(r'<div id="user-tools">.*?</div>', self.client.get(url).content.decode(), re.S).group()
-            self.assertIn('<a href="/painel/2026/">Painel 2026</a>', topo)
+        url = reverse("admin:nucleo_parceiro_changelist")
+        topo = re.search(r'<div id="user-tools">.*?</div>', self.client.get(url).content.decode(), re.S).group()
+        self.assertIn('<a href="/painel/2026/">Painel 2026</a>', topo)
+        # O painel é a tela B: a navegação dela marca o Painel.
+        self.assertContains(self.client.get(reverse("painel", args=[2026])), 'href="/painel/2026/" aria-current="page">Painel</a>')
 
 
 class SemAnoTest(TestCase):
@@ -79,9 +81,9 @@ class TemplatesLinksTest(Base):
         href = re.search(rf'href="([^"]*template={tpl.pk})">usado por 2 ', r.content.decode()).group(1)
         painel = self.client.get(href.replace("&amp;", "&"))
         self.assertEqual({l["revista"].pk for l in painel.context["linhas"]}, {self.go["LP"].pk, self.pe["LP"].pk})
-        self.assertContains(painel, "<strong>LP · Padrão (F2)</strong> · <a href=\"?template=\">limpar</a>")
-        parceiro = dict(painel.context["filtros"])["Parceiro"]
-        self.assertTrue(all(f"template={tpl.pk}" in url for _, url, _ in parceiro))  # trocar o parceiro mantém
+        self.assertContains(painel, f"LP · {tpl}")
+        self.assertContains(painel, '<a class="link" href="?"')  # Limpar o template
+        self.assertContains(painel, f'<input type="hidden" name="template" value="{tpl.pk}">')  # trocar o parceiro mantém
         for invalido in ("abc", "999999"):
             self.assertEqual(len(self.client.get(f"/painel/2026/?template={invalido}").context["linhas"]), 4)
 

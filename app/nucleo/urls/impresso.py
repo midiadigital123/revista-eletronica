@@ -107,18 +107,46 @@ def _revista(pk):
         raise Http404
 
 
-@protegida
-def impresso(request, pk):
-    revista = _revista(pk)
+def situacao(revista):
+    """Foto, hash, "Validado" e pendência do impresso de uma revista (lista da tela B e `estado`)."""
     resolvido = resolver.resolver(revista)
     atual = resolver.hash_validado(revista, resolvido)
     foto = ultima_impressa(revista)
-    validada = validacao.validada(revista, atual)
-    pendente = impresso_pendente(foto, resolvido)
+    return {
+        "revista": revista, "foto": foto, "hash": atual, "validada": validacao.validada(revista, atual),
+        "pendente": impresso_pendente(foto, resolvido), "resolvido": resolvido,
+    }  # fmt: skip
+
+
+def estado(revista, s=None):
+    """O que a tela do impresso mostra (página antiga e tela B): `situacao` + o que mudou desde a foto.
+    `s`: a `situacao` já calculada (a lista da tela B não resolve a revista duas vezes)."""
+    s = s or situacao(revista)
+    foto = s["foto"]
+    return s | {"mudancas": mudancas(foto and resolver.impresso_de(foto.conteudo), resolver.impresso_de(s["resolvido"]))}
+
+
+def pode_marcar(user, revista):
+    return user.has_perm("nucleo.marcar_impressa") and revista.arquivada_em is None
+
+
+def gravar(request, revista):
+    """"Revista Impressa Atualizada" com o hash visto, sob o bloqueio do projeto; resultado em messages."""
+    hash_visto = request.POST.get("hash_visto", "")
+    motivo = lote.escrever_travado(
+        revista.projeto, request.user, lambda: validacao.marcar_impressa(revista.pk, hash_visto, request.user)
+    )
+    if motivo:
+        messages.error(request, f"Impresso não atualizado: {motivo.rstrip('.')}.")
+    else:
+        messages.success(request, "Revista Impressa Atualizada: os avisos desta revista foram zerados.")
+
+
+@protegida
+def impresso(request, pk):
+    revista = _revista(pk)
     ctx = contexto(
-        request, f"Impresso: {revista}", revista=revista, foto=foto, hash=atual, validada=validada, pendente=pendente,
-        mudancas=mudancas(foto and resolver.impresso_de(foto.conteudo), resolver.impresso_de(resolvido)),
-        pode=request.user.has_perm("nucleo.marcar_impressa") and revista.arquivada_em is None,
+        request, f"Impresso: {revista}", **estado(revista), pode=pode_marcar(request.user, revista),
         url_painel=reverse("painel", args=[revista.projeto.ano.ano]),
     )  # fmt: skip
     return TemplateResponse(request, "nucleo/impresso.html", ctx)
@@ -128,15 +156,7 @@ def impresso(request, pk):
 @login_required(login_url="admin:login")
 @permission_required("nucleo.marcar_impressa", raise_exception=True)
 def marcar(request, pk):
-    revista = _revista(pk)
-    hash_visto = request.POST.get("hash_visto", "")
-    motivo = lote.escrever_travado(
-        revista.projeto, request.user, lambda: validacao.marcar_impressa(revista.pk, hash_visto, request.user)
-    )
-    if motivo:
-        messages.error(request, f"Impresso não atualizado: {motivo.rstrip('.')}.")
-    else:
-        messages.success(request, "Revista Impressa Atualizada: os avisos desta revista foram zerados.")
+    gravar(request, _revista(pk))
     return HttpResponseRedirect(reverse("impresso", args=[pk]))
 
 

@@ -1,0 +1,6 @@
+{% comment %}
+Seletor de ano (controle segmentado). `rota` recebe o ano como único argumento.
+  {% include "ui/_componentes/anos.html" with rota="cortes" %}   (contexto: anos, ano)
+{% endcomment %}<nav aria-label="Ano" class="segmentos">
+  {% for a in anos %}<a href="{% url rota a.ano %}"{% if a.pk == ano.pk %} aria-current="page"{% endif %}>{{ a.ano }}</a>{% endfor %}
+</nav>

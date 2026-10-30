@@ -1,0 +1,9 @@
+{% comment %}
+Estado vazio: o que falta e onde resolver.
+  {% include "ui/_componentes/vazio.html" with titulo="Nenhuma revista" texto="Lance os cortes do ano para criar as revistas." url=u rotulo="Abrir cortes" %}
+{% endcomment %}<div class="vazio" role="status">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2z"/></svg>
+  <h2>{{ titulo }}</h2>
+  {% if texto %}<p>{{ texto }}</p>{% endif %}
+  {% if url %}<a class="btn btn-outline" href="{{ url }}">{{ rotulo }}</a>{% endif %}
+</div>

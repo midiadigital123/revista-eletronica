@@ -1,0 +1,32 @@
+{% load ui %}{% comment %}
+Linha da planilha de variáveis (um <tbody> por projeto: a linha + os erros dela). A página inclui
+uma por projeto; o "Copiar de <ano-1>" (HTMX) devolve só esta, com as mensagens fora do alvo.
+Contexto: l (urls/ui_variaveis.linha), ano, pode_editar, colunas; oob=True na resposta HTMX.
+{% endcomment %}{% with p=l.form.instance %}<tbody id="projeto-{{ p.pk }}"{% if l.erros %} class="grade-com-erro"{% endif %}>
+  <tr>
+    <th scope="row" class="grade-parceiro">
+      <input type="hidden" name="form-{{ l.indice }}-id" value="{{ p.pk }}">
+      {% rota_b "ui_projeto" p.pk as u %}
+      <a class="link-linha" href="{% if u %}{{ u }}{% else %}{% url 'admin:nucleo_projeto_change' p.pk %}{% endif %}">{{ p.parceiro_ano.parceiro }}</a>
+      <span class="mudo">{{ p.nome }}</span>
+      {% if pode_editar %}
+      <button type="submit" form="copiar-{{ p.pk }}" id="copiar-btn-{{ p.pk }}" class="btn btn-ghost btn-sm"
+        aria-label="Copiar de {{ ano.ano|add:-1 }} para {{ p }}"
+        hx-post="{% url 'ui_variaveis_copiar' ano.ano p.pk %}?i={{ l.indice }}" hx-params="none"
+        hx-target="#projeto-{{ p.pk }}" hx-swap="outerHTML"
+        title="Preenche só as variáveis vazias com as do projeto do parceiro em {{ ano.ano|add:-1 }}. Grava na hora.">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+        Copiar de {{ ano.ano|add:-1 }}
+      </button>
+      {% endif %}
+    </th>
+    {% for c in l.celulas %}<td{% if c.inicio %} class="grade-inicio"{% endif %}>{{ c.campo }}</td>{% endfor %}
+  </tr>
+  {% if l.erros %}
+  <tr class="grade-erros"><td colspan="{{ colunas|length|add:1 }}">
+    <ul id="erros-{{ p.pk }}">{% for erro in l.erros %}<li>{{ p.parceiro_ano.parceiro }}: {{ erro }}</li>{% endfor %}</ul>
+  </td></tr>
+  {% endif %}
+</tbody>{% endwith %}{% if oob %}
+{# <template>: o fragmento começa num <tbody>, e um <div> solto seria descartado pelo parser de tabela. #}
+<template>{% include "ui/_componentes/mensagens.html" with oob=True %}</template>{% endif %}
