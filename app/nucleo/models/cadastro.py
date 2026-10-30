@@ -83,6 +83,8 @@ class CorPadrao(models.Model):
 
     class Meta:
         db_table = "cor_padrao"
+        verbose_name = "padrão do ano"
+        verbose_name_plural = "padrões do ano (cor e nome)"
         constraints = [
             models.UniqueConstraint(fields=["ano", "padrao"], name="cor_padrao_ano_padrao_uniq"),
             models.CheckConstraint(

@@ -62,7 +62,7 @@ guardado junto da cor do padrão. O projeto só preenche `pdNN` quando quer outr
 `pdNN` vazio, vale o nome do ano, tanto na escala quanto em `{{pdNN}}` nos textos. É o mesmo
 modelo da cor (cor do ano + cor do projeto).
 
-- **Nome do ano:** admin > Núcleo > "Cor padraos" (`CorPadrao`, filtre pelo ano), campo "Nome". Começa como
+- **Nome do ano:** admin > Núcleo > "Padrões do ano (cor e nome)" (`CorPadrao`, filtre pelo ano), campo "Nome". Começa como
   "Padrão 01".."Padrão 05" e é copiado ao abrir o ano seguinte. Mudar esse nome muda todas
   as revistas do ano que não sobrescrevem (e elas precisam ser validadas de novo).
 - **Nome do projeto:** form do projeto ou aba Variáveis. O campo vazio mostra o nome do ano
