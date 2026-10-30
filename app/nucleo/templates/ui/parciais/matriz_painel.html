@@ -1,0 +1,107 @@
+{% comment %}
+Painel do descritor (T11): campos, tarefas (com a faixa na escala da etapa), arquivo do item (D-180)
+e links de exclusão (D-181). Troca por HTMX em #painel; com oob=True leva junto a lista e as mensagens.
+Contexto: mec, descritor, form, tarefas, escala, itens, item_impacto, pode_gravar, excluir_*.
+{% endcomment %}{% if descritor %}{% url 'ui_matriz_descritor' mec.pk descritor.pk as url %}
+<article class="matriz-descritor" aria-labelledby="titulo-descritor">
+  <header class="matriz-descritor-cab">
+    <h2 id="titulo-descritor"><span class="matriz-codigo-grande">{{ descritor.codigo }}</span> <span class="mudo">{{ mec.etapa.codigo }} {{ mec.componente.codigo }}</span></h2>
+    {% if excluir_descritor %}<a class="btn btn-destrutivo btn-sm" href="{% url 'ui_matriz_excluir_descritor' mec.pk descritor.pk %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+      Excluir descritor</a>{% endif %}
+  </header>
+
+  <form method="post" action="{{ url }}" hx-post="{{ url }}" hx-target="#painel" class="matriz-form" novalidate>{% csrf_token %}
+    {% if request.bloqueio %}<input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">{% endif %}
+    <fieldset{% if not pode_gravar %} disabled{% endif %}>
+      {% for e in form.non_field_errors %}<p class="aviso aviso-erro" role="alert">{{ e }}</p>{% endfor %}
+      <section class="matriz-secao" aria-labelledby="sec-identificacao">
+        <h3 id="sec-identificacao" class="secao-titulo">Identificação</h3>
+        <div class="matriz-grade-ident">
+          {% include "ui/_componentes/matriz_campo.html" with campo=form.codigo %}
+          {% include "ui/_componentes/matriz_campo.html" with campo=form.ordem %}
+        </div>
+        {% include "ui/_componentes/matriz_campo.html" with campo=form.descricao %}
+      </section>
+      <section class="matriz-secao" aria-labelledby="sec-pre">
+        <h3 id="sec-pre" class="secao-titulo">Pré-requisitos</h3>
+        {% include "ui/_componentes/matriz_campo.html" with campo=form.prerequisitos %}
+      </section>
+      <section class="matriz-secao" aria-labelledby="sec-bncc">
+        <h3 id="sec-bncc" class="secao-titulo">BNCC</h3>
+        <div class="duas-colunas">
+          {% include "ui/_componentes/matriz_campo.html" with campo=form.praticas %}
+          {% include "ui/_componentes/matriz_campo.html" with campo=form.conhecimento %}
+          {% include "ui/_componentes/matriz_campo.html" with campo=form.habilidades_relacionadas %}
+          {% include "ui/_componentes/matriz_campo.html" with campo=form.habilidade_correspondente %}
+        </div>
+      </section>
+      <section class="matriz-secao" aria-labelledby="sec-tarefas">
+        <h3 id="sec-tarefas" class="secao-titulo">Tarefas <span class="mudo">na escala de 0 a {{ escala }}</span></h3>
+        {{ tarefas.management_form }}
+        {% for e in tarefas.non_form_errors %}<p class="erro" role="alert">{{ e }}</p>{% endfor %}
+        <ul class="matriz-tarefas">
+        {% for f in tarefas.forms %}{% with t=f.instance %}
+          <li class="matriz-tarefa{% if not t.pk %} matriz-tarefa-nova{% endif %}">
+            {% for campo in f.hidden_fields %}{{ campo }}{% endfor %}
+            {% if t.pk %}
+            <div class="matriz-faixa" role="img" aria-label="Faixa {{ t.inicio }} a {{ t.fim }} de 0 a {{ escala }}">
+              <span class="matriz-faixa-trilho"><span class="matriz-faixa-trecho" style="--ini: {% widthratio t.inicio escala 100 %}%; --fim: {% widthratio t.fim escala 100 %}%"></span></span>
+              <span class="matriz-faixa-rotulo">{{ t.inicio }}–{{ t.fim }}</span>
+            </div>
+            {% else %}<p class="mudo matriz-faixa-rotulo">Tarefa nova: preencha para incluir; em branco, nada entra.</p>{% endif %}
+            <div class="matriz-tarefa-campos">
+              {% include "ui/_componentes/matriz_campo.html" with campo=f.inicio %}
+              {% include "ui/_componentes/matriz_campo.html" with campo=f.fim %}
+              {% include "ui/_componentes/matriz_campo.html" with campo=f.ordem %}
+              <div class="matriz-tarefa-texto">{% include "ui/_componentes/matriz_campo.html" with campo=f.texto %}</div>
+            </div>
+            {% for e in f.non_field_errors %}<p class="erro" role="alert">{{ e }}</p>{% endfor %}
+            {% if t.pk %}
+            <div class="matriz-tarefa-acoes">
+              {% if t.arquivo %}<a class="badge badge-contorno" href="{% url 'admin:nucleo_descritor_item' descritor.pk t.pk %}" title="Baixar o arquivo do item">{{ t.arquivo|slice:"-3:"|upper }}</a>{% if t.texto_alternativo %}<span class="mudo matriz-alt">{{ t.texto_alternativo|truncatechars:60 }}</span>{% endif %}{% endif %}
+              {% if pode_gravar %}<button type="button" class="btn btn-ghost btn-sm" data-abrir="item-{{ t.pk }}" aria-label="Arquivo do item da tarefa {{ t.codigo }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                Arquivo do item</button>{% endif %}
+              {% if excluir_tarefa %}<a class="btn btn-ghost btn-sm matriz-excluir" href="{% url 'ui_matriz_excluir_tarefa' mec.pk descritor.pk t.pk %}" aria-label="Excluir tarefa {{ t.codigo }}">Excluir</a>{% endif %}
+            </div>
+            {% endif %}
+          </li>
+        {% endwith %}{% empty %}
+          <li class="mudo">Nenhuma tarefa.</li>
+        {% endfor %}
+        </ul>
+      </section>
+      {% if pode_gravar %}
+      <div class="barra-salvar">
+        <span class="mudo">Vale para toda revista que usa esta etapa × componente.</span>
+        {% if form.afetadas %}{% include "ui/_componentes/matriz_campo.html" with campo=form.confirmar_impacto %}{% endif %}
+        <button type="submit" class="btn">Salvar descritor</button>
+      </div>
+      {% endif %}
+    </fieldset>
+  </form>
+
+  {% for t, item in itens %}{% url 'ui_matriz_item' mec.pk descritor.pk t.pk as url_item %}
+  <dialog class="dialogo" id="item-{{ t.pk }}" aria-labelledby="item-{{ t.pk }}-titulo">
+    <form method="post" enctype="multipart/form-data" action="{{ url_item }}" hx-post="{{ url_item }}" hx-encoding="multipart/form-data" hx-target="#painel" class="matriz-dialogo-form" novalidate>{% csrf_token %}
+      {% if request.bloqueio %}<input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">{% endif %}
+      <header>
+        <h2 id="item-{{ t.pk }}-titulo">Arquivo do item da tarefa {{ t.codigo }}</h2>
+        <p class="mudo">O arquivo é da matriz: aparece em toda revista que usa esta etapa × componente.{% if t.arquivo %} Enviar outro troca o atual (<a class="link" href="{% url 'admin:nucleo_descritor_item' descritor.pk t.pk %}">baixar {{ t.arquivo|slice:"-3:"|upper }}</a>).{% endif %}</p>
+      </header>
+      {% if item_impacto.0 %}<p class="aviso aviso-alerta">Afeta {{ item_impacto.0 }} revista(s) ativa(s); {{ item_impacto.1 }} perde(m) o “Validado”.</p>{% endif %}
+      {% for campo in item %}{% include "ui/_componentes/matriz_campo.html" %}{% endfor %}
+      <footer>
+        <button type="button" class="btn btn-outline" data-fechar>Cancelar</button>
+        {% if t.arquivo %}<button type="submit" name="_remover" value="1" class="btn btn-destrutivo">Remover arquivo</button>{% endif %}
+        <button type="submit" class="btn">Enviar</button>
+      </footer>
+    </form>
+  </dialog>
+  {% endfor %}
+</article>
+{% else %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhum descritor" texto="Crie o primeiro descritor desta etapa × componente com Novo descritor, ou reimporte a matriz." %}
+{% endif %}
+{% if oob %}{% include "ui/parciais/matriz_lista.html" %}{% if request.method == "POST" %}{% include "ui/_componentes/mensagens.html" with oob=True %}{% endif %}{% endif %}

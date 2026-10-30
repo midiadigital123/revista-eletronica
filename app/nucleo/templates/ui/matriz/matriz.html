@@ -1,0 +1,73 @@
+{% extends "ui/base.html" %}
+{% load static %}
+{% comment %}Matriz (T09): etapas × componente e as ações Renomear, Duplicar, Reimportar, Diferenças.{% endcomment %}
+{% block titulo %}{{ matriz.nome }} {{ matriz.ano.ano }}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/matriz.css' %}">{% endblock %}
+
+{% block conteudo %}
+<a class="mudo voltar" href="{% url 'ui_matriz' matriz.ano.ano %}">‹ Matrizes de {{ matriz.ano.ano }}</a>
+<header class="pagina-cab">
+  <div>
+    <h1>{{ matriz.nome }}</h1>
+    <p class="mudo">Matriz de {{ matriz.ano.ano }}{% if matriz.duplicada_de %} · cópia de {{ matriz.duplicada_de.nome }} ({{ matriz.duplicada_de.ano.ano }}){% endif %}</p>
+  </div>
+  <div class="acoes">
+    {% if matriz.duplicada_de %}<a class="btn btn-ghost" href="{% url 'ui_matriz_diferencas' matriz.pk %}">Diferenças da origem</a>{% endif %}
+    {% if pode_alterar %}
+    <button type="button" class="btn btn-outline" data-abrir="dlg-renomear">Renomear</button>
+    <a class="btn btn-outline" href="{% url 'ui_matriz_reimportar' matriz.pk %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
+      Reimportar
+    </a>
+    {% endif %}
+    {% if pode_duplicar %}
+    <button type="button" class="btn" data-abrir="dlg-duplicar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+      Duplicar
+    </button>
+    {% endif %}
+  </div>
+</header>
+
+{% if not pode_alterar and not pode_duplicar %}
+{% include "ui/_componentes/so_leitura.html" with texto="Só leitura: seu perfil vê a matriz, mas não altera. Para editar, peça a permissão de matriz a um administrador." %}
+{% endif %}
+
+{% if linhas %}
+<div class="tabela-caixa card matriz-tabela">
+  <table class="tabela">
+    <caption class="sr-only">Etapas × componente de {{ matriz.nome }}</caption>
+    <thead><tr>
+      <th scope="col">Etapa × componente</th><th scope="col" class="num">Intervalo mínimo</th>
+      <th scope="col" class="num">Descritores</th><th scope="col" class="num">Revistas ativas</th>
+    </tr></thead>
+    <tbody>
+    {% for mec, afetadas in linhas %}
+      <tr>
+        <th scope="row"><a class="link-linha" href="{% url 'ui_matriz_mec' mec.pk %}">{{ mec.etapa.codigo }} <span class="mudo">{{ mec.componente.codigo }}</span></a></th>
+        <td class="num">{% if mec.passo %}{{ mec.passo }}{% else %}<span class="mudo">sem linhas vazias</span>{% endif %}</td>
+        <td class="num">{{ mec.n_desc }}</td>
+        <td class="num">{{ afetadas }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+{% if pode_alterar %}{% url 'ui_matriz_reimportar' matriz.pk as u %}{% endif %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhuma etapa × componente" texto="As etapas × componente entram pelo arquivo do SAEGO (PDF ou planilha)." url=u rotulo="Reimportar" %}
+{% endif %}
+
+{% if pode_duplicar %}
+<dialog class="dialogo" id="dlg-duplicar" aria-labelledby="dlg-duplicar-titulo">
+  {% url 'ui_matriz_duplicar' matriz.pk as url %}
+  {% with titulo="Duplicar "|add:matriz.nome %}{% include "ui/parciais/matriz_form.html" with form=duplicar chave="duplicar" %}{% endwith %}
+</dialog>
+{% endif %}
+{% if pode_alterar %}
+<dialog class="dialogo" id="dlg-renomear" aria-labelledby="dlg-renomear-titulo">
+  {% url 'ui_matriz_renomear' matriz.pk as url %}
+  {% with titulo="Renomear "|add:matriz.nome %}{% include "ui/parciais/matriz_form.html" with form=renomear chave="renomear" %}{% endwith %}
+</dialog>
+{% endif %}
+{% endblock %}

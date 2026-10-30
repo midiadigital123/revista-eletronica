@@ -17,7 +17,8 @@ Só leitura; quem grava é `foto.fotografar`. Formato de `resolver(revista)`:
 `titulo` e `corpo` são HTML já escapado (o `titulo` pode ter o `<span class="variavel-vazia">`):
 quem consome usa `|safe`/innerHTML, nunca como texto.
 Linha da tarefa com arquivo: `item: {"id": <nome sem extensão>, "tipo": <extensão>}` (o JS monta
-`arquivos/itens/<id>.<tipo>`); sem arquivo, sem a chave.
+`arquivos/itens/<id>.<tipo>`), mais `"alt"` quando a tarefa tem texto alternativo (D-180);
+sem arquivo, sem a chave.
 Fascículo sem template: `secoes` None e `faixa` com o HTML da faixa vermelha (D-116).
 Variável vazia: já sai de `texto.renderizar` como `<span class="variavel-vazia">` (D-139).
 Os valores das variáveis e o nome do projeto não entram aqui, só os textos renderizados:
@@ -92,20 +93,22 @@ def niveis_do_passo(minimo, maximo, passo):
 def escala(tarefas, cortes, minimo, maximo, passo):
     """`scale` de um descritor: {"padrao-1".."padrao-n": linhas de cima para baixo}, n = cortes + 1.
 
-    `tarefas`: [(inicio, fim, texto, arquivo)]. Cada uma vai para o padrão da âncora maior.
+    `tarefas`: [(inicio, fim, texto, arquivo[, alt])]. Cada uma vai para o padrão da âncora maior.
     Com passo, cada nível do passo sem tarefa começando nele vira uma linha "---" no padrão
     do nível, mesmo dentro do intervalo de uma tarefa mais larga (linhasVaziasDoPasso, D-155);
     passo nulo = sem linhas vazias (D-091).
     """
     saida = {f"padrao-{k}": [] for k in range(1, len(cortes) + 2)}
-    for inicio, fim, conteudo, arquivo in tarefas:
+    for inicio, fim, conteudo, arquivo, *extra in tarefas:
         linha = {"level": inicio, "fim": fim, "content": conteudo}
         if arquivo:
             caminho = PurePosixPath(arquivo)
             linha["item"] = {"id": caminho.stem, "tipo": caminho.suffix.lstrip(".")}
+            if extra and extra[0]:
+                linha["item"]["alt"] = extra[0]
         saida[f"padrao-{padrao_da_tarefa(fim, cortes)}"].append(linha)
     if passo:
-        existentes = {inicio for inicio, _, _, _ in tarefas}
+        existentes = {t[0] for t in tarefas}
         for nivel in niveis_do_passo(minimo, maximo, passo):
             if nivel not in existentes:
                 saida[f"padrao-{padrao_do_nivel(nivel, cortes)}"].append(
@@ -168,7 +171,7 @@ def _f1_escalas(revista, projeto, variaveis):
             "padroes": [{"chave": f"padrao-{k}", "rotulo": rotulo_do_padrao(k, variaveis)} for k in range(1, n + 1)],
         }
         for d in descritores.get(mec.pk if mec else None, []):
-            tarefas = [(t.inicio, t.fim, t.texto, t.arquivo) for t in d.tarefa_set.all()]
+            tarefas = [(t.inicio, t.fim, t.texto, t.arquivo, t.texto_alternativo) for t in d.tarefa_set.all()]
             dados[chave][d.codigo] = {
                 "description": d.descricao,
                 "prerequisites": list(d.prerequisitos),

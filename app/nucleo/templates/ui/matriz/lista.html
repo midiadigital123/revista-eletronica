@@ -1,0 +1,50 @@
+{% extends "ui/base.html" %}
+{% load static %}
+{% comment %}Matrizes do ano (T09). View: nucleo/urls/ui_matriz.py (matrizes). Ficha: docs/telas/fichas/matriz.md.{% endcomment %}
+{% block titulo %}Matrizes{% if ano %} {{ ano.ano }}{% endif %}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/matriz.css' %}">{% endblock %}
+
+{% block conteudo %}
+<header class="pagina-cab">
+  <div>
+    <h1>Matrizes</h1>
+    <p class="mudo">Descritores e tarefas que as revistas do ano usam, por etapa e componente.</p>
+  </div>
+  {% if ano %}<div class="acoes"><a class="btn btn-ghost" href="{% url 'painel' ano.ano %}">Ver painel de {{ ano.ano }}</a></div>{% endif %}
+</header>
+
+{% if not ano %}
+<div class="aviso" role="status">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+  <span>Nenhum ano aberto. Abra um ano no <a class="link" href="{% url 'admin:nucleo_ano_changelist' %}">admin</a> para cadastrar a matriz.</span>
+</div>
+{% else %}
+{% include "ui/_componentes/anos.html" with rota="ui_matriz" %}
+
+{% if matrizes %}
+<div class="tabela-caixa card matriz-tabela">
+  <table class="tabela">
+    <thead><tr><th scope="col">Matriz</th><th scope="col">Duplicada de</th><th scope="col" class="num">Etapas × componente</th><th scope="col" class="num">Descritores</th></tr></thead>
+    <tbody>
+    {% for m in matrizes %}
+      <tr>
+        <th scope="row"><a class="link-linha" href="{% url 'ui_matriz_detalhe' m.pk %}">{{ m.nome }}</a></th>
+        <td>{% if m.duplicada_de %}{{ m.duplicada_de.nome }} <span class="mudo">({{ m.duplicada_de.ano.ano }})</span>{% else %}<span class="mudo">—</span>{% endif %}</td>
+        <td class="num">{{ m.n_mec }}</td>
+        <td class="num">{{ m.n_desc }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+{% if outras %}
+  {% with o=outras.0 %}{% url 'ui_matriz_detalhe' o.pk as u %}
+  {% include "ui/_componentes/vazio.html" with titulo=vazio_titulo texto="A matriz do ano nasce duplicando uma matriz de outro ano (ou pela importação da carga). Abra a matriz de origem e use Duplicar." url=u rotulo="Abrir "|add:o.nome %}
+  {% endwith %}
+{% else %}
+  {% include "ui/_componentes/vazio.html" with titulo="Nenhuma matriz cadastrada" texto="A primeira matriz entra pela importação da carga (comando importar_matriz)." %}
+{% endif %}
+{% endif %}
+{% endif %}
+{% endblock %}

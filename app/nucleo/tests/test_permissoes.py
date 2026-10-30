@@ -34,9 +34,12 @@ class GruposNoBancoTest(TestCase):
         }
         self.assertEqual(set(MODELOS_NUCLEO), registrados)
 
-    def test_so_apaga_passo_e_cor(self):
-        """Só ProjetoPasso e ProjetoCor (excluir = voltar ao padrão); Impresso nada (0008)."""
-        so_esses = {"nucleo.delete_projetopasso", "nucleo.delete_projetocor"}
+    def test_so_apaga_passo_cor_tarefa_e_descritor(self):
+        """ProjetoPasso e ProjetoCor (0008), Tarefa e Descritor (D-181, 0014); Impresso nada."""
+        so_esses = {
+            "nucleo.delete_projetopasso", "nucleo.delete_projetocor",
+            "nucleo.delete_tarefa", "nucleo.delete_descritor",
+        }  # fmt: skip
         for papel in PAPEIS:
             with self.subTest(papel=papel):
                 apaga = {p for p in permissoes(papel) if ".delete_" in p}
@@ -56,12 +59,13 @@ class PerfilTest(TestCase):
         "nucleo.change_corte", "nucleo.change_template", "nucleo.add_templateversao",
         "nucleo.change_corpadrao", "nucleo.change_projeto", "nucleo.change_revista",
         "nucleo.delete_projetopasso", "nucleo.delete_projetocor",
+        "nucleo.delete_tarefa", "nucleo.delete_descritor",
     )  # fmt: skip
     PEDAGOGICA_NAO = (
         "nucleo.marcar_impressa", "auth.change_user", "auth.add_group",
         "nucleo.change_templateversao", "nucleo.add_ano", "nucleo.add_fotorevista",
-        "nucleo.delete_revista", "nucleo.add_revista", "nucleo.delete_tarefa",
-        "nucleo.delete_descritor", "nucleo.delete_projeto",
+        "nucleo.delete_revista", "nucleo.add_revista", "nucleo.delete_matrizetapacc",
+        "nucleo.delete_matriz", "nucleo.delete_projeto",
     )  # fmt: skip
 
     def test_admin(self):
@@ -93,6 +97,7 @@ class PerfilTest(TestCase):
                 "nucleo.validar_revista", "nucleo.abrir_ano", "nucleo.change_matriz",
                 "nucleo.change_revista", "auth.change_user",
                 "nucleo.delete_projetopasso", "nucleo.delete_projetocor",
+                "nucleo.delete_tarefa", "nucleo.delete_descritor",
             ),
         )  # fmt: skip
 

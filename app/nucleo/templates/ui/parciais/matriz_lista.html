@@ -1,0 +1,16 @@
+{% comment %}
+Lista de descritores da MEC (busca e item ativo). Vai inteira na página, sozinha na busca
+(hx-target="#lista-descritores") e fora do alvo (oob) quando o painel troca, para marcar o ativo.
+Contexto: mec, visiveis, total, q, ativo, oob.
+{% endcomment %}<div id="lista-descritores" class="matriz-itens"{% if oob %} hx-swap-oob="true"{% endif %}>
+  <input type="hidden" id="ativo" name="d" value="{{ ativo|default:'' }}">
+  <p class="mudo matriz-contagem" aria-live="polite">{{ visiveis|length }} de {{ total }} descritor{{ total|pluralize:"es" }}</p>
+  {% for d in visiveis %}{% url 'ui_matriz_descritor' mec.pk d.pk as u %}
+  <a href="{{ u }}" hx-get="{{ u }}" hx-target="#painel" hx-push-url="{{ u }}" hx-include="#busca"{% if d.pk == ativo %} aria-current="page"{% endif %}>
+    <span class="matriz-codigo">{{ d.codigo }}</span>
+    <span class="matriz-resumo">{{ d.descricao|default:"Sem descrição" }}</span>
+  </a>
+  {% empty %}
+  <p class="mudo matriz-nada">{% if q %}Nenhum descritor com “{{ q }}” no código ou no texto.{% else %}Nenhum descritor nesta etapa × componente.{% endif %}</p>
+  {% endfor %}
+</div>
