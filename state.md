@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo 20 de 22: telas B (9 telas + cortes, painel B em `/painel/<ano>/`) juntadas em `refatoracao-django` (7b55ee8) e no GitHub; usuário aprovou o visual. Suíte 521 OK com PDFs. Agora: desligar React (editor/api) e Mongo do compose, a pedido do usuário. Depois: carga real do S17 e S18.
+Passo 20 de 22: telas B juntadas e no GitHub (7b55ee8). Compose sobe só `db` e `app` (D-187); React, API e Mongo desligados, volume do Mongo mantido. Compose commitado. Falta: README/docs/docker.md ainda falam do sistema antigo, carga real do S17 e S18.
 Funcionando: em cada `feat/s11*`, suíte OK (8 de PDF pulados), `makemigrations --check` limpo; Playwright cortes, templates-admin e revista-textos passam.
 Quebrado/pendente: 5 telas B corrigidas sem 2ª revisão; links "falta" ainda vão ao admin; polimento de CSS/HTMX/JS adiado pelo usuário; S17 executado só em ensaio; apagar `editor/` bloqueado até as telas B substituírem o uso; S18 não iniciado.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Usuário confirma a lista de serviços a desligar do compose (React e Mongo).
+Usuário abre http://localhost:8000/painel/2026/ e confere que o sistema novo está de pé.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1531,6 +1531,14 @@ Usuário confirma a lista de serviços a desligar do compose (React e Mongo).
 - **Arquivos afetados:** `app/nucleo/templates/ui/`, `app/nucleo/static/ui/`, `app/nucleo/urls/`, `docs/telas/`
 - **Status:** em andamento (workflow).
 
+### D-187 — Compose sobe só o sistema novo: saem mongo, api e editor (2026-10-30 15:10)
+- **Contexto:** telas B aprovadas e juntadas (7b55ee8). O usuário pediu para desligar os contêineres do React e do Mongo e subir só os novos. Isso desbloqueia a parte `editor` da ação B do S17 (`docs/s17-carga-2026.md`).
+- **Decisão:** `docker-compose.yml` fica só com `db` e `app`, conforme o diff da ação B. Os contêineres `revista-editor`, `revista-api` e `revista-mongo` foram parados e removidos. O volume `revista-eletronica_mongo-dados` foi mantido.
+- **Motivo:** o editor React deixou de ser usado com as telas B. Sem o editor, a API e o Mongo não têm mais quem os use.
+- **Descartadas:** apagar o volume do Mongo — os dados antigos ainda podem servir para exportar usuários (S17 §6a), e só o usuário decide apagar; apagar as pastas `api/` e `editor/` agora — isso é a ação C, que exige a tag da ação A e o ok do usuário.
+- **Arquivos afetados:** `docker-compose.yml`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (D-184) S17: os cortes de 2026 repetem os de 2025? Se sim, comando `importar_cortes` (~60 min) substituindo a D-119 nesse ponto — depende de: Pedagógica
 - [x] (D-184) S17: LP 2EF tem 10 descritores na planilha `NÍVEIS - LP 2EF.xlsx` e 8 no PDF SAEGO 2025 — qual vale? — depende de: Pedagógica
@@ -1815,3 +1823,5 @@ Usuário confirma a lista de serviços a desligar do compose (React e Mongo).
 - 14:50 Workflow das telas B terminou (25 agentes): integração em `integ/ui-b` 3401dd9; suíte 519 OK com PDFs (verificada por mim), Playwright 26/26 (relatório do agente). Porta 8080 = editor React antigo; telas B ficam no Django (8000).
 - Usuário aprovou as telas B ("mais do que aprovadas"); polimento de CSS/HTMX/JS fica para depois. Merge `integ/ui-b` → `refatoracao-django` (7b55ee8): conflitos em `urls/__init__.py` (mantidos `conta/` e `cortes/`) e `admin/matriz.py` (imports da integ/ui-b); suíte 521 OK com PDFs; trail check sem conflito; push.
 - Usuário pediu para desligar os contêineres do React e do Mongo e subir só os novos.
+- D-187: React (editor), API e Mongo parados, removidos e tirados do compose; sobram `db` e `app`. O volume do Mongo foi mantido. 8000 responde e 8080 está desligada.
+- Commit do compose (D-187) feito a pedido do usuário; state.md em commit próprio.
