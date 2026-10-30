@@ -144,7 +144,7 @@ class TemplateAdmin(BloqueioAdminMixin, admin.ModelAdmin):
 
     @admin.display(description="Uso", ordering="n_usado")
     def usado_por(self, obj):
-        # ponytail: rota do painel do S12 (ainda não existe); href à mão até lá.
+        # ponytail: o painel do S12 ainda não lê ?template= (abre sem filtro); href à mão até ler.
         return format_html(
             '<a href="/painel/{}/?template={}">usado por {} ({} com cópia)</a>',
             obj.ano.ano, obj.pk, obj.n_usado, obj.n_copia,
