@@ -83,10 +83,11 @@ Cuidar da matriz de referência do ano: ver quais matrizes existem, criar uma a 
 - Editar etapa × CC, descritor e tarefas: as permissões de alterar/criar de etapa × CC, descritor e tarefa (o pacote "editar matriz" dos perfis).
 - Excluir: `delete_tarefa` / `delete_descritor`.
 - Gravar na etapa × CC exige o bloqueio dela (um editor por vez); POST sem permissão é 403.
+- A permissão de ver a etapa × CC é conferida antes de pegar o bloqueio: quem só tem `delete_*` recebe 403 sem travar a etapa × CC.
 
 ## Interações com HTMX
 
-- Busca: `input` com atraso de 300 ms troca só a lista.
+- Busca: `input` com atraso de 300 ms troca só a lista; Enter também (o campo fica num `<form method=get>`, que sem JS recarrega a página filtrada).
 - Clique num descritor: troca o painel e a URL (`hx-push-url`); a lista volta junto (fora do alvo) para marcar o ativo, mantendo a busca.
 - Salvar descritor, salvar intervalo e arquivo do item: `hx-post`; a resposta é o pedaço novo + mensagens.
 - Novo descritor e Duplicar/Renomear: modal com `hx-post`; erro volta dentro do modal; sucesso leva à página nova (`HX-Redirect`).
@@ -148,7 +149,7 @@ O elemento que marca a tela: a **faixa da tarefa na escala** (barra fina de 0 ao
 3. Duplicar cria a cópia com a origem e leva a ela; nome repetido no ano mostra o erro no modal.
 4. Reimportar grava pela regra do admin; com etapas × CC existentes, exige digitar o nome da matriz.
 5. Diferenças lista o que mudou ou "Nenhuma diferença para X."
-6. Intervalo mínimo e descritor gravam só com a confirmação de impacto quando há revistas ativas afetadas; sem ela, a mensagem de impacto aparece e nada grava.
+6. Intervalo mínimo e descritor gravam só com a confirmação de impacto quando há revistas ativas afetadas; sem ela, a mensagem de impacto aparece e nada grava. A linha da tarefa nova (com a ordem já preenchida) não impede salvar quando fica em branco.
 7. Busca filtra por código ou descrição; abrir descritor por HTMX devolve só o painel (com a lista fora do alvo).
 8. Arquivo do item envia, troca e remove pela mesma regra do admin (tipo pelos bytes, 5 MB).
 9. Excluir tarefa/descritor pede o código digitado; código errado não exclui; certo exclui e volta com a mensagem.
@@ -156,7 +157,7 @@ O elemento que marca a tela: a **faixa da tarefa na escala** (barra fina de 0 ao
 
 ## Referências técnicas
 
-- Regra: `app/nucleo/admin/matriz.py` (formulários, impacto, exclusão), `app/nucleo/matriz.py` (reimportar e arquivo do item, extraídos do admin), `app/nucleo/servicos/matriz.py`, `app/nucleo/servicos/arquivos.py`.
+- Regra: `app/nucleo/admin/matriz.py` (formulários, impacto, exclusão), `app/nucleo/matriz.py` (reimportar, arquivo do item, `com_afetadas` e `excluir`, extraídos do admin), `app/nucleo/servicos/matriz.py`, `app/nucleo/servicos/arquivos.py`.
 - Bloqueio: `app/nucleo/ui_bloqueio.py` (`com_bloqueio`, alvo = etapa × CC).
 - Visual: `editor/src/projetos/ano/TelaAno.tsx`, `ListaDescritores.tsx`, `TelaDescritor.tsx`.
 - Decisões: D-053, D-071, D-076, D-081, D-091, D-101, D-113, D-155, D-180, D-181, D-183, D-185, D-186.

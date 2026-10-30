@@ -27,6 +27,8 @@ from nucleo.matriz import (
     LinhasField,
     MatrizForm,
     ReimportarForm,
+    com_afetadas,
+    excluir,
     gravar_item,
     reimportar,
 )  # fmt: skip
@@ -54,11 +56,6 @@ def pode_ver(user):
 def pode_editar(user):
     """O pacote "editar matriz" dos perfis: etapa × CC, descritor e tarefa (admin: inlines)."""
     return user.has_perms(EDITAR)
-
-
-def _com_afetadas(classe, n):
-    """Form de impacto com a contagem desta MEC (como `admin.matriz._item_form`)."""
-    return type(classe.__name__, (classe,), {"afetadas": n})
 
 
 def _estilo(*forms_):
@@ -216,12 +213,10 @@ def diferencas_view(request, pk):
 
 
 def _mec(request, pk, **kwargs):
-    return get_object_or_404(MatrizEtapaCC.objects.select_related("matriz__ano", "etapa", "componente"), pk=pk)
-
-
-def _ver_mec(request):
+    """Alvo do `com_bloqueio`: confere a permissão de ver antes, para não travar a MEC à toa."""
     if not (request.user.has_perm("nucleo.view_matrizetapacc") or request.user.has_perm("nucleo.change_matrizetapacc")):
         raise PermissionDenied
+    return get_object_or_404(MatrizEtapaCC.objects.select_related("matriz__ano", "etapa", "componente"), pk=pk)
 
 
 class IntervaloForm(ImpactoForm):
@@ -277,6 +272,13 @@ def _ordem(descritor):
     return Tarefa.objects.filter(descritor=descritor).order_by("ordem", "pk")
 
 
+def _formset(descritor, extra, data=None):
+    """Tarefas do descritor + `extra` linha(s) em branco com a próxima ordem. GET e POST usam o
+    mesmo initial; sem ele, a ordem da linha em branco conta como alteração e a linha é validada."""
+    n = Tarefa.objects.filter(descritor=descritor).count()
+    return _tarefas(extra)(data, instance=descritor, prefix="tarefas", initial=[{"ordem": n + 1}], queryset=_ordem(descritor))
+
+
 def _descritores(mec, q):
     todos = Descritor.objects.filter(matriz_etapa_cc=mec).order_by("ordem", "pk")
     filtro = todos.filter(Q(codigo__icontains=q) | Q(descricao__icontains=q)) if q else todos
@@ -302,13 +304,10 @@ def _pagina_mec(request, mec, descritor, form=None, tarefas=None):
         return TemplateResponse(request, "ui/parciais/matriz_lista.html", contexto)
     afetadas = revistas_afetadas(mec)
     if descritor is not None:
-        n = Tarefa.objects.filter(descritor=descritor).count()
         if form is None:
-            form = _com_afetadas(DescritorUiForm, afetadas)(instance=descritor)
+            form = com_afetadas(DescritorUiForm, afetadas)(instance=descritor)
         if tarefas is None:
-            tarefas = _tarefas(1 if request.pode_gravar else 0)(
-                instance=descritor, prefix="tarefas", initial=[{"ordem": n + 1}], queryset=_ordem(descritor)
-            )
+            tarefas = _formset(descritor, 1 if request.pode_gravar else 0)
         _estilo(form, *tarefas.forms)
         u = request.user
         contexto.update(
@@ -319,15 +318,15 @@ def _pagina_mec(request, mec, descritor, form=None, tarefas=None):
         if request.pode_gravar:
             salvas = list(_ordem(descritor))
             revistas = impacto(mec) if salvas else []
-            item_form = _com_afetadas(ItemForm, len(revistas))
+            item_form = com_afetadas(ItemForm, len(revistas))
             contexto["itens"] = [(t, _estilo(item_form(instance=t, auto_id=f"item{t.pk}_%s"))) for t in salvas]
             contexto["item_impacto"] = (len(revistas), sum(v for _, v in revistas))
     if e_htmx(request):
         return TemplateResponse(request, "ui/parciais/matriz_painel.html", contexto)
     contexto.update(
         afetadas=afetadas, perfil_edita=pode_editar(request.user),
-        intervalo=_estilo(_com_afetadas(IntervaloForm, afetadas)(instance=mec)),
-        novo=_estilo(_com_afetadas(NovoDescritorForm, afetadas)(initial={"ordem": total + 1})),
+        intervalo=_estilo(com_afetadas(IntervaloForm, afetadas)(instance=mec)),
+        novo=_estilo(com_afetadas(NovoDescritorForm, afetadas)(initial={"ordem": total + 1}, auto_id="novo_%s")),
     )  # fmt: skip
     return TemplateResponse(request, "ui/matriz/mec.html", contexto)
 
@@ -336,7 +335,6 @@ def _pagina_mec(request, mec, descritor, form=None, tarefas=None):
 @login_required(login_url="admin:login")
 @com_bloqueio(_mec, pode_editar)
 def mec(request, pk, dpk=None):
-    _ver_mec(request)
     m = _mec(request, pk)
     if dpk is None:
         if request.method == "POST":
@@ -346,8 +344,8 @@ def mec(request, pk, dpk=None):
     if request.method != "POST":
         return _pagina_mec(request, m, d)
     afetadas = revistas_afetadas(m)
-    form = _com_afetadas(DescritorUiForm, afetadas)(request.POST, instance=d)
-    tarefas = _tarefas(1)(request.POST, instance=d, prefix="tarefas", queryset=_ordem(d))
+    form = com_afetadas(DescritorUiForm, afetadas)(request.POST, instance=d)
+    tarefas = _formset(d, 1, request.POST)
     if form.is_valid() and tarefas.is_valid():
         form.save()
         tarefas.save()
@@ -364,11 +362,11 @@ def mec(request, pk, dpk=None):
 @com_bloqueio(_mec, pode_editar)
 def intervalo(request, pk):
     m = _mec(request, pk)
-    form = _com_afetadas(IntervaloForm, revistas_afetadas(m))(request.POST, instance=m)
+    form = com_afetadas(IntervaloForm, revistas_afetadas(m))(request.POST, instance=m)
     if form.is_valid():
         form.save()
         messages.success(request, f"Intervalo mínimo de {m.etapa.codigo} {m.componente.codigo} salvo.")
-        form = _com_afetadas(IntervaloForm, form.afetadas)(instance=m)
+        form = com_afetadas(IntervaloForm, form.afetadas)(instance=m)
     else:
         messages.error(request, ERROS)
     if not e_htmx(request):
@@ -383,8 +381,8 @@ def intervalo(request, pk):
 def novo_descritor(request, pk):
     m = _mec(request, pk)
     ordem = (Descritor.objects.filter(matriz_etapa_cc=m).aggregate(o=Max("ordem"))["o"] or 0) + 1
-    form = _com_afetadas(NovoDescritorForm, revistas_afetadas(m))(
-        request.POST, instance=Descritor(matriz_etapa_cc=m), initial={"ordem": ordem}
+    form = com_afetadas(NovoDescritorForm, revistas_afetadas(m))(
+        request.POST, instance=Descritor(matriz_etapa_cc=m), initial={"ordem": ordem}, auto_id="novo_%s"
     )
     if form.is_valid():
         d = form.save()
@@ -402,7 +400,7 @@ def item(request, pk, dpk, tpk):
     m = _mec(request, pk)
     d = get_object_or_404(Descritor, pk=dpk, matriz_etapa_cc=m)
     tarefa = get_object_or_404(Tarefa, pk=tpk, descritor=d)
-    form = _com_afetadas(ItemForm, revistas_afetadas(m))(request.POST, request.FILES, instance=tarefa)
+    form = com_afetadas(ItemForm, revistas_afetadas(m))(request.POST, request.FILES, instance=tarefa)
     sucesso, erro = gravar_item(tarefa, form, "_remover" in request.POST)
     if sucesso:
         messages.success(request, sucesso)
@@ -419,10 +417,7 @@ def item(request, pk, dpk, tpk):
 def _excluir(request, mec, obj, rotulo, voltar):
     form = ExcluirForm(request.POST or None, codigo=obj.codigo)
     if request.method == "POST" and form.is_valid():
-        codigo = obj.codigo
-        obj.delete()
-        excluido = "excluída" if rotulo == "tarefa" else "excluído"
-        messages.success(request, f"{rotulo.capitalize()} {codigo} {excluido}.")
+        messages.success(request, excluir(obj, rotulo))
         return redirect(voltar)
     revistas = impacto(mec)
     _estilo(form)
@@ -436,7 +431,6 @@ def _excluir(request, mec, obj, rotulo, voltar):
 @login_required(login_url="admin:login")
 @com_bloqueio(_mec, lambda u: u.has_perm("nucleo.delete_descritor"))
 def excluir_descritor(request, pk, dpk):
-    _ver_mec(request)
     m = _mec(request, pk)
     d = get_object_or_404(Descritor, pk=dpk, matriz_etapa_cc=m)
     return _excluir(request, m, d, "descritor", reverse("ui_matriz_mec", args=[m.pk]))
@@ -446,7 +440,6 @@ def excluir_descritor(request, pk, dpk):
 @login_required(login_url="admin:login")
 @com_bloqueio(_mec, lambda u: u.has_perm("nucleo.delete_tarefa"))
 def excluir_tarefa(request, pk, dpk, tpk):
-    _ver_mec(request)
     m = _mec(request, pk)
     d = get_object_or_404(Descritor, pk=dpk, matriz_etapa_cc=m)
     tarefa = get_object_or_404(Tarefa.objects.select_related("descritor"), pk=tpk, descritor=d)

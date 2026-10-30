@@ -37,6 +37,8 @@ from nucleo.matriz import (  # formulários comuns ao admin e à página própri
     LinhasField,
     MatrizForm,
     ReimportarForm,
+    com_afetadas,
+    excluir,
     gravar_item,
     reimportar,
 )  # fmt: skip
@@ -316,7 +318,7 @@ class DescritorAdmin(MatrizEditAdmin):
         if obj is not None and context.get("bloqueio") and self._edita_tarefa(request, obj):
             tarefas = list(obj.tarefa_set.order_by("ordem", "pk"))
             revistas = impacto(obj.matriz_etapa_cc) if tarefas else []
-            form = _item_form(len(revistas))
+            form = com_afetadas(ItemForm, len(revistas))
             context["itens"] = [
                 (t, form(instance=t, auto_id=f"item{t.pk}_%s"), PurePosixPath(t.arquivo or "")) for t in tarefas
             ]
@@ -344,7 +346,7 @@ class DescritorAdmin(MatrizEditAdmin):
             raise PermissionDenied
         mec, sessao = descritor.matriz_etapa_cc, request.POST.get(CAMPO_SESSAO, "")
         voltar = redirect("admin:nucleo_descritor_change", descritor.pk)
-        form = _item_form(revistas_afetadas(mec))(request.POST, request.FILES, instance=tarefa)
+        form = com_afetadas(ItemForm, revistas_afetadas(mec))(request.POST, request.FILES, instance=tarefa)
         with transaction.atomic(using=router.db_for_write(Tarefa)):
             if not bloqueio.conferir_na_transacao(mec, request.user, sessao):
                 messages.error(
@@ -390,10 +392,6 @@ def _de_outro(request, mec):
     return atual is not None and atual.usuario_id != request.user.pk
 
 
-def _item_form(afetadas):
-    return type("ItemForm", (ItemForm,), {"afetadas": afetadas})
-
-
 def _excluir(model_admin, request, obj, rotulo, mec, voltar):
     """Tela intermediária: revistas afetadas, as que perdem o "Validado" e o código digitado."""
     codigo = obj.codigo
@@ -406,10 +404,9 @@ def _excluir(model_admin, request, obj, rotulo, mec, voltar):
             if not bloqueio.conferir_na_transacao(mec, request.user, sessao):
                 messages.error(request, "Nada foi excluído: você perdeu o bloqueio de edição. Recarregue e tente de novo.")
                 return redirect(voltar)
-            obj.delete()
+            sucesso = excluir(obj, rotulo)
         bloqueio.liberar(mec, request.user, sessao)
-        excluido = "excluída" if rotulo == "tarefa" else "excluído"
-        messages.success(request, f"{rotulo.capitalize()} {codigo} {excluido}.")
+        messages.success(request, sucesso)
         return redirect(voltar)
     if request.method != "POST":
         sessao = bloqueio.nova_sessao()

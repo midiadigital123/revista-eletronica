@@ -3,6 +3,7 @@
 import tempfile
 from pathlib import Path
 
+from django.contrib.auth.models import Permission
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client
@@ -118,6 +119,7 @@ class MecUiTest(BaseMundo):
             "habilidades_relacionadas": self.d.habilidades_relacionadas, "habilidade_correspondente": "",
             "tarefas-TOTAL_FORMS": len(tarefas) + 1, "tarefas-INITIAL_FORMS": len(tarefas),
             "tarefas-MIN_NUM_FORMS": 0, "tarefas-MAX_NUM_FORMS": 1000,
+            f"tarefas-{len(tarefas)}-ordem": len(tarefas) + 1,  # a linha em branco vem com a ordem, como no navegador
         }  # fmt: skip
         for i, t in enumerate(tarefas):
             dados.update({f"tarefas-{i}-id": t.pk, f"tarefas-{i}-descritor": self.d.pk, f"tarefas-{i}-inicio": t.inicio,
@@ -159,6 +161,24 @@ class MecUiTest(BaseMundo):
         self.d.refresh_from_db()
         self.assertEqual(self.d.descricao, "Localiza e infere.")
         self.assertTrue(self.d.tarefa_set.filter(inicio=400, fim=450, texto="Nova.").exists())
+
+    def test_descritor_salva_sem_preencher_a_tarefa_nova(self):
+        """A linha em branco chega com a ordem preenchida (como no navegador) e não é validada."""
+        sessao = self.abrir()
+        n = self.d.tarefa_set.count()
+        resp = self.client.post(self.url, self.dados(sessao, descricao="Só o texto.", confirmar_impacto="on"), **HX)
+        self.assertContains(resp, "Descritor D01 salvo.")
+        self.d.refresh_from_db()
+        self.assertEqual(self.d.descricao, "Só o texto.")
+        self.assertEqual(self.d.tarefa_set.count(), n)
+
+    def test_excluir_sem_ver_403_sem_travar(self):
+        u = usuario("so_exclui")
+        u.user_permissions.add(Permission.objects.get(codename="delete_descritor"))
+        self.client.force_login(u)
+        url = reverse("ui_matriz_excluir_descritor", args=[self.mec.pk, self.d.pk])
+        self.assertEqual(self.client.get(url).status_code, 403)
+        self.assertIsNone(bloqueio.quem_bloqueia(self.mec))
 
     def test_tarefa_invalida_mostra_erro_e_nada_grava(self):
         sessao = self.abrir()

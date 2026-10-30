@@ -34,12 +34,14 @@ todo pedido HTMX; os forms também a levam, para funcionar sem JS).
 
 <div class="lado-a-lado">
   <nav class="lista matriz-lista" aria-label="Descritores de {{ mec.etapa.codigo }} {{ mec.componente.codigo }}">
-    <div class="matriz-busca">
+    {# Form: sem JS, Enter recarrega a página filtrada (mantém o descritor aberto); com JS, o submit vira hx-get. #}
+    <form class="matriz-busca" method="get" action="" role="search"
+      hx-get="{% url 'ui_matriz_mec' mec.pk %}" hx-include="#ativo" hx-trigger="submit" hx-target="#lista-descritores" hx-swap="outerHTML">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
       <input class="input" id="busca" type="search" name="q" value="{{ q }}" placeholder="Código ou texto" aria-label="Buscar descritor" autocomplete="off"
         hx-get="{% url 'ui_matriz_mec' mec.pk %}" hx-include="#ativo"
-        hx-trigger="input changed delay:300ms, search" hx-target="#lista-descritores" hx-swap="outerHTML">
-    </div>
+        hx-trigger="input changed delay:300ms" hx-target="#lista-descritores" hx-swap="outerHTML">
+    </form>
     {% include "ui/parciais/matriz_lista.html" %}
   </nav>
   <section class="detalhe" id="painel" aria-live="polite">

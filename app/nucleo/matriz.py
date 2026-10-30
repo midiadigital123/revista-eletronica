@@ -207,3 +207,16 @@ class ExcluirForm(forms.Form):
         if self.cleaned_data["confirmacao"].strip() != self.codigo:
             raise ValidationError(f"Nada foi excluído: o código não confere. Digite {self.codigo} exatamente.")
         return self.cleaned_data["confirmacao"]
+
+
+def com_afetadas(classe, n):
+    """Form de impacto (`ImpactoForm`) com a contagem de revistas afetadas desta MEC."""
+    return type(classe.__name__, (classe,), {"afetadas": n})
+
+
+def excluir(obj, rotulo):
+    """Exclui o descritor ou a tarefa (D-181) e devolve a mensagem de sucesso. Quem chama já
+    validou o `ExcluirForm` e cuida do bloqueio da MEC."""
+    codigo = obj.codigo
+    obj.delete()
+    return f"{rotulo.capitalize()} {codigo} {'excluída' if rotulo == 'tarefa' else 'excluído'}."
