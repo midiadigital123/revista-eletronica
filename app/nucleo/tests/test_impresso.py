@@ -7,14 +7,16 @@ from pathlib import Path
 
 import openpyxl
 from django.db import transaction
+from django.utils import timezone
 from django.test import SimpleTestCase
 from django.urls import reverse
 
-from nucleo.models import Corte, FotoRevista, TemplateVersao
+from nucleo.models import Corte, Descritor, FotoRevista, Projeto, ProjetoPasso, Revista, Tarefa, TemplateVersao
 from nucleo.models.revista import Motivo
 from nucleo.servicos import bloqueio, planilhas, validacao
 from nucleo.servicos.foto import fotografar
-from nucleo.servicos.resolver import carregar, hash_validado
+from nucleo import texto
+from nucleo.servicos.resolver import carregar, hash_validado, resolver
 from nucleo.tests.test_admin_projeto import Base, mensagens
 from nucleo.tests.test_painel import SVG_B, completar, trocar_svg
 from nucleo.tests.test_resolver import F1
@@ -166,6 +168,87 @@ class ImpressoTest(Base):
         self.client.logout()
         self.assertEqual(self.client.get(self.url).status_code, 302)
 
+    def nova_versao_f1(self, texto_f1):
+        t = self.templates["LP", "F1"]
+        TemplateVersao.objects.create(template=t, numero=TemplateVersao.objects.filter(template=t).count() + 1, texto=texto_f1)
+
+    def test_so_o_fim_da_tarefa_aparece_no_diff(self):
+        self.imprimir()
+        Tarefa.objects.filter(pk=self.tarefa.pk).update(fim=175)  # mesmo padrão: só o fim muda
+        mudou = self.abrir().context["mudancas"]
+        self.assertEqual({f: list(g) for f, g in mudou.items()}, {"F1": ["5EF"]})
+        item = mudou["F1"]["5EF"][0]
+        self.assertEqual(item["item"], "D01")
+        self.assertIn("  100–150: Localiza.", item["antes"])
+        self.assertIn("  100–175: Localiza.", item["depois"])
+
+    def test_item_da_tarefa_no_diff(self):
+        self.imprimir()
+        Tarefa.objects.filter(pk=self.tarefa.pk).update(arquivo="itens/abc.pdf")
+        self.assertIn("  100–150: Localiza. [item: abc.pdf]", self.abrir().context["mudancas"]["F1"]["5EF"][0]["depois"])
+
+    def test_so_formatacao_aparece_no_diff(self):
+        self.imprimir()
+        self.nova_versao_f1(F1.replace("**{{nome_projeto}}**", "{{nome_projeto}}"))
+        item = self.abrir().context["mudancas"]["F1"]["introducao"][0]
+        self.assertIn("Texto **Projeto GO**.", item["antes"])
+        self.assertIn("Texto Projeto GO.", item["depois"])
+
+    def test_lista_vira_marcacao(self):
+        self.assertEqual(
+            texto.html_para_texto("<p>a</p>\n<ol>\n<li>um</li>\n<li><em>dois</em></li>\n</ol>\n<ul>\n<li>x</li>\n</ul>\n\n\n<p>b</p>"),
+            "a\n\n1. um\n2. *dois*\n\n- x\n\nb",  # listas separadas: linha em branco entre elas
+        )
+
+    def test_secao_removida(self):
+        self.imprimir()
+        self.nova_versao_f1(F1.split("## fechamento")[0])
+        r = self.abrir()
+        item = r.context["mudancas"]["F1"]["fechamento"][0]
+        self.assertEqual((item["depois"], item["tabela"]), (None, None))
+        self.assertContains(r, "fechamento (removido)")
+        self.assertContains(r, "Utilização\n\nFim.</pre>")
+
+    def test_texto_escapado_no_diff_e_na_textarea(self):
+        self.imprimir()
+        self.nova_versao_f1(F1.replace("Fim.", "Fim <script>alert(1)</script> </textarea>."))
+        r = self.abrir()
+        corpo = r.content.decode()
+        self.assertNotIn("<script>alert(1)", corpo)
+        self.assertNotIn("</textarea>.", corpo)
+        self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt; &lt;/textarea&gt;.", corpo)  # textarea
+        self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt;&nbsp;&lt;/textarea&gt;.", corpo)  # HtmlDiff
+
+    def test_post_anonimo_vai_ao_login(self):
+        self.client.logout()
+        url = reverse("impresso_marcar", args=[self.rev.pk])
+        r = self.client.post(url, {"hash_visto": "x"})
+        self.assertRedirects(r, f"{reverse('admin:login')}?next={url}", fetch_redirect_response=False)
+        self.assertFalse(FotoRevista.objects.exists())
+
+    def planilha(self, nome):
+        r = self.client.get(reverse("impresso_planilhas", args=[self.rev.pk]))
+        self.assertEqual(r.status_code, 200)
+        return openpyxl.load_workbook(io.BytesIO(zipfile.ZipFile(io.BytesIO(r.content)).read(nome)))
+
+    def test_caractere_de_controle_nao_derruba_as_planilhas(self):
+        Descritor.objects.filter(matriz_etapa_cc__etapa=self.e5, matriz_etapa_cc__componente=self.lp, codigo="D01").update(descricao="Des\x01critor\x0b 1")
+        Projeto.objects.filter(pk=self.projeto_go.pk).update(adjetivo_patrio_plural_masculino="goia\x01nos\x0b")
+        self.assertEqual(self.planilha("Projeto GO - LP 5EF.xlsx")["Níveis"]["C2"].value, "Descritor 1")
+        self.assertEqual(self.planilha("Projeto GO - LP F2.xlsx").active["C3"].value, "Para os goianos.")
+
+    def test_passo_do_projeto_sobrescreve_o_da_matriz(self):
+        ProjetoPasso.objects.create(projeto=self.projeto_go, etapa=self.e5, componente=self.lp, ano=self.ano, passo=50)
+        resolvido = resolver(carregar(self.rev.pk))["f1"]["dados"]["5ef"]
+        vazias = {x["level"] for d in planilhas.descritores(resolvido) for ls in d[1]["scale"].values() for x in ls if x["content"] == "---"}
+        self.assertTrue(vazias and all(n % 50 == 0 for n in vazias))  # o resolver usa 50
+        self.assertEqual(self.planilha("Projeto GO - LP 5EF.xlsx")["Escala"]["B4"].value, 50)
+        self.assertEqual(self.planilha("Projeto GO - LP 9EF.xlsx")["Escala"]["B4"].value, 25)
+
+    def test_arquivada_sem_intervalo_minimo(self):
+        Revista.objects.filter(pk=self.rev.pk).update(arquivada_em=timezone.now())
+        self.assertIsNone(self.planilha("Projeto GO - LP 5EF.xlsx")["Escala"]["B4"].value)
+
     def test_baixar_planilhas(self):
         self.client.force_login(self.imp)
         r = self.client.get(reverse("impresso_planilhas", args=[self.rev.pk]))
@@ -220,3 +303,9 @@ class GabaritoPlanilhaTest(SimpleTestCase):
         self.assertEqual([c.value for c in wb["Escala"]["A"]][5:], ["Padrão", "P1", "P2", "P3", "P4", "P5"])
         self.assertEqual(wb["Escala"]["C6"].value, "Fim (< / ≤ no 05)")
         self.assertEqual([c.value for c in wb["Escala"][11]][:3], ["P5", 400, 500])
+
+    def test_formula_sai_como_texto(self):
+        dados = json.loads((FIXTURES / "revista-3cortes.json").read_text())["9ef"]
+        dados["D01"]["description"] = '=HYPERLINK("http://exemplo.invalid","x")'
+        c = openpyxl.load_workbook(io.BytesIO(planilhas.planilha_f1(dados, "9ef", "MT", {})))["Níveis"]["C2"]
+        self.assertEqual((c.value, c.data_type), ('=HYPERLINK("http://exemplo.invalid","x")', "s"))

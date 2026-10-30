@@ -11,6 +11,7 @@ import re
 import zipfile
 
 from openpyxl import Workbook
+from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
@@ -66,6 +67,15 @@ def nome_planilha(nome_projeto, componente, etapa):
     return f"{re.sub(r'[/\\:*?\"<>|]', '', nome_projeto).strip()} - {componente} {etapa.upper()}.xlsx"
 
 
+def _limpo(v):
+    """Sem caractere de controle: o openpyxl recusa (IllegalCharacterError) e o download daria 500."""
+    return ILLEGAL_CHARACTERS_RE.sub("", v) if isinstance(v, str) else v
+
+
+def _append(ws, valores):
+    ws.append([_limpo(v) for v in valores])
+
+
 def _bytes(wb):
     for ws in wb:
         for linha in ws.iter_rows():
@@ -91,7 +101,7 @@ def planilha_f1(dados, etapa, componente, cores, passo=None):
     ws = wb.active
     ws.title = "Níveis"
     ws.freeze_panes = "A2"
-    ws.append([*layout["inicio"], *(f"{a} a {b}" for a, b in ns), *layout["fim"]])
+    _append(ws, [*layout["inicio"], *(f"{a} a {b}" for a, b in ns), *layout["fim"]])
     inicio, nivel, fim = layout["larguras"]
     _larguras(ws, [*inicio, *[nivel] * len(ns), *fim])
     for c in ws[1]:
@@ -99,7 +109,7 @@ def planilha_f1(dados, etapa, componente, cores, passo=None):
     for codigo, d in descritores(dados):
         relacionadas, correspondente = separar_habilidades(d["bncc"]["skills"])
         linhas = [linha for p in padroes for linha in d["scale"].get(p, [])]
-        ws.append([
+        _append(ws, [
             etapa.upper(), codigo, d["description"], "#".join(d["prerequisites"]),
             *(celula_do_nivel([x for x in linhas if x["level"] == n], layout["vazio"]) for n, _ in ns),
             d["bncc"]["practices"], d["bncc"]["knowledge"], relacionadas, correspondente,
@@ -112,15 +122,15 @@ def planilha_f1(dados, etapa, componente, cores, passo=None):
 
     ws = wb.create_sheet("Escala")
     faixa = dados["scaleRange"]
-    for linha in (["Etapa", etapa.upper()], ["Mínimo", faixa["min"]], ["Máximo", faixa["max"]], ["Intervalo mínimo", "" if passo is None else passo], []):
-        ws.append(linha)
-    ws.append(["Padrão", "Início (≥)", f"Fim (< / ≤ no {len(padroes):02d})", "Cor"])
+    for linha in (["Etapa", etapa.upper()], ["Mínimo", faixa["min"]], ["Máximo", faixa["max"]], ["Intervalo mínimo", passo], []):
+        _append(ws, linha)
+    _append(ws, ["Padrão", "Início (≥)", f"Fim (< / ≤ no {len(padroes):02d})", "Cor"])
     for c in ws[ws.max_row]:
         c.font = NEGRITO
     limites = [faixa["min"], *(dados["cortes"].get(f"padrao-{i}") for i in range(1, len(padroes))), faixa["max"]]
     for i, p in enumerate(dados["padroes"]):
         cor = cores.get(p["chave"], "")
-        ws.append([p["rotulo"], limites[i], limites[i + 1], cor])
+        _append(ws, [p["rotulo"], limites[i], limites[i + 1], cor])
         if cor:
             ws.cell(ws.max_row, 4).fill = PatternFill("solid", fgColor="FF" + cor[1:].upper())
     _larguras(ws, [20, 14, 20, 12])
@@ -136,11 +146,11 @@ def planilha_f2(secoes):
     ws = wb.active
     ws.title = "F2"
     ws.freeze_panes = "A2"
-    ws.append(["Seção", "Título", "Texto"])
+    _append(ws, ["Seção", "Título", "Texto"])
     for c in ws[1]:
         c.font = NEGRITO
     for s in secoes or []:
-        ws.append([s["id"], texto.html_para_texto(s["titulo"]), texto.html_para_texto(s["corpo"])])
+        _append(ws, [s["id"], texto.html_para_texto(s["titulo"]), texto.html_para_texto(s["corpo"])])
         for c in ws[ws.max_row]:
             c.alignment = TOPO
     _larguras(ws, [16, 40, 100])
@@ -158,7 +168,9 @@ def passos(revista):
 def zip_planilhas(revista):
     """(nome, bytes) do zip com as planilhas F1 (uma por etapa) e F2. Revista de `resolver.carregar`."""
     f1, f2 = (resolvido := resolver(revista))["f1"], resolvido["f2"]
-    nome, cc, por_etapa = revista.projeto.nome, revista.componente.codigo, passos(revista)
+    # Arquivada: o resto vem da foto (D-117), então o passo atual do banco não vale; vai vazio.
+    por_etapa = {} if revista.arquivada_em is not None else passos(revista)
+    nome, cc = revista.projeto.nome, revista.componente.codigo
     saida = io.BytesIO()
     with zipfile.ZipFile(saida, "w", zipfile.ZIP_DEFLATED) as z:
         for etapa in f1["etapas"]:

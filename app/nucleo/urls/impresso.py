@@ -45,8 +45,15 @@ def _descritor(codigo, d):
     linhas += [f"BNCC: {bncc['practices']} / {bncc['knowledge']}", *(f"Habilidade: {s}" for s in bncc["skills"])]
     for chave in sorted(d["scale"], key=lambda c: int(c.split("-")[1])):  # jsonb não guarda a ordem
         linhas.append(f"Padrão {chave.split('-')[1]}:")
-        linhas += [f"  {x['level']}: {x['content']}" for x in d["scale"][chave]]
+        linhas += [_linha(x) for x in d["scale"][chave]]
     return "\n".join(linhas)
+
+
+def _linha(x):
+    """"  556–640: texto [item: id.tipo]": fim e arquivo da tarefa também vão para o InDesign."""
+    faixa = f"{x['level']}–{x['fim']}" if "fim" in x else str(x["level"])
+    item = f" [item: {x['item']['id']}.{x['item']['tipo']}]" if "item" in x else ""
+    return f"  {faixa}: {x['content']}{item}"
 
 
 def textos(conteudo):

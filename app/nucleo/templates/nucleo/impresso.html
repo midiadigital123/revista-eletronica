@@ -22,13 +22,13 @@
     {% if i.tabela %}{{ i.tabela }}{% elif i.depois is None %}<pre class="texto-template">{{ i.antes }}</pre>{% endif %}
     {% if i.depois is not None %}
     <textarea readonly rows="4" class="vLargeTextField" aria-label="Texto novo de {{ i.item }}">{{ i.depois }}</textarea>
-    <button type="button" class="button" onclick="navigator.clipboard.writeText(this.previousElementSibling.value); this.textContent = 'Copiado'">Copiar texto novo</button>
+    <button type="button" class="button" onclick="const t = this.previousElementSibling, b = this, sel = () => { t.select(); b.textContent = 'Selecionado: use Ctrl+C'; }; const p = navigator.clipboard?.writeText(t.value); p ? p.then(() => b.textContent = 'Copiado', sel) : sel()">Copiar texto novo</button>
     {% endif %}
   </div>{% endfor %}
 </fieldset>
 {% endfor %}
 {% empty %}
-<p>{% if pendente %}Nenhum texto mudou (só dados que não vão para o InDesign).{% else %}Sem mudanças desde a última “Revista Impressa Atualizada”.{% endif %}</p>
+<p>{% if pendente %}Mudou algo que o diff de texto não mostra (formatação ou arquivo de item).{% else %}Sem mudanças desde a última “Revista Impressa Atualizada”.{% endif %}</p>
 {% endfor %}
 
 {% if pendente %}

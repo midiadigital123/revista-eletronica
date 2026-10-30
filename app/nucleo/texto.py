@@ -189,6 +189,17 @@ def renderizar_texto_puro(texto, valores):
     return VAR.sub(lambda m: _valor(m[1], valores), escape(texto))
 
 
+def _lista(m):
+    itens = re.findall(r"<li>(.*?)</li>", m[2], re.S)
+    return "".join(f"{f'{i}.' if m[1] == 'ol' else '-'} {item.strip()}\n" for i, item in enumerate(itens, 1))
+
+
 def html_para_texto(html):
-    """HTML renderizado -> texto puro para o impresso (S13): fim de parágrafo, item ou <br> vira quebra."""
-    return unescape(strip_tags(re.sub(r"</(?:p|li)>|<br\s*/?>", "\n", html or ""))).strip()
+    """HTML renderizado -> texto para o impresso (S13): volta a marcação do Markdown restrito
+    (**negrito**, *itálico*, "1." e "-" nas listas), para que mudar só a formatação apareça no diff
+    e o texto copiado a mantenha; fim de parágrafo e <br> viram quebra."""
+    html = re.sub(r"<strong>(.*?)</strong>", r"**\1**", html or "", flags=re.S)
+    html = re.sub(r"<em>(.*?)</em>", r"*\1*", html, flags=re.S)
+    html = re.sub(r"<(ol|ul)[^>]*>(.*?)</\1>", _lista, html, flags=re.S)
+    html = re.sub(r"</p>|<br\s*/?>", "\n", html)
+    return re.sub(r"\n{3,}", "\n\n", unescape(strip_tags(html))).strip()
