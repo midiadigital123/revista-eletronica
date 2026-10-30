@@ -164,7 +164,7 @@ class MatrizAdmin(admin.ModelAdmin):
         arquivo, d = form.cleaned_data["arquivo"], form.cleaned_data
         try:
             dados = ler_upload(arquivo)
-        except (ImportacaoRecusada, ValueError) as e:
+        except ValueError as e:  # inclui ImportacaoRecusada
             form.add_error("arquivo", str(e))
             return False
         existentes = sorted(
