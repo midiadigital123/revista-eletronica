@@ -18,7 +18,7 @@ type Revista = Record<string, any>;
 
 const fixture = (nome: string): Revista =>
   JSON.parse(readFileSync(join(APP, "nucleo", "tests", "fixtures", nome), "utf8"));
-const etapas = (revista: Revista) => Object.keys(revista).filter((k) => k !== "pagina");
+const etapas = (revista: Revista) => Object.keys(revista);
 
 /** Mesmo que o escala.hbs: abas por etapa, uma variável CSS por padrão e o JSON seguro. */
 function pagina(revista: Revista, comCores: boolean): string {
