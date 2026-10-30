@@ -59,6 +59,9 @@ def _tour(secoes):
     }
 
 
+CHAVES_DA_ETAPA = {"scaleRange", "cortes", "padroes"}  # o resto das chaves são descritores
+
+
 def contexto_pagina(revista, *, preview, estaticos, capa):
     """Contexto do `revista/index.html` para a revista resolvida (arquivada: a foto, D-117)."""
     r = resolver(revista)
@@ -82,6 +85,9 @@ def contexto_pagina(revista, *, preview, estaticos, capa):
         # Faixas vermelhas (D-116): o texto fica no template; nada do resolvido/foto vira HTML aqui.
         "sem_template_f1": f1["secoes"] is None,
         "sem_template_f2": f2["secoes"] is None,
+        # Item 21 (D-190): etapa sem descritor = sem matriz (ou sem a etapa × CC na matriz). Sai dos
+        # `dados`, não do resolvido: uma chave nova lá mudaria o hash de toda revista.
+        "sem_matriz": [e.upper() for e in f1["etapas"] if not set(f1["dados"][e]) - CHAVES_DA_ETAPA],
         "svg": svg,
         "tour": _tour(f2_secoes),
         "modais": [s for s in f2_secoes if s["id"].startswith("dlg-")],

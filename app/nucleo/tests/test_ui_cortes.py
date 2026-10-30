@@ -3,6 +3,9 @@
 from django.urls import reverse
 
 from nucleo.models import Corte, Parceiro, ParceiroAno, Projeto, Revista
+from nucleo.servicos.resolver import hash_validado
+from nucleo.servicos.validacao import validada
+from nucleo.tests.test_admin_projeto import Base as ProjetoBase
 from nucleo.tests.test_admin_cadastro import Base, dados_da_grade
 from nucleo.tests.test_resolver import usuario
 
@@ -84,3 +87,35 @@ class GradeUiTest(Base):
         self.client.logout()
         resp = self.client.get(self.url)
         self.assertRedirects(resp, f"{reverse('admin:login')}?next={self.url}", fetch_redirect_response=False)
+
+
+class RenomearParceiroTest(ProjetoBase):
+    """Item 6 (D-190): renomear pela grade. O nome entra no hash (`nome_parceiro`) e vale para todos
+    os anos; revista validada que mudaria pede confirmação antes."""
+
+    def setUp(self):
+        super().setUp()
+        self.go_parceiro = self.projeto_go.parceiro_ano.parceiro
+        self.url = reverse("cortes_renomear_parceiro", args=[2026, self.go_parceiro.pk])
+        self.rev = self.go["LP"]
+        Revista.objects.filter(pk=self.rev.pk).update(hash_validado=hash_validado(self.rev))
+
+    def test_sem_confirmacao_lista_quem_perde_e_nao_grava(self):
+        self.assertContains(self.client.get(reverse("cortes", args=[2026])), f'action="{self.url}"')
+        r = self.client.post(self.url, {"nome": "Goiás"}, follow=True)
+        self.assertContains(r, "Nada foi renomeado")
+        self.assertContains(r, str(self.rev))
+        self.assertEqual(Parceiro.objects.get(pk=self.go_parceiro.pk).nome, "GO")
+        self.assertTrue(validada(Revista.objects.get(pk=self.rev.pk), hash_validado(self.rev)))
+
+    def test_com_confirmacao_grava(self):
+        r = self.client.post(self.url, {"nome": "Goiás", "confirmar": "1"}, follow=True)
+        self.assertContains(r, "Parceiro renomeado para Goiás")
+        self.assertEqual(Parceiro.objects.get(pk=self.go_parceiro.pk).nome, "Goiás")
+
+    def test_nome_repetido_e_impresso(self):
+        r = self.client.post(self.url, {"nome": "PE", "confirmar": "1"}, follow=True)
+        self.assertContains(r, "Parceiro não renomeado")
+        self.client.force_login(self.imp)
+        self.assertNotContains(self.client.get(reverse("cortes", args=[2026])), f'action="{self.url}"')
+        self.assertEqual(self.client.post(self.url, {"nome": "X", "confirmar": "1"}).status_code, 403)

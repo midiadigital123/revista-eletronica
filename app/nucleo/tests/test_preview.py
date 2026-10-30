@@ -16,6 +16,7 @@ from nucleo.models import Revista, RevistaFasciculo, TemplateVersao
 from nucleo.servicos.arquivos import receber_capa, receber_svg
 from nucleo.servicos.cascata import gravar_cortes
 from nucleo.servicos.html import contexto_pagina, css_das_cores
+from nucleo.servicos.resolver import resolver
 from nucleo.tests.test_resolver import MediaTemporaria, Mundo
 
 # Página que o Playwright pagina.spec.ts abre (gabarito). Regerar: REGERAR_FIXTURES=1.
@@ -98,6 +99,17 @@ class PaginaTest(MediaTemporaria, TestCase):
         html = self.get(self.rev).content.decode()
         self.assertIn("Falta escolher o template do F1.", html)
         self.assertIn("Falta o SVG do F2.", html)
+
+    def test_faixa_vermelha_sem_matriz(self):
+        """Item 21 (D-190): sem matriz o F1 sai sem descritores; a faixa diz o que falta. Ela fica
+        fora do resolvido (senão o hash de toda revista muda e todas perdem o "Validado")."""
+        self.assertNotIn("Falta escolher a matriz", self.get(self.rev).content.decode())
+        pa = self.rev.projeto.parceiro_ano
+        pa.matriz = None
+        pa.save(update_fields=["matriz"])
+        html = self.get(self.rev).content.decode()
+        self.assertIn("Falta escolher a matriz (5EF, 9EF).", html)
+        self.assertNotIn("Falta escolher a matriz", json.dumps(resolver(Revista.objects.get(pk=self.rev.pk)), ensure_ascii=False))
 
     def test_arquivada_mostra_a_foto(self):
         mt = self.go["MT"]

@@ -9,7 +9,19 @@
 <header class="pagina-cab">
   <div>
     <h1>{{ projeto.nome }}{% if arquivado %} <span class="badge badge-contorno">Arquivado</span>{% endif %}</h1>
-    <p class="mudo">{{ projeto.parceiro_ano.parceiro.nome }} em {{ projeto.ano.ano }}, matriz {{ projeto.parceiro_ano.matriz.nome|default:"ainda não escolhida" }}.{% if perms.nucleo.change_parceiroano %} <a class="link" href="{% url 'ui_lotes_matriz' projeto.ano.ano %}">Escolher matriz</a>{% endif %}</p>
+    <p class="mudo">{{ projeto.parceiro_ano.parceiro.nome }} em {{ projeto.ano.ano }}, matriz {{ projeto.parceiro_ano.matriz.nome|default:"ainda não escolhida" }}.</p>
+    {% if matrizes is not None and not arquivado %}
+    {# Form próprio (fora do form da ficha: form não aninha), com a mesma sessão de bloqueio. #}
+    <form method="post" action="{% url 'ui_projeto_matriz' projeto.pk %}" class="acoes pj-matriz" id="matriz">{% csrf_token %}
+      <input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">
+      <label for="pj-matriz">Matriz</label>
+      <select class="select" id="pj-matriz" name="matriz" required>
+        {% if not projeto.parceiro_ano.matriz_id %}<option value="">Escolha a matriz</option>{% endif %}
+        {% for m in matrizes %}<option value="{{ m.pk }}"{% if m.pk == projeto.parceiro_ano.matriz_id %} selected{% endif %}>{{ m.nome }}</option>{% empty %}<option value="">Nenhuma matriz em {{ projeto.ano.ano }}</option>{% endfor %}
+      </select>
+      <button class="btn btn-outline btn-sm" type="submit"{% if not matrizes %} disabled{% endif %}>Atribuir matriz</button>
+    </form>
+    {% endif %}
   </div>
   <div class="acoes">
     <a class="btn btn-outline" href="{% url 'ui_variaveis' projeto.ano.ano %}">Planilha de variáveis de {{ projeto.ano.ano }}</a>

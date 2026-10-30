@@ -13,6 +13,18 @@ O bloqueio do projeto (bloqueio.js) vive num form próprio, fora de qualquer alv
 <header class="pagina-cab">
   <div>
     <h1>{{ revista.projeto }}</h1>
+    {% if pode_nome %}
+    <details class="revista-nome">
+      <summary class="link">Editar nome</summary>
+      <form method="post" class="acoes">{% csrf_token %}
+        <input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">
+        <input type="hidden" name="acao" value="nome">
+        <label for="revista-nome">Nome do projeto</label>
+        <input class="input" id="revista-nome" name="nome" value="{{ revista.projeto.nome }}" required maxlength="200">
+        <button class="btn btn-outline btn-sm" type="submit">Salvar nome</button>
+      </form>
+    </details>
+    {% endif %}
     <p class="mudo">{{ revista.componente.nome }}, {{ revista.ano.ano }}{% if arquivada %} <span class="badge badge-secundario">Arquivada</span>{% endif %}</p>
   </div>
   <div class="acoes">
@@ -45,6 +57,7 @@ O bloqueio do projeto (bloqueio.js) vive num form próprio, fora de qualquer alv
     <h2 class="secao-titulo" id="textos-titulo">Textos</h2>
     <p class="mudo">Uma seção por vez. O título vem do template e não se edita aqui.</p>
   </div>
+  {% if sem_matriz %}{% url 'ui_projeto' revista.projeto_id as u %}{% include "ui/_componentes/faixa.html" with texto="Falta escolher a matriz." url=u|add:"#matriz" rotulo="Escolher matriz" %}{% endif %}
   {% for f in sem_template %}{% include "ui/_componentes/faixa.html" with texto="Falta escolher o template do "|add:f|add:"." url="#templates" rotulo="Escolher template" %}{% endfor %}
   {% if arquivada %}
     {% for f, secoes in foto %}

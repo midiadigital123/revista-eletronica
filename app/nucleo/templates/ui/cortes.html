@@ -46,7 +46,15 @@
       <tbody>
       {% for linha in linhas %}
         <tr{% if linha.erros %} class="grade-com-erro"{% endif %} data-parceiro="{{ linha.parceiro.nome }}">
-          <th scope="row" class="grade-parceiro">{{ linha.parceiro.nome }}<input type="hidden" name="o-{{ linha.parceiro.pk }}" value="{{ linha.original }}"></th>
+          <th scope="row" class="grade-parceiro">{{ linha.parceiro.nome }}<input type="hidden" name="o-{{ linha.parceiro.pk }}" value="{{ linha.original }}">
+            {% if perms.nucleo.change_parceiro %}{# campos do form de renomear (abaixo da grade) pelo atributo form=: form não aninha #}
+            <details class="grade-renomear"><summary class="link">Renomear</summary>
+              <label class="sr-only" for="renomear-nome-{{ linha.parceiro.pk }}">Novo nome de {{ linha.parceiro.nome }}</label>
+              <input class="input" id="renomear-nome-{{ linha.parceiro.pk }}" name="nome" form="renomear-{{ linha.parceiro.pk }}" value="{{ linha.parceiro.nome }}" required maxlength="200">
+              <label><input type="checkbox" name="confirmar" value="1" form="renomear-{{ linha.parceiro.pk }}"> Confirmo: revistas validadas que usam o nome perdem o “Validado”</label>
+              <button class="btn btn-outline btn-sm" type="submit" form="renomear-{{ linha.parceiro.pk }}">Renomear</button>
+            </details>{% endif %}
+          </th>
           {% for cel in linha.celulas %}<td{% if cel.inicio %} class="grade-inicio"{% endif %}><input class="input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" name="c-{{ cel.chave }}" value="{{ cel.texto }}" aria-label="{{ cel.titulo }}"{% if cel.invalida %} aria-invalid="true"{% endif %}{% if linha.erros %} aria-describedby="erros-{{ linha.parceiro.pk }}"{% endif %}{% if not pode_gravar %} readonly{% endif %}></td>{% endfor %}
         </tr>
         {% if linha.erros %}
@@ -67,6 +75,10 @@
   </div>
   {% endif %}
 </form>
+
+{% if perms.nucleo.change_parceiro %}{% for linha in linhas %}
+<form id="renomear-{{ linha.parceiro.pk }}" method="post" action="{% url 'cortes_renomear_parceiro' ano.ano linha.parceiro.pk %}" hidden>{% csrf_token %}</form>
+{% endfor %}{% endif %}
 
 {% if perms.nucleo.add_parceiro %}
 {# Fora do form da grade (form não aninha). Com cortes não salvos, o beforeunload da grade avisa antes de recarregar. #}

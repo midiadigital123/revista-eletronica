@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from nucleo.admin.bloqueio import CAMPO_SESSAO
 from nucleo.variaveis import EDITAVEIS
-from nucleo.models import Ano, Projeto, ProjetoCor, ProjetoPasso
+from nucleo.models import Ano, Matriz, ParceiroAno, Projeto, ProjetoCor, ProjetoPasso
 from nucleo.tests.test_admin_projeto import Base, mensagens
 from nucleo.tests.test_resolver import usuario
 
@@ -118,6 +118,41 @@ class ProjetoUiTest(Base):
         resp = self.client.post(self.url, dados, follow=True)
         self.assertIn("Não salvo: você perdeu o bloqueio de edição", mensagens(resp)[0])
         self.assertEqual(Projeto.objects.get(pk=self.projeto_go.pk).nome, "Projeto GO")
+
+    def test_atribuir_matriz_pela_ficha(self):
+        """Item 19 (D-190): a ficha grava a matriz com a sessão de bloqueio da própria ficha."""
+        nova = Matriz.objects.create(ano=self.ano, nome="Nova")
+        url = reverse("ui_projeto_matriz", args=[self.projeto_go.pk])
+        resp = self.client.get(self.url)
+        self.assertContains(resp, f'action="{url}"')
+        sessao = resp.wsgi_request.bloqueio["sessao"]
+        resp = self.client.post(url, {"matriz": nova.pk, CAMPO_SESSAO: sessao}, follow=True)
+        self.assertIn("Matriz Nova escolhida para GO.", mensagens(resp))
+        self.assertEqual(ParceiroAno.objects.get(pk=self.projeto_go.parceiro_ano_id).matriz, nova)
+        self.assertEqual(ParceiroAno.objects.get(pk=self.projeto_pe.parceiro_ano_id).matriz, self.matriz)
+
+    def test_matriz_de_outro_ano_e_recusada(self):
+        velha = Matriz.objects.create(ano=Ano.objects.create(ano=2025), nome="Velha")
+        sessao = self.client.get(self.url).wsgi_request.bloqueio["sessao"]
+        resp = self.client.post(reverse("ui_projeto_matriz", args=[self.projeto_go.pk]), {"matriz": velha.pk, CAMPO_SESSAO: sessao}, follow=True)
+        self.assertIn("Matriz não gravada: escolha uma matriz de 2026.", mensagens(resp))
+        self.assertEqual(ParceiroAno.objects.get(pk=self.projeto_go.parceiro_ano_id).matriz, self.matriz)
+
+    def test_matriz_sem_permissao_ou_arquivado(self):
+        url = reverse("ui_projeto_matriz", args=[self.projeto_go.pk])
+        self.client.force_login(self.imp)
+        self.assertNotContains(self.client.get(self.url), f'action="{url}"')
+        self.assertEqual(self.client.post(url, {"matriz": self.matriz.pk}).status_code, 403)
+        self.client.force_login(self.ped)
+        Projeto.objects.filter(pk=self.projeto_go.pk).update(arquivado_em=timezone.now())
+        self.assertNotContains(self.client.get(self.url), f'action="{url}"')
+        self.assertEqual(self.client.post(url, {"matriz": self.matriz.pk}).status_code, 403)
+
+    def test_matriz_bloqueada_por_outro(self):
+        self.travar(self.projeto_go)
+        url = reverse("ui_projeto_matriz", args=[self.projeto_go.pk])
+        resp = self.client.post(url, {"matriz": self.matriz.pk, CAMPO_SESSAO: "x"}, follow=True)
+        self.assertIn("Não salvo: você perdeu o bloqueio de edição", mensagens(resp)[0])
 
     def test_htmx_linha_nova(self):
         sessao = self.client.get(self.url).wsgi_request.bloqueio["sessao"]

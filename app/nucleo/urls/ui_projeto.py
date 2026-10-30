@@ -14,7 +14,7 @@ from django.template.response import TemplateResponse
 from django.urls import path
 from django.views.decorators.http import require_GET, require_http_methods
 
-from nucleo.models import Ano, CorPadrao, MatrizEtapaCC, Projeto
+from nucleo.models import Ano, CorPadrao, Matriz, MatrizEtapaCC, Projeto
 from nucleo.projeto import MAX_CORES, ProjetoForm, formsets
 from nucleo.servicos.resolver import cores_efetivas, valores_das_variaveis
 from nucleo.ui_bloqueio import com_bloqueio
@@ -125,12 +125,45 @@ def projeto(request, pk):
             {"padrao": k, "cor": efetivas[f"padrao-{k}"], "nome": nomes.get(f"pd{k:02d}", ""), "projeto": k in sobrescritas}
             for k in range(1, MAX_CORES + 1) if f"padrao-{k}" in efetivas
         ],
+        "matrizes": Matriz.objects.filter(ano_id=projeto.ano_id).order_by("nome")
+        if request.bloqueio and pode_matriz(request.user) else None,
         "passos_matriz": MatrizEtapaCC.objects.filter(matriz_id=projeto.parceiro_ano.matriz_id)
         .select_related("etapa", "componente").order_by("etapa__ordem", "componente__codigo"),
         "ano": projeto.ano,
         "secao": "projetos",
     }
     return TemplateResponse(request, "ui/projeto/projeto.html", contexto)
+
+
+def pode_matriz(user):
+    return user.has_perm("nucleo.change_parceiroano")
+
+
+@require_http_methods(["GET", "POST"])
+@login_required(login_url="admin:login")
+def matriz(request, pk):
+    """GET volta à ficha: é para onde o com_bloqueio manda quem perdeu o bloqueio (o caminho do POST)."""
+    if request.method == "GET":
+        return redirect("ui_projeto", pk)
+    return _gravar_matriz(request, pk)
+
+
+@com_bloqueio(_alvo, pode_matriz)
+def _gravar_matriz(request, pk):
+    """Item 19 (D-190): matriz do parceiro no ano, a partir da ficha. Grava direto, sob a sessão de
+    bloqueio da ficha (via com_bloqueio); `lotes.aplicar` abriria outra sessão no mesmo projeto."""
+    projeto = get_object_or_404(Projeto.objects.select_related("ano", "parceiro_ano__parceiro"), pk=pk)
+    if projeto.arquivado_em:
+        raise PermissionDenied  # arquivado é congelado (D-093)
+    escolhida = Matriz.objects.filter(pk=request.POST.get("matriz") or None, ano_id=projeto.ano_id).first()
+    if escolhida is None:
+        messages.error(request, f"Matriz não gravada: escolha uma matriz de {projeto.ano.ano}.")
+    else:
+        pa = projeto.parceiro_ano
+        pa.matriz = escolhida
+        pa.save(update_fields=["matriz"])
+        messages.success(request, f"Matriz {escolhida.nome} escolhida para {pa.parceiro}.")
+    return redirect("ui_projeto", projeto.pk)
 
 
 @require_GET
@@ -165,4 +198,5 @@ urlpatterns = [
     path("ano/<int:ano>/", lista, name="ui_projeto_lista"),
     path("<int:pk>/", projeto, name="ui_projeto"),
     path("<int:pk>/linha/<str:tipo>/", linha, name="ui_projeto_linha"),
+    path("<int:pk>/matriz/", matriz, name="ui_projeto_matriz"),
 ]

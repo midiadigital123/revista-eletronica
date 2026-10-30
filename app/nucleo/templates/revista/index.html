@@ -59,6 +59,7 @@ Títulos e corpos das seções vêm prontos e escapados do resolver (|safe só n
     <section id="f1" class="capitulo" aria-labelledby="f1-titulo">
         <h2 id="f1-titulo" class="rv-sr-only">Escalas de proficiência</h2>
         {% if preview and sem_template_f1 %}<div class="faixa-vermelha" role="status">Falta escolher o template do F1.</div>{% endif %}
+        {% if preview and sem_matriz %}<div class="faixa-vermelha" role="status">Falta escolher a matriz ({{ sem_matriz|join:", " }}).</div>{% endif %}
         {% if introducao %}
         <section class="intro-section">
             <div class="intro-content">{{ introducao.corpo|safe }}</div>

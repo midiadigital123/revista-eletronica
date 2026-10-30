@@ -14,13 +14,14 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db.models import F
+from django.forms import modelform_factory
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.views.decorators.http import require_GET, require_http_methods
 
-from nucleo.models import Ano, Revista, RevistaFasciculo
+from nucleo.models import Ano, Projeto, Revista, RevistaFasciculo
 from nucleo.revista import (
     FasciculoForm,
     RevistaForm,
@@ -149,6 +150,8 @@ def revista(request, ano, pk):
             return _salvar_templates(request, revista)
         if acao == "arquivos":
             return _salvar_arquivos(request, revista)
+        if acao == "nome":
+            return _salvar_nome(request, revista)
         raise Http404
     if e_htmx(request) and "secao" in request.GET:
         blocos = blocos_de_texto(revista)
@@ -166,6 +169,10 @@ def _pagina(request, revista, fasciculos=None, arquivos=None, chave=None, form=N
         "fasciculos": fasciculos or _forms_fasciculo(request, revista),
         "arquivos": arquivos or RevistaForm(instance=revista),
         "ids": ids_do_f2(revista) if revista.svg_f2 else None,
+        # Item 20 (D-190): o nome do projeto se edita aqui, com o bloqueio desta página (que já
+        # trava o projeto); um link para a ficha abriria só leitura.
+        "pode_nome": request.pode_gravar and request.user.has_perm("nucleo.change_projeto"),
+        "sem_matriz": revista.projeto.parceiro_ano.matriz_id is None,  # item 21
         "sem_template": list(RevistaFasciculo.objects.filter(revista=revista, template__isnull=True).order_by("fasciculo").values_list("fasciculo", flat=True)),
     }  # fmt: skip
     if so_foto:
@@ -182,6 +189,18 @@ def _ir(request, revista):
     """Depois de gravar: volta à página (PRG). No HTMX, HX-Redirect (o com_bloqueio libera nos dois)."""
     url = reverse("ui_revista_editar", args=[revista.ano.ano, revista.pk])
     return HttpResponse(headers={"HX-Redirect": url}) if e_htmx(request) else redirect(url)
+
+
+def _salvar_nome(request, revista):
+    if not request.user.has_perm("nucleo.change_projeto"):
+        raise PermissionDenied
+    form = modelform_factory(Projeto, fields=["nome"])(request.POST, instance=revista.projeto)
+    if not form.is_valid():
+        messages.error(request, "Nome não salvo: " + " ".join(m for erros in form.errors.values() for m in erros))
+        return _pagina(request, revista)
+    form.save()
+    messages.success(request, f"Nome do projeto salvo: {form.instance.nome}.")
+    return _ir(request, revista)
 
 
 def _salvar_secao(request, revista):
