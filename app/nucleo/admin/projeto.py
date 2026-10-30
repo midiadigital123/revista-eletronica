@@ -26,14 +26,10 @@ class PassoForm(forms.ModelForm):
         fields = ["etapa", "componente", "passo"]
 
     def clean(self):
-        dados = super().clean()
-        # D-053: etapa e componente do ano do projeto (as FKs compostas também recusam).
-        ano_id = Projeto.objects.values_list("ano_id", flat=True).get(pk=self.instance.projeto_id)
-        for nome in ("etapa", "componente"):
-            if dados.get(nome) is not None and dados[nome].ano_id != ano_id:
-                self.add_error(nome, "Precisa ser do ano do projeto.")
-        self.instance.ano_id = ano_id
-        return dados
+        # D-053: etapa e componente de outro ano já não estão no queryset (PassoInline) e a FK
+        # composta recusa no banco; aqui só o ano que a FK composta precisa.
+        self.instance.ano_id = self.instance.projeto.ano_id
+        return super().clean()
 
 
 class PassoInline(admin.TabularInline):

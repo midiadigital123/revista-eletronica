@@ -11,6 +11,7 @@ from nucleo.admin.lote import escrever_travado
 from nucleo.models import (
     Ano,
     Bloqueio,
+    Etapa,
     Matriz,
     Parceiro,
     ParceiroAno,
@@ -264,6 +265,9 @@ class ProjetoAdminTest(Base):
         }  # fmt: skip
         r = self.client.post(url, dados)
         self.assertContains(r, "Use o formato #RRGGBB.")
+        outra = Etapa.objects.create(ano=Ano.objects.create(ano=2025), codigo="5EF", escala_max=500, ordem=1)
+        r = self.client.post(url, {**dados, "projetopasso_set-0-etapa": outra.pk})
+        self.assertTrue(r.context["inline_admin_formsets"][0].formset.errors[0]["etapa"])  # D-053: outro ano
         dados["projetocor_set-0-cor"] = "#00aa00"
         self.assertEqual(self.client.post(url, dados).status_code, 302)
         p = Projeto.objects.get(pk=self.projeto_go.pk)
