@@ -124,7 +124,7 @@ class SalvarTest(Base):
         r = self.abrir()  # ped chega depois: só leitura, sem o editor
         self.assertNotContains(r, 'name="texto"')
         self.assertNotContains(r, 'class="editor-template"')
-        self.assertContains(r, "Para os {{gentilico_masc_plur}}.")
+        self.assertContains(r, "Para os {{adjetivo_patrio_plural_masculino}}.")
         for extra in ({}, {"_confirmar": "1"}):
             r = self.ped.post(self.url, self.dados(sessao_mid, F2_NOVO, **extra))
             self.assertRedirects(r, self.url, fetch_redirect_response=False)
@@ -252,7 +252,7 @@ class PerfisTest(Base):
         c.force_login(usuario("imp", "Impresso"))
         r = self.abrir(c)
         self.assertNotContains(r, 'name="texto"')
-        self.assertContains(r, "Para os {{gentilico_masc_plur}}.")  # texto só leitura
+        self.assertContains(r, "Para os {{adjetivo_patrio_plural_masculino}}.")  # texto só leitura
         self.assertEqual(c.post(self.url, self.dados("x", F2_NOVO, _confirmar="1")).status_code, 403)
         self.assertEqual(c.post(self.url, self.dados("x", F2_NOVO)).status_code, 403)
         self.assertEqual(c.get("/admin/nucleo/template/add/").status_code, 403)

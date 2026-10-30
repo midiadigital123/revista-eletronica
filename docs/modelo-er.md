@@ -134,10 +134,30 @@ erDiagram
         bigint ano_id FK "só para FK composta"
         text nome "GO - NOME DO PROJETO"
         timestamptz arquivado_em "nulo = ativo"
-        text gentilico_masc_sing "uma coluna por variável da lista fixa"
-        text gentilico_fem_sing
-        text gentilico_masc_plur
-        text gentilico_fem_plur
+        text issn "uma coluna por variável da lista fixa (docs/variaveis.md)"
+        text adjetivo_patrio_singular_masculino
+        text adjetivo_patrio_singular_feminino
+        text adjetivo_patrio_plural_masculino
+        text adjetivo_patrio_plural_feminino
+        text do_da_de_nome_parceiro
+        text no_na_em_nome_parceiro
+        text nome_programa
+        text do_da_nome_programa
+        text no_na_nome_programa
+        text nome_regional
+        text nome_secretaria
+        text pd01
+        text pd02
+        text pd03
+        text pd04
+        text pd05
+        text plataforma
+        text quais_redes
+        text sigla_programa
+        text do_da_sigla_programa
+        text no_na_sigla_programa
+        text sigla_regional
+        text sigla_secretaria
     }
     projeto_passo {
         bigint projeto_id FK

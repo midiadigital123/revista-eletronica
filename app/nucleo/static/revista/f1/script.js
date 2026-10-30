@@ -797,7 +797,7 @@ class DescriptorManager {
     const escalaContent = document.querySelector(".escala-content");
     if (!escalaContent) return;
 
-    // Rótulos vêm do JSON ("padroes": [{chave, rotulo}])
+    // Rótulos vêm do JSON ("padroes": [{chave, rotulo}]); "{{pdNN}}" = pdNN vazio no projeto (destaque D-116)
     const labels = Object.fromEntries((padroes || []).map(({ chave, rotulo }) => [chave, rotulo]));
 
     // Início de cada padrão (o fim é o início do de cima): combina com a leitura "nota ≥ nível"
@@ -849,7 +849,7 @@ class DescriptorManager {
     // Linhas só pelos níveis; rótulos, barra de cor e cortes ficam por cima, posicionados por y.
     const faixaDoPadrao = (classe) => ({ padrao, y0, y1 }) =>
       `<div class="${classe} ${padrao}" aria-hidden="true" style="top:${emLinhas(y0)};height:${emLinhas(y1 - y0)}" data-y="${y0},${y1 - y0}">${
-        classe === "padrao-label" ? `<span>${escapeHtml(labels[padrao] ?? "")}</span><small>${escapeHtml(intervalos[padrao])}</small>` : ""
+        classe === "padrao-label" ? `<span${/^\{\{pd\d\d\}\}$/.test(labels[padrao] ?? "") ? ' class="variavel-vazia"' : ""}>${escapeHtml(labels[padrao] ?? "")}</span><small>${escapeHtml(intervalos[padrao])}</small>` : ""
       }</div>`;
     escalaContent.innerHTML = `
                 <div class="escala-rotulos" aria-hidden="true">${regua.padroes.map(faixaDoPadrao("padrao-label")).join("")}</div>
