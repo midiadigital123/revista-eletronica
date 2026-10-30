@@ -537,7 +537,7 @@ class ValidacaoTest(Base):
         self.assertContains(resp, "não foi possível ler m.pdf")
         resp = self.client.post(url, {"arquivo": SimpleUploadedFile("m.pdf", b"<html>")})
         self.assertContains(resp, "não é um PDF nem uma planilha")
-        with mock.patch("nucleo.admin.matriz.LIMITE_UPLOAD", 10):
+        with mock.patch("nucleo.matriz.LIMITE_UPLOAD", 10):
             resp = self.client.post(url, {"arquivo": SimpleUploadedFile("m.pdf", b"%PDF-" + b"x" * 20)})
         self.assertContains(resp, "Arquivo maior que")
 

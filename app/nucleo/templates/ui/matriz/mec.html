@@ -1,0 +1,56 @@
+{% extends "ui/base.html" %}
+{% load static %}
+{% comment %}
+Etapa × componente (T10) com descritores e tarefas (T11): lista com busca à esquerda, painel do
+descritor à direita (editor/src/projetos/ano/TelaAno.tsx). Busca e troca do painel por HTMX.
+O bloqueio da MEC fica num form próprio, fora dos alvos do HTMX (o bloqueio.js manda a sessão em
+todo pedido HTMX; os forms também a levam, para funcionar sem JS).
+{% endcomment %}
+{% block titulo %}{{ mec.etapa.codigo }} {{ mec.componente.codigo }} · {{ mec.matriz.nome }}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/matriz.css' %}">{% endblock %}
+
+{% block conteudo %}
+<form id="bloqueio-form" hidden>{% csrf_token %}{% include "ui/_componentes/bloqueio.html" %}</form>
+<a class="mudo voltar" href="{% url 'ui_matriz_detalhe' mec.matriz.pk %}">‹ {{ mec.matriz.nome }} ({{ mec.matriz.ano.ano }})</a>
+<header class="pagina-cab">
+  <div>
+    <h1>{{ mec.etapa.codigo }} <span class="mudo matriz-cc">{{ mec.componente.nome|default:mec.componente.codigo }}</span></h1>
+    <p class="mudo">{{ mec.matriz.nome }} · escala até {{ mec.etapa.escala_max }} · afeta {{ afetadas }} revista(s) ativa(s)</p>
+  </div>
+  <div class="acoes">
+    {% include "ui/parciais/matriz_intervalo.html" with intervalo=intervalo %}
+    {% if pode_gravar %}
+    <button type="button" class="btn" data-abrir="dlg-novo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+      Novo descritor
+    </button>
+    {% endif %}
+  </div>
+</header>
+
+{% if not perfil_edita %}
+{% include "ui/_componentes/so_leitura.html" with texto="Só leitura: seu perfil vê a matriz, mas não altera. Para editar, peça a permissão de matriz a um administrador." %}
+{% endif %}
+
+<div class="lado-a-lado">
+  <nav class="lista matriz-lista" aria-label="Descritores de {{ mec.etapa.codigo }} {{ mec.componente.codigo }}">
+    <div class="matriz-busca">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input class="input" id="busca" type="search" name="q" value="{{ q }}" placeholder="Código ou texto" aria-label="Buscar descritor" autocomplete="off"
+        hx-get="{% url 'ui_matriz_mec' mec.pk %}" hx-include="#ativo"
+        hx-trigger="input changed delay:300ms, search" hx-target="#lista-descritores" hx-swap="outerHTML">
+    </div>
+    {% include "ui/parciais/matriz_lista.html" %}
+  </nav>
+  <section class="detalhe" id="painel" aria-live="polite">
+    {% include "ui/parciais/matriz_painel.html" %}
+  </section>
+</div>
+
+{% if pode_gravar %}
+<dialog class="dialogo" id="dlg-novo" aria-labelledby="dlg-novo-titulo">
+  {% url 'ui_matriz_novo' mec.pk as url %}
+  {% with titulo="Novo descritor em "|add:mec.etapa.codigo|add:" "|add:mec.componente.codigo %}{% include "ui/parciais/matriz_form.html" with form=novo chave="novo" %}{% endwith %}
+</dialog>
+{% endif %}
+{% endblock %}
