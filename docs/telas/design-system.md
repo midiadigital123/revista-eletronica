@@ -64,7 +64,7 @@ Cores fora dos tokens só onde o admin/preview já fixou: faixa vermelha `#b0002
 | Seletor de ano | telas por ano | `{% include "ui/_componentes/anos.html" with rota="ui_<tela>" %}` |
 | Abas | partes da mesma tela (Templates F1/F2/Matrizes/Variáveis) | `<nav class="abas"><a aria-current="page">`; a aba é a URL (`?aba=`), não estado em JS |
 | Tabela | listas curtas | `.tabela-caixa > table.tabela` |
-| Tabela densa | painel, listas longas: cabeçalho fixo, 1ª coluna `.fixa` | `.tabela-densa > table.tabela`; `.num` alinha números; `.quebra` deixa quebrar |
+| Tabela densa | painel, listas longas: cabeçalho fixo, 1ª coluna `.fixa` (é `position: relative`, para o `.sr-only` não vazar e criar rolagem na página) | `.tabela-densa > table.tabela`; `.num` alinha números; `.quebra` deixa quebrar |
 | Grade editável | planilha de células (cortes, variáveis) | `form.grade > .grade-caixa > table.tabela` + `.barra-salvar` (ver `cortes.html`) |
 | Lista + detalhe | navegar itens e editar um (matriz → descritores, revista → seções) | `.lado-a-lado > nav.lista + section.detalhe`; o item ativo com `aria-current`; o detalhe vem por HTMX |
 | Duas colunas | editor + preview ao vivo | `.duas-colunas` |
@@ -80,12 +80,14 @@ Cores fora dos tokens só onde o admin/preview já fixou: faixa vermelha `#b0002
 | Toast | erro de rede/servidor do HTMX (automático) ou aviso efêmero | `uiToast("texto", "erro")` (`static/ui/ui.js`) |
 | Estado vazio | lista sem itens | `{% include "ui/_componentes/vazio.html" with titulo=… texto=… url=… rotulo=… %}` |
 | Badge | contagem, rótulo curto | `.badge`, `.badge-secundario`, `.badge-contorno`, `.badge-alerta`, `.badge-erro` |
-| Carregando | pedido HTMX demorado | `hx-indicator` + `.htmx-indicator`; `svg.girando` |
+| Carregando | pedido HTMX demorado | `hx-indicator` + `.htmx-indicator`; `svg.girando`; o alvo com `.alvo-htmx` (ou `.detalhe`) e `hx-indicator` nele esmaece |
+| Link da linha | nome na 1ª coluna que abre o item | `a.link-linha` (sublinha no hover) |
 
 ## 5. HTMX
 
 - Página inteira = GET normal. HTMX só para trocar um pedaço: detalhe da lista, preview, linha salva, filtro.
-- Fragmentos em `templates/ui/parciais/<tela>_<pedaco>.html`; a mesma view devolve o fragmento quando `request.headers.get("HX-Request") == "true"` (`nucleo.ui_bloqueio.e_htmx(request)`), senão a página inteira (o link funciona sem JS e ao recarregar).
+- Fragmentos em `templates/ui/parciais/<tela>_<pedaco>.html`; a mesma view devolve o fragmento ao HTMX e a página inteira ao resto (o link funciona sem JS e ao recarregar): `return pagina_ou_parcial(request, "ui/<tela>/x.html", "ui/parciais/<tela>_y.html", ctx)` (`nucleo.ui_bloqueio`). Ela põe `Vary: HX-Request` (sem isso o Voltar do navegador mostra só o fragmento de uma URL empurrada) e `e_htmx` trata a restauração de histórico do htmx (`HX-History-Restore-Request`) como página inteira.
+- Região viva (`aria-live`) fica fora do `hx-target`: uma região recém-inserida não é anunciada. Copie o texto para ela no `htmx:afterSwap` (ver `ui/painel/painel.html`).
 - Atributos: `hx-get`/`hx-post` + `hx-target="#id"` + `hx-swap="innerHTML"` (padrão) ou `outerHTML` para trocar o próprio elemento; `hx-push-url="true"` quando o fragmento muda o "onde estou" (item da lista ativo); `hx-trigger="input changed delay:400ms"` para preview ao vivo (o mesmo debounce do admin).
 - CSRF: a base põe `hx-headers='{"X-CSRFToken": …}'` no `<body>`; todo `hx-post` já vai com o token. Forms comuns seguem com `{% csrf_token %}`.
 - Erro 4xx/5xx: o HTMX não troca o alvo; `ui.js` mostra um toast. Erro de validação esperado: responda 200 com o fragmento e os erros nele.

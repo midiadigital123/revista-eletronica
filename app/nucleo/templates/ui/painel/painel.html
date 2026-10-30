@@ -1,0 +1,49 @@
+{% extends "ui/base.html" %}{% load static %}
+{% comment %}Painel da temporada (T23) fora do admin. View: urls/ui_painel.py; regra: urls/painel.py (filtrar, linha).
+Ficha: docs/telas/fichas/painel.md. O corpo (tarefa, filtros, tabela) é trocado por HTMX ao filtrar.{% endcomment %}
+{% block titulo %}Painel {{ ano.ano }}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/painel.css' %}">{% endblock %}
+
+{% block conteudo %}
+<header class="pagina-cab">
+  <div>
+    <h1>Painel da temporada {{ ano.ano }}</h1>
+    <p class="mudo">Uma linha por revista ativa: o que falta para cada uma sair completa, e onde resolver.</p>
+  </div>
+</header>
+
+{% include "ui/_componentes/anos.html" with rota="ui_painel" %}
+
+{% if not pode_validar %}
+{% include "ui/_componentes/so_leitura.html" with texto="Só leitura: seu perfil vê o painel, mas não valida revistas. Para validar, peça a permissão de validação a um administrador." %}
+{% endif %}
+
+<div id="painel-corpo" class="painel-corpo alvo-htmx">{% include "ui/parciais/painel_corpo.html" %}</div>
+<p class="sr-only" id="painel-anuncio" aria-live="polite"></p>
+<script>
+// Região viva fixa (fora do alvo do HTMX): anuncia o resumo novo depois de filtrar.
+document.addEventListener("htmx:afterSwap", (e) => {
+  if (e.detail.target.id !== "painel-corpo") return;
+  document.getElementById("painel-anuncio").textContent = e.detail.target.querySelector(".painel-resumo")?.textContent.trim() ?? "";
+});
+</script>
+
+{% if pode_validar %}
+<script>
+// Seleção para "Validar selecionadas": marca/desmarca todas, conta e libera o botão.
+// Delegado no documento: vale também depois que o HTMX troca o corpo.
+document.addEventListener("change", (e) => {
+  const lote = e.target.closest?.("#painel-lote");
+  if (!lote) return;
+  const caixas = [...lote.querySelectorAll("input[name=revista]")];
+  const todas = lote.querySelector("[data-todas]");
+  if (e.target === todas) caixas.forEach((c) => { c.checked = todas.checked; });
+  const n = caixas.filter((c) => c.checked).length;
+  todas.checked = n === caixas.length;
+  todas.indeterminate = n > 0 && n < caixas.length;
+  lote.querySelector("[data-selecionadas]").textContent = n ? `${n} revista(s) selecionada(s).` : "Nenhuma revista selecionada.";
+  lote.querySelector("[data-validar]").disabled = !n;
+});
+</script>
+{% endif %}
+{% endblock %}
