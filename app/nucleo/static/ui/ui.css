@@ -295,6 +295,7 @@ form.inline { display: inline; }
 /* --- status ✓ / falta (célula do painel; sempre com texto, nunca só cor) --- */
 .status { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.8125rem; font-weight: 500; white-space: nowrap; }
 .status-ok { color: oklch(0.45 0.13 150); }
+.btn[data-copiado] { border-color: oklch(0.45 0.13 150); color: oklch(0.45 0.13 150); } /* ui.js: [data-copiar] depois de copiar */
 .status-falta { color: var(--destructive); text-decoration: underline; text-underline-offset: 3px; }
 .status-aviso { color: var(--warning); }
 .status svg { width: 0.875rem; height: 0.875rem; }
