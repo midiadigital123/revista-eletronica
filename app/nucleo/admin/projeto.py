@@ -7,7 +7,7 @@ leitura (D-093). Rotas próprias (fora do mixin): aba Variáveis e lote "Escolhe
 from django import forms
 from django.contrib import admin
 from django.db import models
-from django.urls import path, reverse
+from django.urls import reverse
 
 from nucleo.admin import lote, variaveis
 from nucleo.admin.bloqueio import BloqueioAdminMixin
@@ -26,14 +26,10 @@ class PassoForm(forms.ModelForm):
         fields = ["etapa", "componente", "passo"]
 
     def clean(self):
-        dados = super().clean()
-        # D-053: etapa e componente do ano do projeto (as FKs compostas também recusam).
-        ano_id = Projeto.objects.values_list("ano_id", flat=True).get(pk=self.instance.projeto_id)
-        for nome in ("etapa", "componente"):
-            if dados.get(nome) is not None and dados[nome].ano_id != ano_id:
-                self.add_error(nome, "Precisa ser do ano do projeto.")
-        self.instance.ano_id = ano_id
-        return dados
+        # D-053: etapa e componente de outro ano já não estão no queryset (PassoInline) e a FK
+        # composta recusa no banco; aqui só o ano que a FK composta precisa.
+        self.instance.ano_id = self.instance.projeto.ano_id
+        return super().clean()
 
 
 class PassoInline(admin.TabularInline):
@@ -110,12 +106,9 @@ class ProjetoAdmin(BloqueioAdminMixin, admin.ModelAdmin):
         return super().has_change_permission(request, obj)
 
     def get_urls(self):
-        def rota(caminho, view, nome):
-            return path(caminho, self.admin_site.admin_view(lambda r: view(self, r)), name=f"nucleo_projeto_{nome}")
-
         return [
-            rota("variaveis/", variaveis.variaveis, "variaveis"),
-            rota("escolher-matriz/", lote.escolher_matriz, "escolher_matriz"),
+            lote.rota(self, "variaveis/", lambda r: variaveis.variaveis(self, r), "variaveis"),
+            lote.rota(self, "escolher-matriz/", lambda r: lote.escolher_matriz(self, r), "escolher_matriz"),
         ] + super().get_urls()
 
     def changelist_view(self, request, extra_context=None):

@@ -16,7 +16,7 @@ from .matriz import Matriz
 class ParceiroAno(models.Model):
     parceiro = models.ForeignKey(Parceiro, on_delete=models.PROTECT)
     ano = models.ForeignKey(Ano, on_delete=models.PROTECT)
-    matriz = models.ForeignKey(Matriz, on_delete=models.PROTECT, null=True, blank=True)  # D-106
+    matriz = models.ForeignKey(Matriz, on_delete=models.PROTECT, null=True, blank=True)  # nulo até o lote escolher (D-106)
     history = HistoricalRecords()
 
     class Meta:

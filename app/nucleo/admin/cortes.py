@@ -14,10 +14,11 @@ from django.db import transaction
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
-from django.urls import path, reverse
+from django.urls import reverse
 from openpyxl import Workbook
 
-from nucleo.models import Ano, Componente, Corte, Etapa, Parceiro, ParceiroAno
+from nucleo.admin.lote import escolher_ano, rota
+from nucleo.models import Componente, Corte, Etapa, Parceiro, ParceiroAno
 from nucleo.servicos.cascata import gravar_cortes, validar_linhas
 
 SEPARADOR = re.compile(r"[\s,;]+")
@@ -73,11 +74,8 @@ def planilha(ano):
 @admin.register(Corte)
 class CorteAdmin(admin.ModelAdmin):
     def get_urls(self):
-        def rota(sufixo, view, nome):
-            return path(sufixo, self.admin_site.admin_view(view), name=f"nucleo_corte_{nome}")
-
         # Só a grade e a exportação: corte não se edita um a um (a linha do parceiro é inteira).
-        return [rota("", self.changelist_view, "changelist"), rota("exportar/", self.exportar_view, "exportar")]
+        return [rota(self, "", self.changelist_view, "changelist"), rota(self, "exportar/", self.exportar_view, "exportar")]
 
     def has_add_permission(self, request):
         return False  # some o "incluir" do índice; a grade confere add + change por conta própria
@@ -88,13 +86,10 @@ class CorteAdmin(admin.ModelAdmin):
     def _ano(self, request):
         if not self.has_view_permission(request):
             raise PermissionDenied
-        anos = list(Ano.objects.order_by("-ano"))
-        pedido = request.GET.get("ano", "")
-        ano = next((a for a in anos if str(a.ano) == pedido), anos[0] if anos else None)
-        return ano, anos
+        return escolher_ano(request)
 
     def exportar_view(self, request):
-        ano, _ = self._ano(request)
+        _, ano = self._ano(request)
         if ano is None:
             raise Http404("Nenhum ano aberto.")
         resposta = HttpResponse(
@@ -104,7 +99,7 @@ class CorteAdmin(admin.ModelAdmin):
         return resposta
 
     def changelist_view(self, request, extra_context=None):
-        ano, anos = self._ano(request)
+        anos, ano = self._ano(request)
         contexto = {
             **self.admin_site.each_context(request), "opts": self.opts, "title": "Cortes",
             "ano": ano, "anos": anos,
@@ -146,9 +141,9 @@ class CorteAdmin(admin.ModelAdmin):
                     valores.append((e, c, lista))
             # Parceiro criado depois de a página abrir não tem "o-": fica como está.
             nova = [cel["texto"] for cel in celulas]
-            if original is not None and (erros or juntar(map(formatar_texto, nova)) != original):
-                if not erros and original != juntar(atual):
-                    erros.append(CONFLITO.format(juntar(atual).replace(SEP, " | ") or "vazia"))
+            if original is not None and (erros or SEP.join(map(formatar_texto, nova)) != original):
+                if not erros and original != SEP.join(atual):
+                    erros.append(CONFLITO.format(SEP.join(atual).replace(SEP, " | ") or "vazia"))
                 elif not erros:
                     try:
                         validar_linhas(valores, ano.pk)
@@ -158,7 +153,7 @@ class CorteAdmin(admin.ModelAdmin):
                     mudadas[p.pk] = (p, valores, original)
             com_erro |= bool(erros)
             # Com conflito, o "o-" passa a ser o estado atual: salvar de novo sobrescreve de propósito.
-            linhas.append({"parceiro": p, "celulas": celulas, "erros": erros, "original": juntar(atual)})
+            linhas.append({"parceiro": p, "celulas": celulas, "erros": erros, "original": SEP.join(atual)})
 
         if post is not None and not com_erro:
             try:
@@ -188,7 +183,7 @@ class CorteAdmin(admin.ModelAdmin):
             list(ParceiroAno.objects.select_for_update(no_key=True).filter(pk__in=[pa.pk for pa in pas.values()]).order_by("pk"))
             agora = linhas_atuais(ano, colunas, parceiro_ids=list(mudadas))
             for pk, (p, valores, original) in sorted(mudadas.items()):
-                atual = juntar(agora.get(pk, [""] * len(colunas)))
+                atual = SEP.join(agora.get(pk, [""] * len(colunas)))
                 if atual != original:
                     raise Conflito(p, atual)
                 gravar_cortes(pas[pk], valores, request.user)
@@ -205,10 +200,6 @@ class Conflito(Exception):
     def __init__(self, parceiro, agora):
         super().__init__(f"os cortes de {parceiro} mudaram desde que a página foi aberta.")
         self.parceiro, self.agora = parceiro, agora
-
-
-def juntar(textos):
-    return SEP.join(textos)
 
 
 def formatar_texto(texto):

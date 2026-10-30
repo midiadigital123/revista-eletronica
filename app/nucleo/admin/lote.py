@@ -14,6 +14,7 @@ from django.db import transaction
 from django.db.models import Exists, OuterRef, Prefetch
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
+from django.urls import path
 from django.utils.http import urlencode
 
 from nucleo.models import (
@@ -95,6 +96,11 @@ def escolher_ano(request):
     return anos, ano
 
 
+def rota(model_admin, caminho, view, nome):
+    """path() de uma view extra do admin, com login/permissão e nome "nucleo_<modelo>_<nome>"."""
+    return path(caminho, model_admin.admin_site.admin_view(view), name=f"nucleo_{model_admin.opts.model_name}_{nome}")
+
+
 def filtro(rotulo, opcoes, ativo, chave, extra=None):
     """Linha de links do filtro: [(texto, url, ativo)]."""
     return (
@@ -115,19 +121,8 @@ def contexto(model_admin, request, titulo, **extra):
 # --- Escolher matriz ------------------------------------------------------------
 
 
-class Escolha(forms.ModelMultipleChoiceField):
-    widget = forms.CheckboxSelectMultiple
-
-    def __init__(self, rotulo, label_from_instance, **kwargs):
-        super().__init__(queryset=None, label=rotulo, **kwargs)
-        self._rotulo_item = label_from_instance
-
-    def label_from_instance(self, obj):
-        return self._rotulo_item(obj)
-
-
 class MatrizLoteForm(forms.Form):
-    alvos = Escolha("Parceiros", lambda pa: f"{pa.parceiro} (atual: {pa.matriz.nome if pa.matriz else '—'})")
+    alvos = forms.ModelMultipleChoiceField(None, label="Parceiros", widget=forms.CheckboxSelectMultiple)
     matriz = forms.ModelChoiceField(queryset=None)
 
     def __init__(self, *args, ano, **kwargs):
@@ -138,6 +133,7 @@ class MatrizLoteForm(forms.Form):
             .prefetch_related(Prefetch("projeto_set", Projeto.objects.filter(arquivado_em__isnull=True), to_attr="ativos"))
             .order_by("parceiro__nome")
         )
+        self.fields["alvos"].label_from_instance = lambda pa: f"{pa.parceiro} (atual: {pa.matriz.nome if pa.matriz else '—'})"
         self.fields["matriz"].queryset = Matriz.objects.filter(ano=ano).order_by("nome")
 
 
@@ -174,7 +170,7 @@ def escolher_matriz(model_admin, request):
 
 
 class TemplateLoteForm(forms.Form):
-    alvos = Escolha("Revistas", str)
+    alvos = forms.ModelMultipleChoiceField(None, label="Revistas", widget=forms.CheckboxSelectMultiple)
     template_f1 = forms.ModelChoiceField(queryset=None, required=False, label="Template F1")
     template_f2 = forms.ModelChoiceField(queryset=None, required=False, label="Template F2")
 

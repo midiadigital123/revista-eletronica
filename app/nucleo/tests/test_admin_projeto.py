@@ -11,6 +11,7 @@ from nucleo.admin.lote import escrever_travado
 from nucleo.models import (
     Ano,
     Bloqueio,
+    Etapa,
     Matriz,
     Parceiro,
     ParceiroAno,
@@ -213,11 +214,11 @@ class RevistaUploadTest(Base):
         self.assertEqual(csv.content.decode().splitlines(), ["id_no_svg,secao_do_template", "passo1,passo1", "btn-action-p2,dlg-p2"])
 
     def test_svg_e_capa_validos(self):
-        from nucleo.management.commands.criar_demo import png
+        from nucleo.management.commands.criar_demo import PNG
 
         rev = self.go["LP"]
         r = self.post_revista(
-            rev, arquivo_svg=SimpleUploadedFile("f2.svg", SVG), arquivo_capa=SimpleUploadedFile("c.png", png(2, 2, (0, 0, 0)))
+            rev, arquivo_svg=SimpleUploadedFile("f2.svg", SVG), arquivo_capa=SimpleUploadedFile("c.png", PNG)
         )
         self.assertFalse([m for m in mensagens(r) if "Ids que faltam" in m])
         rev = Revista.objects.get(pk=rev.pk)
@@ -264,6 +265,9 @@ class ProjetoAdminTest(Base):
         }  # fmt: skip
         r = self.client.post(url, dados)
         self.assertContains(r, "Use o formato #RRGGBB.")
+        outra = Etapa.objects.create(ano=Ano.objects.create(ano=2025), codigo="5EF", escala_max=500, ordem=1)
+        r = self.client.post(url, {**dados, "projetopasso_set-0-etapa": outra.pk})
+        self.assertTrue(r.context["inline_admin_formsets"][0].formset.errors[0]["etapa"])  # D-053: outro ano
         dados["projetocor_set-0-cor"] = "#00aa00"
         self.assertEqual(self.client.post(url, dados).status_code, 302)
         p = Projeto.objects.get(pk=self.projeto_go.pk)
