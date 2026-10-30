@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo 19 de 22: S13 (impresso + planilhas), UI de navegação, aviso em Padrões do ano, F1 JS/CSS e abertura do F1 juntados em `refatoracao-django` e no GitHub. Migrações até 0012. Faltam S17 e S18; em andamento: upload do item + exclusão (D-180/D-181) e auditoria 2ª leva.
+Passo 19 de 22: upload do item + exclusão (D-180/D-181/D-185) e preparo do S17 juntados em `refatoracao-django` e no GitHub. Migrações até 0014. Rodando: time das telas B (D-186). Falta executar o S17 (carga real + ações destrutivas, cada uma com ok do usuário) e o S18.
 Funcionando: em cada `feat/s11*`, suíte OK (8 de PDF pulados), `makemigrations --check` limpo; Playwright cortes, templates-admin e revista-textos passam.
-Quebrado/pendente: upload do item e exclusão (D-180/D-181) em `feat/item-exclusao`; preparo do S17 em `feat/s17-preparo`; S17 (execução) e S18 não iniciados.
+Quebrado/pendente: telas B em `feat/ui-b` (workflow); S17 executado só em ensaio; apagar `editor/` bloqueado até as telas B substituírem o uso; S18 não iniciado.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Verificar a entrega de `feat/item-exclusao` (suíte + `makemigrations --check` + Playwright item) quando o subagente terminar.
+Quando o workflow das telas B terminar: ver os screenshots e o relatório da integração em `feat/ui-b`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1489,7 +1489,7 @@ Verificar a entrega de `feat/item-exclusao` (suíte + `makemigrations --check` +
 - **Motivo:** respostas do usuário; desde a D-166 existem aviso de impacto (D-076), "Validado" por hash e histórico; reimportar a matriz para corrigir uma tarefa é caro.
 - **Descartadas:** só o arquivo do item; só Admin exclui; lixeira restaurável por 30 dias (+4 h, `excluido_em`); confirmação simples do Django; nunca apagar o arquivo do disco.
 - **Arquivos afetados:** `app/nucleo/permissoes.py`, migração de dados dos grupos, `app/nucleo/admin/matriz.py`, `app/nucleo/servicos/arquivos.py`, testes de permissão
-- **Status:** ativa. Substitui D-166 no ponto "tarefa e descritor não se excluem pela tela" (~~D-166 nesse ponto~~). Implementação junto da D-180.
+- **Status:** ativa. Código da tarefa na confirmação = `D01 100-150` (descritor + faixa), aprovado pelo usuário em 2026-10-30. Substitui D-166 no ponto "tarefa e descritor não se excluem pela tela" (~~D-166 nesse ponto~~). Implementação junto da D-180.
 
 ### D-182 — Fonte dos PDFs da matriz Comunitária: `revista/modelo/PDFs Matriz Comunitária/` (2026-10-30 12:55)
 - **Contexto:** o preparo do S17 precisa dos 3 PDFs SAEGO 2025; a learning de 29/10 dizia que o Alfa (2EF/5EF) estava só na máquina do usuário.
@@ -1499,7 +1499,43 @@ Verificar a entrega de `feat/item-exclusao` (suíte + `makemigrations --check` +
 - **Arquivos afetados:** roteiro do S17 (`docs/s17-carga-2026.md`, em preparo)
 - **Status:** ativa. A learning "Passos paralelos… PDFs grandes fora do app" está desatualizada no ponto do Alfa.
 
+### D-183 — Telas do dia a dia como páginas próprias no Django com o visual do editor React (2026-10-30 13:50)
+- **Contexto:** o usuário reavaliou a D-121 ao ver as telas do editor React; ele também é do time de design.
+- **Decisão:** opção B. As telas do dia a dia (Painel, Cortes, Variáveis, Revista e textos, Matriz e descritores, Templates, Impresso, Lotes, Projeto) viram páginas próprias renderizadas pelo Django (HTML do servidor + CSS com os tokens do editor React, JS vanilla pequeno), fora do Django admin. O admin fica para o raro (usuários, etapas, componentes, parceiros). Backend, regras e testes não mudam. Troca tela por tela; o admin segue funcionando até cada página nova ficar pronta. Primeiro: protótipo da grade de cortes para comparar com o admin.
+- **Motivo:** escolha do usuário; mantém o visual já desenhado, uma linguagem só (Python), sem parar a temporada.
+- **Descartadas:** A — ficar só no admin (interface fria, pouco a desenhar); C — React sobre API Django (API por tela, duas linguagens, telas refeitas de qualquer jeito pelo modelo novo).
+- **Arquivos afetados:** futuro: `app/nucleo/templates/ui/`, `app/nucleo/static/ui/`, views próprias; `editor/` fica como referência visual até a última tela migrar
+- **Status:** ativa. Substitui D-121 no ponto "a interface nova é o Django admin" (~~D-121 nesse ponto~~); o bloqueio de edição da D-121 continua. Apagar `editor/` no S17 segue bloqueado.
+
+### D-184 — Carga 2026: cortes digitados, PDF como fonte dos descritores, intervalo pela tela (2026-10-30 14:10)
+- **Contexto:** 3 perguntas que o preparo do S17 deixou para a Pedagógica; o usuário respondeu.
+- **Decisão:** (1) os cortes de 2026 **não** repetem os de 2025 por ora: a Pedagógica digita na grade (D-119 mantida; sem `importar_cortes`). (2) LP 2EF tem **8** descritores: o PDF SAEGO 2025 é a referência; a planilha `NÍVEIS - LP 2EF.xlsx` (10) não é fonte. (3) O intervalo mínimo 25 de 5EF/9EF/3EM entra pela tela da MEC depois da carga, como no roteiro; sem ele a escala sai sem linhas vazias, e tudo bem.
+- **Motivo:** respostas do usuário.
+- **Descartadas:** comando `importar_cortes` a partir da planilha de 2025; planilhas de níveis como fonte; `--passo 25` na importação (valeria também para o 2EF).
+- **Arquivos afetados:** `docs/s17-carga-2026.md` (em `feat/s17-preparo`)
+- **Status:** ativa.
+
+### D-185 — Correções da revisão de segurança do upload do item e da exclusão (2026-10-30 14:30)
+- **Contexto:** revisão (security-reviewer) de e93babb e 299de99: 0 críticos, 1 importante, 6 menores. Sem path traversal, sem IDOR entre revistas, sem XSS no `alt`; polyglot e SVG-como-PNG barrados; CSRF, código conferido no servidor e permissões OK.
+- **Decisão:** (1) rota do item com `X-Frame-Options: SAMEORIGIN` e `frame-ancestors 'self'` — o PDF ficava em branco no iframe do F1; e2e com PDF; (2) GET do item no admin vira anexo (preview segue inline); (3) `clean_arquivo` recusa acima de 5 MB no form; (4) sai a conferência do mime declarado (o cliente controla; os bytes decidem); (5) exclusão confere o bloqueio da MEC com FOR SHARE na transação; (6) corrida `post_delete` × cópia não commitada só anotada (`ponytail:`).
+- **Motivo:** o PDF não abria; arquivos grandes enchiam o disco temporário antes da recusa; navegadores mandam mimes variados.
+- **Descartadas:** filtrar a rota do item por etapa (a revista cobre várias etapas; todos os papéis têm `ver_tudo`); sandbox no PDF (quebra o visualizador); servir itens de outro domínio.
+- **Arquivos afetados:** `app/nucleo/urls/preview.py`, `app/nucleo/admin/matriz.py`, `app/nucleo/servicos/arquivos.py`, `app/e2e/tests/item.spec.ts`
+- **Status:** ativa. 3º commit cb6b8b4 em `feat/item-exclusao` (354 OK no relatório; e2e com PDF). Fora: corrida post_delete × cópia não commitada (só `ponytail:`); excluir logo após sair do change form da mesma MEC pode pedir para recarregar.
+
+### D-186 — HTMX liberado; time de agentes faz as telas B a partir do protótipo (2026-10-30 14:50)
+- **Contexto:** o usuário gostou do protótipo B da grade de cortes (b0623f4) e pediu um time de agentes especialistas com um supervisor para planejar, desenhar e codar todas as telas do dia a dia.
+- **Decisão:** HTMX (versão fixa, servido de `static/ui/`, sem CDN) liberado para interatividade nas páginas B; o sistema não precisa ser tão interativo quanto o React. Base comum em `feat/ui-b` (a partir de `feat/ui-b-cortes`): HTMX, fonte Inter local, peça comum de bloqueio, navegação com todas as rotas e design system documentado. Uma branch por tela a partir da base; cada tela tem ficha (planejamento) em `docs/telas/fichas/`, código e testes, revisão do supervisor e uma rodada de correção; o supervisor integra tudo em `feat/ui-b`. O admin continua funcionando.
+- **Motivo:** pedido do usuário; telas independentes rodam em paralelo; arquivos compartilhados (rotas, navegação) são preparados na base para evitar conflito.
+- **Descartadas:** React; cada agente editar a navegação e as rotas (conflitos certos); Google Fonts (dependência externa, offline quebra).
+- **Arquivos afetados:** `app/nucleo/templates/ui/`, `app/nucleo/static/ui/`, `app/nucleo/urls/`, `docs/telas/`
+- **Status:** em andamento (workflow).
+
 ## Perguntas em aberto
+- [x] (D-184) S17: os cortes de 2026 repetem os de 2025? Se sim, comando `importar_cortes` (~60 min) substituindo a D-119 nesse ponto — depende de: Pedagógica
+- [x] (D-184) S17: LP 2EF tem 10 descritores na planilha `NÍVEIS - LP 2EF.xlsx` e 8 no PDF SAEGO 2025 — qual vale? — depende de: Pedagógica
+- [x] (D-184) S17: passo 25 em 5EF/9EF/3EM (como 2025) entra pela tela T10 depois da carga — depende de: Pedagógica
+- [x] (D-183) Reavaliar a D-121 (interface no Django admin, React aposentado): manter o visual/telas do editor React? Opções: admin como está; páginas Django próprias com o visual do editor (admin só para cadastros); React sobre API Django. Apagar `editor/` no S17 fica bloqueado até decidir — depende de: usuário
 - [x] (D-179) Rascunho de UI: as matrizes de 2026 têm imagem/PDF por item (`tarefa.arquivo`)? Se sim, tela de upload sobe para agora (+4 h). `/` vai para o Painel mantendo o índice do admin com módulo "Temporada"? (rec.: sim). Botão "Baixar zip" por linha no Painel em 2026? (rec.: não) — depende de: usuário
 - [x] (D-176) Docx "Interpretação pedagógica da escala — textos de abertura LP e MT": o usuário disse que abre o fascículo 2 (infográfico), mas o texto é quase igual à `introducao` do F1 nos seeds (`f1-lp.hbs`/`f1-mt.hbs`: "relação entre a Matriz de Referência e a Escala de Proficiência…"). Entra no F1 `introducao` ou no F2 `abertura`? — depende de: usuário
 - [x] Mapa das telas (UI): inventário feito (2026-10-30): 28 telas, 25 existem ok, 0 desatualizadas, 3 faltam (T26 impresso, T27 planilhas, T28 histórico). Rascunho de UI em andamento.
@@ -1764,3 +1800,15 @@ Verificar a entrega de `feat/item-exclusao` (suíte + `makemigrations --check` +
 - `examples/` apagada a pedido do usuário (cópias de `revista/modelo/PDFs Matriz Comunitária/`); docstring do `test_importacao.py` aponta a pasta nova; teste de importação com os 3 PDFs: 24 OK. Sem commit.
 - `fix/auditoria-ia-2` entregue (7 commits A–H, 335 OK). Ensaio do merge sobre 9a574ae: conflitos em `revista.zip` (regerar) e `admin/templates.py` `usado_por` (fica a versão da integração, com `reverse` e `?template=`); suíte rodando.
 - Leva: 835bec5 (remove `examples/`) + 3c74ac2 (merge `fix/auditoria-ia-2`: `usado_por` da integração, zip regerado; ensaio com suíte OK, 8 pulados; árvore igual ao ensaio fora a docstring já testada). Push feito.
+- Usuário reavalia React × Django admin (D-121); telas mostradas são do editor React antigo (`editor/src/projetos/ListaProjetos.tsx`, `ano/TelaAno.tsx`). Apagar `editor/` bloqueado no roteiro do S17. Envio ao design em espera (usuário também é do design).
+- Preparo do S17 entregue (77835dc em `feat/s17-preparo`): roteiro `docs/s17-carga-2026.md`, ensaio sem erros (198 descritores e 1093 tarefas, iguais ao extrator antigo nas 8 etapa × CC; 29 parceiros/58 revistas com os cortes de 2025), comando `criar_usuarios` (CSV fora do git, link de senha), README/CLAUDE propostos, ações destrutivas A–D só no texto (editor/ bloqueado). Minha verificação rodando.
+- D-183: opção B escolhida; protótipo da grade de cortes disparado em `feat/ui-b-cortes`.
+- Banco local: migrações 0011/0012 aplicadas; carga 2026 de cadastros, templates e matriz Comunitária (3 PDFs) feita; sem superusuário ainda.
+- `feat/s17-preparo` (77835dc) verificado por mim com os PDFs montados: suíte OK, 0 pulados; `makemigrations --check` limpo.
+- Usuário respondeu as 3 perguntas do S17 (D-184): cortes digitados, LP 2EF com 8 (PDF), intervalo 25 pela tela.
+- `feat/item-exclusao` entregue: e93babb (D-180) + 299de99 (D-181), migrações 0013 (texto_alternativo) e 0014 (grupos); código da tarefa na confirmação = `D01 100-150`; arquivo apagado via `post_delete` + on_commit só sem referência; rota `preview/<id>/arquivos/itens/<nome>`. Minha suíte + revisão de segurança rodando.
+- Usuário aprovou o código da tarefa `D01 100-150` (D-181).
+- Revisão de segurança do item/exclusão: 0 críticos, 1 importante (PDF em branco no iframe); correções enviadas (D-185).
+- D-186: HTMX liberado; workflow do time de telas B disparado.
+- `feat/item-exclusao` (cb6b8b4) verificado por mim: suíte OK (8 pulados), migrações limpas. Prontos para merge: `feat/item-exclusao` e `feat/s17-preparo`.
+- Ensaio dos 2 merges (item-exclusao + s17-preparo): conflitos em `admin/matriz.py` (imports: mantidos `path, reverse`, `format_html`, `CAMPO_SESSAO` e `lote.rota`) e `revista.zip` (regerado); suíte OK com os PDFs (0 pulados), régua ok. Merge real idêntico ao ensaio; push.
