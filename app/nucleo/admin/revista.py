@@ -365,7 +365,7 @@ class RevistaAdmin(BloqueioAdminMixin, admin.ModelAdmin):
         ("Validação", {"fields": ("hash_validado", "validado_em", "validado_por", "arquivada_em")}),
     )
     inlines = [FasciculoInline]
-    actions = ["baixar_zip"]  # só leitura: o mixin proíbe actions de escrita
+    actions = ["baixar_zip", "baixar_planilhas"]  # só leitura: o mixin proíbe actions de escrita
 
     def alvo_do_bloqueio(self, obj):
         return obj.projeto  # revista trava o projeto dela (D-140)
@@ -569,3 +569,12 @@ class RevistaAdmin(BloqueioAdminMixin, admin.ModelAdmin):
         resposta = HttpResponse(dados, content_type="application/zip")
         resposta["Content-Disposition"] = f'attachment; filename="{nome}"'
         return resposta
+
+    @admin.action(description="Baixar planilhas", permissions=["view"])
+    def baixar_planilhas(self, request, queryset):
+        """Zip com as planilhas F1 e F2 (S13); a tela do impresso tem o mesmo link por revista."""
+        pks = list(queryset.values_list("pk", flat=True)[:2])
+        if len(pks) != 1:
+            self.message_user(request, "Escolha uma revista por vez para baixar as planilhas.", messages.ERROR)
+            return None
+        return HttpResponseRedirect(reverse("impresso_planilhas", args=pks))

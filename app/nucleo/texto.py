@@ -11,9 +11,10 @@ título (texto puro) e o resto é o corpo em Markdown.
 import re
 from collections import Counter
 import secrets
-from html import escape
+from html import escape, unescape
 
 from django.core.exceptions import ValidationError
+from django.utils.html import strip_tags
 from markdown_it import MarkdownIt
 
 from nucleo.variaveis import VARIAVEIS
@@ -186,3 +187,8 @@ def renderizar(corpo, valores):
 def renderizar_texto_puro(texto, valores):
     """Título: texto escapado com as variáveis trocadas, sem Markdown."""
     return VAR.sub(lambda m: _valor(m[1], valores), escape(texto))
+
+
+def html_para_texto(html):
+    """HTML renderizado -> texto puro para o impresso (S13): fim de parágrafo, item ou <br> vira quebra."""
+    return unescape(strip_tags(re.sub(r"</(?:p|li)>|<br\s*/?>", "\n", html or ""))).strip()

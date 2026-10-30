@@ -49,7 +49,7 @@ def link(codigo, revista):
     if codigo in ("variaveis", "nome_projeto"):
         return reverse("admin:nucleo_projeto_change", args=[revista.projeto_id])
     if codigo == "impresso":
-        return None  # tela do impresso: S13
+        return reverse("impresso", args=[revista.pk])  # tela do impresso (S13)
     return reverse("admin:nucleo_revista_change", args=[revista.pk])  # templates, SVG, capa, Validado
 
 
@@ -57,6 +57,11 @@ def ultima_impressa(revista):
     # ponytail: carrega o JSON inteiro da foto; comparar por hash pede uma coluna hash_impresso
     # (o `hash` da foto inclui SVG e capa, D-118) = migração. Fazer se o painel ficar lento.
     return FotoRevista.objects.filter(revista=revista, motivo=Motivo.IMPRESSO).order_by("-criada_em", "-pk").first()
+
+
+def impresso_pendente(foto, resolvido):
+    """O impresso confere só textos e escalas (D-118): trocar SVG ou capa não o derruba."""
+    return foto is None or resolver.impresso_de(foto.conteudo) != resolver.impresso_de(resolvido)
 
 
 def linha(revista):
@@ -74,9 +79,9 @@ def linha(revista):
         }
     if not validacao.validada(revista, atual):
         celulas["validado"] = {"ok": False, "dica": "Sem “Validado” nesta versão.", "link": link("validado", revista)}
-    # O impresso confere só textos e escalas (D-118): trocar SVG ou capa não o derruba.
-    if foto is None or resolver.impresso_de(foto.conteudo) != resolver.impresso_de(resolvido):
+    if impresso_pendente(foto, resolvido):
         celulas["impresso"] = {"ok": False, "dica": "Impresso não atualizado nesta versão.", "link": None}
+    celulas["impresso"]["link"] = link("impresso", revista)  # com ✓ também: a tela mostra a última foto
     return {"revista": revista, "celulas": [celulas[c] | {"coluna": c} for c in COLUNAS], "faltas": celulas}
 
 
