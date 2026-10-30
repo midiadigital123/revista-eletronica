@@ -132,8 +132,8 @@ function montarFaixasRegua({ min, max, cortes, escala }) {
   const entradas = [];
   for (const padrao of PADROES_DE_CIMA) {
     const linhas = (escala && escala[padrao]) || [];
-    for (const { level, content, item } of linhas)
-      entradas.push({ padrao, base: level, conteudo: content || "---", item });
+    for (const { level, fim, content, item } of linhas)
+      entradas.push({ padrao, base: level, fim, conteudo: content || "---", item });
     if (!linhas.length) {
       const [topoPadrao, basePadrao] = limites[padrao];
       entradas.push({ padrao, base: topoPadrao, conteudo: null });
@@ -150,10 +150,11 @@ function montarFaixasRegua({ min, max, cortes, escala }) {
     // preenchimento acima de um padrão vazio pertence ao padrão de cima
     if (e.conteudo === null)
       e.padrao = PADROES_DE_CIMA.find((p) => limites[p][1] <= e.base) || e.padrao;
-    // habilidade que cruza um corte tem a cor do padrão da âncora maior (topo); o topo é limite
-    // aberto: um topo exatamente no corte não sobe de padrão
+    // habilidade que cruza um corte tem a cor do padrão da âncora maior: o `fim` da tarefa, como
+    // padrao_da_tarefa do resolver (D-154); sem `fim`, o topo da faixa. Limite aberto: âncora
+    // exatamente no corte não sobe de padrão
     else if (!ehVazia(e.conteudo))
-      e.padrao = PADROES_DE_CIMA.find((p) => limites[p][1] < topo) || e.padrao;
+      e.padrao = PADROES_DE_CIMA.find((p) => limites[p][1] < (e.fim ?? topo)) || e.padrao;
     faixas.push({ ...e, topo });
     topo = e.base;
   }
@@ -273,8 +274,9 @@ const appState = {
 // ==========================================
 
 class FilterManager {
-  constructor(data) {
+  constructor(data, descritores) {
     this.data = data;
+    this.descritores = descritores;
     this.filterButtons = document.querySelectorAll(".filtro-btn");
     this.init();
   }
@@ -300,11 +302,8 @@ class FilterManager {
 
     appState.currentFilter = filter;
     this.updateActiveFilter(button);
-    this.animateFilterChange();
-
-    window.dispatchEvent(
-      new CustomEvent("filterChanged", { detail: { filter } }),
-    );
+    animarEntrada(".content-wrapper");
+    this.descritores.trocarEtapa();
   }
 
   updateActiveFilter(activeButton) {
@@ -322,19 +321,14 @@ class FilterManager {
     });
   }
 
-  animateFilterChange() {
-    if (reduzMovimento()) return;
-    const contentWrapper = document.querySelector(".content-wrapper");
-    if (contentWrapper) {
-      contentWrapper.style.opacity = "0";
-      contentWrapper.style.transform = "translateY(10px)";
-      setTimeout(() => {
-        contentWrapper.style.transition =
-          "opacity 0.3s ease, transform 0.3s ease";
-        contentWrapper.style.opacity = "1";
-        contentWrapper.style.transform = "translateY(0)";
-      }, 50);
-    }
+}
+
+/** Reinicia a animação de entrada (.entrando no styles.css, que também trata reduced-motion). */
+function animarEntrada(seletores) {
+  for (const el of document.querySelectorAll(seletores)) {
+    el.classList.remove("entrando");
+    void el.offsetWidth; // força o reflow: sem ele a animação não recomeça
+    el.classList.add("entrando");
   }
 }
 
@@ -365,13 +359,13 @@ class DescriptorManager {
     if (document.fonts && document.fonts.ready) {
       document.fonts.ready.then(() => this.atualizarTruncamentos());
     }
+  }
 
-    window.addEventListener("filterChanged", () => {
-      appState.currentDescriptor = null;
-      this.dropdownOpen = false;
-      this.renderButtons();
-      this.updateDropdownUI();
-    });
+  trocarEtapa() {
+    appState.currentDescriptor = null;
+    this.dropdownOpen = false;
+    this.renderButtons();
+    this.updateDropdownUI();
   }
 
   initModal() {
@@ -774,7 +768,7 @@ class DescriptorManager {
     if (data.bncc) this.updateBNCC(data.bncc);
     if (filterData.scaleRange) this.updateScaleRange(filterData.scaleRange);
 
-    this.animateContentChange();
+    animarEntrada(".titulo-topico, .descritor-detalhado, .prerequisitos-box, .bncc-section");
   }
 
   updateScaleRange({ min, max }) {
@@ -918,27 +912,6 @@ class DescriptorManager {
     }
   }
 
-  animateContentChange() {
-    if (reduzMovimento()) return;
-    const selectors = [
-      ".titulo-topico",
-      ".descritor-detalhado",
-      ".prerequisitos-box",
-      ".bncc-section",
-    ];
-    selectors.forEach((selector, index) => {
-      const el = document.querySelector(selector);
-      if (!el) return;
-      el.style.opacity = "0";
-      el.style.transform = "translateX(-20px)";
-      setTimeout(() => {
-        el.style.transition = "opacity 0.4s ease, transform 0.4s ease";
-        el.style.opacity = "1";
-        el.style.transform = "translateX(0)";
-      }, index * 100);
-    });
-  }
-
   scrollToContent() {
     if (appState.scrolling) return;
     appState.scrolling = true;
@@ -1048,9 +1021,9 @@ class App {
     );
     appState.currentFilter = primeira?.dataset.filter ?? null;
 
-    new DescriptorManager(data);
+    const descritores = new DescriptorManager(data);
     new NavigationManager(data);
-    new FilterManager(data);
+    new FilterManager(data, descritores);
     new StickyMenuManager();
 
     document.body.classList.add("app-initialized");

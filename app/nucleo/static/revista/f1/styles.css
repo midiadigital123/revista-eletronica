@@ -97,12 +97,6 @@ html {
   scroll-behavior: smooth;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-}
-
 /* Só para leitor de tela (rótulos da escala, anúncio do descritor) */
 .rv-sr-only {
   position: absolute;
@@ -652,6 +646,7 @@ body {
   text-align: center;
   color: var(--color-black);
   line-height: 1;
+  transition: background-color 0.2s var(--ease-out);
 }
 
 .proficiencia-valor::after {
@@ -671,6 +666,10 @@ body {
   background-color: var(--color-white);
   padding: 0.0625rem clamp(0.25rem, 2.2cqi - 0.19rem, 0.5rem);
   border-radius: 999px;
+  transition:
+    background-color 0.2s var(--ease-out),
+    color 0.2s var(--ease-out),
+    transform 0.2s var(--ease-out);
 }
 
 /* Nível que coincide com um corte: selo amarelo */
@@ -689,6 +688,7 @@ body {
   border-bottom: 1px solid var(--color-border);
   margin-bottom: 0;
   flex-shrink: 0;
+  transition: background-color 0.2s var(--ease-out);
 }
 
 /* Preenchimento (sem conteúdo): meia altura, como na revista impressa */
@@ -836,17 +836,6 @@ body {
 /* Foco na linha: hover/foco de teclado tinge a linha com a cor do padrão (--p, de script.js) e
    preenche o número de início (base da linha) e o de fim (base da linha de cima). Foco de mouse
    não conta (:focus-visible), senão a linha fica "ativa" depois que o mouse sai. */
-.proficiencia-valor,
-.linha-marcador {
-  transition: background-color 0.2s var(--ease-out);
-}
-
-.proficiencia-valor-numero {
-  transition:
-    background-color 0.2s var(--ease-out),
-    color 0.2s var(--ease-out),
-    transform 0.2s var(--ease-out);
-}
 
 /* Leitura cumulativa: quem chegou à habilidade em foco já domina todas as de baixo, tinta leve */
 .linha:has(:focus-visible)
@@ -858,19 +847,6 @@ body {
 .linha:has(:focus-visible)
   :is(.proficiencia-valor, .linha-marcador, .linha-conteudo) {
   background-color: color-mix(in srgb, var(--p) 23%, white);
-}
-
-/* Hover só onde existe ponteiro: no toque ele "gruda" depois do tap */
-@media (hover: hover) {
-  .linha:hover
-    ~ .linha
-    :is(.proficiencia-valor, .linha-marcador, .linha-conteudo) {
-    background-color: color-mix(in srgb, var(--p) 10%, white);
-  }
-
-  .linha:hover :is(.proficiencia-valor, .linha-marcador, .linha-conteudo) {
-    background-color: color-mix(in srgb, var(--p) 23%, white);
-  }
 }
 
 /* .destaque (script.js): números de início e fim da linha em foco, cortes inclusive */
@@ -920,16 +896,6 @@ body {
 .ver-item-btn:focus-visible {
   transform: scale(1.08);
   box-shadow: 0 8px 14px rgba(0, 0, 0, 0.2);
-}
-
-@media (hover: hover) {
-  .ver-item-btn:hover {
-    transform: scale(1.08);
-    box-shadow: 0 8px 14px rgba(0, 0, 0, 0.2);
-  }
-}
-
-.ver-item-btn:focus-visible {
   outline: 2px solid var(--color-black);
   outline-offset: 3px;
 }
@@ -979,30 +945,40 @@ body {
   transform: translateY(4px);
 }
 
-.ver-item-btn:focus-visible::before,
 .ver-item-btn:focus-visible::after {
   opacity: 1;
-}
-
-.ver-item-btn:focus-visible::after {
   transform: translate(-50%, 0);
 }
 
 .ver-item-btn:focus-visible::before {
+  opacity: 1;
   transform: translateY(0);
 }
 
+/* Hover só onde existe ponteiro: no toque ele "gruda" depois do tap */
 @media (hover: hover) {
-  .ver-item-btn:hover::before,
-  .ver-item-btn:hover::after {
-    opacity: 1;
+  .linha:hover
+    ~ .linha
+    :is(.proficiencia-valor, .linha-marcador, .linha-conteudo) {
+    background-color: color-mix(in srgb, var(--p) 10%, white);
+  }
+
+  .linha:hover :is(.proficiencia-valor, .linha-marcador, .linha-conteudo) {
+    background-color: color-mix(in srgb, var(--p) 23%, white);
+  }
+
+  .ver-item-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 8px 14px rgba(0, 0, 0, 0.2);
   }
 
   .ver-item-btn:hover::after {
+    opacity: 1;
     transform: translate(-50%, 0);
   }
 
   .ver-item-btn:hover::before {
+    opacity: 1;
     transform: translateY(0);
   }
 }
@@ -1017,27 +993,6 @@ body {
   .linha-conteudo.tem-ver-item,
   .linha-conteudo.tem-ver-item.expandido {
     padding-inline-end: 4rem;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .linha-conteudo,
-  .linha-conteudo.tem-ver-mais,
-  .proficiencia-valor,
-  .linha-marcador,
-  .proficiencia-valor-numero,
-  .ver-item-btn,
-  .ver-item-btn::before,
-  .ver-item-btn::after {
-    transition: none;
-  }
-
-  .proficiencia-valor-numero.destaque {
-    transform: translateY(50%);
-  }
-
-  .escala-corte .proficiencia-valor-numero.destaque {
-    transform: none;
   }
 }
 
@@ -1453,12 +1408,72 @@ body {
   }
 }
 
-/* No fim do arquivo: precisa vir depois das regras base destes botões (mesma especificidade) */
+/* Entrada do conteúdo ao trocar etapa/descritor (script.js: animarEntrada) */
+@keyframes rv-entra-lado {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+}
+
+@keyframes rv-entra-baixo {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+.entrando {
+  animation: rv-entra-lado 0.4s ease backwards;
+}
+
+.descritor-detalhado.entrando {
+  animation-delay: 0.1s;
+}
+
+.prerequisitos-box.entrando {
+  animation-delay: 0.2s;
+}
+
+.bncc-section.entrando {
+  animation-delay: 0.3s;
+}
+
+.content-wrapper.entrando {
+  animation: rv-entra-baixo 0.3s ease 0.05s backwards;
+}
+
+/* No fim do arquivo: precisa vir depois das regras base (mesma especificidade) */
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   .descritor-btn,
   .descritor-btn-lateral,
   .nav-btn,
-  .modal-close {
+  .modal-close,
+  .linha-conteudo,
+  .linha-conteudo.tem-ver-mais,
+  .proficiencia-valor,
+  .linha-marcador,
+  .proficiencia-valor-numero,
+  .ver-item-btn,
+  .ver-item-btn::before,
+  .ver-item-btn::after {
     transition: none;
+  }
+
+  .entrando,
+  .content-wrapper.entrando {
+    animation: none;
+  }
+
+  .proficiencia-valor-numero.destaque {
+    transform: translateY(50%);
+  }
+
+  .escala-corte .proficiencia-valor-numero.destaque {
+    transform: none;
   }
 }

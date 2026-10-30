@@ -201,6 +201,30 @@ assert.equal(tipoDoItem("PNG"), "pdf"); // case-sensitive: só o que o pacote gr
   assert.equal(padroes({ "padrao-3": [L(400)], "padrao-2": [L(350)] })[350], "2");
 }
 
+// Cor igual à do resolver (padrao_da_tarefa, D-154): o padrão de cada linha no JSON é o que o
+// Python calculou pela âncora maior (`fim`). Tarefas esparsas (100→150, 225→275 com cortes
+// 100/200/250/300): sem `fim`, o topo de 225 seria 250 (P03); com `fim` 275 é P04.
+// Gabaritos gerados por test_resolver.py (REGERAR_FIXTURES=1).
+{
+  const { readFileSync } = await import("node:fs");
+  for (const nome of ["resolver-passo-nulo.json", "resolver-4cortes.json"]) {
+    const revista = JSON.parse(readFileSync(new URL(`../../../tests/fixtures/${nome}`, import.meta.url), "utf8"));
+    for (const etapa of Object.values(revista))
+      for (const [chave, d] of Object.entries(etapa)) {
+        if (!/^D\d\d$/.test(chave)) continue;
+        const faixas = montarFaixasRegua({ ...etapa.scaleRange, cortes: etapa.cortes, escala: d.scale });
+        for (const [padrao, linhas] of Object.entries(d.scale))
+          for (const l of linhas.filter((l) => l.content !== "---")) {
+            const f = faixas.find((f) => f.base === l.level && f.conteudo === l.content);
+            assert.equal(f.padrao, padrao, `${nome} ${chave} ${l.level}→${l.fim}`);
+          }
+      }
+  }
+  const nulo = JSON.parse(readFileSync(new URL("../../../tests/fixtures/resolver-passo-nulo.json", import.meta.url), "utf8"));
+  assert.ok(nulo["5ef"].D01.scale["padrao-4"].some((l) => l.level === 225 && l.fim === 275)); // o caso esparso está no gabarito
+  assert.ok(Object.values(nulo["5ef"].D01.scale).flat().every((l) => l.content !== "---")); // passo nulo
+}
+
 // Título do modal do item: âncora menor e maior da habilidade (aceita número ou texto do data-*)
 assert.equal(rotuloNiveis(556, 616), "níveis 556 a 616");
 assert.equal(rotuloNiveis("782", "1000"), "níveis 782 a 1000");
