@@ -1,0 +1,37 @@
+/* Planilha de variáveis (T17): só o que a grade de cortes (ui.css, .grade) não cobre. */
+
+/* Um <tbody> por projeto (a linha + os erros dela, trocado inteiro pelo HTMX): a borda entre
+   projetos vem do fim de cada tbody, não do último tr da tabela. */
+.grade-variaveis .tabela tbody tr:last-child > * { border-bottom-width: 1px; }
+.grade-variaveis .tabela tbody:last-of-type tr:last-child > * { border-bottom-width: 0; }
+
+/* 1ª coluna: parceiro, nome do projeto e o "Copiar de <ano-1>" empilhados. */
+.grade-variaveis tbody .grade-parceiro { white-space: normal; vertical-align: top; padding: 0.5rem 0.75rem; }
+.grade-variaveis tbody .grade-parceiro > a,
+.grade-variaveis tbody .grade-parceiro > .mudo { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.grade-variaveis tbody .grade-parceiro > a { font-weight: 500; }
+.grade-variaveis tbody .grade-parceiro > .btn { margin: 0.25rem 0 0 -0.5rem; }
+.grade-variaveis tbody .grade-parceiro .btn svg { width: 0.875rem; height: 0.875rem; }
+.grade-variaveis tbody .grade-parceiro .htmx-request { opacity: 0.6; pointer-events: none; }
+
+/* Textos mais longos que os cortes (nomes por extenso): célula mais larga; placeholder do pdNN legível. */
+.grade-variaveis .input { width: 11rem; }
+.grade-variaveis .input::placeholder { color: var(--muted-foreground); font-style: italic; }
+.grade-variaveis .input:disabled { opacity: 1; background: var(--muted); color: var(--foreground); cursor: default; }
+.grade-variaveis thead .grade-cc { cursor: help; }
+
+/* Legenda recolhível abaixo da planilha. */
+.legenda > summary { cursor: pointer; width: fit-content; font-size: 0.875rem; font-weight: 500; padding: 0.25rem 0; }
+.legenda > summary:hover { text-decoration: underline; text-underline-offset: 4px; }
+.legenda[open] > summary { margin-bottom: 0.5rem; }
+.legenda .tabela td { vertical-align: top; }
+
+/* O canto (cabeçalho da 1ª coluna) por cima dos cabeçalhos que rolam: `.grade thead .grade-parceiro`
+   do ui.css perde em especificidade para `.grade .tabela thead th` (z-index 1). Corrigir lá subiria à base. */
+.grade-variaveis .tabela thead th.grade-parceiro { z-index: 2; }
+
+@media (max-width: 40rem) {
+  .grade-variaveis .input { width: 9rem; }
+  .grade-variaveis tbody .grade-parceiro { padding: 0.5rem; }
+  .grade-variaveis tbody .grade-parceiro > .btn { white-space: normal; height: auto; padding-block: 0.25rem; text-align: left; }
+}
