@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo 19 de 22: upload do item + exclusão (D-180/D-181/D-185) e preparo do S17 juntados em `refatoracao-django` e no GitHub. Migrações até 0014. Rodando: time das telas B (D-186). Falta executar o S17 (carga real + ações destrutivas, cada uma com ok do usuário) e o S18.
+Passo 20 de 22: telas B (9 telas + cortes, painel B em `/painel/<ano>/`) juntadas em `refatoracao-django` (7b55ee8) e no GitHub; usuário aprovou o visual. Suíte 521 OK com PDFs. Agora: desligar React (editor/api) e Mongo do compose, a pedido do usuário. Depois: carga real do S17 e S18.
 Funcionando: em cada `feat/s11*`, suíte OK (8 de PDF pulados), `makemigrations --check` limpo; Playwright cortes, templates-admin e revista-textos passam.
-Quebrado/pendente: telas B em `feat/ui-b` (workflow); S17 executado só em ensaio; apagar `editor/` bloqueado até as telas B substituírem o uso; S18 não iniciado.
+Quebrado/pendente: 5 telas B corrigidas sem 2ª revisão; links "falta" ainda vão ao admin; polimento de CSS/HTMX/JS adiado pelo usuário; S17 executado só em ensaio; apagar `editor/` bloqueado até as telas B substituírem o uso; S18 não iniciado.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Quando o workflow das telas B terminar: ver os screenshots e o relatório da integração em `feat/ui-b`.
+Usuário confirma a lista de serviços a desligar do compose (React e Mongo).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1812,3 +1812,6 @@ Quando o workflow das telas B terminar: ver os screenshots e o relatório da int
 - D-186: HTMX liberado; workflow do time de telas B disparado.
 - `feat/item-exclusao` (cb6b8b4) verificado por mim: suíte OK (8 pulados), migrações limpas. Prontos para merge: `feat/item-exclusao` e `feat/s17-preparo`.
 - Ensaio dos 2 merges (item-exclusao + s17-preparo): conflitos em `admin/matriz.py` (imports: mantidos `path, reverse`, `format_html`, `CAMPO_SESSAO` e `lote.rota`) e `revista.zip` (regerado); suíte OK com os PDFs (0 pulados), régua ok. Merge real idêntico ao ensaio; push.
+- 14:50 Workflow das telas B terminou (25 agentes): integração em `integ/ui-b` 3401dd9; suíte 519 OK com PDFs (verificada por mim), Playwright 26/26 (relatório do agente). Porta 8080 = editor React antigo; telas B ficam no Django (8000).
+- Usuário aprovou as telas B ("mais do que aprovadas"); polimento de CSS/HTMX/JS fica para depois. Merge `integ/ui-b` → `refatoracao-django` (7b55ee8): conflitos em `urls/__init__.py` (mantidos `conta/` e `cortes/`) e `admin/matriz.py` (imports da integ/ui-b); suíte 521 OK com PDFs; trail check sem conflito; push.
+- Usuário pediu para desligar os contêineres do React e do Mongo e subir só os novos.
