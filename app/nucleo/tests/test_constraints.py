@@ -49,6 +49,7 @@ CHECKS = {
     "matriz_nome_tamanho",
     "parceiro_nome_tamanho",
     "tarefa_arquivo_tamanho",
+    "tarefa_texto_alternativo_tamanho",
     "tarefa_inicio_menor_fim",
     "bloqueio_sessao_edicao_tamanho",
     "bloqueio_um_alvo",

@@ -1,0 +1,49 @@
+{% extends "nucleo/bloqueio_change_form.html" %}
+{% load static %}
+{% comment %}Change form do descritor: um <dialog> "Arquivo do item" por tarefa (D-180), fora do form
+do admin (form não aninha). Posta com a sessão do bloqueio desta página; Cancelar fecha sem enviar.{% endcomment %}
+
+{% block extrahead %}{{ block.super }}
+{% if itens %}<script src="{% static 'nucleo/item.js' %}" defer></script>
+<link rel="stylesheet" href="{% static 'nucleo/template_editor.css' %}">{% endif %}
+{% endblock %}
+
+{% block extrastyle %}{{ block.super }}
+<style>
+  dialog.item-dialogo { width: min(40rem, calc(100% - 2rem)); padding: 20px; border: 1px solid var(--border-color); background: var(--body-bg); color: var(--body-fg); }
+  dialog.item-dialogo::backdrop { background: rgb(0 0 0 / 0.5); }
+  dialog.item-dialogo h2 { margin-top: 0; }
+  dialog.item-dialogo textarea { width: 100%; box-sizing: border-box; }
+</style>
+{% endblock %}
+
+{% block content %}{{ block.super }}
+{% for tarefa, form, caminho in itens %}
+<dialog id="item-{{ tarefa.pk }}" class="item-dialogo" aria-labelledby="item-{{ tarefa.pk }}-titulo">
+  <form method="post" enctype="multipart/form-data" action="{% url 'admin:nucleo_descritor_item' original.pk tarefa.pk %}">{% csrf_token %}
+    <input type="hidden" name="{{ bloqueio_campo_sessao }}" value="{{ bloqueio.sessao }}">
+    <h2 id="item-{{ tarefa.pk }}-titulo">Arquivo do item da tarefa {{ tarefa.codigo }}</h2>
+    {% if tarefa.arquivo %}
+    <p>Arquivo atual: <a href="{% url 'admin:nucleo_descritor_item' original.pk tarefa.pk %}" target="_blank" rel="noopener">{{ caminho.name }}</a>
+      ({{ caminho.suffix|slice:"1:"|upper }}). Enviar outro troca este.</p>
+    {% endif %}
+    <p>O arquivo é da matriz: aparece em toda revista que usa esta etapa × CC.
+      Salvar aqui descarta o que ainda não foi salvo no formulário do descritor.</p>
+    {% if item_impacto.0 %}<p><strong class="impacto-alerta">Afeta {{ item_impacto.0 }} revista(s) ativa(s); {{ item_impacto.1 }} perde(m) o “Validado”.</strong></p>{% endif %}
+    <fieldset class="module aligned">
+    {% for campo in form %}{% if campo.is_hidden %}{{ campo }}{% else %}
+      <div class="form-row">
+        <div class="flex-container">{{ campo.label_tag }} {{ campo }}</div>
+        {% if campo.help_text %}<div class="help">{{ campo.help_text }}</div>{% endif %}
+      </div>
+    {% endif %}{% endfor %}
+    </fieldset>
+    <div class="submit-row">
+      <input type="submit" class="default" value="Enviar">
+      {% if tarefa.arquivo %}<input type="submit" name="_remover" value="Remover arquivo">{% endif %}
+      <input type="submit" formmethod="dialog" formnovalidate value="Cancelar">
+    </div>
+  </form>
+</dialog>
+{% endfor %}
+{% endblock %}

@@ -1,4 +1,5 @@
-"""Upload do SVG do F2 e da capa da revista (S09; D-108, D-111, D-118, D-125).
+"""Upload do SVG do F2, da capa da revista (S09; D-108, D-111, D-118, D-125) e do arquivo
+do item da tarefa (D-180, D-181).
 
 O SVG gravado é o sanitizado, nunca o original: lista fixa de tags e
 atributos, ids e classes com prefixo `f2-` (no atributo, no `<style>`, em
@@ -18,9 +19,13 @@ from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.db import transaction
 
+from nucleo.models import Tarefa
+
 MB = 1024 * 1024
 SVG_MAX = 3 * MB
 CAPA_MAX = 5 * MB
+ITEM_MAX = 5 * MB
+ITEM_MIMES = {"pdf": "application/pdf", "png": "image/png", "jpg": "image/jpeg"}  # contrato/schemas.ts
 STYLE_MAX = 1 * MB
 ATRIBUTO_MAX = 4 * 1024
 NOS_MAX = 200_000
@@ -302,6 +307,48 @@ def receber_capa(revista, arquivo):
     revista.capa_sha256 = hashlib.sha256(dados).hexdigest()
     _salvar(revista, ["capa", "capa_sha256"], revista.capa, antigo)
     return revista
+
+
+# --- Item da tarefa (D-180, D-181) -----------------------------------------------
+
+
+def receber_item(tarefa, arquivo, alt=""):
+    """Grava o arquivo do item (PDF, PNG ou JPG até 5 MB, tipo pelos bytes e igual ao mime
+    declarado) com nome uuid e o texto alternativo. O arquivo antigo sai se ficou órfão."""
+    dados = _ler(arquivo, ITEM_MAX, "Arquivo do item")
+    tipo = "pdf" if dados.startswith(b"%PDF-") else tipo_imagem(dados)
+    if tipo not in ITEM_MIMES:
+        _erro("O arquivo do item precisa ser PDF, PNG ou JPG.")
+    if getattr(arquivo, "content_type", None) != ITEM_MIMES[tipo]:
+        _erro("O conteúdo do arquivo não é do tipo informado.")
+    antigo = tarefa.arquivo
+    tarefa.arquivo, tarefa.texto_alternativo = _gravar("itens", tipo, dados), alt
+    try:
+        tarefa.save(update_fields=["arquivo", "texto_alternativo"])
+    except BaseException:
+        default_storage.delete(tarefa.arquivo)
+        raise
+    apagar_item_orfao(antigo)
+    return tarefa
+
+
+def remover_item(tarefa):
+    """Desliga o arquivo da tarefa; o arquivo físico só sai se nenhuma tarefa o usa (D-150)."""
+    antigo = tarefa.arquivo
+    tarefa.arquivo, tarefa.texto_alternativo = None, ""
+    tarefa.save(update_fields=["arquivo", "texto_alternativo"])
+    apagar_item_orfao(antigo)
+
+
+def apagar_item_orfao(caminho):
+    """Depois do commit, apaga `caminho` do storage se nenhuma Tarefa (de nenhum ano) aponta
+    para ele. O abrir_ano copia o caminho: 2026 e 2027 dividem o mesmo arquivo (D-150)."""
+    def apagar():
+        if not Tarefa.objects.filter(arquivo=caminho).exists():
+            default_storage.delete(caminho)
+
+    if caminho:
+        transaction.on_commit(apagar)
 
 
 # --- Conferência seções × ids -------------------------------------------------

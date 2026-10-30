@@ -6,22 +6,31 @@
   do descritor, o descritor é inline da MEC. Sem actions nem list_editable (o mixin proíbe).
 - Antes de salvar, o formulário pede confirmação quando a edição afeta revistas ativas (D-076).
 - MEC nasce pela importação ou pela duplicação; ninguém exclui (D-136).
+- Arquivo do item (D-180): botão "Arquivo do item" em cada tarefa abre um <dialog> que posta
+  em `item_view`, com a sessão do bloqueio da página e a confirmação de impacto.
 """
 
 import tempfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from django import forms
 from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.files.storage import default_storage
+from django.db import router, transaction
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import path
+from django.utils.html import format_html, format_html_join
 
-from nucleo.admin.bloqueio import BloqueioAdminMixin
+from nucleo.admin.bloqueio import CAMPO_SESSAO, BloqueioAdminMixin
 from nucleo.models import Ano, Descritor, Matriz, MatrizEtapaCC, Tarefa
+from nucleo.servicos import bloqueio
+from nucleo.servicos.arquivos import receber_item, remover_item
 from nucleo.servicos.importar_matriz import MANTER, ImportacaoRecusada, gravar_matriz, ler
-from nucleo.servicos.matriz import DuplicacaoRecusada, diferencas, duplicar_matriz, revistas_afetadas
+from nucleo.servicos.matriz import DuplicacaoRecusada, diferencas, duplicar_matriz, impacto, revistas_afetadas
+from nucleo.urls.preview import TIPOS_ITEM, servir
 
 
 # --- Matriz -------------------------------------------------------------------------------
@@ -315,8 +324,24 @@ class MatrizEtapaCCAdmin(MatrizEditAdmin):
 
 class TarefaInline(admin.TabularInline):
     model = Tarefa
-    fields = ("inicio", "fim", "texto", "ordem")
+    fields = ("inicio", "fim", "texto", "ordem", "acoes")
+    readonly_fields = ("acoes",)
     extra = 0
+    editavel = False  # o DescritorAdmin preenche por pedido (instância nova a cada um)
+
+    @admin.display(description="Arquivo do item")
+    def acoes(self, obj):
+        if obj.pk is None:
+            return ""
+        partes = []
+        if obj.arquivo:
+            partes.append(format_html("{} ", PurePosixPath(obj.arquivo).suffix.lstrip(".").upper()))
+        if self.editavel:
+            partes.append(format_html(
+                '<button type="button" class="button" data-dialogo="item-{}" '
+                'aria-label="Arquivo do item da tarefa {}">Arquivo do item</button> ', obj.pk, obj.codigo,
+            ))  # fmt: skip
+        return format_html_join("", "{}", ((p,) for p in partes))
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         if db_field.name == "texto":
@@ -366,3 +391,113 @@ class DescritorAdmin(MatrizEditAdmin):
         if db_field.name == "prerequisitos":
             return LinhasField(label="Pré-requisitos", required=False, help_text="Um por linha.")
         return super().formfield_for_dbfield(db_field, request, **kwargs)
+
+    change_form_template = "nucleo/descritor_change_form.html"
+
+    def get_urls(self):
+        def rota(sufixo, view, nome):
+            return path(
+                f"<int:pk>/tarefa/<int:tarefa_pk>/{sufixo}/", self.admin_site.admin_view(view),
+                name=f"nucleo_descritor_{nome}",
+            )  # fmt: skip
+
+        return [
+            rota("item", self.item_view, "item"),
+            *super().get_urls(),
+        ]
+
+    def get_inline_instances(self, request, obj=None):
+        inlines = super().get_inline_instances(request, obj)
+        editavel = obj is not None and self._edita_tarefa(request, obj)
+        for inline in inlines:
+            inline.editavel = editavel
+        return inlines
+
+    def _edita_tarefa(self, request, descritor):
+        return self.has_change_permission(request, descritor) and request.user.has_perm("nucleo.change_tarefa")
+
+    def render_change_form(self, request, context, add=False, change=False, form_url="", obj=None):
+        # Os <dialog> do item ficam fora do form do admin (form não aninha); só com o bloqueio.
+        if obj is not None and context.get("bloqueio") and self._edita_tarefa(request, obj):
+            tarefas = list(obj.tarefa_set.order_by("ordem", "pk"))
+            revistas = impacto(obj.matriz_etapa_cc) if tarefas else []
+            form = _item_form(len(revistas))
+            context["itens"] = [
+                (t, form(instance=t, auto_id=f"item{t.pk}_%s"), PurePosixPath(t.arquivo or "")) for t in tarefas
+            ]
+            context["item_impacto"] = (len(revistas), sum(v for _, v in revistas))
+        return super().render_change_form(request, context, add, change, form_url, obj)
+
+    def _descritor_e_tarefa(self, request, pk, tarefa_pk):
+        descritor = self.get_object(request, str(pk))
+        if descritor is None:
+            raise Http404
+        return descritor, get_object_or_404(Tarefa, pk=tarefa_pk, descritor=descritor)
+
+    def item_view(self, request, pk, tarefa_pk):
+        """GET: o arquivo do item (link do modal). POST: envia, troca ou remove (D-180)."""
+        descritor, tarefa = self._descritor_e_tarefa(request, pk, tarefa_pk)
+        if request.method != "POST":
+            tipo = TIPOS_ITEM.get(PurePosixPath(tarefa.arquivo or "").suffix)
+            if not self.has_view_permission(request, descritor) or tipo is None:
+                raise Http404
+            try:
+                return servir(default_storage.open(tarefa.arquivo), tipo, sandbox=tipo != "application/pdf")
+            except FileNotFoundError:
+                raise Http404 from None
+        if not self._edita_tarefa(request, descritor):
+            raise PermissionDenied
+        mec, sessao = descritor.matriz_etapa_cc, request.POST.get(CAMPO_SESSAO, "")
+        voltar = redirect("admin:nucleo_descritor_change", descritor.pk)
+        form = _item_form(revistas_afetadas(mec))(request.POST, request.FILES, instance=tarefa)
+        with transaction.atomic(using=router.db_for_write(Tarefa)):
+            if not bloqueio.conferir_na_transacao(mec, request.user, sessao):
+                messages.error(
+                    request, "Arquivo do item não salvo: você perdeu o bloqueio de edição. Recarregue e tente de novo."
+                )
+                return voltar
+            erro = self._gravar_item(request, tarefa, form)
+        bloqueio.liberar(mec, request.user, sessao)  # a próxima página readquire com sessão nova
+        if erro:
+            messages.error(request, f"Arquivo do item da tarefa {tarefa.codigo} não salvo: {erro}")
+        return voltar
+
+    def _gravar_item(self, request, tarefa, form):
+        """Grava e devolve None, ou devolve o motivo da recusa (causa + correção)."""
+        if not form.is_valid():
+            return " ".join(e for erros in form.errors.values() for e in erros)
+        arquivo, alt = form.cleaned_data["arquivo"], form.cleaned_data["texto_alternativo"]
+        try:
+            if "_remover" in request.POST:
+                remover_item(tarefa)
+                messages.success(request, f"Arquivo do item removido da tarefa {tarefa.codigo}.")
+            elif arquivo:
+                receber_item(tarefa, arquivo, alt)
+                messages.success(request, f"Arquivo do item enviado para a tarefa {tarefa.codigo}.")
+            elif tarefa.arquivo:
+                tarefa.save(update_fields=["texto_alternativo"])
+                messages.success(request, f"Texto alternativo da tarefa {tarefa.codigo} salvo.")
+            else:
+                return "nenhum arquivo escolhido. Escolha um PDF, PNG ou JPG e envie de novo."
+        except ValidationError as e:
+            return " ".join(e.messages) + " Escolha outro arquivo e envie de novo."
+        return None
+
+
+class ItemForm(ImpactoForm):
+    arquivo = forms.FileField(
+        label="Arquivo", required=False, help_text="PDF, PNG ou JPG, até 5 MB.",
+        widget=forms.FileInput(attrs={"accept": "application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg"}),
+    )  # fmt: skip
+    field_order = ("arquivo", "texto_alternativo", "confirmar_impacto")
+
+    class Meta:
+        model = Tarefa
+        fields = ("texto_alternativo",)
+        labels = {"texto_alternativo": "Texto alternativo (opcional)"}
+        help_texts = {"texto_alternativo": "O que o item mostra, para quem usa leitor de tela. Até 1000 caracteres."}
+        widgets = {"texto_alternativo": forms.Textarea(attrs={"rows": 3, "cols": 50, "maxlength": 1000})}
+
+
+def _item_form(afetadas):
+    return type("ItemForm", (ItemForm,), {"afetadas": afetadas})

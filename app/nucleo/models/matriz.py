@@ -91,8 +91,10 @@ class Tarefa(models.Model):
     fim = models.IntegerField()
     texto = models.TextField()
     # Caminho no storage, compartilhado entre anos pelo abrir_ano: quem trocar o arquivo
-    # só apaga o antigo se nenhuma outra Tarefa usar o mesmo caminho.
+    # só apaga o antigo se nenhuma outra Tarefa usar o mesmo caminho (D-150, D-181:
+    # `servicos.arquivos.apagar_item_orfao`). Grava só `servicos.arquivos.receber_item`.
     arquivo = models.TextField(null=True, blank=True)
+    texto_alternativo = models.TextField("Texto alternativo", blank=True, default="")  # D-180
     ordem = models.IntegerField()
     history = HistoricalRecords()
 
@@ -101,4 +103,13 @@ class Tarefa(models.Model):
         constraints = [
             models.CheckConstraint(condition=Q(inicio__lt=F("fim")), name="tarefa_inicio_menor_fim"),
             max_len("tarefa", "arquivo", 500),
+            max_len("tarefa", "texto_alternativo", 1000),
         ]
+
+    @property
+    def codigo(self):
+        """Código da tarefa nas telas (confirmação da exclusão, leitor de tela do F1): `D01 100-150`."""
+        return f"{self.descritor.codigo} {self.inicio}-{self.fim}"
+
+    def __str__(self):
+        return self.codigo
