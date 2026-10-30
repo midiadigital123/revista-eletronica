@@ -351,7 +351,7 @@ class RevistaAdmin(BloqueioAdminMixin, admin.ModelAdmin):
     form = RevistaForm
     change_form_template = "nucleo/revista_change_form.html"
     change_list_template = "nucleo/change_list_lotes.html"
-    list_display = ("projeto", "componente", "arquivada_em")
+    list_display = ("projeto", "componente", "arquivada_em", "preview")
     list_select_related = ("projeto", "componente")
     list_filter = ("ano", "componente")
     readonly_fields = (
@@ -431,6 +431,11 @@ class RevistaAdmin(BloqueioAdminMixin, admin.ModelAdmin):
             '<h4>{} {} · {}</h4><pre class="texto-template">{}</pre>',
             ((b.rf.fasciculo, s.id, s.titulo, s.corpo) for b in blocos_de_texto(obj) for s in b.secoes),
         ) + faixas_sem_template(obj)
+
+    @admin.display(description="Preview")
+    def preview(self, obj):
+        rotulo = "versão arquivada ↗" if obj.arquivada_em else "preview ↗"  # arquivada: a foto (D-117)
+        return format_html('<a href="{}" target="_blank" rel="noopener">{}</a>', reverse("preview", args=[obj.pk]), rotulo)
 
     @admin.display(description="Ids do SVG")
     def conferencia_ids(self, obj):

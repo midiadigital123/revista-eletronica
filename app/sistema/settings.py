@@ -16,6 +16,7 @@ if not DEBUG and SECRET_KEY == CHAVE_DEV:
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 INSTALLED_APPS = [
+    "nucleo",  # antes do admin: sobrescreve admin/index.html e admin/base_site.html
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -24,7 +25,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.postgres",
     "simple_history",
-    "nucleo",
 ]
 
 MIDDLEWARE = [

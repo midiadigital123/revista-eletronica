@@ -3,6 +3,12 @@
 Form separado do change form: só csrf, hash_visto e a sessão do bloqueio (não reenvia uploads
 nem textos não salvos). A renovação do bloqueio segue no change form.{% endcomment %}
 
+{% block object-tools-items %}
+<li><a href="{% url 'preview' original.pk %}" target="_blank" rel="noopener" title="Abre mesmo com pendências; o que falta aparece em faixa vermelha.">Abrir preview{% if original.arquivada_em %} (versão arquivada){% endif %} ↗</a></li>
+<li><a href="{% url 'impresso' original.pk %}">Abrir tela do impresso</a></li>
+{{ block.super }}
+{% endblock %}
+
 {% block content %}{{ block.super }}
 {% if validacao %}<fieldset class="module aligned" id="validacao">
   <h2>Validado</h2>
