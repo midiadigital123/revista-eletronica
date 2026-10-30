@@ -5,6 +5,7 @@
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/projeto.css' %}">{% endblock %}
 
 {% block conteudo %}
+<a class="mudo voltar" href="{% url 'ui_projeto_lista' projeto.ano.ano %}">‹ Projetos de {{ projeto.ano.ano }}</a>
 <header class="pagina-cab">
   <div>
     <h1>{{ projeto.nome }}{% if arquivado %} <span class="badge badge-contorno">Arquivado</span>{% endif %}</h1>
@@ -13,7 +14,6 @@
   <div class="acoes">
     {% rota_b "ui_variaveis" projeto.ano.ano as u %}
     <a class="btn btn-outline" href="{% if u %}{{ u }}{% else %}{% url 'admin:nucleo_projeto_variaveis' %}?ano={{ projeto.ano.ano }}{% endif %}">Planilha de variáveis de {{ projeto.ano.ano }}</a>
-    <a class="btn btn-ghost" href="{% url 'ui_projeto_lista' projeto.ano.ano %}">Projetos de {{ projeto.ano.ano }}</a>
   </div>
 </header>
 

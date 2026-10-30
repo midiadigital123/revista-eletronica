@@ -7,7 +7,7 @@ Contexto: l (urls/ui_variaveis.linha), ano, pode_editar, colunas; oob=True na re
     <th scope="row" class="grade-parceiro">
       <input type="hidden" name="form-{{ l.indice }}-id" value="{{ p.pk }}">
       {% rota_b "ui_projeto" p.pk as u %}
-      <a class="link" href="{% if u %}{{ u }}{% else %}{% url 'admin:nucleo_projeto_change' p.pk %}{% endif %}">{{ p.parceiro_ano.parceiro }}</a>
+      <a class="link-linha" href="{% if u %}{{ u }}{% else %}{% url 'admin:nucleo_projeto_change' p.pk %}{% endif %}">{{ p.parceiro_ano.parceiro }}</a>
       <span class="mudo">{{ p.nome }}</span>
       {% if pode_editar %}
       <button type="submit" form="copiar-{{ p.pk }}" id="copiar-btn-{{ p.pk }}" class="btn btn-ghost btn-sm"

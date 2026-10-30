@@ -5,6 +5,7 @@ View: nucleo/urls/ui_templates.py (editar). Ficha: docs/telas/fichas/templates.m
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/templates.css' %}">{% endblock %}
 
 {% block conteudo %}
+<a class="mudo voltar" href="{% url 'ui_templates' tpl.ano.ano %}?aba={{ tpl.fasciculo }}">‹ Templates {{ tpl.fasciculo }}</a>
 <header class="pagina-cab">
   <div>
     <h1>{{ tpl.nome }}</h1>
@@ -12,12 +13,6 @@ View: nucleo/urls/ui_templates.py (editar). Ficha: docs/telas/fichas/templates.m
       {{ tpl.componente.nome }} ({{ tpl.componente.codigo }}), fascículo {{ tpl.fasciculo }}, {{ tpl.ano.ano }}.
       {% if atual %}Versão atual: {{ atual.numero }}, de {{ atual.criada_em|date:"d/m/Y H:i" }}{% if atual.criada_por %} por {{ atual.criada_por.get_full_name|default:atual.criada_por.username }}{% endif %}.{% else %}Ainda sem texto.{% endif %}
     </p>
-  </div>
-  <div class="acoes">
-    <a class="btn btn-ghost" href="{% url 'ui_templates' tpl.ano.ano %}?aba={{ tpl.fasciculo }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
-      Templates {{ tpl.fasciculo }}
-    </a>
   </div>
 </header>
 

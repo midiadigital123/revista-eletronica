@@ -26,7 +26,7 @@
     <tbody>
     {% for r in revistas %}
       <tr>
-        <th scope="row" class="fixa"><a class="link" href="{% url 'ui_revista_editar' ano.ano r.pk %}">{{ r.projeto }}</a></th>
+        <th scope="row" class="fixa"><a class="link-linha" href="{% url 'ui_revista_editar' ano.ano r.pk %}">{{ r.projeto }}</a></th>
         <td>{{ r.componente.codigo }}</td>
         <td>{% include "ui/_componentes/status.html" with ok=r.svg_f2 titulo="Sem SVG do F2" %}</td>
         <td>{% include "ui/_componentes/status.html" with ok=r.capa titulo="Sem capa" %}</td>

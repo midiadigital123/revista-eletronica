@@ -57,7 +57,7 @@ para #painel-corpo. Contexto: urls/ui_painel.py.
         <tr data-revista="{{ l.revista.pk }}">
           <th scope="row" class="fixa painel-revista">
             {% if pode_validar %}<input type="checkbox" name="revista" value="{{ l.revista.pk }}" aria-label="Selecionar {{ l.revista }}">{% endif %}
-            <a class="link-linha" href="{% url 'admin:nucleo_revista_change' l.revista.pk %}">{{ l.revista.projeto.parceiro_ano.parceiro.nome }}</a>
+            <a class="link-linha" href="{% url 'ui_revista_editar' ano.ano l.revista.pk %}">{{ l.revista.projeto.parceiro_ano.parceiro.nome }}</a>
             <span class="badge badge-secundario">{{ l.revista.componente.codigo }}</span>
             <a class="painel-preview" href="{% url 'preview' l.revista.pk %}" target="_blank" rel="noopener" title="Abre mesmo com pendências; o que falta aparece em faixa vermelha.">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Preview<span class="sr-only"> de {{ l.revista }} (abre em nova aba)</span></a>

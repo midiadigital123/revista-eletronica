@@ -72,7 +72,7 @@ def matriz(request, ano):
         for pa in parceiros
     ]  # fmt: skip
     contexto = {
-        "ano": ano, "anos": Ano.objects.order_by("-ano"), "secao": "lotes", "aba": "matriz",
+        "ano": ano, "anos": Ano.objects.order_by("-ano"), "secao": "variaveis", "aba": "matriz",
         "form": form, "linhas": linhas, "pode_gravar": pode_gravar,
     }  # fmt: skip
     return responder(request, "ui/lotes/matriz.html", "ui/parciais/lotes_matriz.html", contexto)
@@ -87,7 +87,7 @@ def template(request, ano):
     pedido = request.GET.get("componente", "")
     componente = next((c for c in componentes if str(c.pk) == pedido), componentes[0] if componentes else None)
     contexto = {
-        "ano": ano, "anos": Ano.objects.order_by("-ano"), "secao": "lotes", "aba": "template",
+        "ano": ano, "anos": Ano.objects.order_by("-ano"), "secao": "variaveis", "aba": "template",
         "componentes": componentes, "componente": componente, "pode_gravar": pode_gravar,
     }  # fmt: skip
     if componente is None:  # ano sem componente: só o estado vazio

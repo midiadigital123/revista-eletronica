@@ -50,7 +50,8 @@ test("impresso: valida, vê o diff e marca impressa", async ({ browser }) => {
     await ped.click("input[name=_save]");
     await ped.goto(urlPainel);
   }
-  await linha.locator("th a.link-linha").click(); // o outro link da célula é o preview
+  // O nome leva à revista B; o roteiro edita no admin (mesma revista).
+  await ped.goto(`/admin/nucleo/revista/${await linha.getAttribute("data-revista")}/change/`);
   const urlRevista = ped.url();
   await ped.fill(FECHAMENTO, `Fechamento ${marca}.`);
   await ped.click("input[name=_continue]");

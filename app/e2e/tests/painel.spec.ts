@@ -65,7 +65,8 @@ test("painel: filtrar e validar uma revista", async ({ page }) => {
   }
 
   // 3. Revista: muda um texto (hash novo), salva e clica em "Validado".
-  await linha.locator("th a.link-linha").click(); // o outro link da célula é o preview
+  // O nome leva à revista B; o roteiro edita no admin (mesma revista).
+  await page.goto(`/admin/nucleo/revista/${await linha.getAttribute("data-revista")}/change/`);
   const urlRevista = page.url();
   await page.fill(FECHAMENTO, `Fechamento ${marca}.`);
   await page.click("input[name=_continue]");
