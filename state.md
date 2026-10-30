@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo 18 de 22: S12 (painel + Validado), auditoria (Top 5) e variáveis oficiais (D-172/D-173) juntados em `refatoracao-django` e no GitHub. Migrações até 0010.
+Passo 18 de 22: S12, auditoria, variáveis oficiais e nome dos padrões por ano (D-175) em `refatoracao-django` e no GitHub. Migrações até 0012.
 Funcionando: em cada `feat/s11*`, suíte OK (8 de PDF pulados), `makemigrations --check` limpo; Playwright cortes, templates-admin e revista-textos passam.
-Quebrado/pendente: nome padrão dos padrões por ano (D-175) não iniciado; S13, S17, S18 não iniciados; legenda "Onde aparece" da aba Variáveis não mostra pd01..pd05 na escala.
+Quebrado/pendente: não há mapa das telas (UI) × dados × requisitos — preocupação do usuário (2026-10-30); S13, S17, S18 não iniciados.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Disparar a D-175 (campo `nome` em CorPadrao como padrão de pd01..pd05) numa branch `feat/nome-padrao` a partir de `refatoracao-django`.
+Com o aval do usuário: inventário das telas existentes (admin S11a–S12) × dados do ER × requisitos das decisões, apontando lacunas, antes do S13.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1441,9 +1441,10 @@ Disparar a D-175 (campo `nome` em CorPadrao como padrão de pd01..pd05) numa bra
 - **Motivo:** escolha do usuário; reaproveita o padrão ano + sobrescrita já existente.
 - **Descartadas:** `pdNN` obrigatório em cada projeto (D-173, digitar em todo projeto); ação em lote gravando `pdNN` (valor duplicado em cada projeto); padrão por parceiro (usuário escolheu por ano).
 - **Arquivos afetados:** `app/nucleo/models/cadastro.py`, `app/nucleo/servicos/resolver.py`, `app/nucleo/servicos/abrir_ano.py`, `carregar_cadastros`, admin de CorPadrao, testes, `docs/variaveis.md`
-- **Status:** pendente. Substitui parte de D-173 (pdNN vazio = pendência).
+- **Status:** ativa. Commit local 222627b em `feat/nome-padrao`, migração `0011_cor_padrao_nome` (preenche "Padrão 0N" nas linhas existentes). Verificado por mim: suíte OK (8 pulados), `makemigrations --check` limpo, merge em `refatoracao-django` sem conflito. Tetos de consulta +1 (resolver 13, painel 16 por linha). Nome de exibição corrigido para "Padrões do ano (cor e nome)" (892af5e, migração 0012 sem SQL). Juntada em `refatoracao-django`. Substitui parte de D-173 (pdNN vazio = pendência).
 
 ## Perguntas em aberto
+- [ ] Mapa das telas (UI): quais telas, quem usa, quais dados cada uma preenche e requisitos de cada uma; quais já existem no admin e quais faltam — depende de: usuário aprovar o inventário
 - [ ] Coluna Impresso do painel: criar `hash_impresso` na foto (migração) para não carregar o JSON inteiro por linha? Só se o painel ficar lento — depende de: medida com dados de 2026
 - [x] (D-173) `pd01..pd05` devem virar os rótulos "Padrão 01..05" do F1? `nome_parceiro` substitui a automática `parceiro` nos textos? — depende de: usuário
 - [x] Aplicar o Top 5 da auditoria de código com cara de IA (2026-10-30)? — usuário: todos, na branch `fix/auditoria-ia`
@@ -1678,3 +1679,7 @@ Disparar a D-175 (campo `nome` em CorPadrao como padrão de pd01..pd05) numa bra
 - S12 correções (f52fffc): suíte OK verificada por mim; pronto para merge.
 - S12, auditoria e variáveis juntados em `refatoracao-django` (ensaio em worktree descartável antes: suíte OK); push feito.
 - Usuário: nome dos padrões tem padrão por ano junto da cor e o projeto sobrescreve (D-175).
+- D-175 disparada: subagente em `feat/nome-padrao`.
+- D-175 entregue (222627b): suíte OK verificada por mim; merge simulado limpo.
+- D-175 juntada com a correção do nome de exibição (892af5e) e a learning da escolha do usuário; push feito.
+- Usuário preocupado: telas (UI) ainda não mapeadas com requisitos.
