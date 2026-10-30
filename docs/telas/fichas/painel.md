@@ -26,6 +26,7 @@ Responder em uma tela "o que falta para cada revista do ano sair completa, e ond
 - Bloco "Próxima tarefa", conforme a permissão (nunca pelo nome do grupo):
   - quem marca impressão: "N revista(s) para atualizar no impresso", com link para o filtro Impresso;
   - quem valida: "N revista(s) sem “Validado” nesta versão", com link para o filtro Validado;
+  - com as duas permissões (Admin, superusuário): as duas linhas, "Validado" primeiro;
   - os demais: "N de M revista(s) completas".
   - Atalhos de montagem, cada um só com a permissão: Cortes, Variáveis, Escolher matriz, Escolher template F1/F2.
 - Filtros: Falta (Tudo ou uma das 8 colunas), Parceiro (Todos ou um parceiro do ano) e Template (só aparece quando se chega pelo "usado por" da lista de templates, com "Limpar").
@@ -72,7 +73,9 @@ Nenhum. O painel só lê. "Validar selecionadas" leva à tela de validação em 
 ## Interações com HTMX
 
 - O formulário de filtros faz `hx-get` ao mudar qualquer select; alvo `#painel-corpo` (tarefa + filtros + tabela), `hx-push-url`. Os números do cabeçalho fazem o mesmo, com `href` normal para funcionar sem JS.
-- A mesma view devolve só o corpo quando o pedido é HTMX; senão a página inteira.
+- A mesma view devolve só o corpo quando o pedido é HTMX; senão a página inteira (`pagina_ou_parcial`, com `Vary: HX-Request`). Voltar do admin depois de filtrar mostra a página inteira, inclusive na restauração de histórico do htmx.
+- "Limpar" do template também troca só o corpo (`hx-get`), como os números do cabeçalho.
+- O resumo é anunciado ao leitor de tela por uma região viva fixa fora de `#painel-corpo`, atualizada no `htmx:afterSwap`.
 - Sem JS: um botão "Filtrar" aparece (`<noscript>`), os links funcionam.
 - Seleção: JS pequeno e delegado (sobrevive à troca do corpo): marcar todas, contador, botão ativo/inativo.
 
@@ -105,10 +108,10 @@ Em 390 px: filtros empilhados em largura total; atalhos de montagem quebram linh
 ## Critérios de aceite
 
 1. Pedagógica abre `/ui/painel/2026/`: 200, visual da base B, uma linha por revista ativa, caixas de seleção, "Validar selecionadas" apontando para a validação em lote, link de preview em nova aba, link da coluna Impresso para a tela do impresso.
-2. "Próxima tarefa" da Pedagógica mostra a contagem de revistas sem "Validado" e linka `?falta=validado`; a do Impresso linka `?falta=impresso`.
+2. "Próxima tarefa" da Pedagógica mostra a contagem de revistas sem "Validado" e linka `?falta=validado`; a do Impresso linka `?falta=impresso`; o superusuário vê as duas.
 3. Célula "falta" tem a dica no `title` e o link de correção; o cabeçalho mostra quantas faltam por coluna e linka o filtro mantendo parceiro e template.
 4. Filtros dão o mesmo resultado do painel do admin (falta, parceiro, template; inválidos ignorados).
-5. Pedido HTMX devolve só o corpo (sem `<html>`).
+5. Pedido HTMX devolve só o corpo (sem `<html>`); a resposta tem `Vary: HX-Request`; pedido de restauração de histórico recebe a página inteira.
 6. Impresso: aviso de só leitura, sem seleção nem botão; POST 405.
 7. Sem `view_revista`: 403. Anônimo: login do admin com `next`. Ano inexistente: 404.
 8. Estados vazios com as mensagens exatas acima.

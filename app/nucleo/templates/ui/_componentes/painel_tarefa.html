@@ -1,17 +1,20 @@
 {% load ui %}{% comment %}
 Próxima tarefa por perfil (rascunho-ui item 3): por permissão, nunca por nome de grupo.
+Com as duas permissões (Admin, superusuário) mostra as duas linhas, Validado primeiro.
 Contagens do recorte atual (parceiro/template), antes do filtro de falta. Contexto: urls/ui_painel.py.
 Candidato à base: o índice e outras telas B podem usar o mesmo bloco.
 {% endcomment %}<section class="painel-tarefa" aria-labelledby="painel-tarefa-titulo">
   <div class="painel-tarefa-principal">
     <h2 id="painel-tarefa-titulo" class="mudo">Próxima tarefa</h2>
+    {% if perms.nucleo.validar_revista %}
+      {% if faltam.validado %}<a class="painel-tarefa-link" href="{{ url_falta.validado }}"><strong>{{ faltam.validado }}</strong> revista(s) sem “Validado” nesta versão</a>
+      {% else %}<p class="painel-tarefa-link">Tudo validado: nenhuma revista mudou desde o último “Validado”.</p>{% endif %}
+    {% endif %}
     {% if perms.nucleo.marcar_impressa %}
       {% if faltam.impresso %}<a class="painel-tarefa-link" href="{{ url_falta.impresso }}"><strong>{{ faltam.impresso }}</strong> revista(s) para atualizar no impresso</a>
       {% else %}<p class="painel-tarefa-link">Impresso em dia: nenhuma revista mudou desde a última impressão.</p>{% endif %}
-    {% elif perms.nucleo.validar_revista %}
-      {% if faltam.validado %}<a class="painel-tarefa-link" href="{{ url_falta.validado }}"><strong>{{ faltam.validado }}</strong> revista(s) sem “Validado” nesta versão</a>
-      {% else %}<p class="painel-tarefa-link">Tudo validado: nenhuma revista mudou desde o último “Validado”.</p>{% endif %}
-    {% else %}
+    {% endif %}
+    {% if not perms.nucleo.validar_revista and not perms.nucleo.marcar_impressa %}
       <p class="painel-tarefa-link"><strong>{{ completas }}</strong> de {{ todas|length }} revista(s) completas</p>
     {% endif %}
   </div>

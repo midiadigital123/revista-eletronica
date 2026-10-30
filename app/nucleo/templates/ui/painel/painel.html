@@ -18,7 +18,15 @@ Ficha: docs/telas/fichas/painel.md. O corpo (tarefa, filtros, tabela) é trocado
 {% include "ui/_componentes/so_leitura.html" with texto="Só leitura: seu perfil vê o painel, mas não valida revistas. Para validar, peça a permissão de validação a um administrador." %}
 {% endif %}
 
-<div id="painel-corpo" class="painel-corpo">{% include "ui/parciais/painel_corpo.html" %}</div>
+<div id="painel-corpo" class="painel-corpo alvo-htmx">{% include "ui/parciais/painel_corpo.html" %}</div>
+<p class="sr-only" id="painel-anuncio" aria-live="polite"></p>
+<script>
+// Região viva fixa (fora do alvo do HTMX): anuncia o resumo novo depois de filtrar.
+document.addEventListener("htmx:afterSwap", (e) => {
+  if (e.detail.target.id !== "painel-corpo") return;
+  document.getElementById("painel-anuncio").textContent = e.detail.target.querySelector(".painel-resumo")?.textContent.trim() ?? "";
+});
+</script>
 
 {% if pode_validar %}
 <script>

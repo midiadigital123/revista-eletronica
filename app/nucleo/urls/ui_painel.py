@@ -7,12 +7,11 @@ Pedido HTMX (troca de filtro) devolve só o corpo (`parciais/painel_corpo.html`)
 """
 
 from django.shortcuts import get_object_or_404
-from django.template.response import TemplateResponse
 from django.urls import path
 from django.utils.http import urlencode
 
 from nucleo.models import Ano
-from nucleo.ui_bloqueio import e_htmx
+from nucleo.ui_bloqueio import pagina_ou_parcial
 from nucleo.urls.painel import COLUNAS, filtrar
 from nucleo.urls.preview import protegida
 
@@ -41,12 +40,12 @@ def painel(request, ano):
         "faltam": faltam,
         "url_falta": {c["chave"]: c["url"] for c in colunas},
         "completas": sum(all(c["ok"] for c in x["faltas"].values()) for x in f["todas"]),
-        "sem_falta": "?" + urlencode(recorte) if recorte else "?",
+        "sem_falta": "?" + urlencode(recorte),
+        "sem_template": "?" + urlencode({k: v for k, v in {"falta": f["falta"], "parceiro": recorte.get("parceiro")}.items() if v}),
         "filtrado": bool(f["falta"] or recorte),
         "pode_validar": request.user.has_perm("nucleo.validar_revista"),
     }
-    nome = "ui/parciais/painel_corpo.html" if e_htmx(request) else "ui/painel/painel.html"
-    return TemplateResponse(request, nome, ctx)
+    return pagina_ou_parcial(request, "ui/painel/painel.html", "ui/parciais/painel_corpo.html", ctx)
 
 
 urlpatterns = [

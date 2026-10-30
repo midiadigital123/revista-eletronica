@@ -23,11 +23,11 @@ para #painel-corpo. Contexto: urls/ui_painel.py.
   <div class="campo">
     <span class="rotulo">Template</span>
     <span class="painel-chip"><input type="hidden" name="template" value="{{ template.pk }}">{{ template.componente.codigo }} · {{ template }}
-      <a class="link" href="?{% if falta %}falta={{ falta }}{% endif %}{% if falta and parceiro %}&amp;{% endif %}{% if parceiro %}parceiro={{ parceiro.pk }}{% endif %}">Limpar</a></span>
+      <a class="link" href="{{ sem_template }}" hx-get="{{ sem_template }}" hx-target="#painel-corpo" hx-indicator="#painel-corpo" hx-push-url="true">Limpar</a></span>
   </div>
   {% endif %}
   <noscript><button class="btn btn-outline" type="submit">Filtrar</button></noscript>
-  <p class="mudo painel-resumo" aria-live="polite">{{ linhas|length }} de {{ todas|length }} revista(s) · {{ completas }} completa(s)</p>
+  <p class="mudo painel-resumo">{{ linhas|length }} de {{ todas|length }} revista(s) · {{ completas }} completa(s)</p>
 </form>
 
 {% if not todas and not filtrado %}

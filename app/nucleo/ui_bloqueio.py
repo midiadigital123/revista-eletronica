@@ -25,6 +25,8 @@ from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.http import HttpResponse, HttpResponseRedirect
+from django.template.response import TemplateResponse
+from django.utils.cache import patch_vary_headers
 
 from nucleo.admin.bloqueio import CAMPO_SESSAO, aviso
 from nucleo.servicos import bloqueio
@@ -34,7 +36,17 @@ PERDEU = "Não salvo: você perdeu o bloqueio de edição (outra pessoa ou aba a
 
 
 def e_htmx(request):
-    return request.headers.get("HX-Request") == "true"
+    """Pedido HTMX que troca um pedaço. A restauração de histórico do htmx (cache vazio ao voltar)
+    também manda HX-Request, mas precisa da página inteira."""
+    return request.headers.get("HX-Request") == "true" and not request.headers.get("HX-History-Restore-Request")
+
+
+def pagina_ou_parcial(request, pagina, parcial, ctx):
+    """A mesma URL devolve `parcial` ao HTMX e `pagina` ao resto. `Vary: HX-Request` impede o cache
+    do navegador de servir o fragmento ao voltar para a URL empurrada (hx-push-url)."""
+    resposta = TemplateResponse(request, parcial if e_htmx(request) else pagina, ctx)
+    patch_vary_headers(resposta, ["HX-Request"])
+    return resposta
 
 
 def _dados(alvo, sessao):

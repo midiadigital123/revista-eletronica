@@ -279,7 +279,7 @@ form.inline { display: inline; }
 .abas .badge { margin-left: 0.375rem; }
 
 /* --- tabela densa (painel, listas longas): linhas baixas, cabeçalho fixo, coluna .fixa --- */
-.tabela-densa { border: 1px solid var(--border); border-radius: var(--radius-lg); max-height: calc(100dvh - 14rem); overflow: auto; }
+.tabela-densa { position: relative; /* contém o .sr-only (absolute) na rolagem */ border: 1px solid var(--border); border-radius: var(--radius-lg); max-height: calc(100dvh - 14rem); overflow: auto; }
 .tabela-densa .tabela { border-collapse: separate; border-spacing: 0; font-size: 0.8125rem; }
 .tabela-densa .tabela tr { border-bottom-width: 0; }
 .tabela-densa .tabela th, .tabela-densa .tabela td { border-bottom-width: 1px; padding: 0.25rem 0.5rem; }
@@ -315,7 +315,10 @@ form.inline { display: inline; }
 .lista [aria-current="page"], .lista [aria-current="true"] { background: var(--muted); font-weight: 600; }
 .lado-a-lado > .detalhe { min-width: 0; display: flex; flex-direction: column; gap: 1rem; }
 .duas-colunas { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
-.detalhe.htmx-request { opacity: 0.6; transition: opacity 150ms; }
+/* Alvo do HTMX esmaece enquanto carrega (hx-indicator nele mesmo): .detalhe ou qualquer .alvo-htmx. */
+.detalhe.htmx-request, .alvo-htmx.htmx-request { opacity: 0.6; transition: opacity 150ms; }
+/* Link do nome na 1ª coluna de uma tabela: sem sublinhado até o hover. */
+.link-linha:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* --- modal: <dialog class="dialogo"> (components/ui/dialog.tsx) --- */
 .dialogo {

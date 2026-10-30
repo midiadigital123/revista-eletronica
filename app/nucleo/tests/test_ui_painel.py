@@ -76,6 +76,9 @@ class PainelUiTest(Base):
         r = self.client.get(self.url, {"template": tpl.pk})
         self.assertEqual(sorted(self.pks(r)), sorted([self.go["LP"].pk, self.pe["LP"].pk]))
         self.assertContains(r, f'name="template" value="{tpl.pk}"')
+        r = self.client.get(self.url, {"template": tpl.pk, "falta": "svg", "parceiro": go})
+        self.assertContains(r, f'href="?falta=svg&amp;parceiro={go}" hx-get=')  # Limpar só tira o template
+        r = self.client.get(self.url, {"template": tpl.pk})
         self.assertEqual(next(c for c in r.context["colunas"] if c["chave"] == "svg")["url"], f"?template={tpl.pk}&falta=svg")
 
     def test_htmx_devolve_so_o_corpo(self):
@@ -85,6 +88,20 @@ class PainelUiTest(Base):
         self.assertTemplateNotUsed(r, "ui/base.html")
         self.assertNotContains(r, "<html")
         self.assertContains(r, 'class="tabela painel-tabela"')
+        self.assertIn("HX-Request", r["Vary"])  # o cache do navegador não troca página por fragmento
+        # Restauração de histórico do htmx (Voltar com o cache vazio): página inteira.
+        r = self.client.get(self.url, {"falta": "capa"}, headers={"HX-Request": "true", "HX-History-Restore-Request": "true"})
+        self.assertTemplateUsed(r, "ui/base.html")
+        self.assertIn("HX-Request", r["Vary"])
+
+    def test_superusuario_ve_validado_e_impresso(self):
+        from django.contrib.auth import get_user_model
+
+        self.client.force_login(get_user_model().objects.create_superuser("raiz", "r@x.br", "x"))
+        r = self.client.get(self.url)
+        self.assertContains(r, "<strong>4</strong> revista(s) sem “Validado” nesta versão")
+        self.assertContains(r, "revista(s) para atualizar no impresso")
+        self.assertNotContains(r, "revista(s) completas")
 
     def test_estados_vazios(self):
         completar(self.go["LP"])
