@@ -1,0 +1,57 @@
+/* Tela Projeto (T16): só o que ui.css não tem. Tokens e componentes vêm de ui.css. */
+
+.pj-form { display: flex; flex-direction: column; gap: 1.5rem; }
+.pj-secao { scroll-margin-top: 4.5rem; }
+.pj-secao code, .pj-referencia code { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted-foreground); }
+
+/* índice da página: âncoras para as quatro partes */
+.pj-indice { display: flex; flex-wrap: wrap; gap: 0.25rem; margin: 0 0 1rem; }
+.pj-indice a {
+  padding: 0.25rem 0.625rem; border-radius: var(--radius-md); font-size: 0.875rem;
+  color: var(--muted-foreground); text-decoration: none;
+}
+.pj-indice a:hover { background: var(--muted); color: var(--foreground); }
+
+.pj-nome { max-width: 36rem; }
+
+/* variáveis: um fieldset por grupo, campos em grade */
+.pj-grupo { display: flex; flex-direction: column; gap: 0.75rem; padding-top: 1.25rem; border-top-width: 1px; }
+.pj-grupo legend { float: left; width: 100%; font-weight: 600; font-size: 0.9375rem; }
+.pj-campos { display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: 1rem 1.5rem; clear: both; }
+
+/* passo da matriz como referência */
+.pj-referencia { display: flex; flex-wrap: wrap; align-items: center; gap: 0.375rem; }
+
+/* tabelas de sobrescrita: a linha "Nenhuma sobrescrita" some quando há outra linha */
+.pj-tabela td { vertical-align: middle; }
+.pj-tabela .select, .pj-tabela .input { min-width: 7rem; }
+.pj-tabela input[type="number"] { width: 8rem; }
+.pj-tabela tbody tr.pj-vazio:not(:only-child) { display: none; }
+.pj-remover { width: 1%; white-space: nowrap; }
+.pj-com-erro td { background: color-mix(in oklch, var(--destructive) 6%, transparent); }
+.pj-erros td { padding-top: 0; color: var(--destructive); font-size: 0.8125rem; }
+.pj-erros ul { margin: 0; padding-left: 1rem; }
+.pj-cor {
+  width: 3rem; height: 2.25rem; padding: 0.125rem; cursor: pointer;
+  border: 1px solid var(--input); border-radius: var(--radius-md); background: transparent;
+}
+.pj-cor:disabled { cursor: default; opacity: 0.7; }
+
+/* faixa dos padrões: a escala como sai na revista (cor e nome efetivos) */
+.pj-faixa {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  margin: 0; padding: 0; list-style: none;
+  border-radius: var(--radius-lg); overflow: hidden; border-width: 1px;
+}
+.pj-faixa li { display: flex; flex-direction: column; gap: 0.125rem; padding: 0 0.875rem 0.75rem; font-size: 0.8125rem; }
+.pj-faixa li + li { border-left-width: 1px; }
+.pj-amostra { display: block; height: 2.5rem; margin: 0 -0.875rem 0.625rem; background: var(--cor); border-bottom-width: 1px; }
+.pj-faixa-nome { font-weight: 500; overflow-wrap: anywhere; }
+
+@media (max-width: 40rem) {
+  .pj-faixa { grid-template-columns: 1fr; }
+  .pj-faixa li { display: grid; grid-template-columns: 2.5rem 1fr; column-gap: 0.75rem; padding: 0.625rem 0.875rem; }
+  .pj-faixa li + li { border-left-width: 0; border-top-width: 1px; }
+  .pj-amostra { grid-row: span 3; height: auto; margin: 0; border-radius: var(--radius-md); border-width: 1px; }
+  .pj-tabela .select, .pj-tabela .input { min-width: 5rem; }
+}

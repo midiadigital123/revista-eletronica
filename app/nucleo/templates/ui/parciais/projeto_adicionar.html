@@ -1,0 +1,10 @@
+{% comment %}
+Botão que pede ao servidor (HTMX) uma linha nova no formset `tipo` ("passos" ou "cores") do projeto.
+O índice sai do TOTAL_FORMS; nas cores vão também os padrões já usados (sugere o primeiro livre).
+`oob=True` troca o botão fora do alvo; `desligado=True` quando já há 5 cores.
+{% endcomment %}<button type="button" class="btn btn-outline btn-sm" id="{{ tipo }}-adicionar"
+  hx-get="{% url 'ui_projeto_linha' projeto.pk tipo %}" hx-target="#{{ tipo }}-linhas" hx-swap="beforeend"
+  hx-include="#{{ tipo }}-caixa"{% if oob %} hx-swap-oob="true"{% endif %}{% if desligado %} disabled title="Já há uma cor para cada um dos 5 padrões."{% endif %}>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+  {% if tipo == "passos" %}Sobrescrever um passo{% else %}Sobrescrever uma cor{% endif %}
+</button>

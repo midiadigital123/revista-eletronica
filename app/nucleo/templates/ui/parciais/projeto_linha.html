@@ -1,0 +1,21 @@
+{% comment %}
+Uma linha do formset de passo (tipo="passos") ou de cor (tipo="cores") do projeto.
+Na página: {% include "ui/parciais/projeto_linha.html" with f=form tipo="passos" %} (contexto: pode_gravar).
+Pelo HTMX (view `linha`, nova=True): a linha nova + o TOTAL_FORMS atualizado (oob) e, nas cores,
+o botão "Adicionar" desligado quando chega a 5.
+{% endcomment %}<tr{% if f.errors %} class="pj-com-erro"{% endif %}>
+  {% if tipo == "passos" %}
+  <td>{{ f.id }}{{ f.etapa }}</td>
+  <td>{{ f.componente }}</td>
+  <td>{{ f.passo }}</td>
+  {% else %}
+  <td>{{ f.id }}{{ f.padrao }}</td>
+  <td>{{ f.cor }}</td>
+  {% endif %}
+  {% if pode_gravar or nova %}<td class="pj-remover"><label class="marcar">{{ f.DELETE }} {% if f.instance.pk %}Remover{% else %}Descartar{% endif %}</label></td>{% endif %}
+</tr>
+{% if f.errors %}<tr class="pj-erros"><td colspan="{% if tipo == "passos" %}{% if pode_gravar or nova %}4{% else %}3{% endif %}{% elif pode_gravar or nova %}3{% else %}2{% endif %}"><ul>{% for campo in f %}{% for e in campo.errors %}<li>{{ campo.label }}: {{ e }}</li>{% endfor %}{% endfor %}{% for e in f.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul></td></tr>{% endif %}
+{% if nova %}
+<input type="hidden" name="{{ tipo }}-TOTAL_FORMS" id="id_{{ tipo }}-TOTAL_FORMS" value="{{ total }}" hx-swap-oob="true">
+{% if tipo == "cores" and cheio %}{% include "ui/parciais/projeto_adicionar.html" with tipo="cores" oob=True desligado=True %}{% endif %}
+{% endif %}

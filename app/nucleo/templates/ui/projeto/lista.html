@@ -1,0 +1,42 @@
+{% extends "ui/base.html" %}
+{% load ui %}
+{% comment %}Projetos do ano (T15) fora do admin. View em nucleo/urls/ui_projeto.py; ficha em docs/telas/fichas/projeto.md.{% endcomment %}
+{% block titulo %}Projetos {{ ano.ano }}{% endblock %}
+
+{% block conteudo %}
+<header class="pagina-cab">
+  <div>
+    <h1>Projetos</h1>
+    <p class="mudo">Um projeto por parceiro no ano. Nasce quando os cortes do parceiro são lançados.</p>
+  </div>
+  <div class="acoes">
+    {% rota_b "ui_variaveis" ano.ano as u %}
+    <a class="btn btn-outline" href="{% if u %}{{ u }}{% else %}{% url 'admin:nucleo_projeto_variaveis' %}?ano={{ ano.ano }}{% endif %}">Planilha de variáveis</a>
+    {% if perms.nucleo.change_parceiroano %}{% rota_b "ui_lotes_matriz" ano.ano as u %}
+    <a class="btn btn-ghost" href="{% if u %}{{ u }}{% else %}{% url 'admin:nucleo_projeto_escolher_matriz' %}?ano={{ ano.ano }}{% endif %}">Escolher matriz</a>{% endif %}
+  </div>
+</header>
+
+{% include "ui/_componentes/anos.html" with rota="ui_projeto_lista" %}
+
+{% if projetos %}
+<div class="tabela-caixa">
+  <table class="tabela">
+    <thead><tr><th scope="col">Projeto</th><th scope="col">Parceiro</th><th scope="col">Matriz</th><th scope="col">Situação</th></tr></thead>
+    <tbody>
+      {% for p in projetos %}
+      <tr>
+        <td><a class="link" href="{% url 'ui_projeto' p.pk %}">{{ p.nome }}</a></td>
+        <td>{{ p.parceiro_ano.parceiro.nome }}</td>
+        <td>{% if p.parceiro_ano.matriz %}{{ p.parceiro_ano.matriz.nome }}{% else %}<span class="badge badge-alerta">sem matriz</span>{% endif %}</td>
+        <td>{% if p.arquivado_em %}<span class="badge badge-contorno">Arquivado em {{ p.arquivado_em|date:"d/m/Y" }}</span>{% else %}<span class="badge badge-secundario">Ativo</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+{% url 'cortes' ano.ano as u %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhum projeto neste ano" texto="O projeto do parceiro nasce quando os cortes dele são lançados." url=u rotulo="Lançar cortes" %}
+{% endif %}
+{% endblock %}
