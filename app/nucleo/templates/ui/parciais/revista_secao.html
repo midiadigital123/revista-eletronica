@@ -1,0 +1,55 @@
+{% comment %}
+Painel de uma seção (lado direito, #secao). Contexto de urls/ui_revista._contexto_secao.
+Salvar vai por HTMX: a resposta é a página inteira e o form escolhe #secao + lista, "Validado" e
+mensagens (hx-select-oob). Campos com os nomes do RevistaForm (nucleo/revista.py): `initial-` é o
+valor que abriu (show_hidden_initial), `versao__F1` a versão do template que a pessoa viu.
+Com `oob` (GET HTMX de uma seção) inclui a lista de seções para marcar o item ativo.
+{% endcomment %}<section class="detalhe" id="secao" aria-live="polite">
+{% if s %}
+  <form method="post" action="{% url 'ui_revista_editar' revista.ano.ano revista.pk %}" class="card revista-secao"
+        hx-post="{% url 'ui_revista_editar' revista.ano.ano revista.pk %}" hx-target="#secao" hx-select="#secao" hx-swap="outerHTML"
+        hx-select-oob="#secoes,#validado,#mensagens" hx-indicator="#secao">{% csrf_token %}
+    <input type="hidden" name="acao" value="secao">
+    <input type="hidden" name="chave" value="{{ chave }}">
+    <input type="hidden" name="{{ campo_versao }}" value="{{ bloco.versao.pk }}">
+    <input type="hidden" name="initial-{{ campo }}" value="{{ s.corpo }}">
+    {% if request.bloqueio %}<input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">{% endif %}
+    <header class="revista-secao-cab">
+      <div>
+        <h3>{{ bloco.rf.fasciculo }} <span class="mudo">/</span> {{ s.id }}</h3>
+        <p class="mudo">Título (vem do template): {{ s.titulo }}</p>
+      </div>
+      {% if s.desatualizada %}<span class="badge badge-alerta">desatualizada</span>{% elif s.copia %}<span class="badge badge-secundario">cópia desta revista</span>{% else %}<span class="badge badge-contorno">texto do template</span>{% endif %}
+    </header>
+
+    {% if s.desatualizada %}
+    <div class="aviso aviso-alerta" role="status">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      <span>O template mudou nesta seção depois da sua cópia. Edite o texto ou marque “Manter meu texto” para salvar a cópia sobre a versão nova; ou descarte a cópia.</span>
+    </div>
+    <div class="revista-diff">{{ diff }}</div>
+    {% endif %}
+
+    <div class="campo">
+      <label for="texto-secao">Texto da seção</label>
+      <textarea class="textarea mono" id="texto-secao" name="{{ campo }}" rows="12" spellcheck="true" aria-describedby="texto-secao-ajuda"{% if erros %} aria-invalid="true"{% endif %}{% if not pode_textos %} readonly{% endif %}>{{ valor }}</textarea>
+      <p class="ajuda" id="texto-secao-ajuda">{% if s.copia %}Texto editado nesta revista (cópia). Descarte para voltar ao texto do template.{% else %}Texto do template. Salvar com o texto mudado cria uma cópia só desta seção.{% endif %} Markdown; variáveis entre chaves duplas, como <code>{% templatetag openvariable %}nome_parceiro{% templatetag closevariable %}</code>.</p>
+      {% for e in erros %}<p class="erro" role="alert">{{ e }}</p>{% endfor %}
+    </div>
+
+    {% if pode_textos %}
+    <footer class="revista-secao-rodape">
+      {% if s.desatualizada %}<label class="marcar"><input type="checkbox" name="{{ campo_manter }}"> Manter meu texto (o aviso some)</label>{% endif %}
+      {% if s.copia %}<label class="marcar"><input type="checkbox" name="{{ campo_descartar }}"> Descartar cópia (volta ao texto do template)</label>{% endif %}
+      <button class="btn" type="submit">
+        <svg class="girando htmx-indicator" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+        Salvar seção
+      </button>
+    </footer>
+    {% endif %}
+  </form>
+{% else %}
+  {% include "ui/_componentes/vazio.html" with titulo="Nenhuma seção para editar" texto="Escolha o template dos fascículos no card Templates." %}
+{% endif %}
+</section>
+{% if oob %}{% include "ui/parciais/revista_secoes.html" with oob=True %}{% endif %}
