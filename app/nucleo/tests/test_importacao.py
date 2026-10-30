@@ -1,10 +1,10 @@
 """Cadastros iniciais e importação de matriz (S04).
 
-Os PDFs do SAEGO 2025 não estão no repositório (10–12 MB cada). Os testes com PDF procuram
-os arquivos nas pastas de SAEGO_PDFS (separadas por ":"; padrão "/pdfs:/pdfs-alfa") e são
-pulados quando faltam. Exemplo:
-  docker compose run --rm -v "$PWD/examples:/pdfs:ro" \
-    -v "$HOME/Documentos:/pdfs-alfa:ro" app python manage.py test nucleo.tests.test_importacao
+Os 3 PDFs do SAEGO 2025 ficam em `revista/modelo/PDFs Matriz Comunitária/`, fora da imagem
+do app. Os testes com PDF procuram os arquivos nas pastas de SAEGO_PDFS (separadas por ":";
+padrão "/pdfs:/pdfs-alfa") e são pulados quando faltam. Exemplo:
+  docker compose run --rm -v "$PWD/revista/modelo/PDFs Matriz Comunitária:/pdfs:ro" \
+    app python manage.py test nucleo.tests.test_importacao
 """
 import os
 import tempfile
