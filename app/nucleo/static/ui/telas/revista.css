@@ -1,7 +1,5 @@
 /* Tela Revista (T20/T21): só o que os componentes de ui.css não cobrem. Tokens de ui.css. */
 
-.revista-voltar { align-self: flex-start; margin-bottom: -0.75rem; color: var(--muted-foreground); }
-.revista-voltar svg { width: 1rem; height: 1rem; }
 .revista-acoes { display: flex; gap: 0.25rem; justify-content: flex-end; }
 
 /* Card "Validado": o estado é a primeira coisa que se lê; verde só quando validado. */
@@ -9,10 +7,8 @@
 .revista-validado-linha { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
 .revista-validado-estado { display: flex; align-items: flex-start; gap: 0.75rem; min-width: 0; }
 .revista-validado-estado > svg { width: 1.5rem; height: 1.5rem; flex-shrink: 0; margin-top: 0.125rem; color: var(--muted-foreground); }
-.revista-validado-ok { box-shadow: var(--shadow-xs), 0 0 0 1px color-mix(in oklch, oklch(0.45 0.13 150) 35%, transparent); }
-.revista-validado-ok .revista-validado-estado > svg { color: oklch(0.45 0.13 150); }
-.revista-pendencias { padding: 0.75rem 1rem; border-radius: var(--radius-lg); background: color-mix(in oklch, var(--destructive) 6%, var(--background)); color: var(--destructive); }
-.revista-pendencias ul { margin-top: 0.25rem; padding-left: 1.25rem; list-style: disc; }
+.revista-validado-ok { box-shadow: var(--shadow-xs), 0 0 0 1px color-mix(in oklch, var(--sucesso) 35%, transparent); }
+.revista-validado-ok .revista-validado-estado > svg { color: var(--sucesso); }
 .revista-desatualizadas { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; color: var(--warning); }
 
 /* Blocos e cards */

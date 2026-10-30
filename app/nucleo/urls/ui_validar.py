@@ -17,7 +17,6 @@ from django.utils.http import urlencode
 from django.views.decorators.http import require_http_methods
 
 from nucleo.models import Ano
-from nucleo.templatetags.ui import rota_b
 from nucleo.ui_bloqueio import e_htmx
 from nucleo.urls.painel import itens_validar, validar_pares
 
@@ -52,7 +51,7 @@ def validar(request, ano):
         return redirect(reverse("ui_validar", args=[ano.ano]) + (f"?{consulta}" if consulta else ""))
     pedidos = set(ids_de(request.GET.getlist("revista")))
     itens = itens_validar(ano, pedidos)
-    painel = rota_b("ui_painel", ano.ano) or reverse("painel", args=[ano.ano])
+    painel = reverse("painel", args=[ano.ano])
     ctx = {
         "ano": ano, "secao": "painel", "itens": itens, "pode_validar": pode,
         "fora": len(pedidos) - len(itens), "url_painel": painel,

@@ -1,4 +1,5 @@
-"""Painel da temporada e validação em lote (S12, D-078, D-120).
+"""Regra do painel da temporada e validação em lote (S12, D-078, D-120). A tela do painel é
+`urls/ui_painel.py` (rota `painel`); aqui ficam as linhas, os filtros e o validar em lote do admin.
 
 Uma linha por revista ativa do ano: ✓ ou "falta" por coluna, com link para a correção.
 O resolvido é montado uma vez por linha e serve ao hash e às pendências.
@@ -24,7 +25,6 @@ from nucleo.admin import lote
 from nucleo.models import Ano, FotoRevista, Parceiro, Revista, Template
 from nucleo.models.revista import Motivo
 from nucleo.servicos import bloqueio, resolver, validacao
-from nucleo.urls.preview import protegida
 
 # Coluna → códigos de `pendencias` que ela mostra (ordem das colunas da tela).
 COLUNAS = {
@@ -116,33 +116,6 @@ def filtrar(ano, params):
     return {"linhas": linhas, "todas": todas, "parceiros": parceiros, "parceiro": parceiro, "falta": falta, "template": template}
 
 
-@protegida
-def painel(request, ano):
-    ano = get_object_or_404(Ano, ano=ano)
-    f = filtrar(ano, request.GET)
-    falta, parceiro, parceiros, template, linhas = f["falta"], f["parceiro"], f["parceiros"], f["template"], f["linhas"]
-    ativos = {"falta": falta, "parceiro": parceiro and parceiro.pk, "template": template and template.pk}
-
-    def mantendo(chave):  # cada filtro preserva os outros na URL
-        return {k: v for k, v in ativos.items() if v and k != chave}
-
-    filtros = [
-        lote.filtro("Falta", [("Tudo", "")] + [(r, c) for c, (r, _) in COLUNAS.items()],
-                    COLUNAS[falta][0] if falta else "Tudo", "falta", mantendo("falta")),
-        lote.filtro("Parceiro", [("Todos", "")] + [(p, p.pk) for p in parceiros],
-                    parceiro or "Todos", "parceiro", mantendo("parceiro")),
-    ]  # fmt: skip
-    if template is not None:
-        rotulo = f"{template.componente.codigo} · {template}"
-        filtros.append(lote.filtro("Template", [(rotulo, template.pk), ("limpar", "")], rotulo, "template", mantendo("template")))
-    ctx = contexto(
-        request, f"Painel da temporada {ano.ano}", linhas=linhas, colunas=[r for r, _ in COLUNAS.values()],
-        filtros=filtros, pode_validar=request.user.has_perm("nucleo.validar_revista"),
-        url_lote=reverse("painel_validar", args=[ano.ano]),
-    )  # fmt: skip
-    return TemplateResponse(request, "nucleo/painel.html", ctx)
-
-
 def diff(revista, resolvido):
     """Tabela do difflib: última foto do impresso | agora (só os trechos que mudaram)."""
     foto = ultima_impressa(revista)
@@ -207,6 +180,5 @@ def validar_lote(request, ano):
 
 
 urlpatterns = [
-    path("<int:ano>/", painel, name="painel"),
     path("<int:ano>/validar/", validar_lote, name="painel_validar"),
 ]

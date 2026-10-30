@@ -3,8 +3,8 @@ Corpo do painel: próxima tarefa, filtros e tabela. A página inclui; o filtro (
 para #painel-corpo. Contexto: urls/ui_painel.py.
 {% endcomment %}{% include "ui/_componentes/painel_tarefa.html" %}
 
-<form class="painel-filtros" method="get" action="{% url 'ui_painel' ano.ano %}"
-      hx-get="{% url 'ui_painel' ano.ano %}" hx-trigger="change" hx-target="#painel-corpo" hx-indicator="#painel-corpo" hx-push-url="true">
+<form class="painel-filtros" method="get" action="{% url 'painel' ano.ano %}"
+      hx-get="{% url 'painel' ano.ano %}" hx-trigger="change" hx-target="#painel-corpo" hx-indicator="#painel-corpo" hx-push-url="true">
   <div class="campo">
     <label for="filtro-falta">Falta</label>
     <select class="select" id="filtro-falta" name="falta">

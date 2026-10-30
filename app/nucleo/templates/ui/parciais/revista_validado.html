@@ -25,7 +25,7 @@ O botão manda o hash da revista como a página a mostrou; salvar uma seção tr
     {% endif %}
   </div>
   {% if validacao.pendencias %}
-  <div class="revista-pendencias">
+  <div class="caixa-erro">
     <p><strong>Pendências que impedem o “Validado”</strong></p>
     <ul>{% for p in validacao.pendencias %}<li>{{ p.mensagem }}</li>{% endfor %}</ul>
   </div>

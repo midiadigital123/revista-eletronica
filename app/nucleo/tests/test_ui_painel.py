@@ -1,4 +1,4 @@
-"""Painel da temporada B (/ui/painel/<ano>/, T23): critérios de aceite de docs/telas/fichas/painel.md."""
+"""Painel da temporada B (/painel/<ano>/, T23): critérios de aceite de docs/telas/fichas/painel.md."""
 
 from django.urls import reverse
 
@@ -9,7 +9,7 @@ from nucleo.tests.test_resolver import usuario
 
 
 class PainelUiTest(Base):
-    url = reverse("ui_painel", args=[2026])
+    url = reverse("painel", args=[2026])
 
     def pks(self, r):
         return [x["revista"].pk for x in r.context["linhas"]]
@@ -59,7 +59,7 @@ class PainelUiTest(Base):
         self.client.logout()
         self.assertRedirects(self.client.get(self.url), f"{reverse('admin:login')}?next={self.url}", fetch_redirect_response=False)
         self.client.force_login(self.ped)
-        self.assertEqual(self.client.get(reverse("ui_painel", args=[1999])).status_code, 404)
+        self.assertEqual(self.client.get(reverse("painel", args=[1999])).status_code, 404)
 
     def test_filtros_iguais_ao_admin(self):
         go = self.go["LP"].projeto.parceiro_ano.parceiro_id
@@ -112,7 +112,7 @@ class PainelUiTest(Base):
         self.assertContains(r, "Nenhuma revista com esse filtro")
         self.assertContains(r, "Limpar filtro de falta")
         Ano.objects.create(ano=2027)
-        r = self.client.get(reverse("ui_painel", args=[2027]))
+        r = self.client.get(reverse("painel", args=[2027]))
         self.assertContains(r, "Nenhuma revista ativa neste ano")
         self.assertContains(r, reverse("cortes", args=[2027]))
-        self.assertContains(r, f'href="{reverse("ui_painel", args=[2026])}"')  # seletor de ano
+        self.assertContains(r, f'href="{reverse("painel", args=[2026])}"')  # seletor de ano

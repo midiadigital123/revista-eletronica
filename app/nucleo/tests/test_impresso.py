@@ -81,7 +81,7 @@ class ImpressoTest(Base):
         painel = self.client.get(reverse("painel", args=[2026]))
         linha = next(x for x in painel.context["linhas"] if x["revista"].pk == self.rev.pk)
         self.assertEqual(linha["faltas"]["impresso"], {"ok": True, "dica": "", "link": self.url})
-        self.assertContains(painel, f'<a href="{self.url}">✓</a>', html=True)
+        self.assertContains(painel, f'<a href="{self.url}" title="Ver a última versão impressa">')  # ✓ também é link
 
     def test_variavel_aparece_em_todas_as_secoes_que_a_usam(self):
         rf_template = self.templates["LP", "F1"]

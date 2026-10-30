@@ -46,7 +46,7 @@
     <tbody>
     {% for t in templates %}
       <tr>
-        <th scope="row"><a class="tpl-nome" href="{% url 'ui_templates_editar' t.pk %}">{{ t.nome }}</a></th>
+        <th scope="row"><a class="link-linha" href="{% url 'ui_templates_editar' t.pk %}">{{ t.nome }}</a></th>
         <td>{{ t.componente.codigo }} <span class="mudo">{{ t.componente.nome }}</span></td>
         <td class="num">{% if t.n_versao %}<span class="badge badge-contorno">v{{ t.n_versao }}</span>{% else %}<span class="badge badge-alerta" title="Sem texto: abra e escreva a primeira versão.">sem texto</span>{% endif %}</td>
         <td>{% if t.n_usado %}<a class="link" href="{% url 'painel' ano.ano %}?template={{ t.pk }}" title="Abre o Painel filtrado por este template.">usado por {{ t.n_usado }}</a>{% if t.n_copia %} <span class="mudo">({{ t.n_copia }} com cópia de seção)</span>{% endif %}{% else %}<span class="mudo">nenhuma revista</span>{% endif %}</td>

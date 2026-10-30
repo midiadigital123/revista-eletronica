@@ -15,11 +15,11 @@ urlpatterns = [
     path("bloqueio/", include("nucleo.urls.bloqueio")),
     path("cortes/", include("nucleo.urls.cortes")),
     path("impresso/", include("nucleo.urls.impresso")),
-    path("painel/", include("nucleo.urls.painel")),
+    path("painel/", include("nucleo.urls.ui_painel")),  # painel B (D-183): /painel/<ano>/
+    path("painel/", include("nucleo.urls.painel")),  # validar em lote do admin: /painel/<ano>/validar/
     path("preview/", include("nucleo.urls.preview")),
     path("templates/", include("nucleo.urls.templates")),
     # Telas B (D-183, D-186): um módulo por tela, já incluído para os agentes não disputarem este arquivo.
-    path("ui/painel/", include("nucleo.urls.ui_painel")),
     path("ui/validar/", include("nucleo.urls.ui_validar")),
     path("ui/variaveis/", include("nucleo.urls.ui_variaveis")),
     path("ui/projeto/", include("nucleo.urls.ui_projeto")),

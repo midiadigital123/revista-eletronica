@@ -23,8 +23,7 @@ cai no equivalente do admin (tag rota_b). Referência: docs/telas/design-system.
     <div class="cab-in">
       <a class="marca" href="{% url 'inicio' %}">Revista Eletrônica</a>
       <nav class="nav" aria-label="Principal">
-        {% rota_b "ui_painel" ano.ano as u %}
-        <a href="{% if u %}{{ u }}{% elif ano %}{% url 'painel' ano.ano %}{% else %}{% url 'inicio' %}{% endif %}"{% if secao == "painel" %} aria-current="page"{% endif %}>Painel</a>
+        <a href="{% if ano %}{% url 'painel' ano.ano %}{% else %}{% url 'inicio' %}{% endif %}"{% if secao == "painel" %} aria-current="page"{% endif %}>Painel</a>
         <a href="{% if ano %}{% url 'cortes' ano.ano %}{% else %}{% url 'cortes_inicio' %}{% endif %}"{% if secao == "cortes" %} aria-current="page"{% endif %}>Cortes</a>
         {% rota_b "ui_variaveis" ano.ano as u %}
         <a href="{% if u %}{{ u }}{% else %}{% url 'admin:nucleo_projeto_variaveis' %}{% if ano %}?ano={{ ano.ano }}{% endif %}{% endif %}"{% if secao == "variaveis" %} aria-current="page"{% endif %}>Variáveis</a>

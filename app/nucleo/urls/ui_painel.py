@@ -1,8 +1,8 @@
-"""Painel da temporada B (T23): /ui/painel/<ano>/, rota ui_painel; troca /painel/<ano>/ só no fim. Convenções: docs/telas/design-system.md.
+"""Painel da temporada B (T23): /painel/<ano>/, rota `painel` (substituiu o painel no estilo do admin). Convenções: docs/telas/design-system.md.
 
 Mesma regra do painel do admin (`urls/painel.py`: `filtrar`, `linha`, `COLUNAS`); só a casca muda.
 Login (vai ao login do admin) e `view_revista` (403), como o painel atual. Não grava nada: a
-validação em lote é a tela T24 (`ui_validar`, ou `painel_validar` enquanto ela não entra).
+validação em lote é a tela T24 (`ui_validar`).
 Pedido HTMX (troca de filtro) devolve só o corpo (`parciais/painel_corpo.html`).
 """
 
@@ -49,5 +49,5 @@ def painel(request, ano):
 
 
 urlpatterns = [
-    path("<int:ano>/", painel, name="ui_painel"),
+    path("<int:ano>/", painel, name="painel"),
 ]
