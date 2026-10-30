@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo 17 de 22: Fase D até S11c concluída e no GitHub (D-171 = 74bf143 juntada em `refatoracao-django`). Próximo: S12.
+Passo 18 de 22: S12 (painel + Validado), auditoria (Top 5) e variáveis oficiais (D-172/D-173) juntados em `refatoracao-django` e no GitHub. Migrações até 0010.
 Funcionando: em cada `feat/s11*`, suíte OK (8 de PDF pulados), `makemigrations --check` limpo; Playwright cortes, templates-admin e revista-textos passam.
-Quebrado/pendente: S12, S13, S17, S18 não iniciados; auditoria de código com cara de IA rodando.
+Quebrado/pendente: nome padrão dos padrões por ano (D-175) não iniciado; S13, S17, S18 não iniciados; legenda "Onde aparece" da aba Variáveis não mostra pd01..pd05 na escala.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Disparar o S12 (painel da temporada + Validado) numa branch `feat/s12-painel` a partir de `refatoracao-django`.
+Disparar a D-175 (campo `nome` em CorPadrao como padrão de pd01..pd05) numa branch `feat/nome-padrao` a partir de `refatoracao-django`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -29,8 +29,8 @@ Disparar o S12 (painel da temporada + Validado) numa branch `feat/s12-painel` a 
 15. [x] S11b1 — Admin: templates
 16. [x] S11b2 — Admin: cópia por seção
 17. [x] S11c — Admin: projeto, variáveis, arquivos, lote
-18. [ ] S12 — Painel + Validado  ← agora
-19. [ ] S13 — Impresso + planilhas
+18. [x] S12 — Painel + Validado
+19. [ ] S13 — Impresso + planilhas  ← agora
 20. [x] S16 — Abrir ano
 21. [ ] S17 — Carga 2026 + desligar o antigo
 22. [ ] S18 — E2E da temporada
@@ -1411,7 +1411,42 @@ Disparar o S12 (painel da temporada + Validado) numa branch `feat/s12-painel` a 
 - **Arquivos afetados:** `app/nucleo/admin/revista.py`, testes
 - **Status:** ativa. Commit local 74bf143 em `feat/s11b2-copia-secao`. Verificado por mim: suíte 279 OK (8 pulados), `makemigrations --check` limpo; Playwright revista-textos + templates-admin 2/2 (subagente). Fora do escopo: troca de template em revista arquivada no mesmo envio não é travada (só `gravar_textos` recusa); nesse caso ainda sai o "alterado com sucesso" do Django.
 
+### D-172 — Lista oficial de variáveis dos templates (2026-10-30 11:00)
+- **Contexto:** a equipe entregou `revistas_variaveis.xlsx` com 25 variáveis (sintaxe `<<x>>`), fechando a pendência da D-107.
+- **Decisão:** 3 automáticas mantidas (`parceiro`, `nome_projeto`, `ano`) + 25 colunas text de `Projeto`, na ordem da planilha. Sintaxe continua `{{x}}` (D-123). Os 4 `gentilico_*` viram `adjetivo_patrio_{singular,plural}_{masculino,feminino}` por `RenameField`. Exemplos singular/plural da planilha estavam trocados (corrigidos). `no_na_ em_nome_parceiro` → `no_na_em_nome_parceiro`; `ISSN` → `issn`. ~~`nome_parceiro` é manual (nome por extenso), distinto da automática `parceiro` (código do cadastro).~~ substituído por D-173. `pd01..pd05` são texto livre, sem ligação com rótulos do F1 nem `CorPadrao`. Documentação em `docs/variaveis.md` (para a Pedagógica) e `docs/modelo-er.md`.
+- **Motivo:** planilha é a fonte oficial; rename preserva dados; ligar pdNN ao F1 seria escopo novo.
+- **Descartadas:** aceitar `<<x>>` (dois formatos de marcador); manter `gentilico_*` com alias (dois nomes para a mesma coisa); `nome_parceiro` automático de `Parceiro.nome` (o cadastro guarda código, não nome por extenso).
+- **Arquivos afetados:** `app/nucleo/variaveis.py`, `app/nucleo/models/projeto.py`, migração `0009_variaveis_oficiais`, `app/nucleo/admin/variaveis.py`, testes, `docs/variaveis.md`, `docs/modelo-er.md`
+- **Status:** ativa. Juntada em `refatoracao-django`; migração renumerada para `0010_variaveis_oficiais` (depois de `0009_validators_cor_padrao` da auditoria).
+
+### D-173 — `nome_parceiro` automático e `pd01..pd05` como rótulo dos padrões (2026-10-30 11:30)
+- **Contexto:** pergunta aberta da D-172; o usuário respondeu.
+- **Decisão:** a automática `parceiro` passa a se chamar `nome_parceiro` (valor de `Parceiro.nome`; "o sistema obtém o valor por outro meio"); não há coluna manual `nome_parceiro`. `pd01..pd05` ("pd01 significa padrão 01") são o rótulo de cada padrão no F1, no lugar do fixo "Padrão 01..05"; `pdNN` vazio de padrão que a revista tem é pendência de variável vazia e mostra o marcador de lacuna; padrão inexistente não cobra. Continuam utilizáveis nos textos. Cor segue em `CorPadrao`/`ProjetoCor`.
+- **Motivo:** resposta do usuário; rótulo é texto impresso, então entra no hash e no `conteudo_impresso`.
+- **Descartadas:** coluna manual `nome_parceiro` (D-172, valor viria duplicado); fallback silencioso para "Padrão 0N" com `pdNN` vazio (sairia impresso o rótulo errado sem ninguém ver).
+- **Arquivos afetados:** `app/nucleo/variaveis.py`, `app/nucleo/servicos/resolver.py`, migração de variáveis, testes, `docs/variaveis.md`
+- **Status:** ~~parte do pdNN vazio = pendência substituída por D-175~~. Juntada (f17d53a). Substitui em parte D-172 (item `nome_parceiro`).
+
+### D-174 — Correções da revisão do S12 (2026-10-30 12:00)
+- **Contexto:** revisão (django-reviewer) do 25d24ec: 0 críticos, 2 importantes, 6 menores. Sem caminho que grave `hash_validado` sem hash visto ou sem bloqueio; CSRF, POST-only, permissões e XSS OK.
+- **Decisão:** (1) `change_view` só calcula hash/pendências no GET e após permissão; (2) teste de teto de queries por linha no painel, filtro de parceiro antes do loop, sem paginação por ora; (3) revalidar com o mesmo hash não regrava `validado_por/em` (preserva a trilha); (4) lote avisa pares não encontrados e só mostra sucesso com feitos > 0; (5) `liberar` com try/except + log, ponto duplo, botão desabilitado no envio; (6) "Validado" em form separado (não reenvia upload nem perde edição sem aviso); (7) reusar `preview.protegida`, `alvo_do_bloqueio`. 2º commit local `fix(s12)`.
+- **Motivo:** cálculo pesado em todo POST; trilha de quem validou se perdia; mensagens enganosas.
+- **Descartadas:** paginação agora (sem medida de custo ainda); "SVG/Capa alterados" no diff do lote — vai para o S13.
+- **Arquivos afetados:** `app/nucleo/admin/revista.py`, `app/nucleo/urls/painel.py`, `app/nucleo/servicos/validacao.py`, templates do painel e da revista, testes
+- **Status:** ativa. Commit local f52fffc em `feat/s12-painel`. Verificado por mim: suíte OK (8 pulados), `makemigrations --check` limpo; Playwright painel + revista-textos 2/2 (subagente). Teto medido: 15 queries por linha. Fora: coluna Impresso compara JSON inteiro (precisaria coluna `hash_impresso` com migração) — anotado com `ponytail:` em `ultima_impressa`.
+
+### D-175 — Nome dos padrões: padrão por ano junto da cor, `pdNN` do projeto sobrescreve (2026-10-30 12:40)
+- **Contexto:** usuário: "o nome dos padrões é definido uma vez na criação [...] em lote e cada curso pode sobrescrever esse valor apenas definindo o valor dessa variável". Pergunta de onde fica o padrão: "Por ano, junto da cor".
+- **Decisão:** `CorPadrao` (por ano, padrão 1..5) ganha `nome`; rótulo do padrão no F1 e `{{pdNN}}` nos textos = `pdNN` do projeto se preenchido, senão `CorPadrao.nome`. Pendência só se os dois estiverem vazios. Mesmo modelo de cor do ano + `ProjetoCor`. `abrir_ano` copia o nome junto da cor.
+- **Motivo:** escolha do usuário; reaproveita o padrão ano + sobrescrita já existente.
+- **Descartadas:** `pdNN` obrigatório em cada projeto (D-173, digitar em todo projeto); ação em lote gravando `pdNN` (valor duplicado em cada projeto); padrão por parceiro (usuário escolheu por ano).
+- **Arquivos afetados:** `app/nucleo/models/cadastro.py`, `app/nucleo/servicos/resolver.py`, `app/nucleo/servicos/abrir_ano.py`, `carregar_cadastros`, admin de CorPadrao, testes, `docs/variaveis.md`
+- **Status:** pendente. Substitui parte de D-173 (pdNN vazio = pendência).
+
 ## Perguntas em aberto
+- [ ] Coluna Impresso do painel: criar `hash_impresso` na foto (migração) para não carregar o JSON inteiro por linha? Só se o painel ficar lento — depende de: medida com dados de 2026
+- [x] (D-173) `pd01..pd05` devem virar os rótulos "Padrão 01..05" do F1? `nome_parceiro` substitui a automática `parceiro` nos textos? — depende de: usuário
+- [x] Aplicar o Top 5 da auditoria de código com cara de IA (2026-10-30)? — usuário: todos, na branch `fix/auditoria-ia`
 - [x] (D-115 a D-124) Varredura 7 agentes (2026-10-29), perguntas 55–70: cópia por seção; juntar lado a lado × proposta; preview sem template; ciclo de vida da revista sem cortes; SVG/capa derrubam Validado; variável com escopo parceiro; sugestão do ano anterior; painel da temporada; copiar em lote; validar em lote com hash; React × Django admin; bloqueio × otimista; fascículo fixo; editor textarea × etiquetas; FK composta; matriz duplicada entre anos — depende de: usuário
 - [x] (D-125) Correções técnicas da varredura (sem decisão do usuário): ER sem TextoModelo/BlocoTexto/ProjetoBloco e com Revista/RevistaFasciculo/Projeto.ano_id; TemplateVersao só de inserção como base da fusão; hash em Python com JSON canônico (só cai a revista que usa a variável, corrige D-097); bloqueio por `INSERT … ON CONFLICT … WHERE expira_em < now()`; cascata com `FOR UPDATE` em ParceiroAno, foto em REPEATABLE READ, clone em uma transação; SVG sanitizado (defusedxml, lista de tags, 3 MB, ids prefixados); Markdown com `html: false` e `{{var}}` validado por regex; zip com JSON/SVG embutidos no index.html; atalhos do F1 só fora do F2; revalidar seções × ids do SVG no Validado e ao salvar template; marcar D-063 (texto), D-070 e D-088 (texto_modelo) como substituídas e reescrever D-093 — depende de: aprovação das perguntas 55–70
 - [x] (D-114) Template F1: o texto aparece antes e depois das escalas; usar seções fixas (`## introducao`, `## fechamento`) como no F2? — depende de: usuário
@@ -1426,7 +1461,7 @@ Disparar o S12 (painel da temporada + Validado) numa branch `feat/s12-painel` a 
 - [x] (D-166) Impacto do template sem listar revista sem SVG? — fica assim
 - [x] (D-168) Só o superusuário põe alguém nos grupos Impresso e Admin — confirmado
 - [x] (D-170) Cópia de seção editada até ficar igual ao template continua cópia — confirmado pelo usuário
-- [ ] Lista completa de variáveis (D-107) — depende de: equipe pedagógica
+- [x] (D-172) Lista completa de variáveis (D-107) — planilha recebida
 - [ ] Seeds 2026 para a Pedagógica (D-139): `f1-mt.hbs` diz "Para Língua Portuguesa…" no 3º parágrafo (igual ao escala.hbs e ao PDF de MT 2025); fechamento do F1 = "Utilização dos resultados"?; `f2-mt.hbs` é cópia do LP; modais `dlg-p4-i1..i4` com "Conteúdo em breve."; nome do template "Padrão" — depende de: Pedagógica
 - [ ] Bloqueio (D-140): portar a saída por inatividade do editor React?; POST recusado re-renderizar em vez de descartar o digitado? — depende de: usuário
 - [ ] SVG com `<!DOCTYPE>` é recusado (D-137): o design exporta sem DOCTYPE? — depende de: usuário/design
@@ -1633,3 +1668,13 @@ Disparar o S12 (painel da temporada + Validado) numa branch `feat/s12-painel` a 
 - Auditoria de código com cara de IA (ponytail + tech-debt) disparada, só leitura, em `app/`; relatório no scratchpad da sessão.
 - D-171 concluída: 74bf143, suíte 279 OK (8 pulados) verificada por mim.
 - D-171 juntada em `refatoracao-django` e push feito.
+- S12 disparado: subagente em worktree isolado, branch `feat/s12-painel` de ce9f6a3; checklist A–D (painel, Validado, lote, testes).
+- Auditoria IA concluída: 33 achados (1 alta, 11 médias, 21 baixas), ~250 linhas removíveis; Top 5 = json_seguro→json_script, JS morto no F1, except/scaffolding inalcançável, helpers de teste duplicados, validação de cor em 3 camadas. Relatório só no scratchpad da sessão (não versionado). Item 3 esbarra no S12 (link /painel/ e Pendencia.link).
+- Top 5 da auditoria disparado: 1 subagente sequencial em `fix/auditoria-ia` (de ce9f6a3), 5 objetivos com critério de pronto, 1 commit cada; link /painel/ e Pendencia.link ficam para o S12.
+- Planilha de variáveis recebida (D-172); subagente em `feat/variaveis`.
+- S12 entregue (25d24ec em `feat/s12-painel`): suíte OK (8 pulados) e `makemigrations --check` limpo verificados por mim; revisão django-reviewer rodando.
+- Usuário respondeu D-172 → D-173 (`nome_parceiro` automático, `pdNN` = rótulo dos padrões); enviado ao subagente de variáveis.
+- Revisão do S12: 0 críticos, 2 importantes; correções enviadas (D-174).
+- S12 correções (f52fffc): suíte OK verificada por mim; pronto para merge.
+- S12, auditoria e variáveis juntados em `refatoracao-django` (ensaio em worktree descartável antes: suíte OK); push feito.
+- Usuário: nome dos padrões tem padrão por ano junto da cor e o projeto sobrescreve (D-175).
