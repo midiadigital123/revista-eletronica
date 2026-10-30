@@ -1,4 +1,4 @@
-{% load ui %}{% comment %}
+{% comment %}
 Corpo do painel: próxima tarefa, filtros e tabela. A página inclui; o filtro (HTMX) devolve só isto
 para #painel-corpo. Contexto: urls/ui_painel.py.
 {% endcomment %}{% include "ui/_componentes/painel_tarefa.html" %}
@@ -36,8 +36,7 @@ para #painel-corpo. Contexto: urls/ui_painel.py.
 {% elif not linhas %}
 {% include "ui/_componentes/vazio.html" with titulo="Nenhuma revista com esse filtro" texto="Nenhuma revista ativa tem essa pendência neste recorte. Limpe o filtro de falta para ver todas." url=sem_falta rotulo="Limpar filtro de falta" %}
 {% else %}
-{% rota_b "ui_validar" ano.ano as url_lote %}
-<form method="get" action="{% if url_lote %}{{ url_lote }}{% else %}{% url 'painel_validar' ano.ano %}{% endif %}" id="painel-lote">
+<form method="get" action="{% url 'ui_validar' ano.ano %}" id="painel-lote">
   <div class="tabela-densa">
     <table class="tabela painel-tabela">
       <thead>

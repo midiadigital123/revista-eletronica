@@ -59,7 +59,7 @@ def lista(request, ano):
         .select_related("parceiro_ano__parceiro", "parceiro_ano__matriz")
         .order_by("arquivado_em", "parceiro_ano__parceiro__nome")  # ativos (NULL) primeiro
     )
-    contexto = {"ano": ano, "anos": Ano.objects.order_by("-ano"), "secao": "variaveis", "projetos": projetos}
+    contexto = {"ano": ano, "anos": Ano.objects.order_by("-ano"), "secao": "projetos", "projetos": projetos}
     return TemplateResponse(request, "ui/projeto/lista.html", contexto)
 
 
@@ -128,7 +128,7 @@ def projeto(request, pk):
         "passos_matriz": MatrizEtapaCC.objects.filter(matriz_id=projeto.parceiro_ano.matriz_id)
         .select_related("etapa", "componente").order_by("etapa__ordem", "componente__codigo"),
         "ano": projeto.ano,
-        "secao": "variaveis",
+        "secao": "projetos",
     }
     return TemplateResponse(request, "ui/projeto/projeto.html", contexto)
 

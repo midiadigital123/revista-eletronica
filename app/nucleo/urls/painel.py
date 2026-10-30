@@ -40,17 +40,15 @@ COLUNAS = {
 
 
 def link(codigo, revista):
-    """Onde corrigir cada pendência (o `Pendencia.link` fica nulo: o painel monta pelo código)."""
-    ano = {"ano": revista.projeto.ano.ano}
-    if codigo in ("matriz", "corte_sem_matriz"):
-        return reverse("admin:nucleo_projeto_escolher_matriz") + "?" + urlencode(ano)
+    """Onde corrigir cada pendência, só em telas B (o `Pendencia.link` fica nulo: o painel monta pelo código)."""
+    ano = revista.projeto.ano.ano
+    if codigo in ("matriz", "corte_sem_matriz", "variaveis", "nome_projeto"):
+        return reverse("ui_projeto", args=[revista.projeto_id])
     if codigo == "corte_invalido":
-        return reverse("admin:nucleo_corte_changelist") + "?" + urlencode(ano)
-    if codigo in ("variaveis", "nome_projeto"):
-        return reverse("admin:nucleo_projeto_change", args=[revista.projeto_id])
+        return reverse("cortes", args=[ano])
     if codigo == "impresso":
-        return reverse("impresso", args=[revista.pk])  # tela do impresso (S13)
-    return reverse("admin:nucleo_revista_change", args=[revista.pk])  # templates, SVG, capa, Validado
+        return reverse("ui_impresso", args=[ano]) + "?" + urlencode({"revista": revista.pk})
+    return reverse("ui_revista_editar", args=[ano, revista.pk])  # templates, SVG, capa, Validado
 
 
 def ultima_impressa(revista):

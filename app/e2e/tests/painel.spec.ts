@@ -53,13 +53,14 @@ test("painel: filtrar e validar uma revista", async ({ page }) => {
   await expect(linha.locator("td.coluna-validado .status-falta")).toBeVisible();
   const urlPainel = page.url();
 
-  // 2. Nome padrão do projeto é pendência (Variáveis): o "falta" leva ao projeto.
+  // 2. Nome padrão do projeto é pendência (Variáveis): o "falta" leva à ficha B do projeto.
   const variaveis = linha.locator("td.coluna-variaveis a", { hasText: "falta" });
   if (await variaveis.count()) {
     await variaveis.click();
+    await expect(page).toHaveURL(/\/ui\/projeto\/\d+\/$/);
     await page.fill("#id_nome", "DEMONSTRAÇÃO E2E");
-    await page.click("input[name=_save]");
-    await expect(page.locator(".messagelist")).toContainText("alterado com sucesso");
+    await page.getByRole("button", { name: "Salvar projeto" }).click();
+    await expect(page.locator("#mensagens")).toContainText("salvo");
     await page.goto(urlPainel);
     await expect(linha.locator("td.coluna-variaveis .status-ok")).toBeVisible();
   }

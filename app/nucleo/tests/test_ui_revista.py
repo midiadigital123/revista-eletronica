@@ -74,7 +74,7 @@ class RevistaUiTest(Base):
         for texto in ("Salvar seção", "Salvar templates", "Salvar arquivos", "Não validado", 'id="bloqueio-sessao"'):
             self.assertContains(r, texto)
         self.assertContains(r, f'href="{reverse("preview", args=[self.rev.pk])}" target="_blank"')
-        self.assertContains(r, reverse("impresso", args=[self.rev.pk]))
+        self.assertContains(r, f'{reverse("ui_impresso", args=[2026])}?revista={self.rev.pk}')
         self.assertTrue(bloqueio.quem_bloqueia(self.projeto_go))  # abrir trava o projeto (D-140)
         self.assertEqual(self.client.get(reverse("ui_revista_editar", args=[2025, self.rev.pk])).status_code, 404)
 

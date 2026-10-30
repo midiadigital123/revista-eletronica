@@ -55,7 +55,7 @@ class ValidarUiTest(Base):
         r = self.abrir(pe)
         self.assertContains(r, "pendência(s)")
         self.assertContains(r, "Falta o SVG do F2.")
-        self.assertContains(r, reverse("admin:nucleo_revista_change", args=[pe.pk]))
+        self.assertContains(r, reverse("ui_revista_editar", args=[2026, pe.pk]))
         self.assertRegex(r.content.decode(), r'name="par" value="[^"]+" disabled')
         self.assertContains(r, "validar-pendente")
 

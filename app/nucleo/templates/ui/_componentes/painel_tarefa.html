@@ -1,4 +1,4 @@
-{% load ui %}{% comment %}
+{% comment %}
 Próxima tarefa por perfil (rascunho-ui item 3): por permissão, nunca por nome de grupo.
 Com as duas permissões (Admin, superusuário) mostra as duas linhas, Validado primeiro.
 Contagens do recorte atual (parceiro/template), antes do filtro de falta. Contexto: urls/ui_painel.py (rota painel).
@@ -21,9 +21,9 @@ Candidato à base: o índice e outras telas B podem usar o mesmo bloco.
   {% if perms.nucleo.change_corte or perms.nucleo.change_projeto or perms.nucleo.change_parceiroano or perms.nucleo.change_revistafasciculo %}
   <nav class="painel-montagem" aria-label="Montagem">
     {% if perms.nucleo.change_corte %}<a class="btn btn-ghost btn-sm" href="{% url 'cortes' ano.ano %}">Cortes</a>{% endif %}
-    {% if perms.nucleo.change_projeto %}{% rota_b "ui_variaveis" ano.ano as u %}<a class="btn btn-ghost btn-sm" href="{% if u %}{{ u }}{% else %}{% url 'admin:nucleo_projeto_variaveis' %}?ano={{ ano.ano }}{% endif %}">Variáveis</a>{% endif %}
-    {% if perms.nucleo.change_parceiroano %}{% rota_b "ui_lotes_matriz" ano.ano as u %}<a class="btn btn-ghost btn-sm" href="{% if u %}{{ u }}{% else %}{% url 'admin:nucleo_projeto_escolher_matriz' %}?ano={{ ano.ano }}{% endif %}">Escolher matriz</a>{% endif %}
-    {% if perms.nucleo.change_revistafasciculo %}{% rota_b "ui_lotes_template" ano.ano as u %}<a class="btn btn-ghost btn-sm" href="{% if u %}{{ u }}{% else %}{% url 'admin:nucleo_revista_escolher_template' %}?ano={{ ano.ano }}{% endif %}">Escolher template F1/F2</a>{% endif %}
+    {% if perms.nucleo.change_projeto %}<a class="btn btn-ghost btn-sm" href="{% url 'ui_variaveis' ano.ano %}">Variáveis</a>{% endif %}
+    {% if perms.nucleo.change_parceiroano %}<a class="btn btn-ghost btn-sm" href="{% url 'ui_lotes_matriz' ano.ano %}">Escolher matriz</a>{% endif %}
+    {% if perms.nucleo.change_revistafasciculo %}<a class="btn btn-ghost btn-sm" href="{% url 'ui_lotes_template' ano.ano %}">Escolher template F1/F2</a>{% endif %}
   </nav>
   {% endif %}
 </section>

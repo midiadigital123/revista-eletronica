@@ -8,8 +8,11 @@
 {% include "ui/lotes/_cab.html" %}
 {% with a=ano.ano|stringformat:"d" %}
 {% if not componente %}
-{% url 'admin:nucleo_componente_changelist' as u %}
+{% if perms.nucleo.add_componente %}{% url 'admin:nucleo_componente_changelist' as u %}
 {% include "ui/_componentes/vazio.html" with titulo="Nenhum componente em "|add:a texto="Cadastre os componentes do ano no admin." url=u rotulo="Abrir componentes" %}
+{% else %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhum componente em "|add:a texto="Peça a um administrador para cadastrar os componentes do ano." %}
+{% endif %}
 {% else %}
 <nav aria-label="Componente" class="segmentos">
   {% for c in componentes %}<a href="{% url 'ui_lotes_template' ano.ano %}?componente={{ c.pk }}"{% if c.pk == componente.pk %} aria-current="page"{% endif %} title="{{ c.nome }}">{{ c.codigo }}</a>{% endfor %}

@@ -1,5 +1,5 @@
 {% extends "ui/base.html" %}
-{% load static ui %}
+{% load static %}
 {% comment %}Projeto (T16) fora do admin. Regra em nucleo/projeto.py; view em nucleo/urls/ui_projeto.py; ficha em docs/telas/fichas/projeto.md.{% endcomment %}
 {% block titulo %}{{ projeto.nome }}{% endblock %}
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/projeto.css' %}">{% endblock %}
@@ -9,11 +9,10 @@
 <header class="pagina-cab">
   <div>
     <h1>{{ projeto.nome }}{% if arquivado %} <span class="badge badge-contorno">Arquivado</span>{% endif %}</h1>
-    <p class="mudo">{{ projeto.parceiro_ano.parceiro.nome }} em {{ projeto.ano.ano }}, matriz {{ projeto.parceiro_ano.matriz.nome|default:"ainda não escolhida" }}.</p>
+    <p class="mudo">{{ projeto.parceiro_ano.parceiro.nome }} em {{ projeto.ano.ano }}, matriz {{ projeto.parceiro_ano.matriz.nome|default:"ainda não escolhida" }}.{% if perms.nucleo.change_parceiroano %} <a class="link" href="{% url 'ui_lotes_matriz' projeto.ano.ano %}">Escolher matriz</a>{% endif %}</p>
   </div>
   <div class="acoes">
-    {% rota_b "ui_variaveis" projeto.ano.ano as u %}
-    <a class="btn btn-outline" href="{% if u %}{{ u }}{% else %}{% url 'admin:nucleo_projeto_variaveis' %}?ano={{ projeto.ano.ano }}{% endif %}">Planilha de variáveis de {{ projeto.ano.ano }}</a>
+    <a class="btn btn-outline" href="{% url 'ui_variaveis' projeto.ano.ano %}">Planilha de variáveis de {{ projeto.ano.ano }}</a>
   </div>
 </header>
 

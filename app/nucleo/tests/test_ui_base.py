@@ -1,4 +1,4 @@
-"""Base comum das telas B: bloqueio para views próprias (ui_bloqueio), navegação (rota_b) e casca.
+"""Base comum das telas B: bloqueio para views próprias (ui_bloqueio), navegação e casca.
 
 TransactionTestCase no bloqueio, como em test_bloqueio: o `now()` do banco precisa andar e
 cada Client vê o commit do outro.
@@ -8,8 +8,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect
 from django.http import HttpResponse
-from django.template import Context, RequestContext, Template as Tpl
-from django.test import Client, SimpleTestCase, TestCase, TransactionTestCase, override_settings
+from django.template import RequestContext, Template as Tpl
+from django.test import Client, TestCase, TransactionTestCase, override_settings
 from django.urls import include, path
 
 from nucleo.admin.bloqueio import CAMPO_SESSAO
@@ -111,18 +111,6 @@ class BloqueioUiTest(TransactionTestCase):
         self.assertIsNotNone(bloqueio.quem_bloqueia(self.tpl))
 
 
-@override_settings(ROOT_URLCONF="sistema.urls")
-class RotaBTest(SimpleTestCase):
-    def render(self, texto, **ctx):
-        return Tpl("{% load ui %}" + texto).render(Context(ctx))
-
-    def test_cai_para_vazio_sem_args_ou_com_args(self):
-        self.assertEqual(self.render('{% rota_b "ui_nao_existe" 2026 %}'), "")
-        self.assertEqual(self.render('{% rota_b "cortes" 2026 %}'), "/cortes/2026/")
-        self.assertEqual(self.render('{% rota_b "cortes_inicio" 2026 %}'), "/cortes/")  # args a mais: sem args
-        self.assertEqual(self.render('{% rota_b "cortes" ano %}', ano=None), "")  # sem ano e a rota exige
-
-
 class CascaTest(TestCase):
     def test_casca_com_htmx_csrf_fonte_local_e_navegacao_com_reserva(self):
         Ano.objects.create(ano=2026)
@@ -132,9 +120,11 @@ class CascaTest(TestCase):
         self.assertContains(r, 'hx-headers=\'{"X-CSRFToken": "')
         self.assertContains(r, "ui/fontes/inter-latin-wght-normal.woff2")
         self.assertNotContains(r, "fonts.googleapis.com")
-        # Telas B ainda vazias: a navegação cai no admin equivalente.
+        # Navegação só por telas B.
         self.assertContains(r, 'href="/painel/2026/"')
         self.assertContains(r, 'href="/ui/variaveis/2026/"')  # tela B de variáveis já entrou
         self.assertContains(r, 'href="/ui/matriz/2026/"')  # tela B de matrizes já registrada
         self.assertContains(r, 'href="/ui/impresso/2026/"')
+        self.assertContains(r, 'href="/ui/projeto/ano/2026/"')
+        self.assertContains(r, 'href="/ui/lotes/2026/matriz/"')
         self.assertContains(r, 'id="mensagens"')

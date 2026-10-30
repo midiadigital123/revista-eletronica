@@ -143,7 +143,7 @@ class ValidadoTest(Base):
         go_mt = self.go["MT"]
         falta_svg = self.celula("svg", go_mt)
         self.assertEqual((falta_svg["ok"], falta_svg["dica"]), (False, "Falta o SVG do F2."))
-        self.assertEqual(falta_svg["link"], reverse("admin:nucleo_revista_change", args=[go_mt.pk]))
+        self.assertEqual(falta_svg["link"], reverse("ui_revista_editar", args=[2026, go_mt.pk]))
         self.assertTrue(self.celula("svg")["ok"])
         self.assertContains(r, f'<a class="status status-falta" href="{falta_svg["link"]}" title="Falta o SVG do F2.">')
         # Filtro por pendência: só as sem SVG (GO MT, PE LP, PE MT).
@@ -155,7 +155,7 @@ class ValidadoTest(Base):
         # Variáveis: nome padrão do projeto aponta para o projeto.
         self.projeto_go.nome = "GO - NOME DO PROJETO"
         self.projeto_go.save()
-        self.assertEqual(self.celula("variaveis")["link"], reverse("admin:nucleo_projeto_change", args=[self.projeto_go.pk]))
+        self.assertEqual(self.celula("variaveis")["link"], reverse("ui_projeto", args=[self.projeto_go.pk]))
 
     def test_resolvido_uma_vez_por_linha(self):
         with mock.patch.object(resolver, "resolver", wraps=resolver.resolver) as espiao:

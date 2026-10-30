@@ -26,7 +26,7 @@ class PainelUiTest(Base):
         self.assertContains(r, f'action="{reverse("ui_validar", args=[2026])}"')  # lote vai à tela B de validar
         self.assertContains(r, f'href="{reverse("preview", args=[rev.pk])}" target="_blank"')
         self.assertContains(r, f'href="{reverse("ui_revista_editar", args=[2026, rev.pk])}"')  # o nome abre a revista B
-        self.assertContains(r, reverse("impresso", args=[rev.pk]))  # coluna Impresso leva à tela do impresso
+        self.assertContains(r, f'{reverse("ui_impresso", args=[2026])}?revista={rev.pk}')  # coluna Impresso leva à tela B
         # Próxima tarefa da Pedagógica: revistas sem "Validado", com link para o filtro.
         self.assertContains(r, "<strong>4</strong> revista(s) sem “Validado” nesta versão")
         self.assertContains(r, 'href="?falta=validado"')
@@ -37,7 +37,7 @@ class PainelUiTest(Base):
         completar(self.go["LP"])
         r = self.client.get(self.url)
         mt = self.go["MT"]
-        link = reverse("admin:nucleo_revista_change", args=[mt.pk])
+        link = reverse("ui_revista_editar", args=[2026, mt.pk])
         self.assertContains(r, f'<a class="status status-falta" href="{link}" title="Falta o SVG do F2.">')
         # Cabeçalho: quantas faltam por coluna (SVG: GO MT, PE LP, PE MT).
         svg = next(c for c in r.context["colunas"] if c["chave"] == "svg")

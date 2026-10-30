@@ -54,6 +54,14 @@ def responder(request, pagina, parcial, contexto):
     return TemplateResponse(request, parcial if e_htmx(request) else pagina, contexto)
 
 
+@require_http_methods(["GET"])
+@login_required(login_url="admin:login")
+def inicio(request):
+    """/ui/lotes/ → lote de matriz do ano mais recente (menu sem `ano` no contexto); sem ano, `/`."""
+    ano = Ano.objects.order_by("-ano").first()
+    return redirect("ui_lotes_matriz", ano.ano) if ano else redirect("inicio")
+
+
 @require_http_methods(["GET", "POST"])
 @login_required(login_url="admin:login")
 def matriz(request, ano):
@@ -72,7 +80,7 @@ def matriz(request, ano):
         for pa in parceiros
     ]  # fmt: skip
     contexto = {
-        "ano": ano, "anos": Ano.objects.order_by("-ano"), "secao": "variaveis", "aba": "matriz",
+        "ano": ano, "anos": Ano.objects.order_by("-ano"), "secao": "lotes", "aba": "matriz",
         "form": form, "linhas": linhas, "pode_gravar": pode_gravar,
     }  # fmt: skip
     return responder(request, "ui/lotes/matriz.html", "ui/parciais/lotes_matriz.html", contexto)
@@ -87,7 +95,7 @@ def template(request, ano):
     pedido = request.GET.get("componente", "")
     componente = next((c for c in componentes if str(c.pk) == pedido), componentes[0] if componentes else None)
     contexto = {
-        "ano": ano, "anos": Ano.objects.order_by("-ano"), "secao": "variaveis", "aba": "template",
+        "ano": ano, "anos": Ano.objects.order_by("-ano"), "secao": "lotes", "aba": "template",
         "componentes": componentes, "componente": componente, "pode_gravar": pode_gravar,
     }  # fmt: skip
     if componente is None:  # ano sem componente: só o estado vazio
@@ -115,6 +123,7 @@ def template(request, ano):
 
 
 urlpatterns = [
+    path("", inicio, name="ui_lotes_inicio"),
     path("<int:ano>/matriz/", matriz, name="ui_lotes_matriz"),
     path("<int:ano>/template/", template, name="ui_lotes_template"),
 ]

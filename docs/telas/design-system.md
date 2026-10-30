@@ -31,7 +31,7 @@ Telas e rotas (nomes `ui_<tela>`; ações `ui_<tela>_<acao>`):
 
 - Cortes já é B e fica em `/cortes/<ano>/` (rota `cortes`).
 - O Painel B ocupa `/painel/<ano>/` (rota `painel`; `urls/ui_painel.py` é incluído em `painel/` antes de `urls/painel.py`). O painel no estilo do admin saiu; `/painel/<ano>/validar/` (`painel_validar`) continua para quem chega pelo admin. O lote do painel B vai a `ui_validar`.
-- A rota principal recebe o ano (`<int:ano>/`) quando a tela é por ano. A navegação usa `{% rota_b "ui_<tela>" ano.ano %}`: tenta com o ano, depois sem args; vazio = cai no admin equivalente. Por isso a navegação funciona em qualquer ordem de merge: basta registrar a rota com o nome da tabela.
+- A rota principal recebe o ano (`<int:ano>/`) quando a tela é por ano. A navegação usa `{% if ano %}{% url "ui_<tela>" ano.ano %}{% else %}{% url "ui_<tela>_inicio" %}{% endif %}`; a rota `_inicio` redireciona ao ano mais recente. Nenhum link de navegação cai no admin.
 
 ## 2. Casca e contexto
 

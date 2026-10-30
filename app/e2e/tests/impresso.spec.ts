@@ -45,9 +45,9 @@ test("impresso: valida, vê o diff e marca impressa", async ({ browser }) => {
   const variaveis = linha.locator("td.coluna-variaveis a", { hasText: "falta" });
   const urlPainel = ped.url();
   if (await variaveis.count()) {
-    await variaveis.click();
+    await variaveis.click();  // ficha B do projeto
     await ped.fill("#id_nome", "DEMONSTRAÇÃO E2E");
-    await ped.click("input[name=_save]");
+    await ped.getByRole("button", { name: "Salvar projeto" }).click();
     await ped.goto(urlPainel);
   }
   // O nome leva à revista B; o roteiro edita no admin (mesma revista).
@@ -64,16 +64,16 @@ test("impresso: valida, vê o diff e marca impressa", async ({ browser }) => {
   const erros: string[] = [];
   page.on("pageerror", (e) => erros.push(e.message));
   await page.locator("#painel-corpo tbody tr").first().locator("td.coluna-impresso a").click();
-  await expect(page.locator("h1")).toContainText("Impresso:");
-  const fechamento = page.locator("fieldset", { has: page.locator("h2", { hasText: "fechamento" }) });
+  await expect(page.locator("h1")).toHaveText("Impresso");  // tela B: /ui/impresso/<ano>/?revista=
+  const fechamento = page.locator("#grupo-F1-fechamento");
   await expect(fechamento.locator("textarea")).toHaveValue(new RegExp(`Fechamento ${marca}\\.`));
   await expect(page.getByRole("button", { name: "Copiar texto novo" }).first()).toBeVisible();
   await expect(page.getByRole("link", { name: "Baixar planilhas" })).toBeVisible();
 
   // 3. Marca: os avisos zeram e o botão some.
   await page.click("#botao-impressa");
-  await expect(page.locator(".messagelist")).toContainText("Revista Impressa Atualizada");
-  await expect(page.locator("#content-main")).toContainText("Sem mudanças desde a última");
+  await expect(page.locator("#mensagens")).toContainText("Revista Impressa Atualizada");
+  await expect(page.locator("#conteudo")).toContainText("Sem mudanças desde a última");
   await expect(page.locator("#botao-impressa")).toHaveCount(0);
   await page.goto(urlPainel.replace(/^https?:\/\/[^/]+/, ""));
   await expect(page.locator("#painel-corpo tbody tr").first().locator("td.coluna-impresso .status-ok")).toBeVisible();
