@@ -110,19 +110,32 @@ class FasciculoForm(forms.ModelForm):
         required=False, label="Confirmação", help_text="Só para trocar o template de um fascículo com textos editados."
     )
 
+    pode_descartar = False  # FasciculoInline.get_formset põe pelas permissões de texto
+
     def clean(self):
         dados = super().clean()
-        rf, self.descartar = self.instance, False
+        rf, self.descartar = self.instance, 0
         if rf.pk and "template" in dados and dados["template"] != rf.template:
+            # Trava o fascículo antes de contar (D-171): outra aba que crie cópia espera o fim
+            # desta transação (gravar_textos trava o mesmo fascículo), então a contagem
+            # confirmada é a que o save apaga. Roda na transação do admin.
+            RevistaFasciculo.objects.select_for_update().filter(pk=rf.pk).first()
             secoes = sorted(rf.revistasecao_set.values_list("secao", flat=True))
             if secoes:
-                frase = frase_descarte(len(secoes))
-                if " ".join(dados.get("confirmacao", "").split()).lower() != frase:
+                if not self.pode_descartar:
                     raise ValidationError(
-                        f"Este fascículo tem textos editados (cópias de seção: {', '.join(secoes)}). "
+                        "Este fascículo tem textos editados: trocar o template apaga as cópias "
+                        "e exige permissão de editar textos."
+                    )
+                frase = frase_descarte(len(secoes))
+                confirmacao = " ".join(dados.get("confirmacao", "").split()).lower()
+                if confirmacao != frase:
+                    raise ValidationError(
+                        ("A confirmação não confere com as cópias de agora. " if confirmacao else "")
+                        + f"Este fascículo tem textos editados (cópias de seção: {', '.join(secoes)}). "
                         f"Trocar o template apaga essas cópias: para confirmar, digite “{frase}” em Confirmação."
                     )
-                self.descartar = True
+                self.descartar = len(secoes)
         return dados
 
     def save(self, commit=True):
@@ -142,6 +155,12 @@ class FasciculoInline(admin.TabularInline):
     readonly_fields = ("fasciculo",)
     extra = 0
     can_delete = False
+
+    def get_formset(self, request, obj=None, **kwargs):
+        # A troca que apaga cópias roda sob as permissões de editar textos (D-170, D-171).
+        pode = request.user.has_perms(["nucleo.add_revistasecao", "nucleo.change_revistasecao"])
+        kwargs["form"] = type("FasciculoForm", (self.form,), {"pode_descartar": pode})
+        return super().get_formset(request, obj, **kwargs)
 
     def get_fields(self, request, obj=None):
         if not self.has_change_permission(request, obj):
@@ -187,6 +206,12 @@ def blocos_de_texto(revista):
         ]
         blocos.append(Bloco(rf, versao, secoes))
     return blocos
+
+
+def faixas_sem_template(revista):
+    """Faixa vermelha do resolver para cada fascículo sem template (D-116)."""
+    sem = RevistaFasciculo.objects.filter(revista=revista, template__isnull=True).order_by("fasciculo")
+    return mark_safe("".join(resolver.FAIXA_SEM_TEMPLATE.format(f) for f in sem.values_list("fasciculo", flat=True)))
 
 
 def nome(tipo, fasciculo, secao=""):
@@ -254,6 +279,12 @@ def campos_de_texto(blocos):
 def gravar_textos(request, form):
     """Cria, atualiza ou descarta as cópias de seção (D-104, D-115). Roda na transação do mixin."""
     dados = form.cleaned_data
+    # Trava a revista: a cascata arquiva com UPDATE na mesma linha (D-117); arquivada é foto congelada.
+    # Projeto só arquiva com todas as revistas arquivadas: basta a linha da revista.
+    if Revista.objects.select_for_update().get(pk=form.instance.pk).arquivada_em is not None:
+        if any(n.startswith(("secao__", "manter__", "descartar__")) for n in form.changed_data):
+            messages.error(request, "Textos não salvos: a revista foi arquivada (só leitura).")
+        return
     # Trava os fascículos: duplo envio da mesma aba passa junto pelo FOR SHARE do bloqueio.
     rfs = {rf.pk: rf for rf in RevistaFasciculo.objects.select_for_update().filter(pk__in=[b.rf.pk for b in form.blocos])}
     for b in form.blocos:
@@ -279,7 +310,7 @@ def gravar_textos(request, form):
                 )  # fmt: skip
             elif copia is not None and dados.get(nome("manter", f, s.id)):
                 copia.template_versao_id = versao_id
-                copia.save()
+                copia.save(update_fields=["template_versao"])
         if mexeu:
             messages.info(request, f"Textos do {f} salvos: {', '.join(mexeu)}.")
 
@@ -364,6 +395,8 @@ class RevistaAdmin(BloqueioAdminMixin, admin.ModelAdmin):
                 else ""
             )
             textos.append((f"Textos do {f} ({b.rf.template.nome}, versão {b.versao.numero})", {"fields": campos, "description": descricao}))
+        if faixas := faixas_sem_template(obj):
+            textos.append(("Textos sem template", {"fields": [], "description": faixas}))
         return [*self.fieldsets, *textos]
 
     def get_form(self, request, obj=None, **kwargs):
@@ -374,11 +407,21 @@ class RevistaAdmin(BloqueioAdminMixin, admin.ModelAdmin):
 
     @admin.display(description="Textos")
     def textos(self, obj):
+        if obj.arquivada_em is not None:
+            # Arquivada: as seções da foto de arquivamento (D-117), já renderizadas e escapadas.
+            r = resolver.resolver(resolver.carregar(obj.pk))
+            return mark_safe("".join(
+                r[f]["faixa"] if r[f]["secoes"] is None else format_html_join(
+                    "", '<h4>{} {} · {}</h4><div class="texto-template">{}</div>',
+                    ((f.upper(), s["id"], mark_safe(s["titulo"]), mark_safe(s["corpo"])) for s in r[f]["secoes"]),
+                )
+                for f in ("f1", "f2")
+            ))  # fmt: skip
         return format_html_join(
             "",
             '<h4>{} {} · {}</h4><pre class="texto-template">{}</pre>',
             ((b.rf.fasciculo, s.id, s.titulo, s.corpo) for b in blocos_de_texto(obj) for s in b.secoes),
-        ) or "Sem template."
+        ) + faixas_sem_template(obj)
 
     @admin.display(description="Ids do SVG")
     def conferencia_ids(self, obj):
@@ -415,6 +458,11 @@ class RevistaAdmin(BloqueioAdminMixin, admin.ModelAdmin):
 
     def save_related(self, request, form, formsets, change):
         super().save_related(request, form, formsets, change)  # inline antes: troca de template
+        for f in (f for fs in formsets for f in fs.forms if getattr(f, "descartar", 0)):
+            n = f.descartar
+            messages.warning(
+                request, f"Template do {f.instance.fasciculo} trocado: {n} cópia{'s' if n > 1 else ''} de seção descartada{'s' if n > 1 else ''}."
+            )
         gravar_textos(request, form)
 
     def get_urls(self):

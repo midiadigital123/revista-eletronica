@@ -26,11 +26,13 @@ def preview(request):
     if len(corpo) > TEXTO_MAX:
         return JsonResponse({"erro": "texto grande demais"}, status=400)
     erros = []
-    if request.POST.get("fasciculo") in Fasciculo.values:
-        try:
+    try:
+        if request.POST.get("fasciculo") in Fasciculo.values:
             texto.validar(corpo, request.POST["fasciculo"])
-        except ValidationError as e:
-            erros = e.messages
+        elif request.POST.get("corpo"):  # seção da revista: o corpo vem depois do "## id\ntítulo\n\n"
+            texto.validar_corpo(corpo.split("\n\n", 1)[-1])
+    except ValidationError as e:
+        erros = e.messages
     # renderizar/renderizar_texto_puro já escapam; o id da seção é escapado pelo format_html.
     html = format_html_join(
         "",
