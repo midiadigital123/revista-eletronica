@@ -1,0 +1,56 @@
+{% comment %}
+Form do lote "Escolher matriz": página inteira e resposta do hx-post (troca a si mesmo; mensagens oob).
+Contexto: form (nucleo.lotes.MatrizLoteForm), linhas [{pa, marcado, projeto, editando}], pode_gravar.
+{% endcomment %}<form method="post" id="lote" class="lote" data-lote
+  {% if pode_gravar %}hx-post="{{ request.get_full_path }}" hx-target="this" hx-swap="outerHTML" hx-indicator="#lote-girando"{% endif %}>
+  {% csrf_token %}
+  <div class="tabela-caixa lote-caixa">
+    <table class="tabela">
+      <thead>
+        <tr>
+          {% if pode_gravar %}<th scope="col" class="lote-marca"><input type="checkbox" data-todos aria-label="Marcar todos os parceiros"></th>{% endif %}
+          <th scope="col">Parceiro</th>
+          <th scope="col">Matriz</th>
+          <th scope="col">Situação</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for l in linhas %}
+        <tr{% if l.marcado %} aria-selected="true"{% endif %}{% if l.editando %} data-pulado{% endif %}>
+          {% if pode_gravar %}<td class="lote-marca"><input type="checkbox" name="alvos" value="{{ l.pa.pk }}" id="alvo-{{ l.pa.pk }}"{% if l.marcado %} checked{% endif %}{% if form.alvos.errors %} aria-describedby="erro-alvos"{% endif %}></td>{% endif %}
+          <th scope="row" class="lote-nome">{% if pode_gravar %}<label for="alvo-{{ l.pa.pk }}">{{ l.pa.parceiro.nome }}</label>{% else %}{{ l.pa.parceiro.nome }}{% endif %}</th>
+          <td data-atual="matriz" data-valor="{{ l.pa.matriz_id|default:'' }}">
+            {% if l.pa.matriz %}{{ l.pa.matriz.nome }}{% else %}<span class="mudo">sem matriz</span>{% endif %}
+            <span class="lote-novo" data-novo hidden></span>
+          </td>
+          <td>
+            {% if l.editando %}<span class="badge badge-alerta" title="O projeto está aberto; o lote não grava nele.">Em edição por {{ l.editando }}: será pulado</span>
+            {% elif not l.projeto %}<span class="badge badge-secundario" title="Grava a matriz do parceiro mesmo sem projeto ativo.">Sem projeto ativo</span>{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if form.alvos.errors %}<p class="erro" id="erro-alvos" role="alert">{{ form.alvos.errors.0 }}</p>{% endif %}
+  {% if pode_gravar %}
+  <p class="mudo">Projetos em edição por outra sessão são pulados e listados.</p>
+  <div class="barra-salvar lote-barra">
+    <span class="mudo" data-contador aria-live="polite">{{ form.alvos.value|length|default:0 }} selecionado(s)</span>
+    <div class="lote-campo">
+      <label class="rotulo" for="lote-matriz">Matriz</label>
+      <select class="select" name="matriz" id="lote-matriz" data-previa="matriz"{% if form.matriz.errors %} aria-invalid="true" aria-describedby="erro-matriz"{% endif %}>
+        <option value="">Escolha a matriz</option>
+        {% for m in form.fields.matriz.queryset %}<option value="{{ m.pk }}"{% if form.matriz.value|stringformat:"s" == m.pk|stringformat:"s" %} selected{% endif %}>{{ m.nome }}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="btn" type="submit">
+      <svg class="girando htmx-indicator" id="lote-girando" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+      Aplicar aos selecionados
+    </button>
+    {% if form.matriz.errors %}<p class="erro lote-erro" id="erro-matriz" role="alert">{{ form.matriz.errors.0 }}</p>{% endif %}
+    {% if not form.fields.matriz.queryset.exists %}<p class="ajuda mudo lote-erro">Nenhuma matriz em {{ ano.ano }}: cadastre em Matrizes.</p>{% endif %}
+  </div>
+  {% endif %}
+</form>
+{% if htmx %}{% include "ui/_componentes/mensagens.html" with oob=True %}{% endif %}

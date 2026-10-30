@@ -1,0 +1,23 @@
+{% comment %}
+Cabeçalho comum das duas abas de Lotes: título, ano, abas e aviso de só leitura.
+Contexto: ano, anos, aba ("matriz" | "template"), pode_gravar.
+{% endcomment %}<header class="pagina-cab">
+  <div>
+    <h1>Lotes</h1>
+    <p class="mudo">Atribua a mesma matriz ou o mesmo template a vários de uma vez.</p>
+  </div>
+  <div class="acoes">
+    <a class="btn btn-ghost" href="{% url 'painel' ano.ano %}">Ver painel de {{ ano.ano }}</a>
+  </div>
+</header>
+
+{% include "ui/_componentes/anos.html" with rota="ui_lotes_"|add:aba %}
+
+<nav class="abas" aria-label="Lotes">
+  <a href="{% url 'ui_lotes_matriz' ano.ano %}"{% if aba == "matriz" %} aria-current="page"{% endif %}>Escolher matriz</a>
+  <a href="{% url 'ui_lotes_template' ano.ano %}"{% if aba == "template" %} aria-current="page"{% endif %}>Escolher template F1/F2</a>
+</nav>
+
+{% if not pode_gravar %}
+{% include "ui/_componentes/so_leitura.html" with texto="Só leitura: seu perfil vê as atribuições, mas não altera. Para alterar, peça a permissão a um administrador." %}
+{% endif %}

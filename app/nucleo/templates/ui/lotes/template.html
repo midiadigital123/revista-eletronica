@@ -1,0 +1,25 @@
+{% extends "ui/base.html" %}
+{% load static %}
+{% comment %}Lote "Escolher template F1/F2" (T19) fora do admin. Regra: nucleo/lotes.py; view: urls/ui_lotes.py; ficha: docs/telas/fichas/lotes.md.{% endcomment %}
+{% block titulo %}Escolher template {{ ano.ano }}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/lotes.css' %}"><script src="{% static 'ui/telas/lotes.js' %}" defer></script>{% endblock %}
+
+{% block conteudo %}
+{% include "ui/lotes/_cab.html" %}
+{% with a=ano.ano|stringformat:"d" %}
+{% if not componente %}
+{% url 'admin:nucleo_componente_changelist' as u %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhum componente em "|add:a texto="Cadastre os componentes do ano no admin." url=u rotulo="Abrir componentes" %}
+{% else %}
+<nav aria-label="Componente" class="segmentos">
+  {% for c in componentes %}<a href="{% url 'ui_lotes_template' ano.ano %}?componente={{ c.pk }}"{% if c.pk == componente.pk %} aria-current="page"{% endif %} title="{{ c.nome }}">{{ c.codigo }}</a>{% endfor %}
+</nav>
+{% if linhas %}
+{% include "ui/parciais/lotes_template.html" %}
+{% else %}
+{% url 'cortes' ano.ano as u %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhuma revista ativa de "|add:componente.codigo|add:" em "|add:a texto="As revistas nascem dos cortes do ano." url=u rotulo="Abrir cortes" %}
+{% endif %}
+{% endif %}
+{% endwith %}
+{% endblock %}
