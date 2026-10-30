@@ -8,7 +8,7 @@ Quebrado/pendente: 5 telas B corrigidas sem 2ª revisão; links "falta" ainda v�
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Executar S1 do plano telas-b-lacunas (links do painel).
+Executar S2 do plano telas-b-lacunas (matriz na ficha do projeto, faixa sem matriz, nome do projeto na revista, renomear parceiro).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1563,6 +1563,16 @@ Executar S1 do plano telas-b-lacunas (links do painel).
 - **Arquivos afetados:** `plans/revista-express-telas-b-lacunas.md`
 - **Status:** ativa
 
+### D-191 — Bloqueio: a mesma pessoa em outra aba ou carga nova assume (2026-10-30 17:40)
+- **Contexto:** o Playwright do S1 mostrou que ir da ficha do projeto para a revista do mesmo projeto deixava a revista em "Somente leitura" por até 30 s: a página anterior só solta o bloqueio no `pagehide`, depois que a nova já pediu o dela. Afeta usuários reais, não só o teste.
+- **Decisão:** `adquirir` aceita quando o bloqueio expirou OU é do mesmo usuário (antes: mesmo usuário E mesma sessão). A sessão antiga perde renovação e escrita (`renovar`/`conferir_na_transacao` continuam exigindo a sessão) e o JS mostra "Você perdeu o bloqueio". Outra pessoa continua barrada. Escolhida pelo usuário.
+- **Motivo:** determinístico, no servidor, sem corrida de rede.
+- **Descartadas:** soltar o bloqueio no `beforeunload` (corrida: o envio não tem ordem garantida; falha se a pessoa cancela a saída); manter e só ajustar o teste (usuários seguiriam travados por 30 s).
+- **Consequências:** o aviso "sua outra aba ainda segura a edição" saiu (não acontece mais); um lote do mesmo usuário toma o bloqueio da ficha que ele tem aberta, e a ficha vira só leitura; Playwright passa a rodar em série (`workers: 1`), porque painel, impresso e revista-textos gravam a mesma revista com o mesmo usuário.
+- **Achado junto:** o botão "Copiar texto novo" da tela B do impresso não tinha nome acessível (`<span role="status">` dentro do botão); trocado por `aria-live="polite"`.
+- **Arquivos afetados:** `app/nucleo/servicos/bloqueio.py`, `app/nucleo/admin/bloqueio.py`, `app/nucleo/lotes.py`, `app/nucleo/tests/test_bloqueio.py`, `app/nucleo/templates/ui/parciais/impresso_detalhe.html`, `app/nucleo/static/ui/ui.js`, `app/e2e/playwright.config.ts`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (D-189 → D-190) Auditoria das telas B: o que o back faz e a tela B não oferece. Bloqueia: abrir ano, criar matriz, criar template, paleta do ano, etapas/componentes. Leva a erro: links do painel vão ao admin (Impresso recebe 403 em "Matriz", `urls/painel.py:43`), renomear parceiro, "abra um ano no admin" para quem não pode. Menu sem Projetos e Lotes. Por onde começar — depende de: usuário
 - [x] (D-184) S17: os cortes de 2026 repetem os de 2025? Se sim, comando `importar_cortes` (~60 min) substituindo a D-119 nesse ponto — depende de: Pedagógica
@@ -1854,3 +1864,4 @@ Executar S1 do plano telas-b-lacunas (links do painel).
 - D-189: grade de cortes ganhou 'Adicionar parceiro' (7 testes OK). Auditoria das telas B (back sem UI, links errados por perfil) disparada em segundo plano.
 - Auditoria das telas B concluída: 5 lacunas bloqueiam o trabalho, 1 link dá 403 ao Impresso (painel → escolher matriz no admin, confirmado por mim).
 - D-190: blueprint das 21 lacunas aprovado (S0–S9); S0 em execução.
+- S1 (35d2cd0) + correção (5e8bf95): links do painel e mensagens sem admin nem 403. O Playwright achou o bloqueio de 30 s ao navegar entre ficha e revista: D-191 (mesma pessoa assume) + botão de copiar sem nome acessível. Suíte 527 OK; Playwright 26/26 numa pilha isolada (porta 8014). A pilha de dev foi encerrada à força (137) ao subir a isolada e foi religada.
