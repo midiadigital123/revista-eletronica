@@ -44,6 +44,10 @@ class ValidarTest(SimpleTestCase):
     def test_variavel_inexistente(self):
         self.assertIn("{{inexistente}}", self.erros(F1 + "{{inexistente}} {{ parceiro }} {{x"))
 
+    def test_gentilico_saiu_da_lista(self):  # virou adjetivo_patrio_* (lista oficial)
+        self.assertIn("{{gentilico_masc_sing}}", self.erros(F1 + "{{gentilico_masc_sing}}"))
+        validar(F1 + "{{adjetivo_patrio_singular_masculino}} {{issn}} {{no_na_em_nome_parceiro}}", "F1")
+
     def test_recusa_recursos_fora_do_formato(self):
         for trecho, nome in [
             ("# Título", "título"),

@@ -151,17 +151,17 @@ class VariaveisTest(Base):
         return Projeto.objects.create(parceiro_ano=pa, ano=ano25, nome="GO 2025", **valores)
 
     def test_copiar_so_preenche_vazias(self):
-        Projeto.objects.filter(pk=self.projeto_go.pk).update(gentilico_fem_sing="   ")  # só espaço = vazio
+        Projeto.objects.filter(pk=self.projeto_go.pk).update(adjetivo_patrio_singular_feminino="   ")  # só espaço = vazio
         self.criar_2025(
-            gentilico_masc_sing="goiano", gentilico_fem_sing="goiana", gentilico_masc_plur="velho",
+            adjetivo_patrio_singular_masculino="goiano", adjetivo_patrio_singular_feminino="goiana", adjetivo_patrio_plural_masculino="velho",
             arquivado_em="2025-12-31T00:00:00Z",  # arquivado também serve
         )  # fmt: skip
         r = self.client.post(self.URL, {"copiar": self.projeto_go.pk}, follow=True)
         p = Projeto.objects.get(pk=self.projeto_go.pk)
-        self.assertEqual(p.gentilico_masc_sing, "goiano")
-        self.assertEqual(p.gentilico_fem_sing, "goiana")
-        self.assertEqual(p.gentilico_masc_plur, "goianos")  # já tinha valor: não sobrescreve
-        self.assertEqual(p.gentilico_fem_plur, "")  # vazio também em 2025
+        self.assertEqual(p.adjetivo_patrio_singular_masculino, "goiano")
+        self.assertEqual(p.adjetivo_patrio_singular_feminino, "goiana")
+        self.assertEqual(p.adjetivo_patrio_plural_masculino, "goianos")  # já tinha valor: não sobrescreve
+        self.assertEqual(p.adjetivo_patrio_plural_feminino, "")  # vazio também em 2025
         self.assertIn("copiado de 2025", mensagens(r)[0])
 
     def test_sem_ano_anterior_nada_muda(self):
@@ -172,19 +172,19 @@ class VariaveisTest(Base):
 
     def test_planilha_grava_e_pula_travado(self):
         r = self.client.get(self.URL)
-        self.assertContains(r, "LP F2 Padrão")  # gentilico_masc_plur aparece no F2 do LP
+        self.assertContains(r, "LP F2 Padrão")  # adjetivo_patrio_plural_masculino aparece no F2 do LP
         dados = {
             "form-TOTAL_FORMS": 2, "form-INITIAL_FORMS": 2, "form-MIN_NUM_FORMS": 0, "form-MAX_NUM_FORMS": 1000,
         }  # fmt: skip
         for i, p in enumerate(r.context["formset"].queryset):
             dados[f"form-{i}-id"] = p.pk
-            for nome in ("gentilico_masc_sing", "gentilico_fem_sing", "gentilico_masc_plur", "gentilico_fem_plur"):
+            for nome in ("adjetivo_patrio_singular_masculino", "adjetivo_patrio_singular_feminino", "adjetivo_patrio_plural_masculino", "adjetivo_patrio_plural_feminino"):
                 dados[f"form-{i}-{nome}"] = dados[f"initial-form-{i}-{nome}"] = getattr(p, nome)
-            dados[f"form-{i}-gentilico_masc_sing"] = f"novo {p.nome}"
+            dados[f"form-{i}-adjetivo_patrio_singular_masculino"] = f"novo {p.nome}"
         self.travar(self.projeto_pe)
         r = self.client.post(self.URL, dados, follow=True)
-        self.assertEqual(Projeto.objects.get(pk=self.projeto_go.pk).gentilico_masc_sing, "novo Projeto GO")
-        self.assertEqual(Projeto.objects.get(pk=self.projeto_pe.pk).gentilico_masc_sing, "")
+        self.assertEqual(Projeto.objects.get(pk=self.projeto_go.pk).adjetivo_patrio_singular_masculino, "novo Projeto GO")
+        self.assertEqual(Projeto.objects.get(pk=self.projeto_pe.pk).adjetivo_patrio_singular_masculino, "")
         self.assertIn("Pulados: Projeto PE (projeto em edição por outro).", mensagens(r))
 
 
@@ -261,8 +261,8 @@ class ProjetoAdminTest(Base):
         sessao = self.client.get(url).context["bloqueio"]["sessao"]
         dados = {
             CAMPO_SESSAO: sessao, "nome": "Avalia GO",
-            **{n: "" for n in ("gentilico_masc_sing", "gentilico_fem_sing", "gentilico_fem_plur")},
-            "gentilico_masc_plur": "goianos",
+            **{n: "" for n in ("adjetivo_patrio_singular_masculino", "adjetivo_patrio_singular_feminino", "adjetivo_patrio_plural_feminino")},
+            "adjetivo_patrio_plural_masculino": "goianos",
             "projetopasso_set-TOTAL_FORMS": 1, "projetopasso_set-INITIAL_FORMS": 0,
             "projetopasso_set-0-etapa": self.e5.pk, "projetopasso_set-0-componente": self.lp.pk,
             "projetopasso_set-0-passo": "",
@@ -324,7 +324,7 @@ class PermissoesTest(Base):
 
 
 ARQUIVADO = "2026-01-01T00:00:00Z"
-VARS = ("gentilico_masc_sing", "gentilico_fem_sing", "gentilico_masc_plur", "gentilico_fem_plur")
+VARS = ("adjetivo_patrio_singular_masculino", "adjetivo_patrio_singular_feminino", "adjetivo_patrio_plural_masculino", "adjetivo_patrio_plural_feminino")
 
 
 def planilha(resposta):
@@ -346,19 +346,19 @@ class PlanilhaConcorrenteTest(Base):
 
     def test_preserva_coluna_alterada_por_outro_entre_carga_e_post(self):
         dados = planilha(self.client.get(self.URL))
-        dados["form-0-gentilico_masc_sing"] = "goiano"  # GO é a 1ª linha
-        Projeto.objects.filter(pk=self.projeto_go.pk).update(gentilico_fem_sing="goiana")  # outra pessoa
+        dados["form-0-adjetivo_patrio_singular_masculino"] = "goiano"  # GO é a 1ª linha
+        Projeto.objects.filter(pk=self.projeto_go.pk).update(adjetivo_patrio_singular_feminino="goiana")  # outra pessoa
         self.client.post(self.URL, dados)
         p = Projeto.objects.get(pk=self.projeto_go.pk)
-        self.assertEqual((p.gentilico_masc_sing, p.gentilico_fem_sing), ("goiano", "goiana"))
+        self.assertEqual((p.adjetivo_patrio_singular_masculino, p.adjetivo_patrio_singular_feminino), ("goiano", "goiana"))
 
     def test_mais_de_200_caracteres_e_erro_de_form(self):
         dados = planilha(self.client.get(self.URL))
-        dados["form-0-gentilico_masc_sing"] = "x" * 201
+        dados["form-0-adjetivo_patrio_singular_masculino"] = "x" * 201
         r = self.client.post(self.URL, dados)
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, "no máximo 200 caracteres")
-        self.assertEqual(Projeto.objects.get(pk=self.projeto_go.pk).gentilico_masc_sing, "")
+        self.assertEqual(Projeto.objects.get(pk=self.projeto_go.pk).adjetivo_patrio_singular_masculino, "")
 
 
 class ArquivadosTest(Base):
@@ -439,7 +439,7 @@ class RevistaPermissoesTest(Base):
         r = self.client.get(url)
         self.assertContains(r, 'name="projetocor_set-0-DELETE"')
         dados = {
-            CAMPO_SESSAO: r.context["bloqueio"]["sessao"], "nome": "Projeto GO", "gentilico_masc_plur": "goianos",
+            CAMPO_SESSAO: r.context["bloqueio"]["sessao"], "nome": "Projeto GO", "adjetivo_patrio_plural_masculino": "goianos",
             "projetopasso_set-TOTAL_FORMS": 0, "projetopasso_set-INITIAL_FORMS": 0,
             "projetocor_set-TOTAL_FORMS": 1, "projetocor_set-INITIAL_FORMS": 1,
             "projetocor_set-0-id": cor.pk, "projetocor_set-0-projeto": self.projeto_go.pk,
@@ -462,7 +462,7 @@ class CsrfTest(Base):
             reverse("admin:nucleo_revista_escolher_template"),
         ):
             self.assertEqual(cliente.post(url, {"copiar": self.projeto_go.pk}).status_code, 403, url)
-        self.assertEqual(Projeto.objects.get(pk=self.projeto_go.pk).gentilico_masc_sing, "")
+        self.assertEqual(Projeto.objects.get(pk=self.projeto_go.pk).adjetivo_patrio_singular_masculino, "")
 
 
 class LoteConcorrenteTest(TransactionTestCase):

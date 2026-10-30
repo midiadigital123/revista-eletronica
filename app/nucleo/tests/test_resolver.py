@@ -43,14 +43,16 @@ from nucleo.servicos.resolver import (
     resolver,
     secoes_desatualizadas,
     sha256,
+    valores_das_variaveis,
 )
+from nucleo.texto import renderizar
 
 # JSON do F1 que o Playwright f1-fixture carrega (gabarito). Regerar: REGERAR_FIXTURES=1.
 GABARITO = Path(__file__).parent / "fixtures" / "resolver-4cortes.json"
 
 F1 = "## introducao\nAnálise de {{parceiro}}\n\nTexto **{{nome_projeto}}**.\n\n## fechamento\nUtilização\n\nFim.\n"
 F2_LP = (
-    "## abertura\nAbertura\n\nBem-vindo.\n\n## passo1\nPasso um\n\nPara os {{gentilico_masc_plur}}.\n\n"
+    "## abertura\nAbertura\n\nBem-vindo.\n\n## passo1\nPasso um\n\nPara os {{adjetivo_patrio_plural_masculino}}.\n\n"
     "## dlg-p2\nItens\n\nDetalhe.\n"
 )
 F2_MT = "## abertura\nAbertura\n\nBem-vindo.\n\n## passo1\nPasso um\n\nSem variável.\n"
@@ -108,7 +110,7 @@ class Mundo:
         )
         projeto = Projeto.objects.get(parceiro_ano=pa, arquivado_em__isnull=True)
         projeto.nome = f"Projeto {nome}"
-        projeto.gentilico_masc_plur = "goianos"
+        projeto.adjetivo_patrio_plural_masculino = "goianos"
         projeto.save()
         for rf in RevistaFasciculo.objects.filter(revista__projeto=projeto).select_related("revista"):
             rf.template = alvo.templates[rf.revista.componente.codigo, rf.fasciculo]
@@ -190,6 +192,12 @@ class ResolverTest(TestCase):
         self.assertEqual(intro["corpo"], "<p>Texto <strong>Projeto GO</strong>.</p>\n")
         self.assertEqual([s["id"] for s in r["f2"]["secoes"]], ["abertura", "passo1", "dlg-p2"])
 
+    def test_variaveis_oficiais_renderizam_o_valor_do_projeto(self):
+        Projeto.objects.filter(pk=self.go["LP"].projeto_id).update(nome_parceiro="Goiás", pd05="Avançado")
+        valores = valores_das_variaveis(recarregar(self.go["LP"]).projeto)
+        corpo = renderizar("Estudantes de {{nome_parceiro}}: {{pd05}}.", valores)
+        self.assertEqual(corpo, "<p>Estudantes de Goiás: Avançado.</p>\n")
+
     def test_passo_do_projeto_sobrescreve_e_cor_do_projeto(self):
         projeto = self.go["LP"].projeto
         ProjetoPasso.objects.create(projeto=projeto, etapa=self.e5, componente=self.lp, ano=self.ano, passo=None)
@@ -202,7 +210,7 @@ class ResolverTest(TestCase):
 
     def test_variavel_so_no_f2_da_lp_muda_so_o_hash_da_lp(self):
         antes = hash_validado(self.go["LP"]), hash_validado(self.go["MT"])
-        Projeto.objects.filter(pk=self.go["LP"].projeto_id).update(gentilico_masc_plur="goianas")
+        Projeto.objects.filter(pk=self.go["LP"].projeto_id).update(adjetivo_patrio_plural_masculino="goianas")
         depois = hash_validado(recarregar(self.go["LP"])), hash_validado(recarregar(self.go["MT"]))
         self.assertNotEqual(antes[0], depois[0])
         self.assertEqual(antes[1], depois[1])
@@ -244,11 +252,11 @@ class ResolverTest(TestCase):
         self.assertNotIn("variaveis", [p.codigo for p in pendencias(self.go["LP"])])  # gentílico só no F2
 
     def test_variavel_vazia_lacuna_e_pendencia(self):
-        Projeto.objects.filter(pk=self.go["LP"].projeto_id).update(gentilico_masc_plur=" ")
+        Projeto.objects.filter(pk=self.go["LP"].projeto_id).update(adjetivo_patrio_plural_masculino=" ")
         lp = recarregar(self.go["LP"])
         r = resolver(lp)
-        self.assertIn('<span class="variavel-vazia">{{gentilico_masc_plur}}</span>', r["f2"]["secoes"][1]["corpo"])
-        self.assertEqual(r["lacunas"], [{"tipo": "variavel", "nome": "gentilico_masc_plur"}])
+        self.assertIn('<span class="variavel-vazia">{{adjetivo_patrio_plural_masculino}}</span>', r["f2"]["secoes"][1]["corpo"])
+        self.assertEqual(r["lacunas"], [{"tipo": "variavel", "nome": "adjetivo_patrio_plural_masculino"}])
         self.assertIn("variaveis", [p.codigo for p in pendencias(lp)])
 
     def test_pendencias(self):

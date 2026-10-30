@@ -24,7 +24,7 @@
 <form method="post" id="variaveis">{% csrf_token %}
   {{ formset.management_form }}
   {% if formset.errors %}<p class="errornote">Corrija os erros abaixo.</p>{% endif %}
-  <div class="module">
+  <div class="module" style="overflow-x: auto">{# 25 colunas: rola de lado em vez de alargar a página #}
   <table>
     <thead><tr>
       <th>Parceiro</th><th>Nome do projeto</th><th>Ano</th>

@@ -3,7 +3,7 @@ from django.core.management import call_command
 from django.db import IntegrityError, connection, transaction
 from django.test import TestCase, TransactionTestCase
 
-from nucleo.models import Ano, Componente, CorPadrao, Etapa, Matriz, MatrizEtapaCC
+from nucleo.models import Ano, Componente, CorPadrao, Etapa, Matriz, MatrizEtapaCC, Parceiro, ParceiroAno, Projeto
 
 # Atualize junto com cada migração que criar FK composta, CHECK ou UNIQUE (D-124).
 FKS_COMPOSTAS = {
@@ -57,10 +57,31 @@ CHECKS = {
     "foto_revista_motivo",
     "projeto_cor_cor_hex",
     "projeto_cor_padrao_1a5",
-    "projeto_gentilico_fem_plur_tamanho",
-    "projeto_gentilico_fem_sing_tamanho",
-    "projeto_gentilico_masc_plur_tamanho",
-    "projeto_gentilico_masc_sing_tamanho",
+    "projeto_adjetivo_patrio_plural_feminino_tamanho",
+    "projeto_adjetivo_patrio_singular_feminino_tamanho",
+    "projeto_adjetivo_patrio_plural_masculino_tamanho",
+    "projeto_adjetivo_patrio_singular_masculino_tamanho",
+    "projeto_do_da_de_nome_parceiro_tamanho",
+    "projeto_do_da_nome_programa_tamanho",
+    "projeto_do_da_sigla_programa_tamanho",
+    "projeto_issn_tamanho",
+    "projeto_no_na_em_nome_parceiro_tamanho",
+    "projeto_no_na_nome_programa_tamanho",
+    "projeto_no_na_sigla_programa_tamanho",
+    "projeto_nome_parceiro_tamanho",
+    "projeto_nome_programa_tamanho",
+    "projeto_nome_regional_tamanho",
+    "projeto_nome_secretaria_tamanho",
+    "projeto_pd01_tamanho",
+    "projeto_pd02_tamanho",
+    "projeto_pd03_tamanho",
+    "projeto_pd04_tamanho",
+    "projeto_pd05_tamanho",
+    "projeto_plataforma_tamanho",
+    "projeto_quais_redes_tamanho",
+    "projeto_sigla_programa_tamanho",
+    "projeto_sigla_regional_tamanho",
+    "projeto_sigla_secretaria_tamanho",
     "projeto_nome_tamanho",
     "revista_capa_com_hash",
     "revista_capa_sha256_sha256",
@@ -231,6 +252,12 @@ class RecusaTest(TestCase):
             cursor.execute("SELECT duplicada_de_id FROM matriz WHERE id = %s", [copia.pk])
             self.assertIsNone(cursor.fetchone()[0])
 
+    def test_variavel_nova_acima_do_tamanho(self):
+        pa = ParceiroAno.objects.create(parceiro=Parceiro.objects.create(nome="GO"), ano=self.a26)
+        projeto = Projeto.objects.create(parceiro_ano=pa, ano=self.a26, nome="Projeto GO")
+        Projeto.objects.filter(pk=projeto.pk).update(sigla_secretaria="x" * 200)
+        self.recusa(lambda: Projeto.objects.filter(pk=projeto.pk).update(sigla_secretaria="x" * 201))
+
 
 def triggers():
     with connection.cursor() as cursor:
@@ -253,3 +280,34 @@ class ReverseSqlTest(TransactionTestCase):
         self.assertEqual(triggers(), TRIGGERS)
         self.assertEqual(fks_manuais(), FKS_MANUAIS)
         self.assertEqual(indices_ix(), {"ix_" + n.removeprefix("fk_") for n in FKS_COMPOSTAS})
+
+
+class RenomearGentilicoTest(TransactionTestCase):
+    """0009: gentilico_* vira adjetivo_patrio_* sem perder o valor gravado."""
+
+    def test_rename_mantem_o_valor(self):
+        call_command("migrate", "nucleo", "0008", verbosity=0)
+        with connection.cursor() as cursor:  # SQL direto: os models já estão na 0009
+            cursor.execute("INSERT INTO ano (ano) VALUES (2026) RETURNING id")
+            ano = cursor.fetchone()[0]
+            cursor.execute("INSERT INTO parceiro (nome) VALUES ('GO') RETURNING id")
+            parceiro = cursor.fetchone()[0]
+            cursor.execute(
+                "INSERT INTO parceiro_ano (parceiro_id, ano_id) VALUES (%s, %s) RETURNING id", [parceiro, ano]
+            )
+            pa = cursor.fetchone()[0]
+            cursor.execute(
+                "INSERT INTO projeto (parceiro_ano_id, ano_id, nome, gentilico_masc_sing, gentilico_fem_sing,"
+                " gentilico_masc_plur, gentilico_fem_plur) VALUES (%s, %s, 'P', 'goiano', 'goiana', 'goianos',"
+                " 'goianas') RETURNING id",
+                [pa, ano],
+            )
+            pk = cursor.fetchone()[0]
+        call_command("migrate", "nucleo", verbosity=0)
+        p = Projeto.objects.get(pk=pk)
+        self.assertEqual(
+            (p.adjetivo_patrio_singular_masculino, p.adjetivo_patrio_singular_feminino,
+             p.adjetivo_patrio_plural_masculino, p.adjetivo_patrio_plural_feminino),
+            ("goiano", "goiana", "goianos", "goianas"),
+        )  # fmt: skip
+        self.assertEqual(p.nome_parceiro, "")  # coluna nova nasce vazia

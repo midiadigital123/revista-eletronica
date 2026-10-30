@@ -14,7 +14,7 @@ from nucleo.admin import lote, variaveis
 from nucleo.admin.bloqueio import BloqueioAdminMixin
 from nucleo.admin.variaveis import limitar
 from nucleo.models import Componente, Etapa, Projeto, ProjetoCor, ProjetoPasso
-from nucleo.variaveis import TAMANHO_MAX
+from nucleo.variaveis import TAMANHO_MAX, VARIAVEIS
 
 COR = RegexValidator(r"^#[0-9A-Fa-f]{6}$", "Use o formato #RRGGBB.")
 
@@ -94,8 +94,12 @@ class ProjetoAdmin(BloqueioAdminMixin, admin.ModelAdmin):
     search_fields = ("nome", "parceiro_ano__parceiro__nome")
     readonly_fields = ("parceiro_ano", "ano", "arquivado_em")
     fieldsets = (
-        (None, {"fields": ("nome", "parceiro_ano", "ano", "arquivado_em")}),
-        ("Variáveis", {"fields": variaveis.EDITAVEIS, "description": "Também editáveis na aba Variáveis."}),
+        (None, {"fields": ("nome", "parceiro_ano", "ano", "arquivado_em"),
+                "description": "As variáveis também são editáveis na aba Variáveis."}),
+    ) + tuple(
+        # Um fieldset por grupo de variáveis, na ordem de VARIAVEIS (25 campos num bloco só cansam).
+        (f"Variáveis: {g}", {"fields": [v.nome for v in VARIAVEIS if v.grupo == g and not v.automatica]})
+        for g in dict.fromkeys(v.grupo for v in VARIAVEIS if not v.automatica)
     )
     formfield_overrides = {models.TextField: {"widget": forms.TextInput(attrs={"size": 60})}}
     inlines = [PassoInline, CorInline]
