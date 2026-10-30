@@ -11,30 +11,15 @@ from django.urls import reverse
 
 from nucleo.admin import lote, variaveis
 from nucleo.admin.bloqueio import BloqueioAdminMixin
-from nucleo.admin.variaveis import limitar
-from nucleo.models import Componente, Etapa, Projeto, ProjetoCor, ProjetoPasso
-from nucleo.variaveis import TAMANHO_MAX, VARIAVEIS
-
-
-class PassoForm(forms.ModelForm):
-    passo = forms.IntegerField(
-        required=False, min_value=1, help_text="Vazio = sem linhas vazias, de propósito (D-091)."
-    )
-
-    class Meta:
-        model = ProjetoPasso
-        fields = ["etapa", "componente", "passo"]
-
-    def clean(self):
-        # D-053: etapa e componente de outro ano já não estão no queryset (PassoInline) e a FK
-        # composta recusa no banco; aqui só o ano que a FK composta precisa.
-        self.instance.ano_id = self.instance.projeto.ano_id
-        return super().clean()
+from nucleo.models import Projeto, ProjetoCor, ProjetoPasso
+from nucleo.projeto import MAX_CORES, CorForm, PassoForm, PassoFormSet, ProjetoForm
+from nucleo.variaveis import VARIAVEIS
 
 
 class PassoInline(admin.TabularInline):
     model = ProjetoPasso
     form = PassoForm
+    formset = PassoFormSet
     extra = 0
     verbose_name = "passo sobrescrito"
     verbose_name_plural = (
@@ -42,31 +27,13 @@ class PassoInline(admin.TabularInline):
         " excluir a linha = voltar ao passo da matriz)"
     )
 
-    def get_formset(self, request, obj=None, **kwargs):
-        self._ano_id = obj.ano_id if obj else None  # instância por requisição
-        return super().get_formset(request, obj, **kwargs)
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "etapa":
-            kwargs["queryset"] = Etapa.objects.filter(ano_id=getattr(self, "_ano_id", None)).order_by("ordem")
-        elif db_field.name == "componente":
-            kwargs["queryset"] = Componente.objects.filter(ano_id=getattr(self, "_ano_id", None)).order_by("codigo")
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
 
 class CorInline(admin.TabularInline):
     model = ProjetoCor
-    formfield_overrides = {models.TextField: {"widget": forms.TextInput(attrs={"type": "color"})}}
+    form = CorForm
     extra = 0
-    max_num = 5
+    max_num = MAX_CORES
     verbose_name_plural = "Cores do projeto (sobrescrevem a paleta do ano, D-060; excluir = voltar à paleta)"
-
-
-class ProjetoForm(forms.ModelForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        limitar(self, {"nome": 200, **dict.fromkeys(variaveis.EDITAVEIS, TAMANHO_MAX)})  # CHECKs do banco
-        variaveis.mostrar_nome_do_ano(self, self.instance.ano_id)
 
 
 @admin.register(Projeto)
