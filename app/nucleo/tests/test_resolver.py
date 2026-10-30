@@ -41,7 +41,6 @@ from nucleo.servicos.resolver import (
     carregar,
     escala,
     hash_validado,
-    niveis_do_passo,
     pendencias,
     resolver,
     secoes_desatualizadas,
@@ -148,10 +147,6 @@ def recarregar(revista):
 
 class EscalaTest(TestCase):
     """Casos de contrato/schemas.ts (api/test/contrato.test.ts), generalizados para N padrões."""
-
-    def test_niveis_do_passo_25(self):
-        n = niveis_do_passo(0, 500, 25)
-        self.assertEqual((len(n), n[0], n[-1]), (20, 0, 475))
 
     def test_passo_25_linhas_vazias(self):
         # contrato: nível 150 já ocupado. Aqui por uma tarefa 150→175 (fim = próximo nível).
