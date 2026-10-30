@@ -28,10 +28,11 @@ from django.db.models.functions import Coalesce
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.html import format_html
+from django.utils.http import urlencode
 
 from nucleo import texto
 from nucleo.admin.bloqueio import CAMPO_SESSAO, BloqueioAdminMixin
-from nucleo.models import FotoRevista, RevistaFasciculo, Template, TemplateVersao
+from nucleo.models import Ano, FotoRevista, RevistaFasciculo, Template, TemplateVersao
 from nucleo.models.revista import Motivo
 from nucleo.servicos import bloqueio
 from nucleo.servicos.arquivos import ids_faltando
@@ -144,18 +145,20 @@ class TemplateAdmin(BloqueioAdminMixin, admin.ModelAdmin):
 
     @admin.display(description="Uso", ordering="n_usado")
     def usado_por(self, obj):
-        # ponytail: rota do painel do S12 (ainda não existe); href à mão até lá.
-        return format_html(
-            '<a href="/painel/{}/?template={}">usado por {} ({} com cópia)</a>',
-            obj.ano.ano, obj.pk, obj.n_usado, obj.n_copia,
-        )
+        url = reverse("painel", args=[obj.ano.ano]) + "?" + urlencode({"template": obj.pk})
+        return format_html('<a href="{}">usado por {} ({} com cópia)</a>', url, obj.n_usado, obj.n_copia)
 
     def changelist_view(self, request, extra_context=None):
+        variaveis = reverse("admin:nucleo_projeto_variaveis")
+        filtrado = request.GET.get("ano__id__exact", "")
+        ano = Ano.objects.filter(pk=filtrado).first() if filtrado.isdigit() else None
+        if ano:
+            variaveis += "?" + urlencode({"ano": ano.ano})  # o ano do filtro da lista
         abas = [
             ("Textos F1", "?fasciculo__exact=F1", request.GET.get("fasciculo__exact") == "F1"),
             ("Textos F2", "?fasciculo__exact=F2", request.GET.get("fasciculo__exact") == "F2"),
             ("Matrizes", reverse("admin:nucleo_matriz_changelist"), False),
-            ("Variáveis", reverse("admin:nucleo_projeto_changelist"), False),  # variáveis = colunas de Projeto (D-100)
+            ("Variáveis", variaveis, False),  # planilha T17: variáveis = colunas de Projeto (D-100)
         ]
         return super().changelist_view(request, {**(extra_context or {}), "abas": abas})
 

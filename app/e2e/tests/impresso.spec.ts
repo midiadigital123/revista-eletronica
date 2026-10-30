@@ -48,7 +48,7 @@ test("impresso: valida, vê o diff e marca impressa", async ({ browser }) => {
     await ped.click("input[name=_save]");
     await ped.goto(urlPainel);
   }
-  await linha.locator("td").nth(1).getByRole("link").click();
+  await linha.locator("td").nth(1).getByRole("link").first().click(); // o 2º link é o preview
   const urlRevista = ped.url();
   await ped.fill(FECHAMENTO, `Fechamento ${marca}.`);
   await ped.click("input[name=_continue]");

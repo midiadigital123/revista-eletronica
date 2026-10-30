@@ -40,7 +40,7 @@ def pagina(request, revista_id):
     try:
         contexto = contexto_pagina(revista, preview=True, estaticos=static("revista/"), capa=capa)
     except FileNotFoundError:
-        raise Http404("SVG do F2 não encontrado no storage.")
+        raise Http404("SVG do F2 não encontrado no storage. Envie o SVG de novo na revista.")
     return render(request, "revista/index.html", contexto)
 
 

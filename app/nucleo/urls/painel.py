@@ -21,7 +21,7 @@ from django.utils.safestring import mark_safe
 from django.views.decorators.http import require_http_methods
 
 from nucleo.admin import lote
-from nucleo.models import Ano, FotoRevista, Parceiro, Revista
+from nucleo.models import Ano, FotoRevista, Parceiro, Revista, Template
 from nucleo.models.revista import Motivo
 from nucleo.servicos import resolver, validacao
 from nucleo.urls.preview import protegida
@@ -104,18 +104,30 @@ def painel(request, ano):
     parceiros = list(Parceiro.objects.filter(parceiroano__ano=ano).order_by("nome"))
     parceiro = next((p for p in parceiros if str(p.pk) == request.GET.get("parceiro")), None)
     falta = request.GET.get("falta") if request.GET.get("falta") in COLUNAS else None
+    pedido = request.GET.get("template", "")
+    # Inexistente ou de outro ano: ignorado, como o parceiro inválido.
+    template = Template.objects.filter(ano=ano, pk=pedido).select_related("componente").first() if pedido.isdigit() else None
     if parceiro is not None:
         revistas = revistas.filter(projeto__parceiro_ano__parceiro=parceiro)
+    if template is not None:
+        revistas = revistas.filter(revistafasciculo__template=template)  # 1 fascículo por template: sem duplicar
     linhas = [linha(r) for r in revistas]
     if falta is not None:
         linhas = [x for x in linhas if not x["faltas"][falta]["ok"]]
-    por_parceiro = {"parceiro": parceiro.pk} if parceiro else {}
+    ativos = {"falta": falta, "parceiro": parceiro and parceiro.pk, "template": template and template.pk}
+
+    def mantendo(chave):  # cada filtro preserva os outros na URL
+        return {k: v for k, v in ativos.items() if v and k != chave}
+
     filtros = [
         lote.filtro("Falta", [("Tudo", "")] + [(r, c) for c, (r, _) in COLUNAS.items()],
-                    COLUNAS[falta][0] if falta else "Tudo", "falta", por_parceiro),
+                    COLUNAS[falta][0] if falta else "Tudo", "falta", mantendo("falta")),
         lote.filtro("Parceiro", [("Todos", "")] + [(p, p.pk) for p in parceiros],
-                    parceiro or "Todos", "parceiro", {"falta": falta} if falta else {}),
+                    parceiro or "Todos", "parceiro", mantendo("parceiro")),
     ]  # fmt: skip
+    if template is not None:
+        rotulo = f"{template.componente.codigo} · {template}"
+        filtros.append(lote.filtro("Template", [(rotulo, template.pk), ("limpar", "")], rotulo, "template", mantendo("template")))
     ctx = contexto(
         request, f"Painel da temporada {ano.ano}", linhas=linhas, colunas=[r for r, _ in COLUNAS.values()],
         filtros=filtros, pode_validar=request.user.has_perm("nucleo.validar_revista"),
