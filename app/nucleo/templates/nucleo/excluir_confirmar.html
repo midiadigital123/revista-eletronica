@@ -4,6 +4,7 @@
 
 {% block extrahead %}{{ block.super }}
 <link rel="stylesheet" href="{% static 'nucleo/template_editor.css' %}">
+{% if bloqueio %}<script src="{% static 'nucleo/bloqueio.js' %}" defer></script>{% endif %}
 {% endblock %}
 
 {% block breadcrumbs %}<div class="breadcrumbs">
@@ -35,7 +36,11 @@
   <p>Nenhuma revista ativa usa esta etapa × CC.</p>
   {% endif %}
 
+  {% if bloqueio %}
   <form method="post" novalidate>{% csrf_token %}
+    <input type="hidden" id="bloqueio-sessao" name="{{ bloqueio_campo_sessao }}" value="{{ bloqueio.sessao }}"
+      data-alvo="{{ bloqueio.alvo }}" data-id="{{ bloqueio.id }}"
+      data-renovar="{% url 'bloqueio_renovar' %}" data-liberar="{% url 'bloqueio_liberar' %}">
     {% if form.errors %}<p class="errornote">{{ form.confirmacao.errors|join:" " }}</p>{% endif %}
     <fieldset class="module aligned">
       <div class="form-row{% if form.confirmacao.errors %} errors{% endif %}">
@@ -48,5 +53,8 @@
       <a href="{{ voltar }}" class="button cancel-link">Voltar sem excluir</a>
     </div>
   </form>
+  {% else %}
+  <p><a href="{{ voltar }}" class="button cancel-link">Voltar sem excluir</a></p>
+  {% endif %}
 </div>
 {% endblock %}

@@ -30,7 +30,7 @@ from django.utils.html import format_html, format_html_join
 from nucleo.admin.bloqueio import CAMPO_SESSAO, BloqueioAdminMixin
 from nucleo.models import Ano, Descritor, Matriz, MatrizEtapaCC, Tarefa
 from nucleo.servicos import bloqueio
-from nucleo.servicos.arquivos import receber_item, remover_item
+from nucleo.servicos.arquivos import ITEM_MAX, receber_item, remover_item
 from nucleo.servicos.importar_matriz import MANTER, ImportacaoRecusada, gravar_matriz, ler
 from nucleo.servicos.matriz import DuplicacaoRecusada, diferencas, duplicar_matriz, impacto, revistas_afetadas
 from nucleo.urls.preview import TIPOS_ITEM, servir
@@ -455,7 +455,7 @@ class DescritorAdmin(MatrizEditAdmin):
             if not self.has_view_permission(request, descritor) or tipo is None:
                 raise Http404
             try:
-                return servir(default_storage.open(tarefa.arquivo), tipo, sandbox=tipo != "application/pdf")
+                return servir(default_storage.open(tarefa.arquivo), tipo, as_attachment=True)
             except FileNotFoundError:
                 raise Http404 from None
         if not self._edita_tarefa(request, descritor):
@@ -529,6 +529,12 @@ class ItemForm(ImpactoForm):
     )  # fmt: skip
     field_order = ("arquivo", "texto_alternativo", "confirmar_impacto")
 
+    def clean_arquivo(self):
+        arquivo = self.cleaned_data["arquivo"]
+        if arquivo and arquivo.size > ITEM_MAX:
+            raise ValidationError(f"Arquivo do item acima de {ITEM_MAX // 2**20} MB. Reduza o arquivo e envie de novo.")
+        return arquivo
+
     class Meta:
         model = Tarefa
         fields = ("texto_alternativo",)
@@ -559,21 +565,30 @@ def _excluir(model_admin, request, obj, rotulo, mec, voltar):
     """Tela intermediária: revistas afetadas, as que perdem o "Validado" e o código digitado."""
     codigo = obj.codigo
     form = ExcluirForm(request.POST or None, codigo=codigo)
+    # A página trava a MEC com uma sessão própria (como o change form); o POST a confere com
+    # FOR SHARE dentro da transação da exclusão.
+    sessao = request.POST.get(CAMPO_SESSAO, "")
     if request.method == "POST" and form.is_valid():
-        # ponytail: o bloqueio é conferido sem FOR SHARE; quem adquirir no mesmo instante perde a corrida.
         with transaction.atomic(using=router.db_for_write(type(obj))):
-            if _de_outro(request, mec):
-                messages.error(request, f"Nada foi excluído: outra pessoa está editando {mec}. Tente quando ela terminar.")
+            if not bloqueio.conferir_na_transacao(mec, request.user, sessao):
+                messages.error(request, "Nada foi excluído: você perdeu o bloqueio de edição. Recarregue e tente de novo.")
                 return redirect(voltar)
             obj.delete()
+        bloqueio.liberar(mec, request.user, sessao)
         excluido = "excluída" if rotulo == "tarefa" else "excluído"
         messages.success(request, f"{rotulo.capitalize()} {codigo} {excluido}.")
         return redirect(voltar)
+    if request.method != "POST":
+        sessao = bloqueio.nova_sessao()
+        if not bloqueio.adquirir(mec, request.user, sessao):
+            sessao = ""
+            messages.warning(request, BloqueioAdminMixin._aviso(request, mec))
     revistas = impacto(mec)
     contexto = {
         **model_admin.admin_site.each_context(request),
         "opts": model_admin.opts, "original": obj, "title": f"Excluir {rotulo} {codigo}",
         "rotulo": rotulo, "form": form, "revistas": revistas, "voltar": voltar, "mec": mec,
-        "validadas": sum(v for _, v in revistas),
+        "validadas": sum(v for _, v in revistas), "bloqueio_campo_sessao": CAMPO_SESSAO,
+        "bloqueio": {"alvo": bloqueio.campo(mec), "id": mec.pk, "sessao": sessao} if sessao else None,
     }  # fmt: skip
     return TemplateResponse(request, "nucleo/excluir_confirmar.html", contexto)

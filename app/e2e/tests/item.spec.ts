@@ -16,6 +16,11 @@ const PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==",
   "base64",
 );
+// PDF mínimo de uma página em branco
+const PDF = Buffer.from(
+  "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n" +
+    "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n",
+);
 const TAREFA = "D01 100-150";
 
 async function abrirDescritor(page: Page) {
@@ -71,13 +76,33 @@ test("item: sobe um PNG com texto alternativo, vê no preview e remove", async (
   await expect(imagem).toHaveAttribute("alt", alt);
   await expect.poll(() => imagem.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
 
-  // 3. Remove o arquivo: a tarefa volta a ficar sem item.
+  // 3. Troca por um PDF: o iframe do "Ver item" carrega (200, sem X-Frame-Options DENY).
   await abrirDescritor(page);
   modal = await abrirModal(page);
-  await expect(modal.getByRole("link", { name: /\.png$/ })).toBeVisible();
+  await modal.getByLabel(/^Arquivo:?$/).setInputFiles({ name: "item.pdf", mimeType: "application/pdf", buffer: PDF });
+  await modal.getByRole("button", { name: "Enviar" }).click();
+  await expect(page.locator(".messagelist")).toContainText(`Arquivo do item enviado para a tarefa ${TAREFA}.`);
+  await page.goto(`/preview/${revista}/`);
+  await expect(page.locator("body.app-initialized")).toBeAttached();
+  const respostaPdf = page.waitForResponse((r) => /\/arquivos\/itens\/[^/]+\.pdf$/.test(r.url()));
+  await page.locator(".ver-item-btn").first().click();
+  const pdf = await respostaPdf;
+  expect(pdf.status()).toBe(200);
+  expect((pdf.headers()["x-frame-options"] ?? "").toUpperCase()).not.toBe("DENY");
+  await expect(page.locator("#itemModalFrame")).toBeVisible();
+  await expect(page.locator("#itemModalFrame")).toHaveAttribute("aria-label", alt);
+  const frame = await (await page.locator("#itemModalFrame").elementHandle())!.contentFrame();
+  // Bloqueado pelo X-Frame-Options, o Chrome troca o frame por chrome-error://; o Chromium
+  // headless não renderiza PDF, então o frame liberado fica em about:blank.
+  expect(frame!.url()).not.toContain("chrome-error");
+
+  // 4. Remove o arquivo: a tarefa volta a ficar sem item.
+  await abrirDescritor(page);
+  modal = await abrirModal(page);
+  await expect(modal.getByRole("link", { name: /\.pdf$/ })).toBeVisible();
   await modal.getByRole("button", { name: "Remover arquivo" }).click();
   await expect(page.locator(".messagelist")).toContainText(`Arquivo do item removido da tarefa ${TAREFA}.`);
-  await expect(page.locator("#tarefa_set-group")).not.toContainText("PNG");
+  await expect(page.locator("#tarefa_set-group")).not.toContainText("PDF");
   expect(erros).toEqual([]);
 
   // Libera o bloqueio (fechar o contexto não dispara o pagehide).

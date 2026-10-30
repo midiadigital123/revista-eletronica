@@ -16,6 +16,7 @@ from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, render
 from django.templatetags.static import static
 from django.urls import path, reverse
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_GET
 
 from nucleo.models import Revista, Tarefa
@@ -60,15 +61,16 @@ def capa(request, revista_id):
     return servir(arquivo, tipo)
 
 
-def servir(arquivo, tipo, sandbox=True):
-    resposta = FileResponse(arquivo, content_type=tipo)
+def servir(arquivo, tipo, sandbox=True, as_attachment=False):
+    resposta = FileResponse(arquivo, content_type=tipo, as_attachment=as_attachment)
     resposta["X-Content-Type-Options"] = "nosniff"
     resposta["Cache-Control"] = "private, no-store"
-    # sandbox no PDF impede o visualizador do Chrome de abrir; o PDF fica só com o nosniff.
-    resposta["Content-Security-Policy"] = "default-src 'none'" + ("; sandbox" if sandbox else "")
+    # sandbox no PDF impede o visualizador do Chrome de abrir; o PDF só pode ir num frame da origem.
+    resposta["Content-Security-Policy"] = "default-src 'none'; " + ("sandbox" if sandbox else "frame-ancestors 'self'")
     return resposta
 
 
+@xframe_options_sameorigin  # o PDF abre no iframe do modal "Ver item" (o padrão do Django é DENY)
 @protegida
 def item(request, revista_id, nome):
     revista = get_object_or_404(Revista.objects.select_related("projeto__parceiro_ano"), pk=revista_id)

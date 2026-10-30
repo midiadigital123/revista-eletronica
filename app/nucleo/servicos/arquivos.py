@@ -315,14 +315,13 @@ def receber_capa(revista, arquivo):
 
 
 def receber_item(tarefa, arquivo, alt=""):
-    """Grava o arquivo do item (PDF, PNG ou JPG até 5 MB, tipo pelos bytes e igual ao mime
-    declarado) com nome uuid e o texto alternativo. O arquivo antigo sai se ficou órfão."""
+    """Grava o arquivo do item (PDF, PNG ou JPG até 5 MB) com nome uuid e o texto alternativo.
+    O tipo (e a extensão gravada) sai dos bytes; nome e mime enviados não contam.
+    O arquivo antigo sai se ficou órfão."""
     dados = _ler(arquivo, ITEM_MAX, "Arquivo do item")
     tipo = "pdf" if dados.startswith(b"%PDF-") else tipo_imagem(dados)
     if tipo not in ITEM_MIMES:
         _erro("O arquivo do item precisa ser PDF, PNG ou JPG.")
-    if getattr(arquivo, "content_type", None) != ITEM_MIMES[tipo]:
-        _erro("O conteúdo do arquivo não é do tipo informado.")
     antigo = tarefa.arquivo
     tarefa.arquivo, tarefa.texto_alternativo = _gravar("itens", tipo, dados), alt
     try:
@@ -345,6 +344,10 @@ def remover_item(tarefa):
 def apagar_item_orfao(caminho):
     """Depois do commit, apaga `caminho` do storage se nenhuma Tarefa (de nenhum ano) aponta
     para ele. O abrir_ano copia o caminho: 2026 e 2027 dividem o mesmo arquivo (D-150)."""
+    # ponytail: um abrir_ano/duplicar_matriz em andamento, com a cópia ainda não commitada,
+    # não aparece no exists() e o arquivo sai com a cópia apontando para ele. Saída se
+    # acontecer: select_for_update em Matriz/Ano aqui e na cópia, serializando as duas.
+
     def apagar():
         if not Tarefa.objects.filter(arquivo=caminho).exists():
             default_storage.delete(caminho)

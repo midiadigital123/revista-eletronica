@@ -52,11 +52,19 @@ class ReceberItemTest(Base):
                 self.assertTrue(self.tarefa.arquivo.endswith(f".{tipo}"))
                 self.assertEqual(default_storage.open(self.tarefa.arquivo).read(), dados)
 
-    def test_png_com_bytes_de_pdf_e_recusado(self):
-        with self.assertRaisesMessage(ValidationError, "O conteúdo do arquivo não é do tipo informado"):
-            receber_item(self.tarefa, upload("a.png", PDF, "image/png"), "")
+    def test_png_com_bytes_de_pdf_entra_como_pdf(self):
+        """Os bytes decidem o tipo; nome e mime enviados não contam (revisão de segurança)."""
+        self.receber(self.tarefa, upload("a.png", PDF, "image/png"), "")
         self.tarefa.refresh_from_db()
-        self.assertIsNone(self.tarefa.arquivo)
+        self.assertTrue(self.tarefa.arquivo.endswith(".pdf"))
+
+    def test_pdf_no_preview_abre_em_frame_da_origem(self):
+        self.receber(self.tarefa, upload("a.pdf", PDF, "application/pdf"), "")
+        nome = self.tarefa.arquivo.split("/")[-1]
+        item = self.client.get(reverse("preview_item", args=[self.go["LP"].pk, nome]))
+        self.assertEqual(item["X-Frame-Options"], "SAMEORIGIN")
+        self.assertIn("frame-ancestors 'self'", item["Content-Security-Policy"])
+        self.assertFalse(item.get("Content-Disposition", "").startswith("attachment"))
 
     def test_tipo_fora_da_lista_e_recusado(self):
         with self.assertRaisesMessage(ValidationError, "PDF, PNG ou JPG"):
@@ -115,7 +123,9 @@ class ModalTest(Base):
         self.tarefa.refresh_from_db()
         self.assertEqual(self.tarefa.texto_alternativo, "Mapa")
         caminho = self.tarefa.arquivo
-        self.assertEqual(b"".join(self.client.get(self.url()).streaming_content), PNG)
+        baixado = self.client.get(self.url())
+        self.assertTrue(baixado["Content-Disposition"].startswith("attachment"))
+        self.assertEqual(b"".join(baixado.streaming_content), PNG)
 
         dados = {"_bloqueio_sessao": self.sessao(resp), "confirmar_impacto": "on", "_remover": "1"}
         with self.captureOnCommitCallbacks(execute=True):
@@ -123,6 +133,14 @@ class ModalTest(Base):
         self.tarefa.refresh_from_db()
         self.assertIsNone(self.tarefa.arquivo)
         self.assertFalse(default_storage.exists(caminho))
+
+    def test_form_recusa_acima_de_5_mb(self):
+        dados = {"_bloqueio_sessao": self.sessao(), "confirmar_impacto": "on",
+                 "arquivo": upload("a.png", PNG + b"\0" * (6 * 2**20), "image/png")}  # fmt: skip
+        resp = self.client.post(self.url(), dados, follow=True)
+        self.assertContains(resp, "Arquivo do item acima de 5 MB")
+        self.tarefa.refresh_from_db()
+        self.assertIsNone(self.tarefa.arquivo)
 
     def test_sem_o_bloqueio_nao_grava(self):
         bia = usuario("bia", "Pedagógica")
@@ -180,19 +198,34 @@ class ExclusaoTest(Base):
     def url_tarefa(self):
         return reverse("admin:nucleo_descritor_excluir_tarefa", args=[self.tarefa.descritor_id, self.tarefa.pk])
 
+    def excluir(self, url, codigo):
+        """GET da tela (trava a MEC com uma sessão própria) e POST com essa sessão."""
+        sessao = self.client.get(url).context["bloqueio"]["sessao"]
+        return self.client.post(url, {"confirmacao": codigo, "_bloqueio_sessao": sessao})
+
     def test_tarefa_sem_o_codigo_nao_exclui(self):
         resp = self.client.get(self.url_tarefa())
         self.assertContains(resp, "Revistas ativas afetadas: 2")
         self.assertContains(resp, "Digite D01 100-150 para confirmar.")
-        resp = self.client.post(self.url_tarefa(), {"confirmacao": "D01"})
+        resp = self.client.post(
+            self.url_tarefa(), {"confirmacao": "D01", "_bloqueio_sessao": resp.context["bloqueio"]["sessao"]}
+        )
         self.assertContains(resp, "Nada foi excluído: o código não confere")
+        self.assertTrue(Tarefa.objects.filter(pk=self.tarefa.pk).exists())
+
+    def test_sem_a_sessao_do_bloqueio_nao_exclui(self):
+        self.client.get(self.url_tarefa())
+        resp = self.client.post(self.url_tarefa(), {"confirmacao": "D01 100-150", "_bloqueio_sessao": "outra"})
+        self.assertEqual(resp.status_code, 302)
         self.assertTrue(Tarefa.objects.filter(pk=self.tarefa.pk).exists())
 
     def test_tarefa_com_o_codigo_exclui_e_a_validada_perde_o_validado(self):
         rev = carregar(self.go["LP"].pk)
         Revista.objects.filter(pk=rev.pk).update(hash_validado=hash_validado(rev))
-        self.assertContains(self.client.get(self.url_tarefa()), "perdem o “Validado”: 1")
-        resp = self.client.post(self.url_tarefa(), {"confirmacao": " D01 100-150 "})
+        resp = self.client.get(self.url_tarefa())
+        self.assertContains(resp, "perdem o “Validado”: 1")
+        dados = {"confirmacao": " D01 100-150 ", "_bloqueio_sessao": resp.context["bloqueio"]["sessao"]}
+        resp = self.client.post(self.url_tarefa(), dados)
         self.assertRedirects(resp, reverse("admin:nucleo_descritor_change", args=[self.tarefa.descritor_id]))
         self.assertFalse(Tarefa.objects.filter(pk=self.tarefa.pk).exists())
         rev = carregar(rev.pk)
@@ -201,10 +234,11 @@ class ExclusaoTest(Base):
     def test_descritor_pela_pagina_de_delete(self):
         d = self.tarefa.descritor
         url = reverse("admin:nucleo_descritor_delete", args=[d.pk])
-        self.assertContains(self.client.get(url), "Digite D01 para confirmar.")
-        self.client.post(url, {"confirmacao": "D02"})
+        resp = self.client.get(url)
+        self.assertContains(resp, "Digite D01 para confirmar.")
+        self.client.post(url, {"confirmacao": "D02", "_bloqueio_sessao": resp.context["bloqueio"]["sessao"]})
         self.assertTrue(Descritor.objects.filter(pk=d.pk).exists())
-        self.client.post(url, {"confirmacao": "D01"})
+        self.client.post(url, {"confirmacao": "D01", "_bloqueio_sessao": resp.context["bloqueio"]["sessao"]})
         self.assertFalse(Descritor.objects.filter(pk=d.pk).exists())
 
     def test_pedagogica_exclui_e_impresso_leva_403(self):
@@ -215,7 +249,7 @@ class ExclusaoTest(Base):
         self.assertEqual(self.client.post(url, {"confirmacao": "D01"}).status_code, 403)
         self.assertTrue(Tarefa.objects.filter(pk=self.tarefa.pk).exists())
         self.client.force_login(usuario("ped", "Pedagógica"))
-        self.client.post(self.url_tarefa(), {"confirmacao": "D01 100-150"})
+        self.excluir(self.url_tarefa(), "D01 100-150")
         self.assertFalse(Tarefa.objects.filter(pk=self.tarefa.pk).exists())
 
     def test_bloqueio_de_outro_impede(self):
