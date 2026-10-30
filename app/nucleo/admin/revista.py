@@ -11,6 +11,9 @@ cópia" apaga a cópia (volta ao vivo). Tudo grava dentro da transação do mixi
 Trocar o template de um fascículo com cópias exige digitar "descartar N cópia(s)" no inline;
 apaga as cópias e troca o template na mesma transação (D-093, D-104).
 
+"Validado" (S12, D-074, D-089): o change form leva o hash da revista exibida num hidden, ao lado
+do botão, que envia o próprio formulário (com a sessão do bloqueio) para `validar/`.
+
 Upload com ids faltando GRAVA e avisa (decisão do S11c): o template pode ganhar ou perder
 seções depois, e a pendência `ids_svg` do resolver já bloqueia o "Validado".
 """
@@ -22,19 +25,22 @@ from typing import NamedTuple
 
 from django import forms
 from django.contrib import admin, messages
+from django.contrib.admin.utils import unquote
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.http import HttpResponse
+from django.db import transaction
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
+from django.views.decorators.http import require_POST
 
 from nucleo import texto
 from nucleo.admin import lote
-from nucleo.admin.bloqueio import BloqueioAdminMixin
+from nucleo.admin.bloqueio import CAMPO_SESSAO, BloqueioAdminMixin
 from nucleo.admin.templates import EditorTexto
-from nucleo.models import Revista, RevistaFasciculo, RevistaSecao, Template
-from nucleo.servicos import arquivos, resolver
+from nucleo.models import Ano, Revista, RevistaFasciculo, RevistaSecao, Template
+from nucleo.servicos import arquivos, bloqueio, resolver, validacao
 from nucleo.servicos.empacotar import Pendente, zip_revista
 
 UPLOADS = ("arquivo_svg", "arquivo_capa")
@@ -341,6 +347,7 @@ def aviso_ids(revista, faltando, esperados):
 @admin.register(Revista)
 class RevistaAdmin(BloqueioAdminMixin, admin.ModelAdmin):
     form = RevistaForm
+    change_form_template = "nucleo/revista_change_form.html"
     change_list_template = "nucleo/change_list_lotes.html"
     list_display = ("projeto", "componente", "arquivada_em")
     list_select_related = ("projeto", "componente")
@@ -472,7 +479,49 @@ class RevistaAdmin(BloqueioAdminMixin, admin.ModelAdmin):
         return [
             rota("escolher-template/", lambda r: lote.escolher_template(self, r), "escolher_template"),
             rota("<int:pk>/gabarito-ids/", self.gabarito_ids, "gabarito_ids"),
+            rota("<int:pk>/validar/", require_POST(self.validar_view), "validar"),
         ] + super().get_urls()
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        obj = self.get_object(request, unquote(object_id))
+        if obj is not None:
+            revista = resolver.carregar(obj.pk)
+            resolvido = resolver.resolver(revista)
+            atual = resolver.hash_validado(revista, resolvido)
+            extra_context = {
+                **(extra_context or {}),
+                "validacao": {
+                    "hash": atual,
+                    "validada": validacao.validada(revista, atual),
+                    "pendencias": resolver.pendencias(revista, resolvido),
+                    # D-087: só avisa.
+                    "desatualizadas": [
+                        f"{c.revista_fasciculo.fasciculo} {c.secao}" for c in resolver.secoes_desatualizadas(revista)
+                    ],
+                    "pode": request.user.has_perm("nucleo.validar_revista"),
+                    "url": reverse("admin:nucleo_revista_validar", args=[obj.pk]),
+                },
+            }
+        return super().change_view(request, object_id, form_url, extra_context)
+
+    def validar_view(self, request, pk):
+        """POST do botão "Validado": confere o bloqueio da aba e o hash visto (D-089)."""
+        if not request.user.has_perm("nucleo.validar_revista"):
+            raise PermissionDenied
+        revista = get_object_or_404(Revista.objects.select_related("projeto"), pk=pk)
+        sessao = request.POST.get(CAMPO_SESSAO, "")
+        with transaction.atomic():
+            if bloqueio.conferir_na_transacao(revista.projeto, request.user, sessao):
+                motivo = validacao.validar(pk, request.POST.get("hash_visto", ""), request.user)
+            else:
+                motivo = "você não tem o bloqueio de edição desta revista; recarregue a página"
+        # O botão envia o change form: o bloqueio.js não libera no pagehide; liberamos aqui.
+        bloqueio.liberar(revista.projeto, request.user, sessao)
+        if motivo:
+            messages.error(request, f"Não validada: {motivo}.")
+        else:
+            messages.success(request, "Revista validada.")
+        return HttpResponseRedirect(reverse("admin:nucleo_revista_change", args=[pk]))
 
     def gabarito_ids(self, request, pk):
         """CSV com os ids que o design deve pôr no SVG (sem o prefixo f2-, que o upload põe)."""
@@ -492,6 +541,8 @@ class RevistaAdmin(BloqueioAdminMixin, admin.ModelAdmin):
 
     def changelist_view(self, request, extra_context=None):
         links = []
+        if ano := Ano.objects.order_by("-ano").first():
+            links.append((f"Painel {ano.ano}", reverse("painel", args=[ano.ano])))
         if request.user.has_perm("nucleo.change_revistafasciculo"):
             links.append(("Escolher template F1/F2", reverse("admin:nucleo_revista_escolher_template")))
         return super().changelist_view(request, {**(extra_context or {}), "lotes": links})

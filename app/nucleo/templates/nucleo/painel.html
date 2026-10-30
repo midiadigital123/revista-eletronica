@@ -1,0 +1,26 @@
+{% extends "admin/base_site.html" %}
+{% comment %}Painel da temporada (S12, D-120): uma linha por revista ativa; ✓ ou "falta" com link.{% endcomment %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Início</a> &rsaquo; {{ title }}</div>{% endblock %}
+{% block content %}
+<div id="content-main">
+{% include "nucleo/_filtros.html" %}
+<form method="get" action="{{ url_lote }}">
+<table id="painel">
+  <thead><tr>
+    {% if pode_validar %}<th></th>{% endif %}<th>Revista</th>
+    {% for c in colunas %}<th>{{ c }}</th>{% endfor %}
+  </tr></thead>
+  <tbody>
+  {% for l in linhas %}<tr data-revista="{{ l.revista.pk }}">
+    {% if pode_validar %}<td><input type="checkbox" name="revista" value="{{ l.revista.pk }}" aria-label="Selecionar {{ l.revista }}"></td>{% endif %}
+    <td><a href="{% url 'admin:nucleo_revista_change' l.revista.pk %}">{{ l.revista }}</a></td>
+    {% for c in l.celulas %}<td class="coluna-{{ c.coluna }}"{% if c.dica %} title="{{ c.dica }}"{% endif %}>
+      {% if c.ok %}✓{% elif c.link %}<a href="{{ c.link }}">falta</a>{% else %}falta{% endif %}
+    </td>{% endfor %}
+  </tr>{% empty %}<tr><td colspan="10">Nenhuma revista ativa com esse filtro.</td></tr>{% endfor %}
+  </tbody>
+</table>
+{% if pode_validar and linhas %}<div class="submit-row"><input type="submit" class="default" value="Validar selecionadas"></div>{% endif %}
+</form>
+</div>
+{% endblock %}

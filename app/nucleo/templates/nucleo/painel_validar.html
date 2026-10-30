@@ -1,0 +1,25 @@
+{% extends "admin/base_site.html" %}
+{% comment %}Validação em lote (S12, D-078, D-120): diff de cada revista e o par (revista, hash visto).{% endcomment %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Início</a> &rsaquo; <a href="{{ url_painel }}">Painel</a> &rsaquo; {{ title }}</div>{% endblock %}
+{% block content %}
+<div id="content-main">
+<p>Cada revista é validada na versão mostrada aqui. Se ela mudar antes do envio, é recusada e listada; as outras são gravadas. Projetos em edição por outra sessão são pulados.</p>
+{% if itens %}
+<form method="post">{% csrf_token %}
+{% for i in itens %}
+<fieldset class="module" id="lote-{{ i.revista.pk }}">
+  <h2><label><input type="checkbox" name="par" value="{{ i.revista.pk }}:{{ i.hash }}"{% if not i.pendencias %} checked{% endif %}> {{ i.revista }}</label></h2>
+  {% if i.pendencias %}<p class="errornote">Pendências (será recusada): {% for p in i.pendencias %}{{ p.mensagem }} {% endfor %}</p>{% endif %}
+  {% if i.desatualizadas %}<p class="impacto-alerta">Aviso: seções desatualizadas ({% for c in i.desatualizadas %}{{ c.revista_fasciculo.fasciculo }} {{ c.secao }}{% if not forloop.last %}, {% endif %}{% endfor %}). Não impede o “Validado”.</p>{% endif %}
+  {% if i.diff is None %}<p>Sem foto do impresso para comparar (primeira impressão).</p>
+  {% elif i.diff %}<p>Mudanças desde a última impressa:</p>{{ i.diff }}
+  {% else %}<p>Sem diferenças desde a última impressa.</p>{% endif %}
+</fieldset>
+{% endfor %}
+<div class="submit-row"><input type="submit" class="default" value="Validar as marcadas"></div>
+</form>
+{% else %}
+<p>Nenhuma revista selecionada. <a href="{{ url_painel }}">Voltar ao painel</a>.</p>
+{% endif %}
+</div>
+{% endblock %}
