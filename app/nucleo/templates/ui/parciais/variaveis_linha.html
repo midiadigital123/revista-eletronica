@@ -10,7 +10,8 @@ Contexto: l (urls/ui_variaveis.linha), ano, pode_editar, colunas; oob=True na re
       <a class="link" href="{% if u %}{{ u }}{% else %}{% url 'admin:nucleo_projeto_change' p.pk %}{% endif %}">{{ p.parceiro_ano.parceiro }}</a>
       <span class="mudo">{{ p.nome }}</span>
       {% if pode_editar %}
-      <button type="submit" form="copiar-{{ p.pk }}" class="btn btn-ghost btn-sm"
+      <button type="submit" form="copiar-{{ p.pk }}" id="copiar-btn-{{ p.pk }}" class="btn btn-ghost btn-sm"
+        aria-label="Copiar de {{ ano.ano|add:-1 }} para {{ p }}"
         hx-post="{% url 'ui_variaveis_copiar' ano.ano p.pk %}?i={{ l.indice }}" hx-params="none"
         hx-target="#projeto-{{ p.pk }}" hx-swap="outerHTML"
         title="Preenche só as variáveis vazias com as do projeto do parceiro em {{ ano.ano|add:-1 }}. Grava na hora.">

@@ -9,7 +9,7 @@ from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
 
 from nucleo.admin.lote import contexto, escolher_ano, filtro
-from nucleo.planilha_variaveis import EDITAVEIS, limitar, mostrar_nome_do_ano, planilha  # noqa: F401 (admin/projeto.py)
+from nucleo.planilha_variaveis import planilha
 
 
 def variaveis(model_admin, request):

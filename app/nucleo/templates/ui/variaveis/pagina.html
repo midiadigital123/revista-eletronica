@@ -44,7 +44,7 @@
           <th rowspan="2" scope="col" class="grade-parceiro">Projeto</th>
           {% for g, n in grupos %}<th colspan="{{ n }}" scope="colgroup" class="grade-etapa">{{ g }}</th>{% endfor %}
         </tr>
-        <tr>{% for v, inicio in cabecalho %}<th scope="col" class="grade-cc{% if inicio %} grade-inicio{% endif %}" title="{{ v.descricao }}">{{ v.rotulo }}</th>{% endfor %}</tr>
+        <tr>{% for v, rotulo, inicio in cabecalho %}<th scope="col" class="grade-cc{% if inicio %} grade-inicio{% endif %}" title="{{ v.rotulo }}: {{ v.descricao }}" aria-label="{{ v.rotulo }}">{{ rotulo }}</th>{% endfor %}</tr>
       </thead>
       {% for l in linhas %}{% include "ui/parciais/variaveis_linha.html" %}{% endfor %}
     </table>
@@ -98,6 +98,10 @@
         mudou ||= alterada;
       }
       projetos += mudou;
+      // Copiar troca a linha inteira: com edição não salva nela, pede confirmação antes (hx-confirm).
+      const copiar = corpo.querySelector("button[hx-post]");
+      if (copiar && mudou) copiar.setAttribute("hx-confirm", "Esta linha tem alteração não salva; copiar descarta o que você digitou nela. Continuar?");
+      else copiar?.removeAttribute("hx-confirm");
     }
     aviso.textContent = projetos ? `${projetos} projeto(s) com alteração não salva.` : "Nenhuma alteração.";
     return projetos;

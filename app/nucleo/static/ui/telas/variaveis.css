@@ -26,10 +26,6 @@
 .legenda[open] > summary { margin-bottom: 0.5rem; }
 .legenda .tabela td { vertical-align: top; }
 
-/* O canto (cabeçalho da 1ª coluna) por cima dos cabeçalhos que rolam: `.grade thead .grade-parceiro`
-   do ui.css perde em especificidade para `.grade .tabela thead th` (z-index 1). Corrigir lá subiria à base. */
-.grade-variaveis .tabela thead th.grade-parceiro { z-index: 2; }
-
 @media (max-width: 40rem) {
   .grade-variaveis .input { width: 9rem; }
   .grade-variaveis tbody .grade-parceiro { padding: 0.5rem; }

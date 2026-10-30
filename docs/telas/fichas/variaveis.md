@@ -23,7 +23,7 @@ Preencher, numa só tela, os valores que os textos dos templates usam por projet
 
 - Seletor de ano (os anos cadastrados, o mais recente primeiro).
 - Planilha: 1ª coluna fixa com o parceiro, o nome do projeto e o botão "Copiar de <ano anterior>"; demais colunas são as 24 variáveis preenchidas à mão, agrupadas como no formulário do projeto (Coleção, Adjetivo pátrio, Parceiro, Programa, Regional e secretaria, Padrões de desempenho). O cabeçalho do grupo e o da variável ficam fixos ao rolar.
-- Cada cabeçalho de variável mostra a descrição ao passar o mouse.
+- Cada cabeçalho de variável mostra a descrição ao passar o mouse. Sob o grupo, o rótulo vem sem o nome do grupo ("masc. sing." sob "Adjetivo pátrio"); o rótulo completo fica no título e no nome acessível.
 - Padrão 1 a 5 vazios mostram, em cinza dentro da célula, o nome que vale no ano ("padrão do ano: Abaixo do básico").
 - Legenda recolhível "O que é cada variável": nome entre chaves duplas, descrição e onde aparece (templates do ano, pela última versão de cada um; nos padrões, também a escala do F1). As três automáticas (parceiro, projeto, ano) aparecem marcadas como "do cadastro".
 - Projetos arquivados não aparecem (são só leitura no projeto).
@@ -40,7 +40,7 @@ Preencher, numa só tela, os valores que os textos dos templates usam por projet
 |---|---|---|
 | Trocar o ano | todos | Abre a planilha do ano (link; funciona sem JS). |
 | Editar células e "Salvar variáveis" | quem edita | Grava as alteradas e volta à planilha com a mensagem. |
-| "Copiar de <ano anterior>" na linha | quem edita | Troca só aquela linha, sem recarregar; as edições não salvas nas outras linhas continuam. |
+| "Copiar de <ano anterior>" na linha | quem edita | Troca só aquela linha, sem recarregar; as edições não salvas nas outras linhas continuam. Se a própria linha tem edição não salva, pede confirmação antes ("Esta linha tem alteração não salva; copiar descarta o que você digitou nela. Continuar?"). |
 | Abrir o nome do projeto | todos | Vai ao formulário do projeto. |
 | Abrir "O que é cada variável" | todos | Mostra a legenda. |
 
@@ -67,7 +67,7 @@ Preencher, numa só tela, os valores que os textos dos templates usam por projet
 - Copiar, nada a copiar: "Projeto GO: nada a copiar (as variáveis vazias também estão vazias em 2025)."
 - Copiar, sem ano anterior: "Projeto PE: não há projeto do parceiro em 2025; nada mudou."
 - Copiar, projeto travado: "Projeto GO: não copiado (projeto em edição por Ana Souza)."
-- Copiar, projeto sumiu/arquivado: "Projeto não encontrado ou arquivado." (a página recarrega).
+- Copiar, projeto sumiu/arquivado ou de outro ano: "Projeto não encontrado ou arquivado." (a página recarrega; nada é gravado).
 - Sem ano: "Nenhum ano aberto. Abra um ano no admin para preencher as variáveis."
 
 ## Permissões
@@ -80,7 +80,7 @@ Preencher, numa só tela, os valores que os textos dos templates usam por projet
 ## HTMX
 
 - Página inteira por GET normal; salvar é um envio comum do formulário (grava e volta à página).
-- "Copiar de <ano anterior>": `hx-post` sem enviar a planilha, troca só a linha (`outerHTML` no `<tr>`) e as mensagens (fora do alvo). A linha volta com os valores gravados como novo "original", então o contador continua certo. Sem JS, o mesmo botão envia um formulário comum e a página recarrega.
+- "Copiar de <ano anterior>": `hx-post` sem enviar a planilha, troca só a linha (`outerHTML` no `<tbody>` do projeto; `id` fixo no botão para o foco voltar a ele) e as mensagens (fora do alvo). A linha volta com os valores gravados como novo "original", então o contador continua certo. Sem JS, o mesmo botão envia um formulário comum e a página recarrega.
 - Projeto que sumiu ou foi arquivado no meio: a resposta pede recarga da página inteira.
 
 ## Wireframe

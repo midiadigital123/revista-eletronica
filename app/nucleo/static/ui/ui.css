@@ -209,7 +209,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   min-width: 10rem; max-width: 16rem; overflow: hidden; text-overflow: ellipsis;
   border-right-width: 1px;
 }
-.grade thead .grade-parceiro { z-index: 2; }
+.grade .tabela thead th.grade-parceiro { z-index: 2; }
 .grade tbody tr:hover .grade-parceiro { background: var(--muted); }
 .grade td { padding: 0.375rem; }
 .grade .input { width: 8.5rem; height: 2rem; }

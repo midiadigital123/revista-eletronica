@@ -27,7 +27,9 @@ class VariaveisUiTest(Base):
         self.assertTemplateUsed(r, "ui/base.html")
         self.assertEqual([l["form"].instance for l in r.context["linhas"]], [self.projeto_go, self.projeto_pe])
         self.assertContains(r, "Salvar variáveis")
-        self.assertContains(r, "Copiar de 2025", count=2)
+        self.assertContains(r, 'aria-label="Copiar de 2025 para Projeto GO"', count=1)
+        self.assertContains(r, f'id="copiar-btn-{self.projeto_pe.pk}"', count=1)  # foco volta após o swap
+        self.assertContains(r, '>masc. sing.</th>')  # cabeçalho sem o nome do grupo
         self.assertContains(r, 'placeholder="padrão do ano: Padrão 02"', count=2)  # D-175
         self.assertContains(r, "escala do F1 (nome do padrão)", count=5)
         self.assertContains(r, "LP F2 Padrão")  # onde aparece
@@ -104,6 +106,15 @@ class VariaveisUiTest(Base):
         self.assertIn("Projeto GO: não copiado (projeto em edição por outro).", mensagens(r))
         Projeto.objects.filter(pk=self.projeto_go.pk).update(arquivado_em="2026-01-01T00:00:00Z")
         r = self.client.post(url + "?i=0", headers={"HX-Request": "true"})
+        self.assertEqual(r["HX-Refresh"], "true")
+
+    def test_copiar_projeto_de_outro_ano_nao_grava(self):
+        ano25 = Ano.objects.create(ano=2025)
+        pa = ParceiroAno.objects.create(parceiro=self.projeto_go.parceiro_ano.parceiro, ano=ano25)
+        velho = Projeto.objects.create(parceiro_ano=pa, ano=ano25, nome="GO 2025")
+        r = self.client.post(reverse("ui_variaveis_copiar", args=[2026, velho.pk]), follow=True)
+        self.assertIn("Projeto não encontrado ou arquivado.", mensagens(r))
+        r = self.client.post(reverse("ui_variaveis_copiar", args=[2026, velho.pk]) + "?i=0", headers={"HX-Request": "true"})
         self.assertEqual(r["HX-Refresh"], "true")
 
     def test_anonimo_vai_para_o_login(self):

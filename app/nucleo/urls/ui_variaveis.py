@@ -26,6 +26,12 @@ GRUPOS = [(g, sum(v.grupo == g for v in COLUNAS)) for g in _GRUPOS]
 INICIOS = {next(v.nome for v in COLUNAS if v.grupo == g) for g in _GRUPOS}  # 1ª coluna do grupo: borda
 
 
+def curto(v):
+    """Rótulo do cabeçalho sem o nome do grupo, que já está na linha de cima ("masc. sing.")."""
+    prefixo = v.grupo.lower() + " "
+    return v.rotulo[len(prefixo) :] if v.rotulo.lower().startswith(prefixo) else v.rotulo
+
+
 def celulas(form):
     """Campos da linha na ordem das colunas, com os atributos da grade (classe, rótulo, erro)."""
     saida = []
@@ -72,7 +78,7 @@ def variaveis(request, ano=None):
         {
             **contexto,
             "linhas": [linha(f, i) for i, f in enumerate(formset.forms)],
-            "colunas": COLUNAS, "grupos": GRUPOS, "cabecalho": [(v, v.nome in INICIOS) for v in COLUNAS],
+            "colunas": COLUNAS, "grupos": GRUPOS, "cabecalho": [(v, curto(v), v.nome in INICIOS) for v in COLUNAS],
             "ano": ano, "anos": anos, "secao": "variaveis",
         },
     )  # fmt: skip
@@ -84,10 +90,14 @@ def copiar_linha(request, ano, pk):
     """Copia do ano anterior (só vazias) e devolve a linha nova (HTMX) ou volta à página."""
     if not pode_gravar(request.user):
         raise PermissionDenied
-    copiar(request, pk)
+    do_ano = projetos_do_ano(get_object_or_404(Ano, ano=ano)).filter(pk=pk)
+    if do_ano.exists():  # projeto de outro ano pela URL não é copiado
+        copiar(request, pk)
+    else:
+        messages.error(request, "Projeto não encontrado ou arquivado.")
     if not e_htmx(request):
         return redirect("ui_variaveis", ano)
-    projeto = projetos_do_ano(get_object_or_404(Ano, ano=ano)).filter(pk=pk).first()
+    projeto = do_ano.first()  # relido: a cópia gravou noutra instância
     indice = pk_do_post(request.GET.get("i", ""))
     if projeto is None or indice >= 1000:  # sumiu ou arquivou: a mensagem sai na página recarregada
         return HttpResponse(headers={"HX-Refresh": "true"})
