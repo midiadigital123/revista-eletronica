@@ -7,10 +7,9 @@ O mesmo template serve ao preview (S08) e ao zip (S15, aberto por `file://`):
 - `preview`: só ele mostra as faixas vermelhas (D-116).
 Tudo o que a página lê vem inline (JSON e SVG): nada de `fetch` (D-125).
 
-`json_seguro` e `css_das_cores` portados de api/src/modules/revista/render.ts.
+`css_das_cores` portado de api/src/modules/revista/render.ts.
 """
 
-import json
 import re
 from html import unescape
 
@@ -23,18 +22,6 @@ from nucleo.servicos.resolver import resolver
 COR = re.compile(r"#[0-9A-Fa-f]{6}")
 # Config do tour (antes em svg-tour/avaliacao-e-curriculo/revista.json); os textos vêm das seções.
 ROTULO_TOUR = "Infográfico: tour guiado"
-
-
-def json_seguro(valor):
-    """JSON para dentro de <script>: sem `</script>`, `<!--`, entidades nem separadores de linha JS."""
-    return mark_safe(
-        json.dumps(valor, ensure_ascii=False)
-        .replace("<", "\\u003c")
-        .replace(">", "\\u003e")
-        .replace("&", "\\u0026")
-        .replace(" ", "\\u2028")
-        .replace(" ", "\\u2029")
-    )
 
 
 def css_das_cores(cores):
@@ -88,7 +75,7 @@ def contexto_pagina(revista, *, preview, estaticos, capa):
         "estaticos": estaticos,
         "capa": capa,
         "etapas": f1["etapas"],
-        "dados": json_seguro(f1["dados"]),
+        "dados": f1["dados"],
         "css_cores": css_das_cores(f1["cores"]),
         "introducao": f1_secoes.get("introducao"),
         "fechamento": f1_secoes.get("fechamento"),
@@ -96,6 +83,6 @@ def contexto_pagina(revista, *, preview, estaticos, capa):
         "sem_template_f1": f1["secoes"] is None,
         "sem_template_f2": f2["secoes"] is None,
         "svg": svg,
-        "tour": json_seguro(_tour(f2_secoes)),
+        "tour": _tour(f2_secoes),
         "modais": [s for s in f2_secoes if s["id"].startswith("dlg-")],
     }
