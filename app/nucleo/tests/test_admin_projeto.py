@@ -214,11 +214,11 @@ class RevistaUploadTest(Base):
         self.assertEqual(csv.content.decode().splitlines(), ["id_no_svg,secao_do_template", "passo1,passo1", "btn-action-p2,dlg-p2"])
 
     def test_svg_e_capa_validos(self):
-        from nucleo.management.commands.criar_demo import png
+        from nucleo.management.commands.criar_demo import PNG
 
         rev = self.go["LP"]
         r = self.post_revista(
-            rev, arquivo_svg=SimpleUploadedFile("f2.svg", SVG), arquivo_capa=SimpleUploadedFile("c.png", png(2, 2, (0, 0, 0)))
+            rev, arquivo_svg=SimpleUploadedFile("f2.svg", SVG), arquivo_capa=SimpleUploadedFile("c.png", PNG)
         )
         self.assertFalse([m for m in mensagens(r) if "Ids que faltam" in m])
         rev = Revista.objects.get(pk=rev.pk)

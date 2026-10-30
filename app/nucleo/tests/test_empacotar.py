@@ -12,7 +12,7 @@ from django.template.loader import render_to_string
 from django.test import TestCase
 from django.urls import reverse
 
-from nucleo.management.commands.criar_demo import png
+from nucleo.management.commands.criar_demo import PNG
 from nucleo.models import Parceiro, Revista, Tarefa, TemplateVersao
 from nucleo.servicos.arquivos import receber_capa, receber_svg
 from nucleo.servicos.cascata import gravar_cortes
@@ -42,9 +42,9 @@ class ZipTest(MediaTemporaria, TestCase):
         super().setUp()
         self.rev = carregar(self.go["LP"].pk)
         receber_svg(self.rev, SimpleUploadedFile("x.svg", SVG))
-        receber_capa(self.rev, SimpleUploadedFile("capa.png", png(4, 4, (255, 235, 0))))
+        receber_capa(self.rev, SimpleUploadedFile("capa.png", PNG))
         self.rev = carregar(self.rev.pk)
-        self.item(self.tarefa, "itens/item1.png", png(2, 2, (0, 0, 255)))  # LP 5EF D01 "Localiza."
+        self.item(self.tarefa, "itens/item1.png", PNG)  # LP 5EF D01 "Localiza."
 
     @staticmethod
     def item(tarefa, caminho, dados=None):
@@ -154,7 +154,7 @@ class ZipTest(MediaTemporaria, TestCase):
         arquivada = carregar(self.rev.pk)
         self.assertIsNotNone(arquivada.arquivada_em)
         self.assertIn("arquivos/itens/item1.png", conteudo(zip_revista(arquivada)[1]))
-        receber_capa(arquivada, SimpleUploadedFile("capa.png", png(8, 8, (0, 0, 0))))
+        receber_capa(arquivada, SimpleUploadedFile("capa.png", PNG + b"\0"))  # outro sha256
         self.assertIn("SVG ou capa mudaram", str(self.pendentes()))
 
     def test_recusa_com_pendencias(self):

@@ -7,9 +7,8 @@ Não toca em outros parceiros. Só com DEBUG; recusa trocar a senha de um `demo-
 que não foi criado por este comando (marca em `first_name`).
 """
 
+import base64
 import secrets
-import struct
-import zlib
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -44,14 +43,8 @@ TAREFAS = [(100, 150, "Localiza informação explícita."), (225, 275, "Infere o
            (325, 375, "Reconhece a tese de um texto argumentativo.")]  # fmt: skip
 
 
-def png(largura, altura, rgb):
-    """PNG liso, só com a stdlib (capa de demonstração)."""
-    def bloco(tipo, dados):
-        return struct.pack(">I", len(dados)) + tipo + dados + struct.pack(">I", zlib.crc32(tipo + dados))
-
-    linhas = b"".join(b"\x00" + bytes(rgb) * largura for _ in range(altura))
-    cabecalho = struct.pack(">IIBBBBB", largura, altura, 8, 2, 0, 0, 0)
-    return b"\x89PNG\r\n\x1a\n" + bloco(b"IHDR", cabecalho) + bloco(b"IDAT", zlib.compress(linhas)) + bloco(b"IEND", b"")
+# Capa lisa da demonstração: PNG 1×1 amarelo.
+PNG = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mP4/5oBAATXAesdPD2pAAAAAElFTkSuQmCC")
 
 
 class Command(BaseCommand):
@@ -108,5 +101,5 @@ class Command(BaseCommand):
             rf.template = Template.objects.get(ano=lp.ano, componente=lp, fasciculo=rf.fasciculo, nome="Padrão")
             rf.save()
         receber_svg(revista, SimpleUploadedFile("f2.svg", SVG.read_bytes()))
-        receber_capa(revista, SimpleUploadedFile("capa.png", png(320, 320, (255, 235, 0))))
+        receber_capa(revista, SimpleUploadedFile("capa.png", PNG))
         return revista
