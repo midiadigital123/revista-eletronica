@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo 18 de 22: S12, auditoria, variáveis oficiais e nome dos padrões por ano (D-175) em `refatoracao-django` e no GitHub. Migrações até 0012.
+Passo 19 de 22: S13 (impresso + planilhas), UI de navegação, aviso em Padrões do ano, F1 JS/CSS e abertura do F1 juntados em `refatoracao-django` e no GitHub. Migrações até 0012. Faltam S17 e S18; em andamento: upload do item + exclusão (D-180/D-181) e auditoria 2ª leva.
 Funcionando: em cada `feat/s11*`, suíte OK (8 de PDF pulados), `makemigrations --check` limpo; Playwright cortes, templates-admin e revista-textos passam.
-Quebrado/pendente: não há mapa das telas (UI) × dados × requisitos — preocupação do usuário (2026-10-30); S13, S17, S18 não iniciados.
+Quebrado/pendente: upload do item e exclusão (D-180/D-181) em `feat/item-exclusao`; `fix/auditoria-ia-2` em andamento; S17 e S18 não iniciados.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Com o aval do usuário: inventário das telas existentes (admin S11a–S12) × dados do ER × requisitos das decisões, apontando lacunas, antes do S13.
+Verificar a entrega de `feat/item-exclusao` (suíte + `makemigrations --check` + Playwright item) quando o subagente terminar.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -30,9 +30,9 @@ Com o aval do usuário: inventário das telas existentes (admin S11a–S12) × d
 16. [x] S11b2 — Admin: cópia por seção
 17. [x] S11c — Admin: projeto, variáveis, arquivos, lote
 18. [x] S12 — Painel + Validado
-19. [ ] S13 — Impresso + planilhas  ← agora
+19. [x] S13 — Impresso + planilhas
 20. [x] S16 — Abrir ano
-21. [ ] S17 — Carga 2026 + desligar o antigo
+21. [ ] S17 — Carga 2026 + desligar o antigo  ← agora
 22. [ ] S18 — E2E da temporada
 
 ## Decisões
@@ -1443,8 +1443,59 @@ Com o aval do usuário: inventário das telas existentes (admin S11a–S12) × d
 - **Arquivos afetados:** `app/nucleo/models/cadastro.py`, `app/nucleo/servicos/resolver.py`, `app/nucleo/servicos/abrir_ano.py`, `carregar_cadastros`, admin de CorPadrao, testes, `docs/variaveis.md`
 - **Status:** ativa. Commit local 222627b em `feat/nome-padrao`, migração `0011_cor_padrao_nome` (preenche "Padrão 0N" nas linhas existentes). Verificado por mim: suíte OK (8 pulados), `makemigrations --check` limpo, merge em `refatoracao-django` sem conflito. Tetos de consulta +1 (resolver 13, painel 16 por linha). Nome de exibição corrigido para "Padrões do ano (cor e nome)" (892af5e, migração 0012 sem SQL). Juntada em `refatoracao-django`. Substitui parte de D-173 (pdNN vazio = pendência).
 
+### D-176 — Texto de abertura das escalas (F1) por componente, vindo da Pedagógica (2026-10-30 13:10)
+- **Contexto:** docx "Interpretação pedagógica da escala — textos de abertura LP e MT". O usuário disse "abrem o fascículo 2", mas o texto é a introdução das escalas; perguntado, escolheu "F1, abertura das escalas".
+- **Decisão:** substituir a seção `introducao` de `f1-lp.hbs` e `f1-mt.hbs` pelo texto do docx (título "INTERPRETAÇÃO PEDAGÓGICA DA ESCALA", 3 parágrafos cada). O MT ganha o texto próprio (Unidades Temáticas, eixo cognitivo Saeb), fechando a pendência da D-139 ("f1-mt diz Para Língua Portuguesa"); aviso `<!-- revisar -->` removido. Texto copiado sem revisão ("conforme com o grau" mantido como veio). Abertura do F2 inalterada.
+- **Motivo:** escolha do usuário; texto é da Pedagógica.
+- **Descartadas:** F2 `abertura` (o texto fala da escala, não do tour); nos dois.
+- **Arquivos afetados:** `app/templates_seed/2026/f1-lp.hbs`, `app/templates_seed/2026/f1-mt.hbs`
+- **Status:** ativa. Commit local na `feat/seed-abertura-f1`; suíte OK (8 pulados), `makemigrations --check` limpo. Seed só vale em banco novo (`carregar_templates` nunca sobrescreve): em banco já carregado, a mudança entra como nova versão do template pelo admin.
+
+### D-177 — Respostas do inventário das telas (2026-10-30 14:30)
+- **Contexto:** 5 perguntas do inventário das telas (`docs/telas/inventario.md`, seção 5).
+- **Decisão:** (1) Admin **não** marca "Revista Impressa Atualizada" (mantém `ADMIN_MARCA_IMPRESSA` desligado; fecha a pergunta aberta do plano); (2) "Padrões do ano" ganha aviso "afeta N revistas" antes de salvar nome/cor; (3) tela do impresso é página própria; (4) planilhas saem por revista; (5) o Painel é a página de entrada.
+- **Motivo:** respostas do usuário, todas iguais às recomendações.
+- **Descartadas:** Admin marcar impressa (separação de papéis, D-074); impresso como seção da revista; planilhas por ano (zip de várias revistas, sem pedido); índice do admin como entrada.
+- **Arquivos afetados:** `app/nucleo/permissoes.py` (sem mudança), `feat/t07-impacto`, `feat/s13-impresso`, `feat/ui-navegacao`
+- **Status:** ativa. (3) e (4) já no S13 (bdc32ca); (2) em `feat/t07-impacto`; (5) em `feat/ui-navegacao`.
+
+### D-178 — Correções da revisão do S13; clique do impresso sem REPEATABLE READ (2026-10-30 15:00)
+- **Contexto:** revisão (django-reviewer) do bdc32ca: 0 críticos, 3 importantes, 4 menores. Foto `impresso` segura, injeção de fórmula bloqueada (`data_type="s"` → `inlineStr`), sem XSS, permissões/CSRF/método OK.
+- **Decisão:** o clique "Revista Impressa Atualizada" roda na transação do `escrever_travado` (READ COMMITTED) e grava a foto num savepoint, conferindo `foto.hash == hash_visto == hash_validado`; se não bater, desfaz. Substitui D-097/D-125 neste ponto (REPEATABLE READ no clique): como o hash é função do conteúdo, leitura misturada só gera recusa falsa, nunca aceite falso. Correções: diff mostra `fim` e `item` das tarefas; mudança só de formatação aparece (`**`/`*`/listas no texto puro) e mensagem honesta quando o diff não mostra; caracteres de controle limpos antes do openpyxl (500 no download); revista arquivada sem "Intervalo mínimo"; docstring do `foto.py`; testes de override de `ProjetoPasso`, item removido, fórmula, XSS e POST anônimo; botão "Copiar" com fallback sem TLS.
+- **Motivo:** o Impresso via "nada mudou" quando só `fim`, item ou negrito mudavam; texto colado do Word derrubava as planilhas.
+- **Descartadas:** levar o passo efetivo para o resolvido (mudaria o hash de todas as revistas validadas); REPEATABLE READ forçado no clique (o `escrever_travado` já abriu a transação).
+- **Arquivos afetados:** `app/nucleo/urls/impresso.py`, `app/nucleo/texto.py`, `app/nucleo/servicos/planilhas.py`, `app/nucleo/servicos/foto.py`, `app/nucleo/templates/nucleo/impresso.html`, `app/nucleo/tests/test_impresso.py`
+- **Status:** ativa. 2º commit 1ce0b17 em `feat/s13-impresso` (360 testes no relatório do subagente); minha verificação em andamento. Suíte do bdc32ca verificada por mim: OK (8 pulados).
+
+### D-179 — Respostas do rascunho de UI: item por tarefa, `/` no Painel, zip na lista (2026-10-30 15:20)
+- **Contexto:** 3 perguntas do rascunho de UI (`docs/telas/rascunho-ui.md`), via grill-me.
+- **Decisão:** (1) parte das tarefas de 2026 tem arquivo do item (PNG ou PDF): a tela de upload entra agora, desenhada a partir do editor antigo (`editor/src/projetos/ano/EditorEscala.tsx:230-385`, `api/src/modules/itens/routes.ts`: botão anexar por linha, PDF/PNG/JPG até 5 MB, tipo conferido pelos bytes, link com o nome + "Remover arquivo", arquivo nunca apagado); detalhes na rodada 2 do grill-me. (2) `/` leva ao Painel do maior ano; o índice do admin continua em `/admin/` com o módulo "Temporada" no topo. (3) "Baixar zip" continua só na lista de Revistas.
+- **Motivo:** respostas do usuário.
+- **Descartadas:** trocar o índice do admin pelo Painel (Admin perderia Usuários e cadastros); botão de zip por linha no Painel e zip do ano inteiro (sem necessidade agora).
+- **Arquivos afetados:** futuro: admin da matriz (Tarefa), `servicos/arquivos.py`; `feat/ui-navegacao` (item 2)
+- **Status:** ativa; (1) pendente da rodada 2.
+
+### D-180 — Arquivo do item: da matriz, PDF/PNG/JPG, um a um num modal com texto alternativo opcional (2026-10-30 15:40)
+- **Contexto:** rodada 2 do grill-me sobre o upload do item (D-179).
+- **Decisão:** o arquivo do item é da **matriz** (`Tarefa.arquivo`), cadastrado na edição da matriz, e aparece em toda revista que usa a matriz (aviso "afeta N revistas" da D-076 ao subir/trocar). Aceita PDF, PNG e JPG até 5 MB, tipo conferido pelos bytes (como `api/src/modules/itens/routes.ts`). Upload um a um, por tarefa, num **modal** (`<dialog>`) que pede o arquivo e um campo "Texto alternativo" **opcional** (o item entra sem ele; fecha a pendência D-157 do campo, não a do conteúdo).
+- **Motivo:** respostas do usuário: o item é da prova comum; poucos itens, aos poucos.
+- **Descartadas:** item por projeto (exceção ao "projeto só aponta para a matriz"); só PDF/PNG; upload em lote por zip (pode vir depois sobre o mesmo serviço); texto alternativo obrigatório.
+- **Arquivos afetados:** futuro: `app/nucleo/models/matriz.py` (campo de texto alternativo), `app/nucleo/admin/matriz.py`, `app/nucleo/servicos/arquivos.py`, `app/nucleo/static/revista/f1/script.js` (alt no modal do item)
+- **Status:** ativa; quem remove/exclui em aberto (rodada 3).
+
+### D-181 — Exclusão pela tela: arquivo do item, tarefa e descritor, com confirmação forte (2026-10-30 16:10)
+- **Contexto:** rodada 3 do grill-me. O usuário quis rever a D-166 ("só se exclui a sobrescrita do projeto").
+- **Decisão:** Pedagógica, Mídias Digitais e Admin passam a poder excluir pela tela, além das sobrescritas do projeto: o arquivo do item, a **tarefa** e o **descritor** da matriz. O Impresso continua sem excluir. Excluir tarefa/descritor exige confirmação forte com impacto: lista as revistas afetadas e as que perdem o "Validado" e pede para digitar o código (padrão da troca de template com cópias). Remover o arquivo do item desliga da tarefa e apaga do disco **só quando nenhuma tarefa de nenhum ano** aponta mais para ele (D-150).
+- **Motivo:** respostas do usuário; desde a D-166 existem aviso de impacto (D-076), "Validado" por hash e histórico; reimportar a matriz para corrigir uma tarefa é caro.
+- **Descartadas:** só o arquivo do item; só Admin exclui; lixeira restaurável por 30 dias (+4 h, `excluido_em`); confirmação simples do Django; nunca apagar o arquivo do disco.
+- **Arquivos afetados:** `app/nucleo/permissoes.py`, migração de dados dos grupos, `app/nucleo/admin/matriz.py`, `app/nucleo/servicos/arquivos.py`, testes de permissão
+- **Status:** ativa. Substitui D-166 no ponto "tarefa e descritor não se excluem pela tela" (~~D-166 nesse ponto~~). Implementação junto da D-180.
+
 ## Perguntas em aberto
-- [ ] Mapa das telas (UI): quais telas, quem usa, quais dados cada uma preenche e requisitos de cada uma; quais já existem no admin e quais faltam — depende de: usuário aprovar o inventário
+- [x] (D-179) Rascunho de UI: as matrizes de 2026 têm imagem/PDF por item (`tarefa.arquivo`)? Se sim, tela de upload sobe para agora (+4 h). `/` vai para o Painel mantendo o índice do admin com módulo "Temporada"? (rec.: sim). Botão "Baixar zip" por linha no Painel em 2026? (rec.: não) — depende de: usuário
+- [x] (D-176) Docx "Interpretação pedagógica da escala — textos de abertura LP e MT": o usuário disse que abre o fascículo 2 (infográfico), mas o texto é quase igual à `introducao` do F1 nos seeds (`f1-lp.hbs`/`f1-mt.hbs`: "relação entre a Matriz de Referência e a Escala de Proficiência…"). Entra no F1 `introducao` ou no F2 `abertura`? — depende de: usuário
+- [x] Mapa das telas (UI): inventário feito (2026-10-30): 28 telas, 25 existem ok, 0 desatualizadas, 3 faltam (T26 impresso, T27 planilhas, T28 histórico). Rascunho de UI em andamento.
+- [x] (D-177) Inventário das telas — Admin marca impressa? (rec.: não); aviso "afeta N revistas" em Padrões do ano? (rec.: sim); tela do impresso página própria? (rec.: sim); planilhas por revista ou por ano? (rec.: por revista); painel como página inicial? (rec.: sim) — depende de: usuário
 - [ ] Coluna Impresso do painel: criar `hash_impresso` na foto (migração) para não carregar o JSON inteiro por linha? Só se o painel ficar lento — depende de: medida com dados de 2026
 - [x] (D-173) `pd01..pd05` devem virar os rótulos "Padrão 01..05" do F1? `nome_parceiro` substitui a automática `parceiro` nos textos? — depende de: usuário
 - [x] Aplicar o Top 5 da auditoria de código com cara de IA (2026-10-30)? — usuário: todos, na branch `fix/auditoria-ia`
@@ -1455,9 +1506,9 @@ Com o aval do usuário: inventário das telas existentes (admin S11a–S12) × d
 - [x] (D-150) `Tarefa.arquivo` copiado no abrir ano aponta para o mesmo arquivo nos dois anos (D-148); se um passo futuro apagar o arquivo ao trocá-lo, o outro ano perde. Aceitável? — depende de: usuário
 - [x] (D-153) As cores do F1 entram no "o que mudou" do impresso (D-151)? — depende de: usuário
 - [x] (D-153) Corte igual a 0 ou à escala máxima: a cascata aceita (D-055), o JS recusa a etapa (D-131). Fechar onde? — depende de: usuário
-- [ ] Cor da linha com `passo` nulo: JS pinta pelo topo (base da entrada de cima) e diverge do Python (âncora maior) com tarefas esparsas (D-154). Corrigir no `script.js` depois do S08 — depende de: S08 terminar
+- [x] (d873252, `fix/f1-js-css`) Cor da linha com `passo` nulo: JS pinta pelo topo (base da entrada de cima) e diverge do Python (âncora maior) com tarefas esparsas (D-154). Corrigir no `script.js` depois do S08 — depende de: S08 terminar
 - [x] (D-158) Número destacado da régua: branco sobre o vermelho do padrão 1 (#f72628) dá 3,99:1, abaixo do AA (4,5:1). Trocar para preto (5,3:1) ou escurecer o vermelho? (D-157) — depende de: usuário/design
-- [ ] Itens de tarefa (imagem/PDF) sem texto alternativo: o modelo não tem campo (D-157) — depende de: usuário
+- [x] (D-180) Itens de tarefa (imagem/PDF) sem texto alternativo: campo opcional no modal de upload — depende de: usuário
 - [x] (D-166) Liberar exclusão de sobrescritas do projeto e de tarefa/descritor? — só as sobrescritas
 - [x] (D-166) Impacto do template sem listar revista sem SVG? — fica assim
 - [x] (D-168) Só o superusuário põe alguém nos grupos Impresso e Admin — confirmado
@@ -1683,3 +1734,21 @@ Com o aval do usuário: inventário das telas existentes (admin S11a–S12) × d
 - D-175 entregue (222627b): suíte OK verificada por mim; merge simulado limpo.
 - D-175 juntada com a correção do nome de exibição (892af5e) e a learning da escolha do usuário; push feito.
 - Usuário preocupado: telas (UI) ainda não mapeadas com requisitos.
+- Inventário das telas disparado (só leitura); agentes de UI por área entram depois, com o inventário como entrada.
+- Docx de abertura LP/MT recebido; destino (F1 introducao × F2 abertura) em pergunta.
+- Paralelo (pedido do usuário): S13 (`feat/s13-impresso`), F1 JS/CSS + cor com passo nulo (`fix/f1-js-css`), auditoria 2ª leva (`fix/auditoria-ia-2`), inventário de telas; seed abertura F1 (D-176) feito por mim.
+- Inventário de telas entregue (scratchpad `inventario-telas.md`): 25 ok, 3 faltam; seção 6 "Estilo existente" repassada ao S13; agente de rascunho de UI disparado para navegação, links do preview, aviso em Padrões do ano, T28 e ajustes 4b.
+- Rascunho de UI entregue: Fazer agora = links do Preview (1 h), aviso em Padrões do ano (4 h, disparado em `feat/t07-impacto`), painel como entrada (3 h), 2 links de T12 (1,5 h); 1, 3 e 4 esperam o S13 (mexem em `painel.py`/`revista.py`). Inventário e rascunho versionados em `docs/telas/` (branch `feat/seed-abertura-f1`).
+- S13 entregue (bdc32ca em `feat/s13-impresso`): tela do impresso, "Revista Impressa Atualizada", planilhas F1/F2 com gabarito do TS antigo célula a célula; sem migração. Minha verificação da suíte e revisão django-reviewer em andamento. Itens 1, 3 e 4 do rascunho de UI disparados em `feat/ui-navegacao` (a partir do S13).
+- Usuário respondeu as 5 perguntas do inventário (D-177), todas conforme recomendado.
+- Revisão do S13: 0 críticos, 3 importantes; correções enviadas (D-178).
+- `fix/f1-js-css` entregue: d873252 (cor com passo nulo = âncora maior, gabarito vindo do Python) + 1cac45c (CSS/animações sem duplicação; screenshots em repouso idênticas). Minha verificação em andamento.
+- Entregues: S13 correções (1ce0b17), UI navegação (e2d7459, `feat/ui-navegacao`: preview, `/`→Painel, módulo Temporada, `?template=`; `nucleo` antes de `django.contrib.admin` em INSTALLED_APPS), T07 impacto (9fe75a5, `feat/t07-impacto`). Verificações minhas rodando.
+- Usuário (grill-me rodada 2): item da matriz, PDF/PNG/JPG, um a um num modal com texto alternativo opcional (D-180); quer rever a exclusão pela tela (rodada 3).
+- `fix/f1-js-css` verificado por mim: régua ok, suíte OK (8 pulados), `makemigrations --check` limpo.
+- Usuário pediu página web de acompanhamento sincronizada; agente criando (artifact com banco compartilhado, atualizado por mim via ArtifactData).
+- Rodada 3 do grill-me respondida (D-181): exclusão de item, tarefa e descritor pela tela com confirmação forte; arquivo apagado só sem referência.
+- Verificados por mim: S13 1ce0b17 e UI e2d7459 (suíte OK, 8 pulados; migrações limpas). T07 rodando. D-180/D-181 disparadas em `feat/item-exclusao`.
+- Página de acompanhamento: https://claude.ai/artifact/7RnMUM3c9irbwHcAGEBdG2 (banco: meta/geral, itens/<id>, plano/<código>; atualizo via ArtifactData). Dashboard vazio criado por engano: https://claude.ai/artifact/MhpqVSjr2saLwuhbx6jPhC.
+- Horários das entradas de hoje no state.md a partir de ~11:00 estavam adiantados em relação ao relógio (12:19 -03 real às 12:19); de agora em diante, hora do sistema.
+- Ensaio dos 5 merges (worktree descartável): 0 conflitos, fixtures sem mudança, suíte OK (8 pulados), régua ok. Merges reais 24f7256..b31d17e com a learning da D-181; push feito.
