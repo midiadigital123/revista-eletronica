@@ -8,7 +8,7 @@ Quebrado/pendente: 5 telas B corrigidas sem 2ª revisão; links "falta" ainda v�
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Usuário abre http://localhost:8000/painel/2026/ e confere que o sistema novo está de pé.
+Executar S1 do plano telas-b-lacunas (links do painel).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1539,7 +1539,32 @@ Usuário abre http://localhost:8000/painel/2026/ e confere que o sistema novo es
 - **Arquivos afetados:** `docker-compose.yml`
 - **Status:** ativa
 
+### D-188 — CRUD de cortes para todos menos Impresso: já existia, só ganhou teste (2026-10-30 15:40)
+- **Contexto:** o usuário pediu que todos os grupos, menos o Impresso, criem, editem e excluam cortes pela UI.
+- **Decisão:** sem código novo. A grade `/cortes/<ano>/` já faz isso: digitar cria, mudar edita, esvaziar a célula apaga (`gravar_cortes`). `preencher_cortes` (add/change/view) já está em Admin, Pedagógica e Mídias Digitais; o Impresso vê só leitura e leva 403 no POST. Um teste novo trava a regra para os 3 grupos.
+- **Motivo:** reaproveitar 100%: a regra, a cascata e a UI já estavam prontas e testadas.
+- **Descartadas:** CRUD por formulário (um corte por vez) — duplicaria a grade; dar `delete_corte` — a exclusão passa pelo serviço da cascata, não pelo delete do Django.
+- **Arquivos afetados:** `app/nucleo/tests/test_ui_cortes.py`
+- **Status:** ativa
+
+### D-189 — Grade de cortes cria parceiro (linha nova) sem passar pelo admin (2026-10-30 15:55)
+- **Contexto:** o usuário apontou que cada linha da grade é um parceiro (vira projeto), mas a UI não deixava criar linhas, só o admin. A D-188 tinha olhado só as células. Regra do usuário: "o front deve prever todas as funcionalidades do back e não mostrar algo errado".
+- **Decisão:** formulário "Nova linha" abaixo da grade (`POST /cortes/<ano>/parceiro/`, `add_parceiro`), só visível com a permissão. O parceiro nasce sem cortes; o projeto nasce ao salvar os cortes. Nome duplicado ou longo: mensagem de erro, nada grava.
+- **Motivo:** reaproveita a validação do modelo (`modelform_factory`), o sistema de mensagens e o aviso de "alteração não salva" da grade.
+- **Descartadas:** link para o admin — é justamente o que o usuário rejeitou; adicionar a linha só no JS e criar o parceiro no "Salvar cortes" — mistura dois cadastros numa transação e complica o controle de conflito da grade.
+- **Arquivos afetados:** `app/nucleo/urls/cortes.py`, `app/nucleo/templates/ui/cortes.html`, `app/nucleo/tests/test_ui_cortes.py`
+- **Status:** ativa
+
+### D-190 — Blueprint das telas B: 21 lacunas em 10 passos (2026-10-30 16:40)
+- **Contexto:** a auditoria (D-189) achou 18 lacunas nas telas B; o usuário achou mais 3: matriz não se atribui pela ficha do projeto (0 de 2 ParceiroAno com matriz no banco local), nome do projeto sem edição na revista, preview sem matriz sai vazio sem faixa.
+- **Decisão:** plano `plans/revista-express-telas-b-lacunas.md`, S0 a S9 + fechamento, branch `feat/telas-b-lacunas`, um commit por passo. Revisão adversarial incorporada: a matriz pela ficha grava sob `com_bloqueio` (sem `lotes.aplicar`, que abre outra sessão e é recusado); o nome do projeto se edita na própria revista; a faixa "sem matriz" fica fora do resolvido (senão muda o hash de todas as revistas); usuários B copiam as regras de `UsuarioAdmin` (D-142).
+- **Motivo:** regra do usuário: toda função do back precisa de controle na tela B, sem admin e sem mostrar o que o perfil não pode usar.
+- **Descartadas:** link para `ui_projeto#nome` (abriria só leitura por causa do bloqueio da revista); `FAIXA_SEM_MATRIZ` no resolvido (derruba o Validado de todas); botão "Abrir próximo ano" (o admin obriga digitar o ano, sem desfazer); esconder o botão Admin já no S1 (Pedagógica perderia acesso até o S7).
+- **Arquivos afetados:** `plans/revista-express-telas-b-lacunas.md`
+- **Status:** ativa
+
 ## Perguntas em aberto
+- [x] (D-189 → D-190) Auditoria das telas B: o que o back faz e a tela B não oferece. Bloqueia: abrir ano, criar matriz, criar template, paleta do ano, etapas/componentes. Leva a erro: links do painel vão ao admin (Impresso recebe 403 em "Matriz", `urls/painel.py:43`), renomear parceiro, "abra um ano no admin" para quem não pode. Menu sem Projetos e Lotes. Por onde começar — depende de: usuário
 - [x] (D-184) S17: os cortes de 2026 repetem os de 2025? Se sim, comando `importar_cortes` (~60 min) substituindo a D-119 nesse ponto — depende de: Pedagógica
 - [x] (D-184) S17: LP 2EF tem 10 descritores na planilha `NÍVEIS - LP 2EF.xlsx` e 8 no PDF SAEGO 2025 — qual vale? — depende de: Pedagógica
 - [x] (D-184) S17: passo 25 em 5EF/9EF/3EM (como 2025) entra pela tela T10 depois da carga — depende de: Pedagógica
@@ -1825,3 +1850,7 @@ Usuário abre http://localhost:8000/painel/2026/ e confere que o sistema novo es
 - Usuário pediu para desligar os contêineres do React e do Mongo e subir só os novos.
 - D-187: React (editor), API e Mongo parados, removidos e tirados do compose; sobram `db` e `app`. O volume do Mongo foi mantido. 8000 responde e 8080 está desligada.
 - Commit do compose (D-187) feito a pedido do usuário; state.md em commit próprio.
+- D-188: CRUD de cortes para todos menos Impresso já existia na grade; teste `test_todos_os_grupos_menos_impresso_gravam` adicionado (6 testes OK).
+- D-189: grade de cortes ganhou 'Adicionar parceiro' (7 testes OK). Auditoria das telas B (back sem UI, links errados por perfil) disparada em segundo plano.
+- Auditoria das telas B concluída: 5 lacunas bloqueiam o trabalho, 1 link dá 403 ao Impresso (painel → escolher matriz no admin, confirmado por mim).
+- D-190: blueprint das 21 lacunas aprovado (S0–S9); S0 em execução.
