@@ -3,7 +3,9 @@
 Quem abre primeiro edita; o outro só vê. Expira em 30 s sem renovação; a
 página renova a cada 10 s. Todo horário vem do `now()` do banco, nunca do
 relógio do servidor web. "Mesma sessão" = mesmo usuário e mesma aba
-(`sessao_edicao`).
+(`sessao_edicao`). A mesma pessoa em outra aba ou carga nova toma o bloqueio (D-191): a
+página anterior só o solta no `pagehide`, depois que a nova já pediu o dela. A sessão
+antiga perde a renovação e a escrita (`renovar`/`conferir_na_transacao` exigem a sessão).
 
 `alvo` é uma instância de MatrizEtapaCC, Projeto ou Template (basta o pk).
 """
@@ -40,7 +42,7 @@ def _executar(sql, params):
 
 
 def adquirir(alvo, usuario, sessao):
-    """Pega o bloqueio se livre, expirado ou já desta sessão. Atômico (ON CONFLICT)."""
+    """Pega o bloqueio se livre, expirado ou já do mesmo usuário (D-191). Atômico (ON CONFLICT)."""
     col = f"{campo(alvo)}_id"
     return _executar(
         f"""
@@ -51,8 +53,7 @@ def adquirir(alvo, usuario, sessao):
                 sessao_edicao = EXCLUDED.sessao_edicao,
                 expira_em = EXCLUDED.expira_em
             WHERE bloqueio.expira_em < now()
-               OR (bloqueio.usuario_id = EXCLUDED.usuario_id
-                   AND bloqueio.sessao_edicao = EXCLUDED.sessao_edicao)
+               OR bloqueio.usuario_id = EXCLUDED.usuario_id
         RETURNING id
         """,
         [alvo.pk, usuario.pk, sessao],

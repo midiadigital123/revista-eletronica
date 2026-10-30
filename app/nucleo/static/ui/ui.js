@@ -37,7 +37,8 @@
     const fechar = e.target.closest("dialog [data-fechar]");
     if (fechar) fechar.closest("dialog").close();
 
-    // <button data-copiar="#id-do-campo"><span role="status">rótulo</span></button>: copia o valor do campo;
+    // <button data-copiar="#id-do-campo"><span aria-live="polite">rótulo</span></button>: copia o valor do campo;
+    // (role=status no span tiraria o nome acessível do botão: o Chromium não usa a região como nome.)
     // sem área de transferência (http, navegador antigo), seleciona o texto para o Ctrl+C.
     const copiar = e.target.closest("[data-copiar]");
     const campo = copiar && document.querySelector(copiar.dataset.copiar);

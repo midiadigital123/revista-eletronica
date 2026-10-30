@@ -72,11 +72,13 @@ class ServicoTest(Base):
         n = 6
         barreira = threading.Barrier(n)
         resultados = []
+        # Pessoas diferentes: a mesma pessoa em outra aba assume de propósito (D-191).
+        pessoas = [get_user_model().objects.create_user(f"conc-{i}") for i in range(n)]
 
         def tentar(i):
             try:
                 barreira.wait()
-                resultados.append(bloqueio.adquirir(self.tpl, self.ana, f"aba-{i}"))
+                resultados.append(bloqueio.adquirir(self.tpl, pessoas[i], f"aba-{i}"))
             finally:
                 connection.close()  # cada thread tem a sua conexão
 
@@ -91,8 +93,17 @@ class ServicoTest(Base):
     def test_outra_sessao_nao_adquire(self):
         self.assertTrue(bloqueio.adquirir(self.tpl, self.ana, "a"))
         self.assertFalse(bloqueio.adquirir(self.tpl, self.bia, "b"))
-        self.assertFalse(bloqueio.adquirir(self.tpl, self.ana, "outra-aba"))  # mesmo usuário, outra aba
         self.assertEqual(bloqueio.quem_bloqueia(self.tpl).usuario, self.ana)
+
+    def test_mesmo_usuario_em_outra_aba_assume(self):
+        """D-191: a carga nova toma o bloqueio; a sessão anterior perde renovação e escrita."""
+        self.assertTrue(bloqueio.adquirir(self.tpl, self.ana, "a"))
+        self.assertTrue(bloqueio.adquirir(self.tpl, self.ana, "outra-aba"))
+        self.assertEqual(bloqueio.quem_bloqueia(self.tpl).sessao_edicao, "outra-aba")
+        self.assertFalse(bloqueio.renovar(self.tpl, self.ana, "a"))
+        with transaction.atomic():
+            self.assertFalse(bloqueio.conferir_na_transacao(self.tpl, self.ana, "a"))
+        self.assertFalse(bloqueio.adquirir(self.tpl, self.bia, "b"))  # outra pessoa continua barrada
 
     def test_expirado_e_tomado(self):
         bloqueio.adquirir(self.tpl, self.ana, "a")
@@ -329,6 +340,5 @@ class MixinTest(Base):
 
     def test_f5_contra_si_mesmo(self):
         self.abrir(self.c_ana)
-        r = self.abrir(self.c_ana)  # nova carga = sessão nova; a anterior ainda segura
-        self.assertFalse(r.context["has_change_permission"])
-        self.assertContains(r, "sua outra aba ou a carga anterior desta página")
+        r = self.abrir(self.c_ana)  # nova carga = sessão nova; assume o bloqueio (D-191)
+        self.assertTrue(r.context["has_change_permission"])

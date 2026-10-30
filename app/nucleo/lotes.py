@@ -37,7 +37,7 @@ def erros(obrigatorio):
 def escrever_travado(projeto, usuario, escrever):
     """Roda `escrever()` numa transação, segurando o bloqueio do projeto.
 
-    Devolve None se gravou, ou o motivo do pulo: outra sessão (outro usuário ou outra aba)
+    Devolve None se gravou, ou o motivo do pulo: outro usuário
     edita o projeto, ou ele foi arquivado. `escrever()` também pode devolver um motivo.
     Adquirir (em vez de só olhar `quem_bloqueia`) fecha a corrida: quem abrir o projeto
     enquanto a escrita roda espera o commit e já carrega o valor novo. Exceção: o rollback

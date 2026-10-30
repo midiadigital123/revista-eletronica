@@ -43,11 +43,6 @@ def aviso(request, alvo):
     atual = bloqueio.quem_bloqueia(alvo)
     if atual is None:
         return "Somente leitura: outra sessão está editando. Recarregue para tentar editar."
-    if atual.usuario_id == request.user.pk:
-        return (
-            "Somente leitura: sua outra aba ou a carga anterior desta página ainda segura "
-            "a edição; recarregue em alguns segundos."
-        )
     quem = atual.usuario.get_full_name() or atual.usuario.get_username()
     return (
         f"Somente leitura: {quem} está editando "
