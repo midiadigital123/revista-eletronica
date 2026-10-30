@@ -12,9 +12,13 @@ from django.db import models
 from django.db.models import Max
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
-from django.urls import path
+from django.urls import path, reverse
+from django.utils.functional import cached_property
+from django.utils.html import format_html, format_html_join
 
-from nucleo.models import Ano, Componente, CorPadrao, Etapa, Parceiro
+from nucleo.admin.matriz import ImpactoForm
+from nucleo.models import Ano, Componente, CorPadrao, Etapa, Parceiro, ProjetoCor, Revista
+from nucleo.servicos import resolver, validacao
 from nucleo.servicos.abrir_ano import AnoRecusado, abrir_ano
 
 
@@ -106,9 +110,102 @@ class ComponenteAdmin(PorAnoAdmin):
     ordering = ("-ano__ano", "codigo")
 
 
+# --- Padrões do ano: impacto de nome/cor (T07, D-076, D-175) ------------------------------
+
+CAMPOS_DO_HASH = {"nome", "cor"}
+MAX_NOMES = 20
+
+
+def revistas_afetadas_padrao(cor_padrao, campos):
+    """(afetadas, perdem o "Validado") ao mudar `campos` ⊆ {"nome", "cor"} do padrão do ano.
+
+    Afetada: revista ativa do ano que tem o padrão N em alguma etapa e que não sobrescreve no
+    projeto o que muda (`pdNN` para o nome, `ProjetoCor` N para a cor). Arquivada lê a foto.
+    """
+    n, pd = cor_padrao.padrao, f"pd{cor_padrao.padrao:02d}"
+    com_cor = set(ProjetoCor.objects.filter(padrao=n, projeto__ano_id=cor_padrao.ano_id).values_list("projeto_id", flat=True))
+    afetadas, perdem = [], []
+    revistas = Revista.objects.filter(ano_id=cor_padrao.ano_id, arquivada_em__isnull=True).select_related(
+        "projeto__parceiro_ano__parceiro", "projeto__ano", "componente"
+    ).order_by("projeto__parceiro_ano__parceiro__nome", "componente__codigo")
+    for r in revistas:
+        if not (("nome" in campos and not getattr(r.projeto, pd).strip())
+                or ("cor" in campos and r.projeto_id not in com_cor)):
+            continue  # fmt: skip
+        # ponytail: resolve cada candidata no GET e no POST; guardar na sessão se ficar lento.
+        resolvido = resolver.resolver(r)
+        if not any(len(d["padroes"]) >= n for d in resolvido["f1"]["dados"].values()):
+            continue
+        afetadas.append(r)
+        if validacao.validada(r, resolver.hash_validado(r, resolvido)):
+            perdem.append(r)
+    return afetadas, perdem
+
+
+def nomes(revistas):
+    resto = len(revistas) - MAX_NOMES
+    lista = format_html_join(", ", "{}", ((r,) for r in revistas[:MAX_NOMES]))
+    return format_html("{} e mais {}", lista, resto) if resto > 0 else lista
+
+
+class PadraoImpactoForm(ImpactoForm):
+    """Confirmação só quando nome/cor mudam (no GET, o pior caso: os dois). `impacto` vem do admin."""
+
+    impacto = None  # função(campos) -> (afetadas, perdem); None na inclusão
+
+    @cached_property
+    def resultado(self):
+        campos = CAMPOS_DO_HASH & set(self.changed_data) if self.is_bound else CAMPOS_DO_HASH
+        return self.impacto(campos) if self.impacto and campos else ([], [])
+
+    @property
+    def afetadas(self):
+        return len(self.resultado[0])
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        afetadas, perdem = self.resultado
+        if afetadas and perdem:
+            campo = self.fields["confirmar_impacto"]
+            campo.label += f"; {len(perdem)} perdem o “Validado”"
+            campo.help_text = format_html(
+                "Perdem o “Validado”: {}.{}", nomes(perdem),
+                " As demais afetadas ainda não estavam validadas." if len(afetadas) > len(perdem) else "",
+            )  # fmt: skip
+        # changed_data criou os BoundFields com o rótulo antigo (o BoundField copia label e help_text).
+        self._bound_fields_cache.clear()
+
+    def clean(self):
+        dados = super(ImpactoForm, self).clean()
+        if self.afetadas and not dados.get("confirmar_impacto"):
+            p, ano = self.instance.padrao, self.instance.ano.ano
+            raise forms.ValidationError(
+                f"Não salvo: mudar o nome ou a cor do Padrão {p} de {ano} afeta {self.afetadas} revista(s) "
+                f"ativa(s) (as que não sobrescrevem pd{p:02d} ou a cor no projeto). "
+                "Confira a lista, marque a confirmação e salve de novo."
+            )
+        return dados
+
+
 @admin.register(CorPadrao)
 class CorPadraoAdmin(PorAnoAdmin):
+    form = PadraoImpactoForm
     formfield_overrides = {models.TextField: {"widget": forms.TextInput(attrs={"size": 20})}}
     list_display = ("padrao", "nome", "cor", "ano")
     ordering = ("-ano__ano", "padrao")
     chave = "padrao"
+
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        form = super().get_form(request, obj, change=change, **kwargs)
+        # get_form devolve uma classe nova por chamada: o atributo não vaza entre pedidos.
+        form.impacto = staticmethod(lambda campos: revistas_afetadas_padrao(obj, campos)) if obj is not None else None
+        return form
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        perdem = form.resultado[1] if change else []
+        if perdem:
+            messages.warning(request, format_html(
+                "{} revista(s) perderam o “Validado”: {}. Revalide no <a href=\"{}\">Painel</a>.",
+                len(perdem), nomes(perdem), reverse("painel", args=[obj.ano.ano]) + "?falta=validado",
+            ))  # fmt: skip
