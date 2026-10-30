@@ -1,13 +1,9 @@
 """S11c: admin de Projeto e Revista, aba Variáveis e lotes (matriz, template)."""
 
-import shutil
-import tempfile
-
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError, transaction
-from django.test import Client, TestCase, TransactionTestCase, override_settings
+from django.test import Client, TestCase, TransactionTestCase
 from django.urls import reverse
 
 from nucleo.admin.bloqueio import CAMPO_SESSAO
@@ -28,7 +24,7 @@ from nucleo.models import (
 )
 from nucleo.servicos import bloqueio
 from nucleo.tests.test_preview import SVG
-from nucleo.tests.test_resolver import Mundo
+from nucleo.tests.test_resolver import MediaTemporaria, Mundo, usuario
 
 SVG_SEM_BOTAO = SVG.replace(b'id="btn-action-p2"', b'id="outro"')  # F2_LP pede passo1 e btn-action-p2
 
@@ -37,7 +33,7 @@ def mensagens(resposta):
     return [str(m) for m in resposta.context["messages"]]
 
 
-class Base(TestCase):
+class Base(MediaTemporaria, TestCase):
     @classmethod
     def setUpTestData(cls):
         Mundo.montar(cls)
@@ -45,21 +41,11 @@ class Base(TestCase):
         cls.projeto_pe = Projeto.objects.get(parceiro_ano__parceiro__nome="PE", arquivado_em__isnull=True)
         User = get_user_model()
         cls.outro = User.objects.create(username="outro")
-        cls.ped = cls.com_papel("ped", "Pedagógica")
-        cls.imp = cls.com_papel("imp", "Impresso")
-
-    @staticmethod
-    def com_papel(nome, papel):
-        user = get_user_model().objects.create(username=nome, is_staff=True)
-        user.groups.add(Group.objects.get(name=papel))
-        return user
+        cls.ped = usuario("ped", "Pedagógica")
+        cls.imp = usuario("imp", "Impresso")
 
     def setUp(self):
-        media = tempfile.mkdtemp()
-        self.addCleanup(shutil.rmtree, media)
-        ctx = override_settings(MEDIA_ROOT=media)
-        ctx.enable()
-        self.addCleanup(ctx.disable)
+        super().setUp()
         self.client.force_login(self.ped)
 
     def travar(self, projeto):

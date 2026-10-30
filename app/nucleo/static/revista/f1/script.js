@@ -7,7 +7,6 @@
  * Formato do JSON em <script type="application/json" id="dados-revista"> (gerado pelo resolver, S07):
  *
  *   {
- *     "pagina": { ...textos },
  *     "<etapa>": {                                   // "5ef", "9ef", "3em"...; uma aba por etapa
  *       "scaleRange": { "min": 0, "max": 500 },
  *       "cortes": { "padrao-1": 125, ..., "padrao-<n-1>": 450 },  // 1 a 4 cortes, crescentes
@@ -268,17 +267,6 @@ const appState = {
   etapasInvalidas: new Set(), // etapas cujo JSON falhou em problemaDaEtapa: sem escala
 
 };
-
-// ==========================================
-// SERVIÇO DE DADOS
-// ==========================================
-
-class DataService {
-  /** Lê os dados embutidos no HTML (<script type="application/json" id="dados-revista">). */
-  load() {
-    return JSON.parse(document.getElementById("dados-revista").textContent);
-  }
-}
 
 // ==========================================
 // GERENCIAMENTO DE FILTROS
@@ -981,6 +969,13 @@ class NavigationManager {
       this.prevBtn.addEventListener("click", () => this.navigate(-1));
     if (this.nextBtn)
       this.nextBtn.addEventListener("click", () => this.navigate(1));
+    document.addEventListener("keydown", (e) => {
+      // Página única (S08): no F2 as setas são do tour; com modal aberto, de ninguém.
+      if (e.target.closest?.("#f2") || document.querySelector("dialog[open]") || !document.getElementById("itemModal")?.hidden)
+        return;
+      if (e.ctrlKey && e.key === "ArrowLeft") this.navigate(-1);
+      if (e.ctrlKey && e.key === "ArrowRight") this.navigate(1);
+    });
   }
 
   navigate(direction) {
@@ -1027,53 +1022,6 @@ class StickyMenuManager {
 }
 
 // ==========================================
-// ACESSIBILIDADE
-// ==========================================
-
-class AccessibilityManager {
-  constructor(navigationManager) {
-    this.navigationManager = navigationManager;
-    this.init();
-  }
-
-  init() {
-    document.addEventListener("keydown", (e) => {
-      // Página única (S08): no F2 as setas são do tour; com modal aberto, de ninguém.
-      if (e.target.closest?.("#f2") || document.querySelector("dialog[open]") || !document.getElementById("itemModal")?.hidden)
-        return;
-      if (e.ctrlKey && e.key === "ArrowLeft")
-        this.navigationManager.navigate(-1);
-      if (e.ctrlKey && e.key === "ArrowRight")
-        this.navigationManager.navigate(1);
-    });
-  }
-}
-
-// ==========================================
-// PERFORMANCE
-// ==========================================
-
-class PerformanceManager {
-  constructor() {
-    const images = document.querySelectorAll("img[data-src]");
-    if (!images.length) return;
-
-    const observer = new IntersectionObserver((entries, obs) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const img = entry.target;
-          img.src = img.dataset.src;
-          img.removeAttribute("data-src");
-          obs.unobserve(img);
-        }
-      });
-    });
-
-    images.forEach((img) => observer.observe(img));
-  }
-}
-
-// ==========================================
 // INICIALIZAÇÃO DO APLICATIVO
 // ==========================================
 
@@ -1087,35 +1035,25 @@ class App {
   }
 
   bootstrap() {
-    console.log("🚀 Inicializando aplicação...");
-
-    try {
-      const data = new DataService().load();
-      for (const [etapa, dados] of Object.entries(data)) {
-        if (etapa === "pagina") continue;
-        const motivo = problemaDaEtapa(dados);
-        if (!motivo) continue;
-        appState.etapasInvalidas.add(etapa);
-        console.error(`Etapa ${etapa}: JSON da revista inválido: ${motivo}`);
-      }
-      // Primeira aba (já na ordem das etapas, vinda do template) com dados.
-      const primeira = [...document.querySelectorAll(".filtro-btn")].find(
-        (btn) => data[btn.dataset.filter],
-      );
-      appState.currentFilter = primeira?.dataset.filter ?? null;
-
-      const descriptorManager = new DescriptorManager(data);
-      const navigationManager = new NavigationManager(data);
-      new FilterManager(data);
-      new StickyMenuManager();
-      new AccessibilityManager(navigationManager);
-      new PerformanceManager();
-
-      document.body.classList.add("app-initialized");
-      console.log("✅ Aplicação inicializada com sucesso!");
-    } catch (error) {
-      console.error("❌ Erro ao inicializar aplicação:", error);
+    const data = JSON.parse(document.getElementById("dados-revista").textContent);
+    for (const [etapa, dados] of Object.entries(data)) {
+      const motivo = problemaDaEtapa(dados);
+      if (!motivo) continue;
+      appState.etapasInvalidas.add(etapa);
+      console.error(`Etapa ${etapa}: JSON da revista inválido: ${motivo}`);
     }
+    // Primeira aba (já na ordem das etapas, vinda do template) com dados.
+    const primeira = [...document.querySelectorAll(".filtro-btn")].find(
+      (btn) => data[btn.dataset.filter],
+    );
+    appState.currentFilter = primeira?.dataset.filter ?? null;
+
+    new DescriptorManager(data);
+    new NavigationManager(data);
+    new FilterManager(data);
+    new StickyMenuManager();
+
+    document.body.classList.add("app-initialized");
   }
 }
 

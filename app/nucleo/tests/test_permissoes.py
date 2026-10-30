@@ -4,6 +4,7 @@ from django.core.management import call_command
 from django.test import TestCase, TransactionTestCase
 
 from nucleo.permissoes import ADMIN_MARCA_IMPRESSA, MODELOS_NUCLEO, PAPEIS, permissoes
+from nucleo.tests.test_resolver import usuario
 
 CUSTOMIZADAS = ("abrir_ano", "validar_revista", "marcar_impressa")
 
@@ -43,13 +44,8 @@ class GruposNoBancoTest(TestCase):
 
 
 class PerfilTest(TestCase):
-    def usuario(self, papel):
-        user = User.objects.create_user(papel)
-        user.groups.add(Group.objects.get(name=papel))
-        return User.objects.get(pk=user.pk)  # sem cache de permissões
-
     def confere(self, papel, pode, nao_pode):
-        user = self.usuario(papel)
+        user = usuario(papel, papel)
         for perm in pode:
             self.assertTrue(user.has_perm(perm), f"{papel} deveria ter {perm}")
         for perm in nao_pode:

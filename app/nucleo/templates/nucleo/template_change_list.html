@@ -3,6 +3,6 @@
 {% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'nucleo/template_editor.css' %}">{% endblock %}
 {% block content_title %}{{ block.super }}
 <nav class="abas-templates" aria-label="Abas">
-  {% for rotulo, url, ativa in abas %}{% if url %}<a href="{{ url }}"{% if ativa %} aria-current="page"{% endif %}>{{ rotulo }}</a>{% endif %}{% endfor %}
+  {% for rotulo, url, ativa in abas %}<a href="{{ url }}"{% if ativa %} aria-current="page"{% endif %}>{{ rotulo }}</a>{% endfor %}
 </nav>
 {% endblock %}

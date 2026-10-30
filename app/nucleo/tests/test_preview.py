@@ -1,8 +1,6 @@
 import json
 import os
 import re
-import shutil
-import tempfile
 from pathlib import Path
 
 from django.contrib.auth import get_user_model
@@ -17,8 +15,8 @@ from django.urls import reverse
 from nucleo.models import Revista, RevistaFasciculo, TemplateVersao
 from nucleo.servicos.arquivos import receber_capa, receber_svg
 from nucleo.servicos.cascata import gravar_cortes
-from nucleo.servicos.html import contexto_pagina, css_das_cores, json_seguro
-from nucleo.tests.test_resolver import Mundo
+from nucleo.servicos.html import contexto_pagina, css_das_cores
+from nucleo.tests.test_resolver import MediaTemporaria, Mundo
 
 # Página que o Playwright pagina.spec.ts abre (gabarito). Regerar: REGERAR_FIXTURES=1.
 GABARITO = Path(__file__).resolve().parents[2] / "e2e" / "fixtures" / "pagina.html"
@@ -38,7 +36,7 @@ SVG = b"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
 </svg>"""
 
 
-class PaginaTest(TestCase):
+class PaginaTest(MediaTemporaria, TestCase):
     @classmethod
     def setUpTestData(cls):
         Mundo.montar(cls)
@@ -47,11 +45,7 @@ class PaginaTest(TestCase):
         TemplateVersao.objects.create(template=cls.templates["LP", "F2"], numero=2, texto=F2)
 
     def setUp(self):
-        media = tempfile.mkdtemp()
-        self.addCleanup(shutil.rmtree, media)
-        ctx = override_settings(MEDIA_ROOT=media)
-        ctx.enable()
-        self.addCleanup(ctx.disable)
+        super().setUp()
         self.client.force_login(self.usuario)
 
     def get(self, revista):
@@ -90,7 +84,7 @@ class PaginaTest(TestCase):
         self.assertIn("/static/revista/f2/f2-init.js", html)
         self.assertNotIn("faixa-vermelha", html.split("<body>")[1])
         self.assertNotIn("fetch(", html)
-        tour = json.loads(re.search(r'id="dados-tour">(.*?)</script>', html).group(1))
+        tour = json.loads(re.search(r'id="dados-tour" type="application/json">(.*?)</script>', html).group(1))
         self.assertEqual(tour["intro"]["title"], "Avaliação & Currículo")  # texto puro (textContent)
         self.assertEqual([s["target"] for s in tour["steps"]], ["f2-passo1", "f2-passo2"])
         self.assertEqual(tour["modais"], ["dlg-p2"])
@@ -142,13 +136,16 @@ class PaginaTest(TestCase):
             GABARITO.write_text(html, encoding="utf-8")
         self.assertEqual(GABARITO.read_text(encoding="utf-8"), html)
 
+    def test_script_no_dado_nao_fecha_o_script(self):
+        ctx = contexto_pagina(self.rev, preview=False, estaticos="revista/", capa=None)
+        ctx["dados"] = {"x": "</script><!--&\u2028"}
+        html = render_to_string("revista/index.html", ctx)
+        # O primeiro </script> depois da abertura é o fechamento real: o dado veio escapado.
+        corpo = re.search(r'id="dados-revista" type="application/json">(.*?)</script>', html).group(1)
+        self.assertEqual(json.loads(corpo), ctx["dados"])
+
 
 class HtmlTest(TestCase):
-    def test_json_seguro(self):
-        s = json_seguro({"x": "</script><!--&  "})
-        self.assertNotRegex(s, "[<>&  ]")
-        self.assertEqual(json.loads(s), {"x": "</script><!--&  "})
-
     def test_css_das_cores_n_padroes(self):
         css = css_das_cores({"padrao-2": "#FF8D43", "padrao-1": "#F72628"})
         self.assertEqual(

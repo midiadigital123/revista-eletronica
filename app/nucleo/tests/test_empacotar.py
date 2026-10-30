@@ -1,18 +1,15 @@
 import io
 import os
-import shutil
-import tempfile
 import zipfile
 from pathlib import Path
 
 from django.contrib import admin
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.template.loader import render_to_string
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.urls import reverse
 
 from nucleo.management.commands.criar_demo import png
@@ -23,7 +20,7 @@ from nucleo.servicos.empacotar import Pendente, nome_zip, zip_revista
 from nucleo.servicos.html import contexto_pagina
 from nucleo.servicos.resolver import carregar
 from nucleo.tests.test_preview import F2, SVG
-from nucleo.tests.test_resolver import Mundo
+from nucleo.tests.test_resolver import MediaTemporaria, Mundo, usuario
 
 # Zip que o Playwright zip.spec.ts extrai e abre por file:// (gabarito). Regerar: REGERAR_FIXTURES=1.
 GABARITO = Path(__file__).resolve().parents[2] / "e2e" / "fixtures" / "revista.zip"
@@ -35,18 +32,14 @@ def conteudo(dados):
         return {nome: z.read(nome) for nome in z.namelist()}
 
 
-class ZipTest(TestCase):
+class ZipTest(MediaTemporaria, TestCase):
     @classmethod
     def setUpTestData(cls):
         Mundo.montar(cls)
         TemplateVersao.objects.create(template=cls.templates["LP", "F2"], numero=2, texto=F2)
 
     def setUp(self):
-        media = tempfile.mkdtemp()
-        self.addCleanup(shutil.rmtree, media)
-        ctx = override_settings(MEDIA_ROOT=media)
-        ctx.enable()
-        self.addCleanup(ctx.disable)
+        super().setUp()
         self.rev = carregar(self.go["LP"].pk)
         receber_svg(self.rev, SimpleUploadedFile("x.svg", SVG))
         receber_capa(self.rev, SimpleUploadedFile("capa.png", png(4, 4, (255, 235, 0))))
@@ -179,14 +172,9 @@ class ZipTest(TestCase):
             GABARITO.write_bytes(dados)
         self.assertEqual(GABARITO.read_bytes(), dados)
 
-    def entrar_como_impresso(self):
-        impresso = get_user_model().objects.create(username="imp", is_staff=True)
-        impresso.groups.add(Group.objects.get(name="Impresso"))  # só ver_tudo: tem view_revista
-        self.client.force_login(impresso)
-
     def test_admin_baixar_zip(self):
         url = reverse("admin:nucleo_revista_changelist")
-        self.entrar_como_impresso()
+        self.client.force_login(usuario("imp", "Impresso"))  # só ver_tudo: tem view_revista
         acao = {"action": "baixar_zip", "_selected_action": [self.rev.pk]}
         r = self.client.post(url, acao)
         self.assertEqual(r["Content-Type"], "application/zip")
@@ -203,7 +191,7 @@ class ZipTest(TestCase):
         self.assertEqual(self.client.post(url, acao).status_code, 403)
 
     def test_admin_so_leitura(self):
-        self.entrar_como_impresso()
+        self.client.force_login(usuario("imp", "Impresso"))  # só ver_tudo: tem view_revista
         antes = Revista.objects.filter(pk=self.rev.pk).values().get()
         mudar = reverse("admin:nucleo_revista_change", args=[self.rev.pk])
         apagar = reverse("admin:nucleo_revista_delete", args=[self.rev.pk])

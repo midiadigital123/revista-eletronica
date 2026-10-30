@@ -1,3 +1,4 @@
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
 from django.db.models import Q
 from simple_history.models import HistoricalRecords
@@ -67,10 +68,15 @@ class Componente(models.Model):
         return f"{self.codigo} ({self.ano})"
 
 
+# Os CHECKs *_padrao_1a5 e *_cor_hex ficam no banco; os validators dão a mensagem no form (D-090).
+PADRAO_1A5 = [MinValueValidator(1), MaxValueValidator(5)]
+COR_HEX = [RegexValidator(r"^#[0-9A-Fa-f]{6}$", "Use o formato #RRGGBB.")]
+
+
 class CorPadrao(models.Model):
     ano = models.ForeignKey(Ano, on_delete=models.PROTECT)
-    padrao = models.IntegerField()
-    cor = models.TextField()
+    padrao = models.IntegerField("Padrão", validators=PADRAO_1A5)
+    cor = models.TextField(validators=COR_HEX)
     history = HistoricalRecords()
 
     class Meta:

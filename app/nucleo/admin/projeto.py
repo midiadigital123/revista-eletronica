@@ -6,7 +6,6 @@ leitura (D-093). Rotas próprias (fora do mixin): aba Variáveis e lote "Escolhe
 
 from django import forms
 from django.contrib import admin
-from django.core.validators import RegexValidator
 from django.db import models
 from django.urls import path, reverse
 
@@ -15,8 +14,6 @@ from nucleo.admin.bloqueio import BloqueioAdminMixin
 from nucleo.admin.variaveis import limitar
 from nucleo.models import Componente, Etapa, Projeto, ProjetoCor, ProjetoPasso
 from nucleo.variaveis import TAMANHO_MAX
-
-COR = RegexValidator(r"^#[0-9A-Fa-f]{6}$", "Use o formato #RRGGBB.")
 
 
 class PassoForm(forms.ModelForm):
@@ -61,18 +58,9 @@ class PassoInline(admin.TabularInline):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-class CorForm(forms.ModelForm):
-    padrao = forms.TypedChoiceField(coerce=int, choices=[(k, f"Padrão {k}") for k in range(1, 6)])
-    cor = forms.CharField(validators=[COR], widget=forms.TextInput(attrs={"type": "color"}))
-
-    class Meta:
-        model = ProjetoCor
-        fields = ["padrao", "cor"]
-
-
 class CorInline(admin.TabularInline):
     model = ProjetoCor
-    form = CorForm
+    formfield_overrides = {models.TextField: {"widget": forms.TextInput(attrs={"type": "color"})}}
     extra = 0
     max_num = 5
     verbose_name_plural = "Cores do projeto (sobrescrevem a paleta do ano, D-060; excluir = voltar à paleta)"

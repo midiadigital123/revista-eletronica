@@ -1,10 +1,13 @@
 import json
 import os
+import shutil
+import tempfile
 from pathlib import Path
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.db import connection
-from django.test import TestCase, TransactionTestCase
+from django.test import TestCase, TransactionTestCase, override_settings
 from django.test.utils import CaptureQueriesContext
 
 from nucleo.models import (
@@ -54,6 +57,26 @@ F2_LP = (
     "## dlg-p2\nItens\n\nDetalhe.\n"
 )
 F2_MT = "## abertura\nAbertura\n\nBem-vindo.\n\n## passo1\nPasso um\n\nSem variável.\n"
+
+
+def usuario(nome, papel=None, is_staff=True, **campos):
+    """Usuário staff (senha "x"), no grupo `papel` se houver."""
+    u = get_user_model().objects.create_user(nome, password="x", is_staff=is_staff, **campos)
+    if papel:
+        u.groups.add(Group.objects.get(name=papel))
+    return u
+
+
+class MediaTemporaria:
+    """MEDIA_ROOT num diretório temporário por teste, apagado no fim."""
+
+    def setUp(self):
+        super().setUp()
+        media = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, media)
+        ctx = override_settings(MEDIA_ROOT=media)
+        ctx.enable()
+        self.addCleanup(ctx.disable)
 
 
 class Mundo:

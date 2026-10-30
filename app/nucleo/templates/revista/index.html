@@ -208,8 +208,8 @@ Títulos e corpos das seções vêm prontos e escapados do resolver (|safe só n
     </dialog>
     {% endfor %}
 
-    <script type="application/json" id="dados-revista">{{ dados }}</script>
-    <script type="application/json" id="dados-tour">{{ tour }}</script>
+    {{ dados|json_script:"dados-revista" }}
+    {{ tour|json_script:"dados-tour" }}
     <script src="{{ estaticos }}f1/script.js"></script>
     <script src="{{ estaticos }}f2/svg-tour.js"></script>
     <script src="{{ estaticos }}f2/svg-tour-modal.js"></script>
