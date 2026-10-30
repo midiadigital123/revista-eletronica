@@ -8,7 +8,7 @@ Etapa, Componente e CorPadrao são por ano (D-086); o ano não muda depois de cr
 from django import forms
 from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied
-from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
+from django.db import models
 from django.db.models import Max
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
@@ -106,26 +106,9 @@ class ComponenteAdmin(PorAnoAdmin):
     ordering = ("-ano__ano", "codigo")
 
 
-class CorPadraoForm(forms.ModelForm):
-    # O banco tem os mesmos CHECKs; aqui viram mensagem no formulário (D-090).
-    cor = forms.CharField(
-        validators=[RegexValidator(r"^#[0-9A-Fa-f]{6}$", "Use o formato #RRGGBB.")],
-        widget=forms.TextInput(attrs={"size": 8}),
-    )
-
-    class Meta:
-        model = CorPadrao
-        fields = ("ano", "padrao", "cor")
-
-
 @admin.register(CorPadrao)
 class CorPadraoAdmin(PorAnoAdmin):
-    form = CorPadraoForm
+    formfield_overrides = {models.TextField: {"widget": forms.TextInput(attrs={"size": 8})}}
     list_display = ("padrao", "cor", "ano")
     ordering = ("-ano__ano", "padrao")
     chave = "padrao"
-
-    def formfield_for_dbfield(self, db_field, request, **kwargs):
-        if db_field.name == "padrao":
-            return forms.IntegerField(label="Padrão", validators=[MinValueValidator(1), MaxValueValidator(5)])
-        return super().formfield_for_dbfield(db_field, request, **kwargs)

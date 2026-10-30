@@ -7,7 +7,7 @@ from simple_history.models import HistoricalRecords
 from nucleo.db import max_len
 from nucleo.variaveis import TAMANHO_MAX, VARIAVEIS
 
-from .cadastro import Ano, Componente, Etapa, Parceiro
+from .cadastro import COR_HEX, PADRAO_1A5, Ano, Componente, Etapa, Parceiro
 from .matriz import Matriz
 
 # FKs compostas de ano destas tabelas: migração 0005 (D-090, D-124).
@@ -110,8 +110,8 @@ class ProjetoPasso(models.Model):
 
 class ProjetoCor(models.Model):
     projeto = models.ForeignKey(Projeto, on_delete=models.PROTECT)
-    padrao = models.IntegerField()
-    cor = models.TextField()
+    padrao = models.IntegerField("Padrão", validators=PADRAO_1A5)
+    cor = models.TextField(validators=COR_HEX)
     history = HistoricalRecords()
 
     class Meta:
