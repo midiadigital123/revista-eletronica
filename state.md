@@ -4,7 +4,7 @@
 <!-- sobrescrever a cada atualização -->
 Passo 19 de 22: S13 (impresso + planilhas), UI de navegação, aviso em Padrões do ano, F1 JS/CSS e abertura do F1 juntados em `refatoracao-django` e no GitHub. Migrações até 0012. Faltam S17 e S18; em andamento: upload do item + exclusão (D-180/D-181) e auditoria 2ª leva.
 Funcionando: em cada `feat/s11*`, suíte OK (8 de PDF pulados), `makemigrations --check` limpo; Playwright cortes, templates-admin e revista-textos passam.
-Quebrado/pendente: upload do item e exclusão (D-180/D-181) em `feat/item-exclusao`; `fix/auditoria-ia-2` em andamento; S17 e S18 não iniciados.
+Quebrado/pendente: upload do item e exclusão (D-180/D-181) em `feat/item-exclusao`; preparo do S17 em `feat/s17-preparo`; S17 (execução) e S18 não iniciados.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
@@ -1491,6 +1491,14 @@ Verificar a entrega de `feat/item-exclusao` (suíte + `makemigrations --check` +
 - **Arquivos afetados:** `app/nucleo/permissoes.py`, migração de dados dos grupos, `app/nucleo/admin/matriz.py`, `app/nucleo/servicos/arquivos.py`, testes de permissão
 - **Status:** ativa. Substitui D-166 no ponto "tarefa e descritor não se excluem pela tela" (~~D-166 nesse ponto~~). Implementação junto da D-180.
 
+### D-182 — Fonte dos PDFs da matriz Comunitária: `revista/modelo/PDFs Matriz Comunitária/` (2026-10-30 12:55)
+- **Contexto:** o preparo do S17 precisa dos 3 PDFs SAEGO 2025; a learning de 29/10 dizia que o Alfa (2EF/5EF) estava só na máquina do usuário.
+- **Decisão:** a fonte é `revista/modelo/PDFs Matriz Comunitária/` (Alfa, LP e MT; ~32 MB), que **já está versionada**; LP e MT em `examples/` são cópias idênticas. Nada novo entra no git. Antes de apagar `revista/` no S17, mover `revista/modelo/` (PDFs e planilhas, incluindo `planilhas importantes/Cortes dos Padrões por Etapa e Parceiro.xlsx`) para um lugar que fica e atualizar caminhos.
+- **Motivo:** indicação do usuário; o repositório é privado.
+- **Descartadas:** copiar o Alfa de `~/Documentos` para `examples/` (duplicaria o que já está no git).
+- **Arquivos afetados:** roteiro do S17 (`docs/s17-carga-2026.md`, em preparo)
+- **Status:** ativa. A learning "Passos paralelos… PDFs grandes fora do app" está desatualizada no ponto do Alfa.
+
 ## Perguntas em aberto
 - [x] (D-179) Rascunho de UI: as matrizes de 2026 têm imagem/PDF por item (`tarefa.arquivo`)? Se sim, tela de upload sobe para agora (+4 h). `/` vai para o Painel mantendo o índice do admin com módulo "Temporada"? (rec.: sim). Botão "Baixar zip" por linha no Painel em 2026? (rec.: não) — depende de: usuário
 - [x] (D-176) Docx "Interpretação pedagógica da escala — textos de abertura LP e MT": o usuário disse que abre o fascículo 2 (infográfico), mas o texto é quase igual à `introducao` do F1 nos seeds (`f1-lp.hbs`/`f1-mt.hbs`: "relação entre a Matriz de Referência e a Escala de Proficiência…"). Entra no F1 `introducao` ou no F2 `abertura`? — depende de: usuário
@@ -1749,6 +1757,10 @@ Verificar a entrega de `feat/item-exclusao` (suíte + `makemigrations --check` +
 - Usuário pediu página web de acompanhamento sincronizada; agente criando (artifact com banco compartilhado, atualizado por mim via ArtifactData).
 - Rodada 3 do grill-me respondida (D-181): exclusão de item, tarefa e descritor pela tela com confirmação forte; arquivo apagado só sem referência.
 - Verificados por mim: S13 1ce0b17 e UI e2d7459 (suíte OK, 8 pulados; migrações limpas). T07 rodando. D-180/D-181 disparadas em `feat/item-exclusao`.
-- Página de acompanhamento: https://claude.ai/artifact/7RnMUM3c9irbwHcAGEBdG2 (banco: meta/geral, itens/<id>, plano/<código>; atualizo via ArtifactData). Dashboard vazio criado por engano: https://claude.ai/artifact/MhpqVSjr2saLwuhbx6jPhC.
+- Página de acompanhamento: https://claude.ai/artifact/7RnMUM3c9irbwHcAGEBdG2 (banco: meta/geral, itens/<id>, plano/<código>; atualizo via ArtifactData). Dashboard vazio criado por engano: https://claude.ai/artifact/MhpqVSjr2saLwuhbx6jPhC. Apagado a pedido do usuário.
 - Horários das entradas de hoje no state.md a partir de ~11:00 estavam adiantados em relação ao relógio (12:19 -03 real às 12:19); de agora em diante, hora do sistema.
 - Ensaio dos 5 merges (worktree descartável): 0 conflitos, fixtures sem mudança, suíte OK (8 pulados), régua ok. Merges reais 24f7256..b31d17e com a learning da D-181; push feito.
+- Preparo do S17 disparado em `feat/s17-preparo`: roteiro, ensaio em banco descartável, lista de usuários sem dados pessoais, ações destrutivas só por escrito, README/CLAUDE.md propostos.
+- `examples/` apagada a pedido do usuário (cópias de `revista/modelo/PDFs Matriz Comunitária/`); docstring do `test_importacao.py` aponta a pasta nova; teste de importação com os 3 PDFs: 24 OK. Sem commit.
+- `fix/auditoria-ia-2` entregue (7 commits A–H, 335 OK). Ensaio do merge sobre 9a574ae: conflitos em `revista.zip` (regerar) e `admin/templates.py` `usado_por` (fica a versão da integração, com `reverse` e `?template=`); suíte rodando.
+- Leva: 835bec5 (remove `examples/`) + 3c74ac2 (merge `fix/auditoria-ia-2`: `usado_por` da integração, zip regerado; ensaio com suíte OK, 8 pulados; árvore igual ao ensaio fora a docstring já testada). Push feito.
