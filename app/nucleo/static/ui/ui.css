@@ -2,7 +2,21 @@
  * Base visual das páginas próprias (opção B): o mesmo visual do editor React, sem build.
  * Tokens copiados de editor/src/index.css (preset shadcn vega/neutral + Inter); as classes
  * reproduzem as do shadcn em editor/src/components/ui/*.tsx (valores do Tailwind em rem).
+ * Quando usar cada componente: docs/telas/design-system.md.
  */
+
+/* Inter variável local (@fontsource-variable/inter 5.3.0, OFL: fontes/LICENSE-inter.txt), sem CDN.
+   Mesma família e unicode-range de node_modules/@fontsource-variable/inter/wght.css. */
+@font-face {
+  font-family: "Inter Variable"; font-style: normal; font-display: swap; font-weight: 100 900;
+  src: url("fontes/inter-latin-ext-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Inter Variable"; font-style: normal; font-display: swap; font-weight: 100 900;
+  src: url("fontes/inter-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 
 :root {
   /* editor/src/index.css:134-171 (:root) */
@@ -31,7 +45,8 @@
   --padrao-3: #b3ccff;
   --padrao-4: #0ed3ff;
   --ease-saida: cubic-bezier(0.16, 1, 0.3, 1);
-  --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --shadow-xs: 0 1px 2px 0 oklch(0 0 0 / 0.05);
   color-scheme: light;
 }
@@ -214,4 +229,169 @@ button, input, select, textarea { font: inherit; color: inherit; }
   .grade-parceiro { min-width: 7rem; max-width: 8rem; }
   .grade-caixa { max-height: calc(100dvh - 9rem); }
   .barra-salvar .btn { flex: 1; }
+}
+
+/* ======================================================================================
+ * Componentes comuns das telas B (docs/telas/design-system.md diz quando usar cada um).
+ * ====================================================================================== */
+
+.pular { position: absolute; left: 1rem; top: -3rem; z-index: 60; padding: 0.5rem 0.75rem; border-radius: var(--radius-md); background: var(--primary); color: var(--primary-foreground); font-size: 0.875rem; }
+.pular:focus { top: 0.5rem; }
+.aviso:not(:has(svg)) { display: block; }
+.mensagens-area:not(:has(li)) { display: none; }
+.secao-titulo { font-size: 1.125rem; line-height: 1.75rem; font-weight: 600; letter-spacing: -0.01em; }
+
+/* --- campos: rótulo, textarea, select, checkbox (components/ui/field, textarea, native-select, checkbox) --- */
+.campo { display: flex; flex-direction: column; gap: 0.375rem; min-width: 0; }
+.campo > label, .rotulo { font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; }
+.campo .ajuda { color: var(--muted-foreground); font-size: 0.8125rem; line-height: 1.125rem; }
+.erro { color: var(--destructive); font-size: 0.8125rem; line-height: 1.125rem; }
+.textarea {
+  width: 100%; min-height: 4rem; padding: 0.5rem 0.625rem; resize: vertical; field-sizing: content;
+  border: 1px solid var(--input); border-radius: var(--radius-md); background: transparent;
+  font-size: 0.875rem; line-height: 1.5; box-shadow: var(--shadow-xs); transition: border-color 150ms, box-shadow 150ms;
+}
+.textarea.mono { font-family: var(--font-mono); font-size: 0.8125rem; }
+.select {
+  height: 2.25rem; width: 100%; min-width: 0; padding: 0.25rem 2rem 0.25rem 0.625rem; appearance: none;
+  border: 1px solid var(--input); border-radius: var(--radius-md); font-size: 0.875rem; box-shadow: var(--shadow-xs);
+  background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 0.625rem center / 1rem;
+}
+.textarea:focus-visible, .select:focus-visible { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px var(--ring); }
+.textarea[readonly], .select:disabled { background-color: var(--muted); border-color: var(--border); box-shadow: none; }
+.textarea[aria-invalid="true"], .select[aria-invalid="true"] { border-color: var(--destructive); }
+input[type="checkbox"], input[type="radio"] { width: 1rem; height: 1rem; margin: 0; vertical-align: middle; }
+.marcar { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; cursor: pointer; }
+.btn-destrutivo { background: color-mix(in oklch, var(--destructive) 10%, transparent); color: var(--destructive); }
+.btn-destrutivo:hover { background: color-mix(in oklch, var(--destructive) 20%, transparent); }
+.btn-lg { height: 2.5rem; padding: 0 1rem; }
+form.inline { display: inline; }
+
+/* --- abas (links de página com aria-current; a aba ativa é a URL) --- */
+.abas { display: flex; gap: 0.25rem; border-bottom-width: 1px; overflow-x: auto; }
+.abas a {
+  margin-bottom: -1px; padding: 0.5rem 0.75rem; border-bottom: 2px solid transparent;
+  font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; white-space: nowrap;
+  color: var(--muted-foreground); transition: color 150ms var(--ease-saida), border-color 150ms;
+}
+.abas a:hover { color: var(--foreground); }
+.abas a[aria-current="page"] { color: var(--foreground); border-bottom-color: var(--foreground); }
+.abas .badge { margin-left: 0.375rem; }
+
+/* --- tabela densa (painel, listas longas): linhas baixas, cabeçalho fixo, coluna .fixa --- */
+.tabela-densa { border: 1px solid var(--border); border-radius: var(--radius-lg); max-height: calc(100dvh - 14rem); overflow: auto; }
+.tabela-densa .tabela { border-collapse: separate; border-spacing: 0; font-size: 0.8125rem; }
+.tabela-densa .tabela tr { border-bottom-width: 0; }
+.tabela-densa .tabela th, .tabela-densa .tabela td { border-bottom-width: 1px; padding: 0.25rem 0.5rem; }
+.tabela-densa .tabela tbody tr:last-child > * { border-bottom-width: 0; }
+.tabela-densa .tabela thead th { position: sticky; top: 0; z-index: 1; height: 2.25rem; background: var(--background); color: var(--muted-foreground); }
+.tabela-densa .tabela .fixa { position: sticky; left: 0; z-index: 1; background: var(--background); border-right-width: 1px; }
+.tabela-densa .tabela thead .fixa { z-index: 2; }
+.tabela-densa .tabela tbody tr:hover .fixa { background: var(--muted); }
+.tabela .num { text-align: right; }
+.tabela .quebra { white-space: normal; min-width: 14rem; }
+.tabela tr[aria-selected="true"], .tabela tr[aria-selected="true"] .fixa { background: var(--muted); }
+
+/* --- status ✓ / falta (célula do painel; sempre com texto, nunca só cor) --- */
+.status { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.8125rem; font-weight: 500; white-space: nowrap; }
+.status-ok { color: oklch(0.45 0.13 150); }
+.status-falta { color: var(--destructive); text-decoration: underline; text-underline-offset: 3px; }
+.status-aviso { color: var(--warning); }
+.status svg { width: 0.875rem; height: 0.875rem; }
+
+/* --- lista + detalhe lado a lado (matriz → descritores, templates, revista → seções) --- */
+.lado-a-lado { display: grid; grid-template-columns: minmax(14rem, 20rem) 1fr; gap: 1.5rem; align-items: start; }
+.lado-a-lado > .lista {
+  position: sticky; top: 1rem; display: flex; flex-direction: column; gap: 0.125rem;
+  max-height: calc(100dvh - 8rem); overflow: auto; padding: 0.25rem;
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+}
+.lista a, .lista button {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; width: 100%;
+  padding: 0.375rem 0.625rem; border-radius: var(--radius-md); background: transparent; cursor: pointer;
+  font-size: 0.875rem; line-height: 1.25rem; text-align: left; color: var(--foreground);
+}
+.lista a:hover, .lista button:hover { background: var(--muted); }
+.lista [aria-current="page"], .lista [aria-current="true"] { background: var(--muted); font-weight: 600; }
+.lado-a-lado > .detalhe { min-width: 0; display: flex; flex-direction: column; gap: 1rem; }
+.duas-colunas { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.detalhe.htmx-request { opacity: 0.6; transition: opacity 150ms; }
+
+/* --- modal: <dialog class="dialogo"> (components/ui/dialog.tsx) --- */
+.dialogo {
+  width: calc(100% - 2rem); max-width: 28rem; padding: 1.5rem; border-radius: var(--radius-xl);
+  background: var(--card); color: var(--foreground); font-size: 0.875rem;
+  box-shadow: 0 10px 30px oklch(0 0 0 / 0.12), 0 0 0 1px color-mix(in oklch, var(--foreground) 10%, transparent);
+}
+.dialogo[open] { display: flex; flex-direction: column; gap: 1.5rem; animation: entra 120ms var(--ease-saida) both; }
+.dialogo-largo { max-width: 48rem; }
+.dialogo::backdrop { background: oklch(0 0 0 / 0.1); backdrop-filter: blur(2px); }
+.dialogo h2 { font-size: 1rem; line-height: 1.25; font-weight: 500; }
+.dialogo header { display: flex; flex-direction: column; gap: 0.5rem; }
+.dialogo footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; }
+
+/* --- diff antes/depois: difflib.HtmlDiff (table.diff) ou duas colunas próprias (.diff-lado) --- */
+table.diff { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.75rem; border: 1px solid var(--border); }
+table.diff td, table.diff th { white-space: pre-wrap; vertical-align: top; padding: 0.125rem 0.375rem; }
+table.diff .diff_header { color: var(--muted-foreground); text-align: right; }
+table.diff .diff_next { display: none; }
+.diff_add, .diff-novo { background: #dcfce7; color: #14532d; }
+.diff_chg { background: #fef3c7; color: #713f12; }
+.diff_sub, .diff-velho { background: #fee2e2; color: #7f1d1d; }
+.diff-lado { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.diff-lado > div { min-width: 0; padding: 0.75rem 1rem; }
+.diff-lado > div + div { border-left-width: 1px; }
+.diff-lado h3 { margin: 0 0 0.5rem; color: var(--muted-foreground); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.texto-md { white-space: pre-wrap; font-family: var(--font-mono); font-size: 0.8125rem; line-height: 1.5; margin: 0; }
+
+/* --- lacuna: faixa vermelha (D-116) e variável vazia (mesmas cores do preview e do editor) --- */
+.faixa-vermelha {
+  display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border-radius: var(--radius-md);
+  background: #b00020; color: #fff; font-size: 0.875rem; font-weight: 600;
+}
+.faixa-vermelha a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.variavel-vazia {
+  background: #fde68a; color: #713f12; border-radius: 3px; padding: 0 0.1875rem;
+  font-family: var(--font-mono); font-size: 0.92em;
+}
+.variavel { background: var(--muted); border-radius: 3px; padding: 0 0.1875rem; font-family: var(--font-mono); font-size: 0.92em; }
+
+/* --- confirmação forte: digitar o código/frase exata (ui.js libera o botão; o servidor confere) --- */
+.confirmar {
+  display: flex; flex-direction: column; gap: 0.5rem; padding: 1rem; border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in oklch, var(--destructive) 30%, transparent);
+  background: color-mix(in oklch, var(--destructive) 4%, var(--background));
+}
+.confirmar code { font-family: var(--font-mono); font-weight: 600; user-select: all; }
+
+/* --- barra de salvar (.barra-salvar acima, sticky): contador à esquerda, ações à direita --- */
+.barra-salvar > .mudo { margin-right: auto; }
+
+/* --- toasts (ui.js: erro de rede/servidor do HTMX ou uiToast(texto, tipo)) --- */
+.toasts { position: fixed; right: 1rem; bottom: 1rem; z-index: 50; display: flex; flex-direction: column; gap: 0.5rem; max-width: min(24rem, calc(100% - 2rem)); }
+.toast {
+  padding: 0.75rem 1rem; border-radius: var(--radius-lg); background: var(--primary); color: var(--primary-foreground);
+  font-size: 0.875rem; line-height: 1.25rem; box-shadow: 0 6px 20px oklch(0 0 0 / 0.15); animation: entra 120ms var(--ease-saida) both;
+}
+.toast-erro { background: var(--destructive); }
+
+/* --- estado vazio (components/ui/empty.tsx) --- */
+.vazio {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem;
+  padding: 3rem 1.5rem; border: 1px dashed var(--border); border-radius: var(--radius-lg); text-align: center; text-wrap: balance;
+}
+.vazio svg { width: 1.5rem; height: 1.5rem; color: var(--muted-foreground); }
+.vazio h2 { font-size: 1.125rem; font-weight: 500; letter-spacing: -0.01em; }
+.vazio p { max-width: 24rem; color: var(--muted-foreground); font-size: 0.875rem; line-height: 1.6; }
+
+/* --- carregando (o HTMX põe .htmx-request no elemento indicado por hx-indicator) --- */
+.htmx-indicator { opacity: 0; transition: opacity 150ms; }
+.htmx-request .htmx-indicator, .htmx-request.htmx-indicator { opacity: 1; }
+.girando { width: 1rem; height: 1rem; animation: girar 0.8s linear infinite; }
+@keyframes girar { to { rotate: 360deg; } }
+
+@media (max-width: 50rem) {
+  .lado-a-lado, .duas-colunas, .diff-lado { grid-template-columns: 1fr; }
+  .lado-a-lado > .lista { position: static; max-height: 16rem; }
+  .diff-lado > div + div { border-left-width: 0; border-top-width: 1px; }
 }

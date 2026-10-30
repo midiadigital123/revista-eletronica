@@ -1,0 +1,19 @@
+{% comment %}
+Mensagens do Django (messages) como avisos. A base renderiza uma vez; um fragmento HTMX que
+grava inclui de novo com `oob=True` para trocar a lista fora do alvo:
+  {% include "ui/_componentes/mensagens.html" with oob=True %}
+Texto no padrão causa + correção ("Não salvo: …. Recarregue e …"), sem "Opa".
+{% endcomment %}<div id="mensagens" class="mensagens-area"{% if oob %} hx-swap-oob="true"{% endif %}>
+{% if messages %}
+<ul class="mensagens">
+  {% for m in messages %}
+  <li class="aviso{% if m.level_tag == 'error' %} aviso-erro{% elif m.level_tag == 'warning' %} aviso-alerta{% endif %}" role="{% if m.level_tag == 'error' %}alert{% else %}status{% endif %}">
+    {% if m.level_tag == "error" %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+    {% elif m.level_tag == "warning" %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    {% else %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>{% endif %}
+    <span>{{ m }}</span>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+</div>

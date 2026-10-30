@@ -1,7 +1,9 @@
-{% load static %}<!doctype html>
+{% load static ui %}<!doctype html>
 {% comment %}
 Casca das páginas próprias (opção B), espelho de editor/src/layout/AppLayout.tsx.
 Contexto: `secao` marca o item ativo da navegação; `ano` (opcional) leva o ano aos links.
+Navegação: cada item aponta para a rota B (urls/ui_<tela>.py) e, enquanto ela não existe,
+cai no equivalente do admin (tag rota_b). Referência: docs/telas/design-system.md.
 {% endcomment %}
 <html lang="pt-BR">
 <head>
@@ -9,23 +11,31 @@ Contexto: `secao` marca o item ativo da navegação; `ano` (opcional) leva o ano
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block titulo %}{% endblock %} · Revista Eletrônica</title>
   <link rel="icon" href="data:,">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..600&display=swap">
+  <link rel="preload" href="{% static 'ui/fontes/inter-latin-wght-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{% static 'ui/ui.css' %}">
+  <script src="{% static 'ui/htmx.min.js' %}" defer></script>
+  <script src="{% static 'ui/ui.js' %}" defer></script>
   {% block cabeca %}{% endblock %}
 </head>
-<body>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+  <a class="pular" href="#conteudo">Pular para o conteúdo</a>
   <header class="cab">
     <div class="cab-in">
       <a class="marca" href="{% url 'inicio' %}">Revista Eletrônica</a>
       <nav class="nav" aria-label="Principal">
-        <a href="{% if ano %}{% url 'painel' ano.ano %}{% else %}{% url 'inicio' %}{% endif %}"{% if secao == "painel" %} aria-current="page"{% endif %}>Painel</a>
+        {% rota_b "ui_painel" ano.ano as u %}
+        <a href="{% if u %}{{ u }}{% elif ano %}{% url 'painel' ano.ano %}{% else %}{% url 'inicio' %}{% endif %}"{% if secao == "painel" %} aria-current="page"{% endif %}>Painel</a>
         <a href="{% if ano %}{% url 'cortes' ano.ano %}{% else %}{% url 'cortes_inicio' %}{% endif %}"{% if secao == "cortes" %} aria-current="page"{% endif %}>Cortes</a>
-        <a href="{% url 'admin:nucleo_projeto_variaveis' %}{% if ano %}?ano={{ ano.ano }}{% endif %}"{% if secao == "variaveis" %} aria-current="page"{% endif %}>Variáveis</a>
-        <a href="{% url 'admin:nucleo_matriz_changelist' %}"{% if secao == "matrizes" %} aria-current="page"{% endif %}>Matrizes</a>
-        <a href="{% url 'admin:nucleo_template_changelist' %}"{% if secao == "templates" %} aria-current="page"{% endif %}>Templates</a>
-        <a href="{% url 'admin:nucleo_revista_changelist' %}"{% if secao == "revistas" %} aria-current="page"{% endif %}>Revistas</a>
+        {% rota_b "ui_variaveis" ano.ano as u %}
+        <a href="{% if u %}{{ u }}{% else %}{% url 'admin:nucleo_projeto_variaveis' %}{% if ano %}?ano={{ ano.ano }}{% endif %}{% endif %}"{% if secao == "variaveis" %} aria-current="page"{% endif %}>Variáveis</a>
+        {% rota_b "ui_matriz" ano.ano as u %}
+        <a href="{% if u %}{{ u }}{% else %}{% url 'admin:nucleo_matriz_changelist' %}{% endif %}"{% if secao == "matrizes" %} aria-current="page"{% endif %}>Matrizes</a>
+        {% rota_b "ui_templates" ano.ano as u %}
+        <a href="{% if u %}{{ u }}{% else %}{% url 'admin:nucleo_template_changelist' %}{% endif %}"{% if secao == "templates" %} aria-current="page"{% endif %}>Templates</a>
+        {% rota_b "ui_revista" ano.ano as u %}
+        <a href="{% if u %}{{ u }}{% else %}{% url 'admin:nucleo_revista_changelist' %}{% endif %}"{% if secao == "revistas" %} aria-current="page"{% endif %}>Revistas</a>
+        {% rota_b "ui_impresso" ano.ano as u %}
+        <a href="{% if u %}{{ u }}{% elif ano %}{% url 'painel' ano.ano %}?falta=impresso{% else %}{% url 'inicio' %}{% endif %}"{% if secao == "impresso" %} aria-current="page"{% endif %}>Impresso</a>
       </nav>
       <div class="usuario">
         <span class="mudo">{{ request.user.get_full_name|default:request.user.username }}</span>
@@ -34,19 +44,10 @@ Contexto: `secao` marca o item ativo da navegação; `ano` (opcional) leva o ano
       </div>
     </div>
   </header>
-  <main class="principal">
-    {% if messages %}
-    <ul class="mensagens">
-      {% for m in messages %}
-      <li class="aviso{% if m.level_tag == 'error' %} aviso-erro{% elif m.level_tag == 'warning' %} aviso-alerta{% endif %}" role="{% if m.level_tag == 'error' %}alert{% else %}status{% endif %}">
-        {% if m.level_tag == "error" %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
-        {% else %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>{% endif %}
-        <span>{{ m }}</span>
-      </li>
-      {% endfor %}
-    </ul>
-    {% endif %}
+  <main class="principal" id="conteudo">
+    {% include "ui/_componentes/mensagens.html" %}
     {% block conteudo %}{% endblock %}
   </main>
+  <div class="toasts" id="toasts" aria-live="assertive"></div>
 </body>
 </html>

@@ -38,6 +38,24 @@ def _nega(*args, **kwargs):
     return False
 
 
+def aviso(request, alvo):
+    """Aviso de somente leitura: quem segura o bloqueio e até quando (admin e páginas B)."""
+    atual = bloqueio.quem_bloqueia(alvo)
+    if atual is None:
+        return "Somente leitura: outra sessão está editando. Recarregue para tentar editar."
+    if atual.usuario_id == request.user.pk:
+        return (
+            "Somente leitura: sua outra aba ou a carga anterior desta página ainda segura "
+            "a edição; recarregue em alguns segundos."
+        )
+    quem = atual.usuario.get_full_name() or atual.usuario.get_username()
+    return (
+        f"Somente leitura: {quem} está editando "
+        f"(bloqueio até {timezone.localtime(atual.expira_em):%H:%M:%S}, renovado enquanto "
+        "a página estiver aberta). Recarregue para tentar editar."
+    )
+
+
 class BloqueioAdminMixin:
     change_form_template = "nucleo/bloqueio_change_form.html"
 
@@ -84,7 +102,7 @@ class BloqueioAdminMixin:
             extra_context = self._contexto(extra_context, alvo, sessao)
         else:
             request._bloqueio_somente_leitura = True
-            messages.warning(request, self._aviso(request, alvo))
+            messages.warning(request, aviso(request, alvo))
         return super().changeform_view(request, object_id, form_url, extra_context)
 
     def _salvar(self, request, alvo, object_id, form_url, extra_context):
@@ -110,20 +128,3 @@ class BloqueioAdminMixin:
             "bloqueio": {"alvo": bloqueio.campo(alvo), "id": alvo.pk, "sessao": sessao},
             "bloqueio_campo_sessao": CAMPO_SESSAO,
         }
-
-    @staticmethod
-    def _aviso(request, alvo):
-        atual = bloqueio.quem_bloqueia(alvo)
-        if atual is None:
-            return "Somente leitura: outra sessão está editando. Recarregue para tentar editar."
-        if atual.usuario_id == request.user.pk:
-            return (
-                "Somente leitura: sua outra aba ou a carga anterior desta página ainda segura "
-                "a edição; recarregue em alguns segundos."
-            )
-        quem = atual.usuario.get_full_name() or atual.usuario.get_username()
-        return (
-            f"Somente leitura: {quem} está editando "
-            f"(bloqueio até {timezone.localtime(atual.expira_em):%H:%M:%S}, renovado enquanto "
-            "a página estiver aberta). Recarregue para tentar editar."
-        )

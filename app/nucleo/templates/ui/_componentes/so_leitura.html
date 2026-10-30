@@ -1,0 +1,7 @@
+{% comment %}
+Aviso de só leitura por falta de permissão (o de bloqueio vem por messages, do com_bloqueio).
+  {% if not pode_gravar %}{% include "ui/_componentes/so_leitura.html" with texto="Só leitura: seu perfil vê os cortes, mas não altera. Para editar, peça a permissão de cortes a um administrador." %}{% endif %}
+{% endcomment %}<div class="aviso aviso-alerta" role="status">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+  <span>{{ texto }}</span>
+</div>
