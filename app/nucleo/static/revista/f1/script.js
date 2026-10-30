@@ -384,7 +384,7 @@ class DescriptorManager {
         if (el !== modal) el.inert = inerte;
       });
 
-    const abrirModal = (nivel, fim, id, tipoBruto, origem) => {
+    const abrirModal = (nivel, fim, id, tipoBruto, origem, alt) => {
       abridor = origem;
       const tipo = tipoDoItem(tipoBruto);
       const ehImagem = tipo !== "pdf";
@@ -394,8 +394,13 @@ class DescriptorManager {
       imagem.hidden = !ehImagem;
       const alvo = ehImagem ? imagem : frame;
       alvo.src = urlDoItem(id, tipo);
-      if (ehImagem) imagem.alt = rotulo;
-      else frame.title = rotulo;
+      // D-180: texto alternativo da tarefa; sem ele, o leitor de tela diz qual tarefa é.
+      const descricao = alt || `Item da tarefa ${appState.currentDescriptor} ${nivel}-${fim}, sem descrição`;
+      if (ehImagem) imagem.alt = descricao;
+      else {
+        frame.title = descricao;
+        frame.setAttribute("aria-label", descricao);
+      }
       modal.hidden = false;
       fundoInerte(true);
       document.body.style.overflow = "hidden";
@@ -415,7 +420,7 @@ class DescriptorManager {
     // O item só abre pelo botão; clicar na habilidade não faz nada (o hover já expande o texto).
     document.addEventListener("click", (e) => {
       const btn = e.target.closest(".ver-item-btn");
-      if (btn) abrirModal(btn.dataset.nivelItem, btn.dataset.nivelFim, btn.dataset.itemId, btn.dataset.itemTipo, btn);
+      if (btn) abrirModal(btn.dataset.nivelItem, btn.dataset.nivelFim, btn.dataset.itemId, btn.dataset.itemTipo, btn, btn.dataset.itemAlt);
     });
 
     closeBtn.addEventListener("click", fecharModal);
@@ -825,7 +830,7 @@ class DescriptorManager {
                     </div>
                     ${
                       temItem
-                        ? `<button type="button" class="ver-item-btn" aria-label="Ver item, ${escapeHtml(rotuloNiveis(base, topo))}" data-legenda="Ver item" data-nivel-item="${escapeHtml(base)}" data-nivel-fim="${escapeHtml(topo)}" data-item-id="${escapeHtml(item.id)}" data-item-tipo="${escapeHtml(item.tipo || "pdf")}">
+                        ? `<button type="button" class="ver-item-btn" aria-label="Ver item, ${escapeHtml(rotuloNiveis(base, topo))}" data-legenda="Ver item" data-nivel-item="${escapeHtml(base)}" data-nivel-fim="${escapeHtml(topo)}" data-item-id="${escapeHtml(item.id)}" data-item-tipo="${escapeHtml(item.tipo || "pdf")}" data-item-alt="${escapeHtml(item.alt || "")}">
                             <svg viewBox="4 0 44.3506 44.3506" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                 <rect x="16.6117" y="12.2362" width="19.1273" height="19.8787" rx="2.36459" stroke="black" stroke-width="0.910823"/>
                                 <path d="M19.8918 15.424V17.997H32.4548V15.424H19.8918ZM33.4599 17.997C33.4598 18.5 33.0099 18.9079 32.4548 18.9079H19.8918C19.3367 18.9079 18.8868 18.5 18.8867 17.997V15.424C18.8867 14.921 19.3367 14.5132 19.8918 14.5132H32.4548C33.0099 14.5132 33.4599 14.921 33.4599 15.424V17.997Z" fill="black"/>

@@ -5,10 +5,11 @@ desta tabela (migração não importa código que muda depois). Mudou aqui?
 Crie uma migração de dados nova que sincronize os grupos; o teste
 `test_permissoes.GruposNoBancoTest` falha até isso acontecer.
 
-Só `delete_projetopasso` e `delete_projetocor` existem (S11c, decisão do usuário):
-excluir a linha = voltar ao passo da matriz / à paleta do ano. Fora isso, nenhum
-`delete_*`: revista nunca é apagada (D-117, arquiva). Usuário se desativa, não se
-apaga (histórico usa SET_NULL). Migração 0008.
+Exclusões que existem: `delete_projetopasso` e `delete_projetocor` (S11c: excluir a
+linha = voltar ao passo da matriz / à paleta do ano; migração 0008) e `delete_tarefa` e
+`delete_descritor` (D-181: só pela tela de confirmação forte do admin; migração 0014).
+Fora isso, nenhum `delete_*`: revista nunca é apagada (D-117, arquiva). Usuário se
+desativa, não se apaga (histórico usa SET_NULL).
 """
 
 # Pergunta em aberto: admin pode clicar "Revista Impressa Atualizada"?
@@ -41,7 +42,14 @@ ACOES = {
     "ver_tudo": _perms("nucleo", dict.fromkeys(MODELOS_NUCLEO, ("view",))),
     "abrir_ano": frozenset({"nucleo.abrir_ano"}),
     "editar_cadastros": _perms("nucleo", dict.fromkeys(("parceiro", "etapa", "componente", "parceiroano"), EDITA)),
-    "editar_matriz": _perms("nucleo", dict.fromkeys(("matriz", "matrizetapacc", "descritor", "tarefa"), EDITA)),
+    "editar_matriz": _perms(
+        "nucleo",
+        {
+            **dict.fromkeys(("matriz", "matrizetapacc"), EDITA),
+            # D-181: excluir só pela confirmação forte (revistas afetadas + código digitado).
+            **dict.fromkeys(("descritor", "tarefa"), (*EDITA, "delete")),
+        },
+    ),
     "preencher_cortes": _perms("nucleo", {"corte": EDITA}),
     "editar_templates": _perms("nucleo", {"template": EDITA, "templateversao": ("add", "view")}),
     "editar_paleta": _perms("nucleo", {"corpadrao": EDITA}),

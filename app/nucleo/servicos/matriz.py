@@ -5,6 +5,8 @@ from django.db.models import Q
 
 from nucleo.models import Componente, Descritor, Etapa, Matriz, MatrizEtapaCC, Revista, Tarefa
 from nucleo.servicos.abrir_ano import clonar
+from nucleo.servicos.resolver import hash_validado
+from nucleo.servicos.validacao import validada
 
 # Campos do descritor comparados no diff (ordem de exibição).
 CAMPOS_DESCRITOR = (
@@ -118,10 +120,23 @@ def diferencas(matriz):
 
 
 def revistas_afetadas(*mecs):
-    """Revistas ativas que mudam com uma edição destas MECs (D-076): o ParceiroAno usa a
-    matriz, a revista é do componente e há corte nessa etapa × componente."""
-    if not mecs:
-        return 0
+    """Quantas revistas ativas mudam com uma edição destas MECs (D-076)."""
+    return _afetadas(mecs).count() if mecs else 0
+
+
+def impacto(*mecs):
+    """[(revista, validada agora)] das revistas ativas afetadas: as validadas perdem o
+    "Validado" com a edição, porque o hash muda (D-076, D-181)."""
+    # ponytail: um resolver por revista (~25 na Comunitária); cache se a página ficar lenta.
+    revistas = _afetadas(mecs).select_related(
+        "projeto__parceiro_ano__parceiro", "projeto__ano", "componente"
+    ).order_by("projeto__parceiro_ano__parceiro__nome", "componente__codigo") if mecs else []
+    return [(r, validada(r, hash_validado(r))) for r in revistas]
+
+
+def _afetadas(mecs):
+    """Revistas ativas que mudam com uma edição destas MECs: o ParceiroAno usa a matriz, a
+    revista é do componente e há corte nessa etapa × componente."""
     q = Q()
     for m in mecs:  # num filter() só: as condições sobre o corte usam o mesmo JOIN
         q |= Q(
@@ -130,4 +145,4 @@ def revistas_afetadas(*mecs):
             projeto__parceiro_ano__corte__etapa_id=m.etapa_id,
             projeto__parceiro_ano__corte__componente_id=m.componente_id,
         )
-    return Revista.objects.filter(q, arquivada_em__isnull=True).distinct().count()
+    return Revista.objects.filter(q, arquivada_em__isnull=True).distinct()
