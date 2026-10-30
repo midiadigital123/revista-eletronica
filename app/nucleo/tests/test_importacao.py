@@ -51,6 +51,7 @@ class CarregarCadastrosTest(TestCase):
         call_command("carregar_cadastros", "--ano", "2026", stdout=saida)
         self.assertIn("12 registro(s) criado(s)", saida.getvalue())  # ano + 4 + 2 + 5
         Etapa.objects.filter(codigo="5EF").update(escala_max=999)  # edição no admin
+        CorPadrao.objects.filter(padrao=1).update(nome="Abaixo do básico")
         saida = StringIO()
         call_command("carregar_cadastros", "--ano", "2026", stdout=saida)
         self.assertIn("0 registro(s) criado(s)", saida.getvalue())
@@ -62,6 +63,10 @@ class CarregarCadastrosTest(TestCase):
         self.assertEqual(
             list(CorPadrao.objects.order_by("padrao").values_list("cor", flat=True)),
             ["#F72628", "#FF8D43", "#B3CCFF", "#0ED3FF", "#FFFFFF"],
+        )
+        self.assertEqual(  # D-175: nome padrão por ano, sem desfazer a edição
+            list(CorPadrao.objects.order_by("padrao").values_list("nome", flat=True)),
+            ["Abaixo do básico", "Padrão 02", "Padrão 03", "Padrão 04", "Padrão 05"],
         )
 
 

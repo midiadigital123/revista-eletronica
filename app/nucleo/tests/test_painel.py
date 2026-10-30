@@ -171,7 +171,7 @@ class ValidadoTest(Base):
         todas, n_todas = consultas()
         go, n_go = consultas(parceiro=self.go["LP"].projeto.parceiro_ano.parceiro_id)
         por_linha = (todas - go) / (n_todas - n_go)
-        self.assertLessEqual(por_linha, 15, por_linha)  # medido no S12: 15 (resolver + pendências + foto)
+        self.assertLessEqual(por_linha, 16, por_linha)  # medido no S12: 15 (resolver + pendências + foto); +1 nomes do ano (D-175)
 
 
 class LoteTest(TransactionTestCase):

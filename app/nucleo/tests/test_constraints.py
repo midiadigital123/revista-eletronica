@@ -41,6 +41,7 @@ CHECKS = {
     "componente_codigo_tamanho",
     "componente_nome_tamanho",
     "cor_padrao_cor_hex",
+    "cor_padrao_nome_tamanho",
     "cor_padrao_padrao_1a5",
     "descritor_codigo_tamanho",
     "etapa_codigo_tamanho",

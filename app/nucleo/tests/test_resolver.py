@@ -93,7 +93,8 @@ class Mundo:
         alvo.e5 = Etapa.objects.create(ano=ano, codigo="5EF", escala_max=500, ordem=2)
         alvo.e9 = Etapa.objects.create(ano=ano, codigo="9EF", escala_max=500, ordem=3)
         for k, cor in enumerate(["#F72628", "#FF8D43", "#B3CCFF", "#0ED3FF", "#FFFFFF"], 1):
-            CorPadrao.objects.create(ano=ano, padrao=k, cor=cor)
+            # Nomes do ano (D-175): o gabarito continua com "Padrão 0k"; os projetos não sobrescrevem.
+            CorPadrao.objects.create(ano=ano, padrao=k, cor=cor, nome=f"Padrão {k:02d}")
         alvo.matriz = Matriz.objects.create(ano=ano, nome="Comunitária")
         alvo.tarefa = None
         for comp in (alvo.lp, alvo.mt):
@@ -134,8 +135,6 @@ class Mundo:
         projeto = Projeto.objects.get(parceiro_ano=pa, arquivado_em__isnull=True)
         projeto.nome = f"Projeto {nome}"
         projeto.adjetivo_patrio_plural_masculino = "goianos"
-        for k in range(1, 6):  # rótulos da escala do F1: o gabarito continua com "Padrão 0k"
-            setattr(projeto, f"pd{k:02d}", f"Padrão {k:02d}")
         projeto.save()
         for rf in RevistaFasciculo.objects.filter(revista__projeto=projeto).select_related("revista"):
             rf.template = alvo.templates[rf.revista.componente.codigo, rf.fasciculo]
@@ -223,10 +222,21 @@ class ResolverTest(TestCase):
         corpo = renderizar("Estudantes de {{nome_parceiro}}: {{pd05}}.", valores)
         self.assertEqual(corpo, "<p>Estudantes de GO: Avançado.</p>\n")  # nome_parceiro = Parceiro.nome
 
-    def test_rotulo_do_padrao_sai_do_pdnn(self):
+    def test_pdnn_vazio_usa_o_nome_do_ano(self):  # D-175
+        CorPadrao.objects.filter(ano=self.ano, padrao=2).update(nome="Abaixo do básico")
+        lp = recarregar(self.go["LP"])
+        padroes = resolver(lp)["f1"]["dados"]["5ef"]["padroes"]
+        self.assertEqual(padroes[1], {"chave": "padrao-2", "rotulo": "Abaixo do básico"})
+        valores = valores_das_variaveis(lp.projeto)
+        self.assertEqual(renderizar("{{pd02}}", valores), "<p>Abaixo do básico</p>\n")
+
+    def test_rotulo_do_padrao_sai_do_pdnn(self):  # o projeto sobrescreve o nome do ano
+        CorPadrao.objects.filter(ano=self.ano, padrao=2).update(nome="Abaixo do básico")
         Projeto.objects.filter(pk=self.go["LP"].projeto_id).update(pd02="Básico")
-        padroes = resolver(recarregar(self.go["LP"]))["f1"]["dados"]["5ef"]["padroes"]
+        lp = recarregar(self.go["LP"])
+        padroes = resolver(lp)["f1"]["dados"]["5ef"]["padroes"]
         self.assertEqual(padroes[1], {"chave": "padrao-2", "rotulo": "Básico"})
+        self.assertEqual(renderizar("{{pd02}}", valores_das_variaveis(lp.projeto)), "<p>Básico</p>\n")
 
     def com_cortes(self, valores, **pd):
         """LP do GO com `valores` em todas as etapas e os pdNN dados; devolve a revista recarregada."""
@@ -234,7 +244,8 @@ class ResolverTest(TestCase):
         Projeto.objects.filter(pk=self.go["LP"].projeto_id).update(**pd)
         return recarregar(self.go["LP"])
 
-    def test_pdnn_vazio_de_padrao_existente_e_pendencia(self):
+    def test_pdnn_e_nome_do_ano_vazios_de_padrao_existente_e_pendencia(self):
+        CorPadrao.objects.filter(ano=self.ano, padrao=3).update(nome="")
         lp = self.com_cortes([200, 300], pd03=" ")  # 3 padrões
         r = resolver(lp)
         self.assertEqual(r["f1"]["dados"]["5ef"]["padroes"][2]["rotulo"], "{{pd03}}")  # o JS destaca
@@ -242,6 +253,7 @@ class ResolverTest(TestCase):
         self.assertIn(("variaveis", "Variáveis sem valor: pd03."), [(p.codigo, p.mensagem) for p in pendencias(lp)])
 
     def test_pdnn_vazio_de_padrao_que_nao_existe_nao_e_pendencia(self):
+        CorPadrao.objects.filter(ano=self.ano, padrao=5).update(nome="")
         lp = self.com_cortes([200, 250, 300], pd05="")  # 4 padrões
         self.assertEqual(resolver(lp)["lacunas"], [])
         self.assertNotIn("variaveis", [p.codigo for p in pendencias(lp)])
@@ -251,6 +263,14 @@ class ResolverTest(TestCase):
         lp = self.com_cortes([100, 200, 250, 300], pd01="Abaixo do básico")
         self.assertNotEqual(antes[0], hash_validado(lp))
         self.assertNotEqual(antes[1], conteudo_impresso(lp))
+
+    def test_nome_do_ano_muda_o_hash_so_de_quem_nao_sobrescreve(self):
+        Projeto.objects.filter(pk=self.go["LP"].projeto_id).update(pd02="Básico")
+        go, pe = recarregar(self.go["LP"]), recarregar(self.pe["LP"])
+        antes = hash_validado(go), hash_validado(pe)
+        CorPadrao.objects.filter(ano=self.ano, padrao=2).update(nome="Abaixo do básico")
+        self.assertEqual(hash_validado(go), antes[0])
+        self.assertNotEqual(hash_validado(pe), antes[1])
 
     def test_passo_do_projeto_sobrescreve_e_cor_do_projeto(self):
         projeto = self.go["LP"].projeto
@@ -367,7 +387,7 @@ class ResolverTest(TestCase):
         with CaptureQueriesContext(connection) as resto:
             pendencias(lp, resolvido)
             hash_validado(lp, resolvido)
-        self.assertLessEqual(len(so_resolver), 12, "\n".join(q["sql"][:120] for q in so_resolver))
+        self.assertLessEqual(len(so_resolver), 13, "\n".join(q["sql"][:120] for q in so_resolver))  # +1: nomes do ano (D-175)
         self.assertLessEqual(len(resto), 2)  # só a conferência de MEC por etapa
         self.assertEqual(hash_validado(lp, resolvido), hash_validado(lp))
 

@@ -108,7 +108,7 @@ class ComponenteAdmin(PorAnoAdmin):
 
 @admin.register(CorPadrao)
 class CorPadraoAdmin(PorAnoAdmin):
-    formfield_overrides = {models.TextField: {"widget": forms.TextInput(attrs={"size": 8})}}
-    list_display = ("padrao", "cor", "ano")
+    formfield_overrides = {models.TextField: {"widget": forms.TextInput(attrs={"size": 20})}}
+    list_display = ("padrao", "nome", "cor", "ano")
     ordering = ("-ano__ano", "padrao")
     chave = "padrao"

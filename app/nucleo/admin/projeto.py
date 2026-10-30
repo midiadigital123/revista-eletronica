@@ -70,6 +70,7 @@ class ProjetoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         limitar(self, {"nome": 200, **dict.fromkeys(variaveis.EDITAVEIS, TAMANHO_MAX)})  # CHECKs do banco
+        variaveis.mostrar_nome_do_ano(self, self.instance.ano_id)
 
 
 @admin.register(Projeto)
