@@ -1,0 +1,48 @@
+{% extends "ui/base.html" %}{% load static %}
+{% comment %}T20: revistas do ano. View em nucleo/urls/ui_revista.py (lista).{% endcomment %}
+{% block titulo %}Revistas{% if ano %} {{ ano.ano }}{% endif %}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/revista.css' %}">{% endblock %}
+
+{% block conteudo %}
+<header class="pagina-cab">
+  <div>
+    <h1>Revistas</h1>
+    <p class="mudo">Uma revista por projeto e componente. Abra para enviar o SVG e a capa, escolher templates, editar textos e validar.</p>
+  </div>
+  {% if ano %}<div class="acoes"><a class="btn btn-ghost" href="{% url 'painel' ano.ano %}">Ver painel de {{ ano.ano }}</a></div>{% endif %}
+</header>
+
+{% if not ano %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhum ano aberto" texto="Abra um ano no admin para criar as revistas." %}
+{% else %}
+{% include "ui/_componentes/anos.html" with rota="ui_revista" %}
+
+{% if revistas %}
+<div class="tabela-caixa tabela-densa">
+  <table class="tabela">
+    <thead><tr>
+      <th scope="col" class="fixa">Revista</th><th scope="col">Componente</th><th scope="col">SVG do F2</th><th scope="col">Capa</th><th scope="col">Situação</th><th scope="col"><span class="sr-only">Ações</span></th>
+    </tr></thead>
+    <tbody>
+    {% for r in revistas %}
+      <tr>
+        <th scope="row" class="fixa"><a class="link" href="{% url 'ui_revista_editar' ano.ano r.pk %}">{{ r.projeto }}</a></th>
+        <td>{{ r.componente.codigo }}</td>
+        <td>{% include "ui/_componentes/status.html" with ok=r.svg_f2 titulo="Sem SVG do F2" %}</td>
+        <td>{% include "ui/_componentes/status.html" with ok=r.capa titulo="Sem capa" %}</td>
+        <td>{% if r.arquivada_em %}<span class="badge badge-secundario">Arquivada</span>{% else %}<span class="badge badge-contorno">Ativa</span>{% endif %}</td>
+        <td class="revista-acoes">
+          <a class="btn btn-ghost btn-sm" href="{% url 'preview' r.pk %}" target="_blank" rel="noopener">Preview<span class="sr-only"> (nova aba)</span></a>
+          <a class="btn btn-ghost btn-sm" href="{% url 'ui_revista_zip' ano.ano r.pk %}?voltar=lista">Zip</a>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+{% url 'cortes' ano.ano as cortes_url %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhuma revista neste ano" texto="As revistas nascem quando os cortes do parceiro são lançados." url=cortes_url rotulo="Abrir cortes" %}
+{% endif %}
+{% endif %}
+{% endblock %}
