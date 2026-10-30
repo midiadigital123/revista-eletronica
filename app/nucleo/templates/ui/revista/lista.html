@@ -13,8 +13,8 @@
 </header>
 
 {% if not ano %}
-{% if perms.nucleo.abrir_ano %}{% url 'admin:nucleo_ano_changelist' as u %}
-{% include "ui/_componentes/vazio.html" with titulo="Nenhum ano aberto" texto="Abra um ano no admin para criar as revistas." url=u rotulo="Abrir anos" %}
+{% if perms.nucleo.abrir_ano %}{% url 'ui_anos' as u %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhum ano aberto" texto="Abra um ano para criar as revistas." url=u rotulo="Abrir anos" %}
 {% else %}
 {% include "ui/_componentes/vazio.html" with titulo="Nenhum ano aberto" texto="Peça a um administrador para abrir o ano." %}
 {% endif %}

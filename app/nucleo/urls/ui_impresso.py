@@ -36,7 +36,7 @@ def impresso(request, ano=None):
 def _impresso(request, ano):
     anos = list(Ano.objects.order_by("-ano"))
     if ano is None:  # /ui/impresso/ → ano mais recente
-        return redirect("ui_impresso", anos[0].ano) if anos else redirect("admin:index")
+        return redirect("ui_impresso", anos[0].ano) if anos else redirect("ui_anos")
     ano = get_object_or_404(Ano, ano=ano)
     pedido = request.GET.get("revista", "")
     if e_htmx(request):  # só o detalhe: não recalcula a lista

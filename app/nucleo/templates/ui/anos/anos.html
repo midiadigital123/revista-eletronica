@@ -1,0 +1,41 @@
+{% extends "ui/base.html" %}
+{% comment %}Anos (S3 de D-190). View em nucleo/urls/ui_anos.py; regra em nucleo/servicos/abrir_ano.py.{% endcomment %}
+{% block titulo %}Anos{% endblock %}
+
+{% block conteudo %}
+<header class="pagina-cab">
+  <div>
+    <h1>Anos</h1>
+    <p class="mudo">Cada ano tem seus cadastros, cortes, matrizes, templates e revistas.</p>
+  </div>
+</header>
+
+{% if not anos %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhum ano aberto" texto="O primeiro ano entra pela carga inicial; os seguintes se abrem aqui, copiando o anterior." %}
+{% else %}
+<div class="tabela-caixa">
+  <table class="tabela">
+    <thead><tr><th scope="col">Ano</th><th scope="col">Abrir</th></tr></thead>
+    <tbody>
+    {% for a in anos %}
+      <tr><th scope="row">{{ a.ano }}</th><td><a class="link" href="{% url 'painel' a.ano %}">Painel de {{ a.ano }}</a></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if perms.nucleo.abrir_ano %}
+<form method="post" class="card" style="max-width: 32rem" novalidate>{% csrf_token %}
+  <h2 class="secao-titulo">Abrir ano</h2>
+  <p>Copia etapas, componentes, cores, matrizes e templates do último ano. Não copia parceiros, cortes nem projetos. Não há desfazer.</p>
+  <div class="campo">
+    <label for="ano-novo">Ano novo</label>
+    <input class="input" id="ano-novo" name="ano" inputmode="numeric" autocomplete="off" required value="{{ form.ano.value|default_if_none:'' }}" aria-describedby="ano-dica{% if form.ano.errors %} ano-erro{% endif %}"{% if form.ano.errors %} aria-invalid="true"{% endif %}>
+    <p class="ajuda" id="ano-dica">Digite o ano. O próximo que pode ser aberto é {{ proximo }}.</p>
+    {% if form.ano.errors %}<p class="erro" id="ano-erro">{{ form.ano.errors.0 }}</p>{% endif %}
+  </div>
+  <div><button class="btn" type="submit">Abrir ano</button></div>
+</form>
+{% endif %}
+{% endif %}
+{% endblock %}

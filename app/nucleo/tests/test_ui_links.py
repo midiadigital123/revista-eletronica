@@ -42,7 +42,7 @@ class MensagensSemAnoTest(TestCase):
         cls.ped = usuario("ped", "Pedagógica")
 
     def test_abrir_ano_so_com_permissao(self):
-        abrir = reverse("admin:nucleo_ano_changelist")
+        abrir = reverse("ui_anos")
         for url in (reverse("cortes_inicio"), reverse("ui_revista_inicio")):
             self.client.force_login(self.imp)
             r = self.client.get(url)

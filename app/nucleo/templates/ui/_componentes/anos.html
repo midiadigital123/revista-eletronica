@@ -1,6 +1,7 @@
 {% comment %}
 Seletor de ano (controle segmentado). `rota` recebe o ano como único argumento.
+Com `abrir_ano`, o último item leva à tela de anos (S3 de D-190).
   {% include "ui/_componentes/anos.html" with rota="cortes" %}   (contexto: anos, ano)
 {% endcomment %}<nav aria-label="Ano" class="segmentos">
-  {% for a in anos %}<a href="{% url rota a.ano %}"{% if a.pk == ano.pk %} aria-current="page"{% endif %}>{{ a.ano }}</a>{% endfor %}
+  {% for a in anos %}<a href="{% url rota a.ano %}"{% if a.pk == ano.pk %} aria-current="page"{% endif %}>{{ a.ano }}</a>{% endfor %}{% if perms.nucleo.abrir_ano %}<a href="{% url 'ui_anos' %}">+ Abrir ano</a>{% endif %}
 </nav>

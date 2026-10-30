@@ -5,9 +5,9 @@ from nucleo.models import Ano
 
 
 def inicio(request):
-    """`/` → Painel do maior ano; sem ano, o índice do admin (o login fica com cada destino)."""
+    """`/` → Painel do maior ano; sem ano, a tela de anos (o login fica com cada destino)."""
     ano = Ano.objects.order_by("-ano").first()
-    return redirect("painel", ano.ano) if ano else redirect("admin:index")
+    return redirect("painel", ano.ano) if ano else redirect("ui_anos")
 
 
 urlpatterns = [
@@ -29,4 +29,5 @@ urlpatterns = [
     path("ui/revista/", include("nucleo.urls.ui_revista")),
     path("ui/impresso/", include("nucleo.urls.ui_impresso")),
     path("ui/lotes/", include("nucleo.urls.ui_lotes")),
+    path("ui/anos/", include("nucleo.urls.ui_anos")),
 ]
