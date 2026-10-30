@@ -97,23 +97,30 @@ def contexto(request, titulo, **extra):
     return {**admin.site.each_context(request), "title": titulo, **extra}
 
 
-@protegida
-def painel(request, ano):
-    ano = get_object_or_404(Ano, ano=ano)
+def filtrar(ano, params):
+    """Linhas do painel com os filtros falta/parceiro/template (inválidos são ignorados).
+    `todas` = linhas antes do filtro de falta (serve às contagens por coluna da tela B)."""
     revistas = revistas_do_ano(ano)
     parceiros = list(Parceiro.objects.filter(parceiroano__ano=ano).order_by("nome"))
-    parceiro = next((p for p in parceiros if str(p.pk) == request.GET.get("parceiro")), None)
-    falta = request.GET.get("falta") if request.GET.get("falta") in COLUNAS else None
-    pedido = request.GET.get("template", "")
+    parceiro = next((p for p in parceiros if str(p.pk) == params.get("parceiro")), None)
+    falta = params.get("falta") if params.get("falta") in COLUNAS else None
+    pedido = params.get("template", "")
     # Inexistente ou de outro ano: ignorado, como o parceiro inválido.
     template = Template.objects.filter(ano=ano, pk=pedido).select_related("componente").first() if pedido.isdigit() else None
     if parceiro is not None:
         revistas = revistas.filter(projeto__parceiro_ano__parceiro=parceiro)
     if template is not None:
         revistas = revistas.filter(revistafasciculo__template=template)  # 1 fascículo por template: sem duplicar
-    linhas = [linha(r) for r in revistas]
-    if falta is not None:
-        linhas = [x for x in linhas if not x["faltas"][falta]["ok"]]
+    todas = [linha(r) for r in revistas]
+    linhas = [x for x in todas if not x["faltas"][falta]["ok"]] if falta else todas
+    return {"linhas": linhas, "todas": todas, "parceiros": parceiros, "parceiro": parceiro, "falta": falta, "template": template}
+
+
+@protegida
+def painel(request, ano):
+    ano = get_object_or_404(Ano, ano=ano)
+    f = filtrar(ano, request.GET)
+    falta, parceiro, parceiros, template, linhas = f["falta"], f["parceiro"], f["parceiros"], f["template"], f["linhas"]
     ativos = {"falta": falta, "parceiro": parceiro and parceiro.pk, "template": template and template.pk}
 
     def mantendo(chave):  # cada filtro preserva os outros na URL
