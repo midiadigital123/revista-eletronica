@@ -1,7 +1,15 @@
 {% comment %}
-Seletor de ano (controle segmentado). `rota` recebe o ano como único argumento.
-Com `abrir_ano`, o último item leva à tela de anos (S3 de D-190).
-  {% include "ui/_componentes/anos.html" with rota="cortes" %}   (contexto: anos, ano)
-{% endcomment %}<nav aria-label="Ano" class="segmentos">
-  {% for a in anos %}<a href="{% url rota a.ano %}"{% if a.pk == ano.pk %} aria-current="page"{% endif %}>{{ a.ano }}</a>{% endfor %}{% if perms.nucleo.abrir_ano %}<a href="{% url 'ui_anos' %}">+ Abrir ano</a>{% endif %}
-</nav>
+Seletor de ano do cabeçalho (U6), incluído só pela base. Botão "2026 ▾" com popover nativo
+(Enter/Espaço abre, Esc fecha e o foco volta ao botão) + Alpine `seletorAno` (static/ui/componentes/seletor-ano.js),
+que posiciona o painel sob o botão e leva o foco ao ano atual.
+Contexto: `ano_ctx` e `trocas_ano` de nucleo/contexto.py; `secao == "anos"` destaca o botão.
+{% endcomment %}{% with a=ano_ctx %}{% if a %}<div class="seletor-ano" x-data="seletorAno">
+  <button type="button" class="btn btn-outline btn-sm" popovertarget="seletor-ano" x-ref="botao" aria-label="Ano {{ a.ano }}: trocar de ano"{% if secao == "anos" %} aria-current="page"{% endif %}>{{ a.ano }} <span aria-hidden="true">▾</span></button>
+  <div id="seletor-ano" class="popover-ano" popover x-ref="painel" @toggle="alternou"{% if trocas_mesma_rota %} data-mesma-rota{% endif %}>
+    {% for n, url in trocas_ano %}<a data-ano href="{{ url }}"{% if n == a.ano %} aria-current="page"{% endif %}>{{ n }}</a>
+    {% endfor %}<hr>
+    {% if perms.nucleo.view_ano %}<a href="{% url 'ui_ano' a.ano %}">Configurar {{ a.ano }}</a>
+    {% endif %}{% if perms.nucleo.abrir_ano %}<a href="{% url 'ui_anos' %}">Abrir novo ano</a>
+    {% endif %}
+  </div>
+</div>{% endif %}{% endwith %}

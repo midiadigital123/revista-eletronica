@@ -11,7 +11,6 @@ Contexto: ano, anos, aba ("matriz" | "template"), pode_gravar.
   </div>
 </header>
 
-{% include "ui/_componentes/anos.html" with rota="ui_lotes_"|add:aba %}
 
 <nav class="abas" aria-label="Lotes">
   <a href="{% url 'ui_lotes_matriz' ano.ano %}"{% if aba == "matriz" %} aria-current="page"{% endif %}>Escolher matriz</a>

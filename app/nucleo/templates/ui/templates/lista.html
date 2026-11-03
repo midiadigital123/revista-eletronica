@@ -26,7 +26,6 @@
 </div>
 {% else %}
 
-{% include "ui/_componentes/anos.html" with rota="ui_templates" %}
 
 <nav class="abas" aria-label="Partes da temporada">
   {% for f, n in abas %}<a href="?aba={{ f }}"{% if f == aba %} aria-current="page"{% endif %}>Textos {{ f }}<span class="badge badge-secundario">{{ n }}</span></a>{% endfor %}

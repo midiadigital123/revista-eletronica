@@ -114,6 +114,12 @@ class BloqueioUiTest(TransactionTestCase):
         self.assertIsNotNone(bloqueio.quem_bloqueia(self.tpl))
 
 
+def menu(resp):
+    """Itens do menu principal: (href, nome, ativo)."""
+    nav = re.search(r'<nav class="nav" aria-label="Principal">(.*?)</nav>', resp.content.decode(), re.S).group(1)
+    return [(h, n.strip(), bool(a)) for h, a, n in re.findall(r'<a href="([^"]+)"( aria-current="page")?>([^<]+)</a>', nav)]
+
+
 class CascaTest(TestCase):
     def test_casca_com_htmx_csrf_fonte_local_e_navegacao_com_reserva(self):
         Ano.objects.create(ano=2026)
@@ -123,14 +129,27 @@ class CascaTest(TestCase):
         self.assertContains(r, 'hx-headers=\'{"X-CSRFToken": "')
         self.assertContains(r, "ui/fontes/inter-latin-wght-normal.woff2")
         self.assertNotContains(r, "fonts.googleapis.com")
-        # Navegação só por telas B.
-        self.assertContains(r, 'href="/painel/2026/"')
-        self.assertContains(r, 'href="/ui/variaveis/2026/"')  # tela B de variáveis já entrou
-        self.assertContains(r, 'href="/ui/matriz/2026/"')  # tela B de matrizes já registrada
-        self.assertContains(r, 'href="/ui/impresso/2026/"')
-        self.assertContains(r, 'href="/ui/projeto/ano/2026/"')
-        self.assertContains(r, 'href="/ui/lotes/2026/matriz/"')
+        # Navegação só por telas B (U6: 5 itens; Cortes, Variáveis, Revistas e Lotes ficam sob Projetos).
+        self.assertEqual(menu(r), [
+            ("/painel/2026/", "Painel", False), ("/ui/projeto/ano/2026/", "Projetos", True),
+            ("/ui/matriz/2026/", "Matrizes", False), ("/ui/templates/2026/", "Templates", False),
+            ("/ui/impresso/2026/", "Impresso", False),
+        ])
         self.assertContains(r, 'id="mensagens"')
+
+    def test_menu_tem_5_itens(self):
+        Ano.objects.create(ano=2026)
+        self.client.force_login(get_user_model().objects.create_superuser("ana", password="x"))
+        nomes = ["Painel", "Projetos", "Matrizes", "Templates", "Impresso"]
+        for url, ativo in [("/painel/2026/", "Painel"), ("/ui/variaveis/2026/", "Projetos"),
+                           ("/ui/revista/2026/", "Projetos"), ("/ui/lotes/2026/matriz/", "Projetos"),
+                           ("/ui/projeto/ano/2026/", "Projetos"), ("/ui/matriz/2026/", "Matrizes"),
+                           ("/ui/templates/2026/", "Templates"), ("/ui/impresso/2026/", "Impresso"),
+                           ("/ui/validar/2026/", "Painel"), ("/ui/anos/2026/", None)]:
+            with self.subTest(url=url):
+                itens = menu(self.client.get(url))
+                self.assertEqual([n for _, n, _ in itens], nomes)
+                self.assertEqual([n for _, n, a in itens if a], [ativo] if ativo else [])
 
     def test_alpine_csp_e_sortable_com_sri_na_ordem(self):
         # D-195: Sortable e componentes.js antes do Alpine, para o alpine:init achar os registros.
@@ -144,6 +163,20 @@ class CascaTest(TestCase):
         self.assertEqual(html.count('integrity="sha384-'), 2)
         self.assertEqual(html.count('crossorigin="anonymous"'), 2)
 
+
+
+class SemSeletorNasPaginasTest(SimpleTestCase):
+    """U6: o seletor de ano (e o "Abrir ano") mora só no cabeçalho da base."""
+
+    def test_nenhuma_pagina_inclui_abrir_ano(self):
+        raiz = Path(__file__).resolve().parent.parent / "templates" / "ui"
+        achados = [
+            str(arquivo.relative_to(raiz))
+            for arquivo in sorted(raiz.rglob("*.html"))
+            if arquivo.name not in ("base.html", "anos.html")
+            and ("_componentes/anos.html" in (t := arquivo.read_text()) or "Abrir ano</a>" in t)
+        ]
+        self.assertEqual(achados, [])
 
 
 class SemCheckboxConfirmoTest(SimpleTestCase):

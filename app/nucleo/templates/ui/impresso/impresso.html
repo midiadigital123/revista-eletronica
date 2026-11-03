@@ -16,7 +16,6 @@ Lista + detalhe: a lista é só links (?revista=pk); o HTMX troca o #detalhe e p
   </div>
 </header>
 
-{% include "ui/_componentes/anos.html" with rota="ui_impresso" %}
 
 {% if not itens %}
 {% url 'cortes' ano.ano as u %}

@@ -1,9 +1,9 @@
 {% load static %}<!doctype html>
 {% comment %}
 Casca das páginas próprias (opção B), espelho de editor/src/layout/AppLayout.tsx.
-Contexto: `secao` marca o item ativo da navegação; `ano` (opcional) leva o ano aos links.
-Navegação: cada item aponta para a rota B (urls/ui_<tela>.py) do `ano`; sem ele, para a rota
-`_inicio`, que redireciona ao ano mais recente. Referência: docs/telas/design-system.md.
+Contexto: `secao` marca o item ativo dos 5 do menu (Cortes, Variáveis, Revistas e Lotes marcam
+Projetos; `anos` não marca nenhum e destaca o seletor). O ano vem de `nucleo/contexto.py` (`ano_ctx`,
+`trocas_ano`): cada item aponta para a rota B daquele ano; sem ano, para a rota `_inicio`. Referência: docs/telas/design-system.md.
 {% endcomment %}
 <html lang="pt-BR">
 <head>
@@ -18,6 +18,7 @@ Navegação: cada item aponta para a rota B (urls/ui_<tela>.py) do `ano`; sem el
   {# D-195: Sortable e componentes.js antes do Alpine (o alpine:init precisa achar os Alpine.data). #}
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js" integrity="sha384-HZZ/fukV+9G8gwTNjN7zQDG0Sp7MsZy5DDN6VfY3Be7V9dvQpEpR2jF2HlyFUUjU" crossorigin="anonymous" defer></script>
   <script src="{% static 'ui/componentes.js' %}" defer></script>
+  <script src="{% static 'ui/componentes/seletor-ano.js' %}" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@alpinejs/csp@3.14.9/dist/cdn.min.js" integrity="sha384-zaqGaLZBjCeXCLnYyKyAJrDaZcsW8AqZN7iDmFDw3TzHJvhjMckT1H52jWWza0w8" crossorigin="anonymous" defer></script>
   {% block cabeca %}{% endblock %}
 </head>
@@ -26,16 +27,15 @@ Navegação: cada item aponta para a rota B (urls/ui_<tela>.py) do `ano`; sem el
   <header class="cab">
     <div class="cab-in">
       <a class="marca" href="{% url 'inicio' %}">Revista Eletrônica</a>
+      {% include "ui/_componentes/anos.html" %}
       <nav class="nav" aria-label="Principal">
-        <a href="{% if ano %}{% url 'painel' ano.ano %}{% else %}{% url 'inicio' %}{% endif %}"{% if secao == "painel" %} aria-current="page"{% endif %}>Painel</a>
-        <a href="{% if ano %}{% url 'cortes' ano.ano %}{% else %}{% url 'cortes_inicio' %}{% endif %}"{% if secao == "cortes" %} aria-current="page"{% endif %}>Cortes</a>
-        <a href="{% if ano %}{% url 'ui_projeto_lista' ano.ano %}{% else %}{% url 'ui_projeto_inicio' %}{% endif %}"{% if secao == "projetos" %} aria-current="page"{% endif %}>Projetos</a>
-        <a href="{% if ano %}{% url 'ui_variaveis' ano.ano %}{% else %}{% url 'ui_variaveis_inicio' %}{% endif %}"{% if secao == "variaveis" %} aria-current="page"{% endif %}>Variáveis</a>
-        <a href="{% if ano %}{% url 'ui_lotes_matriz' ano.ano %}{% else %}{% url 'ui_lotes_inicio' %}{% endif %}"{% if secao == "lotes" %} aria-current="page"{% endif %}>Lotes</a>
-        <a href="{% if ano %}{% url 'ui_matriz' ano.ano %}{% else %}{% url 'ui_matriz_inicio' %}{% endif %}"{% if secao == "matrizes" %} aria-current="page"{% endif %}>Matrizes</a>
-        <a href="{% if ano %}{% url 'ui_templates' ano.ano %}{% else %}{% url 'ui_templates_inicio' %}{% endif %}"{% if secao == "templates" %} aria-current="page"{% endif %}>Templates</a>
-        <a href="{% if ano %}{% url 'ui_revista' ano.ano %}{% else %}{% url 'ui_revista_inicio' %}{% endif %}"{% if secao == "revistas" %} aria-current="page"{% endif %}>Revistas</a>
-        <a href="{% if ano %}{% url 'ui_impresso' ano.ano %}{% else %}{% url 'ui_impresso' %}{% endif %}"{% if secao == "impresso" %} aria-current="page"{% endif %}>Impresso</a>
+        {% with a=ano_ctx %}
+        <a href="{% if a %}{% url 'painel' a.ano %}{% else %}{% url 'inicio' %}{% endif %}"{% if secao == "painel" %} aria-current="page"{% endif %}>Painel</a>
+        <a href="{% if a %}{% url 'ui_projeto_lista' a.ano %}{% else %}{% url 'ui_projeto_inicio' %}{% endif %}"{% if secao == "projetos" or secao == "cortes" or secao == "variaveis" or secao == "revistas" or secao == "lotes" %} aria-current="page"{% endif %}>Projetos</a>
+        <a href="{% if a %}{% url 'ui_matriz' a.ano %}{% else %}{% url 'ui_matriz_inicio' %}{% endif %}"{% if secao == "matrizes" %} aria-current="page"{% endif %}>Matrizes</a>
+        <a href="{% if a %}{% url 'ui_templates' a.ano %}{% else %}{% url 'ui_templates_inicio' %}{% endif %}"{% if secao == "templates" %} aria-current="page"{% endif %}>Templates</a>
+        <a href="{% if a %}{% url 'ui_impresso' a.ano %}{% else %}{% url 'ui_impresso' %}{% endif %}"{% if secao == "impresso" %} aria-current="page"{% endif %}>Impresso</a>
+        {% endwith %}
       </nav>
       <div class="usuario">
         <span class="mudo">{{ request.user.get_full_name|default:request.user.username }}</span>

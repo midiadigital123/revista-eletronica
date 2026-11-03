@@ -18,6 +18,7 @@ from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.views.decorators.http import require_GET, require_http_methods
 
+from nucleo.contexto import ano_da_sessao
 from nucleo.matriz import (
     DescritorForm,
     DuplicarForm,
@@ -89,7 +90,7 @@ def _contexto_ano(ano):
 @require_GET
 @login_required(login_url="admin:login")
 def inicio(request):
-    ano = Ano.objects.order_by("-ano").first()
+    ano = ano_da_sessao(request)
     if ano:
         return redirect("ui_matriz", ano.ano)
     if not pode_ver(request.user):

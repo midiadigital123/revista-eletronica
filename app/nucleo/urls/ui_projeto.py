@@ -14,6 +14,7 @@ from django.template.response import TemplateResponse
 from django.urls import path
 from django.views.decorators.http import require_GET, require_http_methods
 
+from nucleo.contexto import ano_da_sessao
 from nucleo.models import Ano, CorPadrao, Matriz, MatrizEtapaCC, Projeto
 from nucleo.projeto import MAX_CORES, ProjetoForm, formsets
 from nucleo.servicos.resolver import cores_efetivas, valores_das_variaveis
@@ -44,7 +45,7 @@ def _alvo(request, pk, **kwargs):
 @require_GET
 @login_required(login_url="admin:login")
 def inicio(request):
-    ano = Ano.objects.order_by("-ano").first()
+    ano = ano_da_sessao(request)
     return redirect("ui_projeto_lista", ano.ano) if ano else redirect("admin:nucleo_projeto_changelist")
 
 

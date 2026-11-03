@@ -21,6 +21,7 @@ from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.views.decorators.http import require_GET, require_http_methods
 
+from nucleo.contexto import ano_da_sessao
 from nucleo.models import Ano, Projeto, Revista, RevistaFasciculo
 from nucleo.revista import (
     FasciculoForm,
@@ -75,7 +76,7 @@ def lista(request, ano=None):
         raise PermissionDenied
     anos = list(Ano.objects.order_by("-ano"))
     if ano is None:
-        return redirect("ui_revista", anos[0].ano) if anos else TemplateResponse(request, "ui/revista/lista.html", {"anos": anos})
+        return redirect("ui_revista", ano_da_sessao(request).ano) if anos else TemplateResponse(request, "ui/revista/lista.html", {"anos": anos})
     ano = get_object_or_404(Ano, ano=ano)
     revistas = (
         Revista.objects.filter(ano=ano)

@@ -27,6 +27,7 @@ from django.template.response import TemplateResponse
 from django.urls import path
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
+from nucleo.contexto import ano_da_sessao
 from nucleo.admin.templates import TemplateForm
 from nucleo.models import Ano, Template
 from nucleo.models.texto import Fasciculo
@@ -62,7 +63,7 @@ def lista(request, ano=None):
     anos = list(Ano.objects.order_by("-ano"))
     if ano is None:  # /ui/templates/ → ano mais recente
         if anos:
-            return redirect("ui_templates", anos[0].ano)
+            return redirect("ui_templates", ano_da_sessao(request).ano)
         return TemplateResponse(request, "ui/templates/lista.html", {"anos": anos, "secao": "templates"})
     ano = get_object_or_404(Ano, ano=ano)
     aba = request.GET.get("aba") if request.GET.get("aba") in Fasciculo.values else Fasciculo.F1
