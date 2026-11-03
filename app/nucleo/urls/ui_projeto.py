@@ -96,8 +96,12 @@ def _linhas(ano):
             if r.arquivada_em or p.arquivado_em:
                 revistas.append({"revista": r, "arquivada": True})
             else:
-                faltas = [c["dica"] for c in painel.linha(r)["faltas"].values() if not c["ok"]]
-                revistas.append({"revista": r, "faltas": faltas})
+                cel = painel.linha(r)["faltas"]
+                # Balão = o que falta preparar; Validado e Impresso são etapas, e vão para a Situação.
+                faltas = [c["dica"] for k, c in cel.items() if k not in ("validado", "impresso") and not c["ok"]]
+                situacao = ("Em preparo" if faltas else "Pronta para validar" if not cel["validado"]["ok"]
+                            else "Validada" if not cel["impresso"]["ok"] else "Impressa")
+                revistas.append({"revista": r, "faltas": faltas, "situacao": situacao})
         linhas.append({
             "pa": p.parceiro_ano, "projeto": p, "revistas": revistas, "editando": editando.get(p.pk, ""),
             "marcar": p.parceiro_ano_id not in vistos, "ativo": p.parceiro_ano_id in ativos,

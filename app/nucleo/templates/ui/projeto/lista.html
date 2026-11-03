@@ -55,10 +55,10 @@ action = a ação recusada (o Confirmar do modal reenvia o form sem botão).
             {% else %}<span class="contagem contagem-ok" role="img" aria-label="Sem pendências" title="Sem pendências"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>{% endif %}{% endif %}
             <a class="link-linha" href="{% url 'ui_revista_editar' ano.ano s.revista.pk %}"><span class="sr-only">{{ l.pa.parceiro.nome }} · {{ s.revista.componente.codigo }} · </span>{{ s.revista.componente.nome }}</a>
           </th>
-          <td>{% if s.arquivada %}<span class="tag">arquivada</span>{% endif %}</td>
+          <td>{% if s.arquivada %}<span class="tag">Arquivada</span>{% else %}<span class="tag">{{ s.situacao }}</span>{% endif %}</td>
           <td class="pj-acoes">
-            <a class="btn-icone" href="{% url 'preview' s.revista.pk %}" target="_blank" rel="noopener" aria-label="Abrir preview de {{ s.revista }} (nova aba)" title="Abrir preview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></a>
-            <a class="btn-icone" href="{% url 'ui_revista_zip' ano.ano s.revista.pk %}?voltar=lista" aria-label="Baixar zip de {{ s.revista }}" title="Baixar zip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg></a>
+            <a class="btn-icone" href="{% url 'preview' s.revista.pk %}" target="_blank" rel="noopener" aria-label="Abrir preview de {{ s.revista }} (nova aba)" data-dica="Abrir preview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></a>
+            <a class="btn-icone" href="{% url 'ui_revista_zip' ano.ano s.revista.pk %}?voltar=lista" aria-label="Baixar zip de {{ s.revista }}" data-dica="Baixar zip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg></a>
           </td>
         </tr>
 {% endwith %}        {% endfor %}

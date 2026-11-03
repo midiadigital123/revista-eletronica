@@ -57,7 +57,8 @@ class HubListaTest(Base):
         self.assertNotIn("pendência(s)", html)
         for r in self.go.values():
             with self.subTest(r.componente.codigo):
-                n = sum(not c["ok"] for c in painel.linha(r)["faltas"].values())
+                cel = painel.linha(r)["faltas"]
+                n = sum(not c["ok"] for k, c in cel.items() if k not in ("validado", "impresso"))
                 linha = re.search(rf'<tr data-revista="{r.pk}">.*?</tr>', html, re.S).group(0)
                 if n:
                     rotulo = f"{n} pendência" + ("s" if n > 1 else "")
@@ -68,6 +69,9 @@ class HubListaTest(Base):
                 self.assertIn(f'aria-label="Abrir preview de {r} (nova aba)"', linha)
                 self.assertIn(f'aria-label="Baixar zip de {r}"', linha)
                 self.assertIn(f'<span class="tag tag-lilas" title="{r.componente.nome}">{r.componente.codigo}</span>', linha)
+                # Validado e Impresso são etapas: aparecem na Situação, não no balão.
+                self.assertIn('<span class="tag">Em preparo</span>' if n else '<span class="tag">Pronta para validar</span>', linha)
+                self.assertIn('data-dica="Abrir preview"', linha)
 
     def test_acoes_em_massa_desabilitadas_sem_marcado(self):
         """Sem parceiro marcado, "Atribuir matriz…" e "Atribuir template…" ficam desabilitados com o motivo;

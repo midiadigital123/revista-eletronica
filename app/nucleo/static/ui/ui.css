@@ -222,6 +222,15 @@ input[type="color"]:focus-visible { outline: none; border-color: var(--ring); bo
 .btn-icone:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 .btn-icone svg { width: 1rem; height: 1rem; stroke-width: 1.75; }
 @media (prefers-reduced-motion: reduce) { .btn-icone { transition: none; } }
+/* Dica imediata do botão-ícone (data-dica): o title nativo demora ~1 s e some no toque; o nome
+   acessível continua no aria-label. */
+.btn-icone[data-dica] { position: relative; }
+.btn-icone[data-dica]::after {
+  content: attr(data-dica); position: absolute; bottom: calc(100% + 0.375rem); left: 50%; translate: -50% 0; z-index: 5;
+  padding: 0.25rem 0.5rem; border-radius: var(--radius-md); background: var(--foreground); color: var(--background);
+  font-size: 0.75rem; line-height: 1rem; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 120ms var(--ease-saida);
+}
+.btn-icone[data-dica]:hover::after, .btn-icone[data-dica]:focus-visible::after { opacity: 1; }
 
 /* --- card (components/ui/card.tsx) --- */
 /* `hidden` sempre esconde: sem isto, `.card { display: flex }` e afins venciam o atributo e as abas

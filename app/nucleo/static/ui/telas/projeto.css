@@ -86,8 +86,9 @@ input.pj-amostra-cor:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--
 
 /* Hub Projetos, aba Lista (U7a): a tabela do painel (telas/painel.css: .painel-grupo, .painel-sub, .painel-preview).
    Só o que a Lista tem a mais: Preview e Zip em botões-ícone à direita e o parceiro marcado para a ação em massa. */
-.painel-tabela .pj-acoes { width: 1%; white-space: nowrap; text-align: right; padding-right: 0.75rem; }
-td.pj-acoes { padding-block: 0.375rem; }
+.painel-tabela .pj-acoes { width: 1%; white-space: nowrap; text-align: center; padding-inline: 0.75rem; }
+td.pj-acoes { padding-block: 0.375rem; vertical-align: middle; }
+.pj-acoes > .btn-icone { vertical-align: middle; }
 .pj-acoes > * + * { margin-left: 0.375rem; }
 .painel-sub > .tag:first-child { min-width: 2.25rem; justify-content: center; } /* LP e MT com a mesma largura: os nomes alinham */
 .painel-sub > .tag + .contagem { margin-left: 0.125rem; } /* o balão fica colado ao selo */
