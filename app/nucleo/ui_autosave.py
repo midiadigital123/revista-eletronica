@@ -16,6 +16,7 @@ Respostas:
 from collections.abc import Callable, Iterable
 
 from django.db import IntegrityError, transaction
+from django.forms.utils import pretty_name
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -50,8 +51,13 @@ def erros(lista):
 
 
 def erros_do_form(form):
-    rotulo = {n: (c.label or n) for n, c in form.fields.items()}
-    return [f"{rotulo[n]}: {e}" if n in rotulo else str(e) for n, lista in form.errors.items() for e in lista]
+    """"Rótulo: erro" (rótulo vazio no campo: só o erro, que já diz onde; ex.: a célula de Cortes)."""
+    saida = []
+    for nome, lista in form.errors.items():
+        campo = form.fields.get(nome)
+        rotulo = None if campo is None else pretty_name(nome) if campo.label is None else campo.label
+        saida += [f"{rotulo}: {e}" if rotulo else str(e) for e in lista]
+    return saida
 
 
 def form_de_um_campo(Form, campo, valor, *, instance, prefix=None, **kwargs):

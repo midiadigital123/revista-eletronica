@@ -49,12 +49,14 @@ test("preenche os cortes de 2 parceiros", async ({ page }) => {
 });
 
 // Comentários 3 e 6 da revisão de 03/11: sem editar nada, a grade não pode acusar alteração
-// nem pedir confirmação ao sair (o campo do "Renomear" deslocava a comparação célula × gravado).
+// nem pedir confirmação ao sair. U3: a grade salva por célula; o status fica ocioso.
 test("cortes sem edição não acusa alteração", async ({ page }) => {
   await entrar(page, "/cortes/");
-  await expect(page.locator("[data-alteradas]")).toHaveText("Nenhuma alteração.");
-  await expect(page.locator("[data-grade] [data-alterada]")).toHaveCount(0);
+  const status = page.locator("[data-status-salvo]");
+  await expect(status).toHaveAttribute("data-estado", "");
+  await expect(status.getByText("Cada campo salva sozinho")).toBeVisible();
+  await expect(page.locator("[data-grade] [aria-invalid]")).toHaveCount(0);
   page.on("dialog", (d) => { throw new Error(`diálogo inesperado: ${d.message()}`); });
   await page.reload();
-  await expect(page.locator("[data-alteradas]")).toHaveText("Nenhuma alteração.");
+  await expect(page.locator("[data-status-salvo]")).toHaveAttribute("data-estado", "");
 });

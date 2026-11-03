@@ -6,6 +6,8 @@ item (D-180) e exclusão com confirmação forte (D-181). Escrita na etapa × CC
 bloqueio dela (`ui_bloqueio.com_bloqueio`, alvo = MEC, D-081). Ficha: docs/telas/fichas/matriz.md.
 """
 
+import re
+
 from django import forms
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -16,7 +18,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
-from django.views.decorators.http import require_GET, require_http_methods
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from nucleo.matriz import (
     DescritorForm,
@@ -40,6 +42,7 @@ from nucleo.servicos.matriz import (
     revistas_afetadas,
 )
 from nucleo.servicos.impacto import avisar_perdidos
+from nucleo.ui_autosave import erros, form_de_um_campo, responder_campo
 from nucleo.ui_bloqueio import com_bloqueio, e_htmx
 
 ERROS = "Nada foi gravado: corrija os erros marcados."
@@ -445,6 +448,41 @@ def item(request, pk, dpk, tpk):
     return _pagina_mec(request, m, Descritor.objects.get(pk=d.pk))
 
 
+TAREFA = re.compile(r"^tarefas-(\d{1,4})-")
+
+
+@require_POST
+@login_required(login_url="admin:login")
+@com_bloqueio(_mec, pode_editar)
+def campo(request, pk, dpk):
+    """Autosave (U3) de um campo do descritor ou de uma tarefa já gravada (a linha inteira vem no
+    POST, com o prefixo do formset do painel), sob o bloqueio da MEC. A tarefa nova ainda entra
+    pelo botão "Incluir tarefa" (POST do painel, U4)."""
+    m = _mec(request, pk)
+    d = get_object_or_404(Descritor, pk=dpk, matriz_etapa_cc=m)
+    nome = request.POST.get("campo", "")
+    revistas = lambda: [r for r, _ in impacto(m)]  # noqa: E731 (as afetadas, D-076; a simulação acha as que perdem)
+    if t := TAREFA.match(nome):
+        prefixo = f"tarefas-{t[1]}"
+        pk_tarefa = request.POST.get(f"{prefixo}-id", "")
+        if not (pk_tarefa.isascii() and pk_tarefa.isdigit()):
+            return erros(["Tarefa nova: preencha a linha e use Incluir tarefa."])
+        tarefa = get_object_or_404(Tarefa, pk=pk_tarefa, descritor=d)
+        form = _tarefas(0).form(request.POST, instance=tarefa, prefix=prefixo)
+        return responder_campo(
+            request, form=form, gravar=lambda _: form.save() and None, revistas=revistas, titulo=f"Salvar a tarefa {tarefa.codigo}"
+        )
+    form = form_de_um_campo(DescritorUiForm, nome, request.POST.get("valor", ""), instance=d)
+
+    def gravar(dados):
+        atual = Descritor.objects.get(pk=d.pk)
+        setattr(atual, nome, dados[nome])
+        atual.save(update_fields=[nome])
+
+    titulo = f"Salvar “{form.fields[nome].label}” de {d.codigo}" if form else "Salvar"
+    return responder_campo(request, form=form, gravar=gravar, revistas=revistas, titulo=titulo)
+
+
 # --- Exclusão com confirmação forte (D-181) -------------------------------------------------
 
 
@@ -492,6 +530,7 @@ urlpatterns = [
     path("mec/<int:pk>/intervalo/", intervalo, name="ui_matriz_intervalo"),
     path("mec/<int:pk>/novo/", novo_descritor, name="ui_matriz_novo"),
     path("mec/<int:pk>/d/<int:dpk>/", mec, name="ui_matriz_descritor"),
+    path("mec/<int:pk>/d/<int:dpk>/campo/", campo, name="ui_matriz_campo"),
     path("mec/<int:pk>/d/<int:dpk>/excluir/", excluir_descritor, name="ui_matriz_excluir_descritor"),
     path("mec/<int:pk>/d/<int:dpk>/tarefa/<int:tpk>/item/", item, name="ui_matriz_item"),
     path("mec/<int:pk>/d/<int:dpk>/tarefa/<int:tpk>/excluir/", excluir_tarefa, name="ui_matriz_excluir_tarefa"),

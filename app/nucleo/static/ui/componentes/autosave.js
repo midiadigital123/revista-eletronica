@@ -71,7 +71,8 @@ document.addEventListener("alpine:init", () => {
     },
     aoEnviarForm(e) {
       const confirmar = this.$root.elements.namedItem("confirmar_impacto");
-      if (this.impacto && confirmar?.value === "on") {
+      if (confirmar?.value === "on") {
+        if (!this.impacto) return; // modal do envio da página (U2, ex.: Incluir tarefa): segue o POST
         e.preventDefault();
         confirmar.value = "";
         const { campo } = this.impacto;
@@ -101,7 +102,7 @@ document.addEventListener("alpine:init", () => {
       const prefixo = alvo.dataset.prefixo || "";
       const d = new FormData();
       d.append("csrfmiddlewaretoken", this.$root.querySelector("[name=csrfmiddlewaretoken]").value);
-      const sessao = this.$root.querySelector("#bloqueio-sessao");
+      const sessao = this.$root.querySelector("[name=_bloqueio_sessao]"); // ui_bloqueio.CAMPO_SESSAO
       if (sessao) d.append(sessao.name, sessao.value);
       d.append("form_id", this.$root.id);
       d.append("campo", c.name.startsWith(prefixo) ? c.name.slice(prefixo.length) : c.name);

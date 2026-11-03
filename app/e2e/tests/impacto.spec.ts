@@ -23,10 +23,14 @@ test("renomear parceiro validado abre o modal; Esc volta o nome e o foco; confir
   await entrar(page, "/cortes/2026/");
   await page.fill("#novo-parceiro", nome);
   await page.getByRole("button", { name: "Adicionar parceiro" }).click();
-  await page.getByLabel(`${nome} 5EF LP`, { exact: true }).fill(CORTES);
-  await page.getByLabel(`${nome} 9EF LP`, { exact: true }).fill(CORTES);
-  await page.getByRole("button", { name: "Salvar cortes" }).click();
-  await expect(mensagens).toContainText("Cortes gravados (1 parceiro(s) alterado(s)).");
+  // U3: cada célula salva sozinha ao sair dela.
+  for (const coluna of ["5EF LP", "9EF LP"]) {
+    const salvou = page.waitForResponse((r) => r.url().includes("/celula/") && r.status() === 200);
+    await page.getByLabel(`${nome} ${coluna}`, { exact: true }).fill(CORTES);
+    await page.keyboard.press("Tab");
+    await salvou;
+  }
+  await expect(page.locator("[data-status-salvo]").getByText(/Salvo às/)).toBeVisible();
 
   // 2. Matriz e templates pelos lotes (antes de abrir o projeto: o lote pula projeto em edição).
   await page.goto("/ui/lotes/2026/matriz/");

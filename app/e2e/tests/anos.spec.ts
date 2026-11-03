@@ -22,10 +22,21 @@ test("adiciona um componente na página do ano", async ({ page }) => {
 
   await page.getByLabel("Código (linha nova)").last().fill(codigo);
   await page.getByLabel("Nome (linha nova)").fill(`Componente E2E ${codigo}`);
-  await page.getByRole("button", { name: "Salvar componentes" }).click();
+  await page.getByRole("button", { name: "Adicionar componente" }).click(); // linha nova ainda pelo botão (U4)
 
   await expect(page.getByText(`Componentes de ${ano} salvos.`)).toBeVisible();
   await expect(page.getByLabel(`Código (${codigo})`)).toHaveValue(codigo);
+
+  // U3: o nome do componente gravado salva sozinho ao sair do campo.
+  await expect(page.locator("[data-status-salvo]")).toHaveAttribute("data-estado", "");
+  const nome = page.getByLabel(`Nome (${codigo})`);
+  await nome.fill(`Componente E2E ${codigo} renomeado`);
+  const salvou = page.waitForResponse((r) => r.url().endsWith("/campo/") && r.status() === 200);
+  await page.keyboard.press("Tab");
+  await salvou;
+  await expect(page.locator("[data-status-salvo]").getByText(/Salvo às/)).toBeVisible();
+  await page.reload();
+  await expect(page.getByLabel(`Nome (${codigo})`)).toHaveValue(`Componente E2E ${codigo} renomeado`);
 });
 
 test("impresso não vê o botão de salvar", async ({ browser }) => {
@@ -39,7 +50,7 @@ test("impresso não vê o botão de salvar", async ({ browser }) => {
   const ano = await abrirMaiorAno(page);
 
   await expect(page.getByRole("heading", { name: "Componentes" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Salvar componentes" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Adicionar componente" })).toHaveCount(0);
   await expect(page.getByLabel("Código (linha nova)")).toHaveCount(0);
   await expect(page.getByText(`Ano ${ano}`).first()).toBeVisible();
 });

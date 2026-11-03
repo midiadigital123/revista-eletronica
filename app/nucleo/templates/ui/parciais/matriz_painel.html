@@ -12,7 +12,8 @@ Impacto (U2): form.precisa_confirmar abre o modal de impacto; o modal do item li
       Excluir descritor</a>{% endif %}
   </header>
 
-  <form method="post" action="{{ url }}" hx-post="{{ url }}" hx-target="#painel" class="matriz-form" id="form-descritor" novalidate>{% csrf_token %}
+  {# U3: campos e tarefas gravadas salvam sozinhos (campoAuto, rota ui_matriz_campo); a tarefa nova entra pelo "Incluir tarefa" (POST da página). #}
+  <form method="post" action="{{ url }}" class="matriz-form" id="form-descritor" novalidate{% if pode_gravar %} x-data="campoAuto" data-url="{% url 'ui_matriz_campo' mec.pk descritor.pk %}"{% endif %}>{% csrf_token %}
     {% if request.bloqueio %}<input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">{% endif %}
     <fieldset{% if not pode_gravar %} disabled{% endif %}>
       {% for e in form.non_field_errors %}<p class="aviso aviso-erro" role="alert">{{ e }}</p>{% endfor %}
@@ -43,7 +44,7 @@ Impacto (U2): form.precisa_confirmar abre o modal de impacto; o modal do item li
         {% for e in tarefas.non_form_errors %}<p class="erro" role="alert">{{ e }}</p>{% endfor %}
         <ul class="matriz-tarefas">
         {% for f in tarefas.forms %}{% with t=f.instance %}
-          <li class="matriz-tarefa{% if not t.pk %} matriz-tarefa-nova{% endif %}">
+          <li class="matriz-tarefa{% if not t.pk %} matriz-tarefa-nova{% endif %}" {% if t.pk %}data-linha{% else %}data-manual{% endif %}>
             {% for campo in f.hidden_fields %}{{ campo }}{% endfor %}
             {% if t.pk %}
             <div class="matriz-faixa" role="img" aria-label="Faixa {{ t.inicio }} a {{ t.fim }} de 0 a {{ escala }}">
@@ -75,13 +76,13 @@ Impacto (U2): form.precisa_confirmar abre o modal de impacto; o modal do item li
       </section>
       {% if pode_gravar %}
       <div class="barra-salvar">
-        <span class="mudo">Vale para toda revista que usa esta etapa × componente.</span>
+        <span class="mudo">Os campos salvam sozinhos e valem para toda revista que usa esta etapa × componente. Preencha a tarefa nova e inclua.</span>
         {{ form.confirmar_impacto }}
-        <button type="submit" class="btn">Salvar descritor</button>
+        <button type="submit" class="btn btn-outline">Incluir tarefa</button>
       </div>
       {% endif %}
     </fieldset>
-    {% if form.precisa_confirmar %}{% include "ui/_componentes/impacto.html" with form_id="form-descritor" acao="Salvar descritor" perdem=form.perdem %}{% endif %}
+    {% if form.precisa_confirmar %}{% include "ui/_componentes/impacto.html" with form_id="form-descritor" acao="Incluir tarefa" perdem=form.perdem %}{% endif %}
   </form>
 
   {% for t, item in itens %}{% url 'ui_matriz_item' mec.pk descritor.pk t.pk as url_item %}
