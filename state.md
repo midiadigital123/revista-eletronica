@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Plano ativo: `plans/revista-express-telas-b-ux.md` (reforma de UX, D-195–D-199). Passo U0 de 13 concluído: contador falso de Cortes corrigido (D-200). S6–S9 do plano de lacunas ficam para depois da reforma (D-198); S17/S18 do plano geral seguem pendentes.
-Funcionando: Cortes abre com "Nenhuma alteração." e sai sem diálogo; suíte Django OK (8 de PDF pulados); Playwright de Cortes 2/2 com usuários `e2e`/`imp-e2e` no banco de dev (senhas fora do repo).
-Quebrado/pendente: U1–U10, U8b, U9b; o spec antigo de Cortes grava parceiros "E2E A/B …" no banco de dev a cada execução.
+Plano ativo: `plans/revista-express-telas-b-ux.md` (reforma de UX, D-195–D-199). Passo U1 de 13 concluído: Alpine CSP 3.14.9 + SortableJS 1.15.6 (jsDelivr, SRI) carregam em toda tela B; `static/ui/componentes.js` pronto para os `Alpine.data`. Em andamento: U2 (modal de impacto).
+Funcionando: U0 (Cortes sem contador falso); suíte Django OK (8 de PDF pulados), `makemigrations --check` limpo; Playwright 28 OK com usuários `e2e`/`imp-e2e`.
+Quebrado/pendente: 4 specs (painel, impresso, item, revista-textos) falham por falta da revista DEMONSTRAÇÃO no banco de dev (`criar_demo --ano 2026` não rodado), não pelo U1; U2–U10, U8b, U9b.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Executar U1: carregar Alpine CSP 3.14.9 e SortableJS 1.15.6 do jsDelivr com SRI em `templates/ui/base.html`.
+Executar U2: extrair `perdem_validado` de `app/nucleo/urls/cortes.py:55` para `app/nucleo/servicos/impacto.py`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1646,6 +1646,7 @@ Executar U1: carregar Alpine CSP 3.14.9 e SortableJS 1.15.6 do jsDelivr com SRI 
 - **Status:** ativa
 
 ## Perguntas em aberto
+- [ ] Rodar `manage.py criar_demo --ano 2026` no banco de dev para os 4 specs que procuram DEMONSTRAÇÃO (cria dados no banco do usuário) — depende de: Otavio
 - [x] (D-189 → D-190) Auditoria das telas B: o que o back faz e a tela B não oferece. Bloqueia: abrir ano, criar matriz, criar template, paleta do ano, etapas/componentes. Leva a erro: links do painel vão ao admin (Impresso recebe 403 em "Matriz", `urls/painel.py:43`), renomear parceiro, "abra um ano no admin" para quem não pode. Menu sem Projetos e Lotes. Por onde começar — depende de: usuário
 - [x] (D-184) S17: os cortes de 2026 repetem os de 2025? Se sim, comando `importar_cortes` (~60 min) substituindo a D-119 nesse ponto — depende de: Pedagógica
 - [x] (D-184) S17: LP 2EF tem 10 descritores na planilha `NÍVEIS - LP 2EF.xlsx` e 8 no PDF SAEGO 2025 — qual vale? — depende de: Pedagógica
@@ -1947,3 +1948,4 @@ Executar U1: carregar Alpine CSP 3.14.9 e SortableJS 1.15.6 do jsDelivr com SRI 
 - D-194: paleta na página do ano. O E2E levantou e eu confirmei: cor em maiúsculas no banco × minúsculas do seletor → pedia confirmação e trocava a caixa (hash). Corrigido com teste. Revisor: amostra mostrava a cor não salva, valor lixo no re-render, textarea no novo padrão, erros sem `role=alert`/`aria-describedby` (corrigidos). Suíte 554 OK; Playwright 19 OK, 11 pulados (4 de `anos.spec.ts`, sem credenciais).
 - Revisão de UX pedida (docx com 11 prints e 18 comentários). Só relatório, sem código. Causa achada do "2 parceiro(s) com alteração não salva" eterno e do aviso de saída sem mudança: em `ui/cortes.html`, `tr.querySelectorAll("input.input")` inclui o campo de Renomear e desloca a comparação célula × gravado.
 - Plano da reforma de UX aprovado: `plans/revista-express-telas-b-ux.md` (U0–U10 + U8b página da revista + U9b editor de template com seções travadas; ~12,5 dias). Decisões: Alpine CSP + fetch somado ao HTMX, autosave com modal de impacto, Cortes como visão de Projetos, reforma antes de S6–S9, CDN liberada (jsDelivr com SRI). Registro formal D-195+ fica no U0.
+- U1: Alpine CSP + SortableJS via jsDelivr com SRI na base, `componentes.js` vazio, design-system atualizado. Playwright completo rodou pela 1ª vez com credenciais: 28 OK, 4 falham só por falta da demo.
