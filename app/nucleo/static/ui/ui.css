@@ -109,6 +109,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .popover-ano a:hover, .popover-ano a:focus-visible { background: var(--muted); color: var(--foreground); }
 .popover-ano a[aria-current="page"] { color: var(--foreground); }
 .popover-ano hr { border: 0; border-top: 1px solid var(--border); margin: 0.25rem 0; }
+.popover-config {
+  position: fixed; inset: auto; margin: 0; width: 18rem; padding: 1rem;
+  border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--background); color: var(--foreground);
+  box-shadow: 0 6px 20px oklch(0 0 0 / 0.12);
+}
+.popover-config:popover-open { animation: entra 120ms var(--ease-saida) both; }
 .principal { max-width: 80rem; margin: 0 auto; padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
 
 /* --- cabeçalho de página (ListaProjetos.tsx:31-34) --- */
@@ -455,3 +461,26 @@ table.diff .diff_next { display: none; }
   .lado-a-lado > .lista { position: static; max-height: 16rem; }
   .diff-lado > div + div { border-left-width: 0; border-top-width: 1px; }
 }
+
+/* --- linha nova e reordenar (U4: componentes linhaNova e ordenavel) --- */
+[data-linha-nova] { animation: entra 120ms var(--ease-saida) both; }
+.linha-nova-acoes { width: 1%; white-space: nowrap; }
+.linha-nova-acoes .btn + .btn { margin-left: 0.375rem; }
+.adicionar-linha { margin-top: 0.75rem; }
+.linha-nova-form { align-items: center; margin-top: 0.75rem; }
+.linha-nova-form .input { width: auto; flex: 0 1 24rem; }
+.ordem { display: inline-flex; align-items: center; gap: 0.125rem; color: var(--muted-foreground); }
+.ordem .alca { display: inline-flex; padding: 0.25rem; border-radius: var(--radius-md); cursor: grab; touch-action: none; }
+.ordem .alca:hover { color: var(--foreground); background: var(--muted); }
+.ordem svg { width: 1rem; height: 1rem; }
+.ordem .btn { width: 1.75rem; height: 1.75rem; padding: 0; color: var(--muted-foreground); }
+.ordem .btn:hover { color: var(--foreground); }
+.sortable-ghost { opacity: 0.4; }
+.sortable-chosen { background: var(--muted); }
+
+/* --- zona de perigo (U9): ação destrutiva separada, no fim da página ou do painel --- */
+.zona-perigo {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1.5rem;
+  padding: 1rem; border: 1px solid color-mix(in oklch, var(--destructive) 25%, var(--border)); border-radius: var(--radius-lg);
+}
+.zona-perigo > div { flex: 1 1 20rem; display: flex; flex-direction: column; gap: 0.25rem; }

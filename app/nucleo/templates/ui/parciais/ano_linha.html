@@ -1,0 +1,14 @@
+{% comment %}
+Uma linha da tabela de etapas ou de componentes do ano (U4). Na página, dentro do form da tabela:
+  {% include "ui/parciais/ano_linha.html" with f=form tabela="etapas" %}
+Gravada (f.instance.pk): salva campo a campo (U3, campoAuto, rota ui_ano_campo). Nova (molde do
+empty_form ou devolvida com erro): data-manual, grava pelo "Incluir" (POST da página; Enter também)
+e sai com "Descartar"/Esc (componente linhaNova).
+{% endcomment %}<tr{% if f.instance.pk %} data-url="{% url 'ui_ano_campo' ano.ano tabela f.instance.pk %}" data-prefixo="{{ f.prefix }}-"{% else %} data-manual data-linha-nova{% endif %}>
+  <td>{{ f.id }}{{ f.codigo }}</td>
+  <td>{% if tabela == "etapas" %}{{ f.escala_max }}{% else %}{{ f.nome }}{% endif %}</td>
+  <td class="linha-nova-acoes">{% if not f.instance.pk %}
+    <button class="btn btn-sm" type="submit">Incluir {% if tabela == "etapas" %}etapa{% else %}componente{% endif %}</button>
+    <button class="btn btn-ghost btn-sm" type="button" @click="descartar">Descartar</button>{% endif %}</td>
+</tr>
+{% if f.errors %}<tr><td colspan="3"><ul class="erro">{% for campo in f %}{% for e in campo.errors %}<li>{{ campo.label }}: {{ e }}</li>{% endfor %}{% endfor %}{% for e in f.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul></td></tr>{% endif %}

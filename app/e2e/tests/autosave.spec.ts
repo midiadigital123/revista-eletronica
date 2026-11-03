@@ -4,7 +4,7 @@
 // Preparar como em painel.spec.ts (criar_demo --ano 2026 e o superusuário e2e). Grava de verdade
 // numa variável do 1º projeto do ano e devolve o valor original no fim.
 import { expect, test, type Page } from "@playwright/test";
-import { entrar, liberarBloqueio } from "./helpers";
+import { entrar, liberarBloqueio, novoParceiro } from "./helpers";
 
 const ROTA = "**/ui/projeto/*/campo/";
 
@@ -88,8 +88,7 @@ test("rede caída: Não salvo · Tentar de novo e aviso ao sair só nesse caso",
 test("cortes: a célula salva sozinha; a outra aba com o valor antigo recebe conflito, não grava por cima", async ({ page, context }) => {
   const nome = `E2E Autosave ${Date.now().toString(36).toUpperCase()}`;
   await entrar(page, "/cortes/2026/");
-  await page.fill("#novo-parceiro", nome);
-  await page.getByRole("button", { name: "Adicionar parceiro" }).click();
+  await novoParceiro(page, nome);
   await pronto(page);
   const celulaDe = (p: Page) => p.getByLabel(`${nome} 5EF LP`, { exact: true });
   const status = (p: Page) => p.locator("[data-status-salvo]");

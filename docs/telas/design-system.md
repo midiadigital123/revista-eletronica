@@ -121,6 +121,17 @@ Campo sem impacto salva sozinho; com impacto, o modal do U2 abre antes de gravar
 - `403`: sem permissão (só leitura, como no 409 de bloqueio).
 - Marcação: `<form x-data="campoAuto" id="…" data-url="…">`; ancestral com `data-url`/`data-prefixo` troca a rota e tira o prefixo do formset; `[data-manual]` fica de fora (linha nova que ainda grava pelo botão). O aviso ao sair (`beforeunload`) só dispara com envio pendente ou com erro.
 
+### Linha nova e ordem (U4)
+
+- Tabela editável não termina em linha vazia (formset com `extra=0`). `linhaNova` (`static/ui/componentes.js`): `<div x-data="linhaNova" data-total="id_<prefixo>-TOTAL_FORMS">` com `<template data-molde>` (o `empty_form`, com `__prefix__`), o alvo `[data-linhas]` e o botão `[data-abrir-linha]` "+ Adicionar <coisa>". A linha nasce no fim com o foco no 1º campo; o botão "Incluir <coisa>" da linha (ou Enter) grava pelo POST da página; Esc ou "Descartar" tira a linha e devolve o foco ao botão. Sem `data-total` (Cortes), o molde é um form próprio.
+- Ordem não se digita. Linha nova vai para o fim: `proxima_ordem(qs)` (`ui_autosave.py`). Etapa segue a lógica escolar (`ordem_escolar` em `urls/ui_anos.py`: todo EF antes do EM; no mesmo ensino, pela série) e não se arrasta; componente segue o código.
+- Reordenar (descritores da MEC, tarefas): `ordenavel` (`static/ui/componentes/autosave.js`) em `<ul|ol x-data="ordenavel" id="…" data-ordem-url="…/reordenar/">` com filhos `[data-id]` e `_componentes/ordem.html` (alça `.alca` do SortableJS + "Mover para cima/baixo" para o teclado). Servidor: `reordenar(request, qs, revistas=…, titulo=…)` grava 1…N pelo protocolo do autosave (impacto, 409 do bloqueio); 422 se `ids` não for exatamente o conjunto atual. Erro ou Cancelar no modal voltam a ordem gravada.
+
+### Configurações e zona de perigo (U9)
+
+- Ajuste raro da página (ex.: intervalo mínimo da MEC) fica num popover nativo atrás de um botão outline "Configurações" no cabeçalho: `<div x-data="popoverSob">` com `popovertarget` no botão (`x-ref="botao"`) e o painel `.popover-config` (`popover`, `x-ref="painel"`, `@toggle="alternou"`). O campo dentro salva sozinho (`campoAuto`); o modal de impacto abre por cima do popover.
+- Ação destrutiva sai do topo e vai para o fim, em `.zona-perigo` (título, o que se perde e o botão `btn-destrutivo` suave). A confirmação forte (digitar o código, D-181) continua na página seguinte.
+
 ## 6. Bloqueio de edição (onde o admin usa `BloqueioAdminMixin`)
 
 `nucleo/ui_bloqueio.py`, mesma regra e mesmo serviço do admin (`servicos/bloqueio.py`, D-080, D-081, D-121):

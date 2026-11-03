@@ -50,7 +50,12 @@ class GradeUiTest(Base):
     def test_adicionar_parceiro_cria_linha(self):
         url = reverse("cortes_novo_parceiro", args=[2026])
         self.client.force_login(usuario("md", "Mídias Digitais"))
-        self.assertContains(self.client.get(self.url), "Adicionar parceiro")
+        pagina = self.client.get(self.url)
+        self.assertContains(pagina, "Adicionar parceiro")
+        # U4: sem o form "Nova linha" sempre aberto; o botão abaixo da grade abre a linha (molde).
+        self.assertNotContains(pagina, ">Nova linha<")
+        self.assertContains(pagina, 'x-data="linhaNova"')
+        self.assertLess(pagina.content.index(b"</table>"), pagina.content.index(b"Adicionar parceiro"))
         resp = self.client.post(url, {"nome": "SAEGO"}, follow=True)
         self.assertContains(resp, 'data-parceiro="SAEGO"')
         self.assertContains(self.client.post(url, {"nome": "SAEGO"}, follow=True), "Parceiro não criado")

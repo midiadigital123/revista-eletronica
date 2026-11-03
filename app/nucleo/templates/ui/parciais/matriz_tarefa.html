@@ -1,0 +1,37 @@
+{% comment %}
+Uma tarefa no painel do descritor (T11, U4). Contexto: f (form do formset `tarefas`), mec, descritor, escala, pode_gravar, excluir_tarefa.
+Gravada: data-linha (o autosave manda a linha inteira) e data-id (componente `ordenavel`). Nova (molde do
+empty_form ou devolvida com erro): data-manual, entra pelo "Incluir tarefa" (POST do painel) e sai com
+"Descartar"/Esc (componente linhaNova).
+{% endcomment %}{% with t=f.instance %}<li class="matriz-tarefa{% if not t.pk %} matriz-tarefa-nova{% endif %}" {% if t.pk %}data-linha data-id="{{ t.pk }}"{% else %}data-manual data-linha-nova{% endif %}>
+  {% for campo in f.hidden_fields %}{{ campo }}{% endfor %}
+  {% if t.pk %}
+  <div class="matriz-tarefa-lado">
+    {% if pode_gravar %}{% include "ui/_componentes/ordem.html" with rotulo=t.codigo %}{% endif %}
+    <div class="matriz-faixa" role="img" aria-label="Faixa {{ t.inicio }} a {{ t.fim }} de 0 a {{ escala }}">
+      <span class="matriz-faixa-trilho"><span class="matriz-faixa-trecho" style="--ini: {% widthratio t.inicio escala 100 %}%; --fim: {% widthratio t.fim escala 100 %}%"></span></span>
+      <span class="matriz-faixa-rotulo">{{ t.inicio }}–{{ t.fim }}</span>
+    </div>
+  </div>
+  {% else %}<p class="mudo matriz-faixa-rotulo">Tarefa nova: entra no fim da lista.</p>{% endif %}
+  <div class="matriz-tarefa-campos">
+    {% include "ui/_componentes/matriz_campo.html" with campo=f.inicio %}
+    {% include "ui/_componentes/matriz_campo.html" with campo=f.fim %}
+    <div class="matriz-tarefa-texto">{% include "ui/_componentes/matriz_campo.html" with campo=f.texto %}</div>
+  </div>
+  {% for e in f.non_field_errors %}<p class="erro" role="alert">{{ e }}</p>{% endfor %}
+  {% if t.pk %}
+  <div class="matriz-tarefa-acoes">
+    {% if t.arquivo %}<a class="badge badge-contorno" href="{% url 'admin:nucleo_descritor_item' descritor.pk t.pk %}" title="Baixar o arquivo do item">{{ t.arquivo|slice:"-3:"|upper }}</a>{% if t.texto_alternativo %}<span class="mudo matriz-alt">{{ t.texto_alternativo|truncatechars:60 }}</span>{% endif %}{% endif %}
+    {% if pode_gravar %}<button type="button" class="btn btn-ghost btn-sm" data-abrir="item-{{ t.pk }}" aria-label="Arquivo do item da tarefa {{ t.codigo }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+      Arquivo do item</button>{% endif %}
+    {% if excluir_tarefa %}<a class="btn btn-ghost btn-sm matriz-excluir" href="{% url 'ui_matriz_excluir_tarefa' mec.pk descritor.pk t.pk %}" aria-label="Excluir tarefa {{ t.codigo }}">Excluir</a>{% endif %}
+  </div>
+  {% else %}
+  <div class="matriz-tarefa-acoes">
+    <button type="submit" class="btn btn-sm">Incluir tarefa</button>
+    <button type="button" class="btn btn-ghost btn-sm" @click="descartar">Descartar</button>
+  </div>
+  {% endif %}
+</li>{% endwith %}

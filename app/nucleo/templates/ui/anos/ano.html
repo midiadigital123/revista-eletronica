@@ -1,7 +1,8 @@
 {% extends "ui/base.html" %}
 {% comment %}Página do ano (S4 de D-190): etapas e componentes. View em nucleo/urls/ui_anos.py (`ano`).
-A última linha de cada tabela, vazia, é o "Adicionar" (grava pelo botão, data-manual). As linhas
-gravadas salvam campo a campo (U3, campoAuto, rota ui_ano_campo). Sem `pode.<tabela>`, só texto.{% endcomment %}
+Sem linha vazia (U4): "+ Adicionar" põe a linha nova (molde do empty_form, componente linhaNova), que
+grava pelo "Incluir". As linhas gravadas salvam campo a campo (U3, campoAuto, rota ui_ano_campo).
+A ordem das etapas é a escolar (`ordem_escolar`). Sem `pode.<tabela>`, só texto.{% endcomment %}
 {% block titulo %}Ano {{ ano.ano }}{% endblock %}
 
 {% block conteudo %}
@@ -16,48 +17,48 @@ gravadas salvam campo a campo (U3, campoAuto, rota ui_ano_campo). Sem `pode.<tab
 
 <section class="card" aria-labelledby="etapas-titulo">
   <h2 class="secao-titulo" id="etapas-titulo">Etapas</h2>
-  <p class="mudo">O código não muda depois de criado. A escala máxima fica travada quando a etapa já tem corte ou matriz.</p>
-  {% if pode.etapas %}<form method="post" id="etapas-form" novalidate x-data="campoAuto">{% csrf_token %}<input type="hidden" name="tabela" value="etapas">{{ etapas.management_form }}{% endif %}
+  <p class="mudo">O código não muda depois de criado. A escala máxima fica travada quando a etapa já tem corte ou matriz. A ordem é a escolar: o fundamental (EF) antes do médio (EM) e, em cada um, pela série.</p>
+  {% if pode.etapas %}<form method="post" id="etapas-form" novalidate x-data="campoAuto">{% csrf_token %}<input type="hidden" name="tabela" value="etapas">{{ etapas.management_form }}
+  <div x-data="linhaNova" data-total="id_etapas-TOTAL_FORMS">{% endif %}
   {% for e in etapas.non_form_errors %}<p class="erro">{{ e }}</p>{% endfor %}
   <div class="tabela-caixa">
     <table class="tabela">
-      <thead><tr><th scope="col">Código</th><th scope="col">Escala máxima</th><th scope="col">Ordem</th></tr></thead>
-      <tbody>
+      <thead><tr><th scope="col">Código</th><th scope="col">Escala máxima</th>{% if pode.etapas %}<th scope="col"><span class="sr-only">Linha nova</span></th>{% endif %}</tr></thead>
+      <tbody data-linhas>
       {% for f in etapas %}
-        {% if pode.etapas %}
-        <tr{% if f.instance.pk %} data-url="{% url 'ui_ano_campo' ano.ano 'etapas' f.instance.pk %}" data-prefixo="{{ f.prefix }}-"{% else %} data-manual{% endif %}><td>{{ f.id }}{{ f.codigo }}</td><td>{{ f.escala_max }}</td><td>{{ f.ordem }}</td></tr>
-        {% if f.errors %}<tr><td colspan="3"><ul class="erro">{% for campo in f %}{% for e in campo.errors %}<li>{{ campo.label }}: {{ e }}</li>{% endfor %}{% endfor %}{% for e in f.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul></td></tr>{% endif %}
-        {% elif f.instance.pk %}
-        <tr><th scope="row">{{ f.instance.codigo }}</th><td>{{ f.instance.escala_max }}</td><td>{{ f.instance.ordem }}</td></tr>
-        {% endif %}
+        {% if pode.etapas %}{% include "ui/parciais/ano_linha.html" with f=f tabela="etapas" %}
+        {% elif f.instance.pk %}<tr><th scope="row">{{ f.instance.codigo }}</th><td>{{ f.instance.escala_max }}</td></tr>{% endif %}
       {% endfor %}
       </tbody>
     </table>
   </div>
-  {% if pode.etapas %}<div class="barra-salvar"><span class="mudo">Preencha a última linha para adicionar uma etapa.</span><button class="btn btn-outline" type="submit">Adicionar etapa</button></div></form>{% endif %}
+  {% if pode.etapas %}
+  <template data-molde>{% include "ui/parciais/ano_linha.html" with f=etapas.empty_form tabela="etapas" %}</template>
+  <button class="btn btn-outline btn-sm adicionar-linha" type="button" data-abrir-linha @click="abrir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Adicionar etapa</button>
+  </div></form>{% endif %}
 </section>
 
 <section class="card" aria-labelledby="componentes-titulo">
   <h2 class="secao-titulo" id="componentes-titulo">Componentes</h2>
-  <p class="mudo">O código não muda depois de criado; o nome pode ser corrigido.</p>
-  {% if pode.componentes %}<form method="post" id="componentes-form" novalidate x-data="campoAuto">{% csrf_token %}<input type="hidden" name="tabela" value="componentes">{{ componentes.management_form }}{% endif %}
+  <p class="mudo">O código não muda depois de criado; o nome pode ser corrigido. A lista segue o código.</p>
+  {% if pode.componentes %}<form method="post" id="componentes-form" novalidate x-data="campoAuto">{% csrf_token %}<input type="hidden" name="tabela" value="componentes">{{ componentes.management_form }}
+  <div x-data="linhaNova" data-total="id_componentes-TOTAL_FORMS">{% endif %}
   {% for e in componentes.non_form_errors %}<p class="erro">{{ e }}</p>{% endfor %}
   <div class="tabela-caixa">
     <table class="tabela">
-      <thead><tr><th scope="col">Código</th><th scope="col">Nome</th></tr></thead>
-      <tbody>
+      <thead><tr><th scope="col">Código</th><th scope="col">Nome</th>{% if pode.componentes %}<th scope="col"><span class="sr-only">Linha nova</span></th>{% endif %}</tr></thead>
+      <tbody data-linhas>
       {% for f in componentes %}
-        {% if pode.componentes %}
-        <tr{% if f.instance.pk %} data-url="{% url 'ui_ano_campo' ano.ano 'componentes' f.instance.pk %}" data-prefixo="{{ f.prefix }}-"{% else %} data-manual{% endif %}><td>{{ f.id }}{{ f.codigo }}</td><td>{{ f.nome }}</td></tr>
-        {% if f.errors %}<tr><td colspan="2"><ul class="erro">{% for campo in f %}{% for e in campo.errors %}<li>{{ campo.label }}: {{ e }}</li>{% endfor %}{% endfor %}{% for e in f.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul></td></tr>{% endif %}
-        {% elif f.instance.pk %}
-        <tr><th scope="row">{{ f.instance.codigo }}</th><td>{{ f.instance.nome }}</td></tr>
-        {% endif %}
+        {% if pode.componentes %}{% include "ui/parciais/ano_linha.html" with f=f tabela="componentes" %}
+        {% elif f.instance.pk %}<tr><th scope="row">{{ f.instance.codigo }}</th><td>{{ f.instance.nome }}</td></tr>{% endif %}
       {% endfor %}
       </tbody>
     </table>
   </div>
-  {% if pode.componentes %}<div class="barra-salvar"><span class="mudo">Preencha a última linha para adicionar um componente.</span><button class="btn btn-outline" type="submit">Adicionar componente</button></div></form>{% endif %}
+  {% if pode.componentes %}
+  <template data-molde>{% include "ui/parciais/ano_linha.html" with f=componentes.empty_form tabela="componentes" %}</template>
+  <button class="btn btn-outline btn-sm adicionar-linha" type="button" data-abrir-linha @click="abrir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Adicionar componente</button>
+  </div></form>{% endif %}
 </section>
 
 <section class="card" aria-labelledby="padroes-titulo">

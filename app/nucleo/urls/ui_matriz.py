@@ -12,7 +12,7 @@ from django import forms
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.db.models import Count, Max, Q
+from django.db.models import Count, Q
 from django.forms import inlineformset_factory, modelform_factory
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -43,7 +43,7 @@ from nucleo.servicos.matriz import (
     revistas_afetadas,
 )
 from nucleo.servicos.impacto import avisar_perdidos
-from nucleo.ui_autosave import erros, form_de_um_campo, responder_campo
+from nucleo.ui_autosave import erros, form_de_um_campo, proxima_ordem, quer_json, reordenar, responder_campo
 from nucleo.ui_bloqueio import com_bloqueio, e_htmx
 
 ERROS = "Nada foi gravado: corrija os erros marcados."
@@ -244,11 +244,11 @@ class DescritorUiForm(DescritorForm):
     class Meta:
         model = Descritor
         fields = (
-            "codigo", "ordem", "descricao", "prerequisitos", "praticas", "conhecimento",
+            "codigo", "descricao", "prerequisitos", "praticas", "conhecimento",
             "habilidades_relacionadas", "habilidade_correspondente",
         )  # fmt: skip
         labels = {
-            "codigo": "Código", "ordem": "Ordem", "descricao": "Descrição", "praticas": "Práticas de linguagem",
+            "codigo": "Código", "descricao": "Descrição", "praticas": "Práticas de linguagem",
             "conhecimento": "Objetos de conhecimento", "habilidades_relacionadas": "Habilidades relacionadas",
             "habilidade_correspondente": "Habilidade correspondente",
         }  # fmt: skip
@@ -262,7 +262,7 @@ class DescritorUiForm(DescritorForm):
 
 
 NovoDescritorForm = modelform_factory(
-    Descritor, form=DescritorForm, fields=("codigo", "descricao", "ordem"),
+    Descritor, form=DescritorForm, fields=("codigo", "descricao"),  # U4: ordem = fim da lista (proxima_ordem)
     labels=DescritorUiForm.Meta.labels,
     widgets={"codigo": forms.TextInput(attrs={"autocomplete": "off"}), "descricao": forms.Textarea(attrs={"rows": 3})},
 )  # fmt: skip
@@ -283,10 +283,16 @@ def _avisar(request, mec, form):
         avisar_perdidos(request, form.perdem, mec.matriz.ano.ano)
 
 
-def _tarefas(extra):
+class _TarefasFormSet(forms.BaseInlineFormSet):
+    def save_new(self, form, commit=True):
+        form.instance.ordem = proxima_ordem(Tarefa.objects.filter(descritor=self.instance))  # U4: fim da lista
+        return super().save_new(form, commit)
+
+
+def _tarefas(extra=0):
     return inlineformset_factory(
-        Descritor, Tarefa, fields=("inicio", "fim", "texto", "ordem"), extra=extra, can_delete=False,
-        labels={"inicio": "Início", "fim": "Fim", "texto": "Texto", "ordem": "Ordem"},
+        Descritor, Tarefa, formset=_TarefasFormSet, fields=("inicio", "fim", "texto"), extra=extra, can_delete=False,
+        labels={"inicio": "Início", "fim": "Fim", "texto": "Texto"},
         widgets={"texto": forms.Textarea(attrs={"rows": 2})},
     )  # fmt: skip
 
@@ -295,11 +301,10 @@ def _ordem(descritor):
     return Tarefa.objects.filter(descritor=descritor).order_by("ordem", "pk")
 
 
-def _formset(descritor, extra, data=None):
-    """Tarefas do descritor + `extra` linha(s) em branco com a próxima ordem. GET e POST usam o
-    mesmo initial; sem ele, a ordem da linha em branco conta como alteração e a linha é validada."""
-    n = Tarefa.objects.filter(descritor=descritor).count()
-    return _tarefas(extra)(data, instance=descritor, prefix="tarefas", initial=[{"ordem": n + 1}], queryset=_ordem(descritor))
+def _formset(descritor, data=None):
+    """Tarefas do descritor, sem linha em branco (U4): o "+ Adicionar tarefa" põe a linha nova
+    (molde do empty_form) e soma 1 ao TOTAL_FORMS."""
+    return _tarefas()(data, instance=descritor, prefix="tarefas", queryset=_ordem(descritor))
 
 
 def _descritores(mec, q):
@@ -330,11 +335,11 @@ def _pagina_mec(request, mec, descritor, form=None, tarefas=None, item_pendente=
         if form is None:
             form = DescritorUiForm(instance=descritor)
         if tarefas is None:
-            tarefas = _formset(descritor, 1 if request.pode_gravar else 0)
+            tarefas = _formset(descritor)
         _estilo(form, *tarefas.forms)
         u = request.user
         contexto.update(
-            form=form, tarefas=tarefas, escala=mec.etapa.escala_max,
+            form=form, tarefas=tarefas, escala=mec.etapa.escala_max, tarefa_nova=_estilo(tarefas.empty_form),
             excluir_descritor=request.pode_gravar and u.has_perm("nucleo.delete_descritor"),
             excluir_tarefa=request.pode_gravar and u.has_perm("nucleo.delete_tarefa"),
         )  # fmt: skip
@@ -351,7 +356,7 @@ def _pagina_mec(request, mec, descritor, form=None, tarefas=None, item_pendente=
     contexto.update(
         afetadas=afetadas, perfil_edita=pode_editar(request.user),
         intervalo=_estilo(IntervaloForm(instance=mec)),
-        novo=_estilo(NovoDescritorForm(initial={"ordem": total + 1}, auto_id="novo_%s")),
+        novo=_estilo(NovoDescritorForm(auto_id="novo_%s")),
     )  # fmt: skip
     return TemplateResponse(request, "ui/matriz/mec.html", contexto)
 
@@ -369,7 +374,7 @@ def mec(request, pk, dpk=None):
     if request.method != "POST":
         return _pagina_mec(request, m, d)
     form = DescritorUiForm(request.POST, instance=d)
-    tarefas = _formset(d, 1, request.POST)
+    tarefas = _formset(d, request.POST)
     if form.is_valid() and tarefas.is_valid():
         mudou = form.has_changed() or tarefas.has_changed()
         if not form.pedir_confirmacao(_perdem(m) if mudou else []):
@@ -389,7 +394,19 @@ def mec(request, pk, dpk=None):
 @login_required(login_url="admin:login")
 @com_bloqueio(_mec, pode_editar)
 def intervalo(request, pk):
+    """Intervalo mínimo. U9: no popover "Configurações" salva sozinho (campoAuto, protocolo do
+    autosave, com impacto); o POST da página (HTMX ou sem JS) segue valendo."""
     m = _mec(request, pk)
+    if quer_json(request):
+        form = form_de_um_campo(IntervaloForm, request.POST.get("campo", ""), request.POST.get("valor", ""), instance=m)
+
+        def gravar(dados):
+            atual = MatrizEtapaCC.objects.get(pk=m.pk)
+            atual.passo = dados["passo"]
+            atual.save(update_fields=["passo"])
+
+        revistas = lambda: [r for r, _ in impacto(m)]  # noqa: E731
+        return responder_campo(request, form=form, gravar=gravar, revistas=revistas, titulo="Salvar o intervalo mínimo")
     form = IntervaloForm(request.POST, instance=m)
     if form.is_valid() and not form.pedir_confirmacao(_perdem(m) if form.has_changed() else []):
         form.save()
@@ -409,8 +426,8 @@ def intervalo(request, pk):
 @com_bloqueio(_mec, pode_editar)
 def novo_descritor(request, pk):
     m = _mec(request, pk)
-    ordem = (Descritor.objects.filter(matriz_etapa_cc=m).aggregate(o=Max("ordem"))["o"] or 0) + 1
-    form = NovoDescritorForm(request.POST, instance=Descritor(matriz_etapa_cc=m), initial={"ordem": ordem}, auto_id="novo_%s")
+    ordem = proxima_ordem(Descritor.objects.filter(matriz_etapa_cc=m))
+    form = NovoDescritorForm(request.POST, instance=Descritor(matriz_etapa_cc=m, ordem=ordem), auto_id="novo_%s")
     if form.is_valid() and not form.pedir_confirmacao(_perdem(m)):
         d = form.save()
         messages.success(request, f"Descritor {d.codigo} criado.")
@@ -484,6 +501,22 @@ def campo(request, pk, dpk):
     return responder_campo(request, form=form, gravar=gravar, revistas=revistas, titulo=titulo)
 
 
+@require_POST
+@login_required(login_url="admin:login")
+@com_bloqueio(_mec, pode_editar)
+def reordenar_view(request, pk, dpk=None):
+    """U4: ordem dos descritores da MEC (sem `dpk`) ou das tarefas de um descritor, pelo arrastar ou
+    pelos botões "Mover para cima/baixo" (componente `ordenavel`). A ordem entra na revista: impacto."""
+    m = _mec(request, pk)
+    revistas = lambda: [r for r, _ in impacto(m)]  # noqa: E731
+    if dpk is None:
+        qs, titulo = Descritor.objects.filter(matriz_etapa_cc=m), "Reordenar os descritores"
+    else:
+        d = get_object_or_404(Descritor, pk=dpk, matriz_etapa_cc=m)
+        qs, titulo = Tarefa.objects.filter(descritor=d), f"Reordenar as tarefas de {d.codigo}"
+    return reordenar(request, qs, revistas=revistas, titulo=titulo)
+
+
 # --- Exclusão com confirmação forte (D-181) -------------------------------------------------
 
 
@@ -530,6 +563,8 @@ urlpatterns = [
     path("mec/<int:pk>/", mec, name="ui_matriz_mec"),
     path("mec/<int:pk>/intervalo/", intervalo, name="ui_matriz_intervalo"),
     path("mec/<int:pk>/novo/", novo_descritor, name="ui_matriz_novo"),
+    path("mec/<int:pk>/reordenar/", reordenar_view, name="ui_matriz_reordenar"),
+    path("mec/<int:pk>/d/<int:dpk>/reordenar/", reordenar_view, name="ui_matriz_reordenar"),
     path("mec/<int:pk>/d/<int:dpk>/", mec, name="ui_matriz_descritor"),
     path("mec/<int:pk>/d/<int:dpk>/campo/", campo, name="ui_matriz_campo"),
     path("mec/<int:pk>/d/<int:dpk>/excluir/", excluir_descritor, name="ui_matriz_excluir_descritor"),

@@ -1,6 +1,7 @@
 """Matrizes e descritores B (/ui/matriz/, T09-T11): critérios de aceite de docs/telas/fichas/matriz.md."""
 
 import tempfile
+from unittest import mock
 from pathlib import Path
 
 from django.contrib.auth.models import Permission
@@ -18,6 +19,7 @@ from nucleo.tests.test_importacao import cadastrar, planilha
 from nucleo.tests.test_item import PNG
 from nucleo.tests.test_item import Base as BaseMundo
 from nucleo.tests.test_resolver import usuario
+from nucleo.urls.ui_matriz import DescritorUiForm, NovoDescritorForm, _tarefas
 
 HX = {"HTTP_HX_REQUEST": "true"}
 
@@ -372,3 +374,194 @@ class MecImpactoTest(BaseMundo):
             resp = self.client.post(url, envio, **HX)
         self.assertContains(resp, "Arquivo do item enviado")
         self.assertPerdeu(resp)
+
+
+class MecLinhasTest(BaseMundo):
+    """U4: descritores e tarefas sem campo de ordem, linha nova pelo botão e reordenar sob o bloqueio da MEC."""
+
+    abrir = MecUiTest.abrir
+    dados = MecUiTest.dados
+
+    def setUp(self):
+        super().setUp()
+        self.d = self.tarefa.descritor
+        self.mec = self.d.matriz_etapa_cc
+        self.url = reverse("ui_matriz_descritor", args=[self.mec.pk, self.d.pk])
+        self.outra = Tarefa.objects.create(descritor=self.d, inicio=300, fim=350, texto="Outra.", ordem=7)
+        self.reordenar_d = reverse("ui_matriz_reordenar", args=[self.mec.pk])
+        self.reordenar_t = reverse("ui_matriz_reordenar", args=[self.mec.pk, self.d.pk])
+
+    def descritores(self):
+        return list(Descritor.objects.filter(matriz_etapa_cc=self.mec).order_by("ordem", "pk").values_list("pk", flat=True))
+
+    def tarefas(self):
+        return list(Tarefa.objects.filter(descritor=self.d).order_by("ordem", "pk").values_list("pk", flat=True))
+
+    def postar(self, url, sessao, ids, **extra):
+        return self.client.post(url, {CAMPO_SESSAO: sessao, "ids": ids, **extra}, HTTP_ACCEPT="application/json")
+
+    def test_form_sem_campo_ordem(self):
+        for Form in (DescritorUiForm, NovoDescritorForm, _tarefas(0).form):
+            self.assertNotIn("ordem", Form().fields, Form)
+        resp = self.client.get(self.url)
+        self.assertNotContains(resp, 'name="ordem"')
+        self.assertNotContains(resp, "tarefas-0-ordem")
+        self.assertNotContains(resp, ">Ordem<")
+
+    def test_novo_descritor_e_nova_tarefa_vao_para_o_fim(self):
+        sessao = self.abrir()
+        maior = max(Descritor.objects.filter(matriz_etapa_cc=self.mec).values_list("ordem", flat=True))
+        dados = {CAMPO_SESSAO: sessao, "codigo": "D09", "descricao": "Novo.", "confirmar_impacto": "on"}
+        self.client.post(reverse("ui_matriz_novo", args=[self.mec.pk]), dados, **HX)
+        self.assertEqual(Descritor.objects.get(matriz_etapa_cc=self.mec, codigo="D09").ordem, maior + 1)
+        n = self.d.tarefa_set.count()
+        dados = self.dados(self.abrir(), **{f"tarefas-{n}-inicio": 400, f"tarefas-{n}-fim": 450, f"tarefas-{n}-texto": "Nova."})
+        self.assertContains(self.client.post(self.url, dados, **HX), "Descritor D01 salvo.")
+        maior = max(Tarefa.objects.filter(descritor=self.d).exclude(texto="Nova.").values_list("ordem", flat=True))
+        self.assertEqual(Tarefa.objects.get(descritor=self.d, texto="Nova.").ordem, maior + 1)
+
+    def test_reordenar_grava_1_a_n(self):
+        sessao = self.abrir()
+        for url, ler in ((self.reordenar_d, self.descritores), (self.reordenar_t, self.tarefas)):
+            with self.subTest(url=url):
+                invertida = ler()[::-1]
+                r = self.postar(url, sessao, invertida, confirmar_impacto="on")
+                self.assertEqual(r.status_code, 200, r.content)
+                self.assertTrue(r.json()["ok"])
+                self.assertEqual(ler(), invertida)
+        ordens = list(Tarefa.objects.filter(descritor=self.d).order_by("ordem").values_list("ordem", flat=True))
+        self.assertEqual(ordens, list(range(1, len(ordens) + 1)))
+
+    def test_reordenar_lista_incompleta_422(self):
+        sessao = self.abrir()
+        d, t = self.descritores(), self.tarefas()
+        alheia = Tarefa.objects.exclude(descritor=self.d).first()
+        casos = ((self.reordenar_d, d[:-1]), (self.reordenar_d, [*d, d[0]]), (self.reordenar_t, [t[0], alheia.pk]), (self.reordenar_t, ["x"]))
+        for url, ids in casos:
+            with self.subTest(url=url, ids=ids):
+                r = self.postar(url, sessao, ids, confirmar_impacto="on")
+                self.assertEqual(r.status_code, 422, r.content)
+        self.assertEqual((self.descritores(), self.tarefas()), (d, t))
+
+    def test_reordenar_com_validada_simula_e_grava_direto(self):
+        """A revista mostra descritores e tarefas pela própria regra, não pela `ordem`: a simulação
+        não acha quem perca o "Validado" e grava sem modal."""
+        rev = self.go["LP"]
+        validar(rev)
+        sessao = self.abrir()
+        invertida = self.tarefas()[::-1]
+        self.assertTrue(self.postar(self.reordenar_t, sessao, invertida).json()["ok"])
+        self.assertEqual(self.tarefas(), invertida)
+        self.assertTrue(esta_validada(rev))
+
+    def test_reordenar_impacto_e_bloqueio(self):
+        """Se a ordem tirasse o "Validado" (simulado aqui), o reordenar segue o protocolo do autosave."""
+        rev = self.go["LP"]
+        sessao = self.abrir()
+        antes = self.descritores()
+        invertida = antes[::-1]
+        with mock.patch("nucleo.ui_autosave.perdem_validado", return_value=[rev]):
+            r = self.postar(self.reordenar_d, sessao, invertida, form_id="ordem-lista-ordem")
+            self.assertEqual(r.status_code, 200)
+            self.assertIn(str(rev), r.json()["impacto"]["perdem"])
+            self.assertIn('data-form="ordem-lista-ordem"', r.json()["impacto"]["html"])
+            self.assertEqual(self.descritores(), antes)
+            self.assertTrue(self.postar(self.reordenar_d, sessao, invertida, confirmar_impacto="on").json()["ok"])
+        self.assertEqual(self.descritores(), invertida)
+        self.assertTrue(bloqueio.adquirir(self.mec, self.root, "outra-aba"))
+        self.assertEqual(self.postar(self.reordenar_d, sessao, antes).status_code, 409)
+        self.assertEqual(self.descritores(), invertida)
+
+    def test_reordenar_impresso_403(self):
+        self.client.force_login(usuario("imp", "Impresso"))
+        antes = self.descritores()
+        self.assertEqual(self.postar(self.reordenar_d, "x", antes[::-1]).status_code, 403)
+        self.assertEqual(self.descritores(), antes)
+        resp = self.client.get(self.url)
+        self.assertNotContains(resp, "Mover para cima")
+        self.assertNotContains(resp, "Adicionar tarefa")
+
+    def test_sem_linha_vazia(self):
+        resp = self.client.get(self.url)
+        self.assertNotContains(resp, "Tarefa nova: preencha")
+        self.assertEqual(resp.context["tarefas"].extra, 0)
+        self.assertEqual(len(resp.context["tarefas"].forms), self.d.tarefa_set.count())  # só as gravadas
+        self.assertContains(resp, "Adicionar tarefa")
+        self.assertContains(resp, 'x-data="linhaNova"')
+        self.assertContains(resp, f'data-ordem-url="{self.reordenar_d}"')
+        self.assertContains(resp, f'data-ordem-url="{self.reordenar_t}"')
+        self.assertContains(resp, "Mover para cima")
+
+
+class MecHierarquiaTest(BaseMundo):
+    """U9: cabeçalho com "Configurações" (popover com o intervalo mínimo, autosave com impacto),
+    "+ Novo descritor" no topo da lista e "Excluir descritor" numa zona de perigo no fim do painel."""
+
+    abrir = MecUiTest.abrir
+
+    def setUp(self):
+        super().setUp()
+        self.d = self.tarefa.descritor
+        self.mec = self.d.matriz_etapa_cc
+        self.url = reverse("ui_matriz_descritor", args=[self.mec.pk, self.d.pk])
+        self.intervalo = reverse("ui_matriz_intervalo", args=[self.mec.pk])
+
+    def campo(self, sessao, valor, **extra):
+        dados = {CAMPO_SESSAO: sessao, "campo": "passo", "valor": valor, "form_id": "form-intervalo", **extra}
+        return self.client.post(self.intervalo, dados, HTTP_ACCEPT="application/json")
+
+    def test_cabecalho_lista_e_zona_de_perigo(self):
+        html = self.client.get(self.url).content.decode()
+        cab = html[html.index('<header class="pagina-cab">') : html.index("</header>", html.index('<header class="pagina-cab">'))]
+        self.assertIn('popovertarget="mec-config"', cab)
+        self.assertIn("Configurações", cab)
+        self.assertIn("data-status-salvo", cab)
+        self.assertNotIn("Novo descritor", cab)
+        self.assertLess(cab.index('id="mec-config" popover'), cab.index("Intervalo mínimo"))  # dentro do popover
+        lista = html.index('aria-label="Descritores de')
+        novo = html.index('data-abrir="dlg-novo"')
+        self.assertLess(lista, novo)
+        self.assertLess(novo, html.index('id="lista-descritores"'))
+        self.assertIn('class="btn btn-outline', html[novo - 80 : novo])
+        perigo = html.index('class="zona-perigo"')
+        self.assertLess(html.index('id="sec-tarefas"'), perigo)
+        self.assertLess(perigo, html.index("Excluir descritor"))
+        self.assertEqual(html.count("Excluir descritor"), 1)  # só o título da zona de perigo, nada no topo
+        self.assertIn(f'aria-label="Excluir o descritor {self.d.codigo}"', html[perigo:])
+
+    def test_excluir_continua_exigindo_o_codigo(self):
+        url = reverse("ui_matriz_excluir_descritor", args=[self.mec.pk, self.d.pk])
+        sessao = self.client.get(url).wsgi_request.bloqueio["sessao"]
+        self.assertContains(self.client.post(url, {CAMPO_SESSAO: sessao, "confirmacao": "D0"}), "o código não confere")
+        self.assertTrue(Descritor.objects.filter(pk=self.d.pk).exists())
+
+    def test_intervalo_autosave_impacto_bloqueio_e_403(self):
+        sessao = self.abrir()
+        r = self.campo(sessao, "40")
+        self.assertEqual(r.status_code, 200, r.content)
+        self.assertTrue(r.json()["ok"])
+        self.mec.refresh_from_db()
+        self.assertEqual(self.mec.passo, 40)
+        self.assertEqual(self.campo(sessao, "0").status_code, 422)
+        rev = self.go["LP"]
+        validar(rev)
+        corpo = self.campo(sessao, "45").json()
+        self.assertIn(str(rev), corpo["impacto"]["perdem"])
+        self.assertIn('data-form="form-intervalo"', corpo["impacto"]["html"])
+        self.assertEqual(MatrizEtapaCC.objects.get(pk=self.mec.pk).passo, 40)
+        self.assertTrue(self.campo(sessao, "45", confirmar_impacto="on").json()["ok"])
+        self.assertEqual(MatrizEtapaCC.objects.get(pk=self.mec.pk).passo, 45)
+        self.assertFalse(esta_validada(rev))
+        self.assertTrue(bloqueio.adquirir(self.mec, self.root, "outra-aba"))
+        self.assertEqual(self.campo(sessao, "50").status_code, 409)
+        self.client.force_login(usuario("imp", "Impresso"))
+        self.assertEqual(self.campo("x", "50").status_code, 403)
+        self.assertEqual(MatrizEtapaCC.objects.get(pk=self.mec.pk).passo, 45)
+
+    def test_impresso_ve_configuracoes_so_leitura(self):
+        self.client.force_login(usuario("imp", "Impresso"))
+        resp = self.client.get(self.url)
+        self.assertContains(resp, "Configurações")
+        self.assertNotContains(resp, 'data-abrir="dlg-novo"')
+        self.assertNotContains(resp, "zona-perigo")
+        self.assertNotContains(resp, 'x-data="campoAuto" data-url="' + self.intervalo)

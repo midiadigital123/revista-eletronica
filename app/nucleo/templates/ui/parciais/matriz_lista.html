@@ -1,16 +1,22 @@
 {% comment %}
 Lista de descritores da MEC (busca e item ativo). Vai inteira na página, sozinha na busca
 (hx-target="#lista-descritores") e fora do alvo (oob) quando o painel troca, para marcar o ativo.
-Contexto: mec, visiveis, total, q, ativo, oob.
+Contexto: mec, visiveis, total, q, ativo, oob, pode_gravar. U4: com pode_gravar e sem busca, os
+descritores reordenam (componente `ordenavel`: alça e "Mover para cima/baixo"; rota ui_matriz_reordenar).
 {% endcomment %}<div id="lista-descritores" class="matriz-itens"{% if oob %} hx-swap-oob="true"{% endif %}>
   <input type="hidden" id="ativo" name="d" value="{{ ativo|default:'' }}">
   <p class="mudo matriz-contagem" aria-live="polite">{{ visiveis|length }} de {{ total }} descritor{{ total|pluralize:"es" }}</p>
+  <ol class="matriz-ordem"{% if pode_gravar and not q %} x-data="ordenavel" id="lista-ordem" data-ordem-url="{% url 'ui_matriz_reordenar' mec.pk %}"{% endif %}>
   {% for d in visiveis %}{% url 'ui_matriz_descritor' mec.pk d.pk as u %}
-  <a href="{{ u }}" hx-get="{{ u }}" hx-target="#painel" hx-push-url="{{ u }}" hx-include="#busca"{% if d.pk == ativo %} aria-current="page"{% endif %}>
-    <span class="matriz-codigo">{{ d.codigo }}</span>
-    <span class="matriz-resumo">{{ d.descricao|default:"Sem descrição" }}</span>
-  </a>
+  <li data-id="{{ d.pk }}">
+    {% if pode_gravar and not q %}{% include "ui/_componentes/ordem.html" with rotulo=d.codigo %}{% endif %}
+    <a href="{{ u }}" hx-get="{{ u }}" hx-target="#painel" hx-push-url="{{ u }}" hx-include="#busca"{% if d.pk == ativo %} aria-current="page"{% endif %}>
+      <span class="matriz-codigo">{{ d.codigo }}</span>
+      <span class="matriz-resumo">{{ d.descricao|default:"Sem descrição" }}</span>
+    </a>
+  </li>
   {% empty %}
-  <p class="mudo matriz-nada">{% if q %}Nenhum descritor com “{{ q }}” no código ou no texto.{% else %}Nenhum descritor nesta etapa × componente.{% endif %}</p>
+  <li class="mudo matriz-nada">{% if q %}Nenhum descritor com “{{ q }}” no código ou no texto.{% else %}Nenhum descritor nesta etapa × componente.{% endif %}</li>
   {% endfor %}
+  </ol>
 </div>

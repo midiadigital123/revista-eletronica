@@ -1,15 +1,15 @@
 {% comment %}
-Intervalo mínimo da MEC (D-091, D-155) com o modal de impacto (D-076, U2). HTMX troca o próprio form.
+Intervalo mínimo da MEC (D-091, D-155), no popover "Configurações" do cabeçalho (U9). Salva sozinho
+(campoAuto → ui_matriz_intervalo em JSON); com impacto, o modal do U2 abre antes de gravar (D-076).
+O POST da página (HTMX troca o próprio form; sem JS) segue valendo e devolve o modal pelo precisa_confirmar.
 Contexto: mec, intervalo (IntervaloForm), pode_gravar; oob=True na resposta do POST (mensagens).
-{% endcomment %}{% url 'ui_matriz_intervalo' mec.pk as url %}<form method="post" action="{{ url }}" hx-post="{{ url }}" hx-target="this" hx-swap="outerHTML" class="matriz-intervalo" id="form-intervalo" novalidate>{% csrf_token %}
+{% endcomment %}{% url 'ui_matriz_intervalo' mec.pk as url %}<form method="post" action="{{ url }}" class="matriz-intervalo" id="form-intervalo" novalidate{% if pode_gravar %} x-data="campoAuto" data-url="{{ url }}"{% endif %}>{% csrf_token %}
   {% if request.bloqueio %}<input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">{% endif %}
   <fieldset{% if not pode_gravar %} disabled{% endif %}>
     <div class="campo">
       <label for="{{ intervalo.passo.id_for_label }}">{{ intervalo.passo.label }}</label>
-      <div class="matriz-intervalo-linha">
-        {{ intervalo.passo }}
-        {% if pode_gravar %}<button type="submit" class="btn btn-outline">Salvar</button>{% endif %}
-      </div>
+      {{ intervalo.passo }}
+      <p class="ajuda" id="{{ intervalo.passo.id_for_label }}_helptext">{{ intervalo.passo.help_text }}</p>
       {% for e in intervalo.passo.errors %}<p class="erro">{{ e }}</p>{% endfor %}
     </div>
     {{ intervalo.confirmar_impacto }}
