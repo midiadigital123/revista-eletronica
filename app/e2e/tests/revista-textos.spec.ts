@@ -183,7 +183,7 @@ test("revista: o texto da seção salva sozinho e não se perde ao sair", async 
   const dialogos: string[] = [];
   const contar = (d: { type: () => string; dismiss: () => Promise<void> }) => { dialogos.push(d.type()); void d.dismiss(); };
   page.on("dialog", contar);
-  await page.locator("a.voltar").click();
+  await page.getByRole("navigation", { name: "Trilha" }).getByRole("link").last().click(); // a trilha leva ao projeto
   await expect(page).toHaveURL(/\/ui\/projeto\/\d+\//);
   expect(dialogos).toEqual([]);
   page.off("dialog", contar);

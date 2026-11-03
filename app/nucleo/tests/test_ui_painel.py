@@ -134,7 +134,7 @@ class PainelUiTest(Base):
     def test_selecao_por_grupo(self):
         r = self.client.get(self.url)
         go = self.projeto_go.pk
-        self.assertContains(r, f'data-grupo="{go}" aria-label="Selecionar as revistas de GO"')
+        self.assertContains(r, f'data-grupo="{go}" aria-label="Selecionar as revistas de {self.projeto_go.nome}"')
         for c in ("LP", "MT"):
             self.assertContains(r, f'name="revista" value="{self.go[c].pk}" data-de="{go}"')
         self.assertContains(r, "Nenhuma selecionada")

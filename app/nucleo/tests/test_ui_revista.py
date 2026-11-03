@@ -113,10 +113,17 @@ class RevistaUiTest(Base):
         self.assertEqual(self.client.post(self.url, {"acao": "nome", "nome": "X"}).status_code, 403)
 
     def test_titulo_e_secoes_com_rotulo_humano(self):
-        """Auditoria 03/11: h1 "Parceiro · Componente ano" (não repete o projeto do link de voltar) e
-        as seções com o rótulo do editor de template, não o id."""
+        """Projeto primeiro: h1 "<projeto> · <componente>", o parceiro e o ano em pares rótulo/valor, a
+        trilha Projetos de <ano> › <projeto> com links; as seções com o rótulo do editor de template, não o id."""
+        Projeto.objects.filter(pk=self.projeto_go.pk).update(nome="SAEGO 2")
         r = self.abrir()
-        self.assertContains(r, f"<h1>{self.projeto_go.parceiro_ano.parceiro.nome} · {self.rev.componente.nome} 2026</h1>", html=True)
+        self.assertContains(r, f"<h1>SAEGO 2 · {self.rev.componente.nome}</h1>", html=True)
+        self.assertContains(r, f"<title>SAEGO 2 · {self.rev.componente.nome}", count=1)
+        self.assertContains(r, "<div><dt>Parceiro</dt><dd>GO</dd></div>", html=True)
+        self.assertContains(r, "<div><dt>Ano</dt><dd>2026</dd></div>", html=True)
+        lista, projeto = reverse("ui_projeto_lista", args=[2026]), reverse("ui_projeto", args=[self.projeto_go.pk])
+        self.assertContains(r, f'<nav class="mudo voltar pj-trilha" aria-label="Trilha"><a href="{lista}">Projetos de 2026</a> '
+                               f'<span aria-hidden="true">›</span> <a href="{projeto}?aba=revistas">SAEGO 2</a></nav>', html=True)
         self.assertContains(r, '<span class="revista-secao-id">Introdução</span>', html=True)
         self.assertNotContains(r, '<span class="revista-secao-id">introducao</span>', html=True)
 
