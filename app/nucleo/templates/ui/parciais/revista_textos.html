@@ -1,0 +1,29 @@
+{% comment %}
+Passo 3 da revista (U8b): textos por seção. Só com os templates escolhidos (senão, estado vazio
+neutro); arquivada mostra a foto. Trocar um template troca este #textos (autosave de ui_revista).
+{% endcomment %}<section class="revista-bloco" id="textos" aria-labelledby="textos-titulo">
+  <header class="revista-passo-cab">
+    <span class="revista-passo-num" aria-hidden="true">3</span>
+    <div>
+      <h2 class="secao-titulo" id="textos-titulo">Textos</h2>
+      <p class="mudo">Uma seção por vez. O título vem do template e não se edita aqui.</p>
+    </div>
+  </header>
+  {% if arquivada %}
+    {% for f, secoes in foto %}
+    <div class="card revista-foto">
+      <h3>{{ f }}</h3>
+      {% for s in secoes %}<article><h4>{{ s.id }} <span class="mudo">/</span> {{ s.titulo|safe }}</h4><div class="revista-foto-corpo">{{ s.corpo|safe }}</div></article>{% endfor %}
+    </div>
+    {% empty %}
+    {% include "ui/_componentes/vazio.html" with titulo="Sem textos na foto" texto="A revista foi arquivada sem template nos fascículos." %}
+    {% endfor %}
+  {% elif sem_template %}
+    {% include "ui/_componentes/vazio.html" with titulo="Escolha os templates acima" texto="Os textos aparecem aqui quando os dois fascículos tiverem template." %}
+  {% elif blocos %}
+  <div class="lado-a-lado">
+    {% include "ui/parciais/revista_secoes.html" %}
+    {% include "ui/parciais/revista_secao.html" %}
+  </div>
+  {% endif %}
+</section>

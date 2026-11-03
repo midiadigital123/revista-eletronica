@@ -1,0 +1,48 @@
+{% comment %}
+Coluna Situação da revista (U8b; antes o card "Validado", D-074, D-089, D-174): a única lista de
+pendências, cada uma um link para o passo que a resolve, e o "Validar revista" com o hash que a página
+mostrou. Contexto: revista, validacao (estado_validacao + passos/prontos + pode). Salvar uma seção ou
+trocar template/arquivo troca este #situacao. Pendência é tarefa, não erro: ○ neutro, sem vermelho.
+{% endcomment %}<aside class="card revista-situacao{% if validacao.validada %} revista-situacao-ok{% endif %}" id="situacao" aria-labelledby="situacao-titulo">
+  <header class="revista-situacao-cab">
+    <h2 class="secao-titulo" id="situacao-titulo">Situação</h2>
+    {% if validacao.validada %}
+    <p class="revista-validada"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>Validada por {{ revista.validado_por.get_full_name|default:revista.validado_por }} em {{ revista.validado_em|date:"d/m H:i" }}</p>
+    {% else %}
+    <p class="mudo">{{ validacao.prontos }} de {{ validacao.passos|length }} prontos{% if revista.hash_validado %} · mudou depois do último “Validado” ({{ revista.validado_em|date:"d/m H:i" }}){% endif %}</p>
+    <progress class="revista-progresso" value="{{ validacao.prontos }}" max="{{ validacao.passos|length }}" aria-hidden="true"></progress>
+    {% endif %}
+  </header>
+
+  <ol class="revista-checklist">
+    {% for p in validacao.passos %}
+    <li{% if not p.pendencias %} data-ok{% endif %}>
+      {% if p.pendencias %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/></svg>
+      {% else %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>{% endif %}
+      <div>
+        <span>{{ p.rotulo }}<span class="sr-only">{% if p.pendencias %}: pendente{% else %}: pronto{% endif %}</span></span>
+        {% if p.pendencias %}<ul>{% for x in p.pendencias %}<li>{% if x.url %}<a class="link" href="{{ x.url }}">{{ x.mensagem }}</a>{% else %}{{ x.mensagem }}{% endif %}</li>{% endfor %}</ul>{% endif %}
+      </div>
+    </li>
+    {% endfor %}
+  </ol>
+
+  {% if validacao.desatualizadas %}
+  <p class="revista-desatualizadas"><span class="badge badge-alerta">Aviso</span> Seções desatualizadas: {{ validacao.desatualizadas|join:", " }}. Não impede o “Validado”.</p>
+  {% endif %}
+
+  {% if validacao.pode and not validacao.validada %}
+  <form method="post" action="{% url 'ui_revista_editar' revista.ano.ano revista.pk %}" hx-post="{% url 'ui_revista_editar' revista.ano.ano revista.pk %}" hx-disabled-elt="find button" class="revista-validar">{% csrf_token %}
+    <input type="hidden" name="acao" value="validar">
+    <input type="hidden" name="hash_visto" value="{{ validacao.hash }}">
+    <input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">
+    {% if validacao.pendencias %}<button class="btn btn-outline" type="submit" id="botao-validado" disabled aria-describedby="validar-motivo">{% else %}<button class="btn" type="submit" id="botao-validado">{% endif %}
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+      Validar revista
+    </button>
+    {% if validacao.pendencias %}<p class="mudo" id="validar-motivo">Resolva as pendências acima para validar.</p>{% endif %}
+  </form>
+  {% endif %}
+
+  <a class="link revista-impresso" href="{% url 'impresso' revista.pk %}">O que mudou para o impresso</a>
+</aside>

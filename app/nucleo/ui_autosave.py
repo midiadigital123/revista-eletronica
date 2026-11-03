@@ -74,22 +74,25 @@ def form_de_um_campo(Form, campo, valor, *, instance, prefix=None, **kwargs):
 
 
 def responder_campo(
-    request, *, form, gravar: Callable[[dict], dict | None], revistas: Callable[[], Iterable[Revista]], titulo="Salvar"
+    request, *, form, gravar: Callable[[dict], dict | None], revistas: Callable[[], Iterable[Revista]], titulo="Salvar",
+    simular: Callable[[dict], object] | None = None, modal: dict | None = None,
 ) -> JsonResponse:
     """Valida o `form` (um campo ou uma linha), simula `gravar` para achar quem perde o "Validado"
     (U2) e grava, ou devolve o impacto sem gravar. `gravar(cleaned_data)` pode devolver extras da
-    resposta 200 e levantar `Conflito` (409)."""
+    resposta 200 e levantar `Conflito` (409). `simular`: o que roda na simulação, se não for o
+    próprio `gravar` (ex.: só o sha256 de um arquivo). `modal`: contexto extra do modal, que passa a
+    ser obrigatório mesmo sem revista perdendo o "Validado" (ex.: a frase "descartar N cópia(s)")."""
     if form is None:
         return erros(["Este campo não pode ser alterado aqui. Recarregue a página."])
     if not form.is_valid():
         return erros(erros_do_form(form))
     try:
         candidatas = list(revistas())
-        perdem = perdem_validado(lambda: gravar(form.cleaned_data), candidatas)
-        if perdem and not request.POST.get(CONFIRMAR):
+        perdem = perdem_validado(lambda: (simular or gravar)(form.cleaned_data), candidatas)
+        if (perdem or modal) and not request.POST.get(CONFIRMAR):
             html = render_to_string(
                 "ui/_componentes/impacto.html",
-                {"form_id": request.POST.get("form_id") or "autosave", "acao": titulo, "perdem": perdem},
+                {"form_id": request.POST.get("form_id") or "autosave", "acao": titulo, "perdem": perdem, **(modal or {})},
                 request=request,
             )
             impacto = {"titulo": titulo, "perdem": [str(r) for r in perdem], "afetadas": len(candidatas), "html": html}
