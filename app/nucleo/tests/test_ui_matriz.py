@@ -270,6 +270,11 @@ class MecUiTest(BaseMundo):
             reverse("ui_matriz_excluir_descritor", args=[self.mec.pk, self.d.pk]),
         ):  # fmt: skip
             self.assertEqual(self.client.post(url, {"confirmacao": "D01"}).status_code, 403, url)
+        for url in (  # nem a página de excluir abre (auditoria 03/11: era 200 sem botão)
+            reverse("ui_matriz_excluir_tarefa", args=[self.mec.pk, self.d.pk, self.tarefa.pk]),
+            reverse("ui_matriz_excluir_descritor", args=[self.mec.pk, self.d.pk]),
+        ):  # fmt: skip
+            self.assertEqual(self.client.get(url).status_code, 403, url)
 
     def test_pedagogica_edita(self):
         self.client.force_login(usuario("ped", "Pedagógica"))
