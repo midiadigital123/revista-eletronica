@@ -15,10 +15,10 @@
 {% else %}
 <div class="tabela-caixa">
   <table class="tabela">
-    <thead><tr><th scope="col">Ano</th><th scope="col">Abrir</th></tr></thead>
+    <thead><tr><th scope="col">Ano</th><th scope="col">Abrir</th><th scope="col">Cadastros</th></tr></thead>
     <tbody>
     {% for a in anos %}
-      <tr><th scope="row">{{ a.ano }}</th><td><a class="link" href="{% url 'painel' a.ano %}">Painel de {{ a.ano }}</a></td></tr>
+      <tr><th scope="row">{{ a.ano }}</th><td><a class="link" href="{% url 'painel' a.ano %}">Painel de {{ a.ano }}</a></td><td><a class="link" href="{% url 'ui_ano' a.ano %}">Etapas e componentes de {{ a.ano }}</a></td></tr>
     {% endfor %}
     </tbody>
   </table>
