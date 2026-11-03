@@ -47,3 +47,14 @@ test("preenche os cortes de 2 parceiros", async ({ page }) => {
   await expect(celula(b, "5EF MT")).toHaveValue("150, 200, 250, 300");
   await expect(celula(b, "9EF MT")).toHaveValue("");
 });
+
+// Comentários 3 e 6 da revisão de 03/11: sem editar nada, a grade não pode acusar alteração
+// nem pedir confirmação ao sair (o campo do "Renomear" deslocava a comparação célula × gravado).
+test("cortes sem edição não acusa alteração", async ({ page }) => {
+  await entrar(page, "/cortes/");
+  await expect(page.locator("[data-alteradas]")).toHaveText("Nenhuma alteração.");
+  await expect(page.locator("[data-grade] [data-alterada]")).toHaveCount(0);
+  page.on("dialog", (d) => { throw new Error(`diálogo inesperado: ${d.message()}`); });
+  await page.reload();
+  await expect(page.locator("[data-alteradas]")).toHaveText("Nenhuma alteração.");
+});

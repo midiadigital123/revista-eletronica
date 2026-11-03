@@ -103,7 +103,7 @@
     for (const tr of form.querySelectorAll("tbody tr[data-parceiro]")) {
       const gravado = tr.querySelector("input[type=hidden]").value.split("|");
       let mudou = false;
-      for (const [n, i] of tr.querySelectorAll("input.input").entries()) {
+      for (const [n, i] of tr.querySelectorAll("td input.input").entries()) {
         const alterada = normal(i.value) !== (gravado[n] ?? "");
         i.toggleAttribute("data-alterada", alterada);
         mudou ||= alterada;
