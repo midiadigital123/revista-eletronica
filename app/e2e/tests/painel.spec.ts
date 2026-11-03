@@ -61,8 +61,8 @@ test("painel: filtrar e validar uma revista", async ({ page }) => {
     await variaveis.click();
     await expect(page).toHaveURL(/\/ui\/projeto\/\d+\/$/);
     await page.fill("#id_nome", "DEMONSTRAÇÃO E2E");
-    await page.getByRole("button", { name: "Salvar projeto" }).click();
-    await expect(page.locator("#mensagens")).toContainText("salvo");
+    await page.press("#id_nome", "Tab"); // U3: o campo salva sozinho ao sair dele
+    await expect(page.locator("[data-status-salvo]")).toContainText("Salvo às");
     await page.goto(urlPainel);
     await expect(linha.locator("td.coluna-variaveis .status-ok")).toBeVisible();
   }

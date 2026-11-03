@@ -24,6 +24,7 @@
     {% endif %}
   </div>
   <div class="acoes">
+    {% if pode_gravar %}{% include "ui/_componentes/status_salvo.html" %}{% endif %}
     <a class="btn btn-outline" href="{% url 'ui_variaveis' projeto.ano.ano %}">Planilha de variáveis de {{ projeto.ano.ano }}</a>
   </div>
 </header>
@@ -38,7 +39,8 @@
   <a href="#nome">Nome</a><a href="#variaveis">Variáveis</a><a href="#passo">Passo</a><a href="#cores">Cores</a>
 </nav>
 
-<form method="post" class="pj-form" novalidate>{% csrf_token %}
+{# U3: cada campo e cada linha de passo/cor salvam sozinhos (componente campoAuto, rota ui_projeto_campo). #}
+<form method="post" class="pj-form" id="projeto-form" novalidate{% if pode_gravar %} x-data="campoAuto" data-url="{% url 'ui_projeto_campo' projeto.pk %}"{% endif %}>{% csrf_token %}
   {% include "ui/_componentes/bloqueio.html" %}
   {% for e in form.non_field_errors %}<p class="erro">{{ e }}</p>{% endfor %}
 
@@ -129,11 +131,5 @@
     {% if pode_gravar %}<div>{% if cores.total_form_count >= max_cores %}{% include "ui/parciais/projeto_adicionar.html" with tipo="cores" desligado=True %}{% else %}{% include "ui/parciais/projeto_adicionar.html" with tipo="cores" %}{% endif %}</div>{% endif %}
   </section>
 
-  {% if pode_gravar %}
-  <div class="barra-salvar">
-    <span class="mudo">Salva nome, variáveis, passos e cores juntos.</span>
-    <button class="btn" type="submit">Salvar projeto</button>
-  </div>
-  {% endif %}
 </form>
 {% endblock %}

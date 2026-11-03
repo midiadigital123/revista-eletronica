@@ -47,7 +47,8 @@ test("impresso: valida, vê o diff e marca impressa", async ({ browser }) => {
   if (await variaveis.count()) {
     await variaveis.click();  // ficha B do projeto
     await ped.fill("#id_nome", "DEMONSTRAÇÃO E2E");
-    await ped.getByRole("button", { name: "Salvar projeto" }).click();
+    await ped.press("#id_nome", "Tab"); // U3: o campo salva sozinho ao sair dele
+    await expect(ped.locator("[data-status-salvo]")).toContainText("Salvo às");
     await ped.goto(urlPainel);
   }
   // O nome leva à revista B; o roteiro edita no admin (mesma revista).

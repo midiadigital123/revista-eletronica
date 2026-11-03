@@ -41,7 +41,7 @@ Telas e rotas (nomes `ui_<tela>`; ações `ui_<tela>_<acao>`):
 - Cabeçalho de página: `<header class="pagina-cab"><div><h1>…</h1><p class="mudo">…</p></div><div class="acoes">…</div></header>` (`editor/src/projetos/ListaProjetos.tsx:31-34`).
 - Página de detalhe (um item de uma lista): o caminho de volta é `<a class="mudo voltar" href="…">‹ Lista</a>` logo acima do cabeçalho, não um botão nas ações (matriz, MEC, revista, projeto, editor de template).
 - Ações do cabeçalho: ir a outra tela = `.btn-ghost` ("Ver painel de 2026"); ação desta tela = `.btn-outline`; a principal = `.btn`.
-- Já carregados pela base, nesta ordem e todos com `defer`: `ui/ui.css`, `ui/htmx.min.js` (2.0.4, local), `ui/ui.js`, SortableJS 1.15.6 (jsDelivr), `ui/componentes.js` e Alpine.js `@alpinejs/csp` 3.14.9 (jsDelivr). Fonte Inter local.
+- Já carregados pela base, nesta ordem e todos com `defer`: `ui/ui.css`, `ui/htmx.min.js` (2.0.4, local), `ui/ui.js`, SortableJS 1.15.6 (jsDelivr), `ui/componentes.js`, `ui/componentes/autosave.js` (U3) e Alpine.js `@alpinejs/csp` 3.14.9 (jsDelivr). Fonte Inter local.
 - **CDN (D-199):** liberada para libs novas, sempre com versão exata, `integrity` (SRI sha384) e `crossorigin="anonymous"`. Hash: `curl -sL URL | openssl dgst -sha384 -binary | openssl base64 -A`.
   - `sortablejs@1.15.6/Sortable.min.js`: `sha384-HZZ/fukV+9G8gwTNjN7zQDG0Sp7MsZy5DDN6VfY3Be7V9dvQpEpR2jF2HlyFUUjU`
   - `@alpinejs/csp@3.14.9/dist/cdn.min.js`: `sha384-zaqGaLZBjCeXCLnYyKyAJrDaZcsW8AqZN7iDmFDw3TzHJvhjMckT1H52jWWza0w8`
@@ -108,6 +108,18 @@ Cores fora dos tokens só onde o admin/preview já fixou: faixa vermelha `#b0002
 - CSRF: a base põe `hx-headers='{"X-CSRFToken": …}'` no `<body>`; todo `hx-post` já vai com o token. Forms comuns seguem com `{% csrf_token %}`.
 - Erro 4xx/5xx: o HTMX não troca o alvo; `ui.js` mostra um toast. Erro de validação esperado: responda 200 com o fragmento e os erros nele.
 - Depois de gravar: página inteira → `redirect` (PRG). Fragmento → 200 com o fragmento novo + mensagens `oob`; para ir a outra página use o header `HX-Redirect`.
+
+### Autosave por campo (U3)
+
+Campo sem impacto salva sozinho; com impacto, o modal do U2 abre antes de gravar. Servidor: `nucleo/ui_autosave.py`, `responder_campo(request, *, form, gravar, revistas, titulo)` (valida, simula com `perdem_validado` e grava ou devolve o impacto). `form_de_um_campo(Form, campo, valor, instance=…)` reaproveita o form inteiro trocando um campo só. Cliente: `static/ui/componentes/autosave.js` (`campoAuto` no `<form>`, `saida` em `_componentes/status_salvo.html`, no cabeçalho).
+
+- POST: `campo`, `valor`, `original` (o que a tela tinha), `confirmar_impacto`, `form_id` e a sessão de bloqueio; `[data-linha]` manda também a linha inteira (passo, cor, tarefa); `Accept: application/json`.
+- `200 {"ok": true, "salvo_em": "10:15"}` (+ `valor` normalizado, `id` da linha criada, `removida`).
+- `200 {"ok": false, "impacto": {"titulo", "perdem": [str], "afetadas": int, "html"}}`: não gravou; `html` é o `_componentes/impacto.html`, inserido no form. Confirmar reenvia o campo com `confirmar_impacto=on`; Cancelar/Esc volta o valor gravado e o foco.
+- `422 {"ok": false, "erros": [str]}`: erro embaixo do campo, status "Não salvo: corrija o campo marcado".
+- `409 {"ok": false, "conflito": str}`: bloqueio perdido (o `com_bloqueio` responde JSON a quem pede JSON) → o form inteiro vira só leitura com o nome de quem edita. Com `atual` (Cortes, conflito otimista pelo `original`): mostra o conflito e "Tentar de novo" sobrescreve de propósito.
+- `403`: sem permissão (só leitura, como no 409 de bloqueio).
+- Marcação: `<form x-data="campoAuto" id="…" data-url="…">`; ancestral com `data-url`/`data-prefixo` troca a rota e tira o prefixo do formset; `[data-manual]` fica de fora (linha nova que ainda grava pelo botão). O aviso ao sair (`beforeunload`) só dispara com envio pendente ou com erro.
 
 ## 6. Bloqueio de edição (onde o admin usa `BloqueioAdminMixin`)
 

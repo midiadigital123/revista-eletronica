@@ -10,6 +10,7 @@
   </div>
   {% if ano %}
   <div class="acoes">
+    {% if pode_gravar %}{% include "ui/_componentes/status_salvo.html" %}{% endif %}
     <a class="btn btn-outline" href="{% url 'admin:nucleo_corte_exportar' %}?ano={{ ano.ano }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>
       Baixar planilha de grupos
@@ -31,9 +32,9 @@
 {% include "ui/_componentes/so_leitura.html" with texto="Só leitura: seu perfil vê os cortes, mas não altera. Para editar, peça a permissão de cortes a um administrador." %}
 {% endif %}
 
-<form method="post" class="grade" id="grade" data-grade>{% csrf_token %}
-  {% if impacto %}{% include "ui/_componentes/impacto.html" with form_id="grade" acao="Salvar cortes" perdem=impacto %}{% endif %}
-  {% if pode_gravar %}<p class="mudo">De 1 a 4 cortes inteiros e crescentes, separados por vírgula, maiores que 0 e menores que o máximo da escala da etapa. Célula vazia apaga o corte.</p>{% endif %}
+{# U3: cada célula salva sozinha ao sair dela (componente campoAuto, rota cortes_celula, com o `original` da célula). #}
+<form method="post" class="grade" id="grade" data-grade{% if pode_gravar %} x-data="campoAuto" data-url="{% url 'cortes_celula' ano.ano %}"{% endif %}>{% csrf_token %}
+  {% if pode_gravar %}<p class="mudo">De 1 a 4 cortes inteiros e crescentes, separados por vírgula, maiores que 0 e menores que o máximo da escala da etapa. Célula vazia apaga o corte. Cada célula salva sozinha ao sair dela.</p>{% endif %}
   <div class="tabela-caixa grade-caixa">
     <table class="tabela">
       <thead>
@@ -46,7 +47,7 @@
       <tbody>
       {% for linha in linhas %}
         <tr{% if linha.erros %} class="grade-com-erro"{% endif %} data-parceiro="{{ linha.parceiro.nome }}">
-          <th scope="row" class="grade-parceiro">{{ linha.parceiro.nome }}<input type="hidden" name="o-{{ linha.parceiro.pk }}" value="{{ linha.original }}">
+          <th scope="row" class="grade-parceiro">{{ linha.parceiro.nome }}
             {% if perms.nucleo.change_parceiro %}{# campos do form de renomear (abaixo da grade) pelo atributo form=: form não aninha #}
             {% with pedido=renomear.pk|default:0 %}<details class="grade-renomear"{% if pedido == linha.parceiro.pk %} open{% endif %}><summary class="link">Renomear</summary>
               <label class="sr-only" for="renomear-nome-{{ linha.parceiro.pk }}">Novo nome de {{ linha.parceiro.nome }}</label>
@@ -54,7 +55,7 @@
               <button class="btn btn-outline btn-sm" type="submit" form="renomear-{{ linha.parceiro.pk }}">Renomear</button>
             </details>{% endwith %}{% endif %}
           </th>
-          {% for cel in linha.celulas %}<td{% if cel.inicio %} class="grade-inicio"{% endif %}><input class="input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" name="c-{{ cel.chave }}" value="{{ cel.texto }}"{% if linha.perde %} data-original="{{ cel.original }}"{% endif %} aria-label="{{ cel.titulo }}"{% if cel.invalida %} aria-invalid="true"{% endif %}{% if linha.erros %} aria-describedby="erros-{{ linha.parceiro.pk }}"{% endif %}{% if not pode_gravar %} readonly{% endif %}></td>{% endfor %}
+          {% for cel in linha.celulas %}<td{% if cel.inicio %} class="grade-inicio"{% endif %}><input class="input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" name="c-{{ cel.chave }}" value="{{ cel.texto }}" aria-label="{{ cel.titulo }}"{% if cel.invalida %} aria-invalid="true"{% endif %}{% if linha.erros %} aria-describedby="erros-{{ linha.parceiro.pk }}"{% endif %}{% if not pode_gravar %} readonly{% endif %}></td>{% endfor %}
         </tr>
         {% if linha.erros %}
         <tr class="grade-erros"><td colspan="{{ colunas|length|add:1 }}">
@@ -67,12 +68,6 @@
       </tbody>
     </table>
   </div>
-  {% if pode_gravar %}
-  <div class="barra-salvar">
-    <span class="mudo" aria-live="polite" data-alteradas>Nenhuma alteração.</span>
-    <button class="btn" type="submit">Salvar cortes</button>
-  </div>
-  {% endif %}
 </form>
 
 {% if perms.nucleo.change_parceiro %}{% for linha in linhas %}
@@ -81,7 +76,7 @@
 {% endfor %}{% endif %}
 
 {% if perms.nucleo.add_parceiro %}
-{# Fora do form da grade (form não aninha). Com cortes não salvos, o beforeunload da grade avisa antes de recarregar. #}
+{# Fora do form da grade (form não aninha). Célula com envio pendente ou com erro: o `saida` avisa antes de recarregar. #}
 <form method="post" action="{% url 'cortes_novo_parceiro' ano.ano %}" class="acoes">{% csrf_token %}
   <label for="novo-parceiro">Nova linha</label>
   <input class="input" id="novo-parceiro" name="nome" required maxlength="200" placeholder="Nome do parceiro (ex.: SAEGO)">
@@ -89,36 +84,5 @@
 </form>
 {% endif %}
 
-{% if pode_gravar %}
-<script>
-// Marca as células que diferem do gravado, conta as linhas e avisa antes de sair sem salvar.
-// O gravado vem do "o-" da linha (células unidas por "|"), então vale também depois de um erro.
-(() => {
-  const form = document.querySelector("[data-grade]");
-  const aviso = form.querySelector("[data-alteradas]");
-  const normal = (v) => v.split(/[\s,;]+/).filter(Boolean).join(", ");
-  let enviando = false;
-  const contar = () => {
-    let linhas = 0;
-    for (const tr of form.querySelectorAll("tbody tr[data-parceiro]")) {
-      const gravado = tr.querySelector("input[type=hidden]").value.split("|");
-      let mudou = false;
-      for (const [n, i] of tr.querySelectorAll("td input.input").entries()) {
-        const alterada = normal(i.value) !== (gravado[n] ?? "");
-        i.toggleAttribute("data-alterada", alterada);
-        mudou ||= alterada;
-      }
-      linhas += mudou;
-    }
-    aviso.textContent = linhas ? `${linhas} parceiro(s) com alteração não salva.` : "Nenhuma alteração.";
-    return linhas;
-  };
-  form.addEventListener("input", contar);
-  form.addEventListener("submit", () => { enviando = true; });
-  addEventListener("beforeunload", (e) => { if (!enviando && contar()) e.preventDefault(); });
-  contar();
-})();
-</script>
-{% endif %}
 {% endif %}
 {% endblock %}

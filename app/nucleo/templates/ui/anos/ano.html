@@ -1,6 +1,7 @@
 {% extends "ui/base.html" %}
 {% comment %}Página do ano (S4 de D-190): etapas e componentes. View em nucleo/urls/ui_anos.py (`ano`).
-A última linha de cada tabela, vazia, é o "Adicionar". Sem `pode.<tabela>`, só texto.{% endcomment %}
+A última linha de cada tabela, vazia, é o "Adicionar" (grava pelo botão, data-manual). As linhas
+gravadas salvam campo a campo (U3, campoAuto, rota ui_ano_campo). Sem `pode.<tabela>`, só texto.{% endcomment %}
 {% block titulo %}Ano {{ ano.ano }}{% endblock %}
 
 {% block conteudo %}
@@ -10,12 +11,13 @@ A última linha de cada tabela, vazia, é o "Adicionar". Sem `pode.<tabela>`, s�
     <h1>Ano {{ ano.ano }}</h1>
     <p class="mudo">Etapas e componentes valem para todas as matrizes, cortes e revistas deste ano.</p>
   </div>
+  {% if pode.etapas or pode.componentes %}<div class="acoes">{% include "ui/_componentes/status_salvo.html" %}</div>{% endif %}
 </header>
 
 <section class="card" aria-labelledby="etapas-titulo">
   <h2 class="secao-titulo" id="etapas-titulo">Etapas</h2>
   <p class="mudo">O código não muda depois de criado. A escala máxima fica travada quando a etapa já tem corte ou matriz.</p>
-  {% if pode.etapas %}<form method="post" novalidate>{% csrf_token %}<input type="hidden" name="tabela" value="etapas">{{ etapas.management_form }}{% endif %}
+  {% if pode.etapas %}<form method="post" id="etapas-form" novalidate x-data="campoAuto">{% csrf_token %}<input type="hidden" name="tabela" value="etapas">{{ etapas.management_form }}{% endif %}
   {% for e in etapas.non_form_errors %}<p class="erro">{{ e }}</p>{% endfor %}
   <div class="tabela-caixa">
     <table class="tabela">
@@ -23,7 +25,7 @@ A última linha de cada tabela, vazia, é o "Adicionar". Sem `pode.<tabela>`, s�
       <tbody>
       {% for f in etapas %}
         {% if pode.etapas %}
-        <tr><td>{{ f.id }}{{ f.codigo }}</td><td>{{ f.escala_max }}</td><td>{{ f.ordem }}</td></tr>
+        <tr{% if f.instance.pk %} data-url="{% url 'ui_ano_campo' ano.ano 'etapas' f.instance.pk %}" data-prefixo="{{ f.prefix }}-"{% else %} data-manual{% endif %}><td>{{ f.id }}{{ f.codigo }}</td><td>{{ f.escala_max }}</td><td>{{ f.ordem }}</td></tr>
         {% if f.errors %}<tr><td colspan="3"><ul class="erro">{% for campo in f %}{% for e in campo.errors %}<li>{{ campo.label }}: {{ e }}</li>{% endfor %}{% endfor %}{% for e in f.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul></td></tr>{% endif %}
         {% elif f.instance.pk %}
         <tr><th scope="row">{{ f.instance.codigo }}</th><td>{{ f.instance.escala_max }}</td><td>{{ f.instance.ordem }}</td></tr>
@@ -32,13 +34,13 @@ A última linha de cada tabela, vazia, é o "Adicionar". Sem `pode.<tabela>`, s�
       </tbody>
     </table>
   </div>
-  {% if pode.etapas %}<div class="barra-salvar"><span class="mudo">Preencha a última linha para adicionar uma etapa.</span><button class="btn" type="submit">Salvar etapas</button></div></form>{% endif %}
+  {% if pode.etapas %}<div class="barra-salvar"><span class="mudo">Preencha a última linha para adicionar uma etapa.</span><button class="btn btn-outline" type="submit">Adicionar etapa</button></div></form>{% endif %}
 </section>
 
 <section class="card" aria-labelledby="componentes-titulo">
   <h2 class="secao-titulo" id="componentes-titulo">Componentes</h2>
   <p class="mudo">O código não muda depois de criado; o nome pode ser corrigido.</p>
-  {% if pode.componentes %}<form method="post" novalidate>{% csrf_token %}<input type="hidden" name="tabela" value="componentes">{{ componentes.management_form }}{% endif %}
+  {% if pode.componentes %}<form method="post" id="componentes-form" novalidate x-data="campoAuto">{% csrf_token %}<input type="hidden" name="tabela" value="componentes">{{ componentes.management_form }}{% endif %}
   {% for e in componentes.non_form_errors %}<p class="erro">{{ e }}</p>{% endfor %}
   <div class="tabela-caixa">
     <table class="tabela">
@@ -46,7 +48,7 @@ A última linha de cada tabela, vazia, é o "Adicionar". Sem `pode.<tabela>`, s�
       <tbody>
       {% for f in componentes %}
         {% if pode.componentes %}
-        <tr><td>{{ f.id }}{{ f.codigo }}</td><td>{{ f.nome }}</td></tr>
+        <tr{% if f.instance.pk %} data-url="{% url 'ui_ano_campo' ano.ano 'componentes' f.instance.pk %}" data-prefixo="{{ f.prefix }}-"{% else %} data-manual{% endif %}><td>{{ f.id }}{{ f.codigo }}</td><td>{{ f.nome }}</td></tr>
         {% if f.errors %}<tr><td colspan="2"><ul class="erro">{% for campo in f %}{% for e in campo.errors %}<li>{{ campo.label }}: {{ e }}</li>{% endfor %}{% endfor %}{% for e in f.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul></td></tr>{% endif %}
         {% elif f.instance.pk %}
         <tr><th scope="row">{{ f.instance.codigo }}</th><td>{{ f.instance.nome }}</td></tr>
@@ -55,7 +57,7 @@ A última linha de cada tabela, vazia, é o "Adicionar". Sem `pode.<tabela>`, s�
       </tbody>
     </table>
   </div>
-  {% if pode.componentes %}<div class="barra-salvar"><span class="mudo">Preencha a última linha para adicionar um componente.</span><button class="btn" type="submit">Salvar componentes</button></div></form>{% endif %}
+  {% if pode.componentes %}<div class="barra-salvar"><span class="mudo">Preencha a última linha para adicionar um componente.</span><button class="btn btn-outline" type="submit">Adicionar componente</button></div></form>{% endif %}
 </section>
 
 <section class="card" aria-labelledby="padroes-titulo">

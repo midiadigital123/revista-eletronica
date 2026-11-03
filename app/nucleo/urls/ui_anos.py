@@ -18,13 +18,14 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import path
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 
-from nucleo.models import Ano, Componente, CorPadrao, Corte, Etapa, MatrizEtapaCC
+from nucleo.models import Ano, Componente, CorPadrao, Corte, Etapa, MatrizEtapaCC, Revista
 from nucleo.models.cadastro import COR_HEX
 from nucleo.paleta import PadraoImpactoForm, revistas_afetadas_padrao
 from nucleo.servicos.abrir_ano import AnoRecusado, abrir_ano
 from nucleo.servicos.impacto import avisar_perdidos
+from nucleo.ui_autosave import form_de_um_campo, responder_campo
 
 
 class AbrirAnoForm(forms.Form):  # cópia do form do admin: importá-lo daria import circular (admin → urls)
@@ -121,10 +122,15 @@ ComponenteFormSet = forms.modelformset_factory(Componente, form=ComponenteForm, 
 SALVO = {"etapas": "Etapas de {} salvas.", "componentes": "Componentes de {} salvos."}
 
 
+def _etapas(ano):
+    """Etapas do ano com `travada` (tem corte ou matriz: a escala fica só leitura)."""
+    travada = Exists(Corte.objects.filter(etapa=OuterRef("pk"))) | Exists(MatrizEtapaCC.objects.filter(etapa=OuterRef("pk")))
+    return Etapa.objects.filter(ano=ano).annotate(travada=travada)
+
+
 def _tabelas(ano, data=None, tabela=None):
     """Os dois formsets do ano; só `tabela` recebe o POST (a outra volta como estava)."""
-    travada = Exists(Corte.objects.filter(etapa=OuterRef("pk"))) | Exists(MatrizEtapaCC.objects.filter(etapa=OuterRef("pk")))
-    etapas = Etapa.objects.filter(ano=ano).annotate(travada=travada).order_by("ordem", "codigo")
+    etapas = _etapas(ano).order_by("ordem", "codigo")
     componentes = Componente.objects.filter(ano=ano).order_by("codigo")
     return {
         "etapas": EtapaFormSet(data if tabela == "etapas" else None, queryset=etapas, prefix="etapas", form_kwargs={"ano": ano}),
@@ -248,4 +254,34 @@ def ano(request, ano):
     return TemplateResponse(request, "ui/anos/ano.html", contexto)
 
 
-urlpatterns = [path("", anos, name="ui_anos"), path("<int:ano>/", ano, name="ui_ano")]
+@require_POST
+@login_required(login_url="admin:login")
+@permission_required("nucleo.view_etapa", raise_exception=True)
+def campo(request, ano, tabela, pk):
+    """Autosave (U3) de um campo de etapa (escala máxima sem corte nem matriz, ordem) ou de
+    componente (nome) já gravados. A linha nova ainda grava pelo botão da tabela (U4)."""
+    if tabela not in SALVO:
+        raise Http404
+    if not _pode(request.user)[tabela]:
+        raise PermissionDenied
+    ano = get_object_or_404(Ano, ano=ano)
+    Form, qs = (EtapaForm, _etapas(ano)) if tabela == "etapas" else (ComponenteForm, Componente.objects.filter(ano=ano))
+    obj = get_object_or_404(qs, pk=pk)
+    nome = request.POST.get("campo", "")
+    form = form_de_um_campo(Form, nome, request.POST.get("valor", ""), instance=obj, ano=ano)
+
+    def gravar(dados):
+        atual = type(obj).objects.get(pk=obj.pk)
+        setattr(atual, nome, dados[nome])
+        atual.save(update_fields=[nome])
+
+    revistas = lambda: Revista.objects.filter(projeto__ano=ano, arquivada_em__isnull=True)  # noqa: E731
+    titulo = f"Salvar “{form.fields[nome].label}” de {obj.codigo}" if form else "Salvar"
+    return responder_campo(request, form=form, gravar=gravar, revistas=revistas, titulo=titulo)
+
+
+urlpatterns = [
+    path("", anos, name="ui_anos"),
+    path("<int:ano>/", ano, name="ui_ano"),
+    path("<int:ano>/<str:tabela>/<int:pk>/campo/", campo, name="ui_ano_campo"),
+]

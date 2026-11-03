@@ -33,7 +33,7 @@ class ProjetoUiTest(Base):
         resp = self.client.get(self.url)
         self.assertEqual(resp.status_code, 200)
         self.assertTemplateUsed(resp, "ui/base.html")
-        self.assertContains(resp, "Salvar projeto")
+        self.assertContains(resp, 'x-data="campoAuto"')  # U3: autosave no lugar do Salvar
         self.assertContains(resp, "<legend>Padrões de desempenho</legend>", html=True)
         self.assertContains(resp, 'placeholder="padrão do ano: Padrão 01"')  # D-175
         self.assertNotContains(resp, 'name="nome_parceiro"')  # automáticas não aparecem
@@ -49,7 +49,7 @@ class ProjetoUiTest(Base):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, "Só leitura: seu perfil vê o projeto")
         self.assertContains(resp, "disabled")
-        self.assertNotContains(resp, "Salvar projeto")
+        self.assertNotContains(resp, 'x-data="campoAuto"')  # U3: autosave no lugar do Salvar
         self.assertNotContains(resp, "Sobrescrever um passo")
         self.assertEqual(self.client.post(self.url, {"nome": "X"}).status_code, 403)
         self.client.force_login(usuario("nada"))
@@ -105,7 +105,7 @@ class ProjetoUiTest(Base):
         resp = self.client.get(self.url)
         self.assertContains(resp, "Só leitura: este projeto foi arquivado")
         self.assertContains(resp, "Arquivado")
-        self.assertNotContains(resp, "Salvar projeto")
+        self.assertNotContains(resp, 'x-data="campoAuto"')  # U3: autosave no lugar do Salvar
         self.assertNotContains(resp, 'id="bloqueio-sessao"')  # arquivado não trava
         self.assertEqual(self.client.post(self.url, {"nome": "X"}).status_code, 403)
 
@@ -113,7 +113,7 @@ class ProjetoUiTest(Base):
         self.travar(self.projeto_go)
         resp = self.client.get(self.url)
         self.assertTrue(any(m.startswith("Somente leitura: outro está editando") for m in mensagens(resp)))
-        self.assertNotContains(resp, "Salvar projeto")
+        self.assertNotContains(resp, 'x-data="campoAuto"')  # U3: autosave no lugar do Salvar
         dados = self.dados(self.client.get(reverse("ui_projeto", args=[self.projeto_pe.pk])), nome="Tomado")
         resp = self.client.post(self.url, dados, follow=True)
         self.assertIn("Não salvo: você perdeu o bloqueio de edição", mensagens(resp)[0])

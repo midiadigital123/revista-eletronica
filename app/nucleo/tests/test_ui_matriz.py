@@ -130,7 +130,7 @@ class MecUiTest(BaseMundo):
     def test_pagina_lista_painel_e_busca_por_htmx(self):
         resp = self.client.get(reverse("ui_matriz_mec", args=[self.mec.pk]))
         self.assertTemplateUsed(resp, "ui/matriz/mec.html")
-        self.assertContains(resp, "Salvar descritor")
+        self.assertContains(resp, "Incluir tarefa")
         self.assertContains(resp, "Novo descritor")
         self.assertContains(resp, "2 de 2 descritores")
         self.assertContains(resp, "nucleo/bloqueio.js")
@@ -244,7 +244,7 @@ class MecUiTest(BaseMundo):
         resp = self.client.get(self.url)
         self.assertContains(resp, "Só leitura: seu perfil vê a matriz")
         self.assertContains(resp, "<fieldset disabled>")
-        self.assertNotContains(resp, "Salvar descritor")
+        self.assertNotContains(resp, "Incluir tarefa")
         self.assertNotContains(resp, "Excluir descritor")
         self.assertIsNone(resp.wsgi_request.bloqueio)
         for url in (
@@ -258,7 +258,7 @@ class MecUiTest(BaseMundo):
     def test_pedagogica_edita(self):
         self.client.force_login(usuario("ped", "Pedagógica"))
         resp = self.client.get(self.url)
-        self.assertContains(resp, "Salvar descritor")
+        self.assertContains(resp, "Incluir tarefa")
         self.assertContains(resp, "Excluir descritor")
 
     def test_outra_pessoa_editando_so_le_e_nao_grava(self):
@@ -266,7 +266,7 @@ class MecUiTest(BaseMundo):
         self.assertTrue(bloqueio.adquirir(self.mec, bia, "aba-bia"))
         resp = self.client.get(self.url)
         self.assertContains(resp, "Somente leitura: Bia está editando")
-        self.assertNotContains(resp, "Salvar descritor")
+        self.assertNotContains(resp, "Incluir tarefa")
         resp = self.client.post(self.url, self.dados("minha", descricao="X", confirmar_impacto="on"))
         self.assertEqual(resp.status_code, 302)
         self.d.refresh_from_db()
@@ -303,7 +303,7 @@ class MecImpactoTest(BaseMundo):
 
     def test_descritor_sem_confirmar_abre_modal_e_nao_grava(self):
         resp = self.client.post(self.url, self.dados(self.sessao, descricao="Outra."), **HX)
-        self.assertModal(resp, "form-descritor", "Salvar descritor")
+        self.assertModal(resp, "form-descritor", "Incluir tarefa")
         self.assertContains(resp, 'data-original="Descritor 1 LP"')
         self.d.refresh_from_db()
         self.assertEqual(self.d.descricao, "Descritor 1 LP")

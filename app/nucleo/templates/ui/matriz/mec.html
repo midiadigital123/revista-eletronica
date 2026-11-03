@@ -18,6 +18,7 @@ todo pedido HTMX; os forms também a levam, para funcionar sem JS).
     <p class="mudo">{{ mec.matriz.nome }} · escala até {{ mec.etapa.escala_max }} · afeta {{ afetadas }} revista(s) ativa(s)</p>
   </div>
   <div class="acoes">
+    {% if pode_gravar %}{% include "ui/_componentes/status_salvo.html" %}{% endif %}
     {% include "ui/parciais/matriz_intervalo.html" with intervalo=intervalo %}
     {% if pode_gravar %}
     <button type="button" class="btn" data-abrir="dlg-novo">

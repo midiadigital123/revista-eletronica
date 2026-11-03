@@ -26,7 +26,7 @@ class VariaveisUiTest(Base):
         self.assertEqual(r.status_code, 200)
         self.assertTemplateUsed(r, "ui/base.html")
         self.assertEqual([l["form"].instance for l in r.context["linhas"]], [self.projeto_go, self.projeto_pe])
-        self.assertContains(r, "Salvar variáveis")
+        self.assertContains(r, 'x-data="campoAuto"')  # U3: autosave no lugar do Salvar
         self.assertContains(r, 'aria-label="Copiar de 2025 para Projeto GO"', count=1)
         self.assertContains(r, f'id="copiar-btn-{self.projeto_pe.pk}"', count=1)  # foco volta após o swap
         self.assertContains(r, '>masc. sing.</th>')  # cabeçalho sem o nome do grupo
@@ -43,7 +43,7 @@ class VariaveisUiTest(Base):
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, "Só leitura: seu perfil vê as variáveis")
         self.assertContains(r, "disabled")
-        self.assertNotContains(r, "Salvar variáveis")
+        self.assertNotContains(r, 'x-data="campoAuto"')  # U3: autosave no lugar do Salvar
         self.assertNotContains(r, "Copiar de 2025")
         self.assertEqual(self.client.post(self.url, dados(r)).status_code, 403)
         copiar = reverse("ui_variaveis_copiar", args=[2026, self.projeto_go.pk])
@@ -127,4 +127,4 @@ class VariaveisUiTest(Base):
         r = self.client.get(reverse("ui_variaveis", args=[2030]))
         self.assertContains(r, "Nenhum projeto ativo neste ano")
         self.assertContains(r, reverse("cortes", args=[2030]))
-        self.assertNotContains(r, "Salvar variáveis")
+        self.assertNotContains(r, 'x-data="campoAuto"')  # U3: autosave no lugar do Salvar
