@@ -128,3 +128,16 @@ class CascaTest(TestCase):
         self.assertContains(r, 'href="/ui/projeto/ano/2026/"')
         self.assertContains(r, 'href="/ui/lotes/2026/matriz/"')
         self.assertContains(r, 'id="mensagens"')
+
+    def test_alpine_csp_e_sortable_com_sri_na_ordem(self):
+        # D-195: Sortable e componentes.js antes do Alpine, para o alpine:init achar os registros.
+        Ano.objects.create(ano=2026)
+        self.client.force_login(get_user_model().objects.create_superuser("bia", password="x"))
+        html = self.client.get("/cortes/2026/").content.decode()
+        ordem = ["ui/htmx.min.js", "ui/ui.js", "sortablejs@1.15.6/Sortable.min.js",
+                 "ui/componentes.js", "@alpinejs/csp@3.14.9/dist/cdn.min.js"]
+        posicoes = [html.index(x) for x in ordem]
+        self.assertEqual(posicoes, sorted(posicoes))
+        self.assertEqual(html.count('integrity="sha384-'), 2)
+        self.assertEqual(html.count('crossorigin="anonymous"'), 2)
+

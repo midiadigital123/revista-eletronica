@@ -15,6 +15,10 @@ Navegação: cada item aponta para a rota B (urls/ui_<tela>.py) do `ano`; sem el
   <link rel="stylesheet" href="{% static 'ui/ui.css' %}">
   <script src="{% static 'ui/htmx.min.js' %}" defer></script>
   <script src="{% static 'ui/ui.js' %}" defer></script>
+  {# D-195: Sortable e componentes.js antes do Alpine (o alpine:init precisa achar os Alpine.data). #}
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js" integrity="sha384-HZZ/fukV+9G8gwTNjN7zQDG0Sp7MsZy5DDN6VfY3Be7V9dvQpEpR2jF2HlyFUUjU" crossorigin="anonymous" defer></script>
+  <script src="{% static 'ui/componentes.js' %}" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@alpinejs/csp@3.14.9/dist/cdn.min.js" integrity="sha384-zaqGaLZBjCeXCLnYyKyAJrDaZcsW8AqZN7iDmFDw3TzHJvhjMckT1H52jWWza0w8" crossorigin="anonymous" defer></script>
   {% block cabeca %}{% endblock %}
 </head>
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>

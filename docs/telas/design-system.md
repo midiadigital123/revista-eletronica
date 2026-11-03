@@ -40,7 +40,11 @@ Telas e rotas (nomes `ui_<tela>`; ações `ui_<tela>_<acao>`):
 - Cabeçalho de página: `<header class="pagina-cab"><div><h1>…</h1><p class="mudo">…</p></div><div class="acoes">…</div></header>` (`editor/src/projetos/ListaProjetos.tsx:31-34`).
 - Página de detalhe (um item de uma lista): o caminho de volta é `<a class="mudo voltar" href="…">‹ Lista</a>` logo acima do cabeçalho, não um botão nas ações (matriz, MEC, revista, projeto, editor de template).
 - Ações do cabeçalho: ir a outra tela = `.btn-ghost` ("Ver painel de 2026"); ação desta tela = `.btn-outline`; a principal = `.btn`.
-- Já carregados pela base: `ui/ui.css`, `ui/htmx.min.js` (2.0.4, `defer`), `ui/ui.js` (`defer`), fonte Inter local. Nada de CDN.
+- Já carregados pela base, nesta ordem e todos com `defer`: `ui/ui.css`, `ui/htmx.min.js` (2.0.4, local), `ui/ui.js`, SortableJS 1.15.6 (jsDelivr), `ui/componentes.js` e Alpine.js `@alpinejs/csp` 3.14.9 (jsDelivr). Fonte Inter local.
+- **CDN (D-199):** liberada para libs novas, sempre com versão exata, `integrity` (SRI sha384) e `crossorigin="anonymous"`. Hash: `curl -sL URL | openssl dgst -sha384 -binary | openssl base64 -A`.
+  - `sortablejs@1.15.6/Sortable.min.js`: `sha384-HZZ/fukV+9G8gwTNjN7zQDG0Sp7MsZy5DDN6VfY3Be7V9dvQpEpR2jF2HlyFUUjU`
+  - `@alpinejs/csp@3.14.9/dist/cdn.min.js`: `sha384-zaqGaLZBjCeXCLnYyKyAJrDaZcsW8AqZN7iDmFDw3TzHJvhjMckT1H52jWWza0w8`
+- **Alpine (D-195):** só o build CSP. Todo `x-data` aponta para um componente registrado com `Alpine.data` em `static/ui/componentes.js`, no evento `alpine:init`; no HTML, só propriedade ou chamada de método (sem expressão inline). O HTMX continua nas telas que já o usam; o Alpine cuida só de estado local (modal, linha nova, edição inline, status do salvamento).
 
 ## 3. Tokens (copiados do editor)
 

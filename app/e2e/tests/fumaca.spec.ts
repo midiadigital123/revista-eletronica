@@ -13,3 +13,13 @@ test("entra no admin com o superusuário", async ({ page }) => {
   await expect(page).toHaveURL(/\/admin\/$/);
   await expect(page.locator("#user-tools")).toBeVisible();
 });
+
+// U1 (D-195): Alpine (build CSP) e SortableJS carregam em toda tela B, sem erro no console.
+test("tela B carrega Alpine e SortableJS sem erro", async ({ page }) => {
+  const erros: string[] = [];
+  page.on("console", (m) => { if (m.type() === "error") erros.push(m.text()); });
+  page.on("pageerror", (e) => erros.push(e.message));
+  await entrar(page, "/cortes/");
+  await expect.poll(() => page.evaluate(() => !!(window as any).Alpine && !!(window as any).Sortable)).toBe(true);
+  expect(erros).toEqual([]);
+});
