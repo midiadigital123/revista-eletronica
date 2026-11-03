@@ -206,3 +206,9 @@ class EstaticosComVersaoTest(SimpleTestCase):
         from django.templatetags.static import static
 
         self.assertTrue(static("ui/nao-existe.css").endswith("/static/ui/nao-existe.css"))
+
+    def test_pasta_fica_sem_versao(self):
+        """O preview monta `static("revista/") + "styles.css"`: versão no meio quebrava o CSS da revista."""
+        from django.templatetags.static import static
+
+        self.assertTrue(static("revista/").endswith("/static/revista/"))

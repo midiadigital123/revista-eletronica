@@ -14,6 +14,6 @@ class EstaticosComVersao(StaticFilesStorage):
     def url(self, name):
         url = super().url(name)
         caminho = finders.find(name) if name else None
-        if isinstance(caminho, str):
+        if isinstance(caminho, str) and os.path.isfile(caminho):  # pasta (static("revista/")) fica sem versão
             url += f"?v={int(os.path.getmtime(caminho))}"
         return url
