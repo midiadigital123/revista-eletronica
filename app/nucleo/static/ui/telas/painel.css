@@ -1,10 +1,11 @@
 /* Painel da temporada (T23, U8). Só o que a tela precisa além de ui.css; usa os tokens de ui.css. */
 .painel-corpo { display: flex; flex-direction: column; gap: 1rem; }
 
-/* Filtros: parceiro (e o chip do template, quando vem de outra tela). */
-.painel-filtros { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.75rem 1rem; }
-.painel-filtros .select { min-width: 12rem; }
-.painel-chip { display: inline-flex; align-items: center; gap: 0.5rem; height: 2.25rem; padding: 0 0.75rem; border-radius: var(--radius-md); background: var(--muted); font-size: 0.875rem; }
+/* Filtros: uma linha de selects compactos (autosubmit HTMX) e "Limpar filtros" só com filtro ativo. */
+.painel-filtros { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.75rem; }
+.painel-filtros .select { min-width: 8.5rem; }
+.painel-filtros .painel-filtro-largo .select { min-width: 15rem; } /* Template: "LP · nome (F1)" */
+.painel-limpar-tudo { display: inline-flex; align-items: center; height: 2.25rem; font-size: 0.875rem; }
 
 /* Resumo: o total grande e um contador por coluna (o contador é o filtro de falta). */
 .painel-sumario { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; }
@@ -14,14 +15,15 @@
 .painel-contador {
   display: inline-flex; align-items: center; gap: 0.375rem; height: 2rem; padding: 0 0.75rem;
   border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--background);
-  font-size: 0.8125rem; font-weight: 500; color: var(--foreground); white-space: nowrap;
+  font: inherit; font-size: 0.8125rem; font-weight: 500; color: var(--foreground); white-space: nowrap;
   transition: background-color 120ms var(--ease-saida), border-color 120ms var(--ease-saida);
 }
-a.painel-contador:hover { background: var(--muted); }
-a.painel-contador:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+button.painel-contador { cursor: pointer; }
+button.painel-contador:hover { background: var(--muted); }
+button.painel-contador:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 .painel-contador-n { min-width: 1.25rem; padding: 0 0.3125rem; border-radius: 999px; background: var(--warning-bg); color: var(--warning); font-weight: 650; text-align: center; }
-.painel-contador[aria-current="true"] { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
-.painel-contador[aria-current="true"]:hover { background: var(--primary); }
+.painel-contador[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+.painel-contador[aria-pressed="true"]:hover { background: var(--primary); }
 .painel-contador-ok { color: var(--muted-foreground); border-style: dashed; }
 .painel-contador-ok svg { width: 0.75rem; height: 0.75rem; color: var(--sucesso); }
 .painel-limpar { font-size: 0.875rem; }
@@ -64,8 +66,9 @@ a.painel-contador:focus-visible { outline: 2px solid var(--ring); outline-offset
 }
 
 @media (max-width: 40rem) {
-  .painel-filtros .campo { flex: 1 1 100%; }
-  .painel-filtros .select { min-width: 0; width: 100%; }
+  .painel-filtros .campo { flex: 1 1 calc(50% - 0.375rem); } /* dois por linha; o Template ocupa a linha toda */
+  .painel-filtros .painel-filtro-largo { flex-basis: 100%; }
+  .painel-filtros .select, .painel-filtros .painel-filtro-largo .select { min-width: 0; width: 100%; }
   .painel-revista { min-width: 12rem; }
   .painel-revista .painel-preview { font-size: 0; gap: 0; }  /* só o ícone; o texto continua para leitor de tela (sr-only) */
   .painel-revista .painel-preview svg { width: 0.875rem; height: 0.875rem; }

@@ -8,16 +8,38 @@ parceiro. A página inclui; o filtro (HTMX) devolve só isto para #painel-corpo.
     <label for="filtro-parceiro">Parceiro</label>
     <select class="select" id="filtro-parceiro" name="parceiro">
       <option value="">Todos</option>
-      {% for p in parceiros %}<option value="{{ p.pk }}"{% if p.pk == parceiro.pk %} selected{% endif %}>{{ p.nome }}</option>{% endfor %}
+      {% for p in opcoes_parceiro %}<option value="{{ p.pk }}"{% if p.pk == parceiro.pk %} selected{% endif %}>{{ p.nome }}</option>{% endfor %}
     </select>
   </div>
-  {% if template %}
   <div class="campo">
-    <span class="rotulo">Template</span>
-    <span class="painel-chip"><input type="hidden" name="template" value="{{ template.pk }}">{{ template.componente.codigo }} · {{ template }}
-      <a class="link" href="{{ sem_template }}" hx-get="{{ sem_template }}" hx-target="#painel-corpo" hx-indicator="#painel-corpo" hx-push-url="true">Limpar</a></span>
+    <label for="filtro-componente">Componente</label>
+    <select class="select" id="filtro-componente" name="componente">
+      <option value="">Todos</option>
+      {% for c in opcoes_componente %}<option value="{{ c.pk }}"{% if c.pk == componente.pk %} selected{% endif %}>{{ c.codigo }}</option>{% endfor %}
+    </select>
   </div>
-  {% endif %}
+  <div class="campo painel-filtro-largo">
+    <label for="filtro-template">Template</label>
+    <select class="select" id="filtro-template" name="template">
+      <option value="">Todos</option>
+      {% for t in opcoes_template %}<option value="{{ t.pk }}"{% if t.pk == template.pk %} selected{% endif %}>{{ t.componente.codigo }} · {{ t }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="campo">
+    <label for="filtro-matriz">Matriz</label>
+    <select class="select" id="filtro-matriz" name="matriz">
+      <option value="">Todas</option>
+      {% for m in opcoes_matriz %}<option value="{{ m.pk }}"{% if m.pk == matriz.pk %} selected{% endif %}>{{ m.nome }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="campo">
+    <label for="filtro-situacao">Situação</label>
+    <select class="select" id="filtro-situacao" name="situacao">
+      <option value="">Todas</option>
+      {% for valor, rotulo in situacoes.items %}<option value="{{ valor }}"{% if valor == situacao %} selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+    </select>
+  </div>
+  {% if filtrado %}<a class="link painel-limpar-tudo" href="{{ request.path }}" hx-get="{{ request.path }}" hx-target="#painel-corpo" hx-indicator="#painel-corpo" hx-push-url="true">Limpar filtros</a>{% endif %}
   <noscript><button class="btn btn-outline" type="submit">Filtrar</button></noscript>
 </form>
 
@@ -25,7 +47,7 @@ parceiro. A página inclui; o filtro (HTMX) devolve só isto para #painel-corpo.
 <section class="painel-sumario" aria-label="O que falta, por coluna" hx-target="#painel-corpo" hx-indicator="#painel-corpo" hx-push-url="true">
   <p class="painel-resumo"><strong>{{ completas }}</strong> de {{ todas|length }} revista{{ todas|length|pluralize }} completa{{ todas|length|pluralize }}{% if falta %} · {{ linhas|length }} sem {% for c in colunas %}{% if c.chave == falta %}{{ c.rotulo }}{% endif %}{% endfor %}{% endif %}</p>
   <ul class="painel-contadores">
-    {% for c in colunas %}<li>{% if c.faltam %}<a class="painel-contador" href="{{ c.url }}" hx-get="{{ c.url }}"{% if c.chave == falta %} aria-current="true"{% endif %} title="Ver só as revistas sem {{ c.rotulo }}"><span class="painel-contador-n">{{ c.faltam }}</span>{{ c.rotulo }}<span class="sr-only"> sem {{ c.rotulo }}</span></a>
+    {% for c in colunas %}<li>{% if c.faltam %}<button type="button" class="painel-contador" aria-pressed="{% if c.chave == falta %}true{% else %}false{% endif %}" hx-get="{{ c.url }}" title="{% if c.chave == falta %}Voltar a todas as revistas{% else %}Ver só as revistas sem {{ c.rotulo }}{% endif %}"><span class="painel-contador-n">{{ c.faltam }}</span>{{ c.rotulo }}<span class="sr-only"> sem {{ c.rotulo }}</span></button>
     {% else %}<span class="painel-contador painel-contador-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>{{ c.rotulo }}<span class="sr-only">: em dia</span></span>{% endif %}</li>{% endfor %}
   </ul>
   {% if falta %}<a class="link painel-limpar" href="{{ sem_falta }}" hx-get="{{ sem_falta }}">Limpar filtro</a>{% endif %}

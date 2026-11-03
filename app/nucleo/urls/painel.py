@@ -22,7 +22,7 @@ from django.utils.safestring import mark_safe
 from django.views.decorators.http import require_http_methods
 
 from nucleo.admin import lote
-from nucleo.models import Ano, FotoRevista, Parceiro, Revista, Template
+from nucleo.models import Ano, Componente, FotoRevista, Matriz, Parceiro, Revista, Template
 from nucleo.models.revista import Motivo
 from nucleo.servicos import bloqueio, resolver, validacao
 
@@ -42,8 +42,11 @@ COLUNAS = {
 def link(codigo, revista):
     """Onde corrigir cada pendência, só em telas B (o `Pendencia.link` fica nulo: o painel monta pelo código)."""
     ano = revista.projeto.ano.ano
+    matriz = revista.projeto.parceiro_ano.matriz_id
+    if codigo == "corte_sem_matriz" and matriz:  # falta a etapa × componente: corrige-se na própria matriz
+        return reverse("ui_matriz_detalhe", args=[matriz])
     if codigo in ("matriz", "corte_sem_matriz"):
-        return reverse("ui_projeto", args=[revista.projeto_id]) + "?aba=matriz"  # U7b
+        return reverse("ui_projeto", args=[revista.projeto_id]) + "?aba=matriz"  # U7b: escolher a matriz
     if codigo in ("variaveis", "nome_projeto"):
         return reverse("ui_projeto", args=[revista.projeto_id])
     if codigo == "corte_invalido":
@@ -97,23 +100,54 @@ def contexto(request, titulo, **extra):
     return {**admin.site.each_context(request), "title": titulo, **extra}
 
 
+def completa(linha):
+    return all(c["ok"] for c in linha["faltas"].values())
+
+
+SITUACOES = {
+    "completa": ("Completas", lambda x: completa(x)),
+    "incompleta": ("Incompletas", lambda x: not completa(x)),
+    "validada": ("Validadas", lambda x: x["faltas"]["validado"]["ok"]),
+}
+
+
 def filtrar(ano, params):
-    """Linhas do painel com os filtros falta/parceiro/template (inválidos são ignorados).
-    `todas` = linhas antes do filtro de falta (serve às contagens por coluna da tela B)."""
+    """Linhas do painel com os filtros parceiro/componente/template/matriz/situação e falta.
+    Valor inexistente, de outro ano ou mal formado é ignorado. `todas` = linhas antes do filtro de
+    falta (serve às contagens por coluna); `recorte` = os filtros válidos menos a falta, prontos para a URL."""
+    opcoes = {  # filtro → (opções do ano, campo da revista); a lista vai ao contexto como `opcoes_<filtro>`
+        "parceiro": (Parceiro.objects.filter(parceiroano__ano=ano).order_by("nome"), "projeto__parceiro_ano__parceiro"),
+        "componente": (Componente.objects.filter(ano=ano).order_by("codigo"), "componente"),
+        "template": (
+            Template.objects.filter(ano=ano).select_related("componente").order_by("componente__codigo", "fasciculo", "nome"),
+            "revistafasciculo__template",  # 1 fascículo por template: sem duplicar
+        ),
+        "matriz": (Matriz.objects.filter(ano=ano).order_by("nome"), "projeto__parceiro_ano__matriz"),
+    }
     revistas = revistas_do_ano(ano)
-    parceiros = list(Parceiro.objects.filter(parceiroano__ano=ano).order_by("nome"))
-    parceiro = next((p for p in parceiros if str(p.pk) == params.get("parceiro")), None)
-    falta = params.get("falta") if params.get("falta") in COLUNAS else None
-    pedido = params.get("template", "")
-    # Inexistente ou de outro ano: ignorado, como o parceiro inválido.
-    template = Template.objects.filter(ano=ano, pk=pedido).select_related("componente").first() if pedido.isdigit() else None
-    if parceiro is not None:
-        revistas = revistas.filter(projeto__parceiro_ano__parceiro=parceiro)
-    if template is not None:
-        revistas = revistas.filter(revistafasciculo__template=template)  # 1 fascículo por template: sem duplicar
+    ctx, recorte = {}, {}
+    for nome, (qs, campo) in opcoes.items():
+        lista = ctx["opcoes_" + nome] = list(qs)
+        escolhido = ctx[nome] = next((o for o in lista if str(o.pk) == params.get(nome)), None)
+        if escolhido is not None:
+            recorte[nome] = escolhido.pk
+            revistas = revistas.filter(**{campo: escolhido})
     todas = [linha(r) for r in revistas]
+    situacao = params.get("situacao") if params.get("situacao") in SITUACOES else None
+    if situacao:
+        recorte["situacao"] = situacao
+        todas = [x for x in todas if SITUACOES[situacao][1](x)]
+    falta = params.get("falta") if params.get("falta") in COLUNAS else None
     linhas = [x for x in todas if not x["faltas"][falta]["ok"]] if falta else todas
-    return {"linhas": linhas, "todas": todas, "parceiros": parceiros, "parceiro": parceiro, "falta": falta, "template": template}
+    return {
+        **ctx,
+        "linhas": linhas,
+        "todas": todas,
+        "falta": falta,
+        "situacao": situacao,
+        "situacoes": {k: rotulo for k, (rotulo, _) in SITUACOES.items()},
+        "recorte": recorte,
+    }
 
 
 def diff(revista, resolvido):

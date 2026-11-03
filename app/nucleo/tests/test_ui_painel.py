@@ -2,9 +2,12 @@
 
 from unittest.mock import patch
 
+from django.db import transaction
 from django.urls import reverse
 
-from nucleo.models import Ano
+from nucleo.models import Ano, Matriz, MatrizEtapaCC, ParceiroAno
+from nucleo.servicos import validacao
+from nucleo.servicos.resolver import carregar, hash_validado
 from nucleo.tests.test_admin_projeto import Base
 from nucleo.tests.test_painel import completar
 from nucleo.tests.test_resolver import usuario
@@ -29,7 +32,7 @@ class PainelUiTest(Base):
         self.assertContains(r, f'href="{reverse("preview", args=[rev.pk])}" target="_blank"')
         self.assertContains(r, f'href="{reverse("ui_revista_editar", args=[2026, rev.pk])}"')  # o nome abre a revista B
         self.assertContains(r, f'{reverse("ui_impresso", args=[2026])}?revista={rev.pk}')  # coluna Impresso leva à tela B
-        self.assertContains(r, 'href="?falta=validado"')  # contador da coluna Validado
+        self.assertContains(r, 'hx-get="?falta=validado"')  # contador da coluna Validado
         self.assertNotContains(r, "Só leitura")
 
     def test_celula_falta_tem_dica_e_link(self):
@@ -49,7 +52,7 @@ class PainelUiTest(Base):
         self.assertContains(r, "Só leitura: seu perfil vê o painel, mas não valida revistas.")
         self.assertNotContains(r, 'name="revista"')
         self.assertNotContains(r, "Validar selecionadas")
-        self.assertContains(r, 'href="?falta=impresso"')
+        self.assertContains(r, 'hx-get="?falta=impresso"')
         self.assertEqual(self.client.post(self.url).status_code, 405)  # o painel não grava
 
     def test_permissoes(self):
@@ -74,9 +77,9 @@ class PainelUiTest(Base):
         tpl = self.templates["LP", "F2"]
         r = self.client.get(self.url, {"template": tpl.pk})
         self.assertEqual(sorted(self.pks(r)), sorted([self.go["LP"].pk, self.pe["LP"].pk]))
-        self.assertContains(r, f'name="template" value="{tpl.pk}"')
+        self.assertContains(r, f'<option value="{tpl.pk}" selected>')
         r = self.client.get(self.url, {"template": tpl.pk, "falta": "svg", "parceiro": go})
-        self.assertContains(r, f'href="?falta=svg&amp;parceiro={go}" hx-get=')  # Limpar só tira o template
+        self.assertEqual(r.context["sem_falta"], f"?parceiro={go}&template={tpl.pk}")  # o contador ativo desliga só a falta
         r = self.client.get(self.url, {"template": tpl.pk})
         self.assertEqual(next(c for c in r.context["colunas"] if c["chave"] == "svg")["url"], f"?template={tpl.pk}&falta=svg")
 
@@ -142,11 +145,11 @@ class PainelUiTest(Base):
         go = self.go["LP"].projeto.parceiro_ano.parceiro_id
         r = self.client.get(self.url, {"parceiro": go})
         # Resumo: um contador por coluna, link-filtro (HTMX) que mantém o recorte.
-        self.assertContains(r, f'href="?parceiro={go}&amp;falta=svg" hx-get="?parceiro={go}&amp;falta=svg"')
-        self.assertNotContains(r, "Limpar filtro")
+        self.assertContains(r, f'aria-pressed="false" hx-get="?parceiro={go}&amp;falta=svg"')
+        self.assertNotContains(r, "painel-limpar\"")  # "Limpar filtro" da falta; o "Limpar filtros" geral aparece
         self.assertNotContains(r, 'id="filtro-falta"')  # o contador substitui o select de falta
         r = self.client.get(self.url, {"parceiro": go, "falta": "svg"})
-        self.assertContains(r, 'aria-current="true"')  # contador ativo destacado
+        self.assertContains(r, 'aria-pressed="true"')  # contador ativo destacado
         self.assertContains(r, f'href="?parceiro={go}" hx-get="?parceiro={go}"')  # Limpar filtro mantém o parceiro
         self.assertContains(r, "Limpar filtro")
         self.assertContains(r, 'name="falta" value="svg"')  # trocar o parceiro mantém a falta
@@ -164,3 +167,126 @@ class PainelUiTest(Base):
         self.assertContains(r, "Nenhuma revista ativa neste ano")
         self.assertContains(r, reverse("cortes", args=[2027]))
         self.assertContains(r, f'href="{reverse("painel", args=[2026])}"')  # seletor de ano
+
+
+class PainelFiltrosTest(Base):
+    """Contador que liga e desliga; filtros parceiro, componente, template, matriz e situação."""
+
+    url = reverse("painel", args=[2026])
+
+    def pks(self, **params):
+        return sorted(x["revista"].pk for x in self.client.get(self.url, params).context["linhas"])
+
+    def todas(self, *pares):
+        return sorted(getattr(self, p)[c].pk for p, c in pares)
+
+    def contador(self, r, chave):
+        return next(c for c in r.context["colunas"] if c["chave"] == chave)
+
+    def test_contador_ativo_volta_ao_estado_inicial(self):
+        go = self.go["LP"].projeto.parceiro_ano.parceiro_id
+        r = self.client.get(self.url, {"parceiro": go, "falta": "svg"})
+        svg = self.contador(r, "svg")
+        self.assertEqual(svg["url"], r.context["sem_falta"])  # o mesmo que "Limpar filtro"
+        self.assertEqual(svg["url"], f"?parceiro={go}")
+        self.assertEqual(self.contador(r, "capa")["url"], f"?parceiro={go}&falta=capa")  # os outros trocam a falta
+        self.assertContains(r, f'aria-pressed="true" hx-get="?parceiro={go}"')
+        self.assertContains(r, 'aria-pressed="false"')
+        # Sem nenhum outro filtro: o contador ativo volta à página limpa.
+        r = self.client.get(self.url, {"falta": "svg"})
+        self.assertEqual(self.contador(r, "svg")["url"], self.url)
+
+    def test_cada_filtro_sozinho(self):
+        go = self.go["LP"].projeto.parceiro_ano.parceiro_id
+        lp = self.go["LP"].componente_id
+        self.assertEqual(self.pks(parceiro=go), self.todas(("go", "LP"), ("go", "MT")))
+        self.assertEqual(self.pks(componente=lp), self.todas(("go", "LP"), ("pe", "LP")))
+        self.assertEqual(self.pks(template=self.templates["LP", "F2"].pk), self.todas(("go", "LP"), ("pe", "LP")))
+        nova = Matriz.objects.create(ano=self.ano, nome="Nova")
+        ParceiroAno.objects.filter(parceiro__nome="PE").update(matriz=nova)
+        self.assertEqual(self.pks(matriz=nova.pk), self.todas(("pe", "LP"), ("pe", "MT")))
+        self.assertEqual(self.pks(matriz=self.matriz.pk), self.todas(("go", "LP"), ("go", "MT")))
+        # Situação: nada completo nem validado no Mundo; validar uma revista a põe em "validada".
+        quatro = self.todas(("go", "LP"), ("go", "MT"), ("pe", "LP"), ("pe", "MT"))
+        self.assertEqual(self.pks(situacao="incompleta"), quatro)
+        self.assertEqual(self.pks(situacao="completa"), [])
+        completar(self.go["LP"])  # validar pede revista sem pendência
+        rev = carregar(self.go["LP"].pk)
+        with transaction.atomic():
+            self.assertIsNone(validacao.validar(rev.pk, hash_validado(rev), self.ped))
+        self.assertEqual(self.pks(situacao="validada"), [self.go["LP"].pk])
+        patch("nucleo.urls.painel.completa", lambda x: x["revista"].pk == self.pe["MT"].pk).start()
+        self.addCleanup(patch.stopall)
+        self.assertEqual(self.pks(situacao="completa"), [self.pe["MT"].pk])
+
+    def test_selects_preenchidos_e_limpar_filtros(self):
+        tpl = self.templates["LP", "F2"]
+        r = self.client.get(self.url)
+        self.assertNotContains(r, "Limpar filtros")
+        for campo in ("parceiro", "componente", "template", "matriz", "situacao"):
+            self.assertContains(r, f'id="filtro-{campo}" name="{campo}"')
+        self.assertContains(r, f'<option value="{tpl.pk}">LP · {tpl}</option>')
+        r = self.client.get(self.url, {"template": tpl.pk})  # o link "usado por N" cai no select preenchido
+        self.assertContains(r, f'<option value="{tpl.pk}" selected>')
+        self.assertNotContains(r, "painel-chip")
+        self.assertContains(r, f'href="{self.url}" hx-get="{self.url}"')  # Limpar filtros: volta à página limpa
+        self.assertContains(r, "Limpar filtros")
+        self.assertContains(self.client.get(self.url, {"situacao": "validada"}), '<option value="validada" selected>')
+        self.assertContains(self.client.get(self.url, {"falta": "svg"}), "Limpar filtros")
+
+    def test_combinacao_e_contadores_do_recorte(self):
+        go = self.go["LP"].projeto.parceiro_ano.parceiro_id
+        mt = self.go["MT"].componente_id
+        r = self.client.get(self.url, {"parceiro": go, "componente": mt})
+        self.assertEqual([x["revista"].pk for x in r.context["linhas"]], [self.go["MT"].pk])
+        self.assertEqual(self.contador(r, "svg")["faltam"], 1)  # só o recorte conta
+        self.assertEqual(self.contador(r, "svg")["url"], f"?parceiro={go}&componente={mt}&falta=svg")
+        completar(self.go["LP"])
+        r = self.client.get(self.url, {"parceiro": go, "componente": mt, "falta": "svg", "situacao": "incompleta"})
+        self.assertEqual([x["revista"].pk for x in r.context["linhas"]], [self.go["MT"].pk])
+        self.assertEqual(r.context["sem_falta"], f"?parceiro={go}&componente={mt}&situacao=incompleta")
+        self.assertContains(r, 'name="falta" value="svg"')  # trocar um select mantém a falta
+        r = self.client.get(self.url, {"componente": self.go["LP"].componente_id, "falta": "svg"})
+        self.assertEqual([x["revista"].pk for x in r.context["linhas"]], [self.pe["LP"].pk])
+        # Template de MT com componente LP: recorte vazio, sem erro.
+        r = self.client.get(self.url, {"componente": self.go["LP"].componente_id, "template": self.templates["MT", "F2"].pk})
+        self.assertEqual(r.context["linhas"], [])
+        self.assertContains(r, "Nenhuma revista com esse filtro")
+
+    def test_valor_invalido_e_ignorado(self):
+        quatro = self.todas(("go", "LP"), ("go", "MT"), ("pe", "LP"), ("pe", "MT"))
+        velha = Matriz.objects.create(ano=Ano.objects.create(ano=2025), nome="Velha")
+        for params in (
+            {"parceiro": "abc"},
+            {"componente": "999999"},
+            {"template": "-1"},
+            {"matriz": velha.pk},
+            {"situacao": "talvez"},
+            {"falta": "x", "componente": "", "matriz": "1 OR 1=1"},
+        ):
+            with self.subTest(params=params):
+                r = self.client.get(self.url, params)
+                self.assertEqual(r.status_code, 200)
+                self.assertEqual(sorted(x["revista"].pk for x in r.context["linhas"]), quatro)
+                self.assertNotContains(r, "Limpar filtros")
+
+    def test_etapa_sem_matriz_leva_a_matriz(self):
+        """"A matriz não tem a etapa" se corrige na matriz (a aba Matriz do projeto só escolhe a matriz)."""
+        MatrizEtapaCC.objects.filter(matriz=self.matriz, componente=self.go["LP"].componente).delete()
+        url = reverse("ui_matriz_detalhe", args=[self.matriz.pk])
+        r = self.client.get(self.url)
+        self.assertContains(r, f'href="{url}" title="A matriz não tem a etapa:')
+        r = self.client.get(reverse("ui_revista_editar", args=[2026, self.go["LP"].pk]))
+        self.assertContains(r, f'href="{url}"')
+        # Sem matriz escolhida, a pendência é outra e continua na aba Matriz do projeto.
+        ParceiroAno.objects.filter(parceiro__nome="GO").update(matriz=None)
+        r = self.client.get(self.url)
+        self.assertContains(r, f'href="{reverse("ui_projeto", args=[self.projeto_go.pk])}?aba=matriz" title="Falta escolher a matriz')
+
+    def test_impresso_filtra_sem_validar(self):
+        self.client.force_login(self.imp)
+        r = self.client.get(self.url, {"componente": self.go["LP"].componente_id, "situacao": "incompleta", "falta": "svg"})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(len(r.context["linhas"]), 2)
+        self.assertNotContains(r, 'name="revista"')
+        self.assertNotContains(r, "Validar selecionadas")

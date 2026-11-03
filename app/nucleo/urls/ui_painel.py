@@ -15,12 +15,8 @@ from django.utils.http import urlencode
 
 from nucleo.models import Ano
 from nucleo.ui_bloqueio import pagina_ou_parcial
-from nucleo.urls.painel import COLUNAS, filtrar
+from nucleo.urls.painel import COLUNAS, completa, filtrar
 from nucleo.urls.preview import protegida
-
-
-def completa(linha):
-    return all(c["ok"] for c in linha["faltas"].values())
 
 
 def agrupar(linhas, todas):
@@ -41,17 +37,18 @@ def agrupar(linhas, todas):
 def painel(request, ano):
     ano = get_object_or_404(Ano, ano=ano)
     f = filtrar(ano, request.GET)
-    recorte = {k: v.pk for k in ("parceiro", "template") if (v := f[k]) is not None}  # o que a falta preserva
+    recorte = f["recorte"]  # o que a falta preserva
+    sem_falta = "?" + urlencode(recorte) if recorte else request.path
     colunas = [
         {
             "chave": chave,
             "rotulo": rotulo,
             "faltam": sum(not x["faltas"][chave]["ok"] for x in f["todas"]),
-            "url": "?" + urlencode({**recorte, "falta": chave}),
+            # Toggle: o contador ativo desliga a falta (o mesmo que "Limpar filtro").
+            "url": sem_falta if chave == f["falta"] else "?" + urlencode({**recorte, "falta": chave}),
         }
         for chave, (rotulo, _) in COLUNAS.items()
     ]
-    sem_falta = "?" + urlencode(recorte) if recorte else request.path
     ctx = {
         **f,
         "ano": ano,
@@ -61,7 +58,6 @@ def painel(request, ano):
         "grupos": agrupar(f["linhas"], f["todas"]),
         "completas": sum(map(completa, f["todas"])),
         "sem_falta": sem_falta,
-        "sem_template": "?" + urlencode({k: v for k, v in {"falta": f["falta"], "parceiro": recorte.get("parceiro")}.items() if v}),
         "filtrado": bool(f["falta"] or recorte),
         # Estado vazio com filtro: o que significa e como sair dele.
         "vazio_texto": (
