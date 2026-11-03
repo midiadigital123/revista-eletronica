@@ -1,9 +1,5 @@
 {% comment %}
-Controles de ordem de um item (U4) dentro de um `ordenavel` (static/ui/componentes/autosave.js):
-a alça de arrastar (SortableJS, `.alca`) e os botões para o teclado. `rotulo` nomeia o item.
+Alça de ordem de um item (U4) dentro de um `ordenavel` (static/ui/componentes/autosave.js): arrasta
+(SortableJS, `.alca`) e, com o foco nela, as setas ↑ e ↓ movem o item. `rotulo` nomeia o item.
   {% include "ui/_componentes/ordem.html" with rotulo=d.codigo %}
-{% endcomment %}<span class="ordem">
-  <span class="alca" title="Arraste para mudar a ordem" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></span>
-  <button type="button" class="btn btn-ghost" data-mover="-1" aria-label="Mover para cima: {{ rotulo }}" title="Mover para cima"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
-  <button type="button" class="btn btn-ghost" data-mover="1" aria-label="Mover para baixo: {{ rotulo }}" title="Mover para baixo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-</span>
+{% endcomment %}<button type="button" class="alca" aria-label="Mover {{ rotulo }}: use as setas para cima e para baixo" data-rotulo="{{ rotulo }}" title="Arraste ou use as setas ↑ e ↓"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></button>

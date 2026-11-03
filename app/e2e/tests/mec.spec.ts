@@ -10,6 +10,14 @@ test("MEC: Configurações salva o intervalo sozinho; Novo descritor na lista; e
   await page.getByRole("link", { name: "Demonstração" }).first().click();
   await page.locator('a[href*="/ui/matriz/mec/"]').first().click();
   await alpinePronto(page);
+  // Lista: só a alça (≤ 1rem), encostada à esquerda da lista e colada no código; nenhum botão ↑↓.
+  const item = page.locator("#lista-ordem > [data-id]").first();
+  await expect(item.locator("[data-mover]")).toHaveCount(0);
+  const [alca, codigo, linha] = await Promise.all([item.locator(".alca").boundingBox(), item.locator(".matriz-codigo").boundingBox(), page.locator("#lista-ordem").boundingBox()]);
+  expect(alca!.width).toBeLessThanOrEqual(16);
+  expect(alca!.x - linha!.x).toBeLessThanOrEqual(1);
+  expect(codigo!.x - (alca!.x + alca!.width)).toBeLessThanOrEqual(14);
+
   const cabecalho = page.locator("header.pagina-cab");
   await expect(cabecalho.getByRole("button", { name: "Novo descritor" })).toHaveCount(0);
   await expect(cabecalho.locator("[data-status-salvo]")).toBeVisible();

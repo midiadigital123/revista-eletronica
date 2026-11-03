@@ -492,7 +492,7 @@ class MecLinhasTest(BaseMundo):
         self.assertEqual(self.postar(self.reordenar_d, "x", antes[::-1]).status_code, 403)
         self.assertEqual(self.descritores(), antes)
         resp = self.client.get(self.url)
-        self.assertNotContains(resp, "Mover para cima")
+        self.assertNotContains(resp, "use as setas para cima e para baixo")
         self.assertNotContains(resp, "Adicionar tarefa")
 
     def test_sem_linha_vazia(self):
@@ -504,7 +504,15 @@ class MecLinhasTest(BaseMundo):
         self.assertContains(resp, 'x-data="linhaNova"')
         self.assertContains(resp, f'data-ordem-url="{self.reordenar_d}"')
         self.assertContains(resp, f'data-ordem-url="{self.reordenar_t}"')
-        self.assertContains(resp, "Mover para cima")
+
+    def test_alca_e_o_botao_de_teclado(self):
+        """Item 4: sem os botões ↑↓; a alça é um <button> com nome acessível e há um aria-live por lista."""
+        resp = self.client.get(self.url)
+        self.assertNotContains(resp, "data-mover")
+        self.assertNotContains(resp, "Mover para cima:")
+        self.assertContains(resp, f'<button type="button" class="alca" aria-label="Mover {self.d.codigo}: use as setas para cima e para baixo"', html=False)
+        t = self.d.tarefa_set.first()
+        self.assertContains(resp, f'aria-label="Mover {t.codigo}: use as setas para cima e para baixo"')
 
 
 class MecHierarquiaTest(BaseMundo):

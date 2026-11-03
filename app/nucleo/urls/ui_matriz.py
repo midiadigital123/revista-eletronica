@@ -503,8 +503,8 @@ def campo(request, pk, dpk):
 @login_required(login_url="admin:login")
 @com_bloqueio(_mec, pode_editar)
 def reordenar_view(request, pk, dpk=None):
-    """U4: ordem dos descritores da MEC (sem `dpk`) ou das tarefas de um descritor, pelo arrastar ou
-    pelos botões "Mover para cima/baixo" (componente `ordenavel`). A ordem entra na revista: impacto."""
+    """U4: ordem dos descritores da MEC (sem `dpk`) ou das tarefas de um descritor, pela alça
+    (arrastar ou ↑/↓ com o foco nela, componente `ordenavel`). A ordem entra na revista: impacto."""
     m = _mec(request, pk)
     revistas = lambda: [r for r, _ in impacto(m)]  # noqa: E731
     if dpk is None:

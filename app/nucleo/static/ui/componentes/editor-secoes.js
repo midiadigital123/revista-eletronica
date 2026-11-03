@@ -2,6 +2,9 @@
 // em templates/ui/templates/editar.html. Build CSP: o HTML só chama acao/focar; os botões dizem o que
 // fazem em data-acao. O id da seção é estrutura (hidden), nunca campo editável. A prévia é HTMX no
 // próprio form (hx-trigger input); cada mudança aqui dispara um input para ela e para o aviso.
+// Uma seção por vez: o servidor marca a ativa (a 1ª com erro); clicar no índice troca. As outras ficam
+// hidden, mas no form (o Salvar manda tudo), e a prévia mostra só a ativa. Sem pode_gravar o componente
+// também liga, só para trocar de seção (não há [data-estado] nem prévia HTMX).
 // Carregado sem defer no bloco cabeca, para o alpine:init rodar antes do Alpine.
 document.addEventListener("alpine:init", () => {
   "use strict";
@@ -12,13 +15,19 @@ document.addEventListener("alpine:init", () => {
   Alpine.data("editorSecoes", () => {
     // Fora do estado reativo: elementos do DOM dentro do proxy do Alpine quebram setRangeText.
     let alvo = null; // último Título/Texto focado (o "{ } Variável" insere nele)
+    let ativa = ""; // id da seção visível
     let inicial = "";
     let enviando = false;
 
     return {
       init() {
         const form = this.$root;
+        ativa = this.secoes().find((s) => !s.hidden)?.dataset.secao || "";
+        this.mostrar();
+        // A prévia e o índice chegam do HTMX com todas as seções: filtra antes de pintar.
+        document.body.addEventListener("htmx:afterSwap", () => this.mostrar());
         const aviso = form.querySelector("[data-estado]");
+        if (!aviso) return; // só leitura
         const padrao = aviso.textContent;
         inicial = this.estado();
         form.addEventListener("input", () => {
@@ -27,6 +36,20 @@ document.addEventListener("alpine:init", () => {
         form.addEventListener("submit", () => { enviando = true; });
         addEventListener("beforeunload", (e) => { if (!enviando && this.mudou()) e.preventDefault(); });
         document.body.addEventListener("htmx:afterSettle", () => this.marcarInvalidos());
+      },
+
+      // --- uma seção por vez ---
+      ativar(id) {
+        ativa = id;
+        this.mostrar();
+      },
+      mostrar() {
+        for (const s of this.secoes()) s.hidden = s.dataset.secao !== ativa;
+        for (const p of this.$root.querySelectorAll("#previa [data-previa]")) p.hidden = p.dataset.previa !== ativa;
+        for (const a of this.$root.querySelectorAll("#tpl-indice a")) {
+          if (a.hash === `#secao-${ativa}`) a.setAttribute("aria-current", "true");
+          else a.removeAttribute("aria-current");
+        }
       },
 
       estado() {
@@ -41,6 +64,12 @@ document.addEventListener("alpine:init", () => {
       },
 
       acao(e) {
+        const indice = e.target.closest("#tpl-indice a");
+        if (indice) {
+          e.preventDefault();
+          this.ativar(indice.hash.slice("#secao-".length));
+          return;
+        }
         const botao = e.target.closest("[data-acao]");
         if (!botao) return;
         const tipo = botao.dataset.acao;
@@ -96,6 +125,7 @@ document.addEventListener("alpine:init", () => {
         if (depoisDe) depoisDe.after(secao);
         else this.$root.querySelector("[data-secoes]").append(secao);
         this.renumerar();
+        this.ativar(secao.dataset.secao);
         secao.querySelector("[data-campo=titulo]").focus();
         this.$root.dispatchEvent(new Event("input", { bubbles: true }));
       },
@@ -115,6 +145,7 @@ document.addEventListener("alpine:init", () => {
         const id = "dlg-p" + n;
         const existe = this.$root.querySelector(`[data-secao="${id}"]`);
         if (existe) {
+          this.ativar(existe.dataset.secao);
           existe.querySelector("[data-campo=titulo]").focus(); // um diálogo por passo
           return;
         }
@@ -129,6 +160,7 @@ document.addEventListener("alpine:init", () => {
         if (alvo && secao.contains(alvo)) alvo = null;
         secao.remove();
         this.renumerar();
+        if (vizinha) this.ativar(vizinha.dataset.secao);
         (vizinha?.querySelector("[data-campo=titulo]") || this.$root.querySelector("[data-acao=passo]"))?.focus();
         this.$root.dispatchEvent(new Event("input", { bubbles: true }));
       },
