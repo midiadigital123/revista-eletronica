@@ -2,14 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Plano ativo: `plans/revista-express-telas-b-ux.md` (D-195–D-202). Ondas 1 e 2 concluídas e mergeadas em `feat/telas-b-ux`: U0, U1, U2, U3 (autosave), U6 (menu e ano), U8 (painel), U9b (editor de template). Onda 3 disparada em 03/11 (sessão nova; a anterior não chegou a criar os worktrees): U4→U9 (`feat/ux-u4-u9-linhas-mec`, porta 8021) e U5→U8b (`feat/ux-u5-u8b-revista`, porta 8022).
-Funcionando: integração com Django 617 OK (8 pulados), `makemigrations --check` limpo, Playwright 41/41 numa stack isolada (`COMPOSE_PROJECT_NAME=ux-integ`, porta 8030, com 2025 vazio para o `ano.spec`).
-Onda 3 concluída: U4+U9 (`35c80ce`), U5+U8b (`d0ff175`), correção de integração `446c8f5`. Onda 4 concluída: U7 mergeado (`93026a3`). Falta só a onda 5 (U10), que espera o usuário.
-Quebrado/pendente: correções de UX da revisão de 03/11 rodando (plano `~/.claude/plans/critique-plan-corrigir-estilos-quebrados-hidden-rain.md`); U10 (espera o usuário); versão de estático em produção fica para o S17; POSTs antigos de lotes sem chamador (apagar no U10); confirmar ordem fixa das etapas; ordem fixa das etapas (decisão do agente U4, a confirmar); limpeza do banco de dev no fim; `item.spec.ts` frágil com 2027 aberto por `abrir_ano`.
+Plano ativo: `plans/revista-express-telas-b-ux.md` + rodada de correções da revisão do usuário de 03/11 (plano `~/.claude/plans/critique-plan-corrigir-estilos-quebrados-hidden-rain.md`). Ondas 1–4 e os agentes A–G + responsivo mergeados em `feat/telas-b-ux`.
+Funcionando: integração validada em `95cc0af` (Django 701 OK, Playwright 51/51, sem rolagem lateral em 1440/1024/768/390). Depois disso: cores por situação, colunas da lista, menu por perfil, ordem das etapas (`4de9cff`).
+Quebrado/pendente (para 04/11): (1) suíte Django completa ainda não confirmada com `4de9cff`, e migração 0015 não aplicada no banco de dev; (2) merge de `feat/ux-fix-nomes` (`721229e`, agente H, "projeto primeiro": testado isolado, Django 702 OK, Playwright 51/51); (3) Playwright completo na integração depois desses dois; (4) U10 (onda 5) e S6–S9 esperam o usuário; (5) `templates.css` reformatado pelo Prettier fora do git (só formatação), a descartar depois de reabrir o VS Code.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Aguardar os 4 agentes das correções de UX (A painel, B lista de projetos, C MEC/template, D página do projeto), mergear e rodar as suítes.
+Rodar `docker compose exec -T app python manage.py test nucleo` em `app/` e conferir que `4de9cff` (ordem das etapas) passa.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1998,3 +1997,21 @@ Aguardar os 4 agentes das correções de UX (A painel, B lista de projetos, C ME
 - Pergunta do usuário: token CSRF em `hx-headers` no `<body>` — esperado (padrão HTMX + Django), não é segredo.
 - Editor de template mostrou tags Django cruas: `editar.html`, `revista_secao.html` e `templates.css` foram reformatados pelo Prettier do VS Code fora do git (16h44–16h45). Restaurados do commit (patch no scratchpad). `.vscode/settings.json` trata `**/templates/**/*.html` como `django-html`, sem formatar ao salvar (entrou em `ca03252`, junto da learning do Alpine CSP).
 - Learnings da sessão commitadas: scratchpad compartilhado e `Salvo às` visível (em `311bf1f`), Alpine CSP com propriedade declarada (em `ca03252`).
+- F (`b267933`) mergeado sem conflito: diff do Impresso por palavra (SequenceMatcher), contexto de 1 parágrafo, copiar só o trecho mudado, rótulos "5EF · D01", LP/MT visível na lista, link da revista vai à tela B.
+- Lista de Projetos (pedido do usuário): coluna Situação por revista (Em preparo / Pronta para validar / Validada / Impressa / Arquivada); balão conta só pendências de preparo (antes contava Validado e Impresso, por isso todos davam 8); `.btn-icone[data-dica]` com dica imediata em CSS; ações centralizadas. Suíte Django OK.
+- Lista de Projetos estourava a borda direita: a dica escondida (::after com opacity 0) contava na área de rolagem da tabela. Agora display:none fora do hover e ancorada à direita.
+- `762a2e2`: lista de Projetos com Situação fixa em 12rem e Ações com min-width 7.5rem e respiro (pedido do usuário); agente de integração avisado.
+- `f00c85d`: cor por situação (Em preparo neutra, Pronta para validar âmbar, Validada azul, Impressa verde, Arquivada tracejada); classes `.tag-ambar`, `.tag-verde`, `.tag-apagada` em ui.css.
+- Limpeza do banco de dev (pedido do usuário): 11 parceiros "E2E…" apagados com projetos (11), revistas (17) e cortes (22). Ficaram TESTE/SAEGO 2, Novo parceiro/SAESE, DEMONSTRAÇÃO (demo do `criar_demo`, usada pelos specs). Backup antes: scratchpad/dev-antes-limpeza-e2e.sql (2,3 MB).
+- Verificação final (`ux-integ`): Django 701 OK, Playwright 51/51; sem rolagem lateral em 1440/1024/768/390. Responsivo mergeado em `95cc0af` (Lista empilhada abaixo de 848 px; Padrões do ano no celular).
+- Decisão do usuário: "projeto primeiro" — nome do projeto é a identidade principal; parceiro é contexto. Agente H (`feat/ux-fix-nomes`, `ux-fh`, 8028) aplica em Lista, revista, projeto, painel e Impresso.
+- 9EF antes de 5EF no preview: `etapa.ordem` só seguia a lógica escolar quando a etapa era criada pela tela B (U4). `4de9cff`: `ordem_escolar`/`renumerar_etapas` foram para `models/cadastro.py`; `Etapa.save` renumera o ano por `update` (save daria recursão); migração 0015 renumera os anos existentes; teste `OrdemEscolarPorQualquerCaminhoTest`. Efeito: revista validada cuja ordem mudar perde o Validado (a ordem entra no hash). Commit feito com a suíte completa ainda rodando.
+- Componentes Z44905 e Z84552 apagados do banco de dev a pedido do usuário (sem dependentes; sobram LP e MT). Backup: scratchpad/dev-antes-componentes-z.sql.
+- Agente H terminou ("projeto primeiro", `721229e` em `feat/ux-fix-nomes`): Lista com nome do projeto como link e parceiro em cinza; revista com título "<projeto> · <componente>", pares Parceiro/Ano e trilha Projetos de 2026 › projeto; painel e Impresso na mesma regra; `models` intocado (hash não muda). Merge fica para 04/11.
+
+### Para 04/11 (pedido do usuário: terminar o que falta)
+1. Confirmar a suíte Django com `4de9cff` e rodar `migrate` no banco de dev (aplica a 0015; o preview passa a mostrar 5EF antes de 9EF).
+2. Fazer `git merge --no-ff feat/ux-fix-nomes` em `feat/telas-b-ux` e rodar a suíte Django.
+3. Rodar o Playwright completo numa stack isolada (`ux-integ`, 8030) no resultado; depois commitar o `state.md`.
+4. Descartar a reformatação do Prettier em `templates.css` (só formatação).
+5. Perguntar ao usuário: onda 5 (U10) e S6–S9.
