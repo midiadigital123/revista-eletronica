@@ -175,6 +175,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .badge-erro { background: color-mix(in oklch, var(--destructive) 10%, transparent); color: var(--destructive); }
 
 /* --- card (components/ui/card.tsx) --- */
+/* `hidden` sempre esconde: sem isto, `.card { display: flex }` e afins venciam o atributo e as abas
+   do projeto mostravam as seções umas das outras. */
+[hidden] { display: none !important; }
+
 .card {
   display: flex; flex-direction: column; gap: 1.5rem; padding: 1.5rem; overflow: hidden;
   border-radius: var(--radius-xl); background: var(--card); font-size: 0.875rem;
