@@ -69,13 +69,13 @@ class RevistaUiTest(Base):
     # --- 1. GET com permissão -------------------------------------------------------------
 
     def test_lista_e_pagina_com_permissao(self):
-        lista = self.client.get(reverse("ui_revista", args=[2026]))
+        lista = self.client.get(reverse("ui_projeto_lista", args=[2026]))  # U7a: a lista de revistas virou a de Projetos
         self.assertEqual(lista.status_code, 200)
         self.assertTemplateUsed(lista, "ui/base.html")
         self.assertContains(lista, f'href="{self.url}"')
         self.assertContains(lista, f'href="{reverse("preview", args=[self.rev.pk])}" target="_blank"')
         self.assertContains(lista, reverse("ui_revista_zip", args=[2026, self.rev.pk]))
-        self.assertRedirects(self.client.get(reverse("ui_revista_inicio")), reverse("ui_revista", args=[2026]))
+        self.assertRedirects(self.client.get(reverse("ui_revista_inicio")), reverse("ui_projeto_lista", args=[2026]))
 
         r = self.abrir()
         for texto in ("Salvar seção", 'x-data="campoAuto"', 'x-data="arquivoSoltar"', "Validar revista", 'id="bloqueio-sessao"'):
@@ -134,7 +134,7 @@ class RevistaUiTest(Base):
         self.assertFalse(RevistaSecao.objects.exists())
         self.client.force_login(get_user_model().objects.create(username="sem", is_staff=True))
         self.assertEqual(self.client.get(self.url).status_code, 403)
-        self.assertEqual(self.client.get(reverse("ui_revista", args=[2026])).status_code, 403)
+        self.assertEqual(self.client.get(reverse("ui_projeto_lista", args=[2026])).status_code, 403)
 
     def test_arquivada_mostra_a_foto_sem_bloqueio(self):
         Revista.objects.filter(pk=self.rev.pk).update(arquivada_em=ARQUIVADO)
@@ -373,10 +373,10 @@ class RevistaUiTest(Base):
 
     def test_zip_com_pendencias_volta_com_a_mensagem(self):
         r = self.client.get(reverse("ui_revista_zip", args=[2026, self.rev.pk]) + "?voltar=lista", follow=True)
-        self.assertRedirects(r, reverse("ui_revista", args=[2026]))
+        self.assertRedirects(r, reverse("ui_projeto_lista", args=[2026]))
         self.assertTrue(any(m.startswith("Zip recusado. Pendências:") for m in mensagens(r)))
 
     def test_ano_sem_revistas(self):
         Ano.objects.create(ano=2027)
-        r = self.client.get(reverse("ui_revista", args=[2027]))
-        self.assertContains(r, "Nenhuma revista neste ano")
+        r = self.client.get(reverse("ui_projeto_lista", args=[2027]))
+        self.assertContains(r, "Nenhum projeto neste ano")

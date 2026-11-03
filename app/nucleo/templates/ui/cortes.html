@@ -1,32 +1,17 @@
 {% extends "ui/base.html" %}
-{% comment %}Grade de cortes fora do admin (opção B). Regra em nucleo/cortes.py; view em nucleo/urls/cortes.py.{% endcomment %}
-{% block titulo %}Cortes{% if ano %} {{ ano.ano }}{% endif %}{% endblock %}
+{% comment %}Aba Cortes do hub Projetos (U7a; grade de cortes, opção B). Regra em nucleo/cortes.py; view em nucleo/urls/cortes.py.{% endcomment %}
+{% block titulo %}Cortes {{ ano.ano }}{% endblock %}
 
 {% block conteudo %}
-<header class="pagina-cab">
-  <div>
-    <h1>Cortes</h1>
-    <p class="mudo">Cortes dos padrões de cada parceiro, por etapa e componente.</p>
-  </div>
-  {% if ano %}
-  <div class="acoes">
-    {% if pode_gravar or perms.nucleo.change_parceiro %}{% include "ui/_componentes/status_salvo.html" %}{% endif %}
-    <a class="btn btn-outline" href="{% url 'admin:nucleo_corte_exportar' %}?ano={{ ano.ano }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>
-      Baixar planilha de grupos
-    </a>
-    <a class="btn btn-ghost" href="{% url 'painel' ano.ano %}">Ver painel de {{ ano.ano }}</a>
-  </div>
-  {% endif %}
-</header>
-
-{% if not ano %}
-<div class="aviso" role="status">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-  <span>Nenhum ano aberto. {% if perms.nucleo.abrir_ano %}<a class="link" href="{% url 'ui_anos' %}">Abra um ano</a> para lançar os cortes.{% else %}Peça a um administrador para abrir o ano.{% endif %}</span>
+{% include "ui/_componentes/projetos_abas.html" %}
+<div class="acoes aba-acoes">
+  <p class="mudo">Cortes dos padrões de cada parceiro, por etapa e componente.</p>
+  {% if pode_gravar or perms.nucleo.change_parceiro %}{% include "ui/_componentes/status_salvo.html" %}{% endif %}
+  <a class="btn btn-outline" href="{% url 'admin:nucleo_corte_exportar' %}?ano={{ ano.ano }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>
+    Baixar planilha de grupos
+  </a>
 </div>
-{% else %}
-
 
 {% if not pode_gravar %}
 {% include "ui/_componentes/so_leitura.html" with texto="Só leitura: seu perfil vê os cortes, mas não altera. Para editar, peça a permissão de cortes a um administrador." %}
@@ -82,5 +67,4 @@ U5: o nome do parceiro também (nomeInline: o data-url dele troca a rota para co
 </div>
 {% endif %}
 
-{% endif %}
 {% endblock %}

@@ -1,4 +1,4 @@
-"""Planilha de variáveis B (T17): /ui/variaveis/<ano>/, rota ui_variaveis. Convenções: docs/telas/design-system.md.
+"""Planilha de variáveis B (T17): desde o U7a, a aba Variáveis do hub Projetos (rota ui_variaveis). Convenções: docs/telas/design-system.md.
 
 Mesma regra da aba Variáveis do admin (`nucleo/planilha_variaveis.py`). Login (vai ao login do
 admin); ver exige `view_projeto` ou `change_projeto` (403); gravar e copiar exigem `change_projeto`,
@@ -58,14 +58,10 @@ def linha(form, indice):
 
 @require_http_methods(["GET", "POST"])
 @login_required(login_url="admin:login")
-def variaveis(request, ano=None):
+def variaveis(request, ano):
+    """Aba Variáveis do hub Projetos (U7a, rota `ui_variaveis` em /ui/projeto/ano/<ano>/variaveis/)."""
     if not pode_ver(request.user):
         raise PermissionDenied
-    anos = list(Ano.objects.order_by("-ano"))
-    if ano is None:  # /ui/variaveis/ → ano mais recente
-        if anos:
-            return redirect("ui_variaveis", ano_da_sessao(request).ano)
-        return TemplateResponse(request, "ui/variaveis/pagina.html", {"anos": anos, "secao": "variaveis"})
     ano = get_object_or_404(Ano, ano=ano)
     contexto, gravou = planilha(request, ano)
     if gravou:
@@ -80,9 +76,20 @@ def variaveis(request, ano=None):
             **contexto,
             "linhas": [linha(f, i) for i, f in enumerate(formset.forms)],
             "colunas": COLUNAS, "grupos": GRUPOS, "cabecalho": [(v, curto(v), v.nome in INICIOS) for v in COLUNAS],
-            "ano": ano, "anos": anos, "secao": "variaveis",
+            "ano": ano, "secao": "projetos", "aba": "variaveis",
         },
     )  # fmt: skip
+
+
+@require_http_methods(["GET", "POST"])
+@login_required(login_url="admin:login")
+def antiga(request, ano=None):
+    """Planilha antiga (/ui/variaveis/, /ui/variaveis/<ano>/): GET vai à aba Variáveis de Projetos (302);
+    o POST continua gravando (U7a)."""
+    if request.method == "POST" and ano is not None:
+        return variaveis(request, ano)
+    ano = ano or getattr(ano_da_sessao(request), "ano", None)
+    return redirect("ui_variaveis", ano) if ano else redirect("ui_projeto_inicio")
 
 
 @require_POST
@@ -112,7 +119,7 @@ def copiar_linha(request, ano, pk):
 
 
 urlpatterns = [
-    path("", variaveis, name="ui_variaveis_inicio"),
-    path("<int:ano>/", variaveis, name="ui_variaveis"),
+    path("", antiga, name="ui_variaveis_inicio"),
+    path("<int:ano>/", antiga, name="ui_variaveis_antiga"),  # a rota `ui_variaveis` é a aba de Projetos
     path("<int:ano>/copiar/<int:pk>/", copiar_linha, name="ui_variaveis_copiar"),
 ]

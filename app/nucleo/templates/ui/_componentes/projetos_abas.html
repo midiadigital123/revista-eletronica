@@ -1,0 +1,15 @@
+{% comment %}
+Cabeçalho do hub Projetos (U7a): título e as abas Lista · Cortes · Variáveis. Cada aba é uma URL
+(o seletor de ano mantém a aba); as ações de cada aba ficam numa linha `.acoes` logo abaixo.
+Contexto: ano, aba ("lista" | "cortes" | "variaveis").
+{% endcomment %}<header class="pagina-cab">
+  <div>
+    <h1>Projetos</h1>
+    <p class="mudo">Um projeto por parceiro no ano. Nasce quando os cortes do parceiro são lançados.</p>
+  </div>
+</header>
+<nav class="abas" aria-label="Projetos de {{ ano.ano }}">
+  <a href="{% url 'ui_projeto_lista' ano.ano %}"{% if aba == "lista" %} aria-current="page"{% endif %}>Lista</a>
+  <a href="{% url 'cortes' ano.ano %}"{% if aba == "cortes" %} aria-current="page"{% endif %}>Cortes</a>
+  <a href="{% url 'ui_variaveis' ano.ano %}"{% if aba == "variaveis" %} aria-current="page"{% endif %}>Variáveis</a>
+</nav>

@@ -1,4 +1,4 @@
-"""Revistas e textos B (T20/T21): /ui/revista/<ano>/, rota ui_revista. Convenções: docs/telas/design-system.md.
+"""Revista e textos B (T21): /ui/revista/<ano>/<pk>/. A lista do ano (T20) virou a aba Lista de Projetos (U7a). Convenções: docs/telas/design-system.md.
 
 Regra em `nucleo/revista.py` (a mesma do admin), "Validado" em `servicos/validacao.py`, zip em
 `servicos/empacotar.py`. Permissões iguais às do admin de Revista:
@@ -77,19 +77,9 @@ def _alvo(request, ano, pk):
 @require_GET
 @login_required(login_url="admin:login")
 def lista(request, ano=None):
-    """T20: revistas do ano com abrir, preview e zip."""
-    if not pode_ver(request.user):
-        raise PermissionDenied
-    anos = list(Ano.objects.order_by("-ano"))
-    if ano is None:
-        return redirect("ui_revista", ano_da_sessao(request).ano) if anos else TemplateResponse(request, "ui/revista/lista.html", {"anos": anos})
-    ano = get_object_or_404(Ano, ano=ano)
-    revistas = (
-        Revista.objects.filter(ano=ano)
-        .select_related("projeto__parceiro_ano__parceiro", "componente")
-        .order_by(F("arquivada_em").asc(nulls_first=True), "projeto__parceiro_ano__parceiro__nome", "componente__codigo")
-    )  # ativas primeiro
-    return TemplateResponse(request, "ui/revista/lista.html", {"ano": ano, "anos": anos, "secao": "revistas", "revistas": revistas})
+    """A lista antiga (T20) virou a aba Lista de Projetos (U7a): GET redireciona (302)."""
+    ano = ano or getattr(ano_da_sessao(request), "ano", None)
+    return redirect("ui_projeto_lista", ano) if ano else redirect("ui_projeto_inicio")
 
 
 def _secao_ativa(blocos, chave):
@@ -332,7 +322,7 @@ def zip_(request, ano, pk):
         nome_, dados = zip_revista(resolver.carregar(revista.pk))
     except Pendente as e:
         messages.error(request, f"Zip recusado. Pendências: {e}")
-        return redirect("ui_revista", ano) if request.GET.get("voltar") == "lista" else redirect("ui_revista_editar", ano, pk)
+        return redirect("ui_projeto_lista", ano) if request.GET.get("voltar") == "lista" else redirect("ui_revista_editar", ano, pk)
     resposta = HttpResponse(dados, content_type="application/zip")
     resposta["Content-Disposition"] = f'attachment; filename="{nome_}"'
     return resposta

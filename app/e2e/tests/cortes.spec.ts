@@ -51,7 +51,7 @@ test("preenche os cortes de 2 parceiros", async ({ page }) => {
 // Comentários 3 e 6 da revisão de 03/11: sem editar nada, a grade não pode acusar alteração
 // nem pedir confirmação ao sair. U3: a grade salva por célula; o status fica ocioso.
 test("cortes sem edição não acusa alteração", async ({ page }) => {
-  await entrar(page, "/cortes/");
+  await entrar(page, "/ui/projeto/ano/2026/cortes/");
   const status = page.locator("[data-status-salvo]");
   await expect(status).toHaveAttribute("data-estado", "");
   await expect(status.getByText("Cada campo salva sozinho")).toBeVisible();
@@ -59,4 +59,23 @@ test("cortes sem edição não acusa alteração", async ({ page }) => {
   page.on("dialog", (d) => { throw new Error(`diálogo inesperado: ${d.message()}`); });
   await page.reload();
   await expect(page.locator("[data-status-salvo]")).toHaveAttribute("data-estado", "");
+});
+
+// U7a: Cortes, Variáveis, Revistas e Lotes viraram o hub Projetos. As URLs antigas redirecionam para a
+// aba equivalente (favoritos não quebram) e as abas trocam de tela mantendo o ano.
+test("rotas antigas levam às abas do hub Projetos", async ({ page }) => {
+  await entrar(page, "/cortes/2026/");
+  await expect(page).toHaveURL(/\/ui\/projeto\/ano\/2026\/cortes\/$/);
+  const abas = page.getByRole("navigation", { name: "Projetos de 2026" });
+  await expect(abas.getByRole("link", { name: "Cortes" })).toHaveAttribute("aria-current", "page");
+  await abas.getByRole("link", { name: "Variáveis" }).click();
+  await expect(page).toHaveURL(/\/ui\/projeto\/ano\/2026\/variaveis\/$/);
+  await page.goto("/ui/variaveis/2026/");
+  await expect(page).toHaveURL(/\/ui\/projeto\/ano\/2026\/variaveis\/$/);
+  for (const antiga of ["/ui/revista/2026/", "/ui/lotes/2026/matriz/", "/ui/lotes/2026/template/"]) {
+    await page.goto(antiga);
+    await expect(page).toHaveURL(/\/ui\/projeto\/ano\/2026\/$/);
+  }
+  await expect(page.getByRole("button", { name: "Atribuir matriz…" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Atribuir template…" })).toBeVisible();
 });

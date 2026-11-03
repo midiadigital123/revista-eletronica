@@ -58,3 +58,31 @@ export async function liberarBloqueio(page: Page) {
   };
   expect((await page.request.post("/bloqueio/liberar", { form })).status()).toBe(204);
 }
+
+/** Hub Projetos, aba Lista (U7a): marca o parceiro e roda "Atribuir matriz…" ou "Atribuir template…"
+ * (o diálogo da barra de ações em massa). Escolhas pelo rótulo: { matriz } ou { componente, f1?, f2? }. */
+export async function atribuirEmMassa(
+  page: Page, parceiro: string, escolhas: { matriz: string } | { componente: string; f1?: string; f2?: string },
+) {
+  await page.goto("/ui/projeto/ano/2026/");
+  await page.getByLabel(`Marcar ${parceiro}`, { exact: true }).check();
+  const titulo = "matriz" in escolhas ? "Atribuir matriz" : "Atribuir template";
+  await page.getByRole("button", { name: `${titulo}…` }).click();
+  const dialogo = page.getByRole("dialog", { name: titulo });
+  await expect(dialogo).toBeVisible();
+  if ("matriz" in escolhas) {
+    await dialogo.getByLabel("Matriz").selectOption({ label: escolhas.matriz });
+  } else {
+    await dialogo.getByLabel("Componente").selectOption({ label: escolhas.componente });
+    if (escolhas.f1) await dialogo.getByLabel("Template F1").selectOption({ label: escolhas.f1 });
+    if (escolhas.f2) await dialogo.getByLabel("Template F2").selectOption({ label: escolhas.f2 });
+  }
+  await dialogo.getByRole("button", { name: titulo, exact: true }).click();
+}
+
+/** Lista de Projetos: o id da revista do selo `codigo` (LP, MT) na linha do parceiro. */
+export async function revistaDaLista(page: Page, parceiro: string, codigo: string) {
+  const linha = page.locator("tr", { has: page.getByLabel(`Marcar ${parceiro}`, { exact: true }) });
+  const href = await linha.locator(".selo-codigo", { hasText: new RegExp(`^${codigo}$`) }).getAttribute("href");
+  return href!.split("/").at(-2)!;
+}

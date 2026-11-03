@@ -1,4 +1,7 @@
-"""Lotes B (/ui/lotes/<ano>/matriz/ e /template/): critérios de aceite de docs/telas/fichas/lotes.md."""
+"""Lotes B (/ui/lotes/<ano>/matriz/ e /template/): critérios de aceite de docs/telas/fichas/lotes.md.
+
+U7a: o GET destas rotas vai à Lista de Projetos (testes da tela em test_ui_projetos.py); aqui fica o
+POST, que continua gravando pela mesma regra."""
 
 from django.test import Client, TransactionTestCase
 from django.urls import reverse
@@ -19,30 +22,18 @@ from nucleo.tests.test_admin_projeto import ARQUIVADO, Base, mensagens
 from nucleo.tests.test_resolver import usuario
 
 HTMX = {"HTTP_HX_REQUEST": "true"}
+LISTA = reverse("ui_projeto_lista", args=[2026])
 
 
 class LoteMatrizUiTest(Base):
     url = reverse("ui_lotes_matriz", args=[2026])
 
-    def test_get_com_permissao(self):
-        nova = Matriz.objects.create(ano=self.ano, nome="Nova")
-        r = self.client.get(self.url)
-        self.assertEqual(r.status_code, 200)
-        self.assertTemplateUsed(r, "ui/base.html")
-        self.assertContains(r, "Aplicar aos selecionados")
-        self.assertContains(r, 'name="alvos"', count=2)  # GO e PE
-        self.assertContains(r, f'<option value="{nova.pk}">Nova</option>', html=True)
-        self.assertContains(r, 'aria-current="page">Escolher matriz')
-        self.assertNotContains(r, "Só leitura")
-        self.assertFalse(ParceiroAno.objects.filter(matriz=nova).exists())  # abrir não grava nem trava
-
     def test_post_grava_pela_regra_e_pula_travado(self):
         nova = Matriz.objects.create(ano=self.ano, nome="Nova")
         self.travar(self.projeto_go)
-        self.assertContains(self.client.get(self.url), "Em edição por outro: será pulado")
         pas = ParceiroAno.objects.filter(ano=self.ano)
         r = self.client.post(self.url, {"alvos": [pa.pk for pa in pas], "matriz": nova.pk}, follow=True)
-        self.assertRedirects(r, self.url)
+        self.assertRedirects(r, LISTA)
         self.assertEqual(ParceiroAno.objects.get(parceiro__nome="PE").matriz, nova)
         self.assertEqual(ParceiroAno.objects.get(parceiro__nome="GO").matriz, self.matriz)
         self.assertIn("Matriz Nova escolhida para 1 parceiro(s).", mensagens(r))
@@ -50,7 +41,6 @@ class LoteMatrizUiTest(Base):
 
     def test_sem_projeto_ativo_grava_e_avisa(self):
         Projeto.objects.filter(pk=self.projeto_pe.pk).update(arquivado_em=ARQUIVADO)
-        self.assertContains(self.client.get(self.url), "Sem projeto ativo")
         nova = Matriz.objects.create(ano=self.ano, nome="Nova")
         pe = ParceiroAno.objects.get(parceiro__nome="PE")
         self.client.post(self.url, {"alvos": [pe.pk], "matriz": nova.pk})
@@ -63,7 +53,6 @@ class LoteMatrizUiTest(Base):
         self.assertContains(r, "Marque ao menos um parceiro.")
         self.assertContains(r, "Escolha a matriz.")
         velha = Matriz.objects.create(ano=Ano.objects.create(ano=2025), nome="Velha")
-        self.assertNotContains(self.client.get(self.url), "Velha")
         pe = ParceiroAno.objects.get(parceiro__nome="PE")
         r = self.client.post(self.url, {"alvos": [pe.pk], "matriz": velha.pk})
         self.assertContains(r, "Escolha uma opção da lista; a lista mudou desde que a página abriu.")
@@ -84,37 +73,18 @@ class LoteMatrizUiTest(Base):
 
     def test_so_leitura_403_e_anonimo(self):
         self.client.force_login(self.imp)
-        r = self.client.get(self.url)
-        self.assertEqual(r.status_code, 200)
-        self.assertContains(r, "Só leitura: seu perfil vê as atribuições")
-        self.assertNotContains(r, 'name="alvos"')
-        self.assertNotContains(r, "Aplicar aos selecionados")
         pe = ParceiroAno.objects.get(parceiro__nome="PE")
         self.assertEqual(self.client.post(self.url, {"alvos": [pe.pk], "matriz": self.matriz.pk}).status_code, 403)
         self.client.force_login(usuario("nada"))
-        self.assertEqual(self.client.get(self.url).status_code, 403)
+        self.assertEqual(self.client.post(self.url, {"alvos": [pe.pk], "matriz": self.matriz.pk}).status_code, 403)
         self.client.logout()
         self.assertRedirects(self.client.get(self.url), f"{reverse('admin:login')}?next={self.url}", fetch_redirect_response=False)
-
-    def test_ano_vazio_e_inexistente(self):
-        Ano.objects.create(ano=2030)
-        self.assertContains(self.client.get(reverse("ui_lotes_matriz", args=[2030])), "Nenhum parceiro em 2030")
-        self.assertEqual(self.client.get(reverse("ui_lotes_matriz", args=[1999])).status_code, 404)
-
 
 class LoteTemplateUiTest(Base):
     novo_template = test_admin_projeto.LoteTemplateTest.novo_template
 
     def url(self, componente=None):
         return reverse("ui_lotes_template", args=[2026]) + (f"?componente={componente.pk}" if componente else "")
-
-    def test_get_abre_o_primeiro_componente_e_so_oferece_o_mesmo_cc(self):
-        r = self.client.get(self.url())
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.context["componente"], self.lp)  # LP vem antes de MT
-        self.assertContains(r, 'name="alvos"', count=2)
-        self.assertNotContains(r, f'<option value="{self.templates["MT", "F1"].pk}"')
-        self.assertContains(r, 'aria-current="page">Escolher template F1/F2')
 
     def test_post_troca_pula_copias_e_travado(self):
         f1 = self.novo_template(self.lp, "F1")
@@ -125,12 +95,9 @@ class LoteTemplateUiTest(Base):
             revista_fasciculo=rf_go, template=rf_go.template, secao="introducao", texto="editado",
             template_versao=TemplateVersao.objects.get(template=rf_go.template, numero=1),
         )  # fmt: skip
-        r = self.client.get(self.url(self.lp))
-        self.assertContains(r, "texto próprio</span>", count=1)
-        self.assertContains(r, "Em edição por outro: será pulado")
         alvos = [self.go["LP"].pk, self.pe["LP"].pk]
         r = self.client.post(self.url(self.lp), {"alvos": alvos, "template_f1": f1.pk, "template_f2": f2.pk}, follow=True)
-        self.assertRedirects(r, self.url(self.lp))
+        self.assertRedirects(r, LISTA)
         self.assertEqual(RevistaFasciculo.objects.get(pk=rf_go.pk).template, self.templates["LP", "F1"])
         self.assertEqual(RevistaFasciculo.objects.get(revista=self.pe["LP"], fasciculo="F2").template, self.templates["LP", "F2"])
         aviso = next(m for m in mensagens(r) if m.startswith("Pulados"))
@@ -149,9 +116,11 @@ class LoteTemplateUiTest(Base):
         self.assertEqual(RevistaFasciculo.objects.get(revista=self.go["LP"], fasciculo="F2").template, f2)
         self.assertEqual(RevistaFasciculo.objects.get(revista=self.go["LP"], fasciculo="F1").template, self.templates["LP", "F1"])
 
-    def test_arquivada_nao_aparece(self):
+    def test_arquivada_e_recusada(self):
         self.go["LP"].__class__.objects.filter(pk=self.go["LP"].pk).update(arquivada_em=ARQUIVADO)
-        self.assertNotIn(self.go["LP"].pk, [l["revista"].pk for l in self.client.get(self.url(self.lp)).context["linhas"]])
+        f2 = self.novo_template(self.lp, "F2")
+        r = self.client.post(self.url(self.lp), {"alvos": [self.go["LP"].pk], "template_f2": f2.pk})
+        self.assertContains(r, "Escolha uma opção da lista")
 
     def test_htmx_e_so_leitura(self):
         f2 = self.novo_template(self.lp, "F2")
@@ -160,16 +129,7 @@ class LoteTemplateUiTest(Base):
         self.assertContains(r, "Template escolhido em 1 revista(s).")
         self.assertContains(r, 'hx-swap-oob="true"')
         self.client.force_login(self.imp)
-        r = self.client.get(self.url(self.lp))
-        self.assertContains(r, "Só leitura")
-        self.assertNotContains(r, 'name="alvos"')
         self.assertEqual(self.client.post(self.url(self.lp), {"alvos": [self.go["LP"].pk], "template_f2": f2.pk}).status_code, 403)
-
-    def test_ano_sem_componente(self):
-        Ano.objects.create(ano=2030)
-        r = self.client.get(reverse("ui_lotes_template", args=[2030]))
-        self.assertContains(r, "Nenhum componente em 2030")
-
 
 class LoteUiConcorrenteTest(TransactionTestCase):
     """Bloqueio efetivado por outra conexão (o editor abriu o projeto no admin)."""
@@ -184,7 +144,7 @@ class LoteUiConcorrenteTest(TransactionTestCase):
         editor.get(reverse("admin:nucleo_projeto_change", args=[projeto.pk]))
         self.client.force_login(usuario("lote", is_superuser=True))
         url = reverse("ui_lotes_matriz", args=[2026])
-        self.assertContains(self.client.get(url), "Em edição por Ana: será pulado")
+        self.assertContains(self.client.get(reverse("ui_projeto_lista", args=[2026])), "Em edição por Ana: será pulado")
         r = self.client.post(url, {"alvos": [pa.pk], "matriz": matriz.pk}, follow=True)
         self.assertIn("Pulados: GO (projeto em edição por Ana).", mensagens(r))
         self.assertIsNone(ParceiroAno.objects.get(pk=pa.pk).matriz)

@@ -47,7 +47,7 @@ test("ano: + Adicionar abre a linha com foco; Esc descarta; Enter grava; etapas 
 });
 
 test("cortes: + Adicionar parceiro abaixo da grade abre a linha; Esc descarta", async ({ page }) => {
-  await entrar(page, "/cortes/2026/");
+  await entrar(page, "/ui/projeto/ano/2026/cortes/");
   await alpinePronto(page);
   await expect(page.locator("#novo-parceiro")).toHaveCount(0);
   const adicionar = page.getByRole("button", { name: "Adicionar parceiro" });

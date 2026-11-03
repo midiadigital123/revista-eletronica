@@ -1,4 +1,4 @@
-"""Grade de cortes fora do admin (protótipo da opção B): mesma regra de `nucleo/cortes.py`.
+"""Grade de cortes fora do admin (opção B; desde o U7a, a aba Cortes do hub Projetos): mesma regra de `nucleo/cortes.py`.
 
 Login (redireciona ao login do admin); ver exige `view_corte` ou `change_corte` (403);
 gravar exige `add_corte` + `change_corte`, sem elas a grade é só leitura. Autosave por célula
@@ -27,16 +27,22 @@ from nucleo.ui_autosave import Conflito, conflito, erros, form_de_um_campo, resp
 
 @require_GET
 @login_required(login_url="admin:login")
-def cortes(request, ano=None):
-    """A grade (só GET): cada célula grava sozinha pela rota `cortes_celula` (U3)."""
+def cortes(request, ano):
+    """Aba Cortes do hub Projetos (U7a, rota `cortes` em /ui/projeto/ano/<ano>/cortes/). Só GET:
+    cada célula grava sozinha pela rota `cortes_celula` (U3)."""
     if not pode_ver(request.user):
         raise PermissionDenied
-    anos = list(Ano.objects.order_by("-ano"))
-    if ano is None:  # /cortes/ → ano mais recente
-        return redirect("cortes", ano_da_sessao(request).ano) if anos else TemplateResponse(request, "ui/cortes.html", {"anos": anos})
     ano = get_object_or_404(Ano, ano=ano)
     contexto, _ = grade(request, ano, ler_post=False)
-    return TemplateResponse(request, "ui/cortes.html", {**contexto, "ano": ano, "anos": anos, "secao": "cortes"})
+    return TemplateResponse(request, "ui/cortes.html", {**contexto, "ano": ano, "secao": "projetos", "aba": "cortes"})
+
+
+@require_GET
+@login_required(login_url="admin:login")
+def antiga(request, ano=None):
+    """GET da grade antiga (/cortes/, /cortes/<ano>/): 302 para a aba Cortes de Projetos (U7a)."""
+    ano = ano or getattr(ano_da_sessao(request), "ano", None)
+    return redirect("cortes", ano) if ano else redirect("ui_projeto_inicio")
 
 
 @require_POST
@@ -139,8 +145,8 @@ def _excecao(parceiro, atual):
 
 
 urlpatterns = [
-    path("", cortes, name="cortes_inicio"),
-    path("<int:ano>/", cortes, name="cortes"),
+    path("", antiga, name="cortes_inicio"),
+    path("<int:ano>/", antiga, name="cortes_antiga"),  # a rota `cortes` é a aba de Projetos (ui_projeto.py)
     path("<int:ano>/parceiro/", novo_parceiro, name="cortes_novo_parceiro"),
     path("<int:ano>/celula/", celula, name="cortes_celula"),
     path("<int:ano>/parceiro/<int:pk>/renomear/", renomear_parceiro, name="cortes_renomear_parceiro"),

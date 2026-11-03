@@ -29,7 +29,7 @@ async function sairESalvar(page: Page) {
 test("variável salva ao sair do campo e recarregar não pede confirmação", async ({ page }) => {
   const erros: string[] = [];
   page.on("pageerror", (e) => erros.push(e.message));
-  await entrar(page, "/ui/variaveis/2026/");
+  await entrar(page, "/ui/projeto/ano/2026/variaveis/");
   await pronto(page);
   await expect(page.locator("[data-status-salvo]").getByText("Cada campo salva sozinho")).toBeVisible();
   const campo = celula(page);
@@ -52,7 +52,7 @@ test("variável salva ao sair do campo e recarregar não pede confirmação", as
 });
 
 test("rede caída: Não salvo · Tentar de novo e aviso ao sair só nesse caso", async ({ page }) => {
-  await entrar(page, "/ui/variaveis/2026/");
+  await entrar(page, "/ui/projeto/ano/2026/variaveis/");
   await pronto(page);
   const campo = celula(page);
   const original = await campo.inputValue();
@@ -87,7 +87,7 @@ test("rede caída: Não salvo · Tentar de novo e aviso ao sair só nesse caso",
 
 test("cortes: a célula salva sozinha; a outra aba com o valor antigo recebe conflito, não grava por cima", async ({ page, context }) => {
   const nome = `E2E Autosave ${Date.now().toString(36).toUpperCase()}`;
-  await entrar(page, "/cortes/2026/");
+  await entrar(page, "/ui/projeto/ano/2026/cortes/");
   await novoParceiro(page, nome);
   await pronto(page);
   const celulaDe = (p: Page) => p.getByLabel(`${nome} 5EF LP`, { exact: true });
@@ -108,7 +108,7 @@ test("cortes: a célula salva sozinha; a outra aba com o valor antigo recebe con
 
   // Duas abas: a 2ª abre agora (vê 150, 300); a 1ª grava 160, 300; a 2ª tenta 170, 300.
   const outra = await context.newPage();
-  await outra.goto("/cortes/2026/");
+  await outra.goto("/ui/projeto/ano/2026/cortes/");
   await pronto(outra);
   await celulaDe(page).fill("160, 300");
   await sairESalvar(page);
@@ -159,7 +159,7 @@ test("descritor: salva sozinho; com o bloqueio perdido, nada aparece como salvo 
 // O cliente diante da resposta de impacto (o servidor real é coberto em test_ui_autosave): a rota
 // responde com o modal do U2; Esc volta o valor gravado e o foco; confirmar reenvia com a confirmação.
 test("impacto no autosave: Esc volta o valor e o foco; confirmar reenvia confirmado", async ({ page }) => {
-  await entrar(page, "/ui/variaveis/2026/");
+  await entrar(page, "/ui/projeto/ano/2026/variaveis/");
   await pronto(page);
   const campo = celula(page);
   const original = await campo.inputValue();

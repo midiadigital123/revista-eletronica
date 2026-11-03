@@ -55,3 +55,16 @@
   .pj-amostra { grid-row: span 3; height: auto; margin: 0; border-radius: var(--radius-md); border-width: 1px; }
   .pj-tabela .select, .pj-tabela .input { min-width: 5rem; }
 }
+
+/* Hub Projetos, aba Lista (U7a): as revistas do projeto como selos (código, situação, Preview, Zip). */
+.selos { display: flex; flex-wrap: wrap; gap: 0.375rem; margin: 0; padding: 0; list-style: none; }
+.selo {
+  display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.125rem 0.5rem;
+  border: 1px solid var(--border); border-radius: var(--radius-md); white-space: nowrap; font-size: 0.8125rem;
+}
+.selo-acao { color: var(--muted-foreground); }
+.selo-acao:hover { color: var(--foreground); text-decoration: underline; text-underline-offset: 3px; }
+.selo-codigo { font-weight: 600; text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 3px; }
+.selo-codigo:hover { text-decoration-color: currentColor; }
+.selo-ok { border-color: color-mix(in oklch, var(--sucesso) 35%, var(--border)); }
+.selo-arquivada { border-style: dashed; color: var(--muted-foreground); }
