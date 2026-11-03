@@ -43,7 +43,7 @@ from nucleo.servicos.matriz import (
     revistas_afetadas,
 )
 from nucleo.servicos.impacto import avisar_perdidos
-from nucleo.ui_autosave import erros, form_de_um_campo, proxima_ordem, reordenar, responder_campo
+from nucleo.ui_autosave import erros, form_de_um_campo, proxima_ordem, quer_json, reordenar, responder_campo
 from nucleo.ui_bloqueio import com_bloqueio, e_htmx
 
 ERROS = "Nada foi gravado: corrija os erros marcados."
@@ -394,7 +394,19 @@ def mec(request, pk, dpk=None):
 @login_required(login_url="admin:login")
 @com_bloqueio(_mec, pode_editar)
 def intervalo(request, pk):
+    """Intervalo mínimo. U9: no popover "Configurações" salva sozinho (campoAuto, protocolo do
+    autosave, com impacto); o POST da página (HTMX ou sem JS) segue valendo."""
     m = _mec(request, pk)
+    if quer_json(request):
+        form = form_de_um_campo(IntervaloForm, request.POST.get("campo", ""), request.POST.get("valor", ""), instance=m)
+
+        def gravar(dados):
+            atual = MatrizEtapaCC.objects.get(pk=m.pk)
+            atual.passo = dados["passo"]
+            atual.save(update_fields=["passo"])
+
+        revistas = lambda: [r for r, _ in impacto(m)]  # noqa: E731
+        return responder_campo(request, form=form, gravar=gravar, revistas=revistas, titulo="Salvar o intervalo mínimo")
     form = IntervaloForm(request.POST, instance=m)
     if form.is_valid() and not form.pedir_confirmacao(_perdem(m) if form.has_changed() else []):
         form.save()

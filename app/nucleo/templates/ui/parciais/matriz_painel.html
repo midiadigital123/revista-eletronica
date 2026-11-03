@@ -7,9 +7,6 @@ Impacto (U2): form.precisa_confirmar abre o modal de impacto; o modal do item li
 <article class="matriz-descritor" aria-labelledby="titulo-descritor">
   <header class="matriz-descritor-cab">
     <h2 id="titulo-descritor"><span class="matriz-codigo-grande">{{ descritor.codigo }}</span> <span class="mudo">{{ mec.etapa.codigo }} {{ mec.componente.codigo }}</span></h2>
-    {% if excluir_descritor %}<a class="btn btn-destrutivo btn-sm" href="{% url 'ui_matriz_excluir_descritor' mec.pk descritor.pk %}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-      Excluir descritor</a>{% endif %}
   </header>
 
   {# U3: campos e tarefas gravadas salvam sozinhos (campoAuto, rota ui_matriz_campo). U4: "+ Adicionar tarefa" põe a linha nova, que entra pelo "Incluir tarefa" (POST do painel); as tarefas reordenam (ordenavel). #}
@@ -58,6 +55,18 @@ Impacto (U2): form.precisa_confirmar abre o modal de impacto; o modal do item li
     </fieldset>
     {% if form.precisa_confirmar %}{% include "ui/_componentes/impacto.html" with form_id="form-descritor" acao="Incluir tarefa" perdem=form.perdem %}{% endif %}
   </form>
+
+  {% if excluir_descritor %}{# U9: fim do painel, separada; a exclusão pede o código (D-181). #}
+  <section class="zona-perigo" aria-labelledby="perigo-titulo">
+    <div>
+      <h3 id="perigo-titulo" class="secao-titulo">Excluir descritor</h3>
+      <p class="mudo">Apaga {{ descritor.codigo }} e as tarefas dele de toda revista que usa esta etapa × componente. Na próxima tela, digite o código para confirmar.</p>
+    </div>
+    <a class="btn btn-destrutivo btn-sm" href="{% url 'ui_matriz_excluir_descritor' mec.pk descritor.pk %}" aria-label="Excluir o descritor {{ descritor.codigo }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+      Excluir</a>
+  </section>
+  {% endif %}
 
   {% for t, item in itens %}{% url 'ui_matriz_item' mec.pk descritor.pk t.pk as url_item %}
   <dialog class="dialogo" id="item-{{ t.pk }}" aria-labelledby="item-{{ t.pk }}-titulo"{% if item_pendente == t.pk %} x-data="impacto" data-abrir-ao-carregar data-form="item-form-{{ t.pk }}" @cancel.prevent="cancelar"{% endif %}>

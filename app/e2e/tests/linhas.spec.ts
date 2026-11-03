@@ -2,7 +2,7 @@
 // --ano 2026 e o superusuário e2e). Grava: o componente criado fica no banco (como em anos.spec);
 // a ordem das tarefas e dos descritores da MEC volta à original no fim de cada teste.
 import { expect, test, type Page } from "@playwright/test";
-import { entrar, liberarBloqueio } from "./helpers";
+import { alpinePronto, entrar, liberarBloqueio } from "./helpers";
 
 const ETAPA = /^\s*(\d+)\s*(EF|EM)\s*$/i;
 const escolar = (a: string, b: string) => {
@@ -18,6 +18,7 @@ const reordenou = (page: Page) => page.waitForResponse((r) => r.url().endsWith("
 
 test("ano: + Adicionar abre a linha com foco; Esc descarta; Enter grava; etapas na ordem escolar", async ({ page }) => {
   await entrar(page, "/ui/anos/2026/");
+  await alpinePronto(page);
   const etapas = page.locator("#etapas-form");
   const codigos = (await etapas.locator("tbody input[name$='-codigo']").evaluateAll((l) => l.map((i) => (i as HTMLInputElement).value)));
   expect(codigos).toEqual([...codigos].sort(escolar));
@@ -47,6 +48,7 @@ test("ano: + Adicionar abre a linha com foco; Esc descarta; Enter grava; etapas 
 
 test("cortes: + Adicionar parceiro abaixo da grade abre a linha; Esc descarta", async ({ page }) => {
   await entrar(page, "/cortes/2026/");
+  await alpinePronto(page);
   await expect(page.locator("#novo-parceiro")).toHaveCount(0);
   const adicionar = page.getByRole("button", { name: "Adicionar parceiro" });
   const [grade, botao] = await Promise.all([page.locator("#grade .grade-caixa").boundingBox(), adicionar.boundingBox()]);
@@ -62,7 +64,7 @@ test("MEC: arrastar e os botões trocam a ordem das tarefas e dos descritores; +
   await entrar(page, "/ui/matriz/2026/");
   await page.getByRole("link", { name: "Demonstração" }).first().click();
   await page.locator('a[href*="/ui/matriz/mec/"]').first().click();
-  await expect(page.locator("#form-descritor")).toBeVisible();
+  await alpinePronto(page);
   const ordem = (sel: string) => page.locator(`${sel} > [data-id]`).evaluateAll((l) => l.map((e) => (e as HTMLElement).dataset.id));
 
   // Tarefa nova: só pelo botão, com foco no Início; Esc descarta.
@@ -83,6 +85,7 @@ test("MEC: arrastar e os botões trocam a ordem das tarefas e dos descritores; +
   const depois = await ordem(tarefas);
   expect(depois).not.toEqual(antes);
   await page.reload();
+  await alpinePronto(page);
   expect(await ordem(tarefas)).toEqual(depois);
 
   // Teclado: "Mover para cima" devolve a tarefa ao 1º lugar.

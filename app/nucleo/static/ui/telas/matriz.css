@@ -12,12 +12,13 @@
 .matriz-cartao-form { display: flex; flex-direction: column; gap: 1.25rem; max-width: 40rem; }
 .matriz-fim { justify-content: flex-end; }
 
-/* cabeçalho da MEC: intervalo mínimo ao lado das ações */
+/* cabeçalho da MEC; o intervalo mínimo fica no popover "Configurações" (U9) */
 .matriz-cc { font-size: 1.25rem; font-weight: 400; letter-spacing: 0; }
 .matriz-intervalo .campo { gap: 0.25rem; }
-.matriz-intervalo-linha { display: flex; gap: 0.5rem; }
 .matriz-intervalo .input { width: 6rem; }
-.matriz-intervalo fieldset { display: flex; flex-direction: column; gap: 0.5rem; max-width: 22rem; }
+.matriz-intervalo fieldset { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.matriz-lista .matriz-novo { justify-content: center; width: auto; margin: 0.25rem 0.25rem 0.5rem; } /* U9: topo da lista */
 
 /* lista de descritores (ListaDescritores.tsx): código forte + descrição truncada; ativo com fio à esquerda */
 .matriz-busca { position: relative; padding: 0.25rem 0.25rem 0.5rem; }
@@ -36,7 +37,7 @@
 .matriz-ordem { list-style: none; display: flex; flex-direction: column; gap: 0.125rem; }
 .matriz-ordem > li { display: flex; align-items: center; gap: 0.125rem; min-width: 0; }
 .matriz-ordem > li > a { flex: 1; min-width: 0; }
-.matriz-ordem .ordem .btn { opacity: 0; transition: opacity 120ms var(--ease-saida); }
+.matriz-ordem .ordem .btn { width: 1.5rem; padding: 0; justify-content: center; opacity: 0; transition: opacity 120ms var(--ease-saida); }
 .matriz-ordem > li:hover .ordem .btn, .matriz-ordem .ordem .btn:focus-visible { opacity: 1; }
 
 /* painel do descritor (TelaDescritor.tsx) */
@@ -74,7 +75,4 @@
   .matriz-tarefa-campos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .matriz-tarefa-texto { grid-column: 1 / -1; }
 }
-@media (max-width: 40rem) {
-  .matriz-intervalo fieldset { max-width: none; }
-  .pagina-cab .acoes:has(.matriz-intervalo) { width: 100%; justify-content: space-between; align-items: flex-end; }
-}
+

@@ -12,8 +12,12 @@ export async function entrar(page: Page, proxima = "/admin/") {
   await expect(page).not.toHaveURL(/\/admin\/login\//);
 }
 
+/** O Alpine já ligou a página (o `:data-estado` do status do autosave só existe depois do init). */
+export const alpinePronto = (page: Page) => expect(page.locator("[data-status-salvo]")).toHaveAttribute("data-estado", "");
+
 /** Cortes (U4): "+ Adicionar parceiro" abre a linha com o foco no nome; Enter cria e recarrega. */
 export async function novoParceiro(page: Page, nome: string) {
+  await alpinePronto(page);
   await page.getByRole("button", { name: "Adicionar parceiro" }).click();
   await expect(page.locator("#novo-parceiro")).toBeFocused();
   await page.keyboard.type(nome);

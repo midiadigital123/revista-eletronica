@@ -39,6 +39,24 @@ document.addEventListener("alpine:init", () => {
     },
   }));
 
+  // U9: <div x-data="popoverSob"> com o botão (x-ref="botao", popovertarget) e o painel (x-ref="painel",
+  // popover, @toggle="alternou"). Abrir/fechar, Esc e clique fora são do popover nativo; aqui só a posição
+  // sob o botão (alinhada à direita dele, sem sair da tela), o foco no 1º campo e a volta do foco ao botão.
+  Alpine.data("popoverSob", () => ({
+    alternou(e) {
+      const { botao, painel } = this.$refs;
+      if (e.newState === "open") {
+        // ponytail: posição por JS; trocar por CSS anchor positioning quando todos os navegadores tiverem.
+        const r = botao.getBoundingClientRect();
+        painel.style.top = `${r.bottom + 4}px`;
+        painel.style.left = `${Math.max(8, Math.min(r.right - painel.offsetWidth, window.innerWidth - painel.offsetWidth - 8))}px`;
+        painel.querySelector("input:not([type=hidden]), select, textarea")?.focus();
+      } else if (!document.activeElement || document.activeElement === document.body || painel.contains(document.activeElement)) {
+        botao.focus();
+      }
+    },
+  }));
+
   // U4: <div x-data="linhaNova" data-total="id_<prefixo>-TOTAL_FORMS"> com <template data-molde> (a
   // linha do empty_form, com __prefix__), o alvo [data-linhas] e o botão [data-abrir-linha] @click="abrir".
   // Não há linha vazia na tela: ela nasce no fim, com o foco no 1º campo, e grava pelo botão submit

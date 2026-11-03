@@ -491,3 +491,77 @@ class MecLinhasTest(BaseMundo):
         self.assertContains(resp, f'data-ordem-url="{self.reordenar_d}"')
         self.assertContains(resp, f'data-ordem-url="{self.reordenar_t}"')
         self.assertContains(resp, "Mover para cima")
+
+
+class MecHierarquiaTest(BaseMundo):
+    """U9: cabeçalho com "Configurações" (popover com o intervalo mínimo, autosave com impacto),
+    "+ Novo descritor" no topo da lista e "Excluir descritor" numa zona de perigo no fim do painel."""
+
+    abrir = MecUiTest.abrir
+
+    def setUp(self):
+        super().setUp()
+        self.d = self.tarefa.descritor
+        self.mec = self.d.matriz_etapa_cc
+        self.url = reverse("ui_matriz_descritor", args=[self.mec.pk, self.d.pk])
+        self.intervalo = reverse("ui_matriz_intervalo", args=[self.mec.pk])
+
+    def campo(self, sessao, valor, **extra):
+        dados = {CAMPO_SESSAO: sessao, "campo": "passo", "valor": valor, "form_id": "form-intervalo", **extra}
+        return self.client.post(self.intervalo, dados, HTTP_ACCEPT="application/json")
+
+    def test_cabecalho_lista_e_zona_de_perigo(self):
+        html = self.client.get(self.url).content.decode()
+        cab = html[html.index('<header class="pagina-cab">') : html.index("</header>", html.index('<header class="pagina-cab">'))]
+        self.assertIn('popovertarget="mec-config"', cab)
+        self.assertIn("Configurações", cab)
+        self.assertIn("data-status-salvo", cab)
+        self.assertNotIn("Novo descritor", cab)
+        self.assertLess(cab.index('id="mec-config" popover'), cab.index("Intervalo mínimo"))  # dentro do popover
+        lista = html.index('aria-label="Descritores de')
+        novo = html.index('data-abrir="dlg-novo"')
+        self.assertLess(lista, novo)
+        self.assertLess(novo, html.index('id="lista-descritores"'))
+        self.assertIn('class="btn btn-outline', html[novo - 80 : novo])
+        perigo = html.index('class="zona-perigo"')
+        self.assertLess(html.index('id="sec-tarefas"'), perigo)
+        self.assertLess(perigo, html.index("Excluir descritor"))
+        self.assertEqual(html.count("Excluir descritor"), 1)  # só o título da zona de perigo, nada no topo
+        self.assertIn(f'aria-label="Excluir o descritor {self.d.codigo}"', html[perigo:])
+
+    def test_excluir_continua_exigindo_o_codigo(self):
+        url = reverse("ui_matriz_excluir_descritor", args=[self.mec.pk, self.d.pk])
+        sessao = self.client.get(url).wsgi_request.bloqueio["sessao"]
+        self.assertContains(self.client.post(url, {CAMPO_SESSAO: sessao, "confirmacao": "D0"}), "o código não confere")
+        self.assertTrue(Descritor.objects.filter(pk=self.d.pk).exists())
+
+    def test_intervalo_autosave_impacto_bloqueio_e_403(self):
+        sessao = self.abrir()
+        r = self.campo(sessao, "40")
+        self.assertEqual(r.status_code, 200, r.content)
+        self.assertTrue(r.json()["ok"])
+        self.mec.refresh_from_db()
+        self.assertEqual(self.mec.passo, 40)
+        self.assertEqual(self.campo(sessao, "0").status_code, 422)
+        rev = self.go["LP"]
+        validar(rev)
+        corpo = self.campo(sessao, "45").json()
+        self.assertIn(str(rev), corpo["impacto"]["perdem"])
+        self.assertIn('data-form="form-intervalo"', corpo["impacto"]["html"])
+        self.assertEqual(MatrizEtapaCC.objects.get(pk=self.mec.pk).passo, 40)
+        self.assertTrue(self.campo(sessao, "45", confirmar_impacto="on").json()["ok"])
+        self.assertEqual(MatrizEtapaCC.objects.get(pk=self.mec.pk).passo, 45)
+        self.assertFalse(esta_validada(rev))
+        self.assertTrue(bloqueio.adquirir(self.mec, self.root, "outra-aba"))
+        self.assertEqual(self.campo(sessao, "50").status_code, 409)
+        self.client.force_login(usuario("imp", "Impresso"))
+        self.assertEqual(self.campo("x", "50").status_code, 403)
+        self.assertEqual(MatrizEtapaCC.objects.get(pk=self.mec.pk).passo, 45)
+
+    def test_impresso_ve_configuracoes_so_leitura(self):
+        self.client.force_login(usuario("imp", "Impresso"))
+        resp = self.client.get(self.url)
+        self.assertContains(resp, "Configurações")
+        self.assertNotContains(resp, 'data-abrir="dlg-novo"')
+        self.assertNotContains(resp, "zona-perigo")
+        self.assertNotContains(resp, 'x-data="campoAuto" data-url="' + self.intervalo)
