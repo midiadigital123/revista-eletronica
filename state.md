@@ -2,13 +2,14 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Plano ativo: `plans/revista-express-telas-b-ux.md` (D-195–D-202). Ondas 1 e 2 concluídas e mergeadas em `feat/telas-b-ux`: U0, U1, U2, U3 (autosave), U6 (menu e ano), U8 (painel), U9b (editor de template). Onda 3 em andamento: U4→U9 e U5→U8b em worktrees.
+Plano ativo: `plans/revista-express-telas-b-ux.md` (D-195–D-202). Ondas 1 e 2 concluídas e mergeadas em `feat/telas-b-ux`: U0, U1, U2, U3 (autosave), U6 (menu e ano), U8 (painel), U9b (editor de template). Onda 3 disparada em 03/11 (sessão nova; a anterior não chegou a criar os worktrees): U4→U9 (`feat/ux-u4-u9-linhas-mec`, porta 8021) e U5→U8b (`feat/ux-u5-u8b-revista`, porta 8022).
 Funcionando: integração com Django 617 OK (8 pulados), `makemigrations --check` limpo, Playwright 41/41 numa stack isolada (`COMPOSE_PROJECT_NAME=ux-integ`, porta 8030, com 2025 vazio para o `ano.spec`).
-Quebrado/pendente: U4, U5, U7, U8b, U9, U10; limpeza do banco de dev no fim; `item.spec.ts` frágil com 2027 aberto por `abrir_ano`.
+Onda 3 concluída: U4+U9 (`35c80ce`), U5+U8b (`d0ff175`), correção de integração `446c8f5`. Onda 4 disparada: U7 em `feat/ux-u7-hub-projetos` (`ux-u7`, 8021).
+Quebrado/pendente: U7 (rodando), U10 (espera o usuário); ordem fixa das etapas (decisão do agente U4, a confirmar); limpeza do banco de dev no fim; `item.spec.ts` frágil com 2027 aberto por `abrir_ano`.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Aguardar os 2 agentes da onda 3 e integrar com `git merge --no-ff` em `feat/telas-b-ux`.
+Aguardar o agente do U7, mergear em `feat/telas-b-ux` e rodar as suítes; U10 só com o usuário.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1975,3 +1976,8 @@ Aguardar os 2 agentes da onda 3 e integrar com `git merge --no-ff` em `feat/tela
 - U6 (`02fe6a8`) mergeado sem conflito (`29b3e75`): menu Painel · Projetos · Matrizes · Templates · Impresso; seletor "2026 ▾" no cabeçalho (popover nativo + Alpine `seletorAno`) com "Configurar <ano>" (`view_ano`) e "Abrir novo ano" (`abrir_ano`); `contexto.py:ano_atual` troca de ano mantendo rota e query (detalhe → mesmo parceiro, senão lista do ano); `_inicio` usa o ano da sessão. Suítes no worktree: Django 581 OK, Playwright 34 OK. Avisos: o worktree do Agent nasce em commit antigo (34f3579) — o agente precisa criar a branch a partir de `feat/telas-b-ux`; `item.spec.ts` quebra com 2027 aberto por `abrir_ano` (dois "D01").
 - U3 (`556b12b`, `29deced`) mergeado (`f47cddf`), conflitos só de import e da linha de scripts na base. Protocolo de autosave em `ui_autosave.py` + `componentes/autosave.js` (`campoAuto`, `saida`); Cortes por célula (`cortes_celula`, 409 com `original`); Projeto e Variáveis na mesma rota `ui_projeto_campo`; 409 de bloqueio pelo `com_bloqueio` com `Accept: application/json`. No incidente, o U3 não tocou o banco de dev.
 - Integração da onda 2: conflito de sentido U6 × U8 — o `ano.spec` do U6 usava o select `#filtro-falta`, que o U8 removeu; ajustado para `filtrarFalta` e o campo oculto `falta`. Django 617 OK, Playwright 41/41.
+- Sessão nova (após /clear): nenhum worktree da onda 3 existia. Onda 3 disparada: U4→U9 em `feat/ux-u4-u9-linhas-mec` (`COMPOSE_PROJECT_NAME=ux-u4`, 8021) e U5→U8b em `feat/ux-u5-u8b-revista` (`ux-u5`, 8022).
+- U4+U9 (`e4bbe49`, `354677b`) mergeados sem conflito (`35c80ce`). Worktree: Django 633 OK (8 pulados), Playwright 44/45 (falha `ano.spec.ts:7` igual na base: banco só com 2026). Decisões do agente: etapas sem reordenar, em ordem escolar (EF antes do EM, por série), renumeradas 1..N ao incluir (`ordem_escolar`/`renumerar_etapas`), o agente atribuiu a uma mensagem recebida no meio do trabalho; componente sem `ordem` (sem migração); linha nova pelo componente `linhaNova` (sem rota `ui_ano_linha`); `reordenar` em `ui_autosave.py` com impacto/409/422; 'Configurações' da MEC com popover nativo `popoverSob`. Achado: `cortes.spec.ts:19` (admin) dá `TooManyFieldsSent` em banco acumulado de E2E. Incidente leve: scratchpad compartilhado entre os 2 agentes, o U4 pode ter rodado segundos contra `ux-u5`; nada tocou o dev.
+- U5+U8b (`8a777dd`, `6058ab3`) mergeados (`d0ff175`). Worktree: Django 627 OK, Playwright 42/42. Conflitos só de blocos novos no fim de `componentes.js`, `componentes/autosave.js` e `ui.css` (mantidos os dois lados). Decisões do agente: corrigiu Enter duplicado no `campoAuto` (dois modais); protocolo do U3 ganhou `trocar: {id: html}`, `simular=`/`modal=` e eventos `autosave:salvo|falhou|cancelado`; `arquivoSoltar` em `autosave.js`; sem 'Remover' arquivo (back não tem); sem menu '⋯' (Impresso virou link); mensagem de tamanho em `servicos/arquivos._ler` mudou.
+- Integração da onda 3 (ux-integ, 8030): Django 643 OK (8 pulados), `makemigrations --check` limpo, Playwright 45/46. A falha era interação U4 × U8b: o spec novo do U8b preenchia `#novo-parceiro`, que o U4 passou para um `<template>` aberto pelo botão; corrigido com o helper `novoParceiro` (`446c8f5`), spec 2/2 OK.
+- Onda 4 disparada: U7 (U7a lista com abas e ações em massa; U7b página do projeto com abas) em `feat/ux-u7-hub-projetos`, `ux-u7`, porta 8021, scratchpad `u7/`.
