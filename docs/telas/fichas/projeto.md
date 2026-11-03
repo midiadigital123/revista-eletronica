@@ -151,9 +151,9 @@ Escolha visual: o resto da página é quieto (cartões do editor, tipografia Int
 
 ## Referências técnicas
 
-- Regra: `app/nucleo/projeto.py` (ProjetoForm, PassoForm, PassoFormSet, CorForm, `formsets`), usada também por `app/nucleo/admin/projeto.py`. Limites e dica do `pdNN` no mesmo módulo (`limitar`, `mostrar_nome_do_ano`), também usados pela aba Variáveis do admin; `EDITAVEIS` em `nucleo/variaveis.py`.
+- Regra: `app/nucleo/projeto.py` (ProjetoForm; PassoForm, PassoFormSet e CorForm só no admin), usada também por `app/nucleo/admin/projeto.py`. Limites e dica do `pdNN` no mesmo módulo (`limitar`, `mostrar_nome_do_ano`), também usados pela aba Variáveis do admin; `EDITAVEIS` em `nucleo/variaveis.py`.
 - Cores e nomes efetivos da faixa: `servicos/resolver.py` (`cores_efetivas`, `valores_das_variaveis`).
-- View: `app/nucleo/urls/ui_projeto.py` (rotas `ui_projeto_inicio`, `ui_projeto_lista`, `ui_projeto`, `ui_projeto_linha`).
-- Templates: `templates/ui/projeto/{projeto,lista}.html`, `templates/ui/parciais/projeto_{linha,adicionar}.html`; CSS `static/ui/telas/projeto.css`.
+- View: `app/nucleo/urls/ui_projeto.py` (rotas `ui_projeto_inicio`, `ui_projeto_lista`, `ui_projeto`, `ui_projeto_campo`; passo por célula `passo-E-C`/`sem-E-C` e cor por padrão `cor-K` no autosave).
+- Templates: `templates/ui/projeto/{projeto,lista}.html`, `templates/ui/_componentes/selo_sobrescrita.html`; JS `static/ui/componentes/sobrescrita.js`; CSS `static/ui/telas/projeto.css`.
 - Testes: `app/nucleo/tests/test_ui_projeto.py`.
 - Decisões: D-053, D-060, D-081, D-091, D-093, D-100, D-166, D-167, D-172, D-173, D-175, D-183, D-186.
