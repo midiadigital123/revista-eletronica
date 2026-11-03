@@ -27,10 +27,8 @@
 {% else %}
 
 
-<nav class="abas" aria-label="Partes da temporada">
+<nav class="abas" aria-label="Fascículos">
   {% for f, n in abas %}<a href="?aba={{ f }}"{% if f == aba %} aria-current="page"{% endif %}>Textos {{ f }}<span class="badge badge-secundario">{{ n }}</span></a>{% endfor %}
-  <a href="{% url 'ui_matriz' ano.ano %}">Matrizes</a>
-  <a href="{% url 'ui_variaveis' ano.ano %}">Variáveis</a>
 </nav>
 
 {% if templates %}

@@ -51,7 +51,9 @@ class ListaTest(UiBase):
         self.assertContains(r, "usado por 2")
         self.assertContains(r, "(1 com cópia de seção)")
         self.assertContains(r, ">v1<")
-        self.assertContains(r, 'href="/ui/projeto/ano/2026/variaveis/">Variáveis')
+        # Auditoria 03/11: as abas são só F1/F2; Matrizes e Variáveis ficam no menu e em Projetos.
+        self.assertNotContains(r, 'href="/ui/projeto/ano/2026/variaveis/">Variáveis')
+        self.assertContains(r, f'href="{reverse("ui_matriz", args=[2026])}">Matrizes', count=1)  # só a do menu
         self.assertNotContains(self.ped.get(self.lista), f'href="{self.editar}"')  # aba padrão F1
         self.assertRedirects(self.ped.get(reverse("ui_templates_inicio")), self.lista)
 
