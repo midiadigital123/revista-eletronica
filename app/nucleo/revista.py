@@ -18,6 +18,7 @@ from django.utils.safestring import mark_safe
 from nucleo import texto
 from nucleo.models import Revista, RevistaFasciculo, RevistaSecao, Template
 from nucleo.servicos import arquivos, resolver, validacao
+from nucleo.templates_texto import rotulo
 
 
 class RevistaForm(forms.ModelForm):
@@ -135,6 +136,11 @@ class Secao(NamedTuple):
     copia: RevistaSecao | None
     desatualizada: bool
     do_template: str | None  # corpo na versão atual; None se a seção saiu do template
+
+    @property
+    def rotulo(self):
+        """"Introdução", "Diálogo do passo 4, item 1": o mesmo nome do editor de template (U9b)."""
+        return rotulo(self.id)
 
 
 class Bloco(NamedTuple):

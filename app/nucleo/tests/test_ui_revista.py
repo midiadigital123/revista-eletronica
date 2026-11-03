@@ -78,8 +78,9 @@ class RevistaUiTest(Base):
         self.assertRedirects(self.client.get(reverse("ui_revista_inicio")), reverse("ui_projeto_lista", args=[2026]))
 
         r = self.abrir()
-        for texto in ("Salvar seção", 'x-data="campoAuto"', 'x-data="arquivoSoltar"', "Validar revista", 'id="bloqueio-sessao"'):
+        for texto in ("acao=texto", 'x-data="campoAuto"', 'x-data="arquivoSoltar"', "Validar revista", 'id="bloqueio-sessao"'):
             self.assertContains(r, texto)
+        self.assertNotContains(r, "Salvar seção")  # o texto da seção salva sozinho
         for texto in ("Salvar templates", "Salvar arquivos", "Trocar SVG do F2"):  # U8b: salva ao escolher
             self.assertNotContains(r, texto)
         self.assertContains(r, f'href="{reverse("preview", args=[self.rev.pk])}" target="_blank"')
@@ -100,7 +101,7 @@ class RevistaUiTest(Base):
         """U5: o "Editar nome" sai da revista; fica o link para o projeto. `acao=nome` é 400."""
         r = self.abrir()
         self.assertNotContains(r, "Editar nome")
-        self.assertContains(r, "Editar no projeto")
+        self.assertContains(r, "Editar o nome do projeto")
         self.assertContains(r, f'href="{reverse("ui_projeto", args=[self.projeto_go.pk])}#nome"')
         dados = {"acao": "nome", "nome": "Projeto Goiás", CAMPO_SESSAO: self.sessao(r)}
         self.assertEqual(self.client.post(self.url, dados).status_code, 400)
@@ -108,8 +109,16 @@ class RevistaUiTest(Base):
 
     def test_editar_no_projeto_sem_permissao(self):
         self.client.force_login(usuario("imp-nome", "Impresso"))
-        self.assertNotContains(self.client.get(self.url), "Editar no projeto")
+        self.assertNotContains(self.client.get(self.url), "Editar o nome do projeto")
         self.assertEqual(self.client.post(self.url, {"acao": "nome", "nome": "X"}).status_code, 403)
+
+    def test_titulo_e_secoes_com_rotulo_humano(self):
+        """Auditoria 03/11: h1 "Parceiro · Componente ano" (não repete o projeto do link de voltar) e
+        as seções com o rótulo do editor de template, não o id."""
+        r = self.abrir()
+        self.assertContains(r, f"<h1>{self.projeto_go.parceiro_ano.parceiro.nome} · {self.rev.componente.nome} 2026</h1>", html=True)
+        self.assertContains(r, '<span class="revista-secao-id">Introdução</span>', html=True)
+        self.assertNotContains(r, '<span class="revista-secao-id">introducao</span>', html=True)
 
     def test_htmx_troca_so_a_secao(self):
         r = self.client.get(self.url, {"secao": "F1:fechamento"}, **HTMX)
@@ -126,11 +135,13 @@ class RevistaUiTest(Base):
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, "Só leitura: seu perfil vê a revista")
         self.assertContains(r, " readonly>")
-        for texto in ("Salvar seção", 'x-data="campoAuto"', 'x-data="arquivoSoltar"', 'id="botao-validado"', 'id="bloqueio-sessao"'):
+        for texto in ("acao=texto", 'x-data="campoAuto"', 'x-data="arquivoSoltar"', 'id="botao-validado"', 'id="bloqueio-sessao"', "Descartar cópia"):
             self.assertNotContains(r, texto)
         self.assertFalse(bloqueio.quem_bloqueia(self.projeto_go))
         for acao in ("secao", "templates", "arquivos", "validar"):
             self.assertEqual(self.client.post(self.url, {"acao": acao, INTRO: "x"}).status_code, 403)
+        r = self.client.post(f"{self.url}?acao=texto", {"campo": INTRO, "valor": "x"}, HTTP_ACCEPT="application/json")
+        self.assertEqual(r.status_code, 403)
         self.assertFalse(RevistaSecao.objects.exists())
         self.client.force_login(get_user_model().objects.create(username="sem", is_staff=True))
         self.assertEqual(self.client.get(self.url).status_code, 403)
@@ -178,18 +189,67 @@ class RevistaUiTest(Base):
         aberta = self.abrir()
         self.assertContains(aberta, "O template mudou nesta seção")
         self.assertContains(aberta, "Template novo")
-        self.assertContains(aberta, 'name="manter__F1__introducao"')
-
-        r = self.secao(aberta, valor="Outro.", descartar__F1__introducao="on")
-        self.assertContains(r, "escolha um dos dois")
-        self.assertEqual(RevistaSecao.objects.get().texto, "Meu texto.")
+        self.assertContains(aberta, "manter__F1__introducao")
+        self.assertContains(aberta, "Manter meu texto")
+        self.assertContains(aberta, "Descartar cópia")
 
         self.secao(self.abrir(), manter__F1__introducao="on")
         self.assertEqual(RevistaSecao.objects.get().template_versao.numero, 2)
         self.assertNotContains(self.abrir(), "O template mudou nesta seção")
 
-        self.secao(self.abrir(), descartar__F1__introducao="on")
+        # "Descartar cópia" é um botão: o texto da tela (mesmo mudado) não conta.
+        self.secao(self.abrir(), valor="Outro.", descartar__F1__introducao="on")
         self.assertFalse(RevistaSecao.objects.exists())
+        self.assertNotContains(self.abrir(), "Descartar cópia")  # sem cópia, sem botão
+
+    # --- 4b. texto da seção salva sozinho (autosave, auditoria 03/11) ------------------------------
+
+    def texto(self, valor, aberta=None, secao="introducao", **extra):
+        aberta = aberta or self.abrir()
+        b = next(b for b in aberta.context["blocos"] if b.rf.fasciculo == "F1")
+        s = next(s for s in b.secoes if s.id == secao)
+        dados = {CAMPO_SESSAO: self.sessao(aberta), "form_id": "secao-form", "campo": f"secao__F1__{secao}",
+                 "valor": valor, "original": s.corpo, "versao__F1": b.versao.pk, **extra}  # fmt: skip
+        return self.client.post(f"{self.url}?acao=texto&secao=F1:{secao}", dados, HTTP_ACCEPT="application/json")
+
+    def test_texto_salva_sozinho_e_cria_copia(self):
+        aberta = self.abrir()
+        self.assertContains(aberta, "data-manter-ao-cancelar")
+        r = self.texto("Meu **texto**.", aberta)
+        corpo = r.json()
+        self.assertTrue(corpo["ok"], corpo)
+        self.assertEqual(RevistaSecao.objects.get().texto, "Meu **texto**.")
+        self.assertEqual(set(corpo["trocar"]), {"secoes", "situacao", "secao-estado-F1-introducao"})
+        self.assertIn("cópia desta revista", corpo["trocar"]["secao-estado-F1-introducao"])
+        self.assertIn("Descartar cópia", corpo["trocar"]["secao-estado-F1-introducao"])
+        self.assertNotIn("Textos do F1 salvos", str(mensagens(self.abrir())))  # o status do autosave já disse
+        self.assertTrue(bloqueio.quem_bloqueia(self.projeto_go))
+        # Segunda mudança: `original` é o texto já salvo; atualiza a mesma cópia.
+        aberta = self.abrir()
+        self.assertContains(aberta, "Meu **texto**.")
+        self.assertTrue(self.texto("Mais.", aberta).json()["ok"])
+        self.assertEqual(RevistaSecao.objects.get().texto, "Mais.")
+
+    def test_texto_invalido_422_e_campo_estranho(self):
+        r = self.texto("Oi {{x}}.\n\n# Título")
+        self.assertEqual(r.status_code, 422)
+        self.assertIn("título (#)", " ".join(r.json()["erros"]))
+        r = self.client.post(f"{self.url}?acao=texto", {CAMPO_SESSAO: self.sessao(self.abrir()), "campo": "secao__F1__nada", "valor": "x"},
+                             HTTP_ACCEPT="application/json")  # fmt: skip
+        self.assertEqual(r.status_code, 422)
+        self.assertFalse(RevistaSecao.objects.exists())
+
+    def test_texto_de_validada_pede_modal(self):
+        completar(self.rev)
+        Revista.objects.filter(pk=self.rev.pk).update(hash_validado=hash_validado(carregar(self.rev.pk)))
+        aberta = self.abrir()
+        corpo = self.texto("Mudou.", aberta).json()
+        self.assertFalse(corpo["ok"])
+        self.assertEqual(corpo["impacto"]["perdem"], [str(self.rev)])
+        self.assertIn('data-form="secao-form"', corpo["impacto"]["html"])
+        self.assertFalse(RevistaSecao.objects.exists())
+        self.assertTrue(self.texto("Mudou.", aberta, confirmar_impacto="on").json()["ok"])
+        self.assertEqual(RevistaSecao.objects.get().texto, "Mudou.")
 
     # --- 5. template por fascículo (U8b: autosave + modal) --------------------------------------
 
@@ -348,6 +408,7 @@ class RevistaUiTest(Base):
         RevistaFasciculo.objects.filter(revista=self.rev, fasciculo="F2").update(template=None)
         r = self.abrir()
         self.assertContains(r, "Escolha os templates acima")
+        self.assertNotContains(r, f'<a class="btn btn-outline" href="{self.url}">')  # o `url` da página não vaza para o vazio
         self.assertNotContains(r, "faixa-vermelha")
         self.assertNotContains(r, 'name="secao__F1__')
 
@@ -356,7 +417,7 @@ class RevistaUiTest(Base):
     def test_outro_com_o_projeto_aberto(self):
         self.travar(self.projeto_go)
         r = self.client.get(self.url)
-        self.assertNotContains(r, "Salvar seção")
+        self.assertNotContains(r, "acao=texto")
         self.assertNotContains(r, 'id="bloqueio-sessao"')
         self.assertContains(r, " readonly>")
         dados = {"acao": "secao", "chave": "F1:introducao", CAMPO_SESSAO: "chute", INTRO: "Meu.", f"initial-{INTRO}": "x"}
