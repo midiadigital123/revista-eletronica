@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Plano ativo: `plans/revista-express-telas-b-ux.md` (reforma de UX, D-195–D-199). Passo U1 de 13 concluído: Alpine CSP 3.14.9 + SortableJS 1.15.6 (jsDelivr, SRI) carregam em toda tela B; `static/ui/componentes.js` pronto para os `Alpine.data`. Em andamento: U2 (modal de impacto).
-Funcionando: U0 (Cortes sem contador falso); suíte Django OK (8 de PDF pulados), `makemigrations --check` limpo; Playwright 28 OK com usuários `e2e`/`imp-e2e`.
-Quebrado/pendente: 4 specs (painel, impresso, item, revista-textos) falham por falta da revista DEMONSTRAÇÃO no banco de dev (`criar_demo --ano 2026` não rodado), não pelo U1; U2–U10, U8b, U9b.
+Plano ativo: `plans/revista-express-telas-b-ux.md` (D-195–D-201). Onda 1 concluída: U0, U1, U2 (modal de impacto, `beedcb6`). Onda 2 em andamento em worktrees: U3 autosave, U6 menu e ano, U8 painel, U9b editor de template, integrando em `feat/telas-b-ux`.
+Funcionando: modal de impacto em renomear parceiro, grade de cortes, intervalo, descritor, novo descritor, item, paleta e lotes; nenhum checkbox "Confirmo" nas telas B (admin mantém). Suíte Django 575 OK (8 pulados); Playwright 32 OK.
+Quebrado/pendente: `item.spec.ts` falha no banco de dev porque o 5EF está com ordem 5 (depois do 9EF) e o preview abre no 9EF — dado do banco, não do U2; U3–U10, U8b, U9b.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Executar U2: extrair `perdem_validado` de `app/nucleo/urls/cortes.py:55` para `app/nucleo/servicos/impacto.py`.
+Aguardar os 4 agentes da onda 2 e integrar com `git merge --no-ff` em `feat/telas-b-ux`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1645,8 +1645,16 @@ Executar U2: extrair `perdem_validado` de `app/nucleo/urls/cortes.py:55` para `a
 - **Arquivos afetados:** `app/nucleo/templates/ui/cortes.html`, `app/e2e/tests/cortes.spec.ts`
 - **Status:** ativa
 
+### D-201 — Reforma de UX em worktrees paralelos, integrados em `feat/telas-b-ux` (2026-11-03)
+- **Contexto:** o usuário pediu para manter a prática da refatoração Django: um agente por passo, cada um no seu worktree, e merge numa branch só.
+- **Decisão:** a partir do U3, cada passo roda num subagente com worktree próprio (`feat/ux-<passo>-<nome>`), com compose isolado (APP_PORT único, banco próprio, `criar_demo` e usuários E2E locais) e commit na própria branch. Eu integro com `merge --no-ff` em `feat/telas-b-ux` e rodo as suítes no resultado de cada onda. Ondas: 2 = U3, U6, U8, U9b; 3 = U4→U9, U5→U8b; 4 = U7; 5 = U10.
+- **Motivo:** ~12,5 dias em série caem para ~6; o banco de cada worktree é descartável, então os testes não sujam o banco de dev do usuário.
+- **Descartadas:** sem commit no worktree (Fase B da refatoração, D-134) — aqui os passos de uma onda dependem da onda anterior, e o merge precisa de commit; tudo na raiz em série — lento.
+- **Arquivos afetados:** `plans/revista-express-telas-b-ux.md`
+- **Status:** ativa
+
 ## Perguntas em aberto
-- [ ] Rodar `manage.py criar_demo --ano 2026` no banco de dev para os 4 specs que procuram DEMONSTRAÇÃO (cria dados no banco do usuário) — depende de: Otavio
+- [ ] **Limpeza do banco de dev ao fim da reforma (autorizada por Otavio, 03/11):** apagar o que foi criado para teste — usuários `e2e`, `imp-e2e`, `demo-preview`; parceiro `DEMONSTRAÇÃO` (projeto/revista 2026, preview 13) e matriz `Demonstração`; parceiros `E2E A/B <sufixo>` criados pelo `cortes.spec.ts`; e o que os specs novos (U2+) criarem (nome com prefixo `E2E`). Não tocar em SAESE, TESTE, Novo parceiro, `otavio`, `midias`, `impresso`, `pedagogica`. Listar antes de apagar — depende de: fim do U10
 - [x] (D-189 → D-190) Auditoria das telas B: o que o back faz e a tela B não oferece. Bloqueia: abrir ano, criar matriz, criar template, paleta do ano, etapas/componentes. Leva a erro: links do painel vão ao admin (Impresso recebe 403 em "Matriz", `urls/painel.py:43`), renomear parceiro, "abra um ano no admin" para quem não pode. Menu sem Projetos e Lotes. Por onde começar — depende de: usuário
 - [x] (D-184) S17: os cortes de 2026 repetem os de 2025? Se sim, comando `importar_cortes` (~60 min) substituindo a D-119 nesse ponto — depende de: Pedagógica
 - [x] (D-184) S17: LP 2EF tem 10 descritores na planilha `NÍVEIS - LP 2EF.xlsx` e 8 no PDF SAEGO 2025 — qual vale? — depende de: Pedagógica
@@ -1949,3 +1957,6 @@ Executar U2: extrair `perdem_validado` de `app/nucleo/urls/cortes.py:55` para `a
 - Revisão de UX pedida (docx com 11 prints e 18 comentários). Só relatório, sem código. Causa achada do "2 parceiro(s) com alteração não salva" eterno e do aviso de saída sem mudança: em `ui/cortes.html`, `tr.querySelectorAll("input.input")` inclui o campo de Renomear e desloca a comparação célula × gravado.
 - Plano da reforma de UX aprovado: `plans/revista-express-telas-b-ux.md` (U0–U10 + U8b página da revista + U9b editor de template com seções travadas; ~12,5 dias). Decisões: Alpine CSP + fetch somado ao HTMX, autosave com modal de impacto, Cortes como visão de Projetos, reforma antes de S6–S9, CDN liberada (jsDelivr com SRI). Registro formal D-195+ fica no U0.
 - U1: Alpine CSP + SortableJS via jsDelivr com SRI na base, `componentes.js` vazio, design-system atualizado. Playwright completo rodou pela 1ª vez com credenciais: 28 OK, 4 falham só por falta da demo.
+- `criar_demo --ano 2026` rodado no banco de dev (autorizado): revista DEMONSTRAÇÃO, matriz Demonstração e usuário demo-preview. Limpeza registrada em Perguntas em aberto.
+- U2 (`beedcb6`, subagente): `servicos/impacto.py` (`perdem_validado` por savepoint desfeito, `avisar_perdidos`), `ImpactoForm(modal=True)`, `_componentes/impacto.html` + componente Alpine `impacto`. Decisão do agente: "impacto" = só quem perde o Validado (afetar revista não validada grava direto); matriz segue com a aproximação de `servicos/matriz.impacto`; admin mantém checkbox. Desvio: testes escritos depois do código.
+- Branch de integração `feat/telas-b-ux` criada a partir de `feat/telas-b-lacunas`; onda 2 disparada (U3, U6, U8, U9b em worktrees, portas 8021–8024).

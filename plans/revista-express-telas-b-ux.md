@@ -20,6 +20,23 @@
 | d | Esta reforma roda **antes** de S6–S9, que já nascem no padrão novo | Fazer S6–S9 antes e adaptar depois |
 | e | O menu fica com Painel, Projetos, Matrizes, Templates e Impresso. O seletor de ano vai para o cabeçalho e traz "Configurar <ano>" e "Abrir novo ano" | O seletor "+ Abrir ano" dentro de cada página |
 
+## Modo de execução: worktrees em paralelo (D-201)
+
+- **Branch de integração:** `feat/telas-b-ux`, criada a partir de `feat/telas-b-lacunas` logo depois do commit do U2. Cada passo roda num subagente com `isolation: "worktree"`, na branch `feat/ux-<passo>-<nome>` (ex.: `feat/ux-u3-autosave`), criada do topo da integração. O subagente faz o commit na própria branch, sem push e sem tocar no `state.md`.
+- **Ambiente por worktree:** copie o `.env` da raiz e use um `APP_PORT` único (U3 8021, U6 8022, U8 8023, U9b 8024; as ondas seguintes reaproveitam). O compose do worktree tem banco e volume próprios, porque o nome do projeto vem da pasta. Preparo: `docker compose up -d db app`, `migrate`, `criar_demo --ano 2026` e os usuários `e2e` e `imp-e2e` (senhas aleatórias num arquivo fora do repo). No fim, `docker compose down -v`. Com isso, **nada de teste toca o banco de dev do usuário**.
+- **Integração (eu, na raiz):** `git merge --no-ff` de cada branch na ordem da onda. Depois de cada onda: suíte Django, `makemigrations --check` e Playwright completo no resultado mesclado. Conflitos (o mais comum é a linha do include `_componentes/anos.html`, que o U6 remove) são resolvidos na integração e entram na mensagem de merge.
+- **Ondas:**
+
+| Onda | Passos em paralelo | Depende de |
+|---|---|---|
+| 1 | U2 (na raiz, já em curso) | U1 |
+| 2 | U3 autosave · U6 menu e ano · U8 painel · U9b editor de template | U2 |
+| 3 | U4 → U9 (mesmo agente: os dois mexem na MEC) · U5 → U8b (mesmo agente: os dois mexem na revista) | U3 |
+| 4 | U7 hub Projetos | U3, U4, U6 |
+| 5 | U10 acabamento | todas |
+
+- **Tempo:** cerca de 12,5 dias em série, cerca de 6 dias com as ondas (o caminho crítico é U2 → U3 → U4/U9 → U7 → U10).
+
 ## Restrições globais
 
 - CDN liberada pelo usuário (03/11). As libs novas vêm do jsDelivr com versão exata e `integrity` (SRI) + `crossorigin="anonymous"`, registradas em `docs/telas/design-system.md`. O HTMX vendorizado fica como está.
