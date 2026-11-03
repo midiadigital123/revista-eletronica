@@ -13,6 +13,10 @@
     }
     const contador = form.querySelector("[data-contador]");
     if (contador) contador.textContent = `${marcadas} selecionado(s)`;
+    for (const b of form.querySelectorAll("[data-precisa-marca]")) {  // sem marcado não há alvo; o servidor também recusa
+      b.disabled = marcadas === 0;
+      if (marcadas === 0) b.title = "Marque ao menos um parceiro"; else b.removeAttribute("title");
+    }
     const escolhas = {};
     for (const s of form.querySelectorAll("[data-previa]")) {
       escolhas[s.dataset.previa] = s.value ? { valor: s.value, nome: s.selectedOptions[0].text } : null;

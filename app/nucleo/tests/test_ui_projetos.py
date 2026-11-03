@@ -46,6 +46,39 @@ class HubListaTest(Base):
                 self.assertEqual(grupo.count(f'<tr data-revista="{r.pk}">'), 1)
         self.assertEqual(grupo.count("<tr data-revista="), len(self.go))
 
+    def test_pendencias_em_balao_e_acoes_com_nome(self):
+        """Pendências num balão com o número (texto completo no aria-label, plural certo); Preview e Zip
+        são botões-ícone com nome acessível."""
+        import re
+
+        from nucleo.urls import painel
+
+        html = self.client.get(LISTA).content.decode()
+        self.assertNotIn("pendência(s)", html)
+        for r in self.go.values():
+            with self.subTest(r.componente.codigo):
+                n = sum(not c["ok"] for c in painel.linha(r)["faltas"].values())
+                linha = re.search(rf'<tr data-revista="{r.pk}">.*?</tr>', html, re.S).group(0)
+                if n:
+                    rotulo = f"{n} pendência" + ("s" if n > 1 else "")
+                    self.assertIn(f'<span class="contagem" role="img" aria-label="{rotulo}" title="{rotulo}: ', linha)
+                    self.assertIn(f">{n}</span>", linha)
+                else:
+                    self.assertIn('aria-label="Sem pendências"', linha)
+                self.assertIn(f'aria-label="Abrir preview de {r} (nova aba)"', linha)
+                self.assertIn(f'aria-label="Baixar zip de {r}"', linha)
+                self.assertIn(f'<span class="tag tag-lilas" title="{r.componente.nome}">{r.componente.codigo}</span>', linha)
+
+    def test_acoes_em_massa_desabilitadas_sem_marcado(self):
+        """Sem parceiro marcado, "Atribuir matriz…" e "Atribuir template…" ficam desabilitados com o motivo;
+        o servidor continua recusando o envio vazio."""
+        r = self.client.get(LISTA)
+        for acao in ("matriz", "template"):
+            with self.subTest(acao):
+                self.assertContains(r, f'data-abrir="dlg-{acao}" data-precisa-marca disabled title="Marque ao menos um parceiro">')
+        r = self.client.post(massa("matriz"), {"matriz": self.matriz.pk}, follow=True)
+        self.assertIn("Marque ao menos um parceiro", r.content.decode())
+
     def test_abas_cortes_e_variaveis(self):
         r = self.client.get(CORTES)
         self.assertTemplateUsed(r, "ui/cortes.html")
@@ -130,7 +163,7 @@ class NenhumaAcaoPerdidaTest(Base):
             ]),
             "/ui/revista/<ano>/": (LISTA, [
                 reverse("ui_revista_editar", args=[2026, lp.pk]), reverse("preview", args=[lp.pk]),
-                reverse("ui_revista_zip", args=[2026, lp.pk]) + "?voltar=lista", "Preview", "Zip",
+                reverse("ui_revista_zip", args=[2026, lp.pk]) + "?voltar=lista", "Abrir preview de", "Baixar zip de",
             ]),
             "/ui/lotes/<ano>/matriz/": (LISTA, ["Atribuir matriz…", 'name="matriz"', 'name="alvos"', massa("matriz")]),
             "/ui/lotes/<ano>/template/": (LISTA, [

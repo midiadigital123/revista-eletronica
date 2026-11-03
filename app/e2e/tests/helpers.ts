@@ -84,7 +84,8 @@ export async function atribuirEmMassa(
 export async function revistaDaLista(page: Page, parceiro: string, codigo: string) {
   const grupo = page.locator("tbody", { has: page.getByLabel(`Marcar ${parceiro}`, { exact: true }) });
   const href = await grupo
-    .locator("a.link-linha", { has: page.locator(".badge", { hasText: new RegExp(`^${codigo}$`) }) })
+    .locator("tr[data-revista]", { has: page.locator(".tag", { hasText: new RegExp(`^${codigo}$`) }) })
+    .locator("a.link-linha")
     .getAttribute("href");
   return href!.split("/").at(-2)!;
 }

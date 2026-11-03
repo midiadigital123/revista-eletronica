@@ -33,6 +33,11 @@
   --warning: #7a4f00;
   --warning-bg: #fff3d6;
   --sucesso: oklch(0.45 0.13 150); /* o verde do ✓ (status, validado, copiado) */
+  /* pílulas de categoria (.tag-*): matiz quase sem croma, para separar colunas sem competir com os Padrões */
+  --tag-azul: oklch(0.42 0.06 250);
+  --tag-azul-bg: oklch(0.955 0.018 250);
+  --tag-lilas: oklch(0.42 0.06 305);
+  --tag-lilas-bg: oklch(0.955 0.018 305);
   --border: oklch(0.922 0 0);
   --input: oklch(0.6 0 0);
   --ring: oklch(0.45 0 0);
@@ -173,6 +178,40 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .badge-contorno { background: transparent; color: var(--foreground); border-color: var(--border); }
 .badge-alerta { background: var(--warning-bg); color: var(--warning); border-color: color-mix(in srgb, var(--warning) 30%, transparent); }
 .badge-erro { background: color-mix(in oklch, var(--destructive) 10%, transparent); color: var(--destructive); }
+
+/* --- tag: pílula de categoria numa célula de tabela (matriz, componente, versão). Neutra por padrão;
+   azul e lilás só distinguem colunas. Aviso continua em .badge-alerta. --- */
+.tag {
+  display: inline-flex; align-items: center; gap: 0.25rem; height: 1.25rem; padding: 0 0.5rem; max-width: 18rem;
+  border: 1px solid var(--border); border-radius: 999px; background: var(--background); color: var(--foreground);
+  font-size: 0.75rem; line-height: 1rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  vertical-align: middle;
+}
+.tag-azul { background: var(--tag-azul-bg); color: var(--tag-azul); border-color: color-mix(in oklch, var(--tag-azul) 18%, transparent); }
+.tag-lilas { background: var(--tag-lilas-bg); color: var(--tag-lilas); border-color: color-mix(in oklch, var(--tag-lilas) 18%, transparent); }
+
+/* --- contagem: balão redondo com um número (pendências); o texto completo vai no aria-label/title.
+   .contagem-ok é o par neutro (✓ sem cor). --- */
+.contagem {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 1.25rem; height: 1.25rem; padding: 0 0.3125rem;
+  border-radius: 999px; background: var(--warning-bg); color: var(--warning); border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
+  font-size: 0.6875rem; line-height: 1; font-weight: 650; font-variant-numeric: tabular-nums; vertical-align: middle; cursor: default;
+}
+.contagem-ok { padding: 0; background: var(--background); color: var(--muted-foreground); border-color: var(--border); }
+.contagem svg { width: 0.75rem; height: 0.75rem; }
+
+/* --- botão-ícone: ação de linha (preview, baixar, editar, excluir). Quadrado de 32px, traço fino;
+   o nome vem do aria-label e a dica do title. --- */
+.btn-icone {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 2rem; height: 2rem;
+  border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--background); color: var(--muted-foreground);
+  cursor: pointer; transition: background-color 120ms var(--ease-saida), color 120ms var(--ease-saida), border-color 120ms var(--ease-saida);
+}
+.btn-icone:hover { background: var(--muted); color: var(--foreground); border-color: color-mix(in oklch, var(--foreground) 20%, var(--border)); }
+.btn-icone:active { translate: 0 1px; }
+.btn-icone:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.btn-icone svg { width: 1rem; height: 1rem; stroke-width: 1.75; }
+@media (prefers-reduced-motion: reduce) { .btn-icone { transition: none; } }
 
 /* --- card (components/ui/card.tsx) --- */
 /* `hidden` sempre esconde: sem isto, `.card { display: flex }` e afins venciam o atributo e as abas
