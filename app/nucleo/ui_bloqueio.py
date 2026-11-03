@@ -11,7 +11,8 @@ Mesma regra do admin (D-080, D-081, D-121), mesmo serviço (`servicos/bloqueio.p
   bloqueio: aviso de quem edita e `request.pode_gravar = False` (somente leitura).
 - GET do HTMX (fragmento): não adquire; vale a sessão que o bloqueio.js põe em todo pedido HTMX.
 - POST: sem `pode_gravar` é 403. Confere o bloqueio dentro da transação (FOR SHARE) e roda a
-  view nela; perdeu o bloqueio: nada roda, mensagem e volta à página. Resposta de redirect
+  view nela; perdeu o bloqueio: nada roda, mensagem e volta à página (autosave, que pede JSON:
+  409 do protocolo de `ui_autosave`). Resposta de redirect
   (302 ou HX-Redirect) libera o bloqueio, como o "Salvar" do admin.
 
 A view lê `request.pode_gravar` (permissão e bloqueio juntos) e o template põe
@@ -30,6 +31,7 @@ from django.utils.cache import patch_vary_headers
 
 from nucleo.admin.bloqueio import CAMPO_SESSAO, aviso
 from nucleo.servicos import bloqueio
+from nucleo.ui_autosave import conflito, quer_json
 
 log = logging.getLogger(__name__)
 PERDEU = "Não salvo: você perdeu o bloqueio de edição (outra pessoa ou aba abriu esta página). Recarregue e refaça a alteração."
@@ -102,6 +104,8 @@ def _salvar(request, alvo, view, args, kwargs):
     sessao = request.POST.get(CAMPO_SESSAO, "")
     with transaction.atomic():
         if not bloqueio.conferir_na_transacao(alvo, request.user, sessao):
+            if quer_json(request):  # autosave (U3): 409 do protocolo, com quem edita agora
+                return conflito(f"{PERDEU} {aviso(request, alvo)}")
             messages.error(request, PERDEU)
             return _voltar(request)
         request.bloqueio, request.pode_gravar = _dados(alvo, sessao), True

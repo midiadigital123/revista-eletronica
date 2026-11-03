@@ -4,6 +4,9 @@ Regra em `nucleo/projeto.py` (os mesmos forms do change form do admin); bloqueio
 (`ui_bloqueio.com_bloqueio`). Lista do ano (T15) em /ui/projeto/ano/<ano>/.
 """
 
+import re
+
+from django import forms
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -12,13 +15,16 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import path
-from django.views.decorators.http import require_GET, require_http_methods
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
-from nucleo.models import Ano, CorPadrao, Matriz, MatrizEtapaCC, Projeto
-from nucleo.projeto import MAX_CORES, ProjetoForm, formsets
+from nucleo import planilha_variaveis
+from nucleo.lotes import escrever_travado
+from nucleo.models import Ano, CorPadrao, Matriz, MatrizEtapaCC, Projeto, ProjetoCor, ProjetoPasso, Revista
+from nucleo.projeto import MAX_CORES, CorForm, PassoForm, ProjetoForm, formsets
 from nucleo.servicos.resolver import cores_efetivas, valores_das_variaveis
-from nucleo.ui_bloqueio import com_bloqueio
-from nucleo.variaveis import VARIAVEIS
+from nucleo.ui_autosave import Conflito, form_de_um_campo, responder_campo
+from nucleo.ui_bloqueio import CAMPO_SESSAO, com_bloqueio
+from nucleo.variaveis import EDITAVEIS, VARIAVEIS
 
 # ponytail: exige também add/change/delete de passo e cor (os perfis dão tudo junto); o admin
 # deixaria quem só tem change_projeto editar nome e variáveis. Separar se surgir esse perfil.
@@ -193,10 +199,98 @@ def linha(request, pk, tipo):
     return TemplateResponse(request, "ui/parciais/projeto_linha.html", contexto)
 
 
+LINHA = re.compile(r"^(passos|cores)-(\d{1,4})-")
+
+
+def _revistas(projeto):
+    return Revista.objects.filter(projeto=projeto, arquivada_em__isnull=True)
+
+
+def _salvar_campo(pk, nome, valor):
+    projeto = Projeto.objects.get(pk=pk)  # relido: o form mexeu na instância da view
+    setattr(projeto, nome, valor)
+    projeto.save(update_fields=[nome])
+
+
+def _form_campo(request, projeto, nomes):
+    nome = request.POST.get("campo", "")
+    if nome not in nomes:
+        return nome, None
+    return nome, form_de_um_campo(ProjetoForm, nome, request.POST.get("valor", ""), instance=projeto)
+
+
+def _titulo(form, nome):
+    return f"Salvar “{form.fields[nome].label}”" if form else "Salvar"
+
+
+@require_POST
+@login_required(login_url="admin:login")
+def campo(request, pk):
+    """Autosave de um campo (U3), ponto único de escrita da ficha e da planilha de variáveis.
+    Com a sessão de bloqueio (ficha): `com_bloqueio`, e vale todo campo da ficha. Sem ela
+    (planilha): só as variáveis, e o projeto fica travado só durante a escrita (D-121)."""
+    if CAMPO_SESSAO in request.POST:
+        return _campo_na_ficha(request, pk)
+    if not planilha_variaveis.pode_gravar(request.user):
+        raise PermissionDenied
+    projeto = get_object_or_404(Projeto, pk=pk)
+    nome, form = _form_campo(request, projeto, EDITAVEIS)
+
+    def gravar(dados):
+        if motivo := escrever_travado(projeto, request.user, lambda: _salvar_campo(projeto.pk, nome, dados[nome])):
+            raise Conflito(f"Não salvo: {motivo}. Tente de novo quando a outra pessoa fechar o projeto.")
+
+    return responder_campo(request, form=form, gravar=gravar, revistas=lambda: _revistas(projeto), titulo=_titulo(form, nome))
+
+
+@com_bloqueio(_alvo, pode_gravar)
+def _campo_na_ficha(request, pk):
+    projeto = get_object_or_404(Projeto, pk=pk)
+    if projeto.arquivado_em:
+        raise PermissionDenied  # arquivado é congelado (D-093, D-167)
+    if m := LINHA.match(request.POST.get("campo", "")):
+        return _linha_na_ficha(request, projeto, *m.groups())
+    nome, form = _form_campo(request, projeto, ProjetoForm._meta.fields)
+    gravar = lambda dados: _salvar_campo(projeto.pk, nome, dados[nome])  # noqa: E731
+    return responder_campo(request, form=form, gravar=gravar, revistas=lambda: _revistas(projeto), titulo=_titulo(form, nome))
+
+
+def _linha_na_ficha(request, projeto, tipo, i):
+    """Linha de passo ou de cor (a linha inteira vem no POST, com o prefixo do formset da página).
+    Sem `id`: cria (a resposta leva o `id`). Com `DELETE`: remove (volta ao valor da matriz/do ano)."""
+    prefixo = f"{tipo}-{i}"
+    Modelo, Form = (ProjetoPasso, PassoForm) if tipo == "passos" else (ProjetoCor, CorForm)
+    pk_linha = request.POST.get(f"{prefixo}-id", "")
+    if pk_linha and not (pk_linha.isascii() and pk_linha.isdigit()):
+        raise Http404
+    instancia = get_object_or_404(Modelo, pk=pk_linha, projeto=projeto) if pk_linha else Modelo(projeto=projeto)
+    revistas = lambda: _revistas(projeto)  # noqa: E731
+    titulo = "Salvar o passo" if tipo == "passos" else "Salvar a cor"
+    if request.POST.get(f"{prefixo}-DELETE"):
+        def remover(_):
+            if instancia.pk:
+                Modelo.objects.filter(pk=instancia.pk).delete()
+            return {"removida": True}
+
+        return responder_campo(request, form=forms.Form({}), gravar=remover, revistas=revistas, titulo="Remover a linha")
+    kwargs = {"ano_id": projeto.ano_id} if tipo == "passos" else {}
+    form = Form(request.POST, instance=instancia, prefix=prefixo, **kwargs)
+
+    def gravar(_):
+        obj = form.save(commit=False)
+        if not pk_linha:  # a simulação do impacto (savepoint desfeito) já deu um pk a esta instância
+            obj.pk, obj._state.adding = None, True
+        obj.save()
+        return {"id": obj.pk}
+
+    return responder_campo(request, form=form, gravar=gravar, revistas=revistas, titulo=titulo)
+
+
 urlpatterns = [
     path("", inicio, name="ui_projeto_inicio"),
     path("ano/<int:ano>/", lista, name="ui_projeto_lista"),
     path("<int:pk>/", projeto, name="ui_projeto"),
     path("<int:pk>/linha/<str:tipo>/", linha, name="ui_projeto_linha"),
+    path("<int:pk>/campo/", campo, name="ui_projeto_campo"),
     path("<int:pk>/matriz/", matriz, name="ui_projeto_matriz"),
 ]

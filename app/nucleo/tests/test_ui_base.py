@@ -138,7 +138,7 @@ class CascaTest(TestCase):
         self.client.force_login(get_user_model().objects.create_superuser("bia", password="x"))
         html = self.client.get("/cortes/2026/").content.decode()
         ordem = ["ui/htmx.min.js", "ui/ui.js", "sortablejs@1.15.6/Sortable.min.js",
-                 "ui/componentes.js", "@alpinejs/csp@3.14.9/dist/cdn.min.js"]
+                 "ui/componentes.js", "ui/componentes/autosave.js", "@alpinejs/csp@3.14.9/dist/cdn.min.js"]
         posicoes = [html.index(x) for x in ordem]
         self.assertEqual(posicoes, sorted(posicoes))
         self.assertEqual(html.count('integrity="sha384-'), 2)

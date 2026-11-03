@@ -49,8 +49,8 @@ test("renomear parceiro validado abre o modal; Esc volta o nome e o foco; confir
   await page.goto("/ui/projeto/ano/2026/");
   await page.getByRole("link", { name: nome }).first().click();
   await page.fill("#id_nome", `${nome} projeto`);
-  await page.getByRole("button", { name: "Salvar projeto" }).click();
-  await expect(mensagens).toContainText("salvo");
+  await page.press("#id_nome", "Tab"); // U3: o campo salva sozinho ao sair dele
+  await expect(page.locator("[data-status-salvo]")).toContainText("Salvo às");
   await liberarBloqueio(page);
 
   await page.goto(`/admin/nucleo/revista/${revista}/change/`);

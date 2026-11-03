@@ -11,6 +11,7 @@
   </div>
   {% if ano %}
   <div class="acoes">
+    {% if pode_editar and linhas %}{% include "ui/_componentes/status_salvo.html" %}{% endif %}
     <a class="btn btn-ghost" href="{% url 'painel' ano.ano %}">Ver painel de {{ ano.ano }}</a>
   </div>
   {% endif %}
@@ -34,9 +35,10 @@
 {% include "ui/_componentes/so_leitura.html" with texto="Só leitura: seu perfil vê as variáveis, mas não altera. Para editar, peça a permissão de projetos a um administrador." %}
 {% endif %}
 
-<form method="post" class="grade grade-variaveis" data-grade>{% csrf_token %}
+{# U3: cada célula salva sozinha ao sair dela, pela rota da ficha do projeto (ui_projeto_campo, data-url do <tbody>). #}
+<form method="post" class="grade grade-variaveis" id="variaveis-form" data-grade{% if pode_editar %} x-data="campoAuto"{% endif %}>{% csrf_token %}
   {{ formset.management_form }}
-  {% if pode_editar %}<p class="mudo">Preencha as células e salve; só o que você mudou é gravado. Padrões vazios usam o nome do ano, em cinza na célula.</p>{% endif %}
+  {% if pode_editar %}<p class="mudo">Cada célula salva sozinha ao sair dela; só ela é gravada. Padrões vazios usam o nome do ano, em cinza na célula.</p>{% endif %}
   <div class="tabela-caixa grade-caixa">
     <table class="tabela">
       <thead>
@@ -68,51 +70,11 @@
     </div>
   </details>
 
-  {% if pode_editar %}
-  <div class="barra-salvar">
-    <span class="mudo" aria-live="polite" data-alteradas>Nenhuma alteração.</span>
-    <button class="btn" type="submit">Salvar variáveis</button>
-  </div>
-  {% endif %}
 </form>
 
 {% if pode_editar %}
 {# Sem JS, o "Copiar de <ano-1>" envia estes forms (fora do form da planilha) e a página recarrega. #}
 {% for l in linhas %}<form method="post" id="copiar-{{ l.form.instance.pk }}" action="{% url 'ui_variaveis_copiar' ano.ano l.form.instance.pk %}" hidden>{% csrf_token %}</form>{% endfor %}
-<script>
-// Marca as células que diferem do original (o "initial-" que o Django põe ao lado de cada uma),
-// conta os projetos com alteração e avisa antes de sair sem salvar. Recontar depois do HTMX:
-// a linha copiada volta com o original novo.
-(() => {
-  const form = document.querySelector("[data-grade]");
-  const aviso = form.querySelector("[data-alteradas]");
-  let enviando = false;
-  const contar = () => {
-    let projetos = 0;
-    for (const corpo of form.querySelectorAll("tbody[id^=projeto-]")) {
-      let mudou = false;
-      for (const i of corpo.querySelectorAll("input.input")) {
-        const original = form.querySelector(`[name="initial-${i.name}"]`);
-        const alterada = original !== null && i.value !== original.value;
-        i.toggleAttribute("data-alterada", alterada);
-        mudou ||= alterada;
-      }
-      projetos += mudou;
-      // Copiar troca a linha inteira: com edição não salva nela, pede confirmação antes (hx-confirm).
-      const copiar = corpo.querySelector("button[hx-post]");
-      if (copiar && mudou) copiar.setAttribute("hx-confirm", "Esta linha tem alteração não salva; copiar descarta o que você digitou nela. Continuar?");
-      else copiar?.removeAttribute("hx-confirm");
-    }
-    aviso.textContent = projetos ? `${projetos} projeto(s) com alteração não salva.` : "Nenhuma alteração.";
-    return projetos;
-  };
-  form.addEventListener("input", contar);
-  form.addEventListener("submit", () => { enviando = true; });
-  document.addEventListener("htmx:afterSettle", contar);
-  addEventListener("beforeunload", (e) => { if (!enviando && contar()) e.preventDefault(); });
-  contar();
-})();
-</script>
 {% endif %}
 {% endif %}
 {% endif %}
