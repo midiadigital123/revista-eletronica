@@ -95,9 +95,26 @@ td.pj-acoes { padding-block: 0.375rem; vertical-align: middle; }
 .painel-sub > .tag:first-child { min-width: 2.25rem; justify-content: center; } /* LP e MT com a mesma largura: os nomes alinham */
 .painel-sub > .tag + .contagem { margin-left: 0.125rem; } /* o balão fica colado ao selo */
 .painel-sub > .contagem + .link-linha { margin-left: 0.5rem; }
-@media (max-width: 40rem) {
-  /* no celular os nomes quebram linha para Preview e Zip caberem sem rolar de lado */
-  .lote .painel-tabela .painel-revista { min-width: 0; white-space: normal; }
+@media (max-width: 53rem) {
+  /* Abaixo da largura da tabela (~800px) a Lista não rola de lado: cada linha vira uma faixa flexível
+     (nome | Situação | Ações numa linha só). Cabeçalho só com "Parceiro / revista". Todas as células
+     esticam (stretch + flex-grow) para o fundo da linha de grupo e da marcada não ter vão. */
+  .lote .painel-tabela, .lote .painel-tabela thead, .lote .painel-tabela tbody { display: block; }
+  .lote .painel-tabela thead { position: sticky; top: 0; z-index: 2; }
+  .lote .painel-tabela tr { display: flex; flex-wrap: wrap; }
+  .lote .painel-tabela tr > * { flex: 1 1 auto; height: auto; min-height: 2.25rem; border-bottom-width: 0; }
+  .lote .painel-tabela tr:not(:last-child), .lote .painel-tabela thead tr { border-bottom-width: 1px; } /* entre parceiros: o border-top do grupo (painel.css) */
+  .lote .painel-tabela thead .pj-situacao, .lote .painel-tabela thead .pj-acoes { display: none; }
+  .lote .painel-tabela .painel-revista { position: static; flex-basis: 14rem; min-width: 0; white-space: normal; border-right-width: 0; }
   .lote .painel-tabela .painel-grupo .painel-revista { line-height: 1.75rem; }
+  .lote .painel-tabela .painel-grupo > td:not(:has(*)) { display: none; } /* sem aviso no grupo: o nome ocupa a faixa toda */
+  .lote .painel-tabela tr[data-revista] > td { display: flex; align-items: center; }
+  .lote .painel-tabela tr[data-revista] > td:not(.pj-acoes) { flex: 0 0 12rem; } /* a mesma largura da Situação no desktop: as tags alinham */
+  .lote .painel-tabela td.pj-acoes { width: auto; min-width: 0; justify-content: flex-end; padding-inline: 0.5rem; }
+}
+@media (max-width: 40rem) {
+  /* no celular: o nome numa linha; Situação (alinhada ao recuo da sublinha) e Ações juntas na linha de baixo */
+  .lote .painel-tabela .painel-revista { flex-basis: 100%; }
+  .lote .painel-tabela tr[data-revista] > td:not(.pj-acoes) { flex-basis: auto; padding-left: 1.75rem; }
 }
 .painel-caixa .painel-tabela .painel-grupo[aria-selected="true"] > * { background: color-mix(in oklch, var(--foreground) 9%, var(--background)); }
