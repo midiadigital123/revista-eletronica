@@ -195,9 +195,9 @@ def previa_secoes(secoes, fasciculo):
 
     html = format_html_join(
         "",
-        "<section class=\"secao\"><h3>{}</h3>{}</section>",
+        "<section class=\"secao\" data-previa=\"{}\"><h3>{}</h3>{}</section>",
         (
-            (mark_safe(texto.renderizar_texto_puro(s["titulo"].strip(), {})), mark_safe(texto.renderizar(s["corpo"].strip(), {})))
+            (s["id"], mark_safe(texto.renderizar_texto_puro(s["titulo"].strip(), {})), mark_safe(texto.renderizar(s["corpo"].strip(), {})))
             for s in secoes
         ),
     )

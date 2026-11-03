@@ -263,6 +263,28 @@ class EditorSecoesTest(UiBase):
         self.assertIn("partiria a seção", erros_da_secao(r.content.decode(), "passo1"))
         self.assertEqual(self.versoes(), 1)
 
+    def test_uma_secao_ativa_por_vez(self):
+        """Item 5: só a 1ª seção aparece; as outras ficam `hidden`, mas no form (o Salvar manda tudo)."""
+        r = self.ped.get(self.editar)
+        html = r.content.decode()
+        self.assertRegex(html, r'<section class="tpl-secao" id="secao-abertura"(?![^>]*hidden)[^>]*>')
+        for n, id_ in ((1, "passo1"), (2, "dlg-p2")):
+            self.assertRegex(html, rf'<section class="tpl-secao" id="secao-{id_}"[^>]*hidden')
+            self.assertContains(r, f'name="secao-{n}-corpo"')
+        self.assertRegex(html, r'<a href="#secao-abertura"[^>]*aria-current="true"')
+        self.assertNotRegex(html, r'<a href="#secao-passo1"[^>]*aria-current')
+        self.assertRegex(html, r'<section class="secao" data-previa="abertura">')  # a prévia filtra pela ativa
+
+    def test_erro_abre_a_primeira_secao_com_erro(self):
+        secoes = [F2_SECOES[0], ("passo1", "Passo um", ""), ("dlg-p2", "Itens", "Oi {{x}}.")]
+        r = self.ped.post(self.editar, form_secoes(secoes, **{CAMPO_SESSAO: self.sessao()}))
+        html = r.content.decode()
+        self.assertRegex(html, r'<section class="tpl-secao" id="secao-passo1"(?![^>]*hidden)[^>]*>')
+        self.assertRegex(html, r'<section class="tpl-secao" id="secao-abertura"[^>]*hidden')
+        self.assertRegex(html, r'<section class="tpl-secao" id="secao-dlg-p2"[^>]*hidden')
+        self.assertRegex(html, r'(?s)<a href="#secao-passo1"[^>]*aria-current="true".*?1 erro')  # o índice segue com o status
+        self.assertRegex(html, r'(?s)<a href="#secao-dlg-p2"[^>]*>.*?1 erro')
+
     def test_previa_por_secoes_tem_indice_e_erros_oob(self):
         url = reverse("ui_templates_previa", args=[self.tpl.pk])
         r = self.ped.post(url, form_secoes([F2_SECOES[0], ("passo1", "Passo um", "")]), HTTP_HX_REQUEST="true")

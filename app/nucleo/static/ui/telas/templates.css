@@ -15,6 +15,7 @@
   transition: background-color 120ms var(--ease-saida);
 }
 .tpl-indice a:hover { background: var(--muted); }
+.tpl-indice a[aria-current] { background: var(--muted); font-weight: 600; box-shadow: inset 2px 0 0 var(--primary); }
 .tpl-indice a:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 .tpl-indice svg { width: 0.875rem; height: 0.875rem; flex-shrink: 0; color: var(--sucesso); }
 .tpl-indice-erro { color: var(--destructive); }
@@ -25,6 +26,7 @@
   border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--card);
   animation: entra 180ms var(--ease-saida) both;
 }
+.tpl-secao[hidden], .tpl-render .secao[hidden] { display: none; } /* uma seção por vez (editor-secoes.js) */
 .tpl-secao:has([aria-invalid="true"]) { border-color: color-mix(in oklch, var(--destructive) 45%, var(--border)); }
 .tpl-secao-cab { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; min-height: 2rem; }
 .tpl-chip { user-select: none; }
@@ -62,7 +64,7 @@
 .tpl-validacao svg { width: 1rem; height: 1rem; flex-shrink: 0; translate: 0 0.125rem; }
 .tpl-validacao-ok { color: var(--sucesso); }
 .tpl-render { font-size: 0.9375rem; line-height: 1.6; max-width: 38rem; }
-.tpl-render .secao + .secao { margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px dashed var(--border); }
+.tpl-render .secao:not([hidden]) ~ .secao:not([hidden]) { margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px dashed var(--border); }
 .tpl-render h3 { margin: 0.125rem 0 0.5rem; font-size: 1.0625rem; line-height: 1.4; font-weight: 600; letter-spacing: -0.01em; }
 .tpl-render p + p, .tpl-render p + ul, .tpl-render ul + p { margin-top: 0.5rem; }
 .tpl-render ul, .tpl-render ol { padding-left: 1.25rem; }

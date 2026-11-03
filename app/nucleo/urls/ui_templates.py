@@ -145,6 +145,8 @@ def _editor(request, tpl, form, secoes=None, status=200):
         **_contexto_secoes(tpl, secoes),
     }
     ids = [s["id"] for s in contexto["secoes"]]
+    # Uma seção por vez: abre a 1ª com erro (ou a 1ª). editor-secoes.js troca pelo índice.
+    contexto["ativa"] = next((s["id"] for s in contexto["secoes"] if s["erros"]), ids[0] if ids else None)
     contexto["proximo"] = proximo_passo(ids)
     contexto["passos"] = [(i, rotulo(i)) for i in ids if i.startswith("passo")]
     contexto["modelo"] = {"id": "__ID__", "rotulo": "__ROTULO__", "titulo": "", "corpo": "", "removivel": True, "erros": []}

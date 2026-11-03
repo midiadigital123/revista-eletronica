@@ -23,7 +23,7 @@ View: nucleo/urls/ui_templates.py (editar). Ficha: docs/telas/fichas/templates.m
 {% include "ui/_componentes/so_leitura.html" with texto="Só leitura: seu perfil vê os templates, mas não altera. Para editar, peça a permissão de templates a um administrador." %}
 {% endif %}
 
-<form method="post" class="tpl-form"{% if pode_gravar %} x-data="editorSecoes" @click="acao" @focusin="focar"
+<form method="post" class="tpl-form" x-data="editorSecoes" @click="acao" @focusin="focar"{% if pode_gravar %}
   hx-post="{% url 'ui_templates_previa' tpl.pk %}" hx-trigger="input delay:400ms" hx-target="#previa" hx-sync="this:replace" hx-indicator="#previa-carregando"{% endif %}>{% csrf_token %}
   {% include "ui/_componentes/bloqueio.html" %}
 
