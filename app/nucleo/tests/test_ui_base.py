@@ -206,3 +206,9 @@ class EstaticosComVersaoTest(SimpleTestCase):
         from django.templatetags.static import static
 
         self.assertTrue(static("ui/nao-existe.css").endswith("/static/ui/nao-existe.css"))
+
+    def test_pasta_fica_sem_versao(self):
+        from django.templatetags.static import static
+
+        # O preview monta "revista/" + "f1/script.js": a versão no meio da URL dava 404.
+        self.assertTrue(static("revista/").endswith("/static/revista/"))

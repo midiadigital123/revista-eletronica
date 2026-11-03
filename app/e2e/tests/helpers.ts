@@ -33,15 +33,15 @@ async function trocarCorpoPainel(page: Page, acao: () => Promise<unknown>) {
   await expect(page.locator("#painel-corpo form.painel-filtros:not([data-velho])")).toHaveCount(1);
 }
 
-/** Painel B: escolhe `valor` no select `seletor` (hoje só o #filtro-parceiro). */
+/** Painel B: escolhe `valor` num select de filtro (#filtro-parceiro, -componente, -template, -matriz, -situacao). */
 export async function filtrarPainel(page: Page, seletor: string, valor: string | { label: string }) {
   await trocarCorpoPainel(page, () => page.selectOption(seletor, valor));
 }
 
-/** Painel B: clica no contador da coluna (filtro de falta) ou, com null, em "Limpar filtro". */
+/** Painel B: clica no contador da coluna (liga ou desliga o filtro de falta) ou, com null, em "Limpar filtro". */
 export async function filtrarFalta(page: Page, coluna: string | null) {
   const alvo = coluna
-    ? page.locator("#painel-corpo .painel-contadores a", { hasText: coluna })
+    ? page.locator("#painel-corpo .painel-contadores button", { hasText: coluna })
     : page.locator("#painel-corpo .painel-limpar");
   await trocarCorpoPainel(page, () => alvo.click());
 }

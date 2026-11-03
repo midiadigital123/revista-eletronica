@@ -11,7 +11,7 @@
 // cópia do fechamento do F1 com uma marca nova (para o hash mudar a cada execução), valida e
 // descarta a cópia no fim (a revista volta ao texto do template, sem "Validado").
 import { expect, test, type Page } from "@playwright/test";
-import { alpinePronto, filtrarFalta, filtrarPainel } from "./helpers";
+import { alpinePronto, entrar, filtrarFalta, filtrarPainel } from "./helpers";
 
 const FECHAMENTO = "#id_secao__F1__fechamento";
 
@@ -46,7 +46,7 @@ test("painel: filtrar e validar uma revista", async ({ page }) => {
   await filtrarPainel(page, "#filtro-parceiro", { label: "DEMONSTRAÇÃO" });
   await filtrarFalta(page, "Validado");
   await expect(page).toHaveURL(/falta=validado/);
-  await expect(page.locator(".painel-contadores a[aria-current=true]")).toContainText("Validado");
+  await expect(page.locator(".painel-contadores button[aria-pressed=true]")).toContainText("Validado");
   await expect(page.locator("#painel-corpo .painel-grupo")).toHaveCount(1);
   const linhas = page.locator("#painel-corpo tbody tr[data-revista]");
   await expect(linhas).toHaveCount(1);
@@ -132,5 +132,70 @@ test("painel: agrupado por parceiro, seleção por grupo", async ({ page }) => {
   await page.setViewportSize({ width: 480, height: 800 });
   await page.locator(".painel-caixa").evaluate((c) => { c.scrollTop = 0; c.scrollLeft = 40; c.dispatchEvent(new Event("scroll")); });
   await expect(page.locator(".painel-caixa")).toHaveAttribute("data-rolou-x", "");
+  expect(erros).toEqual([]);
+});
+
+test("painel: o contador ativo desliga o filtro de falta", async ({ page }) => {
+  const erros: string[] = [];
+  page.on("pageerror", (e) => erros.push(e.message));
+  await entrar(page, "/painel/2026/");
+  const linhas = page.locator("#painel-corpo tbody tr[data-revista]");
+  const total = await linhas.count();
+  const contador = page.locator("#painel-corpo .painel-contadores button").first();
+  test.skip(!(await contador.count()), "nenhuma coluna com falta no ano");
+  const rotulo = (await contador.textContent())!.split(" sem ")[0].replace(/^\s*\d+/, "").trim();
+  await expect(page.locator(".painel-limpar-tudo")).toHaveCount(0); // sem filtro, sem "Limpar filtros"
+
+  await filtrarFalta(page, rotulo);
+  await expect(page).toHaveURL(/falta=/);
+  await expect(page.locator(".painel-contadores button[aria-pressed=true]")).toContainText(rotulo);
+  await expect(page.locator(".painel-limpar-tudo")).toBeVisible();
+
+  await filtrarFalta(page, rotulo); // de novo no mesmo contador: volta ao estado inicial
+  await expect(page).not.toHaveURL(/falta=/);
+  await expect(page.locator(".painel-contadores button[aria-pressed=true]")).toHaveCount(0);
+  await expect(linhas).toHaveCount(total);
+  await expect(page.locator(".painel-limpar-tudo")).toHaveCount(0);
+  expect(erros).toEqual([]);
+});
+
+test("painel: 'usado por N' dos Templates abre o painel filtrado, e o filtro se mexe", async ({ page }) => {
+  const erros: string[] = [];
+  page.on("pageerror", (e) => erros.push(e.message));
+  await entrar(page, "/ui/templates/2026/");
+  const usado = page.getByRole("link", { name: /^usado por \d+/ }).first();
+  test.skip(!(await usado.count()), "nenhum template em uso no ano");
+  const n = Number((await usado.textContent())!.match(/\d+/)![0]);
+  await usado.click();
+
+  await expect(page).toHaveURL(/\/painel\/2026\/\?template=\d+/);
+  const pk = new URL(page.url()).searchParams.get("template")!;
+  const template = page.locator("#filtro-template");
+  await expect(template).toHaveValue(pk); // cai no select preenchido, não num chip
+  const linhas = page.locator("#painel-corpo tbody tr[data-revista]");
+  await expect(linhas).toHaveCount(n);
+  await expect(page.locator(".painel-limpar-tudo")).toBeVisible();
+
+  // Trocar o componente: o do template mantém as revistas; outro esvazia o recorte.
+  const codigo = (await template.locator("option:checked").textContent())!.split(" · ")[0].trim();
+  const outro = await page
+    .locator("#filtro-componente option")
+    .evaluateAll((os, c) => os.map((o) => o.textContent!.trim()).find((t) => t !== "Todos" && t !== c), codigo);
+  await filtrarPainel(page, "#filtro-componente", { label: codigo });
+  await expect(page).toHaveURL(new RegExp(`template=${pk}`));
+  await expect(page).toHaveURL(/componente=\d+/);
+  await expect(page.locator("#filtro-template")).toHaveValue(pk);
+  await expect(linhas).toHaveCount(n);
+  if (outro) {
+    await filtrarPainel(page, "#filtro-componente", { label: outro });
+    await expect(page.locator("#painel-corpo")).toContainText("Nenhuma revista com esse filtro");
+  }
+
+  // "Limpar filtros" volta à página sem filtro nenhum.
+  await page.locator("#painel-corpo form.painel-filtros").evaluate((f) => f.setAttribute("data-velho", ""));
+  await page.locator(".painel-limpar-tudo").click();
+  await expect(page.locator("#painel-corpo form.painel-filtros:not([data-velho])")).toHaveCount(1);
+  await expect(page).toHaveURL(/\/painel\/2026\/$/);
+  await expect(page.locator("#filtro-template")).toHaveValue("");
   expect(erros).toEqual([]);
 });

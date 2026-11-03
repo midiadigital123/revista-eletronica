@@ -83,8 +83,8 @@ class TemplatesLinksTest(Base):
         painel = self.client.get(href.replace("&amp;", "&"))
         self.assertEqual({l["revista"].pk for l in painel.context["linhas"]}, {self.go["LP"].pk, self.pe["LP"].pk})
         self.assertContains(painel, f"LP · {tpl}")
-        self.assertContains(painel, '<a class="link" href="?"')  # Limpar o template
-        self.assertContains(painel, f'<input type="hidden" name="template" value="{tpl.pk}">')  # trocar o parceiro mantém
+        self.assertContains(painel, "Limpar filtros")
+        self.assertContains(painel, f'<option value="{tpl.pk}" selected>')  # select preenchido: trocar o parceiro mantém
         for invalido in ("abc", "999999"):
             self.assertEqual(len(self.client.get(f"/painel/2026/?template={invalido}").context["linhas"]), 4)
 

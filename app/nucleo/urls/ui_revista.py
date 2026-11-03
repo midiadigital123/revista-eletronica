@@ -46,6 +46,7 @@ from nucleo.servicos import arquivos, resolver, validacao
 from nucleo.servicos.empacotar import Pendente, zip_revista
 from nucleo.ui_autosave import erros, quer_json, responder_campo
 from nucleo.ui_bloqueio import com_bloqueio, e_htmx
+from nucleo.urls.painel import link as link_pendencia
 
 ERRO_FORM = "Nada foi gravado: corrija os erros marcados."
 PERMS_TEXTO = ["nucleo.add_revistasecao", "nucleo.change_revistasecao"]
@@ -132,7 +133,7 @@ PASSOS = (
 def _situacao(revista, pendencias):
     projeto = reverse("ui_projeto", args=[revista.projeto_id])
     links = {
-        "matriz": f"{projeto}?aba=matriz", "corte_sem_matriz": f"{projeto}?aba=matriz",  # U7b: abas do projeto
+        "matriz": f"{projeto}?aba=matriz", "corte_sem_matriz": link_pendencia("corte_sem_matriz", revista),  # U7b; a etapa que falta: a matriz
         "corte_invalido": f"{projeto}?aba=cortes",
         "template_f1": "#templates", "template_f2": "#templates",
         "svg": "#arquivos", "ids_svg": "#arquivos", "capa": "#arquivos",
