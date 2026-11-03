@@ -176,6 +176,9 @@ input[type="color"]:focus-visible { outline: none; border-color: var(--ring); bo
 .tabela tbody tr:hover { background: color-mix(in oklch, var(--muted) 50%, transparent); }
 .tabela th { height: 2.5rem; padding: 0 0.5rem; text-align: left; vertical-align: middle; font-weight: 500; white-space: nowrap; }
 .tabela td { padding: 0.5rem; vertical-align: middle; white-space: nowrap; }
+/* Padrões do ano (anos/ano.html): no celular a linha rola na caixa com o padrão fixo à esquerda; o nome não encolhe até sumir */
+.tabela-padroes .tabela tr > th:first-child { position: sticky; left: 0; z-index: 1; background: var(--card); }
+.tabela-padroes .input { min-width: 8rem; }
 
 /* --- badge (components/ui/badge.tsx) --- */
 .badge {
