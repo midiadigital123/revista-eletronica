@@ -13,6 +13,7 @@ from nucleo.admin.bloqueio import CAMPO_SESSAO
 from nucleo.models import Descritor, Matriz, MatrizEtapaCC, Tarefa
 from nucleo.servicos import bloqueio
 from nucleo.tests.test_admin_cadastro import Base as BaseCadastro
+from nucleo.tests.test_admin_padrao import esta_validada, validar
 from nucleo.tests.test_importacao import cadastrar, planilha
 from nucleo.tests.test_item import PNG
 from nucleo.tests.test_item import Base as BaseMundo
@@ -144,20 +145,16 @@ class MecUiTest(BaseMundo):
         self.assertTemplateNotUsed(painel, "ui/base.html")
         self.assertContains(painel, 'hx-swap-oob="true"')  # lista e mensagens fora do alvo
 
-    def test_descritor_pede_impacto_e_grava_com_tarefa_nova(self):
+    def test_descritor_sem_validada_grava_direto_com_tarefa_nova(self):
+        """Afeta 2 revistas, mas nenhuma validada: não há "Validado" a perder, grava sem modal (U2)."""
         sessao = self.abrir()
-        resp = self.client.post(self.url, self.dados(sessao, descricao="Localiza e infere."), **HX)
-        self.assertContains(resp, "afeta 2 revista(s) ativa(s)")
-        self.assertContains(resp, "Nada foi gravado: corrija os erros marcados.")
-        self.d.refresh_from_db()
-        self.assertEqual(self.d.descricao, "Descritor 1 LP")
-
         n = self.d.tarefa_set.count()
-        dados = self.dados(sessao, descricao="Localiza e infere.", confirmar_impacto="on", **{
+        dados = self.dados(sessao, descricao="Localiza e infere.", **{
             f"tarefas-{n}-inicio": 400, f"tarefas-{n}-fim": 450, f"tarefas-{n}-texto": "Nova.", f"tarefas-{n}-ordem": 9,
         })  # fmt: skip
         resp = self.client.post(self.url, dados, **HX)
         self.assertContains(resp, "Descritor D01 salvo.")
+        self.assertNotContains(resp, "data-abrir-ao-carregar")
         self.d.refresh_from_db()
         self.assertEqual(self.d.descricao, "Localiza e infere.")
         self.assertTrue(self.d.tarefa_set.filter(inicio=400, fim=450, texto="Nova.").exists())
@@ -187,14 +184,10 @@ class MecUiTest(BaseMundo):
         self.assertContains(resp, "tarefa_inicio_menor_fim")  # a mesma mensagem do admin (restrição do banco)
         self.assertEqual(self.d.tarefa_set.filter(fim=50).count(), 0)
 
-    def test_intervalo_minimo_com_confirmacao(self):
+    def test_intervalo_minimo_sem_validada_grava_direto(self):
         sessao = self.abrir()
         url = reverse("ui_matriz_intervalo", args=[self.mec.pk])
         resp = self.client.post(url, {CAMPO_SESSAO: sessao, "passo": 50}, **HX)
-        self.assertContains(resp, "afeta 2 revista(s) ativa(s)")
-        self.mec.refresh_from_db()
-        self.assertEqual(self.mec.passo, 25)
-        resp = self.client.post(url, {CAMPO_SESSAO: sessao, "passo": 50, "confirmar_impacto": "on"}, **HX)
         self.assertContains(resp, "Intervalo mínimo de 5EF LP salvo.")
         self.mec.refresh_from_db()
         self.assertEqual(self.mec.passo, 50)
@@ -213,11 +206,8 @@ class MecUiTest(BaseMundo):
         sessao = self.abrir()
         url = reverse("ui_matriz_item", args=[self.mec.pk, self.d.pk, self.tarefa.pk])
         envio = {CAMPO_SESSAO: sessao, "arquivo": SimpleUploadedFile("a.png", PNG, "image/png"), "texto_alternativo": "Mapa"}
-        resp = self.client.post(url, envio, **HX)
-        self.assertContains(resp, "afeta 2 revista(s) ativa(s)")
-        envio["arquivo"].seek(0)
         with self.captureOnCommitCallbacks(execute=True):
-            resp = self.client.post(url, {**envio, "confirmar_impacto": "on"}, **HX)
+            resp = self.client.post(url, envio, **HX)
         self.assertContains(resp, "Arquivo do item enviado para a tarefa D01 100-150.")
         self.tarefa.refresh_from_db()
         caminho = self.tarefa.arquivo
@@ -282,3 +272,103 @@ class MecUiTest(BaseMundo):
         self.d.refresh_from_db()
         self.assertEqual(self.d.descricao, "Descritor 1 LP")
         self.assertTrue(MatrizEtapaCC.objects.filter(pk=self.mec.pk, passo=25).exists())
+
+
+class MecImpactoTest(BaseMundo):
+    """U2: com GO LP validada, editar a MEC LP 5EF abre o modal de impacto antes de gravar."""
+
+    abrir = MecUiTest.abrir
+    dados = MecUiTest.dados
+
+    def setUp(self):
+        super().setUp()
+        self.d = self.tarefa.descritor
+        self.mec = self.d.matriz_etapa_cc
+        self.url = reverse("ui_matriz_descritor", args=[self.mec.pk, self.d.pk])
+        self.rev = self.go["LP"]
+        validar(self.rev)
+        self.sessao = self.abrir()
+
+    def assertModal(self, resp, form_id, acao):
+        self.assertContains(resp, "<dialog")
+        self.assertContains(resp, f'data-abrir-ao-carregar data-form="{form_id}"')
+        self.assertContains(resp, f"{acao} tira o “Validado” de 1 revista(s)")
+        self.assertContains(resp, f"<li>{self.rev}</li>")
+        self.assertNotContains(resp, "corrija os erros")
+        self.assertTrue(esta_validada(self.rev))
+
+    def assertPerdeu(self, resp):
+        self.assertContains(resp, "1 revista(s) perderam o “Validado”")
+        self.assertFalse(esta_validada(self.rev))
+
+    def test_descritor_sem_confirmar_abre_modal_e_nao_grava(self):
+        resp = self.client.post(self.url, self.dados(self.sessao, descricao="Outra."), **HX)
+        self.assertModal(resp, "form-descritor", "Salvar descritor")
+        self.assertContains(resp, 'data-original="Descritor 1 LP"')
+        self.d.refresh_from_db()
+        self.assertEqual(self.d.descricao, "Descritor 1 LP")
+
+    def test_descritor_confirmado_grava_e_tira_validado(self):
+        resp = self.client.post(self.url, self.dados(self.sessao, descricao="Outra.", confirmar_impacto="on"), **HX)
+        self.assertContains(resp, "Descritor D01 salvo.")
+        self.assertPerdeu(resp)
+        self.d.refresh_from_db()
+        self.assertEqual(self.d.descricao, "Outra.")
+
+    def test_descritor_sem_mudanca_nao_pede(self):
+        resp = self.client.post(self.url, self.dados(self.sessao), **HX)
+        self.assertContains(resp, "Descritor D01 salvo.")
+        self.assertTrue(esta_validada(self.rev))
+
+    def test_intervalo_sem_confirmar_abre_modal_e_nao_grava(self):
+        url = reverse("ui_matriz_intervalo", args=[self.mec.pk])
+        resp = self.client.post(url, {CAMPO_SESSAO: self.sessao, "passo": 50}, **HX)
+        self.assertModal(resp, "form-intervalo", "Salvar intervalo")
+        self.mec.refresh_from_db()
+        self.assertEqual(self.mec.passo, 25)
+
+    def test_intervalo_confirmado_grava_e_tira_validado(self):
+        url = reverse("ui_matriz_intervalo", args=[self.mec.pk])
+        resp = self.client.post(url, {CAMPO_SESSAO: self.sessao, "passo": 50, "confirmar_impacto": "on"}, **HX)
+        self.assertContains(resp, "Intervalo mínimo de 5EF LP salvo.")
+        self.assertPerdeu(resp)
+        self.mec.refresh_from_db()
+        self.assertEqual(self.mec.passo, 50)
+
+    def test_novo_descritor_sem_confirmar_abre_modal_e_nao_grava(self):
+        url = reverse("ui_matriz_novo", args=[self.mec.pk])
+        resp = self.client.post(url, {CAMPO_SESSAO: self.sessao, "codigo": "D09", "descricao": "Novo.", "ordem": 9}, **HX)
+        self.assertModal(resp, "form-novo", "Criar descritor")
+        self.assertFalse(Descritor.objects.filter(matriz_etapa_cc=self.mec, codigo="D09").exists())
+
+    def test_novo_descritor_confirmado_grava_e_tira_validado(self):
+        url = reverse("ui_matriz_novo", args=[self.mec.pk])
+        dados = {CAMPO_SESSAO: self.sessao, "codigo": "D09", "descricao": "Novo.", "ordem": 9, "confirmar_impacto": "on"}
+        self.assertIn("HX-Redirect", self.client.post(url, dados, **HX))
+        self.assertTrue(Descritor.objects.filter(matriz_etapa_cc=self.mec, codigo="D09").exists())
+        self.assertFalse(esta_validada(self.rev))
+
+    def test_item_modal_lista_quem_perde(self):
+        resp = self.client.get(self.url)
+        self.assertContains(resp, f"<li>{self.rev}</li>")
+        self.assertContains(resp, "Enviar e tirar Validado")
+        self.assertContains(resp, 'name="confirmar_impacto" value="True"')
+
+    def test_item_sem_confirmar_abre_modal_e_nao_grava(self):
+        url = reverse("ui_matriz_item", args=[self.mec.pk, self.d.pk, self.tarefa.pk])
+        envio = {CAMPO_SESSAO: self.sessao, "arquivo": SimpleUploadedFile("a.png", PNG, "image/png")}
+        resp = self.client.post(url, envio, **HX)
+        self.assertContains(resp, f'x-data="impacto" data-abrir-ao-carregar data-form="item-form-{self.tarefa.pk}"')
+        self.assertContains(resp, f"<li>{self.rev}</li>")
+        self.assertContains(resp, "Nada foi enviado")
+        self.tarefa.refresh_from_db()
+        self.assertIsNone(self.tarefa.arquivo)
+        self.assertTrue(esta_validada(self.rev))
+
+    def test_item_confirmado_grava_e_tira_validado(self):
+        url = reverse("ui_matriz_item", args=[self.mec.pk, self.d.pk, self.tarefa.pk])
+        envio = {CAMPO_SESSAO: self.sessao, "arquivo": SimpleUploadedFile("a.png", PNG, "image/png"), "confirmar_impacto": "True"}
+        with self.captureOnCommitCallbacks(execute=True):
+            resp = self.client.post(url, envio, **HX)
+        self.assertContains(resp, "Arquivo do item enviado")
+        self.assertPerdeu(resp)

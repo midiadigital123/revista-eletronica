@@ -128,22 +128,35 @@ class MatrizForm(forms.ModelForm):
 
 
 class ImpactoForm(forms.ModelForm):
-    """Pede confirmação quando a edição afeta revistas ativas. `afetadas` vem do admin."""
+    """Pede confirmação quando a edição afeta revistas ativas. `afetadas` vem do admin.
+
+    `modal = True` (telas B, U2): a confirmação é o modal de impacto. O campo fica sempre oculto,
+    o `clean` não recusa e a view chama `pedir_confirmacao(perdem)` depois do `is_valid()`.
+    """
 
     confirmar_impacto = forms.BooleanField(required=False)
     afetadas = 0
+    modal = False
+    perdem = ()
+    precisa_confirmar = False
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         campo = self.fields["confirmar_impacto"]
-        if self.afetadas:
+        if not self.modal and self.afetadas:
             campo.label = f"Confirmo: afeta {self.afetadas} revista(s) ativa(s)"
         else:
             campo.widget = forms.HiddenInput()
 
+    def pedir_confirmacao(self, perdem):
+        """Form válido: guarda quem perde o "Validado". True = falta confirmar no modal (não grave)."""
+        self.perdem = list(perdem)
+        self.precisa_confirmar = bool(self.perdem) and not self.cleaned_data.get("confirmar_impacto")
+        return self.precisa_confirmar
+
     def clean(self):
         dados = super().clean()
-        if self.afetadas and not dados.get("confirmar_impacto"):
+        if not self.modal and self.afetadas and not dados.get("confirmar_impacto"):
             raise ValidationError(
                 f"Esta edição afeta {self.afetadas} revista(s) ativa(s) (parceiros com corte nesta "
                 "etapa × CC que usam esta matriz). Marque a confirmação e salve de novo."

@@ -6,14 +6,14 @@ não pode importar do admin (import circular).
 
 from django import forms
 from django.utils.functional import cached_property
-from django.utils.html import format_html, format_html_join
+from django.utils.html import format_html
 
 from nucleo.matriz import ImpactoForm
 from nucleo.models import ProjetoCor, Revista
 from nucleo.servicos import resolver, validacao
+from nucleo.servicos.impacto import nomes  # noqa: F401 (admin/cadastro e ui_anos importam daqui)
 
 CAMPOS_DO_HASH = {"nome", "cor"}
-MAX_NOMES = 20
 
 
 def revistas_afetadas_padrao(cor_padrao, campos):
@@ -42,12 +42,6 @@ def revistas_afetadas_padrao(cor_padrao, campos):
     return afetadas, perdem
 
 
-def nomes(revistas):
-    resto = len(revistas) - MAX_NOMES
-    lista = format_html_join(", ", "{}", ((r,) for r in revistas[:MAX_NOMES]))
-    return format_html("{} e mais {}", lista, resto) if resto > 0 else lista
-
-
 class PadraoImpactoForm(ImpactoForm):
     """Confirmação só quando nome/cor mudam (no GET, o pior caso: os dois). `impacto` vem do admin."""
 
@@ -65,7 +59,7 @@ class PadraoImpactoForm(ImpactoForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         afetadas, perdem = self.resultado
-        if afetadas and perdem:
+        if afetadas and perdem and not self.modal:
             campo = self.fields["confirmar_impacto"]
             campo.label += f"; {len(perdem)} perdem o “Validado”"
             campo.help_text = format_html(
@@ -77,7 +71,7 @@ class PadraoImpactoForm(ImpactoForm):
 
     def clean(self):
         dados = super(ImpactoForm, self).clean()
-        if self.afetadas and not dados.get("confirmar_impacto"):
+        if not self.modal and self.afetadas and not dados.get("confirmar_impacto"):
             p, ano = self.instance.padrao, self.instance.ano.ano
             raise forms.ValidationError(
                 f"Não salvo: mudar o nome ou a cor do Padrão {p} de {ano} afeta {self.afetadas} revista(s) "

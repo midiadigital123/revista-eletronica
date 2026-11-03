@@ -4,12 +4,15 @@ TransactionTestCase no bloqueio, como em test_bloqueio: o `now()` do banco preci
 cada Client vê o commit do outro.
 """
 
+import re
+from pathlib import Path
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect
 from django.http import HttpResponse
 from django.template import RequestContext, Template as Tpl
-from django.test import Client, TestCase, TransactionTestCase, override_settings
+from django.test import Client, SimpleTestCase, TestCase, TransactionTestCase, override_settings
 from django.urls import include, path
 
 from nucleo.admin.bloqueio import CAMPO_SESSAO
@@ -141,3 +144,19 @@ class CascaTest(TestCase):
         self.assertEqual(html.count('integrity="sha384-'), 2)
         self.assertEqual(html.count('crossorigin="anonymous"'), 2)
 
+
+
+class SemCheckboxConfirmoTest(SimpleTestCase):
+    """U2: confirmação de impacto nas telas B é o modal (_componentes/impacto.html), nunca checkbox."""
+
+    def test_nenhum_checkbox_confirmo(self):
+        raiz = Path(__file__).resolve().parent.parent / "templates" / "ui"
+        achados = []
+        for arquivo in sorted(raiz.rglob("*.html")):
+            texto = arquivo.read_text()
+            if "Confirmo:" in texto:
+                achados.append(f"{arquivo.relative_to(raiz)}: Confirmo:")
+            for tag in re.findall(r"<input\b[^>]*>", texto):
+                if 'type="checkbox"' in tag and re.search(r'name="[^"]*confirmar', tag):
+                    achados.append(f"{arquivo.relative_to(raiz)}: {tag}")
+        self.assertEqual(achados, [])

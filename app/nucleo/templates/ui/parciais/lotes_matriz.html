@@ -52,5 +52,6 @@ Contexto: form (nucleo.lotes.MatrizLoteForm), linhas [{pa, marcado, projeto, edi
     {% if not form.fields.matriz.queryset.exists %}<p class="ajuda mudo lote-erro">Nenhuma matriz em {{ ano.ano }}: cadastre em Matrizes.</p>{% endif %}
   </div>
   {% endif %}
+  {% if form.perdem %}{% include "ui/_componentes/impacto.html" with form_id="lote" acao="Aplicar" perdem=form.perdem %}{% endif %}
 </form>
 {% if htmx %}{% include "ui/_componentes/mensagens.html" with oob=True %}{% endif %}

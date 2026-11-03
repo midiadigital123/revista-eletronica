@@ -25,6 +25,7 @@ from nucleo.models import (
     Template,
 )
 from nucleo.servicos import bloqueio
+from nucleo.servicos.impacto import perdem_validado
 
 log = logging.getLogger(__name__)
 FORA_DA_LISTA = "Escolha uma opção da lista; a lista mudou desde que a página abriu."
@@ -116,16 +117,26 @@ class MatrizLoteForm(forms.Form):
         self.fields["matriz"].queryset = Matriz.objects.filter(ano=ano).order_by("nome")
 
 
+def _escrever_matriz(pa, matriz):
+    pa.matriz = matriz
+    pa.save(update_fields=["matriz"])
+
+
+def perdem_matriz(form):
+    """Revistas validadas que o lote de matriz do form válido tira do "Validado" (simulado, U2).
+    Ponytail: conta também as de projeto em edição, que o lote vai pular."""
+    alvos, matriz = form.cleaned_data["alvos"], form.cleaned_data["matriz"]
+    revistas = Revista.objects.filter(projeto__parceiro_ano__in=alvos, arquivada_em__isnull=True).select_related(
+        "projeto__parceiro_ano__parceiro", "projeto__ano", "componente"
+    )
+    return perdem_validado(lambda: [_escrever_matriz(pa, matriz) for pa in alvos], revistas)
+
+
 def gravar_matriz(request, form):
     """Grava a matriz escolhida nos parceiros do form válido; avisa feitos e pulados."""
     matriz = form.cleaned_data["matriz"]
-
-    def gravar(pa):
-        pa.matriz = matriz
-        pa.save(update_fields=["matriz"])
-
     itens = [
-        (str(pa.parceiro), pa.ativos[0] if pa.ativos else None, lambda pa=pa: gravar(pa))
+        (str(pa.parceiro), pa.ativos[0] if pa.ativos else None, lambda pa=pa: _escrever_matriz(pa, matriz))
         for pa in form.cleaned_data["alvos"]
     ]
     feitos = aplicar(request, itens)
@@ -165,33 +176,42 @@ class TemplateLoteForm(forms.Form):
         return dados
 
 
+def _templates(form):
+    novos = {f: form.cleaned_data[f"template_{f.lower()}"] for f in Fasciculo.values}
+    return {f: t for f, t in novos.items() if t is not None}
+
+
+def perdem_template(form):
+    """Revistas validadas que o lote de template do form válido tira do "Validado" (simulado, U2)."""
+    novos, alvos = _templates(form), form.cleaned_data["alvos"]
+    return perdem_validado(lambda: [_escrever_template(r, novos) for r in alvos], alvos)
+
+
+def _escrever_template(revista, novos):
+    """Troca os templates da revista; devolve o motivo do pulo ou None."""
+    # Dentro do bloqueio: ninguém cria cópia de seção enquanto conferimos.
+    if not list(Revista.objects.select_for_update().filter(pk=revista.pk, arquivada_em__isnull=True).values_list("pk")):
+        return "revista arquivada"
+    copias = RevistaSecao.objects.filter(revista_fasciculo=OuterRef("pk"))
+    com_copias = []
+    for rf in RevistaFasciculo.objects.filter(revista=revista, fasciculo__in=novos).annotate(tem_copias=Exists(copias)):
+        novo = novos[rf.fasciculo]
+        if rf.template_id == novo.pk:
+            continue
+        if rf.tem_copias:  # a FK composta recusaria (D-104)
+            com_copias.append(rf.fasciculo)
+            continue
+        rf.template = novo
+        rf.save(update_fields=["template"])
+    if com_copias:
+        return f"{'/'.join(com_copias)} tem cópias de seção; troque o template pela revista"
+    return None
+
+
 def gravar_template(request, form):
     """Grava os templates escolhidos nas revistas do form válido; avisa feitos e pulados."""
-    novos = {f: form.cleaned_data[f"template_{f.lower()}"] for f in Fasciculo.values}
-    novos = {f: t for f, t in novos.items() if t is not None}
-    copias = RevistaSecao.objects.filter(revista_fasciculo=OuterRef("pk"))
-
-    def gravar(revista):
-        # Dentro do bloqueio: ninguém cria cópia de seção enquanto conferimos.
-        if not list(Revista.objects.select_for_update().filter(pk=revista.pk, arquivada_em__isnull=True).values_list("pk")):
-            return "revista arquivada"
-        com_copias = []
-        for rf in RevistaFasciculo.objects.filter(revista=revista, fasciculo__in=novos).annotate(
-            tem_copias=Exists(copias)
-        ):
-            novo = novos[rf.fasciculo]
-            if rf.template_id == novo.pk:
-                continue
-            if rf.tem_copias:  # a FK composta recusaria (D-104)
-                com_copias.append(rf.fasciculo)
-                continue
-            rf.template = novo
-            rf.save(update_fields=["template"])
-        if com_copias:
-            return f"{'/'.join(com_copias)} tem cópias de seção; troque o template pela revista"
-        return None
-
-    itens = [(str(r), r.projeto, lambda r=r: gravar(r)) for r in form.cleaned_data["alvos"]]
+    novos = _templates(form)
+    itens = [(str(r), r.projeto, lambda r=r: _escrever_template(r, novos)) for r in form.cleaned_data["alvos"]]
     feitos = aplicar(request, itens)
     messages.success(request, f"Template escolhido em {feitos} revista(s).")
     return feitos

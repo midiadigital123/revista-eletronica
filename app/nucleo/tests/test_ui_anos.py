@@ -2,7 +2,7 @@
 
 from django.urls import reverse
 
-from nucleo.models import Ano, Componente, CorPadrao, Etapa, Matriz
+from nucleo.models import Ano, Componente, CorPadrao, Etapa, Matriz, Revista
 from nucleo.tests.test_admin_cadastro import Base
 from nucleo.tests.test_admin_padrao import esta_validada, validar
 from nucleo.tests.test_admin_projeto import Base as BaseProjeto
@@ -140,16 +140,24 @@ class PaletaDoAnoTest(BaseProjeto):
         dados.update({f"p3-{k}": v for k, v in troca.items()})
         return self.client.post(self.url, dados, follow=follow)
 
-    def test_sem_confirmar_nao_grava_e_lista_validada(self):
+    def test_sem_confirmar_abre_modal_e_nao_grava(self):
         self.assertContains(self.client.get(self.url), 'name="p3-cor"')
         r = self.post(nome="Adequado")
-        self.assertContains(r, "Não salvo: mudar o nome ou a cor do Padrão 3 de 2026 afeta 2 revista(s)")
-        self.assertContains(r, f"Perdem o “Validado”: {self.go['LP']}.")
-        self.assertContains(r, 'value="Adequado"')
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "<dialog")
+        self.assertContains(r, 'data-form="padrao-3" data-campo="p3-confirmar_impacto"')
+        self.assertContains(r, "Salvar tira o “Validado” de 1 revista(s)")
+        self.assertContains(r, f"<li>{self.go['LP']}</li>")
+        self.assertContains(r, 'value="Adequado" data-original="Padrão 03"')
         self.assertEqual(CorPadrao.objects.get(pk=self.cp.pk).nome, "Padrão 03")
         self.assertTrue(esta_validada(self.go["LP"]))
 
-    def test_confirmado_grava_e_avisa(self):
+    def test_afetada_sem_validada_grava_direto(self):
+        Revista.objects.filter(pk=self.go["LP"].pk).update(hash_validado=None)
+        self.assertEqual(self.post(nome="Adequado").status_code, 302)
+        self.assertEqual(CorPadrao.objects.get(pk=self.cp.pk).nome, "Adequado")
+
+    def test_confirmado_grava_e_tira_validado(self):
         r = self.post(follow=True, nome="Adequado", confirmar_impacto="on")
         self.assertRedirects(r, self.url)
         self.assertEqual(CorPadrao.objects.get(pk=self.cp.pk).nome, "Adequado")

@@ -14,6 +14,7 @@ from nucleo.models import (
     TemplateVersao,
 )
 from nucleo.tests import test_admin_projeto
+from nucleo.tests.test_admin_padrao import esta_validada, validar
 from nucleo.tests.test_admin_projeto import ARQUIVADO, Base, mensagens
 from nucleo.tests.test_resolver import usuario
 
@@ -187,3 +188,53 @@ class LoteUiConcorrenteTest(TransactionTestCase):
         r = self.client.post(url, {"alvos": [pa.pk], "matriz": matriz.pk}, follow=True)
         self.assertIn("Pulados: GO (projeto em edição por Ana).", mensagens(r))
         self.assertIsNone(ParceiroAno.objects.get(pk=pa.pk).matriz)
+
+
+class LoteImpactoUiTest(Base):
+    """U2: lote que tira o "Validado" de GO LP só grava depois do modal de impacto."""
+
+    novo_template = test_admin_projeto.LoteTemplateTest.novo_template
+
+    def setUp(self):
+        super().setUp()
+        self.rev = self.go["LP"]
+        validar(self.rev)
+        self.nova = Matriz.objects.create(ano=self.ano, nome="Nova")
+        self.go_pa = ParceiroAno.objects.get(parceiro__nome="GO")
+        self.url_matriz = reverse("ui_lotes_matriz", args=[2026])
+        self.url_template = reverse("ui_lotes_template", args=[2026]) + f"?componente={self.lp.pk}"
+
+    def assertModal(self, r):
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "<dialog")
+        self.assertContains(r, 'data-abrir-ao-carregar data-form="lote"')
+        self.assertContains(r, "Aplicar tira o “Validado” de 1 revista(s)")
+        self.assertContains(r, f"<li>{self.rev}</li>")
+        self.assertTrue(esta_validada(self.rev))
+
+    def test_matriz_sem_confirmar_abre_modal_e_nao_grava(self):
+        r = self.client.post(self.url_matriz, {"alvos": [self.go_pa.pk], "matriz": self.nova.pk}, **HTMX)
+        self.assertModal(r)
+        self.assertContains(r, f'value="{self.go_pa.pk}" id="alvo-{self.go_pa.pk}" checked')  # a seleção fica
+        self.assertEqual(ParceiroAno.objects.get(pk=self.go_pa.pk).matriz, self.matriz)
+
+    def test_matriz_confirmado_grava_e_tira_validado(self):
+        dados = {"alvos": [self.go_pa.pk], "matriz": self.nova.pk, "confirmar_impacto": "on"}
+        r = self.client.post(self.url_matriz, dados, follow=True)
+        self.assertEqual(ParceiroAno.objects.get(pk=self.go_pa.pk).matriz, self.nova)
+        self.assertTrue(any("1 revista(s) perderam o “Validado”" in m and "?falta=validado" in m for m in mensagens(r)))
+        self.assertFalse(esta_validada(self.rev))
+
+    def test_template_sem_confirmar_abre_modal_e_nao_grava(self):
+        f2 = self.novo_template(self.lp, "F2", nome="Outro F2")
+        r = self.client.post(self.url_template, {"alvos": [self.rev.pk], "template_f2": f2.pk}, **HTMX)
+        self.assertModal(r)
+        self.assertEqual(RevistaFasciculo.objects.get(revista=self.rev, fasciculo="F2").template, self.templates["LP", "F2"])
+
+    def test_template_confirmado_grava_e_tira_validado(self):
+        f2 = self.novo_template(self.lp, "F2", nome="Outro F2")
+        dados = {"alvos": [self.rev.pk], "template_f2": f2.pk, "confirmar_impacto": "on"}
+        r = self.client.post(self.url_template, dados, follow=True)
+        self.assertEqual(RevistaFasciculo.objects.get(revista=self.rev, fasciculo="F2").template, f2)
+        self.assertTrue(any("1 revista(s) perderam o “Validado”" in m for m in mensagens(r)))
+        self.assertFalse(esta_validada(self.rev))

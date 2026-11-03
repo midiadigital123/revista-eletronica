@@ -56,5 +56,6 @@ pode_gravar, componente. rf.tem_copias = o fascículo tem texto próprio (trocar
     {% for campo in form %}{% if campo.name != "alvos" and campo.errors %}<p class="erro lote-erro" role="alert">{{ campo.label }}: {{ campo.errors.0 }}</p>{% endif %}{% endfor %}
   </div>
   {% endif %}
+  {% if form.perdem %}{% include "ui/_componentes/impacto.html" with form_id="lote" acao="Aplicar" perdem=form.perdem %}{% endif %}
 </form>
 {% if htmx %}{% include "ui/_componentes/mensagens.html" with oob=True %}{% endif %}

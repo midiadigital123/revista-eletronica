@@ -1,7 +1,7 @@
 {% comment %}
-Intervalo mínimo da MEC (D-091, D-155) com confirmação de impacto (D-076). HTMX troca o próprio form.
+Intervalo mínimo da MEC (D-091, D-155) com o modal de impacto (D-076, U2). HTMX troca o próprio form.
 Contexto: mec, intervalo (IntervaloForm), pode_gravar; oob=True na resposta do POST (mensagens).
-{% endcomment %}{% url 'ui_matriz_intervalo' mec.pk as url %}<form method="post" action="{{ url }}" hx-post="{{ url }}" hx-target="this" hx-swap="outerHTML" class="matriz-intervalo" novalidate>{% csrf_token %}
+{% endcomment %}{% url 'ui_matriz_intervalo' mec.pk as url %}<form method="post" action="{{ url }}" hx-post="{{ url }}" hx-target="this" hx-swap="outerHTML" class="matriz-intervalo" id="form-intervalo" novalidate>{% csrf_token %}
   {% if request.bloqueio %}<input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">{% endif %}
   <fieldset{% if not pode_gravar %} disabled{% endif %}>
     <div class="campo">
@@ -12,7 +12,8 @@ Contexto: mec, intervalo (IntervaloForm), pode_gravar; oob=True na resposta do P
       </div>
       {% for e in intervalo.passo.errors %}<p class="erro">{{ e }}</p>{% endfor %}
     </div>
-    {% if pode_gravar and intervalo.afetadas %}{% include "ui/_componentes/matriz_campo.html" with campo=intervalo.confirmar_impacto %}{% endif %}
+    {{ intervalo.confirmar_impacto }}
     {% for e in intervalo.non_field_errors %}<p class="erro" role="alert">{{ e }}</p>{% endfor %}
   </fieldset>
+  {% if intervalo.precisa_confirmar %}{% include "ui/_componentes/impacto.html" with form_id="form-intervalo" acao="Salvar intervalo" perdem=intervalo.perdem %}{% endif %}
 </form>{% if oob %}{% include "ui/_componentes/mensagens.html" with oob=True %}{% endif %}

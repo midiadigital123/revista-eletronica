@@ -17,6 +17,7 @@ from django.views.decorators.http import require_http_methods
 
 from nucleo import lotes
 from nucleo.models import Ano, Componente, Fasciculo, RevistaFasciculo, RevistaSecao
+from nucleo.servicos.impacto import avisar_perdidos
 from nucleo.ui_bloqueio import e_htmx
 
 INVALIDO = "Nada foi gravado: corrija os erros marcados."
@@ -32,14 +33,23 @@ def permissoes(request, modelo):
     return pode_gravar
 
 
-def aplicar(request, form, gravar, novo_form):
-    """POST: grava pela regra comum. Devolve (form a mostrar, resposta de redirect ou None)."""
+def aplicar(request, form, gravar, novo_form, perdem_de, ano):
+    """POST: grava pela regra comum. Devolve (form a mostrar, resposta de redirect ou None).
+    Revista validada que perderia o "Validado" só grava com `confirmar_impacto`; sem ele, nada
+    grava e `form.perdem` lista quem perde (modal de impacto, U2)."""
+    form.perdem = []
     if request.method != "POST":
         return form, None
     if not form.is_valid():
         messages.error(request, INVALIDO)
         return form, None
+    perdem = perdem_de(form)
+    if perdem and not request.POST.get("confirmar_impacto"):
+        form.perdem = perdem
+        return form, None
     gravar(request, form)
+    if perdem:
+        avisar_perdidos(request, perdem, ano.ano)
     if e_htmx(request):
         return novo_form(), None  # tabela com os valores novos, seleção limpa
     return form, redirect(request.get_full_path())
@@ -68,7 +78,9 @@ def matriz(request, ano):
     pode_gravar = permissoes(request, "parceiroano")
     ano = get_object_or_404(Ano, ano=ano)
     novo = lambda: lotes.MatrizLoteForm(ano=ano)  # noqa: E731
-    form, resposta = aplicar(request, lotes.MatrizLoteForm(request.POST or None, ano=ano), lotes.gravar_matriz, novo)
+    form, resposta = aplicar(
+        request, lotes.MatrizLoteForm(request.POST or None, ano=ano), lotes.gravar_matriz, novo, lotes.perdem_matriz, ano
+    )
     if resposta:
         return resposta
     parceiros = list(form.fields["alvos"].queryset)
@@ -102,8 +114,9 @@ def template(request, ano):
         return TemplateResponse(request, "ui/lotes/template.html", contexto)
     novo = lambda: lotes.TemplateLoteForm(ano=ano, componente=componente)  # noqa: E731
     form, resposta = aplicar(
-        request, lotes.TemplateLoteForm(request.POST or None, ano=ano, componente=componente), lotes.gravar_template, novo
-    )
+        request, lotes.TemplateLoteForm(request.POST or None, ano=ano, componente=componente), lotes.gravar_template, novo,
+        lotes.perdem_template, ano,
+    )  # fmt: skip
     if resposta:
         return resposta
     copias = RevistaSecao.objects.filter(revista_fasciculo=OuterRef("pk"))

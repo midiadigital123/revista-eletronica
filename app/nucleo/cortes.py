@@ -14,8 +14,9 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from openpyxl import Workbook
 
-from nucleo.models import Componente, Corte, Etapa, Parceiro, ParceiroAno
+from nucleo.models import Componente, Corte, Etapa, Parceiro, ParceiroAno, Revista
 from nucleo.servicos.cascata import gravar_cortes, validar_linhas
+from nucleo.servicos.impacto import avisar_perdidos, perdem_validado
 
 SEPARADOR = re.compile(r"[\s,;]+")
 SEP = "|"
@@ -107,11 +108,14 @@ def linhas_atuais(ano, colunas, parceiro_ids=None):
     return linhas
 
 
-def grade(request, ano):
+def grade(request, ano, impacto=False, ler_post=True):
     """Monta a grade do ano e, no POST, grava. Devolve (contexto, gravou).
 
     `gravou` verdadeiro: o chamador redireciona (a mensagem de sucesso já foi posta).
     POST sem `add_corte` + `change_corte`: PermissionDenied.
+    `impacto` (tela B, U2): revista validada que perderia o "Validado" só grava com
+    `confirmar_impacto`; sem ele, nada grava e `contexto["impacto"]` lista quem perde (modal).
+    `ler_post=False`: só monta a grade (outra view da página recebeu o POST).
     """
     etapas = list(Etapa.objects.filter(ano=ano).order_by("ordem"))
     componentes = list(Componente.objects.filter(ano=ano).order_by("codigo"))
@@ -119,7 +123,7 @@ def grade(request, ano):
     parceiros = list(Parceiro.objects.order_by("nome"))
     atuais = linhas_atuais(ano, colunas)
     pode = pode_gravar(request.user)
-    post = request.POST if request.method == "POST" else None
+    post = request.POST if request.method == "POST" and ler_post else None
     if post is not None and not pode:
         raise PermissionDenied
 
@@ -137,7 +141,7 @@ def grade(request, ano):
                 erros.append(f"{e.codigo} {c.codigo}: célula ausente no envio. Recarregue a página.")
                 texto = ""
             texto = texto.strip()
-            celulas.append({"chave": chave, "texto": texto, "titulo": f"{p} {e.codigo} {c.codigo}", "inicio": c == componentes[0]})
+            celulas.append({"chave": chave, "texto": texto, "titulo": f"{p} {e.codigo} {c.codigo}", "inicio": c == componentes[0], "original": texto_atual})
             try:
                 lista = interpretar(texto)
             except ValueError:
@@ -165,7 +169,20 @@ def grade(request, ano):
 
     contexto = {"etapas": etapas, "componentes": componentes, "colunas": colunas, "linhas": linhas, "pode_gravar": pode}
     if post is not None and not com_erro:
+        perdem = []
         try:
+            if impacto and mudadas:
+                revistas = Revista.objects.filter(
+                    projeto__parceiro_ano__ano=ano, projeto__parceiro_ano__parceiro_id__in=list(mudadas),
+                    arquivada_em__isnull=True,
+                ).select_related("projeto__parceiro_ano__parceiro", "projeto__ano", "componente")  # fmt: skip
+                perdem = perdem_validado(lambda: gravar(request.user, ano, colunas, mudadas), revistas)
+                if perdem and not post.get("confirmar_impacto"):
+                    contexto["impacto"] = perdem
+                    quem = {r.projeto.parceiro_ano.parceiro_id for r in perdem}
+                    for linha in linhas:
+                        linha["perde"] = linha["parceiro"].pk in quem
+                    return contexto, False
             gravar(request.user, ano, colunas, mudadas)
         except Conflito as ex:
             messages.error(request, f"Nada foi gravado: {ex}")
@@ -175,6 +192,8 @@ def grade(request, ano):
                     linha["original"] = ex.agora
         else:
             messages.success(request, f"Cortes gravados ({len(mudadas)} parceiro(s) alterado(s)).")
+            if perdem:
+                avisar_perdidos(request, perdem, ano.ano)
             return contexto, True
     elif com_erro:
         messages.error(request, "Nada foi gravado: corrija os erros marcados.")

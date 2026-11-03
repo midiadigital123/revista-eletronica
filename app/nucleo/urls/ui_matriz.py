@@ -27,7 +27,6 @@ from nucleo.matriz import (
     LinhasField,
     MatrizForm,
     ReimportarForm,
-    com_afetadas,
     excluir,
     gravar_item,
     reimportar,
@@ -40,6 +39,7 @@ from nucleo.servicos.matriz import (
     impacto,
     revistas_afetadas,
 )
+from nucleo.servicos.impacto import avisar_perdidos
 from nucleo.ui_bloqueio import com_bloqueio, e_htmx
 
 ERROS = "Nada foi gravado: corrija os erros marcados."
@@ -66,6 +66,8 @@ def _estilo(*forms_):
             w = campo.widget
             if isinstance(w, forms.CheckboxInput) or w.is_hidden:
                 continue
+            if form.is_bound and not isinstance(w, forms.FileInput):  # Cancelar do modal de impacto volta a isto
+                w.attrs["data-original"] = campo.prepare_value(form[nome].initial) or ""
             w.attrs["class"] = "textarea" if isinstance(w, forms.Textarea) else "select" if isinstance(w, forms.Select) else "input"
             if nome in erros:
                 w.attrs["aria-invalid"] = "true"
@@ -220,6 +222,7 @@ def _mec(request, pk, **kwargs):
 
 
 class IntervaloForm(ImpactoForm):
+    modal = True
     passo = forms.IntegerField(
         label="Intervalo mínimo", required=False, min_value=1,
         help_text="Vazio = sem linhas vazias. Os projetos podem sobrescrever.",
@@ -231,6 +234,7 @@ class IntervaloForm(ImpactoForm):
 
 
 class DescritorUiForm(DescritorForm):
+    modal = True
     prerequisitos = LinhasField(label="Pré-requisitos", required=False, help_text="Um por linha.")
 
     class Meta:
@@ -258,6 +262,21 @@ NovoDescritorForm = modelform_factory(
     labels=DescritorUiForm.Meta.labels,
     widgets={"codigo": forms.TextInput(attrs={"autocomplete": "off"}), "descricao": forms.Textarea(attrs={"rows": 3})},
 )  # fmt: skip
+NovoDescritorForm.modal = True
+
+
+class ItemUiForm(ItemForm):
+    modal = True
+
+
+def _perdem(mec):
+    """Revistas validadas que uma edição da MEC tira do "Validado": as afetadas (D-076) validadas."""
+    return [r for r, validada in impacto(mec) if validada]
+
+
+def _avisar(request, mec, form):
+    if form.perdem:
+        avisar_perdidos(request, form.perdem, mec.matriz.ano.ano)
 
 
 def _tarefas(extra):
@@ -289,14 +308,14 @@ def _url_descritor(mec, d):
     return reverse("ui_matriz_descritor", args=[mec.pk, d.pk])
 
 
-def _pagina_mec(request, mec, descritor, form=None, tarefas=None):
+def _pagina_mec(request, mec, descritor, form=None, tarefas=None, item_pendente=None):
     """Página inteira, o painel (HTMX, com a lista fora do alvo) ou só a lista (busca)."""
     q = request.GET.get("q", "").strip()
     visiveis, total = _descritores(mec, q)
     contexto = {
         **_contexto_ano(mec.matriz.ano), "mec": mec, "descritor": descritor, "q": q,
         "visiveis": visiveis, "total": total, "pode_gravar": request.pode_gravar,
-        "ativo": descritor.pk if descritor else None, "oob": e_htmx(request),
+        "ativo": descritor.pk if descritor else None, "oob": e_htmx(request), "item_pendente": item_pendente,
     }  # fmt: skip
     if e_htmx(request) and request.headers.get("HX-Target") == "lista-descritores":
         d = request.GET.get("d", "")  # a busca manda o descritor aberto no painel
@@ -305,7 +324,7 @@ def _pagina_mec(request, mec, descritor, form=None, tarefas=None):
     afetadas = revistas_afetadas(mec)
     if descritor is not None:
         if form is None:
-            form = com_afetadas(DescritorUiForm, afetadas)(instance=descritor)
+            form = DescritorUiForm(instance=descritor)
         if tarefas is None:
             tarefas = _formset(descritor, 1 if request.pode_gravar else 0)
         _estilo(form, *tarefas.forms)
@@ -318,15 +337,17 @@ def _pagina_mec(request, mec, descritor, form=None, tarefas=None):
         if request.pode_gravar:
             salvas = list(_ordem(descritor))
             revistas = impacto(mec) if salvas else []
-            item_form = com_afetadas(ItemForm, len(revistas))
-            contexto["itens"] = [(t, _estilo(item_form(instance=t, auto_id=f"item{t.pk}_%s"))) for t in salvas]
-            contexto["item_impacto"] = (len(revistas), sum(v for _, v in revistas))
+            perdem = [r for r, v in revistas if v]
+            # O modal do item já lista quem perde o "Validado": enviar por ele é a confirmação (U2).
+            inicial = {"confirmar_impacto": bool(perdem)}
+            contexto["itens"] = [(t, _estilo(ItemUiForm(instance=t, initial=inicial, auto_id=f"item{t.pk}_%s"))) for t in salvas]
+            contexto.update(item_impacto=(len(revistas), len(perdem)), item_perdem=perdem)
     if e_htmx(request):
         return TemplateResponse(request, "ui/parciais/matriz_painel.html", contexto)
     contexto.update(
         afetadas=afetadas, perfil_edita=pode_editar(request.user),
-        intervalo=_estilo(com_afetadas(IntervaloForm, afetadas)(instance=mec)),
-        novo=_estilo(com_afetadas(NovoDescritorForm, afetadas)(initial={"ordem": total + 1}, auto_id="novo_%s")),
+        intervalo=_estilo(IntervaloForm(instance=mec)),
+        novo=_estilo(NovoDescritorForm(initial={"ordem": total + 1}, auto_id="novo_%s")),
     )  # fmt: skip
     return TemplateResponse(request, "ui/matriz/mec.html", contexto)
 
@@ -343,17 +364,20 @@ def mec(request, pk, dpk=None):
     d = get_object_or_404(Descritor, pk=dpk, matriz_etapa_cc=m)
     if request.method != "POST":
         return _pagina_mec(request, m, d)
-    afetadas = revistas_afetadas(m)
-    form = com_afetadas(DescritorUiForm, afetadas)(request.POST, instance=d)
+    form = DescritorUiForm(request.POST, instance=d)
     tarefas = _formset(d, 1, request.POST)
     if form.is_valid() and tarefas.is_valid():
-        form.save()
-        tarefas.save()
-        messages.success(request, f"Descritor {d.codigo} salvo.")
-        if not e_htmx(request):
-            return redirect(_url_descritor(m, d))
-        return _pagina_mec(request, m, d)
-    messages.error(request, ERROS)
+        mudou = form.has_changed() or tarefas.has_changed()
+        if not form.pedir_confirmacao(_perdem(m) if mudou else []):
+            form.save()
+            tarefas.save()
+            messages.success(request, f"Descritor {d.codigo} salvo.")
+            _avisar(request, m, form)
+            if not e_htmx(request):
+                return redirect(_url_descritor(m, d))
+            return _pagina_mec(request, m, d)
+    else:
+        messages.error(request, ERROS)
     return _pagina_mec(request, m, Descritor.objects.get(pk=d.pk), form=form, tarefas=tarefas)
 
 
@@ -362,12 +386,13 @@ def mec(request, pk, dpk=None):
 @com_bloqueio(_mec, pode_editar)
 def intervalo(request, pk):
     m = _mec(request, pk)
-    form = com_afetadas(IntervaloForm, revistas_afetadas(m))(request.POST, instance=m)
-    if form.is_valid():
+    form = IntervaloForm(request.POST, instance=m)
+    if form.is_valid() and not form.pedir_confirmacao(_perdem(m) if form.has_changed() else []):
         form.save()
         messages.success(request, f"Intervalo mínimo de {m.etapa.codigo} {m.componente.codigo} salvo.")
-        form = com_afetadas(IntervaloForm, form.afetadas)(instance=m)
-    else:
+        _avisar(request, m, form)
+        form = IntervaloForm(instance=m)
+    elif not form.precisa_confirmar:
         messages.error(request, ERROS)
     if not e_htmx(request):
         return redirect("ui_matriz_mec", m.pk)
@@ -381,12 +406,11 @@ def intervalo(request, pk):
 def novo_descritor(request, pk):
     m = _mec(request, pk)
     ordem = (Descritor.objects.filter(matriz_etapa_cc=m).aggregate(o=Max("ordem"))["o"] or 0) + 1
-    form = com_afetadas(NovoDescritorForm, revistas_afetadas(m))(
-        request.POST, instance=Descritor(matriz_etapa_cc=m), initial={"ordem": ordem}, auto_id="novo_%s"
-    )
-    if form.is_valid():
+    form = NovoDescritorForm(request.POST, instance=Descritor(matriz_etapa_cc=m), initial={"ordem": ordem}, auto_id="novo_%s")
+    if form.is_valid() and not form.pedir_confirmacao(_perdem(m)):
         d = form.save()
         messages.success(request, f"Descritor {d.codigo} criado.")
+        _avisar(request, m, form)
         return _redirecionar(request, _url_descritor(m, d))
     url = reverse("ui_matriz_novo", args=[m.pk])
     return _form_em_dialogo(request, m.matriz, "novo", form, f"Novo descritor em {m.etapa.codigo} {m.componente.codigo}", url)
@@ -400,10 +424,20 @@ def item(request, pk, dpk, tpk):
     m = _mec(request, pk)
     d = get_object_or_404(Descritor, pk=dpk, matriz_etapa_cc=m)
     tarefa = get_object_or_404(Tarefa, pk=tpk, descritor=d)
-    form = com_afetadas(ItemForm, revistas_afetadas(m))(request.POST, request.FILES, instance=tarefa)
-    sucesso, erro = gravar_item(tarefa, form, "_remover" in request.POST)
+    form = ItemUiForm(request.POST, request.FILES, instance=tarefa)
+    remover = "_remover" in request.POST
+    if form.is_valid() and form.pedir_confirmacao(_perdem(m) if remover or form.has_changed() else []):
+        # Enviado sem a confirmação do modal do item (a lista mudou depois que a página abriu):
+        # o modal do item volta aberto com a lista atual. O arquivo escolhido não volta.
+        messages.warning(request, f"Nada foi enviado: a tarefa {tarefa.codigo} tira o “Validado” de "
+                         f"{len(form.perdem)} revista(s). Confira a lista, escolha o arquivo de novo e envie.")
+        if not e_htmx(request):
+            return redirect(_url_descritor(m, d))
+        return _pagina_mec(request, m, Descritor.objects.get(pk=d.pk), item_pendente=tarefa.pk)
+    sucesso, erro = gravar_item(tarefa, form, remover)
     if sucesso:
         messages.success(request, sucesso)
+        _avisar(request, m, form)
     else:
         messages.error(request, f"Arquivo do item da tarefa {tarefa.codigo} não salvo: {erro}")
     if not e_htmx(request):

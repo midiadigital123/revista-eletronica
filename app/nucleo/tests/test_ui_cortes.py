@@ -4,9 +4,9 @@ from django.urls import reverse
 
 from nucleo.models import Corte, Parceiro, ParceiroAno, Projeto, Revista
 from nucleo.servicos.resolver import hash_validado
-from nucleo.servicos.validacao import validada
 from nucleo.tests.test_admin_projeto import Base as ProjetoBase
 from nucleo.tests.test_admin_cadastro import Base, dados_da_grade
+from nucleo.tests.test_admin_padrao import esta_validada, validar
 from nucleo.tests.test_resolver import usuario
 
 
@@ -100,22 +100,75 @@ class RenomearParceiroTest(ProjetoBase):
         self.rev = self.go["LP"]
         Revista.objects.filter(pk=self.rev.pk).update(hash_validado=hash_validado(self.rev))
 
-    def test_sem_confirmacao_lista_quem_perde_e_nao_grava(self):
+    def test_sem_confirmar_abre_modal_e_nao_grava(self):
         self.assertContains(self.client.get(reverse("cortes", args=[2026])), f'action="{self.url}"')
-        r = self.client.post(self.url, {"nome": "Goiás"}, follow=True)
-        self.assertContains(r, "Nada foi renomeado")
+        r = self.client.post(self.url, {"nome": "Goiás"})
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "<dialog")
+        self.assertContains(r, "data-abrir-ao-carregar")
+        self.assertContains(r, "Renomear tira o “Validado” de 1 revista(s)")
+        self.assertContains(r, f'data-form="renomear-{self.go_parceiro.pk}"')
         self.assertContains(r, str(self.rev))
+        self.assertContains(r, 'value="Goiás" data-original="GO"')
         self.assertEqual(Parceiro.objects.get(pk=self.go_parceiro.pk).nome, "GO")
-        self.assertTrue(validada(Revista.objects.get(pk=self.rev.pk), hash_validado(self.rev)))
+        self.assertTrue(esta_validada(self.rev))
 
-    def test_com_confirmacao_grava(self):
-        r = self.client.post(self.url, {"nome": "Goiás", "confirmar": "1"}, follow=True)
-        self.assertContains(r, "Parceiro renomeado para Goiás")
+    def test_confirmado_grava_e_tira_validado(self):
+        r = self.client.post(self.url, {"nome": "Goiás", "confirmar_impacto": "on"}, follow=True)
+        self.assertContains(r, "Parceiro renomeado para Goiás. 1 revista(s) perderam o “Validado”.")
+        self.assertEqual(Parceiro.objects.get(pk=self.go_parceiro.pk).nome, "Goiás")
+        self.assertFalse(esta_validada(self.rev))
+
+    def test_sem_validada_grava_direto(self):
+        Revista.objects.filter(pk=self.rev.pk).update(hash_validado=None)
+        r = self.client.post(self.url, {"nome": "Goiás"})
+        self.assertRedirects(r, reverse("cortes", args=[2026]), fetch_redirect_response=False)
         self.assertEqual(Parceiro.objects.get(pk=self.go_parceiro.pk).nome, "Goiás")
 
     def test_nome_repetido_e_impresso(self):
-        r = self.client.post(self.url, {"nome": "PE", "confirmar": "1"}, follow=True)
+        r = self.client.post(self.url, {"nome": "PE", "confirmar_impacto": "on"}, follow=True)
         self.assertContains(r, "Parceiro não renomeado")
         self.client.force_login(self.imp)
         self.assertNotContains(self.client.get(reverse("cortes", args=[2026])), f'action="{self.url}"')
         self.assertEqual(self.client.post(self.url, {"nome": "X", "confirmar": "1"}).status_code, 403)
+
+
+class GradeImpactoTest(ProjetoBase):
+    """U2: a grade B grava cortes que mudam revista validada só depois do modal de impacto."""
+
+    url = reverse("cortes", args=[2026])
+
+    def setUp(self):
+        super().setUp()
+        self.rev = self.go["LP"]
+        validar(self.rev)
+        corte = Corte.objects.get(parceiro_ano__parceiro__nome="GO", etapa=self.e5, componente=self.lp)
+        self.chave = f"c-{self.projeto_go.parceiro_ano.parceiro_id}-{self.e5.pk}-{self.lp.pk}"
+        self.antes = corte.valores
+        self.dados = dados_da_grade(self.client.get(self.url))
+        self.dados[self.chave] = "110, 200, 250, 300"
+
+    def test_sem_confirmar_abre_modal_e_nao_grava(self):
+        r = self.client.post(self.url, self.dados)
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "<dialog")
+        self.assertContains(r, 'data-form="grade"')
+        self.assertContains(r, "Salvar cortes tira o “Validado” de 1 revista(s)")
+        self.assertContains(r, str(self.rev))
+        self.assertContains(r, 'value="110, 200, 250, 300" data-original="100, 200, 250, 300"')
+        self.assertEqual(Corte.objects.get(parceiro_ano__parceiro__nome="GO", etapa=self.e5, componente=self.lp).valores, self.antes)
+        self.assertTrue(esta_validada(self.rev))
+
+    def test_confirmado_grava_e_tira_validado(self):
+        r = self.client.post(self.url, {**self.dados, "confirmar_impacto": "on"}, follow=True)
+        self.assertRedirects(r, self.url)
+        self.assertContains(r, "Cortes gravados (1 parceiro(s) alterado(s)).")
+        self.assertContains(r, "1 revista(s) perderam o “Validado”")
+        self.assertContains(r, "/painel/2026/?falta=validado")
+        self.assertEqual(Corte.objects.get(parceiro_ano__parceiro__nome="GO", etapa=self.e5, componente=self.lp).valores,
+                         [110, 200, 250, 300])  # fmt: skip
+        self.assertFalse(esta_validada(self.rev))
+
+    def test_sem_validada_grava_direto(self):
+        Revista.objects.filter(pk=self.rev.pk).update(hash_validado=None)
+        self.assertEqual(self.client.post(self.url, self.dados).status_code, 302)

@@ -17,14 +17,14 @@ from django.db.models import Exists, OuterRef
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
-from django.urls import path, reverse
-from django.utils.html import format_html
+from django.urls import path
 from django.views.decorators.http import require_http_methods
 
 from nucleo.models import Ano, Componente, CorPadrao, Corte, Etapa, MatrizEtapaCC
 from nucleo.models.cadastro import COR_HEX
-from nucleo.paleta import PadraoImpactoForm, nomes, revistas_afetadas_padrao
+from nucleo.paleta import PadraoImpactoForm, revistas_afetadas_padrao
 from nucleo.servicos.abrir_ano import AnoRecusado, abrir_ano
+from nucleo.servicos.impacto import avisar_perdidos
 
 
 class AbrirAnoForm(forms.Form):  # cópia do form do admin: importá-lo daria import circular (admin → urls)
@@ -146,6 +146,7 @@ class CorField(forms.CharField):
 
 
 class PadraoForm(PadraoImpactoForm):
+    modal = True  # confirmação no modal de impacto (U2)
     cor = CorField(label="Cor", widget=COR, validators=COR_HEX)
 
     def clean_cor(self):
@@ -200,15 +201,11 @@ def _gravar_padrao(request, ano, cps, novo, enviado):
         return None
     cp = next(c for c in cps if c.pk == enviado)
     form = cps[cp]
-    if not form.is_valid():
-        return None
+    if not form.is_valid() or form.pedir_confirmacao(form.resultado[1]):
+        return None  # erro ou modal de impacto: a página volta com os valores enviados
     form.save()
-    perdem = form.resultado[1]
-    if perdem:  # mesmo aviso de CorPadraoAdmin.save_model
-        messages.warning(request, format_html(
-            "{} revista(s) perderam o “Validado”: {}. Revalide no <a href=\"{}\">Painel</a>.",
-            len(perdem), nomes(perdem), reverse("painel", args=[ano.ano]) + "?falta=validado",
-        ))  # fmt: skip
+    if form.perdem:  # mesmo aviso de CorPadraoAdmin.save_model
+        avisar_perdidos(request, form.perdem, ano.ano)
     else:
         messages.success(request, f"Padrão {cp.padrao} de {ano.ano} salvo.")
     return redirect("ui_ano", ano.ano)

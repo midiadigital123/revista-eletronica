@@ -356,6 +356,13 @@ fieldset:disabled .input, fieldset:disabled .textarea, fieldset:disabled .select
 .dialogo footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; }
 /* modal cujo conteúdo é um <form> (o HTMX troca o form inteiro) */
 .dialogo > form { display: flex; flex-direction: column; gap: 1.25rem; }
+/* modal de impacto (U2, _componentes/impacto.html): lista das revistas que perdem o "Validado" */
+.impacto-lista {
+  max-height: 14rem; overflow-y: auto; margin: 0; padding: 0.5rem 0.75rem; list-style: none;
+  border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--muted);
+}
+.impacto-lista li { padding: 0.25rem 0; }
+.impacto-lista li + li { border-top: 1px solid var(--border); }
 
 /* --- diff antes/depois: difflib.HtmlDiff (table.diff) ou duas colunas próprias (.diff-lado) --- */
 table.diff { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.75rem; border: 1px solid var(--border); }

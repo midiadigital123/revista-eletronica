@@ -1,7 +1,8 @@
 {% comment %}
 Painel do descritor (T11): campos, tarefas (com a faixa na escala da etapa), arquivo do item (D-180)
 e links de exclusão (D-181). Troca por HTMX em #painel; com oob=True leva junto a lista e as mensagens.
-Contexto: mec, descritor, form, tarefas, escala, itens, item_impacto, pode_gravar, excluir_*.
+Contexto: mec, descritor, form, tarefas, escala, itens, item_impacto, item_perdem, item_pendente, pode_gravar, excluir_*.
+Impacto (U2): form.precisa_confirmar abre o modal de impacto; o modal do item lista item_perdem e enviar por ele confirma.
 {% endcomment %}{% if descritor %}{% url 'ui_matriz_descritor' mec.pk descritor.pk as url %}
 <article class="matriz-descritor" aria-labelledby="titulo-descritor">
   <header class="matriz-descritor-cab">
@@ -11,7 +12,7 @@ Contexto: mec, descritor, form, tarefas, escala, itens, item_impacto, pode_grava
       Excluir descritor</a>{% endif %}
   </header>
 
-  <form method="post" action="{{ url }}" hx-post="{{ url }}" hx-target="#painel" class="matriz-form" novalidate>{% csrf_token %}
+  <form method="post" action="{{ url }}" hx-post="{{ url }}" hx-target="#painel" class="matriz-form" id="form-descritor" novalidate>{% csrf_token %}
     {% if request.bloqueio %}<input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">{% endif %}
     <fieldset{% if not pode_gravar %} disabled{% endif %}>
       {% for e in form.non_field_errors %}<p class="aviso aviso-erro" role="alert">{{ e }}</p>{% endfor %}
@@ -75,27 +76,31 @@ Contexto: mec, descritor, form, tarefas, escala, itens, item_impacto, pode_grava
       {% if pode_gravar %}
       <div class="barra-salvar">
         <span class="mudo">Vale para toda revista que usa esta etapa × componente.</span>
-        {% if form.afetadas %}{% include "ui/_componentes/matriz_campo.html" with campo=form.confirmar_impacto %}{% endif %}
+        {{ form.confirmar_impacto }}
         <button type="submit" class="btn">Salvar descritor</button>
       </div>
       {% endif %}
     </fieldset>
+    {% if form.precisa_confirmar %}{% include "ui/_componentes/impacto.html" with form_id="form-descritor" acao="Salvar descritor" perdem=form.perdem %}{% endif %}
   </form>
 
   {% for t, item in itens %}{% url 'ui_matriz_item' mec.pk descritor.pk t.pk as url_item %}
-  <dialog class="dialogo" id="item-{{ t.pk }}" aria-labelledby="item-{{ t.pk }}-titulo">
-    <form method="post" enctype="multipart/form-data" action="{{ url_item }}" hx-post="{{ url_item }}" hx-encoding="multipart/form-data" hx-target="#painel" class="matriz-dialogo-form" novalidate>{% csrf_token %}
+  <dialog class="dialogo" id="item-{{ t.pk }}" aria-labelledby="item-{{ t.pk }}-titulo"{% if item_pendente == t.pk %} x-data="impacto" data-abrir-ao-carregar data-form="item-form-{{ t.pk }}" @cancel.prevent="cancelar"{% endif %}>
+    <form method="post" enctype="multipart/form-data" action="{{ url_item }}" hx-post="{{ url_item }}" hx-encoding="multipart/form-data" hx-target="#painel" class="matriz-dialogo-form" id="item-form-{{ t.pk }}" novalidate>{% csrf_token %}
       {% if request.bloqueio %}<input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">{% endif %}
       <header>
         <h2 id="item-{{ t.pk }}-titulo">Arquivo do item da tarefa {{ t.codigo }}</h2>
         <p class="mudo">O arquivo é da matriz: aparece em toda revista que usa esta etapa × componente.{% if t.arquivo %} Enviar outro troca o atual (<a class="link" href="{% url 'admin:nucleo_descritor_item' descritor.pk t.pk %}">baixar {{ t.arquivo|slice:"-3:"|upper }}</a>).{% endif %}</p>
       </header>
-      {% if item_impacto.0 %}<p class="aviso aviso-alerta">Afeta {{ item_impacto.0 }} revista(s) ativa(s); {{ item_impacto.1 }} perde(m) o “Validado”.</p>{% endif %}
+      {% if item_perdem %}
+      <p class="aviso aviso-alerta">Enviar ou remover tira o “Validado” de {{ item_perdem|length }} revista(s):</p>
+      <ul class="impacto-lista">{% for r in item_perdem %}<li>{{ r }}</li>{% endfor %}</ul>
+      {% elif item_impacto.0 %}<p class="aviso aviso-alerta">Afeta {{ item_impacto.0 }} revista(s) ativa(s); {{ item_impacto.1 }} perde(m) o “Validado”.</p>{% endif %}
       {% for campo in item %}{% include "ui/_componentes/matriz_campo.html" %}{% endfor %}
       <footer>
         <button type="button" class="btn btn-outline" data-fechar>Cancelar</button>
-        {% if t.arquivo %}<button type="submit" name="_remover" value="1" class="btn btn-destrutivo">Remover arquivo</button>{% endif %}
-        <button type="submit" class="btn">Enviar</button>
+        {% if t.arquivo %}<button type="submit" name="_remover" value="1" class="btn btn-destrutivo">Remover arquivo{% if item_perdem %} e tirar Validado{% endif %}</button>{% endif %}
+        <button type="submit" class="btn{% if item_perdem %} btn-destrutivo{% endif %}">Enviar{% if item_perdem %} e tirar Validado{% endif %}</button>
       </footer>
     </form>
   </dialog>
