@@ -80,9 +80,11 @@ export async function atribuirEmMassa(
   await dialogo.getByRole("button", { name: titulo, exact: true }).click();
 }
 
-/** Lista de Projetos: o id da revista do selo `codigo` (LP, MT) na linha do parceiro. */
+/** Lista de Projetos: o id da revista `codigo` (LP, MT) no grupo do parceiro (linha por revista). */
 export async function revistaDaLista(page: Page, parceiro: string, codigo: string) {
-  const linha = page.locator("tr", { has: page.getByLabel(`Marcar ${parceiro}`, { exact: true }) });
-  const href = await linha.locator(".selo-codigo", { hasText: new RegExp(`^${codigo}$`) }).getAttribute("href");
+  const grupo = page.locator("tbody", { has: page.getByLabel(`Marcar ${parceiro}`, { exact: true }) });
+  const href = await grupo
+    .locator("a.link-linha", { has: page.locator(".badge", { hasText: new RegExp(`^${codigo}$`) }) })
+    .getAttribute("href");
   return href!.split("/").at(-2)!;
 }

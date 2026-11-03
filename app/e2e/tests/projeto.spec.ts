@@ -18,7 +18,7 @@ test("projeto: abas, matriz salva ao escolher, cortes do parceiro e cartões das
   await salvou;
 
   await page.goto("/ui/projeto/ano/2026/");
-  await page.locator("tr", { has: page.getByLabel(`Marcar ${nome}`, { exact: true }) }).locator("a.link-linha").click();
+  await page.locator("tr", { has: page.getByLabel(`Marcar ${nome}`, { exact: true }) }).locator("a.painel-grupo-projeto").click();
   const abas = page.getByRole("navigation", { name: "Partes do projeto" });
   await expect(abas.getByRole("link", { name: "Dados" })).toHaveAttribute("aria-current", "page");
   await expect(page.locator("#id_nome")).toBeVisible();

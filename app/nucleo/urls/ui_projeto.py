@@ -77,7 +77,7 @@ def pode_massa(user):
 
 
 def _linhas(ano):
-    """Lista (U7a): uma linha por projeto (ativos primeiro), com as revistas como selos, mais uma por
+    """Lista (U7a): uma linha por projeto (ativos primeiro), com uma sublinha por revista, mais uma por
     parceiro do ano sem projeto. A caixa de marcar (valor = ParceiroAno, o alvo dos lotes) vai na
     primeira linha de cada parceiro: o projeto ativo ou, sem ele, o mais recente."""
     projetos = list(
@@ -90,20 +90,20 @@ def _linhas(ano):
     ativos = {p.parceiro_ano_id for p in projetos if not p.arquivado_em}
     linhas, vistos = [], set()
     for p in projetos:
-        selos = []
+        revistas = []
         for r in p.revista_set.all():
             if r.arquivada_em or p.arquivado_em:
-                selos.append({"revista": r, "arquivada": True})
+                revistas.append({"revista": r, "arquivada": True})
             else:
                 faltas = [c["dica"] for c in painel.linha(r)["faltas"].values() if not c["ok"]]
-                selos.append({"revista": r, "faltas": faltas})
+                revistas.append({"revista": r, "faltas": faltas})
         linhas.append({
-            "pa": p.parceiro_ano, "projeto": p, "selos": selos, "editando": editando.get(p.pk, ""),
+            "pa": p.parceiro_ano, "projeto": p, "revistas": revistas, "editando": editando.get(p.pk, ""),
             "marcar": p.parceiro_ano_id not in vistos, "ativo": p.parceiro_ano_id in ativos,
         })  # fmt: skip
         vistos.add(p.parceiro_ano_id)
     sem = ParceiroAno.objects.filter(ano=ano).exclude(pk__in=vistos).select_related("parceiro", "matriz").order_by("parceiro__nome")
-    linhas += [{"pa": pa, "projeto": None, "selos": [], "editando": "", "marcar": True, "ativo": False} for pa in sem]
+    linhas += [{"pa": pa, "projeto": None, "revistas": [], "editando": "", "marcar": True, "ativo": False} for pa in sem]
     return linhas
 
 

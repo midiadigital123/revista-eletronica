@@ -1,14 +1,16 @@
 {% extends "ui/base.html" %}{% load static %}
 {% comment %}
 Hub Projetos, aba Lista (U7a). View em nucleo/urls/ui_projeto.py (lista, massa); ficha em docs/telas/fichas/projeto.md.
-Substitui a lista de Revistas (selos com situação, Preview e Zip) e os Lotes (barra de ações em massa:
+Tabela no padrão do painel (classes de telas/painel.css): um <tbody> por projeto, cabeçalho de grupo
+do parceiro (caixa de marcar = ParceiroAno, projeto, matriz) e uma linha por revista (situação, Preview, Zip).
+Substitui a lista de Revistas e os Lotes (barra de ações em massa:
 "Atribuir matriz…" e "Atribuir template…", regra de nucleo/lotes.py, modal de impacto do U2).
 Os diálogos ficam dentro do form `massa`: o botão de cada um envia para a sua ação (formaction).
 Depois de um envio recusado (erro ou impacto), o form volta com a seleção, as escolhas e, no impacto,
 action = a ação recusada (o Confirmar do modal reenvia o form sem botão).
 {% endcomment %}
 {% block titulo %}Projetos{% if ano %} {{ ano.ano }}{% endif %}{% endblock %}
-{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/lotes.css' %}"><link rel="stylesheet" href="{% static 'ui/telas/projeto.css' %}"><script src="{% static 'ui/telas/lotes.js' %}" defer></script>{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/lotes.css' %}"><link rel="stylesheet" href="{% static 'ui/telas/painel.css' %}"><link rel="stylesheet" href="{% static 'ui/telas/projeto.css' %}"><script src="{% static 'ui/telas/lotes.js' %}" defer></script>{% endblock %}
 
 {% block conteudo %}
 {% if not ano %}
@@ -24,40 +26,43 @@ action = a ação recusada (o Confirmar do modal reenvia o form sem botão).
 {% if linhas %}
 <form method="post" id="massa" class="lote" data-lote{% if acao %} action="{% url 'ui_projeto_massa' ano.ano acao %}"{% endif %}>{% csrf_token %}
   {% if pode_massa %}<p class="mudo">Marque os parceiros e escolha a ação na barra de baixo. Projetos em edição por outra sessão são pulados e listados.</p>{% endif %}
-  <div class="tabela-caixa tabela-densa lote-caixa">
-    <table class="tabela">
+  <div class="tabela-densa painel-caixa">
+    <table class="tabela painel-tabela">
       <thead><tr>
-        {% if pode_massa %}<th scope="col" class="lote-marca"><input type="checkbox" data-todos aria-label="Marcar todos os parceiros"></th>{% endif %}
-        <th scope="col" class="fixa">Parceiro</th><th scope="col">Projeto</th><th scope="col">Matriz</th><th scope="col">Revistas</th><th scope="col">Situação</th>
+        <th scope="col" class="fixa painel-revista">{% if pode_massa %}<input type="checkbox" data-todos aria-label="Marcar todos os parceiros">{% endif %}Parceiro / revista</th>
+        <th scope="col">Situação</th><th scope="col"><span class="sr-only">Ações</span></th>
       </tr></thead>
-      <tbody>
       {% for l in linhas %}
-        <tr{% if l.marcado %} aria-selected="true"{% endif %}{% if l.editando %} data-pulado{% endif %}>
-          {% if pode_massa %}<td class="lote-marca">{% if l.marcar %}<input type="checkbox" name="alvos" value="{{ l.pa.pk }}"{% if l.marcado %} checked{% endif %} id="alvo-{{ l.pa.pk }}" aria-label="Marcar {{ l.pa.parceiro.nome }}">{% endif %}</td>{% endif %}
-          <th scope="row" class="fixa lote-nome">{{ l.pa.parceiro.nome }}</th>
-          <td>{% if l.projeto %}<a class="link-linha" href="{% url 'ui_projeto' l.projeto.pk %}">{{ l.projeto.nome }}</a>{% else %}<span class="mudo">sem projeto</span>{% endif %}</td>
-          <td{% if l.marcar %} data-atual="matriz" data-valor="{{ l.pa.matriz_id|default:'' }}"{% endif %}>
-            {% if l.pa.matriz %}{{ l.pa.matriz.nome }}{% else %}<span class="badge badge-alerta">sem matriz</span>{% endif %}
-            {% if l.marcar %}<span class="lote-novo" data-novo hidden></span>{% endif %}
-          </td>
-          <td>{% if l.selos %}
-            <ul class="selos">{% for s in l.selos %}
-              <li class="selo{% if s.arquivada %} selo-arquivada{% elif not s.faltas %} selo-ok{% endif %}">
-                <a class="selo-codigo" href="{% url 'ui_revista_editar' ano.ano s.revista.pk %}" aria-label="Abrir a revista {{ s.revista }}"{% if s.faltas %} title="{{ s.faltas|join:' ' }}"{% endif %}>{{ s.revista.componente.codigo }}</a>
-                <span class="mudo">{% if s.arquivada %}arquivada{% elif s.faltas %}{{ s.faltas|length }} pendência(s){% else %}completa{% endif %}</span>
-                <a class="selo-acao" href="{% url 'preview' s.revista.pk %}" target="_blank" rel="noopener">Preview<span class="sr-only"> de {{ s.revista }} (nova aba)</span></a>
-                <a class="selo-acao" href="{% url 'ui_revista_zip' ano.ano s.revista.pk %}?voltar=lista">Zip<span class="sr-only"> de {{ s.revista }}</span></a>
-              </li>{% endfor %}
-            </ul>{% else %}<span class="mudo">—</span>{% endif %}
-          </td>
-          <td>
+      <tbody>
+        <tr class="painel-grupo"{% if l.marcado %} aria-selected="true"{% endif %}{% if l.editando %} data-pulado{% endif %}>
+          <th scope="rowgroup" class="fixa painel-revista">
+            {% if pode_massa and l.marcar %}<input type="checkbox" name="alvos" value="{{ l.pa.pk }}"{% if l.marcado %} checked{% endif %} id="alvo-{{ l.pa.pk }}" aria-label="Marcar {{ l.pa.parceiro.nome }}">{% endif %}
+            <span class="painel-grupo-nome">{{ l.pa.parceiro.nome }}</span>
+            {% if l.projeto %}<a class="painel-grupo-projeto" href="{% url 'ui_projeto' l.projeto.pk %}" title="Abrir o projeto {{ l.projeto.nome }}">Projeto<span class="sr-only"> {{ l.projeto.nome }}</span></a>{% else %}<span class="painel-grupo-conta">sem projeto</span>{% endif %}
+            <span class="painel-grupo-conta"{% if l.marcar %} data-atual="matriz" data-valor="{{ l.pa.matriz_id|default:'' }}"{% endif %}>{% if l.pa.matriz %}<span class="sr-only">Matriz </span>{{ l.pa.matriz.nome }}{% else %}<span class="badge badge-alerta">sem matriz</span>{% endif %}{% if l.marcar %}<span class="lote-novo" data-novo hidden></span>{% endif %}</span>
+          </th>
+          <td colspan="2">
             {% if l.projeto.arquivado_em %}<span class="badge badge-contorno">Arquivado em {{ l.projeto.arquivado_em|date:"d/m/Y" }}</span>{% endif %}
             {% if l.editando %}<span class="badge badge-alerta" title="O projeto está aberto; a ação em massa não grava nele.">Em edição por {{ l.editando }}: será pulado</span>
             {% elif l.marcar and not l.ativo %}<span class="badge badge-secundario" title="A matriz do parceiro é gravada mesmo sem projeto ativo.">Sem projeto ativo</span>{% endif %}
           </td>
         </tr>
-      {% endfor %}
+        {% for s in l.revistas %}
+        <tr data-revista="{{ s.revista.pk }}">
+          <th scope="row" class="fixa painel-revista painel-sub">
+            <a class="link-linha" href="{% url 'ui_revista_editar' ano.ano s.revista.pk %}"><span class="badge badge-secundario">{{ s.revista.componente.codigo }}</span><span class="sr-only">{{ l.pa.parceiro.nome }} · </span>{{ s.revista.componente.nome }}</a>
+          </th>
+          <td>{% if s.arquivada %}<span class="status status-falta">arquivada</span>
+            {% elif s.faltas %}<span class="status status-falta" title="{{ s.faltas|join:' ' }}">{{ s.faltas|length }} pendência(s)<span class="sr-only">: {{ s.faltas|join:' ' }}</span></span>
+            {% else %}{% include "ui/_componentes/status.html" with ok=True titulo="completa" %}{% endif %}</td>
+          <td class="pj-acoes">
+            <a class="painel-preview" href="{% url 'preview' s.revista.pk %}" target="_blank" rel="noopener">Preview<span class="sr-only"> de {{ s.revista }} (nova aba)</span></a>
+            <a class="painel-preview" href="{% url 'ui_revista_zip' ano.ano s.revista.pk %}?voltar=lista">Zip<span class="sr-only"> de {{ s.revista }}</span></a>
+          </td>
+        </tr>
+        {% endfor %}
       </tbody>
+      {% endfor %}
     </table>
   </div>
 
