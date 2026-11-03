@@ -57,4 +57,49 @@ A última linha de cada tabela, vazia, é o "Adicionar". Sem `pode.<tabela>`, s�
   </div>
   {% if pode.componentes %}<div class="barra-salvar"><span class="mudo">Preencha a última linha para adicionar um componente.</span><button class="btn" type="submit">Salvar componentes</button></div></form>{% endif %}
 </section>
+
+<section class="card" aria-labelledby="padroes-titulo">
+  <h2 class="secao-titulo" id="padroes-titulo">Padrões</h2>
+  <p class="mudo">Nome e cor de cada padrão valem para todos os projetos do ano, menos os que sobrescrevem no projeto. Mudar pode tirar o “Validado” de revistas: a lista aparece antes de gravar.</p>
+  <div class="tabela-caixa">
+    <table class="tabela">
+      <thead><tr><th scope="col">Padrão</th><th scope="col">Nome</th><th scope="col">Cor</th>{% if pode.padroes %}<th scope="col"><span class="sr-only">Salvar</span></th>{% endif %}</tr></thead>
+      <tbody>
+      {% for f in padroes %}{% with cp=f.instance %}
+        <tr>
+          <th scope="row"><span aria-hidden="true" style="display:inline-block;width:1rem;height:1rem;vertical-align:middle;border:1px solid currentColor;background:{{ f.initial.cor|default:cp.cor }}"></span> Padrão {{ cp.padrao }}</th>
+          {% if pode.padroes %}
+          <td><form method="post" id="padrao-{{ cp.padrao }}" novalidate>{% csrf_token %}<input type="hidden" name="tabela" value="padroes"><input type="hidden" name="padrao" value="{{ cp.pk }}"></form>
+            <input class="input" form="padrao-{{ cp.padrao }}" type="text" name="{{ f.nome.html_name }}" id="{{ f.nome.id_for_label }}" value="{{ f.nome.value|default_if_none:'' }}" maxlength="200" aria-label="Nome do Padrão {{ cp.padrao }}"{% if f.nome.errors %} aria-invalid="true"{% endif %}{% if f.errors or f.afetadas %} aria-describedby="padrao-{{ cp.padrao }}-erros"{% endif %}></td>
+          <td><input form="padrao-{{ cp.padrao }}" type="color" name="{{ f.cor.html_name }}" id="{{ f.cor.id_for_label }}" value="{% if f.cor.errors %}{{ f.initial.cor }}{% else %}{{ f.cor.value }}{% endif %}" aria-label="Cor do Padrão {{ cp.padrao }}"{% if f.cor.errors %} aria-invalid="true"{% endif %}{% if f.errors or f.afetadas %} aria-describedby="padrao-{{ cp.padrao }}-erros"{% endif %}> <span class="mudo">{{ f.initial.cor|upper }}</span></td>
+          <td><button class="btn btn-outline btn-sm" type="submit" form="padrao-{{ cp.padrao }}">Salvar</button></td>
+          {% else %}
+          <td>{{ cp.nome|default:"sem nome" }}</td><td>{{ cp.cor|upper }}</td>
+          {% endif %}
+        </tr>
+        {% if f.errors or f.afetadas %}
+        <tr><td colspan="4" id="padrao-{{ cp.padrao }}-erros" role="alert">
+          {% for e in f.non_field_errors %}<p class="erro">{{ e }}</p>{% endfor %}
+          {% for campo in f %}{% for e in campo.errors %}<p class="erro">{{ campo.label }}: {{ e }}</p>{% endfor %}{% endfor %}
+          {% if f.afetadas %}
+          <label class="marcar"><input form="padrao-{{ cp.padrao }}" type="checkbox" name="{{ f.confirmar_impacto.html_name }}" aria-describedby="padrao-{{ cp.padrao }}-erros"> {{ f.confirmar_impacto.label }}</label>
+          {% if f.confirmar_impacto.help_text %}<p class="ajuda">{{ f.confirmar_impacto.help_text }}</p>{% endif %}
+          {% endif %}
+        </td></tr>
+        {% endif %}
+      {% endwith %}{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if novo and pode.novo_padrao %}
+  <form method="post" class="campo" novalidate>{% csrf_token %}<input type="hidden" name="tabela" value="novo_padrao">
+    <h3 class="secao-titulo">Adicionar padrão</h3>
+    {% for campo in novo %}
+    <div class="campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% for e in campo.errors %}<p class="erro">{{ e }}</p>{% endfor %}</div>
+    {% endfor %}
+    {% for e in novo.non_field_errors %}<p class="erro">{{ e }}</p>{% endfor %}
+    <div><button class="btn" type="submit">Adicionar padrão</button></div>
+  </form>
+  {% endif %}
+</section>
 {% endblock %}

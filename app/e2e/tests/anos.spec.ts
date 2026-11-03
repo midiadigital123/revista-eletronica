@@ -43,3 +43,34 @@ test("impresso não vê o botão de salvar", async ({ browser }) => {
   await expect(page.getByLabel("Código (linha nova)")).toHaveCount(0);
   await expect(page.getByText(`Ano ${ano}`).first()).toBeVisible();
 });
+
+test("salva o Padrão 5 com o mesmo nome", async ({ page }) => {
+  await entrar(page, "/ui/anos/");
+  const ano = await abrirMaiorAno(page);
+  await expect(page.getByRole("heading", { name: "Padrões" })).toBeVisible();
+
+  // Mesmo valor: não altera o banco nem tira o Validado de ninguém.
+  const nome = page.getByLabel("Nome do Padrão 5", { exact: true });
+  const atual = await nome.inputValue();
+  await nome.fill(atual);
+  await page
+    .locator("tr", { has: page.getByLabel("Nome do Padrão 5", { exact: true }) })
+    .getByRole("button", { name: "Salvar" })
+    .click();
+
+  await expect(page.getByText(`Padrão 5 de ${ano} salvo.`)).toBeVisible();
+});
+
+test("impresso não vê o input de cor do Padrão 1", async ({ browser }) => {
+  const { E2E_IMPRESSO_USUARIO: imp, E2E_IMPRESSO_SENHA: senha } = process.env;
+  test.skip(!imp || !senha, "defina E2E_IMPRESSO_*");
+  const page = await (await browser.newContext()).newPage();
+  await page.goto("/admin/login/?next=/ui/anos/");
+  await page.fill("#id_username", imp!);
+  await page.fill("#id_password", senha!);
+  await page.click("input[type=submit]");
+  await abrirMaiorAno(page);
+
+  await expect(page.getByRole("heading", { name: "Padrões" })).toBeVisible();
+  await expect(page.getByLabel("Cor do Padrão 1", { exact: true })).toHaveCount(0);
+});

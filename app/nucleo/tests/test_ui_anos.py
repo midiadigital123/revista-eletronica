@@ -2,8 +2,11 @@
 
 from django.urls import reverse
 
-from nucleo.models import Ano, Componente, Etapa, Matriz
+from nucleo.models import Ano, Componente, CorPadrao, Etapa, Matriz
 from nucleo.tests.test_admin_cadastro import Base
+from nucleo.tests.test_admin_padrao import esta_validada, validar
+from nucleo.tests.test_admin_projeto import Base as BaseProjeto
+from nucleo.tests.test_admin_projeto import mensagens
 from nucleo.tests.test_resolver import usuario
 
 
@@ -119,3 +122,77 @@ class CadastrosDoAnoTest(Base):
 
     def test_ano_inexistente(self):
         self.assertEqual(self.client.get(reverse("ui_ano", args=[1999])).status_code, 404)
+
+
+class PaletaDoAnoTest(BaseProjeto):
+    """Padrões do ano fora do admin (S5 de D-190): mesma confirmação de impacto de `CorPadraoAdmin`."""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse("ui_ano", args=[2026])
+        self.cp = CorPadrao.objects.get(ano=self.ano, padrao=3)
+        self.projeto_pe.pd03 = "Adequado PE"  # PE sobrescreve o nome: fica fora da lista
+        self.projeto_pe.save()
+        validar(self.go["LP"])
+
+    def post(self, follow=False, **troca):
+        dados = {"tabela": "padroes", "padrao": self.cp.pk, "p3-nome": self.cp.nome, "p3-cor": self.cp.cor}
+        dados.update({f"p3-{k}": v for k, v in troca.items()})
+        return self.client.post(self.url, dados, follow=follow)
+
+    def test_sem_confirmar_nao_grava_e_lista_validada(self):
+        self.assertContains(self.client.get(self.url), 'name="p3-cor"')
+        r = self.post(nome="Adequado")
+        self.assertContains(r, "Não salvo: mudar o nome ou a cor do Padrão 3 de 2026 afeta 2 revista(s)")
+        self.assertContains(r, f"Perdem o “Validado”: {self.go['LP']}.")
+        self.assertContains(r, 'value="Adequado"')
+        self.assertEqual(CorPadrao.objects.get(pk=self.cp.pk).nome, "Padrão 03")
+        self.assertTrue(esta_validada(self.go["LP"]))
+
+    def test_confirmado_grava_e_avisa(self):
+        r = self.post(follow=True, nome="Adequado", confirmar_impacto="on")
+        self.assertRedirects(r, self.url)
+        self.assertEqual(CorPadrao.objects.get(pk=self.cp.pk).nome, "Adequado")
+        self.assertFalse(esta_validada(self.go["LP"]))
+        aviso = next(m for m in mensagens(r) if "perderam" in m)
+        self.assertIn(f"1 revista(s) perderam o “Validado”: {self.go['LP']}.", aviso)
+        self.assertIn('href="/painel/2026/?falta=validado"', aviso)
+
+    def test_sem_afetada_grava_direto(self):
+        self.projeto_go.pd03 = "Adequado GO"
+        self.projeto_go.save()
+        r = self.post(nome="Adequado")
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(CorPadrao.objects.get(pk=self.cp.pk).nome, "Adequado")
+
+    def test_salvar_sem_mudar_nao_mexe_na_cor(self):
+        """O <input type=color> manda a cor em minúsculas; o banco pode ter maiúsculas (carga)."""
+        CorPadrao.objects.filter(pk=self.cp.pk).update(cor="#B3CCFF")
+        validar(self.go["LP"])
+        r = self.post(cor="#b3ccff")
+        self.assertEqual(r.status_code, 302)  # sem pedir confirmação
+        self.assertEqual(CorPadrao.objects.get(pk=self.cp.pk).cor, "#B3CCFF")
+        self.assertTrue(esta_validada(self.go["LP"]))
+
+    def test_cor_invalida_e_padrao_de_outro_ano(self):
+        self.assertContains(self.post(cor="#12", confirmar_impacto="on"), "Use o formato #RRGGBB.")
+        self.assertEqual(CorPadrao.objects.get(pk=self.cp.pk).cor, self.cp.cor)
+        outro = CorPadrao.objects.create(ano=Ano.objects.create(ano=2025), padrao=3, cor="#000000")
+        r = self.client.post(self.url, {"tabela": "padroes", "padrao": outro.pk, "p3-nome": "x", "p3-cor": "#111111"})
+        self.assertEqual(r.status_code, 404)
+
+    def test_adiciona_padrao_que_falta(self):
+        self.assertNotContains(self.client.get(self.url), "Adicionar padrão")  # já há 5
+        CorPadrao.objects.filter(ano=self.ano, padrao=5).delete()
+        self.assertContains(self.client.get(self.url), "Adicionar padrão")
+        dados = {"tabela": "novo_padrao", "novo-padrao": "5", "novo-nome": "Avançado", "novo-cor": "#00aa00"}
+        self.assertEqual(self.client.post(self.url, dados).status_code, 302)
+        self.assertTrue(CorPadrao.objects.filter(ano=self.ano, padrao=5, nome="Avançado").exists())
+
+    def test_impresso_so_le(self):
+        self.client.force_login(self.imp)
+        r = self.client.get(self.url)
+        self.assertContains(r, self.cp.cor)
+        self.assertNotContains(r, 'name="p3-cor"')
+        self.assertEqual(self.post(nome="X", confirmar_impacto="on").status_code, 403)
+        self.assertEqual(CorPadrao.objects.get(pk=self.cp.pk).nome, "Padrão 03")

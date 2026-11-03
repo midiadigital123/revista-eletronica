@@ -3,7 +3,8 @@
 `/ui/anos/`: lista e "Abrir ano", mesma regra do admin (`AnoAdmin.abrir_view`). Ver exige `view_ano`;
 abrir exige `abrir_ano` (403 no POST, formulário escondido no GET).
 `/ui/anos/<ano>/`: etapas e componentes do ano, mesmas regras de `EtapaAdmin`/`ComponenteAdmin`
-(código só leitura na edição; escala só leitura com corte ou matriz). Sem excluir e sem bloqueio,
+(código só leitura na edição; escala só leitura com corte ou matriz), e a paleta (S5), com a
+confirmação de impacto de `CorPadraoAdmin` (`nucleo/paleta.py`). Sem excluir e sem bloqueio,
 como no admin.
 """
 
@@ -13,12 +14,16 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
 from django.db.models import Exists, OuterRef
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
-from django.urls import path
+from django.urls import path, reverse
+from django.utils.html import format_html
 from django.views.decorators.http import require_http_methods
 
-from nucleo.models import Ano, Componente, Corte, Etapa, MatrizEtapaCC
+from nucleo.models import Ano, Componente, CorPadrao, Corte, Etapa, MatrizEtapaCC
+from nucleo.models.cadastro import COR_HEX
+from nucleo.paleta import PadraoImpactoForm, nomes, revistas_afetadas_padrao
 from nucleo.servicos.abrir_ano import AnoRecusado, abrir_ano
 
 
@@ -129,11 +134,84 @@ def _tabelas(ano, data=None, tabela=None):
     }
 
 
+COR = forms.TextInput(attrs={"type": "color", "class": "input-cor"})
+
+
+class CorField(forms.CharField):
+    """O <input type=color> sempre manda minúsculas; a carga gravou maiúsculas. Mesma cor em outra
+    caixa não é mudança: senão pede confirmação à toa e o save troca a caixa (muda o hash)."""
+
+    def has_changed(self, initial, data):
+        return (initial or "").lower() != (data or "").lower()
+
+
+class PadraoForm(PadraoImpactoForm):
+    cor = CorField(label="Cor", widget=COR, validators=COR_HEX)
+
+    def clean_cor(self):
+        cor = self.cleaned_data["cor"]
+        return self.instance.cor if cor.lower() == (self.instance.cor or "").lower() else cor
+
+
+def _form_padrao(cp, data=None):
+    """Um form por padrão: a confirmação de impacto é de cada um. Só o enviado calcula o impacto
+    (resolver por revista); no GET as 5 linhas sairiam caras e sem caixa de confirmação útil."""
+    Form = forms.modelform_factory(CorPadrao, form=PadraoForm, fields=["nome", "cor"])
+    if data is not None:  # classe nova por chamada: o atributo não vaza (como em CorPadraoAdmin.get_form)
+        Form.impacto = staticmethod(lambda campos: revistas_afetadas_padrao(cp, campos))
+    return Form(data, instance=cp, prefix=f"p{cp.padrao}")
+
+
+class NovoPadraoForm(forms.ModelForm):
+    """Padrão que falta no ano (admin deixa incluir). Sem impacto: o admin também não calcula."""
+
+    class Meta:
+        model = CorPadrao
+        fields = ["padrao", "nome", "cor"]
+        widgets = {"nome": forms.TextInput(attrs={"class": "input", "maxlength": 200}), "cor": COR}
+
+    def __init__(self, *args, ano, livres, **kwargs):
+        super().__init__(*args, prefix="novo", initial={"cor": "#808080"}, **kwargs)  # cinza, não preto: sinaliza "escolha a cor"
+        self.instance.ano = ano
+        self.fields["padrao"] = forms.TypedChoiceField(label="Padrão", choices=[(n, f"Padrão {n}") for n in livres], coerce=int)
+
+
 def _pode(user):
     return {
         "etapas": user.has_perms(["nucleo.add_etapa", "nucleo.change_etapa"]),
         "componentes": user.has_perms(["nucleo.add_componente", "nucleo.change_componente"]),
+        "padroes": user.has_perm("nucleo.change_corpadrao"),
+        "novo_padrao": user.has_perm("nucleo.add_corpadrao"),
     }
+
+
+def _gravar_padrao(request, ano, cps, novo, enviado):
+    """POST de um padrão (`padroes`) ou do padrão novo (`novo_padrao`). Devolve o redirect ou None."""
+    if request.POST["tabela"] == "novo_padrao":
+        if novo.is_valid():
+            try:
+                with transaction.atomic():
+                    novo.save()
+            except IntegrityError:  # outra pessoa criou o mesmo padrão entre o GET e o POST
+                messages.error(request, "Nada foi salvo: esse padrão acabou de ser criado por outra pessoa.")
+                return redirect("ui_ano", ano.ano)
+            messages.success(request, f"Padrão {novo.instance.padrao} de {ano.ano} criado.")
+            return redirect("ui_ano", ano.ano)
+        return None
+    cp = next(c for c in cps if c.pk == enviado)
+    form = cps[cp]
+    if not form.is_valid():
+        return None
+    form.save()
+    perdem = form.resultado[1]
+    if perdem:  # mesmo aviso de CorPadraoAdmin.save_model
+        messages.warning(request, format_html(
+            "{} revista(s) perderam o “Validado”: {}. Revalide no <a href=\"{}\">Painel</a>.",
+            len(perdem), nomes(perdem), reverse("painel", args=[ano.ano]) + "?falta=validado",
+        ))  # fmt: skip
+    else:
+        messages.success(request, f"Padrão {cp.padrao} de {ano.ano} salvo.")
+    return redirect("ui_ano", ano.ano)
 
 
 @require_http_methods(["GET", "POST"])
@@ -145,8 +223,22 @@ def ano(request, ano):
     tabela = request.POST.get("tabela") if request.method == "POST" else None
     if request.method == "POST" and not pode.get(tabela):
         raise PermissionDenied
+    enviado = None
+    if tabela == "padroes":
+        pk = request.POST.get("padrao", "")
+        if not (pk.isascii() and pk.isdigit()):
+            raise Http404
+        enviado = get_object_or_404(CorPadrao, pk=int(pk), ano=ano).pk
+    cps = {cp: _form_padrao(cp, request.POST if cp.pk == enviado else None) for cp in CorPadrao.objects.filter(ano=ano).order_by("padrao")}
+    livres = sorted({1, 2, 3, 4, 5} - {cp.padrao for cp in cps})
+    novo = NovoPadraoForm(request.POST if tabela == "novo_padrao" else None, ano=ano, livres=livres) if livres else None
+    if tabela in ("padroes", "novo_padrao"):
+        if tabela == "novo_padrao" and novo is None:
+            raise PermissionDenied  # já há os 5
+        if resposta := _gravar_padrao(request, ano, cps, novo, enviado):
+            return resposta
     tabelas = _tabelas(ano, request.POST, tabela)
-    if tabela and tabelas[tabela].is_valid():
+    if tabela in ("etapas", "componentes") and tabelas[tabela].is_valid():
         try:
             with transaction.atomic():  # tudo ou nada
                 tabelas[tabela].save()
@@ -155,7 +247,7 @@ def ano(request, ano):
         else:
             messages.success(request, SALVO[tabela].format(ano.ano))
             return redirect("ui_ano", ano.ano)
-    contexto = {**tabelas, "ano": ano, "pode": pode, "secao": "anos"}
+    contexto = {**tabelas, "padroes": list(cps.values()), "novo": novo, "ano": ano, "pode": pode, "secao": "anos"}
     return TemplateResponse(request, "ui/anos/ano.html", contexto)
 
 
