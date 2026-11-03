@@ -1,39 +1,131 @@
-{% extends "ui/base.html" %}
-{% comment %}Projetos do ano (T15) fora do admin. View em nucleo/urls/ui_projeto.py; ficha em docs/telas/fichas/projeto.md.{% endcomment %}
-{% block titulo %}Projetos {{ ano.ano }}{% endblock %}
+{% extends "ui/base.html" %}{% load static %}
+{% comment %}
+Hub Projetos, aba Lista (U7a). View em nucleo/urls/ui_projeto.py (lista, massa); ficha em docs/telas/fichas/projeto.md.
+Substitui a lista de Revistas (selos com situação, Preview e Zip) e os Lotes (barra de ações em massa:
+"Atribuir matriz…" e "Atribuir template…", regra de nucleo/lotes.py, modal de impacto do U2).
+Os diálogos ficam dentro do form `massa`: o botão de cada um envia para a sua ação (formaction).
+Depois de um envio recusado (erro ou impacto), o form volta com a seleção, as escolhas e, no impacto,
+action = a ação recusada (o Confirmar do modal reenvia o form sem botão).
+{% endcomment %}
+{% block titulo %}Projetos{% if ano %} {{ ano.ano }}{% endif %}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/lotes.css' %}"><link rel="stylesheet" href="{% static 'ui/telas/projeto.css' %}"><script src="{% static 'ui/telas/lotes.js' %}" defer></script>{% endblock %}
 
 {% block conteudo %}
-<header class="pagina-cab">
-  <div>
-    <h1>Projetos</h1>
-    <p class="mudo">Um projeto por parceiro no ano. Nasce quando os cortes do parceiro são lançados.</p>
-  </div>
-  <div class="acoes">
-    <a class="btn btn-outline" href="{% url 'ui_variaveis' ano.ano %}">Planilha de variáveis</a>
-    {% if perms.nucleo.change_parceiroano %}
-    <a class="btn btn-ghost" href="{% url 'ui_lotes_matriz' ano.ano %}">Escolher matriz</a>{% endif %}
-  </div>
-</header>
+{% if not ano %}
+<header class="pagina-cab"><div><h1>Projetos</h1></div></header>
+{% if perms.nucleo.abrir_ano %}{% url 'ui_anos' as u %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhum ano aberto" texto="Abra um ano para lançar os cortes e criar os projetos." url=u rotulo="Abrir anos" %}
+{% else %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhum ano aberto" texto="Peça a um administrador para abrir o ano." %}
+{% endif %}
+{% else %}
+{% include "ui/_componentes/projetos_abas.html" %}
 
-
-{% if projetos %}
-<div class="tabela-caixa">
-  <table class="tabela">
-    <thead><tr><th scope="col">Projeto</th><th scope="col">Parceiro</th><th scope="col">Matriz</th><th scope="col">Situação</th></tr></thead>
-    <tbody>
-      {% for p in projetos %}
-      <tr>
-        <td><a class="link" href="{% url 'ui_projeto' p.pk %}">{{ p.nome }}</a></td>
-        <td>{{ p.parceiro_ano.parceiro.nome }}</td>
-        <td>{% if p.parceiro_ano.matriz %}{{ p.parceiro_ano.matriz.nome }}{% else %}<span class="badge badge-alerta">sem matriz</span>{% endif %}</td>
-        <td>{% if p.arquivado_em %}<span class="badge badge-contorno">Arquivado em {{ p.arquivado_em|date:"d/m/Y" }}</span>{% else %}<span class="badge badge-secundario">Ativo</span>{% endif %}</td>
-      </tr>
+{% if linhas %}
+<form method="post" id="massa" class="lote" data-lote{% if acao %} action="{% url 'ui_projeto_massa' ano.ano acao %}"{% endif %}>{% csrf_token %}
+  {% if pode_massa %}<p class="mudo">Marque os parceiros e escolha a ação na barra de baixo. Projetos em edição por outra sessão são pulados e listados.</p>{% endif %}
+  <div class="tabela-caixa tabela-densa lote-caixa">
+    <table class="tabela">
+      <thead><tr>
+        {% if pode_massa %}<th scope="col" class="lote-marca"><input type="checkbox" data-todos aria-label="Marcar todos os parceiros"></th>{% endif %}
+        <th scope="col" class="fixa">Parceiro</th><th scope="col">Projeto</th><th scope="col">Matriz</th><th scope="col">Revistas</th><th scope="col">Situação</th>
+      </tr></thead>
+      <tbody>
+      {% for l in linhas %}
+        <tr{% if l.marcado %} aria-selected="true"{% endif %}{% if l.editando %} data-pulado{% endif %}>
+          {% if pode_massa %}<td class="lote-marca">{% if l.marcar %}<input type="checkbox" name="alvos" value="{{ l.pa.pk }}"{% if l.marcado %} checked{% endif %} id="alvo-{{ l.pa.pk }}" aria-label="Marcar {{ l.pa.parceiro.nome }}">{% endif %}</td>{% endif %}
+          <th scope="row" class="fixa lote-nome">{{ l.pa.parceiro.nome }}</th>
+          <td>{% if l.projeto %}<a class="link-linha" href="{% url 'ui_projeto' l.projeto.pk %}">{{ l.projeto.nome }}</a>{% else %}<span class="mudo">sem projeto</span>{% endif %}</td>
+          <td{% if l.marcar %} data-atual="matriz" data-valor="{{ l.pa.matriz_id|default:'' }}"{% endif %}>
+            {% if l.pa.matriz %}{{ l.pa.matriz.nome }}{% else %}<span class="badge badge-alerta">sem matriz</span>{% endif %}
+            {% if l.marcar %}<span class="lote-novo" data-novo hidden></span>{% endif %}
+          </td>
+          <td>{% if l.selos %}
+            <ul class="selos">{% for s in l.selos %}
+              <li class="selo{% if s.arquivada %} selo-arquivada{% elif not s.faltas %} selo-ok{% endif %}">
+                <a class="selo-codigo" href="{% url 'ui_revista_editar' ano.ano s.revista.pk %}" aria-label="Abrir a revista {{ s.revista }}"{% if s.faltas %} title="{{ s.faltas|join:' ' }}"{% endif %}>{{ s.revista.componente.codigo }}</a>
+                <span class="mudo">{% if s.arquivada %}arquivada{% elif s.faltas %}{{ s.faltas|length }} pendência(s){% else %}completa{% endif %}</span>
+                <a class="selo-acao" href="{% url 'preview' s.revista.pk %}" target="_blank" rel="noopener">Preview<span class="sr-only"> de {{ s.revista }} (nova aba)</span></a>
+                <a class="selo-acao" href="{% url 'ui_revista_zip' ano.ano s.revista.pk %}?voltar=lista">Zip<span class="sr-only"> de {{ s.revista }}</span></a>
+              </li>{% endfor %}
+            </ul>{% else %}<span class="mudo">—</span>{% endif %}
+          </td>
+          <td>
+            {% if l.projeto.arquivado_em %}<span class="badge badge-contorno">Arquivado em {{ l.projeto.arquivado_em|date:"d/m/Y" }}</span>{% endif %}
+            {% if l.editando %}<span class="badge badge-alerta" title="O projeto está aberto; a ação em massa não grava nele.">Em edição por {{ l.editando }}: será pulado</span>
+            {% elif l.marcar and not l.ativo %}<span class="badge badge-secundario" title="A matriz do parceiro é gravada mesmo sem projeto ativo.">Sem projeto ativo</span>{% endif %}
+          </td>
+        </tr>
       {% endfor %}
-    </tbody>
-  </table>
-</div>
+      </tbody>
+    </table>
+  </div>
+
+  {% if pode_massa %}
+  <div class="barra-salvar lote-barra">
+    <span class="mudo" data-contador aria-live="polite">{{ marcados }} selecionado(s)</span>
+    {% if pode_matriz %}<button type="button" class="btn btn-outline" data-abrir="dlg-matriz">Atribuir matriz…</button>{% endif %}
+    {% if pode_template %}<button type="button" class="btn btn-outline" data-abrir="dlg-template">Atribuir template…</button>{% endif %}
+  </div>
+
+  {% if pode_matriz %}
+  <dialog class="dialogo" id="dlg-matriz" aria-labelledby="dlg-matriz-titulo">
+    <header>
+      <h2 id="dlg-matriz-titulo">Atribuir matriz</h2>
+      <p class="mudo">Vale para os parceiros marcados em {{ ano.ano }}. Se alguma revista validada mudar, você confirma antes de gravar.</p>
+    </header>
+    <div class="campo">
+      <label for="massa-matriz">Matriz</label>
+      <select class="select" id="massa-matriz" name="matriz" data-previa="matriz">
+        <option value="">Escolha a matriz</option>
+        {% for m in matrizes %}<option value="{{ m.pk }}"{% if escolha.matriz == m.pk|stringformat:"d" %} selected{% endif %}>{{ m.nome }}</option>{% endfor %}
+      </select>
+      {% if not matrizes %}<p class="ajuda">Nenhuma matriz em {{ ano.ano }}: cadastre em Matrizes.</p>{% endif %}
+    </div>
+    <footer>
+      <button type="button" class="btn btn-outline" data-fechar>Cancelar</button>
+      <button class="btn" type="submit" formaction="{% url 'ui_projeto_massa' ano.ano 'matriz' %}">Atribuir matriz</button>
+    </footer>
+  </dialog>
+  {% endif %}
+
+  {% if pode_template %}
+  <dialog class="dialogo" id="dlg-template" aria-labelledby="dlg-template-titulo">
+    <header>
+      <h2 id="dlg-template-titulo">Atribuir template</h2>
+      <p class="mudo">Vale para as revistas do componente nos parceiros marcados. Fascículo com texto próprio na revista é pulado e listado: troque pela revista.</p>
+    </header>
+    {% regroup templates by componente.codigo as por_cc %}
+    <div class="campo">
+      <label for="massa-componente">Componente</label>
+      <select class="select" id="massa-componente" name="componente">
+        <option value="">Escolha o componente</option>
+        {% for c in componentes %}<option value="{{ c.pk }}"{% if escolha.componente == c.pk|stringformat:"d" %} selected{% endif %}>{{ c.codigo }} · {{ c.nome }}</option>{% endfor %}
+      </select>
+      {% if not componentes %}<p class="ajuda">Nenhum componente em {{ ano.ano }}: {% if perms.nucleo.add_componente %}<a class="link" href="{% url 'ui_ano' ano.ano %}">cadastre os componentes</a> do ano.{% else %}peça a um administrador para cadastrar os componentes do ano.{% endif %}</p>{% endif %}
+    </div>
+    {% for fasc, campo, escolhido in fasciculos %}
+    <div class="campo">
+      <label for="massa-{{ campo }}">Template {{ fasc }}</label>
+      <select class="select" id="massa-{{ campo }}" name="{{ campo }}">
+        <option value="">Não mudar</option>
+        {% for g in por_cc %}<optgroup label="{{ g.grouper }}">{% for t in g.list %}{% if t.fasciculo == fasc %}<option value="{{ t.pk }}"{% if escolhido == t.pk|stringformat:"d" %} selected{% endif %}>{{ t.nome }}</option>{% endif %}{% endfor %}</optgroup>{% endfor %}
+      </select>
+    </div>
+    {% endfor %}
+    <footer>
+      <button type="button" class="btn btn-outline" data-fechar>Cancelar</button>
+      <button class="btn" type="submit" formaction="{% url 'ui_projeto_massa' ano.ano 'template' %}">Atribuir template</button>
+    </footer>
+  </dialog>
+  {% endif %}
+  {% endif %}
+
+  {% if perdem %}{% include "ui/_componentes/impacto.html" with form_id="massa" acao=acao_titulo perdem=perdem %}{% endif %}
+</form>
 {% else %}
 {% url 'cortes' ano.ano as u %}
 {% include "ui/_componentes/vazio.html" with titulo="Nenhum projeto neste ano" texto="O projeto do parceiro nasce quando os cortes dele são lançados." url=u rotulo="Lançar cortes" %}
+{% endif %}
 {% endif %}
 {% endblock %}

@@ -302,6 +302,9 @@ form.inline { display: inline; }
 .abas a:hover { color: var(--foreground); }
 .abas a[aria-current="page"] { color: var(--foreground); border-bottom-color: var(--foreground); }
 .abas .badge { margin-left: 0.375rem; }
+/* linha logo abaixo das abas: o que a aba mostra à esquerda, as ações dela à direita (hub Projetos, U7a) */
+.aba-acoes { flex-wrap: wrap; justify-content: flex-end; }
+.aba-acoes > p { margin-right: auto; }
 
 /* --- tabela densa (painel, listas longas): linhas baixas, cabeçalho fixo, coluna .fixa --- */
 .tabela-densa { position: relative; /* contém o .sr-only (absolute) na rolagem */ border: 1px solid var(--border); border-radius: var(--radius-lg); max-height: calc(100dvh - 14rem); overflow: auto; }

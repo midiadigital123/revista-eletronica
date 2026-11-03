@@ -15,6 +15,15 @@ CAMPOS_DESCRITOR = (
 )  # fmt: skip
 
 
+def atribuir_matriz(parceiro_ano, matriz, usuario):
+    """A matriz do parceiro no ano (o projeto aponta para ela; não herda). Único ponto de escrita da
+    tela B: a aba Matriz do projeto e a ação em massa da Lista (via `lotes.gravar_matriz`), U7b.
+    `usuario` vai para o histórico. Bloqueio e impacto no "Validado" ficam com quem chama."""
+    parceiro_ano.matriz = matriz
+    parceiro_ano._history_user = usuario
+    parceiro_ano.save(update_fields=["matriz"])
+
+
 class DuplicacaoRecusada(ValueError):
     pass
 

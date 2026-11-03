@@ -7,7 +7,7 @@
 // Preparar como em painel.spec.ts (criar_demo --ano 2026 e o superusuário e2e).
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { entrar, liberarBloqueio, novoParceiro } from "./helpers";
+import { alpinePronto, atribuirEmMassa, entrar, liberarBloqueio, novoParceiro, revistaDaLista } from "./helpers";
 
 const SVG = path.join(__dirname, "../../nucleo/tests/fixtures/f2-lp.svg");
 const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mP4/5oBAATXAesdPD2pAAAAAElFTkSuQmCC", "base64");
@@ -21,7 +21,7 @@ test("renomear parceiro validado pela grade abre o modal; Esc volta o nome e o f
   const mensagens = page.locator("#mensagens");
 
   // 1. Parceiro e cortes de LP: a cascata cria o projeto e a revista.
-  await entrar(page, "/cortes/2026/");
+  await entrar(page, "/ui/projeto/ano/2026/cortes/");
   await novoParceiro(page, nome);
   // U3: cada célula salva sozinha ao sair dela.
   for (const coluna of ["5EF LP", "9EF LP"]) {
@@ -32,29 +32,21 @@ test("renomear parceiro validado pela grade abre o modal; Esc volta o nome e o f
   }
   await expect(page.locator("[data-status-salvo]").getByText(/Salvo às/)).toBeVisible();
 
-  // 2. Matriz e templates pelos lotes (antes de abrir o projeto: o lote pula projeto em edição).
-  await page.goto("/ui/lotes/2026/matriz/");
-  await page.getByLabel(nome, { exact: true }).check();
-  await page.selectOption("#lote-matriz", { label: "Demonstração" });
-  await page.getByRole("button", { name: "Aplicar aos selecionados" }).click();
+  // 2. Matriz e templates pela barra de ações em massa da Lista de Projetos (U7a; antes de abrir o
+  // projeto: a ação em massa pula projeto em edição). O id da revista vem do selo LP da linha.
+  await atribuirEmMassa(page, nome, { matriz: "Demonstração" });
   await expect(mensagens).toContainText("escolhida para 1 parceiro(s)");
-
-  await page.goto("/ui/lotes/2026/template/");
-  await page.locator("nav a", { hasText: /^LP$/ }).click();
-  const alvo = page.getByLabel(nome);
-  const revista = await alvo.getAttribute("value");
-  await alvo.check();
-  await page.selectOption("#lote-template_f1", { label: "Padrão" });
-  await page.selectOption("#lote-template_f2", { label: "Padrão" });
-  await page.getByRole("button", { name: "Aplicar aos selecionados" }).click();
+  await atribuirEmMassa(page, nome, { componente: "LP · Língua Portuguesa", f1: "Padrão", f2: "Padrão" });
   await expect(mensagens).toContainText("Template escolhido em 1 revista(s).");
+  const revista = await revistaDaLista(page, nome, "LP");
 
   // 3. Nome do projeto (pendência), SVG e capa; depois o "Validado".
   await page.goto("/ui/projeto/ano/2026/");
   await page.getByRole("link", { name: nome }).first().click();
+  await alpinePronto(page);
   await page.fill("#id_nome", `${nome} projeto`);
   await page.press("#id_nome", "Tab"); // U3: o campo salva sozinho ao sair dele
-  await expect(page.locator("[data-status-salvo]")).toContainText("Salvo às");
+  await expect(page.locator("[data-status-salvo]").getByText(/Salvo às \d/)).toBeVisible(); // o texto oculto (x-show) já existe: espera o visível
   await liberarBloqueio(page);
 
   await page.goto(`/admin/nucleo/revista/${revista}/change/`);
@@ -69,7 +61,7 @@ test("renomear parceiro validado pela grade abre o modal; Esc volta o nome e o f
   await liberarBloqueio(page);
 
   // 4. Renomear inline (U5): lápis → campo com foco; Enter salva pelo autosave, que abre o modal.
-  await page.goto("/cortes/2026/");
+  await page.goto("/ui/projeto/ano/2026/cortes/");
   const linha = page.locator(`tr[data-parceiro="${nome}"]`);
   const campo = page.getByLabel(`Novo nome de ${nome}`);
   const modal = page.getByRole("dialog", { name: "Renomear tira o “Validado” de 1 revista(s)" });

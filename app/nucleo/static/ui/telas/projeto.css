@@ -4,13 +4,19 @@
 .pj-secao { scroll-margin-top: 4.5rem; }
 .pj-secao code, .pj-referencia code { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted-foreground); }
 
-/* índice da página: âncoras para as quatro partes */
-.pj-indice { display: flex; flex-wrap: wrap; gap: 0.25rem; margin: 0 0 1rem; }
-.pj-indice a {
-  padding: 0.25rem 0.625rem; border-radius: var(--radius-md); font-size: 0.875rem;
-  color: var(--muted-foreground); text-decoration: none;
-}
-.pj-indice a:hover { background: var(--muted); color: var(--foreground); }
+/* abas do projeto (U7b): o espaço entre a nav e o conteúdo da aba */
+.abas + .pj-form, .abas ~ .pj-secao, .abas ~ .pj-cartoes, .abas ~ .aba-acoes { margin-top: 1rem; }
+.pj-form:not(:has(> section:not([hidden]))) { display: none; }
+
+/* aba Revistas: um cartão por componente */
+.pj-cartoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 1rem; }
+.pj-cartao { gap: 1rem; }
+.pj-cartao-cab { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.pj-cartao-cab .mudo { font-size: 0.875rem; font-weight: 400; }
+.pj-matriz .select { max-width: 24rem; }
+.pj-cartao-dados { display: grid; grid-template-columns: auto 1fr; gap: 0.375rem 1rem; margin: 0; font-size: 0.875rem; }
+.pj-cartao-dados dt { color: var(--muted-foreground); }
+.pj-cartao-dados dd { margin: 0; }
 
 .pj-nome { max-width: 36rem; }
 
@@ -55,3 +61,16 @@
   .pj-amostra { grid-row: span 3; height: auto; margin: 0; border-radius: var(--radius-md); border-width: 1px; }
   .pj-tabela .select, .pj-tabela .input { min-width: 5rem; }
 }
+
+/* Hub Projetos, aba Lista (U7a): as revistas do projeto como selos (código, situação, Preview, Zip). */
+.selos { display: flex; flex-wrap: wrap; gap: 0.375rem; margin: 0; padding: 0; list-style: none; }
+.selo {
+  display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.125rem 0.5rem;
+  border: 1px solid var(--border); border-radius: var(--radius-md); white-space: nowrap; font-size: 0.8125rem;
+}
+.selo-acao { color: var(--muted-foreground); }
+.selo-acao:hover { color: var(--foreground); text-decoration: underline; text-underline-offset: 3px; }
+.selo-codigo { font-weight: 600; text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 3px; }
+.selo-codigo:hover { text-decoration-color: currentColor; }
+.selo-ok { border-color: color-mix(in oklch, var(--sucesso) 35%, var(--border)); }
+.selo-arquivada { border-style: dashed; color: var(--muted-foreground); }

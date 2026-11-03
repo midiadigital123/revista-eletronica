@@ -42,7 +42,9 @@ COLUNAS = {
 def link(codigo, revista):
     """Onde corrigir cada pendência, só em telas B (o `Pendencia.link` fica nulo: o painel monta pelo código)."""
     ano = revista.projeto.ano.ano
-    if codigo in ("matriz", "corte_sem_matriz", "variaveis", "nome_projeto"):
+    if codigo in ("matriz", "corte_sem_matriz"):
+        return reverse("ui_projeto", args=[revista.projeto_id]) + "?aba=matriz"  # U7b
+    if codigo in ("variaveis", "nome_projeto"):
         return reverse("ui_projeto", args=[revista.projeto_id])
     if codigo == "corte_invalido":
         return reverse("cortes", args=[ano])

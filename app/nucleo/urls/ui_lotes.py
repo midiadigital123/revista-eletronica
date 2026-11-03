@@ -1,10 +1,15 @@
 """Lotes B (T18/T19): "Escolher matriz" e "Escolher template F1/F2" fora do admin.
 
+U7a: a tela virou a barra de ações em massa da Lista de Projetos (`ui_projeto.massa`, que usa
+`aplicar` daqui). O GET destas rotas redireciona para a Lista; o POST continua funcionando.
+
 /ui/lotes/<ano>/matriz/ (ui_lotes_matriz) e /ui/lotes/<ano>/template/?componente= (ui_lotes_template).
 Mesma regra do admin (`nucleo/lotes.py`). Ver: permissão de ver ou de alterar o modelo gravado;
 sem a de alterar, só leitura e POST 403. Aplicar via HTMX devolve o próprio form (parcial) com
 as mensagens oob; sem JS, PRG. Ficha: docs/telas/fichas/lotes.md; convenções: docs/telas/design-system.md.
 """
+
+from functools import wraps
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -53,7 +58,7 @@ def aplicar(request, form, gravar, novo_form, perdem_de, ano):
         avisar_perdidos(request, perdem, ano.ano)
     if e_htmx(request):
         return novo_form(), None  # tabela com os valores novos, seleção limpa
-    return form, redirect(request.get_full_path())
+    return form, redirect("ui_projeto_lista", ano.ano)  # U7a: a lista com as ações em massa
 
 
 def marcados(form):
@@ -68,13 +73,22 @@ def responder(request, pagina, parcial, contexto):
 @require_http_methods(["GET"])
 @login_required(login_url="admin:login")
 def inicio(request):
-    """/ui/lotes/ → lote de matriz do ano mais recente (menu sem `ano` no contexto); sem ano, `/`."""
+    """/ui/lotes/ → Lista de Projetos do ano da sessão (U7a); sem ano, `/`."""
     ano = ano_da_sessao(request)
-    return redirect("ui_lotes_matriz", ano.ano) if ano else redirect("inicio")
+    return redirect("ui_projeto_lista", ano.ano) if ano else redirect("inicio")
+
+
+def para_a_lista(view):
+    """U7a: o GET dos lotes vai à Lista de Projetos (barra de ações em massa); o POST continua."""
+    @wraps(view)
+    def envolta(request, ano):
+        return view(request, ano) if request.method == "POST" else redirect("ui_projeto_lista", ano)
+    return envolta
 
 
 @require_http_methods(["GET", "POST"])
 @login_required(login_url="admin:login")
+@para_a_lista
 def matriz(request, ano):
     pode_gravar = permissoes(request, "parceiroano")
     ano = get_object_or_404(Ano, ano=ano)
@@ -101,6 +115,7 @@ def matriz(request, ano):
 
 @require_http_methods(["GET", "POST"])
 @login_required(login_url="admin:login")
+@para_a_lista
 def template(request, ano):
     pode_gravar = permissoes(request, "revistafasciculo")
     ano = get_object_or_404(Ano, ano=ano)

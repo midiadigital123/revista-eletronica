@@ -124,7 +124,7 @@ class CascaTest(TestCase):
     def test_casca_com_htmx_csrf_fonte_local_e_navegacao_com_reserva(self):
         Ano.objects.create(ano=2026)
         self.client.force_login(get_user_model().objects.create_superuser("ana", password="x"))
-        r = self.client.get("/cortes/2026/")
+        r = self.client.get("/ui/projeto/ano/2026/cortes/")
         self.assertContains(r, "ui/htmx.min.js")
         self.assertContains(r, 'hx-headers=\'{"X-CSRFToken": "')
         self.assertContains(r, "ui/fontes/inter-latin-wght-normal.woff2")
@@ -141,9 +141,8 @@ class CascaTest(TestCase):
         Ano.objects.create(ano=2026)
         self.client.force_login(get_user_model().objects.create_superuser("ana", password="x"))
         nomes = ["Painel", "Projetos", "Matrizes", "Templates", "Impresso"]
-        for url, ativo in [("/painel/2026/", "Painel"), ("/ui/variaveis/2026/", "Projetos"),
-                           ("/ui/revista/2026/", "Projetos"), ("/ui/lotes/2026/matriz/", "Projetos"),
-                           ("/ui/projeto/ano/2026/", "Projetos"), ("/ui/matriz/2026/", "Matrizes"),
+        for url, ativo in [("/painel/2026/", "Painel"), ("/ui/projeto/ano/2026/variaveis/", "Projetos"),
+                           ("/ui/projeto/ano/2026/cortes/", "Projetos"), ("/ui/projeto/ano/2026/", "Projetos"), ("/ui/matriz/2026/", "Matrizes"),
                            ("/ui/templates/2026/", "Templates"), ("/ui/impresso/2026/", "Impresso"),
                            ("/ui/validar/2026/", "Painel"), ("/ui/anos/2026/", None)]:
             with self.subTest(url=url):
@@ -155,7 +154,7 @@ class CascaTest(TestCase):
         # D-195: Sortable e componentes.js antes do Alpine, para o alpine:init achar os registros.
         Ano.objects.create(ano=2026)
         self.client.force_login(get_user_model().objects.create_superuser("bia", password="x"))
-        html = self.client.get("/cortes/2026/").content.decode()
+        html = self.client.get("/ui/projeto/ano/2026/cortes/").content.decode()
         ordem = ["ui/htmx.min.js", "ui/ui.js", "sortablejs@1.15.6/Sortable.min.js",
                  "ui/componentes.js", "ui/componentes/autosave.js", "@alpinejs/csp@3.14.9/dist/cdn.min.js"]
         posicoes = [html.index(x) for x in ordem]

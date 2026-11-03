@@ -43,20 +43,21 @@ class MensagensSemAnoTest(TestCase):
 
     def test_abrir_ano_so_com_permissao(self):
         abrir = reverse("ui_anos")
-        for url in (reverse("cortes_inicio"), reverse("ui_revista_inicio")):
+        for url in (reverse("cortes_inicio"), reverse("ui_revista_inicio"), reverse("ui_projeto_inicio")):
             self.client.force_login(self.imp)
-            r = self.client.get(url)
+            r = self.client.get(url, follow=True)
             self.assertContains(r, "Peça a um administrador para abrir o ano.")
             self.assertNotContains(r, abrir)
             self.client.force_login(self.ped)
-            r = self.client.get(url)
+            r = self.client.get(url, follow=True)
             self.assertContains(r, abrir)
             self.assertNotContains(r, "Peça a um administrador")
 
     def test_componentes_so_com_permissao(self):
-        Ano.objects.create(ano=2030)  # sem componentes
-        url = reverse("ui_lotes_template", args=[2030])
-        componentes = reverse("admin:nucleo_componente_changelist")
+        ano = Ano.objects.create(ano=2030)  # sem componentes; um parceiro para a Lista ter a barra
+        ParceiroAno.objects.create(parceiro=Parceiro.objects.create(nome="GO"), ano=ano)
+        url = reverse("ui_projeto_lista", args=[2030])  # U7a: "Atribuir template…" da Lista
+        componentes = f'<a class="link" href="{reverse("ui_ano", args=[2030])}">cadastre os componentes</a>'
         self.client.force_login(self.imp)
         self.assertNotContains(self.client.get(url), componentes)
         self.client.force_login(self.ped)
@@ -67,7 +68,7 @@ class MensagensSemAnoTest(TestCase):
         self.assertRedirects(self.client.get(reverse("ui_lotes_inicio")), "/", fetch_redirect_response=False)
         Ano.objects.create(ano=2030)
         r = self.client.get(reverse("ui_lotes_inicio"))
-        self.assertRedirects(r, reverse("ui_lotes_matriz", args=[2030]), fetch_redirect_response=False)
+        self.assertRedirects(r, reverse("ui_projeto_lista", args=[2030]), fetch_redirect_response=False)
 
 
 SELETOR = re.compile(r'<div[^>]*id="seletor-ano"[^>]*>(.*?)</div>', re.S)
@@ -115,9 +116,9 @@ class SeletorAnoTest(Base):
         Ano.objects.create(ano=2027)
         self.client.get(f"/ui/projeto/{self.projeto_go.pk}/")  # o ano do objeto da página vai para a sessão
         self.assertEqual(self.client.session["ano"], 2026)
-        for nome, destino in [("cortes_inicio", "/cortes/2026/"), ("ui_projeto_inicio", "/ui/projeto/ano/2026/"),
+        for nome, destino in [("cortes_inicio", "/ui/projeto/ano/2026/cortes/"), ("ui_projeto_inicio", "/ui/projeto/ano/2026/"),
                               ("ui_matriz_inicio", "/ui/matriz/2026/"), ("ui_templates_inicio", "/ui/templates/2026/"),
-                              ("ui_revista_inicio", "/ui/revista/2026/"), ("ui_variaveis_inicio", "/ui/variaveis/2026/"),
-                              ("ui_lotes_inicio", "/ui/lotes/2026/matriz/"), ("ui_impresso", "/ui/impresso/2026/")]:
+                              ("ui_revista_inicio", "/ui/projeto/ano/2026/"), ("ui_variaveis_inicio", "/ui/projeto/ano/2026/variaveis/"),
+                              ("ui_lotes_inicio", "/ui/projeto/ano/2026/"), ("ui_impresso", "/ui/impresso/2026/")]:
             with self.subTest(nome=nome):
                 self.assertRedirects(self.client.get(reverse(nome)), destino, fetch_redirect_response=False)

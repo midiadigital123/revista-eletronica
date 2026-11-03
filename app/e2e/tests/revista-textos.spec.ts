@@ -12,7 +12,7 @@
 // termina sem cópia na revista DEMONSTRAÇÃO (descartada no fim). Use num banco de desenvolvimento.
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { entrar, liberarBloqueio, novoParceiro } from "./helpers";
+import { atribuirEmMassa, entrar, liberarBloqueio, novoParceiro, revistaDaLista } from "./helpers";
 
 const INTRO = "#id_secao__F1__introducao";
 const SVG = path.join(__dirname, "../../nucleo/tests/fixtures/f2-lp.svg");
@@ -79,7 +79,7 @@ test("revista: templates, arquivos por soltar e validar pela coluna Situação",
   const nome = `E2E Revista ${Date.now().toString(36).toUpperCase()}`;
   const salvo = page.locator("[data-status-salvo]").getByText(/Salvo às \d/);
 
-  await entrar(page, "/cortes/2026/");
+  await entrar(page, "/ui/projeto/ano/2026/cortes/");
   await novoParceiro(page, nome);
   for (const coluna of ["5EF LP", "9EF LP"]) {
     const salvou = page.waitForResponse((r) => r.url().includes("/celula/") && r.status() === 200);
@@ -87,14 +87,9 @@ test("revista: templates, arquivos por soltar e validar pela coluna Situação",
     await page.keyboard.press("Tab");
     await salvou;
   }
-  await page.goto("/ui/lotes/2026/matriz/");
-  await page.getByLabel(nome, { exact: true }).check();
-  await page.selectOption("#lote-matriz", { label: "Demonstração" });
-  await page.getByRole("button", { name: "Aplicar aos selecionados" }).click();
+  await atribuirEmMassa(page, nome, { matriz: "Demonstração" });
   await expect(page.locator("#mensagens")).toContainText("escolhida para 1 parceiro(s)");
-  await page.goto("/ui/lotes/2026/template/");
-  await page.locator("nav a", { hasText: /^LP$/ }).click();
-  const revista = await page.getByLabel(nome).getAttribute("value");
+  const revista = await revistaDaLista(page, nome, "LP");
   await page.goto("/ui/projeto/ano/2026/");
   await page.getByRole("link", { name: nome }).first().click();
   await page.fill("#id_nome", `${nome} projeto`);

@@ -1,0 +1,35 @@
+{% comment %}
+A grade de cortes (form `grade`): aba Cortes do hub Projetos (o ano inteiro) e aba Cortes do projeto
+(U7b, só a linha do parceiro). Contexto: ano, etapas, componentes, colunas, linhas, pode_gravar
+(o de `nucleo.cortes.pode_gravar`, não o do projeto).
+{% endcomment %}{% comment %}U3: cada célula salva sozinha ao sair dela (componente campoAuto, rota cortes_celula, com o `original` da célula).
+U5: o nome do parceiro também (nomeInline: o data-url dele troca a rota para cortes_renomear_parceiro).{% endcomment %}
+<form method="post" class="grade" id="grade" data-grade{% if pode_gravar or perms.nucleo.change_parceiro %} x-data="campoAuto" data-url="{% url 'cortes_celula' ano.ano %}"{% endif %}>{% csrf_token %}
+  {% if pode_gravar %}<p class="mudo">De 1 a 4 cortes inteiros e crescentes, separados por vírgula, maiores que 0 e menores que o máximo da escala da etapa. Célula vazia apaga o corte. Cada célula salva sozinha ao sair dela.</p>{% endif %}
+  <div class="tabela-caixa grade-caixa">
+    <table class="tabela">
+      <thead>
+        <tr>
+          <th rowspan="2" scope="col" class="grade-parceiro">Parceiro</th>
+          {% for e in etapas %}<th colspan="{{ componentes|length }}" scope="colgroup" class="grade-etapa">{{ e.codigo }} <span class="mudo">até {{ e.escala_max }}</span></th>{% endfor %}
+        </tr>
+        <tr>{% for e, c in colunas %}<th scope="col" class="grade-cc{% if c.pk == componentes.0.pk %} grade-inicio{% endif %}">{{ c.codigo }}</th>{% endfor %}</tr>
+      </thead>
+      <tbody>
+      {% for linha in linhas %}
+        <tr{% if linha.erros %} class="grade-com-erro"{% endif %} data-parceiro="{{ linha.parceiro.nome }}">
+          <th scope="row" class="grade-parceiro">{% if perms.nucleo.change_parceiro %}{% url 'cortes_renomear_parceiro' ano.ano linha.parceiro.pk as url %}{% include "ui/_componentes/nome_inline.html" with nome=linha.parceiro.nome %}{% else %}{{ linha.parceiro.nome }}{% endif %}</th>
+          {% for cel in linha.celulas %}<td{% if cel.inicio %} class="grade-inicio"{% endif %}><input class="input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" name="c-{{ cel.chave }}" value="{{ cel.texto }}" aria-label="{{ cel.titulo }}"{% if cel.invalida %} aria-invalid="true"{% endif %}{% if linha.erros %} aria-describedby="erros-{{ linha.parceiro.pk }}"{% endif %}{% if not pode_gravar %} readonly{% endif %}></td>{% endfor %}
+        </tr>
+        {% if linha.erros %}
+        <tr class="grade-erros"><td colspan="{{ colunas|length|add:1 }}">
+          <ul id="erros-{{ linha.parceiro.pk }}">{% for erro in linha.erros %}<li>{{ linha.parceiro.nome }}: {{ erro }}</li>{% endfor %}</ul>
+        </td></tr>
+        {% endif %}
+      {% empty %}
+        <tr><td colspan="{{ colunas|length|add:1 }}" class="mudo">Nenhum parceiro cadastrado.{% if perms.nucleo.add_parceiro %} Adicione o primeiro abaixo.{% endif %}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</form>

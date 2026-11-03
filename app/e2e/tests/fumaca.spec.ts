@@ -19,7 +19,7 @@ test("tela B carrega Alpine e SortableJS sem erro", async ({ page }) => {
   const erros: string[] = [];
   page.on("console", (m) => { if (m.type() === "error") erros.push(m.text()); });
   page.on("pageerror", (e) => erros.push(e.message));
-  await entrar(page, "/cortes/");
+  await entrar(page, "/ui/projeto/ano/2026/cortes/");
   await expect.poll(() => page.evaluate(() => !!(window as any).Alpine && !!(window as any).Sortable)).toBe(true);
   expect(erros).toEqual([]);
 });
