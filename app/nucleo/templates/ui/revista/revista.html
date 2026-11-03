@@ -13,19 +13,7 @@ O bloqueio do projeto (bloqueio.js) vive num form próprio, fora de qualquer alv
 <header class="pagina-cab">
   <div>
     <h1>{{ revista.projeto }}</h1>
-    {% if pode_nome %}
-    <details class="revista-nome">
-      <summary class="link">Editar nome</summary>
-      <form method="post" class="acoes">{% csrf_token %}
-        <input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">
-        <input type="hidden" name="acao" value="nome">
-        <label for="revista-nome">Nome do projeto</label>
-        <input class="input" id="revista-nome" name="nome" value="{{ revista.projeto.nome }}" required maxlength="200">
-        <button class="btn btn-outline btn-sm" type="submit">Salvar nome</button>
-      </form>
-    </details>
-    {% endif %}
-    <p class="mudo">{{ revista.componente.nome }}, {{ revista.ano.ano }}{% if arquivada %} <span class="badge badge-secundario">Arquivada</span>{% endif %}</p>
+    <p class="mudo">{{ revista.componente.nome }}, {{ revista.ano.ano }}{% if arquivada %} <span class="badge badge-secundario">Arquivada</span>{% endif %}{% if pode_nome %} · <a class="link" href="{% url 'ui_projeto' revista.projeto_id %}#nome">Editar no projeto</a>{% endif %}</p>
   </div>
   <div class="acoes">
     <a class="btn btn-outline" href="{% url 'preview' revista.pk %}" target="_blank" rel="noopener" title="Abre mesmo com pendências; o que falta aparece em faixa vermelha.">

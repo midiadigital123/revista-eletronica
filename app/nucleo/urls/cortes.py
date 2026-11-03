@@ -21,9 +21,8 @@ from nucleo import cortes as regra
 from nucleo.contexto import ano_da_sessao
 from nucleo.cortes import grade, pode_ver
 from nucleo.models import Ano, Componente, Etapa, Parceiro, Revista
-from nucleo.servicos import impacto
 from nucleo.servicos.cascata import validar_linhas
-from nucleo.ui_autosave import Conflito, conflito, erros, responder_campo
+from nucleo.ui_autosave import Conflito, conflito, erros, form_de_um_campo, responder_campo
 
 
 @require_GET
@@ -53,34 +52,19 @@ def novo_parceiro(request, ano):
     return redirect("cortes", ano)
 
 
-def perdem_validado(parceiro, nome):
-    """Revistas ativas do parceiro (todos os anos) validadas cujo hash muda com o nome novo."""
-    revistas = Revista.objects.filter(projeto__parceiro_ano__parceiro=parceiro, arquivada_em__isnull=True)
-    return impacto.perdem_validado(lambda: Parceiro.objects.filter(pk=parceiro.pk).update(nome=nome), revistas)
-
-
 @require_POST
 @login_required(login_url="admin:login")
 @permission_required("nucleo.change_parceiro", raise_exception=True)
 def renomear_parceiro(request, ano, pk):
-    """Item 6 (D-190). O nome vale para todos os anos e entra no hash (`nome_parceiro`): revista
-    validada que mudaria só é afetada depois do modal de impacto (U2)."""
+    """Item 6 (D-190), U5: renomear inline (componente `nomeInline`), pelo protocolo do autosave.
+    O nome vale para todos os anos e entra no hash (`nome_parceiro`): revista validada que mudaria
+    só é afetada depois do modal de impacto (U2)."""
     parceiro = get_object_or_404(Parceiro, pk=pk)
-    form = modelform_factory(Parceiro, fields=["nome"])(request.POST, instance=parceiro)
-    if not form.is_valid():
-        messages.error(request, "Parceiro não renomeado: " + " ".join(m for erros in form.errors.values() for m in erros))
-        return redirect("cortes", ano)
-    perdem = perdem_validado(parceiro, form.cleaned_data["nome"])
-    if perdem and not request.POST.get("confirmar_impacto"):
-        ano = get_object_or_404(Ano, ano=ano)
-        contexto, _ = grade(request, ano, ler_post=False)
-        renomear = {"pk": parceiro.pk, "nome": form.cleaned_data["nome"], "perdem": perdem, "form_id": f"renomear-{parceiro.pk}"}
-        return TemplateResponse(request, "ui/cortes.html", {
-            **contexto, "ano": ano, "anos": list(Ano.objects.order_by("-ano")), "secao": "cortes", "renomear": renomear,
-        })  # fmt: skip
-    form.save()
-    messages.success(request, f"Parceiro renomeado para {parceiro.nome}." + (f" {len(perdem)} revista(s) perderam o “Validado”." if perdem else ""))
-    return redirect("cortes", ano)
+    form = form_de_um_campo(modelform_factory(Parceiro, fields=["nome"]), request.POST.get("campo"), request.POST.get("valor", "").strip(), instance=parceiro)
+    revistas = lambda: Revista.objects.filter(  # noqa: E731 (ativas do parceiro, todos os anos)
+        projeto__parceiro_ano__parceiro=parceiro, arquivada_em__isnull=True
+    ).select_related("projeto__parceiro_ano__parceiro", "projeto__ano", "componente")
+    return responder_campo(request, form=form, gravar=lambda d: {"valor": form.save().nome}, revistas=revistas, titulo="Renomear")
 
 
 CELULA = re.compile(r"^c-(\d{1,9})-(\d{1,9})-(\d{1,9})$")

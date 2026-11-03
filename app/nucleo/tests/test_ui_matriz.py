@@ -63,10 +63,24 @@ class MatrizUiTest(BaseCadastro):
         Descritor.objects.filter(matriz_etapa_cc__matriz=nova, codigo="D02").update(descricao="Infere.")
         self.assertContains(self.client.get(diff), "5EF LP D02")
 
-    def test_renomear(self):
+    def test_renomear_inline_pelo_protocolo(self):
+        """U5: o nome se edita no título (nomeInline), pelo protocolo do autosave (U3)."""
         url = reverse("ui_matriz_renomear", args=[self.matriz.pk])
-        resp = self.client.post(url, {"nome": "Comum"})
-        self.assertRedirects(resp, reverse("ui_matriz_detalhe", args=[self.matriz.pk]), fetch_redirect_response=False)
+        resp = self.client.get(reverse("ui_matriz_detalhe", args=[self.matriz.pk]))
+        self.assertContains(resp, 'x-data="nomeInline"')
+        self.assertContains(resp, f'data-url="{url}"')
+        self.assertNotContains(resp, "dlg-renomear")
+        json_ = {"HTTP_ACCEPT": "application/json"}
+        corpo = self.client.post(url, {"campo": "nome", "valor": "Comum", "original": "Comunitária"}, **json_).json()
+        self.assertTrue(corpo["ok"])
+        self.assertEqual(corpo["valor"], "Comum")
+        self.matriz.refresh_from_db()
+        self.assertEqual(self.matriz.nome, "Comum")
+        Matriz.objects.create(ano=self.matriz.ano, nome="Outra")
+        for valor in ("", "Outra"):
+            r = self.client.post(url, {"campo": "nome", "valor": valor}, **json_)
+            self.assertEqual(r.status_code, 422, valor)
+            self.assertTrue(r.json()["erros"])
         self.matriz.refresh_from_db()
         self.assertEqual(self.matriz.nome, "Comum")
 

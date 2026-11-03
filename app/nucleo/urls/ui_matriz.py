@@ -34,7 +34,7 @@ from nucleo.matriz import (
     gravar_item,
     reimportar,
 )  # fmt: skip
-from nucleo.models import Ano, Descritor, Matriz, MatrizEtapaCC, Tarefa
+from nucleo.models import Ano, Descritor, Matriz, MatrizEtapaCC, Revista, Tarefa
 from nucleo.servicos.matriz import (
     DuplicacaoRecusada,
     diferencas,
@@ -127,10 +127,9 @@ def _matriz(request, pk, permissao=None):
 RenomearForm = modelform_factory(Matriz, form=MatrizForm, fields=["nome"], labels={"nome": "Nome"})
 
 
-def _forms_matriz(m, duplicar=None, renomear=None):
+def _forms_matriz(m, duplicar=None):
     return {
         "duplicar": _estilo(duplicar or DuplicarForm(initial={"nome": f"{m.nome} (cópia)", "ano": m.ano_id})),
-        "renomear": _estilo(renomear or RenomearForm(instance=m)),
     }
 
 
@@ -174,16 +173,15 @@ def duplicar(request, pk):
     return _form_em_dialogo(request, origem, "duplicar", form, f"Duplicar {origem}", reverse("ui_matriz_duplicar", args=[pk]))
 
 
-@require_http_methods(["GET", "POST"])
+@require_POST
 @login_required(login_url="admin:login")
 def renomear(request, pk):
+    """U5: renomear inline no título (componente `nomeInline`), pelo protocolo do autosave (U3).
+    O nome da matriz não entra no texto da revista; o impacto é calculado mesmo assim (U2)."""
     m = _matriz(request, pk, "nucleo.change_matriz")
-    form = RenomearForm(request.POST or None, instance=m)
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success(request, f"Matriz renomeada para {m.nome}.")
-        return _redirecionar(request, reverse("ui_matriz_detalhe", args=[m.pk]))
-    return _form_em_dialogo(request, m, "renomear", form, f"Renomear {m}", reverse("ui_matriz_renomear", args=[pk]))
+    form = form_de_um_campo(RenomearForm, request.POST.get("campo"), request.POST.get("valor", "").strip(), instance=m)
+    revistas = lambda: Revista.objects.filter(projeto__parceiro_ano__matriz=m, arquivada_em__isnull=True)  # noqa: E731
+    return responder_campo(request, form=form, gravar=lambda d: {"valor": form.save().nome}, revistas=revistas, titulo="Renomear")
 
 
 @require_http_methods(["GET", "POST"])

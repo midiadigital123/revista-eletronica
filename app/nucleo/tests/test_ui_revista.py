@@ -88,21 +88,19 @@ class RevistaUiTest(Base):
         self.assertContains(r, "Falta escolher a matriz.")
         self.assertContains(r, f'href="{reverse("ui_projeto", args=[self.projeto_go.pk])}#matriz"')
 
-    def test_editar_nome_do_projeto_na_revista(self):
-        """Item 20 (D-190): na própria revista, com a sessão de bloqueio dela (a ficha abriria só leitura)."""
+    def test_nome_se_edita_so_no_projeto(self):
+        """U5: o "Editar nome" sai da revista; fica o link para o projeto. `acao=nome` é 400."""
         r = self.abrir()
-        self.assertContains(r, "Editar nome")
+        self.assertNotContains(r, "Editar nome")
+        self.assertContains(r, "Editar no projeto")
+        self.assertContains(r, f'href="{reverse("ui_projeto", args=[self.projeto_go.pk])}#nome"')
         dados = {"acao": "nome", "nome": "Projeto Goiás", CAMPO_SESSAO: self.sessao(r)}
-        r = self.client.post(self.url, dados, follow=True)
-        self.assertContains(r, "Nome do projeto salvo: Projeto Goiás.")
-        self.assertEqual(Projeto.objects.get(pk=self.projeto_go.pk).nome, "Projeto Goiás")
-        r = self.client.post(self.url, {"acao": "nome", "nome": "", CAMPO_SESSAO: self.sessao(self.abrir())}, follow=True)
-        self.assertContains(r, "Nome não salvo")
-        self.assertEqual(Projeto.objects.get(pk=self.projeto_go.pk).nome, "Projeto Goiás")
+        self.assertEqual(self.client.post(self.url, dados).status_code, 400)
+        self.assertNotEqual(Projeto.objects.get(pk=self.projeto_go.pk).nome, "Projeto Goiás")
 
-    def test_editar_nome_sem_permissao(self):
+    def test_editar_no_projeto_sem_permissao(self):
         self.client.force_login(usuario("imp-nome", "Impresso"))
-        self.assertNotContains(self.client.get(self.url), "Editar nome")
+        self.assertNotContains(self.client.get(self.url), "Editar no projeto")
         self.assertEqual(self.client.post(self.url, {"acao": "nome", "nome": "X"}).status_code, 403)
 
     def test_htmx_troca_so_a_secao(self):

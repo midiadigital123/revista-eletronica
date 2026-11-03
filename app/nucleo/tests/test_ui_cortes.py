@@ -94,8 +94,8 @@ class GradeUiTest(Base):
 
 
 class RenomearParceiroTest(ProjetoBase):
-    """Item 6 (D-190): renomear pela grade. O nome entra no hash (`nome_parceiro`) e vale para todos
-    os anos; revista validada que mudaria pede confirmação antes."""
+    """Item 6 (D-190), U5: renomear inline na grade, pelo protocolo do autosave (U3). O nome entra no
+    hash (`nome_parceiro`) e vale para todos os anos; revista validada que mudaria pede o modal antes."""
 
     def setUp(self):
         super().setUp()
@@ -104,34 +104,48 @@ class RenomearParceiroTest(ProjetoBase):
         self.rev = self.go["LP"]
         Revista.objects.filter(pk=self.rev.pk).update(hash_validado=hash_validado(self.rev))
 
-    def test_sem_confirmar_abre_modal_e_nao_grava(self):
-        self.assertContains(self.client.get(reverse("cortes", args=[2026])), f'action="{self.url}"')
-        r = self.client.post(self.url, {"nome": "Goiás"})
+    def renomear(self, valor, **extra):
+        return self.client.post(self.url, {"campo": "nome", "valor": valor, "original": "GO", **extra}, **JSON)
+
+    def test_grade_tem_o_nome_inline(self):
+        r = self.client.get(reverse("cortes", args=[2026]))
+        self.assertContains(r, 'x-data="nomeInline"')
+        self.assertContains(r, f'data-url="{self.url}"')
+        self.assertContains(r, 'aria-label="Renomear GO"')
+        self.assertNotContains(r, "<details")
+
+    def test_sem_confirmar_devolve_impacto_e_nao_grava(self):
+        r = self.renomear("Goiás")
         self.assertEqual(r.status_code, 200)
-        self.assertContains(r, "<dialog")
-        self.assertContains(r, "data-abrir-ao-carregar")
-        self.assertContains(r, "Renomear tira o “Validado” de 1 revista(s)")
-        self.assertContains(r, f'data-form="renomear-{self.go_parceiro.pk}"')
-        self.assertContains(r, str(self.rev))
-        self.assertContains(r, 'value="Goiás" data-original="GO"')
+        corpo = r.json()
+        self.assertFalse(corpo["ok"])
+        self.assertEqual(corpo["impacto"]["perdem"], [str(self.rev)])
+        self.assertIn("Renomear tira o “Validado” de 1 revista(s)", corpo["impacto"]["html"])
         self.assertEqual(Parceiro.objects.get(pk=self.go_parceiro.pk).nome, "GO")
         self.assertTrue(esta_validada(self.rev))
 
     def test_confirmado_grava_e_tira_validado(self):
-        r = self.client.post(self.url, {"nome": "Goiás", "confirmar_impacto": "on"}, follow=True)
-        self.assertContains(r, "Parceiro renomeado para Goiás. 1 revista(s) perderam o “Validado”.")
+        corpo = self.renomear("Goiás", confirmar_impacto="on").json()
+        self.assertTrue(corpo["ok"])
+        self.assertEqual((corpo["valor"], corpo["perderam"]), ("Goiás", 1))
         self.assertEqual(Parceiro.objects.get(pk=self.go_parceiro.pk).nome, "Goiás")
         self.assertFalse(esta_validada(self.rev))
 
     def test_sem_validada_grava_direto(self):
         Revista.objects.filter(pk=self.rev.pk).update(hash_validado=None)
-        r = self.client.post(self.url, {"nome": "Goiás"})
-        self.assertRedirects(r, reverse("cortes", args=[2026]), fetch_redirect_response=False)
+        corpo = self.renomear("Goiás").json()
+        self.assertTrue(corpo["ok"])
         self.assertEqual(Parceiro.objects.get(pk=self.go_parceiro.pk).nome, "Goiás")
 
-    def test_nome_repetido_e_impresso(self):
-        r = self.client.post(self.url, {"nome": "PE", "confirmar_impacto": "on"}, follow=True)
-        self.assertContains(r, "Parceiro não renomeado")
+    def test_422_vazio_ou_repetido(self):
+        for valor in ("", "PE"):
+            r = self.renomear(valor, confirmar_impacto="on")
+            self.assertEqual(r.status_code, 422, valor)
+            self.assertTrue(r.json()["erros"])
+        self.assertEqual(Parceiro.objects.get(pk=self.go_parceiro.pk).nome, "GO")
+
+    def test_impresso_nao_ve_e_recebe_403(self):
         self.client.force_login(self.imp)
-        self.assertNotContains(self.client.get(reverse("cortes", args=[2026])), f'action="{self.url}"')
-        self.assertEqual(self.client.post(self.url, {"nome": "X", "confirmar": "1"}).status_code, 403)
+        self.assertNotContains(self.client.get(reverse("cortes", args=[2026])), 'x-data="nomeInline"')
+        self.assertEqual(self.renomear("X").status_code, 403)
+        self.assertEqual(Parceiro.objects.get(pk=self.go_parceiro.pk).nome, "GO")

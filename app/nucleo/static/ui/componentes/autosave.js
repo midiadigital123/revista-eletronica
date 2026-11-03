@@ -90,6 +90,7 @@ document.addEventListener("alpine:init", () => {
     },
     async enviar(c, confirmar) {
       if (this.desligado) return;
+      if (!confirmar && this.impacto?.campo === c) return; // Enter manda e o change do Enter também: um modal só
       const atual = valor(c);
       if (!confirmar && atual === gravado(c)) {
         this.limpar(c); // voltou ao gravado: nada a enviar
@@ -148,6 +149,7 @@ document.addEventListener("alpine:init", () => {
       if (linha) for (const o of controles(linha)) if (o !== c && !enviando.has(o)) salvos.set(o, valor(o));
       salvoEm = corpo.salvo_em;
       this.limpar(c);
+      c.dispatchEvent(new CustomEvent("autosave:salvo", { bubbles: true, detail: { valor: valor(c) } })); // nomeInline (U5)
     },
     limpar(c) {
       const linha = daLinha(c);

@@ -455,3 +455,13 @@ table.diff .diff_next { display: none; }
   .lado-a-lado > .lista { position: static; max-height: 16rem; }
   .diff-lado > div + div { border-left-width: 0; border-top-width: 1px; }
 }
+
+/* Renomear inline (U5, _componentes/nome_inline.html): texto + lápis; o campo entra no lugar. */
+.nome-inline { display: inline-flex; align-items: center; gap: 0.25rem; max-width: 100%; min-width: 0; }
+.nome-inline-texto { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nome-inline-lapis { width: 2rem; padding: 0; flex: none; color: var(--muted-foreground); }
+.nome-inline-lapis:hover { color: var(--foreground); }
+.nome-inline-lapis svg { width: 0.875rem; height: 0.875rem; }
+.nome-inline-campo { display: inline-flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+.nome-inline-campo .input { width: 100%; min-width: 8rem; font: inherit; }
+.grade-parceiro .nome-inline-campo .input { height: 2rem; }
