@@ -24,6 +24,11 @@ from nucleo.tests.test_painel import completar
 from nucleo.tests.test_preview import SVG
 from nucleo.tests.test_resolver import F1, usuario
 
+PNG = bytes.fromhex(
+    "89504e470d0a1a0a0000000d4948445200000001000000010802000000907753de"
+    "0000000c49444154789c63f8ff9f0100050001fe0b2d0bc20000000049454e44ae426082"
+)
+
 INTRO = "secao__F1__introducao"
 HTMX = {"HTTP_HX_REQUEST": "true"}
 
@@ -73,36 +78,37 @@ class RevistaUiTest(Base):
         self.assertRedirects(self.client.get(reverse("ui_revista_inicio")), reverse("ui_revista", args=[2026]))
 
         r = self.abrir()
-        for texto in ("Salvar seção", "Salvar templates", "Salvar arquivos", "Não validado", 'id="bloqueio-sessao"'):
+        for texto in ("Salvar seção", 'x-data="campoAuto"', 'x-data="arquivoSoltar"', "Validar revista", 'id="bloqueio-sessao"'):
             self.assertContains(r, texto)
+        for texto in ("Salvar templates", "Salvar arquivos", "Trocar SVG do F2"):  # U8b: salva ao escolher
+            self.assertNotContains(r, texto)
         self.assertContains(r, f'href="{reverse("preview", args=[self.rev.pk])}" target="_blank"')
         self.assertContains(r, f'{reverse("ui_impresso", args=[2026])}?revista={self.rev.pk}')
         self.assertTrue(bloqueio.quem_bloqueia(self.projeto_go))  # abrir trava o projeto (D-140)
         self.assertEqual(self.client.get(reverse("ui_revista_editar", args=[2025, self.rev.pk])).status_code, 404)
 
-    def test_faixa_sem_matriz_leva_a_ficha_do_projeto(self):
-        """Item 21 (D-190)."""
-        self.assertNotContains(self.abrir(), "Falta escolher a matriz.")
+    def test_sem_matriz_leva_a_ficha_do_projeto(self):
+        """Item 21 (D-190); U8b: na lista da coluna Situação, sem faixa vermelha."""
+        self.assertNotContains(self.abrir(), "Falta escolher a matriz")
         ParceiroAno.objects.filter(pk=self.projeto_go.parceiro_ano_id).update(matriz=None)
         r = self.abrir()
-        self.assertContains(r, "Falta escolher a matriz.")
+        self.assertContains(r, "Falta escolher a matriz do parceiro no ano.", count=1)
         self.assertContains(r, f'href="{reverse("ui_projeto", args=[self.projeto_go.pk])}#matriz"')
+        self.assertNotContains(r, "faixa-vermelha")
 
-    def test_editar_nome_do_projeto_na_revista(self):
-        """Item 20 (D-190): na própria revista, com a sessão de bloqueio dela (a ficha abriria só leitura)."""
+    def test_nome_se_edita_so_no_projeto(self):
+        """U5: o "Editar nome" sai da revista; fica o link para o projeto. `acao=nome` é 400."""
         r = self.abrir()
-        self.assertContains(r, "Editar nome")
+        self.assertNotContains(r, "Editar nome")
+        self.assertContains(r, "Editar no projeto")
+        self.assertContains(r, f'href="{reverse("ui_projeto", args=[self.projeto_go.pk])}#nome"')
         dados = {"acao": "nome", "nome": "Projeto Goiás", CAMPO_SESSAO: self.sessao(r)}
-        r = self.client.post(self.url, dados, follow=True)
-        self.assertContains(r, "Nome do projeto salvo: Projeto Goiás.")
-        self.assertEqual(Projeto.objects.get(pk=self.projeto_go.pk).nome, "Projeto Goiás")
-        r = self.client.post(self.url, {"acao": "nome", "nome": "", CAMPO_SESSAO: self.sessao(self.abrir())}, follow=True)
-        self.assertContains(r, "Nome não salvo")
-        self.assertEqual(Projeto.objects.get(pk=self.projeto_go.pk).nome, "Projeto Goiás")
+        self.assertEqual(self.client.post(self.url, dados).status_code, 400)
+        self.assertNotEqual(Projeto.objects.get(pk=self.projeto_go.pk).nome, "Projeto Goiás")
 
-    def test_editar_nome_sem_permissao(self):
+    def test_editar_no_projeto_sem_permissao(self):
         self.client.force_login(usuario("imp-nome", "Impresso"))
-        self.assertNotContains(self.client.get(self.url), "Editar nome")
+        self.assertNotContains(self.client.get(self.url), "Editar no projeto")
         self.assertEqual(self.client.post(self.url, {"acao": "nome", "nome": "X"}).status_code, 403)
 
     def test_htmx_troca_so_a_secao(self):
@@ -120,7 +126,7 @@ class RevistaUiTest(Base):
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, "Só leitura: seu perfil vê a revista")
         self.assertContains(r, " readonly>")
-        for texto in ("Salvar seção", "Salvar templates", "Salvar arquivos", 'id="botao-validado"', 'id="bloqueio-sessao"'):
+        for texto in ("Salvar seção", 'x-data="campoAuto"', 'x-data="arquivoSoltar"', 'id="botao-validado"', 'id="bloqueio-sessao"'):
             self.assertNotContains(r, texto)
         self.assertFalse(bloqueio.quem_bloqueia(self.projeto_go))
         for acao in ("secao", "templates", "arquivos", "validar"):
@@ -147,7 +153,7 @@ class RevistaUiTest(Base):
         r = self.secao(valor="Meu **texto**.")
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, "Textos do F1 salvos: introducao.")
-        self.assertContains(r, 'id="validado"')  # a página volta inteira; o hx-select-oob troca o card
+        self.assertContains(r, 'id="situacao"')  # a página volta inteira; o hx-select-oob troca a Situação
         copia = RevistaSecao.objects.get()
         self.assertEqual((copia.revista_fasciculo, copia.secao, copia.texto), (self.rf, "introducao", "Meu **texto**."))
         self.assertNotEqual(hash_validado(carregar(self.rev.pk)), antes)
@@ -185,63 +191,115 @@ class RevistaUiTest(Base):
         self.secao(self.abrir(), descartar__F1__introducao="on")
         self.assertFalse(RevistaSecao.objects.exists())
 
-    # --- 5. template por fascículo --------------------------------------------------------------
+    # --- 5. template por fascículo (U8b: autosave + modal) --------------------------------------
 
-    def postar_templates(self, aberta, **troca):
-        dados = {"acao": "templates", CAMPO_SESSAO: self.sessao(aberta)}
-        for rf in RevistaFasciculo.objects.filter(revista=self.rev):
-            dados[f"{rf.fasciculo}-template"] = rf.template_id
-        return self.client.post(self.url, {**dados, **troca}, **HTMX)
+    def campo(self, acao, aberta=None, files=None, **dados):
+        """POST do autosave (protocolo do U3) da página `aberta`, na rota da revista com `?acao=`."""
+        aberta = aberta or self.abrir()
+        dados = {CAMPO_SESSAO: self.sessao(aberta), "form_id": "revista-form", **dados}
+        return self.client.post(f"{self.url}?acao={acao}", {**dados, **(files or {})}, HTTP_ACCEPT="application/json")
 
-    def test_trocar_template_com_copias_pede_a_frase(self):
-        self.secao(valor="Meu texto.")
+    def outro_template(self):
         outro = Template.objects.create(ano=self.ano, componente=self.lp, fasciculo="F1", nome="Outro")
         TemplateVersao.objects.create(template=outro, numero=1, texto=F1.replace("Fim.", "Outro fim."))
-        aberta = self.abrir()
-        self.assertContains(aberta, "<code>descartar 1 cópia</code>")
-        self.assertContains(aberta, f'<option value="{outro.pk}">Outro (F1)</option>')
+        return outro
 
-        r = self.postar_templates(aberta, **{"F1-template": outro.pk})
-        self.assertEqual(r.status_code, 200)
-        self.assertContains(r, "digite “descartar 1 cópia”")
-        self.assertContains(r, "Nada foi gravado")
+    def test_trocar_template_salva_sozinho_e_troca_textos_e_situacao(self):
+        outro = self.outro_template()
+        aberta = self.abrir()
+        self.assertContains(aberta, f'<option value="{outro.pk}">Outro (F1)</option>')
+        r = self.campo("templates", aberta, campo="F1-template", valor=outro.pk, original=self.rf.template_id)
+        corpo = r.json()
+        self.assertTrue(corpo["ok"], corpo)
+        self.assertEqual(set(corpo["trocar"]), {"textos", "situacao"})
+        self.assertIn('id="situacao"', corpo["trocar"]["situacao"])
+        self.assertEqual(RevistaFasciculo.objects.get(pk=self.rf.pk).template, outro)
+        self.assertTrue(bloqueio.quem_bloqueia(self.projeto_go))  # o autosave segue com o bloqueio da aba
+
+    def test_trocar_template_com_copias_pede_modal(self):
+        self.secao(valor="Meu texto.")
+        outro = self.outro_template()
+        aberta = self.abrir()
+        self.assertNotContains(aberta, "descartar 1 cópia")  # a frase só aparece no modal
+        corpo = self.campo("templates", aberta, campo="F1-template", valor=outro.pk).json()
+        self.assertFalse(corpo["ok"])
+        html = corpo["impacto"]["html"]
+        self.assertIn("apaga 1 cópia(s) de seção", html)
+        self.assertIn("<code>descartar 1 cópia</code>", html)
+        self.assertIn('name="confirmacao"', html)
         self.assertEqual(RevistaFasciculo.objects.get(pk=self.rf.pk).template, self.templates["LP", "F1"])
 
-        r = self.postar_templates(aberta, **{"F1-template": outro.pk, "F1-confirmacao": "descartar 1 cópia"})
-        self.assertEqual(r["HX-Redirect"], self.url)
+        r = self.campo("templates", aberta, campo="F1-template", valor=outro.pk, confirmar_impacto="on", confirmacao="errado")
+        self.assertEqual(r.status_code, 422)
+        self.assertIn("descartar 1 cópia", r.json()["erros"][0])
+        self.assertTrue(RevistaSecao.objects.exists())
+
+        r = self.campo("templates", aberta, campo="F1-template", valor=outro.pk, confirmar_impacto="on", confirmacao="descartar 1 cópia")
+        self.assertTrue(r.json()["ok"])
         self.assertEqual(RevistaFasciculo.objects.get(pk=self.rf.pk).template, outro)
         self.assertFalse(RevistaSecao.objects.exists())
-        self.assertFalse(bloqueio.quem_bloqueia(self.projeto_go))  # HX-Redirect libera
-        r = self.client.get(self.url)
-        self.assertIn("Template do F1 trocado: 1 cópia de seção descartada.", mensagens(r))
-        self.assertIn("Templates salvos.", mensagens(r))
 
-    # --- 6. arquivos ------------------------------------------------------------------------------
+    def test_trocar_template_de_validada_pede_modal(self):
+        completar(self.rev)
+        Revista.objects.filter(pk=self.rev.pk).update(hash_validado=hash_validado(carregar(self.rev.pk)))
+        outro = self.outro_template()
+        corpo = self.campo("templates", campo="F1-template", valor=outro.pk).json()
+        self.assertEqual(corpo["impacto"]["perdem"], [str(self.rev)])
+        self.assertEqual(RevistaFasciculo.objects.get(pk=self.rf.pk).template, self.templates["LP", "F1"])
 
-    def arquivos(self, aberta, **arquivos):
-        return self.client.post(self.url, {"acao": "arquivos", CAMPO_SESSAO: self.sessao(aberta), **arquivos}, follow=True)
+    def test_template_de_outro_lugar_ou_campo_estranho_422(self):
+        for campo, valor in (("F1-template", self.templates["LP", "F2"].pk), ("F9-template", ""), ("acao", "x")):
+            r = self.campo("templates", campo=campo, valor=valor)
+            self.assertEqual(r.status_code, 422, campo)
+        self.assertEqual(RevistaFasciculo.objects.get(pk=self.rf.pk).template, self.templates["LP", "F1"])
 
-    def test_svg_com_id_faltando_grava_e_avisa(self):
-        r = self.arquivos(self.abrir(), arquivo_svg=SimpleUploadedFile("f2.svg", SVG_SEM_BOTAO))
-        self.assertRedirects(r, self.url)
-        aviso = next(m for m in mensagens(r) if "Ids que faltam" in m)
-        self.assertIn("<strong>btn-action-p2</strong>", aviso)
-        self.assertIn("Arquivos salvos.", mensagens(r))
+    # --- 6. arquivos (U8b: arquivoSoltar, envio ao escolher) --------------------------------------
+
+    def arquivo(self, campo, nome, dados, aberta=None, **extra):
+        return self.campo("arquivos", aberta, files={"valor": SimpleUploadedFile(nome, dados)}, campo=campo, **extra)
+
+    def test_svg_com_id_faltando_grava_e_mostra_os_ids(self):
+        corpo = self.arquivo("arquivo_svg", "f2.svg", SVG_SEM_BOTAO).json()
+        self.assertTrue(corpo["ok"], corpo)
+        self.assertEqual(set(corpo["trocar"]), {"arquivos", "situacao"})
+        self.assertIn("Ids que faltam no SVG: btn-action-p2.", corpo["trocar"]["situacao"])  # a pendência, só lá
+        self.assertIn(reverse("admin:nucleo_revista_gabarito_ids", args=[self.rev.pk]), corpo["trocar"]["arquivos"])
         self.assertEqual(Revista.objects.get(pk=self.rev.pk).svg_ids, ["fundo", "passo1", "passo2", "outro"])
-        self.assertContains(r, "Ids que faltam no SVG: <strong>btn-action-p2</strong>")
-        self.assertContains(r, reverse("admin:nucleo_revista_gabarito_ids", args=[self.rev.pk]))
 
-    def test_arquivo_invalido_mostra_erro_e_nao_grava(self):
-        r = self.arquivos(
-            self.abrir(), arquivo_svg=SimpleUploadedFile("f2.svg", b"<html/>"), arquivo_capa=SimpleUploadedFile("c.png", b"GIF89a")
-        )
-        self.assertEqual(r.status_code, 200)
-        self.assertContains(r, "O arquivo não é um SVG.")
-        self.assertContains(r, "Capa precisa ser PNG, JPG ou WebP.")
-        self.assertContains(r, "Nada foi gravado")
+    def test_capa_grava_e_mostra_a_miniatura(self):
+        corpo = self.arquivo("arquivo_capa", "c.png", PNG).json()
+        self.assertTrue(corpo["ok"], corpo)
+        self.assertIn(reverse("preview_capa", args=[self.rev.pk]), corpo["trocar"]["arquivos"])
+        self.assertTrue(Revista.objects.get(pk=self.rev.pk).capa)
+
+    def test_arquivo_invalido_422_e_nao_grava(self):
+        r = self.arquivo("arquivo_svg", "f2.svg", b"<html/>")
+        self.assertEqual(r.status_code, 422)
+        self.assertIn("O arquivo não é um SVG.", r.json()["erros"][0])
+        r = self.arquivo("arquivo_capa", "c.png", b"GIF89a")
+        self.assertEqual(r.json()["erros"], ["Capa precisa ser PNG, JPG ou WebP."])
+        r = self.arquivo("svg_f2", "f2.svg", SVG)  # só os dois campos de arquivo
+        self.assertEqual(r.status_code, 422)
         rev = Revista.objects.get(pk=self.rev.pk)
-        self.assertIsNone(rev.svg_f2)
-        self.assertIsNone(rev.capa)
+        self.assertFalse(rev.svg_f2)
+        self.assertFalse(rev.capa)
+
+    def test_upload_svg_grande_422_com_mensagem(self):
+        r = self.arquivo("arquivo_svg", "f2.svg", b" " * (3 * 2**20 + 1))
+        self.assertEqual(r.status_code, 422)
+        self.assertEqual(r.json()["erros"], ["SVG maior que 3 MB: reduza e envie de novo."])
+        self.assertFalse(Revista.objects.get(pk=self.rev.pk).svg_f2)
+
+    def test_capa_nova_em_validada_pede_modal(self):
+        completar(self.rev)
+        Revista.objects.filter(pk=self.rev.pk).update(hash_validado=hash_validado(carregar(self.rev.pk)))
+        aberta = self.abrir()
+        corpo = self.arquivo("arquivo_capa", "c.png", PNG, aberta).json()
+        self.assertEqual(corpo["impacto"]["perdem"], [str(self.rev)])
+        self.assertEqual(Revista.objects.get(pk=self.rev.pk).capa, "capas/x.png")
+        corpo = self.arquivo("arquivo_capa", "c.png", PNG, aberta, confirmar_impacto="on").json()
+        self.assertTrue(corpo["ok"])
+        self.assertNotEqual(Revista.objects.get(pk=self.rev.pk).capa, "capas/x.png")
 
     # --- 7. Validado ---------------------------------------------------------------------------
 
@@ -261,13 +319,37 @@ class RevistaUiTest(Base):
         self.assertEqual(Revista.objects.get(pk=self.rev.pk).hash_validado, hash_)
         r = self.client.get(self.url)
         self.assertIn("Revista validada.", mensagens(r))
-        self.assertContains(r, "Por ped em")
+        self.assertContains(r, "Validada por ped em")
         self.assertNotContains(r, 'id="botao-validado"')
 
-    def test_validado_desabilitado_com_pendencias(self):
+    def test_validar_desabilitado_com_motivo(self):
         r = self.abrir()
-        self.assertContains(r, 'id="botao-validado" disabled')
-        self.assertContains(r, "Pendências que impedem")
+        self.assertContains(r, 'id="botao-validado" disabled aria-describedby="validar-motivo"')
+        self.assertContains(r, 'id="validar-motivo">Resolva as pendências acima para validar.')
+        completar(self.rev)
+        r = self.abrir()
+        self.assertContains(r, '<button class="btn" type="submit" id="botao-validado">')
+        self.assertNotContains(r, "validar-motivo")
+
+    def test_pendencias_aparecem_uma_vez(self):
+        """U8b: uma lista só, na coluna Situação (antes: caixa rosa + faixas + selects)."""
+        RevistaFasciculo.objects.filter(revista=self.rev, fasciculo="F2").update(template=None)
+        r = self.abrir()
+        pendencias = r.context["validacao"]["pendencias"]
+        self.assertGreaterEqual(len(pendencias), 3)  # template do F2, SVG, capa
+        for p in pendencias:
+            self.assertContains(r, p.mensagem, count=1)
+        self.assertContains(r, 'href="#templates"')
+        self.assertContains(r, 'href="#arquivos"')
+        for texto in ("faixa-vermelha", "caixa-erro", "Pendências que impedem", "não salvo não entra"):
+            self.assertNotContains(r, texto)
+
+    def test_textos_sem_template_mostra_estado_vazio(self):
+        RevistaFasciculo.objects.filter(revista=self.rev, fasciculo="F2").update(template=None)
+        r = self.abrir()
+        self.assertContains(r, "Escolha os templates acima")
+        self.assertNotContains(r, "faixa-vermelha")
+        self.assertNotContains(r, 'name="secao__F1__')
 
     # --- 9. bloqueio -------------------------------------------------------------------------
 

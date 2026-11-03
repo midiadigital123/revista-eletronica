@@ -97,7 +97,7 @@ def _erro(msg):
 def _ler(arquivo, limite, nome):
     dados = arquivo if isinstance(arquivo, bytes) else arquivo.read(limite + 1)
     if len(dados) > limite:
-        _erro(f"{nome} acima de {limite // MB} MB.")
+        _erro(f"{nome} maior que {limite // MB} MB: reduza e envie de novo.")
     return dados
 
 

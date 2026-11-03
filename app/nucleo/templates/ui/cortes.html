@@ -10,7 +10,7 @@
   </div>
   {% if ano %}
   <div class="acoes">
-    {% if pode_gravar %}{% include "ui/_componentes/status_salvo.html" %}{% endif %}
+    {% if pode_gravar or perms.nucleo.change_parceiro %}{% include "ui/_componentes/status_salvo.html" %}{% endif %}
     <a class="btn btn-outline" href="{% url 'admin:nucleo_corte_exportar' %}?ano={{ ano.ano }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>
       Baixar planilha de grupos
@@ -32,8 +32,9 @@
 {% include "ui/_componentes/so_leitura.html" with texto="Só leitura: seu perfil vê os cortes, mas não altera. Para editar, peça a permissão de cortes a um administrador." %}
 {% endif %}
 
-{# U3: cada célula salva sozinha ao sair dela (componente campoAuto, rota cortes_celula, com o `original` da célula). #}
-<form method="post" class="grade" id="grade" data-grade{% if pode_gravar %} x-data="campoAuto" data-url="{% url 'cortes_celula' ano.ano %}"{% endif %}>{% csrf_token %}
+{% comment %}U3: cada célula salva sozinha ao sair dela (componente campoAuto, rota cortes_celula, com o `original` da célula).
+U5: o nome do parceiro também (nomeInline: o data-url dele troca a rota para cortes_renomear_parceiro).{% endcomment %}
+<form method="post" class="grade" id="grade" data-grade{% if pode_gravar or perms.nucleo.change_parceiro %} x-data="campoAuto" data-url="{% url 'cortes_celula' ano.ano %}"{% endif %}>{% csrf_token %}
   {% if pode_gravar %}<p class="mudo">De 1 a 4 cortes inteiros e crescentes, separados por vírgula, maiores que 0 e menores que o máximo da escala da etapa. Célula vazia apaga o corte. Cada célula salva sozinha ao sair dela.</p>{% endif %}
   <div class="tabela-caixa grade-caixa">
     <table class="tabela">
@@ -47,14 +48,7 @@
       <tbody>
       {% for linha in linhas %}
         <tr{% if linha.erros %} class="grade-com-erro"{% endif %} data-parceiro="{{ linha.parceiro.nome }}">
-          <th scope="row" class="grade-parceiro">{{ linha.parceiro.nome }}
-            {% if perms.nucleo.change_parceiro %}{# campos do form de renomear (abaixo da grade) pelo atributo form=: form não aninha #}
-            {% with pedido=renomear.pk|default:0 %}<details class="grade-renomear"{% if pedido == linha.parceiro.pk %} open{% endif %}><summary class="link">Renomear</summary>
-              <label class="sr-only" for="renomear-nome-{{ linha.parceiro.pk }}">Novo nome de {{ linha.parceiro.nome }}</label>
-              <input class="input" id="renomear-nome-{{ linha.parceiro.pk }}" name="nome" form="renomear-{{ linha.parceiro.pk }}" value="{% if pedido == linha.parceiro.pk %}{{ renomear.nome }}{% else %}{{ linha.parceiro.nome }}{% endif %}" data-original="{{ linha.parceiro.nome }}" required maxlength="200">
-              <button class="btn btn-outline btn-sm" type="submit" form="renomear-{{ linha.parceiro.pk }}">Renomear</button>
-            </details>{% endwith %}{% endif %}
-          </th>
+          <th scope="row" class="grade-parceiro">{% if perms.nucleo.change_parceiro %}{% url 'cortes_renomear_parceiro' ano.ano linha.parceiro.pk as url %}{% include "ui/_componentes/nome_inline.html" with nome=linha.parceiro.nome %}{% else %}{{ linha.parceiro.nome }}{% endif %}</th>
           {% for cel in linha.celulas %}<td{% if cel.inicio %} class="grade-inicio"{% endif %}><input class="input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" name="c-{{ cel.chave }}" value="{{ cel.texto }}" aria-label="{{ cel.titulo }}"{% if cel.invalida %} aria-invalid="true"{% endif %}{% if linha.erros %} aria-describedby="erros-{{ linha.parceiro.pk }}"{% endif %}{% if not pode_gravar %} readonly{% endif %}></td>{% endfor %}
         </tr>
         {% if linha.erros %}
@@ -70,10 +64,6 @@
   </div>
 </form>
 
-{% if perms.nucleo.change_parceiro %}{% for linha in linhas %}
-<form id="renomear-{{ linha.parceiro.pk }}" method="post" action="{% url 'cortes_renomear_parceiro' ano.ano linha.parceiro.pk %}" hidden>{% csrf_token %}</form>
-{% if renomear.pk == linha.parceiro.pk %}{% include "ui/_componentes/impacto.html" with form_id=renomear.form_id acao="Renomear" perdem=renomear.perdem %}{% endif %}
-{% endfor %}{% endif %}
 
 {% if perms.nucleo.add_parceiro %}
 {# U4: logo abaixo da grade, o botão abre a linha do parceiro novo com o foco no nome (componente linhaNova); #}

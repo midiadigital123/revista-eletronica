@@ -10,10 +10,13 @@
 //     npx playwright test revista-textos
 // Grava de verdade: cada execução cria uma versão nova do template "Padrão" LP F1 de 2026 e
 // termina sem cópia na revista DEMONSTRAÇÃO (descartada no fim). Use num banco de desenvolvimento.
+import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { entrar, liberarBloqueio } from "./helpers";
 
 const INTRO = "#id_secao__F1__introducao";
+const SVG = path.join(__dirname, "../../nucleo/tests/fixtures/f2-lp.svg");
+const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mP4/5oBAATXAesdPD2pAAAAAElFTkSuQmCC", "base64");
 
 test("revista: cópia por seção, aviso com diff e descartar", async ({ page }) => {
   const erros: string[] = [];
@@ -64,4 +67,92 @@ test("revista: cópia por seção, aviso com diff e descartar", async ({ page })
   expect(erros).toEqual([]);
 
   await liberarBloqueio(page);
+});
+
+// U8b: página da revista em duas colunas. Monta um parceiro "E2E Revista <sufixo>" com cortes de LP
+// (a cascata cria projeto e revista sem template), matriz pelo lote e nome do projeto; na revista:
+// templates salvam ao escolher e liberam "Textos", o SVG vai pelo clique e a capa por soltar (miniatura
+// + "Salvo às"), a Situação chega a 6 de 6 e "Validar revista" valida. Os dados ficam no banco.
+test("revista: templates, arquivos por soltar e validar pela coluna Situação", async ({ page }) => {
+  const erros: string[] = [];
+  page.on("pageerror", (e) => erros.push(e.message));
+  const nome = `E2E Revista ${Date.now().toString(36).toUpperCase()}`;
+  const salvo = page.locator("[data-status-salvo]").getByText(/Salvo às \d/);
+
+  await entrar(page, "/cortes/2026/");
+  await page.fill("#novo-parceiro", nome);
+  await page.getByRole("button", { name: "Adicionar parceiro" }).click();
+  for (const coluna of ["5EF LP", "9EF LP"]) {
+    const salvou = page.waitForResponse((r) => r.url().includes("/celula/") && r.status() === 200);
+    await page.getByLabel(`${nome} ${coluna}`, { exact: true }).fill("150, 200, 250, 300");
+    await page.keyboard.press("Tab");
+    await salvou;
+  }
+  await page.goto("/ui/lotes/2026/matriz/");
+  await page.getByLabel(nome, { exact: true }).check();
+  await page.selectOption("#lote-matriz", { label: "Demonstração" });
+  await page.getByRole("button", { name: "Aplicar aos selecionados" }).click();
+  await expect(page.locator("#mensagens")).toContainText("escolhida para 1 parceiro(s)");
+  await page.goto("/ui/lotes/2026/template/");
+  await page.locator("nav a", { hasText: /^LP$/ }).click();
+  const revista = await page.getByLabel(nome).getAttribute("value");
+  await page.goto("/ui/projeto/ano/2026/");
+  await page.getByRole("link", { name: nome }).first().click();
+  await page.fill("#id_nome", `${nome} projeto`);
+  await page.press("#id_nome", "Tab");
+  await expect(salvo).toBeVisible();
+  await liberarBloqueio(page);
+
+  await page.goto(`/ui/revista/2026/${revista}/`);
+  const situacao = page.locator("#situacao");
+  await expect(situacao).toContainText("2 de 6 prontos");
+  await expect(situacao.getByRole("link", { name: "Falta escolher o template do F1." })).toHaveAttribute("href", "#templates");
+  await expect(page.locator("#botao-validado")).toBeDisabled();
+  await expect(page.locator("#validar-motivo")).toHaveText("Resolva as pendências acima para validar.");
+  await expect(page.locator("#textos")).toContainText("Escolha os templates acima");
+
+  // 1. Templates: salvam ao escolher; com os dois, "Textos" libera.
+  await page.selectOption("#template-F1", { label: "Padrão (F1)" });
+  await expect(salvo).toBeVisible();
+  await page.selectOption("#template-F2", { label: "Padrão (F2)" });
+  await expect(page.locator("#textos textarea")).toBeVisible();
+  await expect(situacao).not.toContainText("Falta escolher o template");
+
+  // 1b. Trocar o template de um fascículo com cópia de seção: o modal pede a frase (D-171); Esc volta o select.
+  await page.locator("#textos textarea").fill("Texto E2E da revista.");
+  await page.getByRole("button", { name: "Salvar seção" }).click();
+  await expect(page.locator("#mensagens")).toContainText("Textos do F1 salvos");
+  const padrao = await page.locator("#template-F1").inputValue();
+  const modal = page.getByRole("dialog", { name: "Trocar o template do F1 apaga 1 cópia(s) de seção" });
+  await page.selectOption("#template-F1", "");
+  await expect(modal).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(modal).toBeHidden();
+  await expect(page.locator("#template-F1")).toHaveValue(padrao);
+  await page.selectOption("#template-F1", "");
+  await modal.getByLabel(/Para confirmar/).fill("descartar 1 cópia");
+  await modal.getByRole("button", { name: "Trocar o template do F1 e apagar cópias" }).click();
+  await expect(page.locator("#textos")).toContainText("Escolha os templates acima");
+  await page.selectOption("#template-F1", padrao);
+  await expect(page.locator("#textos textarea")).toBeVisible();
+
+  // 2. SVG pelo clique (input do rótulo) e capa por soltar: envia ao escolher e troca a parte de arquivos.
+  await page.setInputFiles("#arquivo-svg", SVG);
+  await expect(page.locator("#arquivos")).toContainText("SVG enviado");
+  const transfer = await page.evaluateHandle((b64) => {
+    const dt = new DataTransfer();
+    const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    dt.items.add(new File([bytes], "capa.png", { type: "image/png" }));
+    return dt;
+  }, PNG.toString("base64"));
+  await page.dispatchEvent("label[for=arquivo-capa]", "drop", { dataTransfer: transfer });
+  await expect(page.locator("#arquivos img.revista-capa")).toBeVisible();
+  await expect(salvo).toBeVisible();
+
+  // 3. Sem pendência: "Validar revista" primário; validar mostra quem validou.
+  await expect(situacao).toContainText("6 de 6 prontos");
+  await page.locator("#botao-validado").click();
+  await expect(page.locator("#situacao")).toContainText("Validada por");
+  await liberarBloqueio(page);
+  expect(erros).toEqual([]);
 });

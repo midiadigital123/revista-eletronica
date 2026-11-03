@@ -10,6 +10,10 @@
 // ao confirmar põe confirmar_impacto=on no form e chama requestSubmit(): o submit é interceptado
 // aqui e o campo vai de novo, confirmado. Cancelar/Esc volta o valor gravado e o foco ao campo.
 // 409 sem `atual` (bloqueio perdido) e 403: o form inteiro vira só leitura, como no bloqueio.js.
+// Campos do modal (ex.: a frase "descartar N cópia(s)") vão junto ao confirmar. Resposta 200 com
+// `trocar` ({id: html}): troca essas partes da página (o que a gravação mudou fora do campo).
+// Arquivo só dentro de [data-soltar] (componente `arquivoSoltar`, abaixo): envia o arquivo em `valor`.
+// Eventos no campo, para os componentes de cima: autosave:salvo, autosave:falhou, autosave:cancelado.
 document.addEventListener("alpine:init", () => {
   "use strict";
 
@@ -31,6 +35,19 @@ document.addEventListener("alpine:init", () => {
   };
   const daLinha = (c) => c.closest("[data-linha]");
   const controles = (raiz) => [...raiz.querySelectorAll("input[name], select[name], textarea[name]")];
+
+  // U8b: troca partes da página pelo HTML que a resposta trouxe (o Alpine inicia o que entrar).
+  const trocar = (pedacos) => {
+    for (const [id, html] of Object.entries(pedacos)) {
+      const velho = document.getElementById(id);
+      if (!velho) continue;
+      const molde = document.createElement("template");
+      molde.innerHTML = html.trim();
+      const novo = molde.content.firstElementChild;
+      velho.replaceWith(novo);
+      if (window.htmx) window.htmx.process(novo); // links da lista de seções, form da seção, Validar
+    }
+  };
 
   // Um status para a página inteira: erro vence envio, envio vence salvo.
   const avisar = () => {
@@ -55,7 +72,7 @@ document.addEventListener("alpine:init", () => {
     },
     automatico(c) {
       return (
-        !this.desligado && c.name && c.form === this.$root && c.type !== "hidden" && c.type !== "file" &&
+        !this.desligado && c.name && c.form === this.$root && c.type !== "hidden" && (c.type !== "file" || !!c.closest("[data-soltar]")) &&
         c.type !== "submit" && !c.disabled && !c.readOnly && !c.closest("[data-manual]") && !!c.closest("[data-url]")
       );
     },
@@ -75,21 +92,23 @@ document.addEventListener("alpine:init", () => {
         if (!this.impacto) return; // modal do envio da página (U2, ex.: Incluir tarefa): segue o POST
         e.preventDefault();
         confirmar.value = "";
-        const { campo } = this.impacto;
+        const { campo, dialogo } = this.impacto;
+        const extra = controles(dialogo).map((o) => [o.name, o.value]); // ex.: a frase de descarte
         this.impacto = null; // o `close` do modal, que chega depois, não é cancelamento
-        this.enfileirar(campo, true);
+        this.enfileirar(campo, true, extra);
       } else if (!e.submitter) {
         e.preventDefault(); // sem botão (requestSubmit, Enter): nada sai pelo POST da página
       }
     },
-    enfileirar(c, confirmar) {
+    enfileirar(c, confirmar, extra = []) {
       const chave = daLinha(c) || c; // linha nova: o 2º campo espera o id que o 1º recebe
-      const fila = (this.filas.get(chave) || Promise.resolve()).then(() => this.enviar(c, confirmar));
+      const fila = (this.filas.get(chave) || Promise.resolve()).then(() => this.enviar(c, confirmar, extra));
       this.filas.set(chave, fila);
       return fila;
     },
-    async enviar(c, confirmar) {
+    async enviar(c, confirmar, extra = []) {
       if (this.desligado) return;
+      if (!confirmar && this.impacto?.campo === c) return; // Enter manda e o change do Enter também: um modal só
       const atual = valor(c);
       if (!confirmar && atual === gravado(c)) {
         this.limpar(c); // voltou ao gravado: nada a enviar
@@ -106,11 +125,12 @@ document.addEventListener("alpine:init", () => {
       if (sessao) d.append(sessao.name, sessao.value);
       d.append("form_id", this.$root.id);
       d.append("campo", c.name.startsWith(prefixo) ? c.name.slice(prefixo.length) : c.name);
-      d.append("valor", atual);
+      d.append("valor", c.type === "file" ? c.files[0] : atual);
       d.append("original", gravado(c));
       const linha = daLinha(c);
       if (linha) for (const o of controles(linha)) if (o.type !== "checkbox" || o.checked) d.append(o.name, o.value);
       if (confirmar) d.append("confirmar_impacto", "on");
+      for (const [nome, v] of extra) d.append(nome, v);
 
       let r;
       let corpo = {};
@@ -148,6 +168,8 @@ document.addEventListener("alpine:init", () => {
       if (linha) for (const o of controles(linha)) if (o !== c && !enviando.has(o)) salvos.set(o, valor(o));
       salvoEm = corpo.salvo_em;
       this.limpar(c);
+      c.dispatchEvent(new CustomEvent("autosave:salvo", { bubbles: true, detail: { valor: valor(c) } })); // nomeInline (U5)
+      if (corpo.trocar) trocar(corpo.trocar);
     },
     limpar(c) {
       const linha = daLinha(c);
@@ -163,6 +185,7 @@ document.addEventListener("alpine:init", () => {
     falhou(c, texto, erros) {
       enviando.delete(c);
       falhas.set(c, texto);
+      c.dispatchEvent(new CustomEvent("autosave:falhou", { bubbles: true }));
       if (erros?.length) {
         c.setAttribute("aria-invalid", "true");
         let p = c.parentElement.querySelector(":scope > [data-erro-auto]");
@@ -193,6 +216,7 @@ document.addEventListener("alpine:init", () => {
         const linha = daLinha(campo);
         for (const o of linha ? controles(linha) : [campo]) definir(o, gravado(o));
         this.limpar(campo);
+        campo.dispatchEvent(new CustomEvent("autosave:cancelado", { bubbles: true }));
         campo.focus();
       }
       dialogo.remove();
@@ -351,6 +375,49 @@ document.addEventListener("alpine:init", () => {
       this.impacto = null; // o `close` do modal, que chega depois, não é cancelamento
       this.enfileirar(true);
       this.foco?.focus();
+    },
+  }));
+
+  // U8b: <div x-data="arquivoSoltar" data-soltar data-max data-tipo> com um input file dentro de um
+  // form `campoAuto`: área de soltar e clique. Quem envia é o campoAuto (ao escolher, com o modal de
+  // impacto e o erro inline do 422); aqui só o arrastar, o limite de tamanho antes de enviar e a barra.
+  Alpine.data("arquivoSoltar", () => ({
+    sobre: false,
+    enviando: false,
+    nome: "",
+    erro: "",
+    init() {
+      const campo = this.$root.querySelector("input[type=file]");
+      const max = Number(this.$root.dataset.max);
+      this.$root.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        this.sobre = true;
+      });
+      this.$root.addEventListener("dragleave", () => (this.sobre = false));
+      this.$root.addEventListener("drop", (e) => {
+        e.preventDefault();
+        this.sobre = false;
+        if (!e.dataTransfer.files.length) return;
+        campo.files = e.dataTransfer.files;
+        campo.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      // Antes do campoAuto (que ouve no form): arquivo grande nem sai daqui.
+      campo.addEventListener("change", (e) => {
+        const arquivo = campo.files[0];
+        this.erro = "";
+        if (!arquivo) return;
+        if (arquivo.size > max) {
+          e.stopPropagation();
+          this.erro = `${this.$root.dataset.tipo} maior que ${Math.floor(max / 2 ** 20)} MB: reduza e envie de novo.`;
+          campo.value = "";
+          return;
+        }
+        this.nome = arquivo.name;
+        this.enviando = true;
+      });
+      for (const fim of ["autosave:salvo", "autosave:falhou", "autosave:cancelado"]) {
+        this.$root.addEventListener(fim, () => (this.enviando = false));
+      }
     },
   }));
 

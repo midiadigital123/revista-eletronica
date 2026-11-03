@@ -71,7 +71,7 @@ class ReceberItemTest(Base):
             receber_item(self.tarefa, upload("a.gif", b"GIF89a" + b"\0" * 10, "image/gif"), "")
 
     def test_6_mb_e_recusado(self):
-        with self.assertRaisesMessage(ValidationError, "acima de 5 MB"):
+        with self.assertRaisesMessage(ValidationError, "maior que 5 MB"):
             receber_item(self.tarefa, upload("a.png", PNG + b"\0" * (6 * 2**20), "image/png"), "")
 
     def test_texto_alternativo_no_resolvido_e_no_preview(self):

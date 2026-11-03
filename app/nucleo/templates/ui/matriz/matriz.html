@@ -1,6 +1,6 @@
 {% extends "ui/base.html" %}
 {% load static %}
-{% comment %}Matriz (T09): etapas × componente e as ações Renomear, Duplicar, Reimportar, Diferenças.{% endcomment %}
+{% comment %}Matriz (T09): etapas × componente e as ações Renomear (inline, U5), Duplicar, Reimportar, Diferenças.{% endcomment %}
 {% block titulo %}{{ matriz.nome }} {{ matriz.ano.ano }}{% endblock %}
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/matriz.css' %}">{% endblock %}
 
@@ -8,13 +8,17 @@
 <a class="mudo voltar" href="{% url 'ui_matriz' matriz.ano.ano %}">‹ Matrizes de {{ matriz.ano.ano }}</a>
 <header class="pagina-cab">
   <div>
-    <h1>{{ matriz.nome }}</h1>
+    {% if pode_alterar %}{# U5: renomear inline, pelo autosave (campoAuto + nomeInline) #}
+    <form id="matriz-nome" x-data="campoAuto" novalidate>{% csrf_token %}{% url 'ui_matriz_renomear' matriz.pk as url %}
+      <h1>{% include "ui/_componentes/nome_inline.html" with nome=matriz.nome %}</h1>
+    </form>
+    {% else %}<h1>{{ matriz.nome }}</h1>{% endif %}
     <p class="mudo">Matriz de {{ matriz.ano.ano }}{% if matriz.duplicada_de %} · cópia de {{ matriz.duplicada_de.nome }} ({{ matriz.duplicada_de.ano.ano }}){% endif %}</p>
   </div>
   <div class="acoes">
     {% if matriz.duplicada_de %}<a class="btn btn-ghost" href="{% url 'ui_matriz_diferencas' matriz.pk %}">Diferenças da origem</a>{% endif %}
     {% if pode_alterar %}
-    <button type="button" class="btn btn-outline" data-abrir="dlg-renomear">Renomear</button>
+    {% include "ui/_componentes/status_salvo.html" %}
     <a class="btn btn-outline" href="{% url 'ui_matriz_reimportar' matriz.pk %}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
       Reimportar
@@ -62,12 +66,6 @@
 <dialog class="dialogo" id="dlg-duplicar" aria-labelledby="dlg-duplicar-titulo">
   {% url 'ui_matriz_duplicar' matriz.pk as url %}
   {% with titulo="Duplicar "|add:matriz.nome %}{% include "ui/parciais/matriz_form.html" with form=duplicar chave="duplicar" %}{% endwith %}
-</dialog>
-{% endif %}
-{% if pode_alterar %}
-<dialog class="dialogo" id="dlg-renomear" aria-labelledby="dlg-renomear-titulo">
-  {% url 'ui_matriz_renomear' matriz.pk as url %}
-  {% with titulo="Renomear "|add:matriz.nome %}{% include "ui/parciais/matriz_form.html" with form=renomear chave="renomear" %}{% endwith %}
 </dialog>
 {% endif %}
 {% endblock %}

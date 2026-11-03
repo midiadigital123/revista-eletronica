@@ -1,29 +1,79 @@
-/* Tela Revista (T20/T21): só o que os componentes de ui.css não cobrem. Tokens de ui.css. */
+/* Tela Revista (T20/T21, U8b): só o que os componentes de ui.css não cobrem. Tokens de ui.css. */
 
 .revista-acoes { display: flex; gap: 0.25rem; justify-content: flex-end; }
+.revista-cab-acoes { align-items: center; }
+.revista-cab-link { font-size: 0.875rem; padding: 0 0.25rem; }
+.revista-cab-link:hover { color: var(--foreground); }
 
-/* Card "Validado": o estado é a primeira coisa que se lê; verde só quando validado. */
-.revista-validado { gap: 1rem; }
-.revista-validado-linha { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
-.revista-validado-estado { display: flex; align-items: flex-start; gap: 0.75rem; min-width: 0; }
-.revista-validado-estado > svg { width: 1.5rem; height: 1.5rem; flex-shrink: 0; margin-top: 0.125rem; color: var(--muted-foreground); }
-.revista-validado-ok { box-shadow: var(--shadow-xs), 0 0 0 1px color-mix(in oklch, var(--sucesso) 35%, transparent); }
-.revista-validado-ok .revista-validado-estado > svg { color: var(--sucesso); }
-.revista-desatualizadas { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; color: var(--warning); }
+/* Duas colunas: os passos à esquerda, a Situação fixa ao rolar à direita. */
+.revista-layout { display: grid; grid-template-columns: minmax(0, 1fr) 19rem; gap: 1.5rem; align-items: start; }
+.revista-principal { display: flex; flex-direction: column; gap: 1.5rem; min-width: 0; }
+.revista-passos { display: flex; flex-direction: column; gap: 1.5rem; }
+.revista-passo { gap: 1.25rem; }
+.revista-passo-cab { display: flex; align-items: flex-start; gap: 0.75rem; }
+.revista-passo-cab > div { display: flex; flex-direction: column; gap: 0.25rem; }
+.revista-passo-num {
+  display: inline-grid; place-items: center; flex: none; width: 1.5rem; height: 1.5rem; margin-top: 0.0625rem;
+  border-radius: 999px; background: var(--muted); color: var(--muted-foreground);
+  font-size: 0.75rem; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.revista-templates { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 1rem; }
+
+/* Situação: pendência é tarefa (○ neutro); verde só no ✓ e na validada. */
+.revista-situacao { position: sticky; top: 1rem; gap: 1rem; max-height: calc(100dvh - 2rem); overflow-y: auto; }
+.revista-situacao-cab { display: flex; flex-direction: column; gap: 0.5rem; }
+.revista-situacao-ok { box-shadow: var(--shadow-xs), 0 0 0 1px color-mix(in oklch, var(--sucesso) 35%, transparent); }
+.revista-validada { display: flex; align-items: flex-start; gap: 0.5rem; font-weight: 500; }
+.revista-validada svg { width: 1.125rem; height: 1.125rem; flex: none; color: var(--sucesso); }
+.revista-progresso { width: 100%; height: 0.375rem; appearance: none; border: 0; border-radius: 999px; background: var(--muted); overflow: hidden; }
+.revista-progresso::-webkit-progress-bar { background: var(--muted); }
+.revista-progresso::-webkit-progress-value { background: var(--foreground); border-radius: 999px; transition: width 180ms var(--ease-saida); }
+.revista-progresso::-moz-progress-bar { background: var(--foreground); border-radius: 999px; }
+.revista-checklist, .revista-checklist ul { padding: 0; list-style: none; }
+.revista-checklist { display: flex; flex-direction: column; gap: 0.625rem; }
+.revista-checklist > li { display: flex; align-items: flex-start; gap: 0.5rem; color: var(--foreground); }
+.revista-checklist > li > svg { width: 1rem; height: 1rem; flex: none; margin-top: 0.125rem; color: var(--muted-foreground); }
+.revista-checklist > li[data-ok] { color: var(--muted-foreground); }
+.revista-checklist > li[data-ok] > svg { color: var(--sucesso); }
+.revista-checklist > li > div { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+.revista-checklist ul { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.8125rem; color: var(--muted-foreground); }
+.revista-checklist ul .link { color: var(--muted-foreground); text-decoration-color: color-mix(in oklch, currentColor 40%, transparent); }
+.revista-checklist ul .link:hover { color: var(--foreground); }
+.revista-validar { display: flex; flex-direction: column; gap: 0.5rem; padding-top: 1rem; border-top-width: 1px; }
+.revista-validar .btn { width: 100%; }
+.revista-impresso { align-self: flex-start; font-size: 0.8125rem; }
+.revista-desatualizadas { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; color: var(--warning); font-size: 0.8125rem; }
 
 /* Blocos e cards */
 .revista-bloco { display: flex; flex-direction: column; gap: 1rem; }
-.revista-bloco-cab { display: flex; flex-direction: column; gap: 0.25rem; }
-.revista-form { display: flex; flex-direction: column; gap: 1.25rem; }
-.revista-form-acoes { display: flex; justify-content: flex-end; }
 .revista-dl { display: flex; flex-direction: column; gap: 0.5rem; }
 .revista-dl > div { display: flex; gap: 1rem; }
 .revista-dl dt { width: 2rem; font-weight: 600; }
-.revista-arquivo { display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-start; }
+.revista-arquivo { display: flex; flex-direction: column; gap: 0.5rem; align-items: stretch; }
+.revista-arquivo + .revista-arquivo { padding-top: 1.25rem; border-top-width: 1px; }
 .revista-arquivo h3 { font-size: 0.875rem; font-weight: 600; }
-.revista-capa { height: auto; border-radius: var(--radius-md); box-shadow: 0 0 0 1px var(--border); }
-.revista-cards .card { gap: 1.25rem; }
-.input[type="file"] { height: auto; padding: 0.375rem 0.5rem; }
+.revista-arquivo-atual { display: flex; align-items: center; gap: 0.5rem; }
+.revista-arquivo-atual svg { width: 1rem; height: 1rem; flex: none; color: var(--muted-foreground); }
+.revista-gabarito { align-self: flex-start; }
+.revista-capa-linha { display: flex; align-items: stretch; gap: 1rem; }
+.revista-capa-linha > .soltar { flex: 1; min-width: 0; }
+.revista-capa { height: auto; align-self: flex-start; border-radius: var(--radius-md); box-shadow: 0 0 0 1px var(--border); }
+
+/* Área de soltar (componente arquivoSoltar): o input é sr-only; o rótulo inteiro é o alvo. */
+.soltar { display: flex; flex-direction: column; gap: 0.5rem; }
+.soltar-area {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.25rem;
+  min-height: 6.5rem; padding: 1rem; text-align: center; cursor: pointer;
+  border: 1px dashed color-mix(in oklch, var(--foreground) 25%, transparent); border-radius: var(--radius-lg);
+  color: var(--foreground); transition: border-color 120ms var(--ease-saida), background-color 120ms var(--ease-saida);
+}
+.soltar-area > svg { width: 1.25rem; height: 1.25rem; color: var(--muted-foreground); }
+.soltar-area .mudo { font-size: 0.8125rem; }
+.soltar-area:hover, .soltar[data-sobre] .soltar-area { border-color: var(--foreground); background: var(--muted); }
+.soltar-area:focus-within { border-style: solid; border-color: var(--ring); box-shadow: 0 0 0 3px var(--ring); }
+.soltar-area .erro { order: 9; }
+.soltar-progresso { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; color: var(--muted-foreground); }
+.soltar-progresso progress { flex: 1; height: 0.375rem; accent-color: var(--foreground); }
 
 /* Lista de seções: grupos por fascículo */
 .revista-grupo { padding: 0.5rem 0.625rem 0.25rem; font-size: 0.8125rem; }
@@ -47,7 +97,11 @@
 .revista-foto h4 { font-family: var(--font-mono); font-size: 0.8125rem; font-weight: 600; }
 .revista-foto-corpo { line-height: 1.6; }
 
+@media (max-width: 64rem) {
+  .revista-layout { grid-template-columns: minmax(0, 1fr); }
+  .revista-situacao { position: static; max-height: none; order: -1; } /* o resumo primeiro */
+}
 @media (max-width: 50rem) {
   .revista-secao-rodape .btn { width: 100%; }
-  .revista-validado-linha form, .revista-validado-linha .btn { width: 100%; }
+  .revista-capa-linha { flex-direction: column; }
 }

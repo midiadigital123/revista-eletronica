@@ -5,14 +5,22 @@ Confirmar põe `campo`=on no form `form_id` e reenvia; Cancelar/Esc fecha, volta
 que têm data-original e devolve o foco ao campo alterado. Componente `impacto` em static/ui/componentes.js.
   {% include "ui/_componentes/impacto.html" with form_id="renomear-3" acao="Renomear" perdem=perdem %}
 Opcional: campo (nome do campo de confirmação; padrão confirmar_impacto).
+U8b: copias + frase + fasciculo (trocar template com cópias de seção, D-171): o modal pede a frase
+"descartar N cópia(s)" num campo `confirmacao`, que o autosave manda junto ao confirmar.
 {% endcomment %}<dialog class="dialogo impacto" x-data="impacto" data-abrir-ao-carregar data-form="{{ form_id }}" data-campo="{{ campo|default:'confirmar_impacto' }}" aria-labelledby="{{ form_id }}-impacto-titulo" aria-describedby="{{ form_id }}-impacto-texto" @cancel.prevent="cancelar">
   <header>
-    <h2 id="{{ form_id }}-impacto-titulo">{{ acao }} tira o “Validado” de {{ perdem|length }} revista(s)</h2>
-    <p class="mudo" id="{{ form_id }}-impacto-texto">Nada foi gravado ainda. Estas revistas mudam e voltam a precisar de validação no Painel:</p>
+    <h2 id="{{ form_id }}-impacto-titulo">{% if perdem %}{{ acao }} tira o “Validado” de {{ perdem|length }} revista(s){% else %}{{ acao }} apaga {{ copias }} cópia(s) de seção{% endif %}</h2>
+    <p class="mudo" id="{{ form_id }}-impacto-texto">Nada foi gravado ainda.{% if perdem %} Estas revistas mudam e voltam a precisar de validação no Painel:{% endif %}{% if copias %} O {{ fasciculo }} tem {{ copias }} seção(ões) com texto editado nesta revista; trocar o template apaga essas cópias.{% endif %}</p>
   </header>
-  <ul class="impacto-lista">{% for r in perdem %}<li>{{ r }}</li>{% endfor %}</ul>
+  {% if perdem %}<ul class="impacto-lista">{% for r in perdem %}<li>{{ r }}</li>{% endfor %}</ul>{% endif %}
+  {% if frase %}
+  <div class="campo">
+    <label for="{{ form_id }}-confirmacao">Para confirmar, digite <code>{{ frase }}</code></label>
+    <input class="input" id="{{ form_id }}-confirmacao" name="confirmacao" autocomplete="off" spellcheck="false">
+  </div>
+  {% endif %}
   <footer>
-    <button type="button" class="btn btn-outline" @click="cancelar" autofocus>Cancelar</button>
-    <button type="button" class="btn btn-destrutivo" @click="confirmar">{{ acao }} e tirar Validado</button>
+    <button type="button" class="btn btn-outline" @click="cancelar"{% if not frase %} autofocus{% endif %}>Cancelar</button>
+    <button type="button" class="btn btn-destrutivo" @click="confirmar">{{ acao }} e {% if perdem %}tirar Validado{% else %}apagar cópias{% endif %}</button>
   </footer>
 </dialog>

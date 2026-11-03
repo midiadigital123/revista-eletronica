@@ -6,39 +6,45 @@ Regra em `nucleo/revista.py` (a mesma do admin), "Validado" em `servicos/validac
 - arquivos: `change_revista`; templates: + `change_revistafasciculo`; textos: + `add/change_revistasecao`;
   "Validado": + `validar_revista`. Revista ou projeto arquivado: só leitura, POST 403.
 - bloqueio: a revista trava o projeto dela (D-140), pela peça comum `ui_bloqueio.com_bloqueio`.
-A página tem quatro formulários (`acao`): arquivos, templates e validar recarregam (PRG); a seção
-vai por HTMX e devolve o painel da seção + lista de seções, card "Validado" e mensagens (oob).
+Página em duas colunas (U8b): templates, arquivos e textos à esquerda; a coluna Situação (a única
+lista de pendências, com o "Validar revista") fixa à direita. Envios (`acao`):
+- `templates` e `arquivos`: autosave (protocolo de `ui_autosave`, `?acao=` na URL), um campo por vez,
+  com o modal de impacto (U2); a resposta 200 traz em `trocar` o HTML novo das partes afetadas.
+- `secao`: HTMX, devolve o painel da seção + lista de seções, Situação e mensagens (oob).
+- `validar`: HTMX com HX-Redirect.
 """
+
+import hashlib
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.core.files.storage import default_storage
 from django.db.models import F
-from django.forms import modelform_factory
-from django.http import Http404, HttpResponse
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect
+from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.views.decorators.http import require_GET, require_http_methods
 
 from nucleo.contexto import ano_da_sessao
-from nucleo.models import Ano, Projeto, Revista, RevistaFasciculo
+from nucleo.models import Ano, Revista, RevistaFasciculo
 from nucleo.revista import (
     FasciculoForm,
     RevistaForm,
-    avisar_descartes,
     blocos_de_texto,
     diff,
     estado_validacao,
     form_de_textos,
     frase_descarte,
-    gravar_arquivos,
     gravar_textos,
     ids_do_f2,
     nome,
 )
-from nucleo.servicos import resolver, validacao
+from nucleo.servicos import arquivos, resolver, validacao
 from nucleo.servicos.empacotar import Pendente, zip_revista
+from nucleo.ui_autosave import erros, quer_json, responder_campo
 from nucleo.ui_bloqueio import com_bloqueio, e_htmx
 
 ERRO_FORM = "Nada foi gravado: corrija os erros marcados."
@@ -117,17 +123,47 @@ def _forms_fasciculo(request, revista, dados=None):
         f.pode_descartar = pode_descartar  # o admin põe o mesmo por subclasse (FasciculoInline.get_formset)
         f.fields["template"].empty_label = "Sem template"
         f.fields["template"].widget.attrs.update({"class": "select", "id": f"template-{rf.fasciculo}"})
-        f.copias = rf.revistasecao_set.count()
-        f.frase = frase_descarte(f.copias) if f.copias else ""
         forms_.append(f)
     return forms_
 
 
+# Coluna Situação (U8b): cada passo junta as pendências do resolver pelo código; cada uma aparece uma
+# vez só, como link para o lugar que resolve. Código novo cai em "Outras pendências".
+PASSOS = (
+    ("Matriz e cortes", ("matriz", "corte_sem_matriz", "corte_invalido")),
+    ("Template do F1", ("template_f1",)),
+    ("Template do F2", ("template_f2",)),
+    ("SVG do F2", ("svg", "ids_svg")),
+    ("Capa", ("capa",)),
+    ("Dados do projeto", ("variaveis", "nome_projeto")),
+)
+
+
+def _situacao(revista, pendencias):
+    projeto = reverse("ui_projeto", args=[revista.projeto_id])
+    links = {
+        "matriz": f"{projeto}#matriz", "corte_sem_matriz": f"{projeto}#matriz",
+        "corte_invalido": reverse("cortes", args=[revista.ano.ano]),
+        "template_f1": "#templates", "template_f2": "#templates",
+        "svg": "#arquivos", "ids_svg": "#arquivos", "capa": "#arquivos",
+        "variaveis": f"{projeto}#variaveis", "nome_projeto": f"{projeto}#nome",
+    }  # fmt: skip
+    passos = [{"rotulo": r, "pendencias": [p for p in pendencias if p.codigo in codigos]} for r, codigos in PASSOS]
+    conhecidos = {c for _, codigos in PASSOS for c in codigos}
+    outras = [p for p in pendencias if p.codigo not in conhecidos]
+    if outras:
+        passos.append({"rotulo": "Outras pendências", "pendencias": outras})
+    for passo in passos:
+        passo["pendencias"] = [{"mensagem": p.mensagem, "url": links.get(p.codigo)} for p in passo["pendencias"]]
+    return {"passos": passos, "prontos": sum(not p["pendencias"] for p in passos)}
+
+
 def _validacao(request, revista):
+    estado = estado_validacao(revista.pk)
     return {
-        **estado_validacao(revista.pk),
+        **estado, **_situacao(revista, estado["pendencias"]),
         "pode": request.user.has_perm("nucleo.validar_revista") and request.bloqueio is not None,
-    }
+    }  # fmt: skip
 
 
 @require_http_methods(["GET", "POST"])
@@ -142,18 +178,16 @@ def revista(request, ano, pk):
     if request.method == "POST":
         if arquivada(revista):
             raise PermissionDenied
-        acao = request.POST.get("acao")
+        acao = request.POST.get("acao") or request.GET.get("acao")  # autosave: ?acao= na data-url
         if acao == "secao":
             return _salvar_secao(request, revista)
         if acao == "validar":
             return _validar(request, revista)
-        if acao == "templates":
-            return _salvar_templates(request, revista)
-        if acao == "arquivos":
-            return _salvar_arquivos(request, revista)
-        if acao == "nome":
-            return _salvar_nome(request, revista)
-        raise Http404
+        if acao == "templates" and quer_json(request):
+            return _template(request, revista)
+        if acao == "arquivos" and quer_json(request):
+            return _arquivo(request, revista)
+        return HttpResponseBadRequest("Ação desconhecida. O nome do projeto se edita no Projeto (U5).")
     if e_htmx(request) and "secao" in request.GET:
         blocos = blocos_de_texto(revista)
         contexto = {"revista": revista, "blocos": blocos, "oob": True, **_contexto_secao(request, blocos, request.GET["secao"])}
@@ -161,20 +195,26 @@ def revista(request, ano, pk):
     return _pagina(request, revista)
 
 
-def _pagina(request, revista, fasciculos=None, arquivos=None, chave=None, form=None):
+def _tamanho(caminho):
+    try:
+        return default_storage.size(caminho) if caminho else None
+    except OSError:  # caminho sem arquivo (dados de teste, storage limpo)
+        return None
+
+
+def _contexto(request, revista, chave=None, form=None):
     so_foto = arquivada(revista)
     contexto = {
         "revista": revista, "ano": revista.ano, "anos": list(Ano.objects.order_by("-ano")), "secao": "revistas",
         "arquivada": so_foto, "validacao": _validacao(request, revista),
         "pode_templates": request.pode_gravar and request.user.has_perm("nucleo.change_revistafasciculo"),
-        "fasciculos": fasciculos or _forms_fasciculo(request, revista),
-        "arquivos": arquivos or RevistaForm(instance=revista),
+        "fasciculos": _forms_fasciculo(request, revista),
         "ids": ids_do_f2(revista) if revista.svg_f2 else None,
-        # Item 20 (D-190): o nome do projeto se edita aqui, com o bloqueio desta página (que já
-        # trava o projeto); um link para a ficha abriria só leitura.
+        "svg_tamanho": _tamanho(revista.svg_f2), "capa_tamanho": _tamanho(revista.capa),
+        "svg_max": arquivos.SVG_MAX, "capa_max": arquivos.CAPA_MAX,
+        # U5: o nome do projeto se edita só no Projeto; aqui fica o link "Editar no projeto".
         "pode_nome": request.pode_gravar and request.user.has_perm("nucleo.change_projeto"),
-        "sem_matriz": revista.projeto.parceiro_ano.matriz_id is None,  # item 21
-        "sem_template": list(RevistaFasciculo.objects.filter(revista=revista, template__isnull=True).order_by("fasciculo").values_list("fasciculo", flat=True)),
+        "sem_template": RevistaFasciculo.objects.filter(revista=revista, template__isnull=True).exists(),
     }  # fmt: skip
     if so_foto:
         # Arquivada: as seções da foto de arquivamento (D-117), já renderizadas e escapadas.
@@ -183,25 +223,24 @@ def _pagina(request, revista, fasciculos=None, arquivos=None, chave=None, form=N
     else:
         contexto["blocos"] = blocos = blocos_de_texto(revista)
         contexto.update(_contexto_secao(request, blocos, chave or request.GET.get("secao"), form))
-    return TemplateResponse(request, "ui/revista/revista.html", contexto)
+    return contexto
+
+
+def _pagina(request, revista, chave=None, form=None):
+    return TemplateResponse(request, "ui/revista/revista.html", _contexto(request, revista, chave, form))
+
+
+def _pedacos(request, revista, *nomes):
+    """HTML novo das partes da página (`revista_<nome>.html`, raiz com id=<nome>) para o autosave
+    trocar depois de gravar: o que a gravação muda fora do campo (Situação, textos, arquivos)."""
+    contexto = _contexto(request, revista)
+    return {n: render_to_string(f"ui/parciais/revista_{n}.html", contexto, request=request) for n in nomes}
 
 
 def _ir(request, revista):
     """Depois de gravar: volta à página (PRG). No HTMX, HX-Redirect (o com_bloqueio libera nos dois)."""
     url = reverse("ui_revista_editar", args=[revista.ano.ano, revista.pk])
     return HttpResponse(headers={"HX-Redirect": url}) if e_htmx(request) else redirect(url)
-
-
-def _salvar_nome(request, revista):
-    if not request.user.has_perm("nucleo.change_projeto"):
-        raise PermissionDenied
-    form = modelform_factory(Projeto, fields=["nome"])(request.POST, instance=revista.projeto)
-    if not form.is_valid():
-        messages.error(request, "Nome não salvo: " + " ".join(m for erros in form.errors.values() for m in erros))
-        return _pagina(request, revista)
-    form.save()
-    messages.success(request, f"Nome do projeto salvo: {form.instance.nome}.")
-    return _ir(request, revista)
 
 
 def _salvar_secao(request, revista):
@@ -220,33 +259,54 @@ def _salvar_secao(request, revista):
     return _pagina(request, revista, chave=chave)  # 200: segue com o bloqueio desta aba
 
 
-def _salvar_templates(request, revista):
+def _template(request, revista):
+    """Autosave do select de template de um fascículo (`campo` = `F1-template`). Trocar com cópias de
+    seção pede o modal com a frase "descartar N cópia(s)" (D-171), que volta no campo `confirmacao`."""
     if not request.user.has_perm("nucleo.change_revistafasciculo"):
         raise PermissionDenied
-    forms_ = _forms_fasciculo(request, revista, request.POST)
-    validos = [f.is_valid() for f in forms_]  # valida todos, para mostrar todos os erros
-    if not all(validos):
-        messages.error(request, ERRO_FORM)
-        return _pagina(request, revista, fasciculos=forms_)
-    for f in forms_:
-        if f.has_changed():
-            f.save()
-    avisar_descartes(request, forms_)
-    messages.success(request, "Templates salvos.")
-    return _ir(request, revista)
+    campo = request.POST.get("campo", "")
+    f = campo.removesuffix("-template")
+    rf = RevistaFasciculo.objects.filter(revista=revista, fasciculo=f).first() if f != campo else None
+    if rf is None:
+        return erros(["Este campo não pode ser alterado aqui. Recarregue a página."])
+    copias = rf.revistasecao_set.count()
+    frase = frase_descarte(copias) if copias else ""
+    # Sem confirmar, a frase vai certa só para validar e simular; o modal pede a frase de verdade.
+    confirmacao = request.POST.get("confirmacao", "") if request.POST.get("confirmar_impacto") else frase
+    form = FasciculoForm({campo: request.POST.get("valor", ""), f"{f}-confirmacao": confirmacao}, instance=rf, prefix=f)
+    form.pode_descartar = request.user.has_perms(PERMS_TEXTO)
+    form.fields["template"].label = ""  # o erro já diz o que é
+    modal = {"copias": form.descartar, "frase": frase, "fasciculo": f} if form.is_valid() and form.descartar else None
+    return responder_campo(
+        request, form=form, simular=lambda _: form.save(), modal=modal, titulo=f"Trocar o template do {f}",
+        gravar=lambda _: form.save() and {"trocar": _pedacos(request, revista, "textos", "situacao")},
+        revistas=lambda: [revista],
+    )  # fmt: skip
 
 
-def _salvar_arquivos(request, revista):
-    form = RevistaForm(request.POST, request.FILES, instance=revista)
-    if not form.is_valid():
-        messages.error(request, ERRO_FORM)
-        return _pagina(request, revista, arquivos=form)
-    if form.cleaned_data.get("arquivo_svg") or form.cleaned_data.get("arquivo_capa"):
-        gravar_arquivos(request, revista, form.cleaned_data)
-        messages.success(request, "Arquivos salvos.")
-    else:
-        messages.info(request, "Nada a salvar: escolha o SVG ou a capa antes de salvar.")
-    return _ir(request, revista)
+def _arquivo(request, revista):
+    """Autosave de um arquivo (`campo` = `arquivo_svg` ou `arquivo_capa`, o arquivo em `valor`): mesma
+    validação do admin (RevistaForm). O impacto simula só o sha256 (é o que entra no hash, D-118),
+    sem gravar arquivo à toa."""
+    campo = request.POST.get("campo", "")
+    if campo not in ("arquivo_svg", "arquivo_capa") or "valor" not in request.FILES:
+        return erros(["Escolha o arquivo do SVG ou da capa e envie de novo."])
+    form = RevistaForm({}, {campo: request.FILES["valor"]}, instance=revista)
+    form.fields[campo].label = ""  # "SVG maior que 3 MB: …" já diz qual
+
+    def simular(dados):
+        if campo == "arquivo_svg":
+            limpo, ids = arquivos.sanitizar_svg(dados[campo])
+            Revista.objects.filter(pk=revista.pk).update(svg_sha256=hashlib.sha256(limpo).hexdigest(), svg_ids=ids)
+        else:
+            Revista.objects.filter(pk=revista.pk).update(capa_sha256=hashlib.sha256(dados[campo]).hexdigest())
+
+    def gravar(dados):
+        (arquivos.receber_svg if campo == "arquivo_svg" else arquivos.receber_capa)(revista, dados[campo])
+        return {"trocar": _pedacos(request, revista, "arquivos", "situacao")}
+
+    titulo = "Trocar o SVG do F2" if campo == "arquivo_svg" else "Trocar a capa"
+    return responder_campo(request, form=form, simular=simular, gravar=gravar, revistas=lambda: [revista], titulo=titulo)
 
 
 def _validar(request, revista):

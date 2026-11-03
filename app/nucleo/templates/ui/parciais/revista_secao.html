@@ -1,6 +1,6 @@
 {% comment %}
 Painel de uma seção (lado direito, #secao). Contexto de urls/ui_revista._contexto_secao.
-Salvar vai por HTMX: a resposta é a página inteira e o form escolhe #secao + lista, "Validado" e
+Salvar vai por HTMX: a resposta é a página inteira e o form escolhe #secao + lista, Situação e
 mensagens (hx-select-oob). Campos com os nomes do RevistaForm (nucleo/revista.py): `initial-` é o
 valor que abriu (show_hidden_initial), `versao__F1` a versão do template que a pessoa viu.
 Com `oob` (GET HTMX de uma seção) inclui a lista de seções para marcar o item ativo.
@@ -8,7 +8,7 @@ Com `oob` (GET HTMX de uma seção) inclui a lista de seções para marcar o ite
 {% if s %}
   <form method="post" action="{% url 'ui_revista_editar' revista.ano.ano revista.pk %}" class="card revista-secao"
         hx-post="{% url 'ui_revista_editar' revista.ano.ano revista.pk %}" hx-target="#secao" hx-select="#secao" hx-swap="outerHTML"
-        hx-select-oob="#secoes,#validado,#mensagens" hx-indicator="#secao">{% csrf_token %}
+        hx-select-oob="#secoes,#situacao,#mensagens" hx-indicator="#secao">{% csrf_token %}
     <input type="hidden" name="acao" value="secao">
     <input type="hidden" name="chave" value="{{ chave }}">
     <input type="hidden" name="{{ campo_versao }}" value="{{ bloco.versao.pk }}">

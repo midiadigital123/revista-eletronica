@@ -1,5 +1,6 @@
-// Modal de impacto (U2): renomear um parceiro com revista validada pede confirmação num modal que
-// lista as revistas; Esc cancela, devolve o nome antigo e o foco ao campo; confirmar grava.
+// Modal de impacto (U2) com o renomear inline (U5): renomear um parceiro com revista validada pede
+// confirmação num modal que lista as revistas; Esc cancela, devolve o nome antigo e o foco ao campo;
+// confirmar grava.
 // Monta o próprio parceiro "E2E Impacto <sufixo>" no ano 2026 (cortes, matriz "Demonstração" e
 // templates "Padrão" do criar_demo, SVG do F2, capa e um fechamento com {{nome_parceiro}}) e valida
 // a revista; os dados ficam no banco.
@@ -12,7 +13,7 @@ const SVG = path.join(__dirname, "../../nucleo/tests/fixtures/f2-lp.svg");
 const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mP4/5oBAATXAesdPD2pAAAAAElFTkSuQmCC", "base64");
 const CORTES = "150, 200, 250, 300";
 
-test("renomear parceiro validado abre o modal; Esc volta o nome e o foco; confirmar grava", async ({ page }) => {
+test("renomear parceiro validado pela grade abre o modal; Esc volta o nome e o foco; confirmar grava", async ({ page }) => {
   const erros: string[] = [];
   page.on("pageerror", (e) => erros.push(e.message));
   const nome = `E2E Impacto ${Date.now().toString(36).toUpperCase()}`;
@@ -67,18 +68,16 @@ test("renomear parceiro validado abre o modal; Esc volta o nome e o foco; confir
   await expect(page.locator(".messagelist")).toContainText("Revista validada.");
   await liberarBloqueio(page);
 
-  // 4. Renomear: o modal abre com a revista, o foco entra nele.
+  // 4. Renomear inline (U5): lápis → campo com foco; Enter salva pelo autosave, que abre o modal.
   await page.goto("/cortes/2026/");
   const linha = page.locator(`tr[data-parceiro="${nome}"]`);
   const campo = page.getByLabel(`Novo nome de ${nome}`);
   const modal = page.getByRole("dialog", { name: "Renomear tira o “Validado” de 1 revista(s)" });
-  const renomear = async () => {
-    await linha.locator("details").evaluate((d: HTMLDetailsElement) => { d.open = true; });
-    await campo.fill(novo);
-    await linha.locator("button", { hasText: "Renomear" }).click();
-    await expect(modal).toBeVisible();
-  };
-  await renomear();
+  await linha.getByRole("button", { name: `Renomear ${nome}` }).click();
+  await expect(campo).toBeFocused();
+  await campo.fill(novo);
+  await campo.press("Enter");
+  await expect(modal).toBeVisible();
   await expect(modal.getByRole("listitem")).toContainText(nome);
   await expect(modal.getByRole("button", { name: "Cancelar" })).toBeFocused();
 
@@ -87,12 +86,17 @@ test("renomear parceiro validado abre o modal; Esc volta o nome e o foco; confir
   await expect(modal).toBeHidden();
   await expect(campo).toHaveValue(nome);
   await expect(campo).toBeFocused();
-  await expect(page.locator(`tr[data-parceiro="${nome}"]`)).toHaveCount(1);
 
-  // 6. Confirmar grava e avisa quem perdeu o "Validado".
-  await renomear();
+  // 6. Sair do campo também salva; confirmar grava e o nome novo aparece na linha.
+  await campo.fill(novo);
+  await campo.press("Tab");
+  await expect(modal).toBeVisible();
   await modal.getByRole("button", { name: "Renomear e tirar Validado" }).click();
-  await expect(mensagens).toContainText(`Parceiro renomeado para ${novo}. 1 revista(s) perderam o “Validado”.`);
+  await expect(page.locator("[data-status-salvo]").getByText(/Salvo às \d/)).toBeVisible();
+  await expect(linha.locator(".nome-inline-texto")).toHaveText(novo);
+  await expect(campo).toBeHidden();
+  await expect(linha.getByRole("button", { name: `Renomear ${novo}` })).toBeVisible();
+  await page.reload();
   await expect(page.locator(`tr[data-parceiro="${novo}"]`)).toHaveCount(1);
   expect(erros).toEqual([]);
 });
