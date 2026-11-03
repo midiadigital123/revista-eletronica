@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo S3 de S0–S9 (+fechamento) do plano telas-b-lacunas concluído: abrir ano na tela B (`/ui/anos/`). Plano geral: passo 21 de 22 (S17) segue pendente.
-Funcionando: S1, S2 e S3 nas telas B; suíte 541 OK (8 de PDF pulados), `makemigrations --check` limpo; links "Abra um ano" das telas B vão para `/ui/anos/`, não ao admin.
-Quebrado/pendente: Playwright do S3 rodou só 19/26 (7 pulados: faltam `E2E_ADMIN_*`/`E2E_IMPRESSO_*` no ambiente); S4–S9 e fechamento; S17 executado só em ensaio; S18 não iniciado.
+Passo S4 de S0–S9 (+fechamento) do plano telas-b-lacunas concluído: etapas e componentes na página do ano (`/ui/anos/<ano>/`). Plano geral: passo 21 de 22 (S17) segue pendente.
+Funcionando: S1–S4 nas telas B; Pedagógica/MD/Admin criam e editam etapas e componentes pela tela; suíte 547 OK (8 de PDF pulados), `makemigrations --check` limpo, links `admin:` nas telas B seguem 9.
+Quebrado/pendente: Playwright do S4 (`e2e/tests/anos.spec.ts`) só pulou: faltam `E2E_ADMIN_*`/`E2E_IMPRESSO_*` no ambiente (suíte: 19 OK, 9 pulados, 0 falhas); S5–S9 e fechamento; S17 executado só em ensaio; S18 não iniciado.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Executar S4 do plano telas-b-lacunas (etapas e componentes na página do ano, `/ui/anos/`).
+Executar S5 do plano telas-b-lacunas (paleta do ano na mesma página `/ui/anos/<ano>/`).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1581,6 +1581,14 @@ Executar S4 do plano telas-b-lacunas (etapas e componentes na página do ano, `/
 - **Arquivos afetados:** `app/nucleo/urls/ui_anos.py`, `app/nucleo/urls/__init__.py`, `app/nucleo/urls/ui_impresso.py`, `app/nucleo/templates/ui/anos/anos.html`, `app/nucleo/templates/ui/_componentes/anos.html`, `ui/cortes.html`, `ui/templates/lista.html`, `ui/variaveis/pagina.html`, `ui/matriz/lista.html`, `ui/revista/lista.html`, `app/nucleo/tests/test_ui_anos.py`, `test_ui_links.py`, `test_navegacao.py`
 - **Status:** ativa
 
+### D-193 — Etapas e componentes na página do ano, sem HTMX (2026-11-03)
+- **Contexto:** item 5 da auditoria (S4 de D-190): só o admin criava/editava `Etapa` e `Componente`.
+- **Decisão:** página `/ui/anos/<ano>/` (rota `ui_ano`) com dois modelformsets (`extra=1`; a linha vazia é o "Adicionar"), um form por tabela (campo `tabela`). Regras do admin copiadas: código só leitura na edição; `escala_max` só leitura com corte ou matriz (anotação `Exists`). `clean_codigo` checa o UNIQUE (ano fora do form → Django pula); o formset recusa código repetido no mesmo envio; `save()` em `atomic()` com `IntegrityError` virando mensagem (corrida). `codigo`/`nome` como `CharField(max_length)` para a mensagem não ser a do CHECK. GET exige `view_etapa`; POST exige add+change do modelo (403). Sem excluir e sem bloqueio de edição, como no admin.
+- **Motivo:** menos da metade do código do padrão HTMX de `ui_projeto_linha`; aprovado pelo usuário. A revisão (agente) reproduziu 500 com duas linhas novas iguais; corrigido com teste.
+- **Descartadas:** edição em linha com HTMX — mais código, ganho só em adicionar várias linhas sem salvar; `min_value` em `escala_max` — o admin também aceita ≤ 0 (paridade); bloqueio com `com_bloqueio` — o admin de etapa/componente não trava.
+- **Arquivos afetados:** `app/nucleo/urls/ui_anos.py`, `app/nucleo/templates/ui/anos/ano.html`, `app/nucleo/templates/ui/anos/anos.html`, `app/nucleo/tests/test_ui_anos.py`, `app/e2e/tests/anos.spec.ts`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (D-189 → D-190) Auditoria das telas B: o que o back faz e a tela B não oferece. Bloqueia: abrir ano, criar matriz, criar template, paleta do ano, etapas/componentes. Leva a erro: links do painel vão ao admin (Impresso recebe 403 em "Matriz", `urls/painel.py:43`), renomear parceiro, "abra um ano no admin" para quem não pode. Menu sem Projetos e Lotes. Por onde começar — depende de: usuário
 - [x] (D-184) S17: os cortes de 2026 repetem os de 2025? Se sim, comando `importar_cortes` (~60 min) substituindo a D-119 nesse ponto — depende de: Pedagógica
@@ -1875,3 +1883,7 @@ Executar S4 do plano telas-b-lacunas (etapas e componentes na página do ano, `/
 - S1 (35d2cd0) + correção (5e8bf95): links do painel e mensagens sem admin nem 403. O Playwright achou o bloqueio de 30 s ao navegar entre ficha e revista: D-191 (mesma pessoa assume) + botão de copiar sem nome acessível. Suíte 527 OK; Playwright 26/26 numa pilha isolada (porta 8014). A pilha de dev foi encerrada à força (137) ao subir a isolada e foi religada.
 - S2: matriz atribuída pela ficha do projeto (sessão de bloqueio da ficha), faixa "Falta escolher a matriz (etapas)" no preview e na ficha da revista (fora do resolvido, hash intacto), nome do projeto editável na própria revista, renomear parceiro na grade com confirmação quando revistas validadas perdem o Validado (simulação em transação desfeita). Suíte OK, Playwright 26/26.
 - S3 (D-192): `/ui/anos/` abre o ano pela tela B; Pedagógica abre 2027, fora de sequência não grava, Impresso só lê (403 no POST). Suíte 541 OK; Playwright 19 OK, 7 pulados por falta de credenciais E2E no ambiente.
+
+### 2026-11-03
+- S4 planejado (plano aprovado: série TDD → paralelo revisor Django + E2E → correções). `npx skills find django formset` só achou skills com 1 e 4 instalações: nenhuma instalada.
+- D-193: `/ui/anos/<ano>/` com etapas e componentes. Revisor achou 500 com código repetido no mesmo envio (corrigido + teste), limite só no HTML e consulta extra por linha (corrigidos). Suíte 547 OK; Playwright 19 OK, 9 pulados (2 novos do S4, sem credenciais E2E).
