@@ -55,6 +55,7 @@ Todos em `static/ui/ui.css` `:root`. Origem:
 |---|---|
 | `--background`, `--foreground`, `--card`, `--primary(-foreground)`, `--secondary(-foreground)`, `--muted(-foreground)`, `--destructive`, `--warning`, `--warning-bg`, `--border`, `--input`, `--ring` | `editor/src/index.css:134-156` |
 | `--sucesso` (o verde do ✓: status ok, validado, copiado) | o `text-green-700` dos selos do editor |
+| `--tag-azul`, `--tag-azul-bg`, `--tag-lilas`, `--tag-lilas-bg` (pílulas de categoria `.tag-*`) | próprios das telas B: matiz com croma ≤ 0.06 no texto e 0.018 no fundo, para separar colunas sem competir com os Padrões 01–04 (a cor saturada continua só nos Padrões e no âmbar). Texto a ~7:1 sobre o fundo |
 | `--radius` e derivados (`-md`, `-lg`, `-xl`) | `editor/src/index.css:123-129`, `:162` |
 | `--padrao-1..4` (cores dos padrões) | `editor/src/index.css:15-18` |
 | `--ease-saida`, animação `entra` | `editor/src/index.css:25-37` |
@@ -90,6 +91,10 @@ Cores fora dos tokens só onde o admin/preview já fixou: faixa vermelha `#b0002
 | Toast | erro de rede/servidor do HTMX (automático) ou aviso efêmero | `uiToast("texto", "erro")` (`static/ui/ui.js`) |
 | Estado vazio | lista sem itens | `{% include "ui/_componentes/vazio.html" with titulo=… texto=… url=… rotulo=… %}` |
 | Badge | contagem, rótulo curto | `.badge`, `.badge-secundario`, `.badge-contorno`, `.badge-alerta`, `.badge-erro` |
+| Tag (pílula de categoria) | valor de categoria numa célula: matriz, componente, versão, "6 tópicos". Uma cor por coluna, sempre a mesma | `.tag` (neutra: fundo branco e fio), `.tag-azul` (matriz), `.tag-lilas` (componente LP/MT). Aviso continua em `.badge-alerta` ("sem matriz"). Corta com reticências acima de 18rem: ponha o nome inteiro no `title` |
+| Contagem (balão) | número de pendências ao lado de um selo | `<span class="contagem" role="img" aria-label="8 pendências" title="8 pendências: …">8</span>` (âmbar, como o contador do painel); sem pendência, `.contagem.contagem-ok` com o ✓ em cinza e `aria-label="Sem pendências"`. Plural com `pluralize`, nunca "(s)" |
+| Botão-ícone | ação de linha numa tabela (preview, baixar, editar, excluir) | `a.btn-icone` / `button.btn-icone` com SVG lucide inline (`aria-hidden="true"`), `aria-label` com a ação e o alvo ("Baixar zip de SAESE · LP") e `title` curto ("Baixar zip"). Quadrado de 32px, traço 1.75; a coluna fica à direita (`text-align: right`, `width: 1%`) |
+| Ação em massa sem alvo | botão da barra que precisa de linha marcada | `data-precisa-marca` + `disabled title="Marque ao menos um parceiro"` no servidor quando nada vem marcado; `lotes.js` liga e desliga ao marcar. O servidor continua recusando o envio vazio |
 | Carregando | pedido HTMX demorado | `hx-indicator` + `{% include "ui/_componentes/girando.html" with id=… %}` (`svg.girando.htmx-indicator`); o alvo com `.alvo-htmx` (ou `.detalhe`) e `hx-indicator` nele esmaece |
 | Link da linha | nome na 1ª coluna que abre o item (painel, matrizes, templates, revistas, variáveis) | `a.link-linha` (sublinhado discreto que escurece no hover) |
 | Link de texto | link no meio de uma frase ("usado por 2", "Limpar", "O que mudou") | `a.link` |
