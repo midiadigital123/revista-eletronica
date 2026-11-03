@@ -6,17 +6,19 @@ com o bloqueio do projeto (`lote.escrever_travado`): a tela não segura o bloque
 impresso lê, então a pedagógica continua editando. Revista readicionada compara com a foto
 herdada (a cascata copia a foto para a revista nova, D-094). Sem foto: tudo aparece como novo.
 
-O diff é por item (seção, escala da etapa, descritor, cores), em texto puro, na ordem da página.
+O diff é por item (seção, escala da etapa, descritor, cores), em texto puro, na ordem da página:
+por palavra (`diff_texto`), só os parágrafos ou linhas que mudaram, com 1 de contexto.
 """
 
 import difflib
+import re
+from itertools import zip_longest
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
-from django.utils.safestring import mark_safe
 from django.views.decorators.http import require_POST
 
 from nucleo import texto
@@ -44,16 +46,16 @@ def _descritor(codigo, d):
     linhas = [f"{codigo}: {d['description']}", *(f"Pré-requisito: {p}" for p in d["prerequisites"])]
     linhas += [f"BNCC: {bncc['practices']} / {bncc['knowledge']}", *(f"Habilidade: {s}" for s in bncc["skills"])]
     for chave in sorted(d["scale"], key=lambda c: int(c.split("-")[1])):  # jsonb não guarda a ordem
-        linhas.append(f"Padrão {chave.split('-')[1]}:")
-        linhas += [_linha(x) for x in d["scale"][chave]]
+        linhas += [_linha(chave.split("-")[1], x) for x in d["scale"][chave]]
     return "\n".join(linhas)
 
 
-def _linha(x):
-    """"  556–640: texto [item: id.tipo]": fim e arquivo da tarefa também vão para o InDesign."""
+def _linha(n, x):
+    """"Padrão 2: 556–640: texto [item: id.tipo]": cada linha se explica sozinha no diff; fim e arquivo
+    da tarefa também vão para o InDesign."""
     faixa = f"{x['level']}–{x['fim']}" if "fim" in x else str(x["level"])
     item = f" [item: {x['item']['id']}.{x['item']['tipo']}]" if "item" in x else ""
-    return f"  {faixa}: {x['content']}{item}"
+    return f"Padrão {n}: {faixa}: {x['content']}{item}"
 
 
 def textos(conteudo):
@@ -80,23 +82,90 @@ def textos(conteudo):
     return saida
 
 
+def _partes(velho, novo):
+    """[(igual|del|ins, texto)] por palavra; cada palavra leva o espaço que a segue."""
+    a, b = re.findall(r"\S+\s*", velho), re.findall(r"\S+\s*", novo)
+    partes = []
+    for op, i0, i1, j0, j1 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
+        if op == "equal":
+            partes.append(("igual", "".join(a[i0:i1])))
+            continue
+        if i1 > i0:
+            partes.append(("del", "".join(a[i0:i1])))
+        if j1 > j0:
+            partes.append(("ins", "".join(b[j0:j1])))
+    return partes
+
+
+def diff_texto(velho, novo, prosa):
+    """(blocos, trecho) do que mudou entre dois textos puros, para o InDesign.
+
+    Unidade: parágrafo (`prosa`, seções) ou linha (escala, descritor, cores). Só as unidades que mudaram,
+    com 1 de contexto antes e depois; o resto vira um bloco "pulo" ("… 3 parágrafos sem mudança").
+    Blocos: contexto {texto}; pulo {rotulo}; inline {partes} (prosa: del e ins no mesmo parágrafo);
+    par {antes, depois} (linhas: a velha e a nova, cada uma None se não existe).
+    `trecho`: só as unidades novas que mudaram, no texto novo (o que se cola no InDesign)."""
+    sep = "\n\n" if prosa else "\n"
+    a, b = ([u.strip() for u in t.split(sep) if u.strip()] for t in (velho, novo))
+    nome = "parágrafo" if prosa else "linha"
+    blocos, trecho, fim = [], [], 0
+
+    def pulo(n):
+        return {"tipo": "pulo", "rotulo": f"{n} {nome}{'s' if n > 1 else ''} sem mudança"}
+
+    for grupo in difflib.SequenceMatcher(None, a, b, autojunk=False).get_grouped_opcodes(1):
+        if grupo[0][1] > fim:
+            blocos.append(pulo(grupo[0][1] - fim))
+        for op, i0, i1, j0, j1 in grupo:
+            if op == "equal":
+                blocos += [{"tipo": "contexto", "texto": x} for x in a[i0:i1]]
+                continue
+            trecho += b[j0:j1]
+            # ponytail: pareia na ordem; um parágrafo inserido no meio de uma troca sai como del + ins inteiros.
+            for v, n in zip_longest(a[i0:i1], b[j0:j1]):
+                partes = _partes(v or "", n or "")
+                if prosa:
+                    blocos.append({"tipo": "inline", "partes": partes})
+                else:
+                    antes = v and [p for p in partes if p[0] != "ins"]
+                    depois = n and [p for p in partes if p[0] != "del"]
+                    blocos.append({"tipo": "par", "antes": antes, "depois": depois})
+        fim = grupo[-1][2]
+    if blocos and fim < len(a):
+        blocos.append(pulo(len(a) - fim))
+    return blocos, sep.join(trecho)
+
+
+def _rotulos(*conteudos):
+    """{(fascículo, id): título em texto puro} das seções (o rótulo humano de "introducao")."""
+    return {
+        (f.upper(), s["id"]): texto.html_para_texto(s["titulo"]).strip()
+        for c in conteudos if c for f in ("f1", "f2") for s in c[f]["secoes"] or []
+    }  # fmt: skip
+
+
 def mudancas(antes, depois):
-    """{fascículo: {grupo: [item]}} só com o que mudou. `antes` None (sem foto): tudo é novo."""
+    """{fascículo: {grupo: [item]}} só com o que mudou. `antes` None (sem foto): tudo é novo.
+    Item: antes/depois (texto inteiro), blocos (só alterado), trecho (o novo que mudou) e rótulos."""
     a, d = textos(antes) if antes else {}, textos(depois)
+    titulos = _rotulos(antes, depois)
     saida = {}
     for chave in [*d, *(k for k in a if k not in d)]:  # removidos no fim
         velho, novo = a.get(chave), d.get(chave)
         if velho == novo:
             continue
         fasciculo, grupo, item = chave
-        tabela = None
+        secao = grupo == item != "Cores"
+        blocos, trecho = None, novo
         if velho is not None and novo is not None:
-            tabela = mark_safe(  # o HtmlDiff escapa &, < e >
-                difflib.HtmlDiff(wrapcolumn=70).make_table(velho.splitlines(), novo.splitlines(), "Antes", "Depois", context=True, numlines=2)
-            )
-        saida.setdefault(fasciculo, {}).setdefault(grupo, []).append(
-            {"item": item, "antes": velho, "depois": novo, "tabela": tabela}
-        )
+            blocos, trecho = diff_texto(velho, novo, prosa=secao)
+            if not blocos:  # só espaço em branco: nada a levar ao InDesign
+                continue
+        rotulo_grupo = titulos.get((fasciculo, grupo)) or grupo if secao else grupo
+        saida.setdefault(fasciculo, {}).setdefault(grupo, []).append({
+            "item": item, "antes": velho, "depois": novo, "blocos": blocos, "trecho": trecho,
+            "rotulo_grupo": rotulo_grupo, "rotulo": rotulo_grupo if secao or item == grupo else f"{grupo} · {item}",
+        })  # fmt: skip
     return saida
 
 

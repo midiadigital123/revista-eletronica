@@ -34,21 +34,30 @@
   <h3 id="fasc-{{ fasciculo }}" class="impresso-fasc-titulo">{{ fasciculo }}</h3>
   {% for grupo, itens in grupos.items %}
   <div class="card impresso-grupo" id="grupo-{{ fasciculo }}-{{ grupo|slugify }}">
-    <h4>{{ grupo }}</h4>
+    {% with i=itens.0 %}<h4>{{ i.rotulo_grupo }}{% if i.rotulo == i.rotulo_grupo %} {% if i.antes is None %}<span class="badge badge-contorno">novo</span>{% elif i.depois is None %}<span class="badge badge-erro">removido</span>{% else %}<span class="badge badge-secundario">alterado</span>{% endif %}{% endif %}</h4>{% endwith %}
     {% for i in itens %}
     <div class="impresso-item">
-      <div class="impresso-item-cab">
-        {% if i.item != grupo %}<h5>{{ i.item }}</h5>{% endif %}
+      {% if i.rotulo != i.rotulo_grupo %}<div class="impresso-item-cab">
+        <h5>{{ i.rotulo }}</h5>
         {% if i.antes is None %}<span class="badge badge-contorno">novo</span>{% elif i.depois is None %}<span class="badge badge-erro">removido</span>{% else %}<span class="badge badge-secundario">alterado</span>{% endif %}
-      </div>
-      {% if i.tabela %}<div class="tabela-caixa">{{ i.tabela }}</div>{% elif i.depois is None %}<pre class="texto-md diff-velho impresso-removido">{{ i.antes }}</pre>{% endif %}
+      </div>{% endif %}
+      {% if i.blocos %}{% include "ui/_componentes/impresso_diff.html" with blocos=i.blocos %}
+      {% elif i.depois is None %}<div class="diff-palavras"><p class="diff-mudou"><del>{{ i.antes }}</del></p></div>{% endif %}
       {% if i.depois is not None %}
-      <label class="sr-only" for="novo-{{ fasciculo }}-{{ grupo|slugify }}-{{ forloop.counter }}">Texto novo de {{ i.item }}</label>
-      <textarea class="textarea mono" id="novo-{{ fasciculo }}-{{ grupo|slugify }}-{{ forloop.counter }}" readonly rows="4">{{ i.depois }}</textarea>
-      <div><button type="button" class="btn btn-outline btn-sm" data-copiar="#novo-{{ fasciculo }}-{{ grupo|slugify }}-{{ forloop.counter }}">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-        <span aria-live="polite">Copiar texto novo</span>
-      </button></div>
+      <div class="impresso-copiar">
+        <label class="impresso-copiar-rotulo" for="novo-{{ fasciculo }}-{{ grupo|slugify }}-{{ forloop.counter }}">{% if i.antes is None %}Texto novo{% else %}Só o trecho que mudou, já no texto novo{% endif %}</label>
+        <textarea class="textarea" id="novo-{{ fasciculo }}-{{ grupo|slugify }}-{{ forloop.counter }}" readonly rows="2">{{ i.trecho }}</textarea>
+        <div class="acoes">
+          <button type="button" class="btn btn-outline btn-sm" data-copiar="#novo-{{ fasciculo }}-{{ grupo|slugify }}-{{ forloop.counter }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            <span aria-live="polite">Copiar texto novo</span>
+          </button>
+          {% if i.trecho != i.depois %}
+          <button type="button" class="btn btn-ghost btn-sm" data-copiar="#inteiro-{{ fasciculo }}-{{ grupo|slugify }}-{{ forloop.counter }}"><span aria-live="polite">Copiar {% if i.rotulo == i.rotulo_grupo and grupo != "Cores" %}a seção inteira{% else %}o item inteiro{% endif %}</span></button>
+          <textarea class="sr-only" id="inteiro-{{ fasciculo }}-{{ grupo|slugify }}-{{ forloop.counter }}" readonly tabindex="-1" aria-hidden="true">{{ i.depois }}</textarea>
+          {% endif %}
+        </div>
+      </div>
       {% endif %}
     </div>
     {% endfor %}
