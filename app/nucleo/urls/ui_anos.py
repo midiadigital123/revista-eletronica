@@ -8,7 +8,6 @@ confirmação de impacto de `CorPadraoAdmin` (`nucleo/paleta.py`). Sem excluir e
 como no admin.
 """
 
-import re
 
 from django import forms
 from django.contrib import messages
@@ -23,7 +22,7 @@ from django.urls import path
 from django.views.decorators.http import require_http_methods, require_POST
 
 from nucleo.models import Ano, Componente, CorPadrao, Corte, Etapa, MatrizEtapaCC, Revista
-from nucleo.models.cadastro import COR_HEX
+from nucleo.models.cadastro import COR_HEX, ordem_escolar  # noqa: F401 (testes importam daqui)
 from nucleo.paleta import PadraoImpactoForm, revistas_afetadas_padrao
 from nucleo.servicos.abrir_ano import AnoRecusado, abrir_ano
 from nucleo.servicos.impacto import avisar_perdidos
@@ -99,27 +98,11 @@ class EtapaForm(_DoAno):
             self.fields["escala_max"].widget.attrs["title"] = "Travada: a etapa já tem corte ou matriz."
 
     def save(self, commit=True):
-        if not self.instance.pk:  # provisória: `renumerar_etapas` acerta a ordem do ano inteiro
+        if not self.instance.pk:  # provisória: `Etapa.save` acerta a ordem do ano inteiro
             self.instance.ordem = proxima_ordem(Etapa.objects.filter(ano=self.instance.ano))
         return super().save(commit)
 
 
-ETAPA = re.compile(r"^\s*(\d+)\s*(EF|EM)\s*$", re.IGNORECASE)
-
-
-def ordem_escolar(codigo):
-    """Lógica escolar (pedido do usuário, 03/11): todo o fundamental (EF) antes do médio (EM) e, no
-    mesmo ensino, pela série (2EF, 5EF, 9EF, 1EM, 3EM). Código fora do padrão vai para o fim."""
-    m = ETAPA.match(codigo)
-    return (("EF", "EM").index(m[2].upper()), int(m[1]), "") if m else (2, 0, codigo)
-
-
-def renumerar_etapas(ano):
-    """Ordem 1…N das etapas do ano pela `ordem_escolar`. `save` (não `update`): o histórico registra."""
-    for n, etapa in enumerate(sorted(Etapa.objects.filter(ano=ano), key=lambda e: ordem_escolar(e.codigo)), 1):
-        if etapa.ordem != n:
-            etapa.ordem = n
-            etapa.save(update_fields=["ordem"])
 
 
 class ComponenteForm(_DoAno):
@@ -275,8 +258,6 @@ def ano(request, ano):
         try:
             with transaction.atomic():  # tudo ou nada
                 tabelas[tabela].save()
-                if tabela == "etapas":
-                    renumerar_etapas(ano)
         except IntegrityError:  # outra pessoa gravou o mesmo código entre a checagem e o save
             messages.error(request, "Nada foi salvo: um dos códigos acabou de ser criado por outra pessoa. Confira e salve de novo.")
         else:

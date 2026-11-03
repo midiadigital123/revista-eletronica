@@ -1,3 +1,5 @@
+import re
+
 from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
 from django.db.models import Q
@@ -30,6 +32,25 @@ class Parceiro(models.Model):
         return self.nome
 
 
+ETAPA_CODIGO = re.compile(r"^\s*(\d+)\s*(EF|EM)\s*$", re.IGNORECASE)
+
+
+def ordem_escolar(codigo):
+    """Lógica escolar (pedido do usuário, 03/11): todo o fundamental (EF) antes do médio (EM) e, no
+    mesmo ensino, pela série (2EF, 5EF, 9EF, 1EM, 3EM). Código fora do padrão vai para o fim."""
+    m = ETAPA_CODIGO.match(codigo)
+    return (("EF", "EM").index(m[2].upper()), int(m[1]), "") if m else (2, 0, codigo)
+
+
+def renumerar_etapas(ano_id, etapas=None):
+    """Ordem 1…N das etapas do ano pela `ordem_escolar`. Por `update`: a ordem é derivada do código,
+    e o `save` da Etapa chama isto (save aqui entraria em recursão)."""
+    etapas = etapas if etapas is not None else Etapa.objects.filter(ano_id=ano_id)
+    for n, etapa in enumerate(sorted(etapas, key=lambda e: ordem_escolar(e.codigo)), 1):
+        if etapa.ordem != n:
+            type(etapa).objects.filter(pk=etapa.pk).update(ordem=n)
+
+
 class Etapa(models.Model):
     ano = models.ForeignKey(Ano, on_delete=models.PROTECT)
     codigo = models.TextField()
@@ -47,6 +68,15 @@ class Etapa(models.Model):
 
     def __str__(self):
         return f"{self.codigo} ({self.ano})"
+
+    def save(self, *args, **kwargs):
+        # A ordem nasce do código, por qualquer caminho (tela B, admin, criar_demo, abrir ano): o preview
+        # ordena por ela, e uma etapa gravada fora da tela B deixava 9EF antes de 5EF.
+        if self.ordem is None:
+            self.ordem = 0
+        super().save(*args, **kwargs)
+        renumerar_etapas(self.ano_id)
+        self.ordem = Etapa.objects.values_list("ordem", flat=True).get(pk=self.pk)
 
 
 class Componente(models.Model):

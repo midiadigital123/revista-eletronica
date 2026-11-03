@@ -250,8 +250,9 @@ class AnoCampoTest(Protocolo, Base):
         self.assertSalvo(self.postar(self.url("etapas", self.livre.pk), campo="escala_max", valor="1000"))
         # U4: a ordem não é campo (reordena por arrastar/setas, rota ui_ano_reordenar).
         self.assertNaoSalvo(self.postar(self.url("etapas", self.livre.pk), campo="ordem", valor="4"), 422, "erros")
+        ordem = self.livre.ordem  # derivada do código (Etapa.save): o POST de ordem não a muda
         self.livre.refresh_from_db()
-        self.assertEqual((self.livre.escala_max, self.livre.ordem), (1000, 9))
+        self.assertEqual((self.livre.escala_max, self.livre.ordem), (1000, ordem))
         self.assertSalvo(self.postar(self.url("componentes", self.mt.pk), campo="nome", valor="Matemática E2E"))
         self.assertEqual(Componente.objects.get(pk=self.mt.pk).nome, "Matemática E2E")
 

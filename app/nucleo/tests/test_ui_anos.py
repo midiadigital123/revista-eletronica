@@ -1,5 +1,6 @@
 """Anos fora do admin (/ui/anos/, S3 de D-190): mesma regra do `AnoAdmin.abrir_view`."""
 
+from django.test import TestCase
 from django.urls import reverse
 
 from nucleo.models import Ano, Componente, CorPadrao, Etapa, Matriz, Revista
@@ -273,3 +274,17 @@ class LinhasDoAnoTest(Base):
         self.assertContains(resp, "Adicionar componente")
         self.assertContains(resp, 'x-data="linhaNova"', count=2)
         self.assertNotContains(resp, 'x-data="ordenavel"')  # etapa: lógica escolar; componente: por código
+
+
+class OrdemEscolarPorQualquerCaminhoTest(TestCase):
+    """A ordem da etapa nasce do código em qualquer gravação (admin, criar_demo, abrir ano), não só na
+    tela B: o preview ordena por ela e mostrava 9EF antes de 5EF."""
+
+    def test_etapa_criada_pelo_orm_entra_na_ordem_escolar(self):
+        from nucleo.models import Ano, Etapa
+
+        ano = Ano.objects.create(ano=2031)
+        for codigo in ["9EF", "3EM", "2EF", "5EF"]:  # fora de ordem, sem passar pela tela
+            Etapa.objects.create(ano=ano, codigo=codigo, escala_max=500, ordem=99)
+        self.assertEqual(list(Etapa.objects.filter(ano=ano).order_by("ordem").values_list("codigo", flat=True)),
+                         ["2EF", "5EF", "9EF", "3EM"])
