@@ -199,7 +199,11 @@ class PaletaDoAnoTest(BaseProjeto):
     def test_adiciona_padrao_que_falta(self):
         self.assertNotContains(self.client.get(self.url), "Adicionar padrão")  # já há 5
         CorPadrao.objects.filter(ano=self.ano, padrao=5).delete()
-        self.assertContains(self.client.get(self.url), "Adicionar padrão")
+        r = self.client.get(self.url)
+        self.assertContains(r, "Adicionar padrão")
+        self.assertContains(r, '<details class="novo-padrao">')  # fechado até clicar (auditoria 03/11)
+        self.assertContains(r, 'class="select"')
+        self.assertContains(r, 'aria-label="Salvar Padrão 1"')  # cada "Salvar" diz de qual padrão
         dados = {"tabela": "novo_padrao", "novo-padrao": "5", "novo-nome": "Avançado", "novo-cor": "#00aa00"}
         self.assertEqual(self.client.post(self.url, dados).status_code, 302)
         self.assertTrue(CorPadrao.objects.filter(ano=self.ano, padrao=5, nome="Avançado").exists())

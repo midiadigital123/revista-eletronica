@@ -66,6 +66,7 @@ class _DoAno(forms.ModelForm):
         self.instance.ano = ano
         if self.instance.pk:
             self.fields["codigo"].disabled = True
+            self.fields["codigo"].widget.attrs["title"] = "O código não muda depois de criado."
         for nome, campo in self.fields.items():
             onde = self.instance.codigo if self.instance.pk else "linha nova"
             campo.widget.attrs.update({"class": "input", "aria-label": f"{campo.label} ({onde})"})
@@ -95,6 +96,7 @@ class EtapaForm(_DoAno):
         # Escala com corte ou matriz gravados: mudar a escala invalidaria esses dados (EtapaAdmin).
         if getattr(self.instance, "travada", False):
             self.fields["escala_max"].disabled = True
+            self.fields["escala_max"].widget.attrs["title"] = "Travada: a etapa já tem corte ou matriz."
 
     def save(self, commit=True):
         if not self.instance.pk:  # provisória: `renumerar_etapas` acerta a ordem do ano inteiro
@@ -206,7 +208,9 @@ class NovoPadraoForm(forms.ModelForm):
     def __init__(self, *args, ano, livres, **kwargs):
         super().__init__(*args, prefix="novo", initial={"cor": "#808080"}, **kwargs)  # cinza, não preto: sinaliza "escolha a cor"
         self.instance.ano = ano
-        self.fields["padrao"] = forms.TypedChoiceField(label="Padrão", choices=[(n, f"Padrão {n}") for n in livres], coerce=int)
+        self.fields["padrao"] = forms.TypedChoiceField(
+            label="Padrão", choices=[(n, f"Padrão {n}") for n in livres], coerce=int, widget=forms.Select(attrs={"class": "select"})
+        )
 
 
 def _pode(user):
