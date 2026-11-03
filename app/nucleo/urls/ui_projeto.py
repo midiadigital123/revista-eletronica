@@ -101,7 +101,8 @@ def _linhas(ano):
                 faltas = [c["dica"] for k, c in cel.items() if k not in ("validado", "impresso") and not c["ok"]]
                 situacao = ("Em preparo" if faltas else "Pronta para validar" if not cel["validado"]["ok"]
                             else "Validada" if not cel["impresso"]["ok"] else "Impressa")
-                revistas.append({"revista": r, "faltas": faltas, "situacao": situacao})
+                tag = {"Em preparo": "", "Pronta para validar": "tag-ambar", "Validada": "tag-azul", "Impressa": "tag-verde"}[situacao]
+                revistas.append({"revista": r, "faltas": faltas, "situacao": situacao, "situacao_tag": tag})
         linhas.append({
             "pa": p.parceiro_ano, "projeto": p, "revistas": revistas, "editando": editando.get(p.pk, ""),
             "marcar": p.parceiro_ano_id not in vistos, "ativo": p.parceiro_ano_id in ativos,

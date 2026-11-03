@@ -70,7 +70,7 @@ class HubListaTest(Base):
                 self.assertIn(f'aria-label="Baixar zip de {r}"', linha)
                 self.assertIn(f'<span class="tag tag-lilas" title="{r.componente.nome}">{r.componente.codigo}</span>', linha)
                 # Validado e Impresso são etapas: aparecem na Situação, não no balão.
-                self.assertIn('<span class="tag">Em preparo</span>' if n else '<span class="tag">Pronta para validar</span>', linha)
+                self.assertIn('<span class="tag ">Em preparo</span>' if n else '<span class="tag tag-ambar">Pronta para validar</span>', linha)
                 self.assertIn('data-dica="Abrir preview"', linha)
 
     def test_acoes_em_massa_desabilitadas_sem_marcado(self):

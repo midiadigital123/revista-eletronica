@@ -199,6 +199,11 @@ input[type="color"]:focus-visible { outline: none; border-color: var(--ring); bo
 }
 .tag-azul { background: var(--tag-azul-bg); color: var(--tag-azul); border-color: color-mix(in oklch, var(--tag-azul) 18%, transparent); }
 .tag-lilas { background: var(--tag-lilas-bg); color: var(--tag-lilas); border-color: color-mix(in oklch, var(--tag-lilas) 18%, transparent); }
+/* Etapa da revista (Situação): preparo neutro → pronta (âmbar, pede ação) → validada (azul) → impressa (verde);
+   arquivada apagada. */
+.tag-ambar { background: var(--warning-bg); color: var(--warning); border-color: color-mix(in srgb, var(--warning) 30%, transparent); }
+.tag-verde { background: color-mix(in oklch, var(--sucesso) 10%, var(--background)); color: var(--sucesso); border-color: color-mix(in oklch, var(--sucesso) 25%, transparent); }
+.tag-apagada { background: var(--muted); color: var(--muted-foreground); border-style: dashed; }
 
 /* --- contagem: balão redondo com um número (pendências); o texto completo vai no aria-label/title.
    .contagem-ok é o par neutro (✓ sem cor). --- */
