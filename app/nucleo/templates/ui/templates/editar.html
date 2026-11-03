@@ -1,8 +1,11 @@
 {% extends "ui/base.html" %}{% load static %}
-{% comment %}T13 Editar template: Markdown + Inserir variável + pré-visualização ao vivo (HTMX).
+{% comment %}T13 Editar template por seção (U9b): chip com o nome da seção (o id vai num hidden), título,
+texto com mini-barra, índice com status e pré-visualização ao vivo (HTMX). Componente: editor-secoes.js.
 View: nucleo/urls/ui_templates.py (editar). Ficha: docs/telas/fichas/templates.md.{% endcomment %}
 {% block titulo %}{{ tpl.nome }} · Templates{% endblock %}
-{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/templates.css' %}">{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/templates.css' %}">
+{# Sem defer: registra o alpine:init antes do Alpine (defer, no base.html) rodar. #}
+<script src="{% static 'ui/componentes/editor-secoes.js' %}"></script>{% endblock %}
 
 {% block conteudo %}
 <a class="mudo voltar" href="{% url 'ui_templates' tpl.ano.ano %}?aba={{ tpl.fasciculo }}">‹ Templates {{ tpl.fasciculo }}</a>
@@ -20,7 +23,8 @@ View: nucleo/urls/ui_templates.py (editar). Ficha: docs/telas/fichas/templates.m
 {% include "ui/_componentes/so_leitura.html" with texto="Só leitura: seu perfil vê os templates, mas não altera. Para editar, peça a permissão de templates a um administrador." %}
 {% endif %}
 
-<form method="post" class="tpl-form" data-editor>{% csrf_token %}
+<form method="post" class="tpl-form"{% if pode_gravar %} x-data="editorSecoes" @click="acao" @focusin="focar"
+  hx-post="{% url 'ui_templates_previa' tpl.pk %}" hx-trigger="input delay:400ms" hx-target="#previa" hx-sync="this:replace" hx-indicator="#previa-carregando"{% endif %}>{% csrf_token %}
   {% include "ui/_componentes/bloqueio.html" %}
 
   <div class="campo tpl-nome-campo">
@@ -29,27 +33,27 @@ View: nucleo/urls/ui_templates.py (editar). Ficha: docs/telas/fichas/templates.m
     {% if form.nome.errors %}<p class="erro" id="nome-erro">{{ form.nome.errors.0 }}</p>{% endif %}
   </div>
 
-  <div class="duas-colunas tpl-editor">
-    <div class="campo">
-      <div class="tpl-barra">
-        <label for="id_texto">Texto</label>
-        {% if pode_gravar %}
-        <div class="tpl-inserir">
-          <label class="sr-only" for="tpl-variavel">Variável</label>
-          <select class="select" id="tpl-variavel">
-            {% for grupo, itens in grupos.items %}<optgroup label="{{ grupo }}">{% for v in itens %}<option value="{{ v.nome }}" title="{{ v.descricao }}">{{ v.rotulo }}</option>{% endfor %}</optgroup>{% endfor %}
-          </select>
-          <button class="btn btn-outline" type="button" data-inserir>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/></svg>
-            Inserir variável
-          </button>
-        </div>
-        {% endif %}
+  <div class="tpl-editor">
+    <aside class="tpl-lado">{% include "ui/parciais/templates_indice.html" %}</aside>
+
+    <div class="tpl-secoes">
+      <div data-secoes>
+        {% for s in secoes %}{% include "ui/parciais/templates_secao.html" with n=forloop.counter0 %}{% endfor %}
       </div>
-      <textarea class="textarea mono tpl-texto" id="id_texto" name="texto" rows="28" spellcheck="true" aria-describedby="texto-ajuda"{% if form.texto.errors %} aria-invalid="true"{% endif %}{% if pode_gravar %}
-        hx-post="{% url 'ui_templates_previa' tpl.pk %}" hx-trigger="input changed delay:400ms" hx-target="#previa" hx-sync="this:replace" hx-indicator="#previa-carregando"{% else %} readonly{% endif %}>
-{{ form.texto.value|default:'' }}</textarea>
-      <p class="ajuda" id="texto-ajuda">Cada seção começa com <code>## id</code> e o título na linha seguinte. Variáveis entre chaves duplas, como <code>{% templatetag openvariable %}ano{% templatetag closevariable %}</code>. Negrito, itálico e listas valem; links, imagens, HTML e <code>#</code> no corpo, não.</p>
+      {% if pode_gravar and permitidas.repetiveis %}
+      <div class="tpl-adicionar">
+        <button class="btn btn-outline" type="button" data-acao="passo" data-proximo="{{ proximo }}">+ Adicionar passo</button>
+        <span class="tpl-adicionar-dlg">
+          <label class="sr-only" for="dlg-passo">Passo do diálogo</label>
+          <select class="select" id="dlg-passo" data-dlg-passo>
+            {% for id, r in passos %}<option value="{{ id }}">{{ r }}</option>{% endfor %}
+          </select>
+          <button class="btn btn-outline" type="button" data-acao="dialogo">+ Adicionar diálogo</button>
+        </span>
+      </div>
+      <template data-modelo>{% include "ui/parciais/templates_secao.html" with s=modelo n="__N__" %}</template>
+      {% endif %}
+      <p class="ajuda">Variáveis entre chaves duplas, como <code>{% templatetag openvariable %}ano{% templatetag closevariable %}</code>: use "{ } Variável". No texto valem negrito, itálico e listas; links, imagens, HTML e <code>#</code>, não. O título é texto puro.</p>
     </div>
 
     <section class="tpl-previa" aria-labelledby="previa-titulo">
@@ -64,35 +68,9 @@ View: nucleo/urls/ui_templates.py (editar). Ficha: docs/telas/fichas/templates.m
 
   {% if pode_gravar %}
   <div class="barra-salvar">
-    <span class="mudo" data-estado>Se o texto mudar, você vê o impacto nas revistas antes de criar a versão.</span>
+    <span class="mudo" data-estado aria-live="polite">Se o texto mudar, você vê o impacto nas revistas antes de criar a versão.</span>
     <button class="btn" type="submit">Salvar</button>
   </div>
   {% endif %}
 </form>
-
-{% if pode_gravar %}
-<script>
-// "Inserir variável" põe a variável entre chaves duplas no cursor e avisa o HTMX (evento input = preview);
-// aviso antes de sair com texto não salvo.
-(() => {
-  const form = document.querySelector("[data-editor]");
-  const area = form.querySelector("#id_texto");
-  const nome = form.querySelector("#id_nome");
-  const estado = form.querySelector("[data-estado]");
-  let enviando = false;
-  const mudou = () => area.value !== area.defaultValue || nome.value !== nome.defaultValue;
-  form.querySelector("[data-inserir]").addEventListener("click", () => {
-    if (area.readOnly) return;
-    area.setRangeText("{" + "{" + form.querySelector("#tpl-variavel").value + "}" + "}", area.selectionStart, area.selectionEnd, "end");
-    area.focus();
-    area.dispatchEvent(new Event("input", { bubbles: true }));
-  });
-  form.addEventListener("input", () => {
-    estado.textContent = mudou() ? "Alteração não salva." : "Se o texto mudar, você vê o impacto nas revistas antes de criar a versão.";
-  });
-  form.addEventListener("submit", () => { enviando = true; });
-  addEventListener("beforeunload", (e) => { if (!enviando && mudou()) e.preventDefault(); });
-})();
-</script>
-{% endif %}
 {% endblock %}

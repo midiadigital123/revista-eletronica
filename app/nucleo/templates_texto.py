@@ -10,6 +10,7 @@ D-099, D-102, D-118, D-123, D-162, D-163. Editar o texto = nova `TemplateVersao`
 """
 
 import hashlib
+import re
 
 from django.core import signing
 from django.core.exceptions import ValidationError
@@ -122,3 +123,82 @@ def previa(corpo, fasciculo=None, so_corpo=False):
         ),
     )
     return html, erros
+
+
+# --- U9b: editor por seção na tela B. O formato gravado continua o mesmo markdown `## id`. ---
+
+def secoes_permitidas(fasciculo):
+    """Estrutura do fascículo: seções fixas (sempre presentes) e repetíveis (só F2)."""
+    if fasciculo == "F1":
+        return {"fixas": list(texto.SECOES_F1), "repetiveis": {}}
+    return {"fixas": ["abertura", "passo1"], "repetiveis": {"passo": "passoN", "dlg": "dlg-pN"}}
+
+
+def id_permitido(id_, fasciculo):
+    return id_ in texto.SECOES_F1 if fasciculo == "F1" else bool(texto.ID_F2.fullmatch(id_))
+
+
+def rotulo(id_):
+    """Nome legível do id da seção: "Passo 1", "Diálogo do passo 4, item 1"."""
+    if m := re.fullmatch(r"passo(\d+)", id_):
+        return f"Passo {m[1]}"
+    if m := re.fullmatch(r"dlg-p(\d+)(?:-i(\d+))?", id_):
+        return f"Diálogo do passo {m[1]}" + (f", item {m[2]}" if m[2] else "")
+    if id_.startswith("dlg-"):
+        return f"Diálogo {id_[4:]}"
+    return {"abertura": "Abertura", "introducao": "Introdução", "fechamento": "Fechamento"}.get(id_, id_)
+
+
+def proximo_passo(ids):
+    """Número do passo novo: o maior passo + 1 (nunca reaproveita um id removido no meio)."""
+    return max((int(m[1]) for i in ids if (m := re.fullmatch(r"passo(\d+)", i))), default=0) + 1
+
+
+def secoes_para_form(corpo):
+    """[{id, titulo, corpo}] na ordem do texto."""
+    return [{"id": i, "titulo": t, "corpo": c} for i, (t, c) in texto.secoes(corpo).items()]
+
+
+def form_para_corpo(secoes):
+    """Inversa de `secoes_para_form` (ida e volta byte a byte nos seeds)."""
+    return "\n".join(f"## {s['id']}\n{s['titulo'].strip()}\n\n{s['corpo'].strip()}\n" for s in secoes)
+
+
+SECAO_ERRO = re.compile(r"Seção (\S+): (.*)", re.S)
+
+
+def previa_secoes(secoes, fasciculo):
+    """(html, erros, por_secao) do editor por seção. `por_secao[id]` = [(mensagem, "titulo"|"corpo")].
+    Título vazio e linha `## x` não aparecem no markdown montado (o corpo subiria a título, a linha
+    partiria a seção), então são conferidos aqui, nos campos, e escondem os erros enganosos da seção."""
+    proprios = {}
+    for s in secoes:
+        if not s["titulo"].strip():
+            proprios.setdefault(s["id"], []).append(("falta o título.", "titulo"))
+        for campo in ("titulo", "corpo"):
+            if texto.SECAO.search(s[campo]):
+                proprios.setdefault(s["id"], []).append(("linha começando com ## não é permitida: ela partiria a seção.", campo))
+    try:
+        texto.validar(form_para_corpo(secoes), fasciculo)
+        erros = []
+    except ValidationError as e:
+        erros = [m for m in e.messages if not ((g := SECAO_ERRO.fullmatch(m)) and g[1] in proprios)]
+    erros += [f"Seção {i}: {m}" for i, lista in proprios.items() for m, _ in lista]
+
+    por_secao = {s["id"]: list(proprios.get(s["id"], [])) for s in secoes}
+    for m in erros:
+        if (g := SECAO_ERRO.fullmatch(m)) and g[1] in por_secao and g[1] not in proprios:
+            por_secao[g[1]].append((g[2], "titulo" if "título" in g[2] else "corpo"))
+    for s in secoes:  # variável fora da lista: o erro geral não diz a seção
+        for campo in ("titulo", "corpo"):
+            por_secao[s["id"]] += [(m, campo) for m in texto._erros_variaveis(s[campo])]
+
+    html = format_html_join(
+        "",
+        "<section class=\"secao\"><h3>{}</h3>{}</section>",
+        (
+            (mark_safe(texto.renderizar_texto_puro(s["titulo"].strip(), {})), mark_safe(texto.renderizar(s["corpo"].strip(), {})))
+            for s in secoes
+        ),
+    )
+    return html, erros, por_secao

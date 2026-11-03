@@ -8,13 +8,20 @@ sem elas o editor é só leitura. Bloqueio por template, como o `BloqueioAdminMi
 Salvar: texto igual ao da versão atual grava só o nome; texto mudado vai à tela de impacto (mesma
 URL, nada gravado); "Confirmar e criar versão" com a assinatura da tela cria a versão N+1;
 "Voltar e editar" reabre o editor com o texto pendente.
+
+Editor por seção (U9b): o POST manda `secao-N-id` (hidden, conferido contra o fascículo; fora dele é
+422), `secao-N-titulo` e `secao-N-corpo`; a view monta o mesmo markdown `## id` com `form_para_corpo`
+e segue o fluxo acima. A tela de impacto e o "Voltar" continuam mandando o `texto` montado.
 """
+
+import re
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count
 from django.forms import modelform_factory
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import path
@@ -24,7 +31,10 @@ from nucleo.admin.templates import TemplateForm
 from nucleo.models import Ano, Template
 from nucleo.models.texto import Fasciculo
 from nucleo.servicos.resolver import versao_atual
-from nucleo.templates_texto import assinar, assinatura, com_uso, criar_versao, impacto, ler_assinatura, previa
+from nucleo.templates_texto import (
+    assinar, assinatura, com_uso, criar_versao, form_para_corpo, id_permitido, impacto, ler_assinatura,
+    previa_secoes, proximo_passo, rotulo, secoes_para_form, secoes_permitidas,
+)  # fmt: skip
 from nucleo.texto import TEXTO_MAX
 from nucleo.ui_bloqueio import com_bloqueio
 from nucleo.variaveis import VARIAVEIS
@@ -74,9 +84,53 @@ def lista(request, ano=None):
     return TemplateResponse(request, "ui/templates/lista.html", contexto)
 
 
-def _editor(request, tpl, form, status=200):
-    corpo = form["texto"].value() or ""
-    html, erros = previa(corpo, tpl.fasciculo) if len(corpo) <= TEXTO_MAX else ("", [GRANDE])
+CAMPO_ID = re.compile(r"secao-(\d+)-id")
+
+
+class IdInvalido(Exception):
+    pass
+
+
+def secoes_do_post(post, fasciculo):
+    """[{id, titulo, corpo}] do editor por seção, na ordem de N; None se o POST não é por seção
+    (tela de impacto e "Voltar" mandam o `texto` montado). Id fora do fascículo: IdInvalido (422)."""
+    ns = sorted(int(m[1]) for k in post if (m := CAMPO_ID.fullmatch(k)))
+    if not ns:
+        return None
+    secoes = []
+    for n in ns:
+        id_ = post[f"secao-{n}-id"]
+        if not id_permitido(id_, fasciculo):
+            raise IdInvalido(id_)
+        titulo = " ".join(post.get(f"secao-{n}-titulo", "").splitlines())  # campo de uma linha
+        secoes.append({"id": id_, "titulo": titulo, "corpo": post.get(f"secao-{n}-corpo", "").replace("\r\n", "\n")})
+    return secoes
+
+
+def _recusa(id_):
+    return HttpResponse(f"Seção não prevista neste fascículo: {id_}. Recarregue o editor.", status=422, content_type="text/plain; charset=utf-8")
+
+
+def _contexto_secoes(tpl, secoes):
+    """Seções para o editor e o índice, com rótulo, erros por campo e a prévia."""
+    if not secoes:  # template ainda sem texto: começa pelas fixas
+        secoes = [{"id": i, "titulo": "", "corpo": ""} for i in secoes_permitidas(tpl.fasciculo)["fixas"]]
+    corpo = form_para_corpo(secoes)
+    if len(corpo) > TEXTO_MAX:
+        html, erros, por_secao = "", [GRANDE], {s["id"]: [] for s in secoes}
+    else:
+        html, erros, por_secao = previa_secoes(secoes, tpl.fasciculo)
+    fixas = secoes_permitidas(tpl.fasciculo)["fixas"]
+    for s in secoes:
+        s["rotulo"], s["removivel"], s["erros"] = rotulo(s["id"]), s["id"] not in fixas, por_secao[s["id"]]
+        s["erro_titulo"] = any(campo == "titulo" for _, campo in s["erros"])
+        s["erro_corpo"] = any(campo == "corpo" for _, campo in s["erros"])
+    return {"secoes": secoes, "previa_html": html, "previa_erros": erros}
+
+
+def _editor(request, tpl, form, secoes=None, status=200):
+    if secoes is None:
+        secoes = secoes_para_form(form["texto"].value() or "")
     contexto = {
         "tpl": tpl,
         "ano": tpl.ano,
@@ -86,9 +140,13 @@ def _editor(request, tpl, form, status=200):
         "grupos": GRUPOS,
         "pode_gravar": request.pode_gravar,
         "sem_permissao": not pode_gravar(request.user),
-        "previa_html": html,
-        "previa_erros": erros,
+        "permitidas": secoes_permitidas(tpl.fasciculo),
+        **_contexto_secoes(tpl, secoes),
     }
+    ids = [s["id"] for s in contexto["secoes"]]
+    contexto["proximo"] = proximo_passo(ids)
+    contexto["passos"] = [(i, rotulo(i)) for i in ids if i.startswith("passo")]
+    contexto["modelo"] = {"id": "__ID__", "rotulo": "__ROTULO__", "titulo": "", "corpo": "", "removivel": True, "erros": []}
     return TemplateResponse(request, "ui/templates/editar.html", contexto, status=status)
 
 
@@ -107,10 +165,21 @@ def editar(request, pk):
         messages.info(request, "Voltou da tela de impacto: nada foi gravado. Revise o texto e salve de novo.")
         return _editor(request, tpl, FormTemplate(instance=tpl, initial=inicial))
 
-    form = FormTemplate(request.POST, instance=tpl)
-    if not form.is_valid():
+    try:
+        secoes = secoes_do_post(request.POST, tpl.fasciculo)
+    except IdInvalido as e:
+        return _recusa(e)
+    dados = request.POST
+    if secoes is not None:
+        dados = request.POST.copy()
+        dados["texto"] = form_para_corpo(secoes)
+    form = FormTemplate(dados, instance=tpl)
+    valido = form.is_valid()
+    if secoes is not None and valido and previa_secoes(secoes, tpl.fasciculo)[1]:
+        valido = False  # título vazio ou linha "## x" num campo: o markdown montado esconderia
+    if not valido:
         messages.error(request, "Nada foi gravado: corrija os erros marcados.")
-        return _editor(request, tpl, form)
+        return _editor(request, tpl, form, secoes)
     if not form.texto_mudou:
         form.save()
         messages.success(request, "Nome salvo. O texto é igual ao da versão atual, então nenhuma versão nova foi criada.")
@@ -146,9 +215,14 @@ def previa_ao_vivo(request, pk):
     if not pode_ver(request.user):
         raise PermissionDenied
     tpl = get_object_or_404(Template, pk=pk)
-    corpo = request.POST.get("texto", "")
-    html, erros = previa(corpo, tpl.fasciculo) if len(corpo.replace("\r\n", "\n")) <= TEXTO_MAX else ("", [GRANDE])
-    return TemplateResponse(request, "ui/parciais/templates_previa.html", {"previa_html": html, "previa_erros": erros})
+    try:
+        secoes = secoes_do_post(request.POST, tpl.fasciculo)
+    except IdInvalido as e:
+        return _recusa(e)
+    if secoes is None:
+        secoes = secoes_para_form(request.POST.get("texto", ""))
+    contexto = {"oob": True, **_contexto_secoes(tpl, secoes)}
+    return TemplateResponse(request, "ui/parciais/templates_previa.html", contexto)
 
 
 urlpatterns = [
