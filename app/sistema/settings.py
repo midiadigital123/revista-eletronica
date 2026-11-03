@@ -83,6 +83,11 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+# ?v=<mtime> em cada {% static %}: CSS/JS novo nunca fica preso no cache do navegador (nucleo/estaticos.py).
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "nucleo.estaticos.EstaticosComVersao"},
+}
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 

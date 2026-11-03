@@ -192,3 +192,17 @@ class SemCheckboxConfirmoTest(SimpleTestCase):
                 if 'type="checkbox"' in tag and re.search(r'name="[^"]*confirmar', tag):
                     achados.append(f"{arquivo.relative_to(raiz)}: {tag}")
         self.assertEqual(achados, [])
+
+
+class EstaticosComVersaoTest(SimpleTestCase):
+    """CSS/JS com ?v=<mtime>: arquivo mudou, URL muda, o navegador não usa o CSS velho do cache."""
+
+    def test_static_leva_versao(self):
+        from django.templatetags.static import static
+
+        self.assertRegex(static("ui/ui.css"), r"/static/ui/ui\.css\?v=\d+$")
+
+    def test_arquivo_inexistente_fica_sem_versao(self):
+        from django.templatetags.static import static
+
+        self.assertTrue(static("ui/nao-existe.css").endswith("/static/ui/nao-existe.css"))
