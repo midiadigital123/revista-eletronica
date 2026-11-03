@@ -4,11 +4,11 @@
 <!-- sobrescrever a cada atualização -->
 Plano ativo: `plans/revista-express-telas-b-ux.md` + rodada de correções da revisão do usuário de 03/11 (plano `~/.claude/plans/critique-plan-corrigir-estilos-quebrados-hidden-rain.md`). Ondas 1–4 e os agentes A–G + responsivo mergeados em `feat/telas-b-ux`.
 Funcionando: integração validada em `95cc0af` (Django 701 OK, Playwright 51/51, sem rolagem lateral em 1440/1024/768/390). Depois disso: cores por situação, colunas da lista, menu por perfil, ordem das etapas (`4de9cff`).
-Quebrado/pendente (para 04/11): (1) suíte Django completa ainda não confirmada com `4de9cff`, e migração 0015 não aplicada no banco de dev; (2) merge de `feat/ux-fix-nomes` (`721229e`, agente H, "projeto primeiro": testado isolado, Django 702 OK, Playwright 51/51); (3) Playwright completo na integração depois desses dois; (4) U10 (onda 5) e S6–S9 esperam o usuário; (5) `templates.css` reformatado pelo Prettier fora do git (só formatação), a descartar depois de reabrir o VS Code.
+Quebrado/pendente (para 04/11): (1) suíte Django OK com `4de9cff` (8 pulados); falta aplicar a migração 0015 no banco de dev; (2) merge de `feat/ux-fix-nomes` (`721229e`, agente H, "projeto primeiro": testado isolado, Django 702 OK, Playwright 51/51); (3) Playwright completo na integração depois desses dois; (4) U10 (onda 5) e S6–S9 esperam o usuário; (5) `templates.css` reformatado pelo Prettier fora do git (só formatação), a descartar depois de reabrir o VS Code.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Rodar `docker compose exec -T app python manage.py test nucleo` em `app/` e conferir que `4de9cff` (ordem das etapas) passa.
+Rodar `docker compose exec -T app python manage.py migrate` em `app/` (aplica a 0015 no banco de dev).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2010,7 +2010,7 @@ Rodar `docker compose exec -T app python manage.py test nucleo` em `app/` e conf
 - Agente H terminou ("projeto primeiro", `721229e` em `feat/ux-fix-nomes`): Lista com nome do projeto como link e parceiro em cinza; revista com título "<projeto> · <componente>", pares Parceiro/Ano e trilha Projetos de 2026 › projeto; painel e Impresso na mesma regra; `models` intocado (hash não muda). Merge fica para 04/11.
 
 ### Para 04/11 (pedido do usuário: terminar o que falta)
-1. Confirmar a suíte Django com `4de9cff` e rodar `migrate` no banco de dev (aplica a 0015; o preview passa a mostrar 5EF antes de 9EF).
+1. ~~Confirmar a suíte Django com `4de9cff`~~ (OK, 8 pulados) e rodar `migrate` no banco de dev (aplica a 0015; o preview passa a mostrar 5EF antes de 9EF).
 2. Fazer `git merge --no-ff feat/ux-fix-nomes` em `feat/telas-b-ux` e rodar a suíte Django.
 3. Rodar o Playwright completo numa stack isolada (`ux-integ`, 8030) no resultado; depois commitar o `state.md`.
 4. Descartar a reformatação do Prettier em `templates.css` (só formatação).
