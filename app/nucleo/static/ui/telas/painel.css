@@ -1,46 +1,72 @@
-/* Painel da temporada (T23). Só o que a tela precisa além de ui.css; usa os tokens de ui.css. */
+/* Painel da temporada (T23, U8). Só o que a tela precisa além de ui.css; usa os tokens de ui.css. */
 .painel-corpo { display: flex; flex-direction: column; gap: 1rem; }
 
-/* Próxima tarefa: uma frase grande à esquerda, atalhos de montagem à direita. */
-.painel-tarefa {
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1.5rem;
-  padding: 1rem 1.25rem; border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--card);
-}
-.painel-tarefa-principal { display: flex; flex-direction: column; gap: 0.125rem; min-width: 0; }
-.painel-tarefa h2 { font-weight: 500; }
-.painel-tarefa-link { font-size: 1.125rem; line-height: 1.75rem; font-weight: 500; letter-spacing: -0.01em; }
-.painel-tarefa-link strong { font-variant-numeric: tabular-nums; font-weight: 650; }
-a.painel-tarefa-link { text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 6px; transition: text-decoration-color 150ms; }
-a.painel-tarefa-link:hover { text-decoration-color: currentColor; }
-.painel-montagem { display: flex; flex-wrap: wrap; gap: 0.25rem; }
-
-/* Filtros: selects lado a lado, resumo à direita. */
+/* Filtros: parceiro (e o chip do template, quando vem de outra tela). */
 .painel-filtros { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.75rem 1rem; }
 .painel-filtros .select { min-width: 12rem; }
-.painel-resumo { margin-left: auto; padding-bottom: 0.5rem; font-variant-numeric: tabular-nums; }
 .painel-chip { display: inline-flex; align-items: center; gap: 0.5rem; height: 2.25rem; padding: 0 0.75rem; border-radius: var(--radius-md); background: var(--muted); font-size: 0.875rem; }
 
-/* Tabela: o cabeçalho de cada coluna diz quantas faltam e filtra por ela. */
-.painel-tabela thead th.painel-col { height: auto; padding-top: 0.375rem; padding-bottom: 0.375rem; text-align: center; }
-.painel-tabela .painel-col > span:first-child { display: block; }
-.painel-tabela .painel-col .badge { margin-top: 0.125rem; font-variant-numeric: tabular-nums; }
+/* Resumo: o total grande e um contador por coluna (o contador é o filtro de falta). */
+.painel-sumario { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; }
+.painel-resumo { flex: 1 1 100%; font-size: 1.125rem; line-height: 1.75rem; font-weight: 500; letter-spacing: -0.01em; }
+.painel-resumo strong { font-weight: 650; }
+.painel-contadores { display: flex; flex-wrap: wrap; gap: 0.375rem; margin: 0; padding: 0; list-style: none; }
+.painel-contador {
+  display: inline-flex; align-items: center; gap: 0.375rem; height: 2rem; padding: 0 0.75rem;
+  border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--background);
+  font-size: 0.8125rem; font-weight: 500; color: var(--foreground); white-space: nowrap;
+  transition: background-color 120ms var(--ease-saida), border-color 120ms var(--ease-saida);
+}
+a.painel-contador:hover { background: var(--muted); }
+a.painel-contador:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.painel-contador-n { min-width: 1.25rem; padding: 0 0.3125rem; border-radius: 999px; background: var(--warning-bg); color: var(--warning); font-weight: 650; text-align: center; }
+.painel-contador[aria-current="true"] { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+.painel-contador[aria-current="true"]:hover { background: var(--primary); }
+.painel-contador-ok { color: var(--muted-foreground); border-style: dashed; }
+.painel-contador-ok svg { width: 0.75rem; height: 0.75rem; color: var(--sucesso); }
+.painel-limpar { font-size: 0.875rem; }
+
+/* Tabela: cabeçalho e coluna Revista fixos (ui.css .tabela-densa); sombra na borda só depois de rolar. */
+.painel-tabela thead th.painel-col { text-align: center; }
 .painel-tabela thead th.painel-col-ativa { color: var(--foreground); box-shadow: inset 0 -2px 0 var(--foreground); }
+.painel-caixa thead th, .painel-caixa .fixa { transition: box-shadow 180ms var(--ease-saida); }
+.painel-caixa[data-rolou-y] thead th { box-shadow: 0 1px 2px 0 oklch(0 0 0 / 0.05); }
+.painel-caixa[data-rolou-y] thead th.painel-col-ativa { box-shadow: inset 0 -2px 0 var(--foreground), 0 1px 2px 0 oklch(0 0 0 / 0.05); }
+.painel-caixa[data-rolou-x] .fixa { box-shadow: 1px 0 2px 0 oklch(0 0 0 / 0.05); }
 .painel-tabela .painel-cel { text-align: center; }
-.painel-revista { font-weight: 500; }
+.painel-revista { font-weight: 500; min-width: 16rem; }
 .painel-revista > * + * { margin-left: 0.375rem; }
 .painel-revista > input[type="checkbox"] { margin-right: 0.375rem; }
-.painel-tabela .badge-contorno { color: var(--muted-foreground); }
+
+/* Linha de grupo (parceiro) e sublinhas (revistas do parceiro). */
+.painel-caixa .painel-tabela .painel-grupo > * { background: var(--muted); }
+.painel-caixa .painel-tabela tbody + tbody .painel-grupo > * { border-top-width: 1px; }
+.painel-grupo-nome { font-weight: 600; }
+.painel-grupo-projeto { color: var(--muted-foreground); font-size: 0.75rem; font-weight: 400; text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 3px; }
+.painel-grupo-projeto:hover { color: var(--foreground); text-decoration-color: currentColor; }
+.painel-grupo-conta { color: var(--muted-foreground); font-size: 0.75rem; font-weight: 400; }
+.painel-caixa .painel-tabela th.painel-sub { padding-left: 1.75rem; } /* recuo da sublinha: mostra que é do parceiro de cima */
+.painel-sub .link-linha { display: inline-flex; align-items: center; gap: 0.375rem; font-weight: 400; }
 .painel-preview { display: inline-flex; align-items: center; gap: 0.25rem; color: var(--muted-foreground); font-size: 0.75rem; font-weight: 400; }
 .painel-preview:hover { color: var(--foreground); }
 .painel-preview svg { width: 0.75rem; height: 0.75rem; }
-.painel-tabela tbody tr:has(input[name=revista]:checked),
-.painel-tabela tbody tr:has(input[name=revista]:checked) .fixa { background: var(--muted); }
+
+/* Pendência não é erro: "falta" neutro com um anel vazio (o ✓ verde é o par), sublinha só no hover. */
+.painel-tabela .status-falta { color: var(--muted-foreground); text-decoration: none; font-weight: 400; }
+.painel-tabela .status-falta::before { content: ""; width: 0.625rem; height: 0.625rem; border: 1.5px solid currentColor; border-radius: 999px; }
+.painel-tabela a.status-falta:hover { color: var(--foreground); text-decoration: underline; text-underline-offset: 3px; }
+
+/* Selecionada: um tom acima do muted, para não se confundir com a linha de grupo. */
+.painel-caixa .painel-tabela tbody tr:has(input[name=revista]:checked) > * { background: color-mix(in oklch, var(--foreground) 6%, var(--background)); }
+
+@media (prefers-reduced-motion: reduce) {
+  .painel-contador, .painel-caixa thead th, .painel-caixa .fixa { transition: none; }
+}
 
 @media (max-width: 40rem) {
   .painel-filtros .campo { flex: 1 1 100%; }
   .painel-filtros .select { min-width: 0; width: 100%; }
-  .painel-resumo { margin-left: 0; }
-  .painel-tarefa { padding: 0.875rem 1rem; }
+  .painel-revista { min-width: 12rem; }
   .painel-revista .painel-preview { font-size: 0; gap: 0; }  /* só o ícone; o texto continua para leitor de tela (sr-only) */
   .painel-revista .painel-preview svg { width: 0.875rem; height: 0.875rem; }
 }

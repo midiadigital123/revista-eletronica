@@ -11,7 +11,7 @@
 // cópia do fechamento do F1 com uma marca nova (para o hash mudar a cada execução), valida e
 // descarta a cópia no fim (a revista volta ao texto do template, sem "Validado").
 import { expect, test, type Page } from "@playwright/test";
-import { filtrarPainel } from "./helpers";
+import { filtrarFalta, filtrarPainel } from "./helpers";
 
 const FECHAMENTO = "#id_secao__F1__fechamento";
 
@@ -41,12 +41,14 @@ test("painel: filtrar e validar uma revista", async ({ page }) => {
   await page.click("input[type=submit]");
   await expect(page.locator("#painel-corpo table")).toBeVisible();
 
-  // 1. Filtros: parceiro DEMONSTRAÇÃO e "falta Validado" (o fim da execução anterior deixa sem).
-  // Painel B: os selects trocam o corpo pelo HTMX e empurram a URL.
+  // 1. Filtros: parceiro DEMONSTRAÇÃO e o contador "Validado" (o fim da execução anterior deixa sem).
+  // Painel B: o select e o contador trocam o corpo pelo HTMX e empurram a URL.
   await filtrarPainel(page, "#filtro-parceiro", { label: "DEMONSTRAÇÃO" });
-  await filtrarPainel(page, "#filtro-falta", "validado");
+  await filtrarFalta(page, "Validado");
   await expect(page).toHaveURL(/falta=validado/);
-  const linhas = page.locator("#painel-corpo tbody tr");
+  await expect(page.locator(".painel-contadores a[aria-current=true]")).toContainText("Validado");
+  await expect(page.locator("#painel-corpo .painel-grupo")).toHaveCount(1);
+  const linhas = page.locator("#painel-corpo tbody tr[data-revista]");
   await expect(linhas).toHaveCount(1);
   const linha = linhas.first();
   await expect(linha).toContainText("DEMONSTRAÇÃO");
@@ -80,8 +82,9 @@ test("painel: filtrar e validar uma revista", async ({ page }) => {
   // 4. O painel com "falta Validado" não mostra mais a revista; sem o filtro, ✓.
   await page.goto(urlPainel);
   await expect(page.locator("#painel-corpo")).toContainText("Nenhuma revista com esse filtro");
-  await filtrarPainel(page, "#filtro-falta", "");
-  await expect(page.locator("#painel-corpo tbody tr").first().locator("td.coluna-validado .status-ok")).toBeVisible();
+  await filtrarFalta(page, null);
+  await expect(page).not.toHaveURL(/falta=/);
+  await expect(page.locator("#painel-corpo tbody tr[data-revista]").first().locator("td.coluna-validado .status-ok")).toBeVisible();
 
   // 5. Limpa: descarta a cópia (o hash muda e o "Validado" cai).
   await page.goto(urlRevista);
@@ -92,4 +95,41 @@ test("painel: filtrar e validar uma revista", async ({ page }) => {
   expect(erros).toEqual([]);
 
   await liberarBloqueio(page);
+});
+
+test("painel: agrupado por parceiro, seleção por grupo", async ({ page }) => {
+  const usuario = process.env.E2E_ADMIN_USUARIO;
+  const senha = process.env.E2E_ADMIN_SENHA;
+  test.skip(!usuario || !senha, "defina E2E_ADMIN_USUARIO e E2E_ADMIN_SENHA");
+  const erros: string[] = [];
+  page.on("pageerror", (e) => erros.push(e.message));
+  await page.goto("/admin/login/?next=/painel/2026/");
+  await page.fill("#id_username", usuario!);
+  await page.fill("#id_password", senha!);
+  await page.click("input[type=submit]");
+
+  await expect(page.locator(".painel-tarefa")).toHaveCount(0);  // sem o card "Próxima tarefa"
+  const grupos = page.locator("#painel-corpo .painel-grupo");
+  test.skip((await grupos.count()) < 2, "precisa de 2 parceiros com revista no ano (ver o preparo do U8)");
+  await expect(grupos.first()).toContainText(/\d+ de \d+ revistas? completas?/);
+
+  // Marcar o parceiro marca as revistas dele; a caixa "todas" fica indeterminada.
+  const grupo = grupos.first().locator("input[data-grupo]");
+  const id = (await grupo.getAttribute("data-grupo"))!;
+  const dele = page.locator(`input[name=revista][data-de="${id}"]`);
+  const n = await dele.count();
+  await grupo.check();
+  for (let i = 0; i < n; i++) await expect(dele.nth(i)).toBeChecked();
+  await expect(page.locator("[data-selecionadas]")).toHaveText(`${n} selecionada(s)`);
+  await expect(page.locator("[data-validar]")).toBeEnabled();
+  expect(await page.locator("[data-todas]").evaluate((c: HTMLInputElement) => c.indeterminate)).toBe(true);
+  await grupo.uncheck();
+  await expect(page.locator("[data-selecionadas]")).toHaveText("Nenhuma selecionada");
+  await expect(page.locator("[data-validar]")).toBeDisabled();
+
+  // Coluna Revista fixa: rolar a tabela na horizontal (tela estreita) liga a sombra da borda.
+  await page.setViewportSize({ width: 480, height: 800 });
+  await page.locator(".painel-caixa").evaluate((c) => { c.scrollTop = 0; c.scrollLeft = 40; c.dispatchEvent(new Event("scroll")); });
+  await expect(page.locator(".painel-caixa")).toHaveAttribute("data-rolou-x", "");
+  expect(erros).toEqual([]);
 });
