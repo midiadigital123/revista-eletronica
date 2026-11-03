@@ -13,13 +13,13 @@ neutro); arquivada mostra a foto. Trocar um template troca este #textos (autosav
     {% for f, secoes in foto %}
     <div class="card revista-foto">
       <h3>{{ f }}</h3>
-      {% for s in secoes %}<article><h4>{{ s.id }} <span class="mudo">/</span> {{ s.titulo|safe }}</h4><div class="revista-foto-corpo">{{ s.corpo|safe }}</div></article>{% endfor %}
+      {% for s in secoes %}<article><h4>{{ s.titulo|safe }}</h4><div class="revista-foto-corpo">{{ s.corpo|safe }}</div></article>{% endfor %}
     </div>
     {% empty %}
-    {% include "ui/_componentes/vazio.html" with titulo="Sem textos na foto" texto="A revista foi arquivada sem template nos fascículos." %}
+    {% include "ui/_componentes/vazio.html" with titulo="Sem textos na foto" texto="A revista foi arquivada sem template nos fascículos." only %}
     {% endfor %}
   {% elif sem_template %}
-    {% include "ui/_componentes/vazio.html" with titulo="Escolha os templates acima" texto="Os textos aparecem aqui quando os dois fascículos tiverem template." %}
+    {% include "ui/_componentes/vazio.html" with titulo="Escolha os templates acima" texto="Os textos aparecem aqui quando os dois fascículos tiverem template." only %}
   {% elif blocos %}
   <div class="lado-a-lado">
     {% include "ui/parciais/revista_secoes.html" %}

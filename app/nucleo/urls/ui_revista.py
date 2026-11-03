@@ -10,7 +10,9 @@ Página em duas colunas (U8b): templates, arquivos e textos à esquerda; a colun
 lista de pendências, com o "Validar revista") fixa à direita. Envios (`acao`):
 - `templates` e `arquivos`: autosave (protocolo de `ui_autosave`, `?acao=` na URL), um campo por vez,
   com o modal de impacto (U2); a resposta 200 traz em `trocar` o HTML novo das partes afetadas.
-- `secao`: HTMX, devolve o painel da seção + lista de seções, Situação e mensagens (oob).
+- `texto`: autosave do texto de uma seção (`?acao=texto&secao=F1:id`), mesmo protocolo.
+- `secao`: HTMX, botões "Manter meu texto" e "Descartar cópia" (e o envio sem JS); devolve o painel
+  da seção + lista de seções, Situação e mensagens (oob).
 - `validar`: HTMX com HX-Redirect.
 """
 
@@ -44,7 +46,7 @@ from nucleo.revista import (
 )
 from nucleo.servicos import arquivos, resolver, validacao
 from nucleo.servicos.empacotar import Pendente, zip_revista
-from nucleo.ui_autosave import erros, quer_json, responder_campo
+from nucleo.ui_autosave import Conflito, erros, quer_json, responder_campo
 from nucleo.ui_bloqueio import com_bloqueio, e_htmx
 from nucleo.urls.painel import link as link_pendencia
 
@@ -174,6 +176,8 @@ def revista(request, ano, pk):
             return _salvar_secao(request, revista)
         if acao == "validar":
             return _validar(request, revista)
+        if acao == "texto" and quer_json(request):
+            return _texto(request, revista)
         if acao == "templates" and quer_json(request):
             return _template(request, revista)
         if acao == "arquivos" and quer_json(request):
@@ -238,7 +242,12 @@ def _salvar_secao(request, revista):
     """Uma seção por envio (só os campos dela vêm no POST; os outros não mudam: `changed_data`)."""
     if not request.user.has_perms(PERMS_TEXTO):
         raise PermissionDenied
-    form = form_de_textos(blocos_de_texto(revista))(request.POST, instance=revista)
+    dados = request.POST.copy()
+    if any(k.startswith("descartar__") for k in dados):
+        # "Descartar cópia" (botão): o texto da tela não conta; senão viraria "editou e descartou".
+        for k in [k for k in dados if k.startswith(("secao__", "initial-secao__"))]:
+            del dados[k]
+    form = form_de_textos(blocos_de_texto(revista))(dados, instance=revista)
     chave = request.POST.get("chave")
     if not form.is_valid():
         messages.error(request, ERRO_FORM)
@@ -248,6 +257,44 @@ def _salvar_secao(request, revista):
     else:
         messages.info(request, "Nada a salvar: o texto está igual ao que abriu.")
     return _pagina(request, revista, chave=chave)  # 200: segue com o bloqueio desta aba
+
+
+def _texto(request, revista):
+    """Autosave do texto de uma seção (`campo` = `secao__F1__introducao`; vêm junto a versão vista e o
+    `original`, que vira o valor inicial do form: só o que mudou grava). Mesma regra do "Salvar" do
+    admin (`gravar_textos`): a primeira mudança cria a cópia. A resposta troca a lista de seções, a
+    Situação e o estado da seção (selo, aviso, Descartar)."""
+    if not request.user.has_perms(PERMS_TEXTO):
+        raise PermissionDenied
+    campo = request.POST.get("campo", "")
+    blocos = blocos_de_texto(revista)
+    bloco = next((b for b in blocos for s in b.secoes if nome("secao", b.rf.fasciculo, s.id) == campo), None)
+    if bloco is None:
+        return erros(["Esta seção saiu do template. Recarregue a página."])
+    versao = nome("versao", bloco.rf.fasciculo)
+    dados = {campo: request.POST.get("valor", ""), f"initial-{campo}": request.POST.get("original", ""), versao: request.POST.get(versao, "")}
+    form = form_de_textos(blocos)(dados, instance=revista)
+    form.fields[campo].label = ""  # o erro já é do campo
+
+    def gravar_quieto(_):
+        # As mensagens do admin ("Textos do F1 salvos") não servem aqui: o status do autosave diz.
+        # Aviso de não salvo (template trocado, revista arquivada) vira 409, desfazendo a gravação.
+        gravar_textos(request, form)
+        avisos = [str(m) for m in messages.get_messages(request) if m.level >= messages.WARNING]
+        if avisos:
+            raise Conflito(" ".join(avisos))
+
+    def gravar(dados):
+        gravar_quieto(dados)
+        contexto = _contexto(request, revista)  # ?secao= da data-url: a mesma seção aberta
+        estado = f"secao-estado-{contexto['bloco'].rf.fasciculo}-{contexto['s'].id}"
+        trocar = {n: render_to_string(f"ui/parciais/revista_{n}.html", contexto, request=request) for n in ("secoes", "situacao")}
+        trocar[estado] = render_to_string("ui/parciais/revista_secao_estado.html", contexto, request=request)
+        return {"trocar": trocar}
+
+    return responder_campo(
+        request, form=form, gravar=gravar, simular=gravar_quieto, revistas=lambda: [revista], titulo="Salvar o texto da seção"
+    )
 
 
 def _template(request, revista):

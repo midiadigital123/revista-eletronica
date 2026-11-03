@@ -12,7 +12,7 @@
 // termina sem cópia na revista DEMONSTRAÇÃO (descartada no fim). Use num banco de desenvolvimento.
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { atribuirEmMassa, entrar, liberarBloqueio, novoParceiro, revistaDaLista } from "./helpers";
+import { alpinePronto, atribuirEmMassa, entrar, liberarBloqueio, novoParceiro, revistaDaLista } from "./helpers";
 
 const INTRO = "#id_secao__F1__introducao";
 const SVG = path.join(__dirname, "../../nucleo/tests/fixtures/f2-lp.svg");
@@ -114,8 +114,8 @@ test("revista: templates, arquivos por soltar e validar pela coluna Situação",
 
   // 1b. Trocar o template de um fascículo com cópia de seção: o modal pede a frase (D-171); Esc volta o select.
   await page.locator("#textos textarea").fill("Texto E2E da revista.");
-  await page.getByRole("button", { name: "Salvar seção" }).click();
-  await expect(page.locator("#mensagens")).toContainText("Textos do F1 salvos");
+  await page.keyboard.press("Tab"); // salva sozinho ao sair do campo
+  await expect(page.locator("#secoes")).toContainText("cópia");
   const padrao = await page.locator("#template-F1").inputValue();
   const modal = page.getByRole("dialog", { name: "Trocar o template do F1 apaga 1 cópia(s) de seção" });
   await page.selectOption("#template-F1", "");
@@ -149,4 +149,63 @@ test("revista: templates, arquivos por soltar e validar pela coluna Situação",
   await expect(page.locator("#situacao")).toContainText("Validada por");
   await liberarBloqueio(page);
   expect(erros).toEqual([]);
+});
+
+// Auditoria 03/11: o texto da seção salva sozinho ao sair do campo; sair da página e voltar mantém o
+// texto. Com o cursor ainda no campo (sem o `change`), sair avisa. Termina descartando a cópia.
+test("revista: o texto da seção salva sozinho e não se perde ao sair", async ({ page }) => {
+  const erros: string[] = [];
+  page.on("pageerror", (e) => erros.push(e.message));
+  const marca = `E2E autosave ${Date.now().toString(36)}`;
+  const status = page.locator("[data-status-salvo]");
+  const salvo = status.getByText(/Salvo às \d/);
+
+  await entrar(page, "/admin/nucleo/revista/");
+  await page.locator("#result_list a", { hasText: "DEMONSTRAÇÃO" }).first().click();
+  const pk = page.url().match(/revista\/(\d+)\//)![1];
+  const url = `/ui/revista/2026/${pk}/`;
+  await page.goto(url);
+  await alpinePronto(page);
+  const area = page.locator("#texto-secao");
+  await expect(status).toContainText("Cada campo salva sozinho");
+
+  // 1. Digitar e sair do campo: grava (com o modal, se a revista estava validada) e vira cópia.
+  await area.fill(`Meu texto ${marca}.`);
+  await page.keyboard.press("Tab");
+  const modal = page.locator("dialog.impacto[open]");
+  await expect(salvo.or(modal)).toBeVisible();
+  if (await modal.isVisible()) await modal.getByRole("button", { name: /tirar Validado/ }).click();
+  await expect(salvo).toBeVisible();
+  await expect(page.locator(".revista-secao-cab .badge")).toHaveText("cópia desta revista");
+  await expect(page.getByRole("button", { name: "Descartar cópia" })).toBeVisible();
+
+  // 2. Sair pela volta ao projeto (sem aviso: está salvo) e voltar: o texto continua lá.
+  const dialogos: string[] = [];
+  const contar = (d: { type: () => string; dismiss: () => Promise<void> }) => { dialogos.push(d.type()); void d.dismiss(); };
+  page.on("dialog", contar);
+  await page.locator("a.voltar").click();
+  await expect(page).toHaveURL(/\/ui\/projeto\/\d+\//);
+  expect(dialogos).toEqual([]);
+  page.off("dialog", contar);
+  await page.goto(url);
+  await expect(area).toHaveValue(`Meu texto ${marca}.`);
+
+  // 3. Digitando, sem sair do campo: fechar a aba pede confirmação.
+  await alpinePronto(page);
+  await area.fill(`Ainda digitando ${marca}`);
+  const dialogo = page.waitForEvent("dialog");
+  await page.close({ runBeforeUnload: true });
+  const d = await dialogo;
+  expect(d.type()).toBe("beforeunload");
+  await d.dismiss();
+  expect(page.isClosed()).toBe(false);
+
+  // 4. Descartar a cópia (botão com confirmação): volta ao texto do template.
+  await area.fill(`Meu texto ${marca}.`);
+  page.once("dialog", (x) => void x.accept());
+  await page.getByRole("button", { name: "Descartar cópia" }).click();
+  await expect(page.locator(".revista-secao-cab .badge")).toHaveText("texto do template");
+  await expect(area).not.toHaveValue(new RegExp(marca));
+  expect(erros).toEqual([]);
+  await liberarBloqueio(page);
 });

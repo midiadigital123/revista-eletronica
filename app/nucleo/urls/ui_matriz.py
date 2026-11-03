@@ -10,7 +10,7 @@ import re
 
 from django import forms
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Q
 from django.forms import inlineformset_factory, modelform_factory
@@ -533,6 +533,7 @@ def _excluir(request, mec, obj, rotulo, voltar):
 
 @require_http_methods(["GET", "POST"])
 @login_required(login_url="admin:login")
+@permission_required("nucleo.delete_descritor", raise_exception=True)  # sem poder excluir, nem a página (GET 403, como o Reimportar)
 @com_bloqueio(_mec, lambda u: u.has_perm("nucleo.delete_descritor"))
 def excluir_descritor(request, pk, dpk):
     m = _mec(request, pk)
@@ -542,6 +543,7 @@ def excluir_descritor(request, pk, dpk):
 
 @require_http_methods(["GET", "POST"])
 @login_required(login_url="admin:login")
+@permission_required("nucleo.delete_tarefa", raise_exception=True)  # sem poder excluir, nem a página (GET 403, como o Reimportar)
 @com_bloqueio(_mec, lambda u: u.has_perm("nucleo.delete_tarefa"))
 def excluir_tarefa(request, pk, dpk, tpk):
     m = _mec(request, pk)

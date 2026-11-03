@@ -190,7 +190,8 @@ test("impacto no autosave: Esc volta o valor e o foco; confirmar reenvia confirm
   await expect(page.locator("[data-status-salvo]").getByText("Salvo às 10:15")).toBeVisible();
   expect(enviados).toEqual(["simples", "simples", "confirmado"]);
   await page.unroute(ROTA);
-  await campo.fill(original); // o valor de verdade não mudou (a rota foi simulada)
+  // O banco não mudou (a rota foi simulada). Não volte o campo à mão: com o cursor nele e o valor
+  // diferente do "salvo", a saída avisaria (texto digitado e ainda não enviado).
   const dialogos: string[] = [];
   page.on("dialog", (d) => { dialogos.push(d.type()); void d.dismiss(); });
   await page.reload();

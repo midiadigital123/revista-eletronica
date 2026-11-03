@@ -8,7 +8,8 @@
 // [data-linha]: manda a linha inteira (passo, cor, tarefa). [data-manual]: fica de fora (linha nova
 // que ainda grava pelo botão). Impacto: o servidor devolve o modal do U2 (componente `impacto`), que
 // ao confirmar põe confirmar_impacto=on no form e chama requestSubmit(): o submit é interceptado
-// aqui e o campo vai de novo, confirmado. Cancelar/Esc volta o valor gravado e o foco ao campo.
+// aqui e o campo vai de novo, confirmado. Cancelar/Esc volta o valor gravado e o foco ao campo; dentro de
+// [data-manter-ao-cancelar] (texto longo) o valor fica e o status vira "Não salvo · Tentar de novo".
 // 409 sem `atual` (bloqueio perdido) e 403: o form inteiro vira só leitura, como no bloqueio.js.
 // Campos do modal (ex.: a frase "descartar N cópia(s)") vão junto ao confirmar. Resposta 200 com
 // `trocar` ({id: html}): troca essas partes da página (o que a gravação mudou fora do campo).
@@ -34,6 +35,12 @@ document.addEventListener("alpine:init", () => {
     else c.value = v;
   };
   const daLinha = (c) => c.closest("[data-linha]");
+  // Fechar ou recarregar a aba com o cursor no campo não dispara o `change`: o texto digitado ainda não
+  // saiu. Campo de autosave em foco e diferente do gravado: a saída avisa.
+  const sujoEmFoco = () => {
+    const c = document.activeElement;
+    return !!c?.form?.matches("[x-data=campoAuto]") && !!c.closest("[data-url]") && !c.readOnly && valor(c) !== gravado(c);
+  };
   const controles = (raiz) => [...raiz.querySelectorAll("input[name], select[name], textarea[name]")];
 
   // U8b: troca partes da página pelo HTML que a resposta trouxe (o Alpine inicia o que entrar).
@@ -213,6 +220,14 @@ document.addEventListener("alpine:init", () => {
       if (this.impacto?.dialogo === dialogo) {
         const { campo } = this.impacto; // Cancelar ou Esc: nada foi gravado
         this.impacto = null;
+        if (campo.closest("[data-manter-ao-cancelar]")) {
+          // Texto longo (seção da revista): o que foi digitado fica; o status diz "Não salvo" e a saída avisa.
+          this.falhou(campo, "Não salvo: gravação cancelada");
+          campo.dispatchEvent(new CustomEvent("autosave:cancelado", { bubbles: true }));
+          campo.focus();
+          dialogo.remove();
+          return;
+        }
         const linha = daLinha(campo);
         for (const o of linha ? controles(linha) : [campo]) definir(o, gravado(o));
         this.limpar(campo);
@@ -437,7 +452,7 @@ document.addEventListener("alpine:init", () => {
     init() {
       window.addEventListener("autosave:estado", (e) => Object.assign(this, e.detail));
       window.addEventListener("beforeunload", (e) => {
-        if (enviando.size || falhas.size) e.preventDefault();
+        if (enviando.size || falhas.size || sujoEmFoco()) e.preventDefault();
       });
     },
     get ocioso() {
