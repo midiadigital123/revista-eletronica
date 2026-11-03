@@ -246,8 +246,8 @@ document.addEventListener("alpine:init", () => {
   }));
 
   // U4: <ul|ol|tbody x-data="ordenavel" id="…" data-ordem-url="…/reordenar/">, filhos [data-id] com
-  // _componentes/ordem.html: alça .alca (SortableJS) e botões [data-mover="-1|1"] para o teclado. Cada
-  // mudança manda a lista inteira (ids) pelo protocolo do autosave e entra no mesmo status da página.
+  // _componentes/ordem.html: a alça <button class="alca" data-rotulo> arrasta (SortableJS) e, com o foco
+  // nela, ↑/↓ movem o item; um aria-live (no body, um por lista) anuncia a posição nova. Cada mudança manda a lista inteira (ids) pelo protocolo do autosave e entra no mesmo status da página.
   // Impacto: o modal do U2 aponta para um form oculto deste componente; confirmar reenvia confirmado,
   // Cancelar/Esc volta a ordem gravada. 422/409/403 também voltam; sem conexão, a ordem fica e o
   // "Tentar de novo" reenvia.
@@ -259,20 +259,25 @@ document.addEventListener("alpine:init", () => {
       this.impacto = null;
       this.foco = null;
       const id = `ordem-${this.$root.id}`;
-      document.getElementById(id)?.remove(); // troca HTMX da lista: um form por lista
+      document.getElementById(id)?.remove(); // troca HTMX da lista: um form e um aviso por lista
+      document.getElementById(`${id}-aviso`)?.remove();
       this.form = Object.assign(document.createElement("form"), { id, hidden: true });
       this.form.addEventListener("submit", (e) => this.aoConfirmar(e));
-      document.body.append(this.form);
+      this.aviso = Object.assign(document.createElement("p"), { id: `${id}-aviso`, className: "sr-only" });
+      this.aviso.setAttribute("aria-live", "polite");
+      document.body.append(this.form, this.aviso);
       this.sortable = Sortable.create(this.$root, {
         handle: ".alca", draggable: "[data-id]", animation: 120,
         onEnd: (e) => {
-          this.foco = e.item.querySelector("[data-mover]");
+          this.foco = e.item.querySelector(".alca");
           if (e.oldIndex !== e.newIndex) this.enfileirar(false);
         },
       });
-      this.$root.addEventListener("click", (e) => {
-        const b = e.target.closest("[data-mover]");
-        if (b && this.$root.contains(b)) this.mover(b);
+      this.$root.addEventListener("keydown", (e) => {
+        const passo = { ArrowUp: -1, ArrowDown: 1 }[e.key];
+        if (!passo || !e.target.matches(".alca") || e.altKey || e.ctrlKey || e.metaKey) return;
+        e.preventDefault(); // a seta não rola a página
+        this.mover(e.target, passo);
       });
       window.addEventListener("autosave:tentar", () => {
         if (falhas.has(this.chave)) this.enfileirar(false);
@@ -284,15 +289,16 @@ document.addEventListener("alpine:init", () => {
     ids() {
       return this.itens().map((e) => e.dataset.id);
     },
-    mover(b) {
-      const item = b.closest("[data-id]");
+    mover(alca, passo) {
+      const item = alca.closest("[data-id]");
       const itens = this.itens();
-      const vizinho = itens[itens.indexOf(item) + Number(b.dataset.mover)];
+      const vizinho = itens[itens.indexOf(item) + passo];
       if (!vizinho) return;
-      if (Number(b.dataset.mover) < 0) vizinho.before(item);
+      if (passo < 0) vizinho.before(item);
       else vizinho.after(item);
-      b.focus(); // mover o nó tira o foco do botão
-      this.foco = b;
+      alca.focus(); // mover o nó tira o foco da alça
+      this.foco = alca;
+      this.aviso.textContent = `${alca.dataset.rotulo} na posição ${this.itens().indexOf(item) + 1} de ${itens.length}`;
       this.enfileirar(false);
     },
     restaurar() {
@@ -341,7 +347,7 @@ document.addEventListener("alpine:init", () => {
       if (r.status === 422) return this.falhou(`Não salvo: ${(corpo.erros || ["ordem recusada"]).join(" ")}`);
       if (r.status === 409 || r.status === 403) {
         this.sortable.option("disabled", true);
-        for (const b of this.$root.querySelectorAll("[data-mover]")) b.disabled = true;
+        for (const b of this.$root.querySelectorAll(".alca")) b.disabled = true;
         return this.falhou(corpo.conflito || "Não salvo: a página ficou somente leitura. Recarregue a página.");
       }
       return this.falhou("Não salvo: erro no servidor");

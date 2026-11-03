@@ -472,12 +472,14 @@ table.diff .diff_next { display: none; }
 .adicionar-linha { margin-top: 0.75rem; }
 .linha-nova-form { align-items: center; margin-top: 0.75rem; }
 .linha-nova-form .input { width: auto; flex: 0 1 24rem; }
-.ordem { display: inline-flex; align-items: center; gap: 0.125rem; color: var(--muted-foreground); }
-.ordem .alca { display: inline-flex; padding: 0.25rem; border-radius: var(--radius-md); cursor: grab; touch-action: none; }
-.ordem .alca:hover { color: var(--foreground); background: var(--muted); }
-.ordem svg { width: 1rem; height: 1rem; }
-.ordem .btn { width: 1.75rem; height: 1.75rem; padding: 0; color: var(--muted-foreground); }
-.ordem .btn:hover { color: var(--foreground); }
+/* alça de ordem (_componentes/ordem.html): arrasta; com o foco, ↑/↓ movem o item */
+button.alca { /* button: vence o `.lista button` */
+  flex: none; display: inline-flex; align-items: center; justify-content: center; width: 1rem; height: 2rem; padding: 0;
+  border: 0; border-radius: var(--radius-md); background: none; color: var(--muted-foreground); cursor: grab; touch-action: none;
+}
+.alca:hover, .alca:focus-visible { color: var(--foreground); background: var(--muted); }
+.alca:disabled { cursor: default; opacity: 0.5; }
+.alca svg { width: 1rem; height: 1rem; }
 .sortable-ghost { opacity: 0.4; }
 .sortable-chosen { background: var(--muted); }
 

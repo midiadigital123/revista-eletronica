@@ -60,7 +60,7 @@ test("cortes: + Adicionar parceiro abaixo da grade abre a linha; Esc descarta", 
   await expect(adicionar).toBeFocused();
 });
 
-test("MEC: arrastar e os botões trocam a ordem das tarefas e dos descritores; + Adicionar tarefa", async ({ page }) => {
+test("MEC: arrastar e a alça com ↑/↓ trocam a ordem das tarefas e dos descritores; + Adicionar tarefa", async ({ page }) => {
   await entrar(page, "/ui/matriz/2026/");
   await page.getByRole("link", { name: "Demonstração" }).first().click();
   await page.locator('a[href*="/ui/matriz/mec/"]').first().click();
@@ -88,15 +88,17 @@ test("MEC: arrastar e os botões trocam a ordem das tarefas e dos descritores; +
   await alpinePronto(page);
   expect(await ordem(tarefas)).toEqual(depois);
 
-  // Teclado: "Mover para cima" devolve a tarefa ao 1º lugar.
-  const movida = page.locator(`${tarefas} > [data-id="${antes[0]}"] [data-mover="-1"]`);
+  // Teclado: com o foco na alça, ↑ devolve a tarefa ao 1º lugar e o aria-live diz a posição.
+  const movida = page.locator(`${tarefas} > [data-id="${antes[0]}"] .alca`);
+  await expect(movida).toHaveAccessibleName(/^Mover .+: use as setas para cima e para baixo$/);
   for (let i = depois.indexOf(antes[0]); i > 0; i--) {
     const ok = reordenou(page);
     await movida.focus();
-    await page.keyboard.press("Enter");
+    await page.keyboard.press("ArrowUp");
     await ok;
   }
   await expect(movida).toBeFocused();
+  await expect(page.locator("#ordem-tarefas-lista-aviso")).toHaveText(new RegExp(`na posição 1 de ${antes.length}$`));
   expect(await ordem(tarefas)).toEqual(antes);
 
   // Descritores (lista da MEC): para baixo e de volta, pelo teclado.
@@ -104,14 +106,16 @@ test("MEC: arrastar e os botões trocam a ordem das tarefas e dos descritores; +
   const descritores = await ordem(lista);
   if (descritores.length > 1) {
     const primeiro = page.locator(`${lista} > [data-id="${descritores[0]}"]`);
+    const alca = primeiro.locator(".alca");
+    await expect(page.locator(`${lista} [data-mover]`)).toHaveCount(0); // sem os botões ↑↓
     let ok = reordenou(page);
-    await primeiro.locator('[data-mover="1"]').focus();
-    await page.keyboard.press("Enter");
+    await alca.focus();
+    await page.keyboard.press("ArrowDown");
     await ok;
     expect((await ordem(lista))[1]).toBe(descritores[0]);
+    await expect(page.locator("#ordem-lista-ordem-aviso")).toHaveText(new RegExp(`na posição 2 de ${descritores.length}$`));
     ok = reordenou(page);
-    await primeiro.locator('[data-mover="-1"]').focus();
-    await page.keyboard.press("Enter");
+    await page.keyboard.press("ArrowUp");
     await ok;
   }
   await page.reload();
