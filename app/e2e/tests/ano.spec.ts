@@ -1,13 +1,14 @@
 // Seletor de ano do cabeçalho (U6): trocar de ano no painel filtrado cai na mesma tela, com o filtro.
-// Precisa de dois anos (ex.: `python manage.py abrir_ano 2027` depois do criar_demo 2026). Só lê.
+// Precisa de dois anos: crie um ano vazio (ex.: 2025) depois do criar_demo 2026. Não use abrir_ano 2027:
+// ele copia os descritores e o item.spec passa a achar dois "D01". Só lê.
 import { expect, test } from "@playwright/test";
-import { entrar, filtrarPainel } from "./helpers";
+import { entrar, filtrarFalta } from "./helpers";
 
 test("seletor de ano: troca no painel filtrado mantém a tela e o filtro", async ({ page }) => {
   const erros: string[] = [];
   page.on("pageerror", (e) => erros.push(e.message));
   await entrar(page, "/painel/2026/");
-  await filtrarPainel(page, "#filtro-falta", "validado"); // HTMX: a URL muda sem renderizar o cabeçalho
+  await filtrarFalta(page, "Validado"); // HTMX: a URL muda sem renderizar o cabeçalho (U8: contador no lugar do select)
   await expect(page).toHaveURL(/\/painel\/2026\/\?falta=validado(&|$)/);
 
   const nav = page.getByRole("navigation", { name: "Principal" }).getByRole("link");
@@ -29,7 +30,7 @@ test("seletor de ano: troca no painel filtrado mantém a tela e o filtro", async
   const ano = (await outro.textContent())!.trim();
   await outro.click();
   await expect(page).toHaveURL(new RegExp(`/painel/${ano}/\\?falta=validado(&|$)`));
-  await expect(page.locator("#filtro-falta")).toHaveValue("validado");
+  await expect(page.locator('#painel-corpo input[name="falta"]')).toHaveValue("validado"); // U8: a falta ativa vai num campo oculto
   await expect(page.getByRole("button", { name: new RegExp(`^Ano ${ano}`) })).toBeVisible();
 
   // O ano fica na sessão: a rota sem ano leva a ele.
