@@ -108,30 +108,43 @@ class ProjetoCampoTest(Protocolo, Base):
         self.assertEqual(Projeto.objects.get(pk=self.p.pk).nome, "GO novo")
         self.assertFalse(esta_validada(self.rev))
 
-    def test_linha_de_passo_cria_edita_e_remove(self):
-        sessao = self.sessao()
-        linha = {CAMPO_SESSAO: sessao, "passos-7-id": "", "passos-7-etapa": self.e9.pk, "passos-7-componente": self.lp.pk}
-        corpo = self.assertSalvo(self.postar(self.url, campo="passos-7-passo", valor="30", **linha, **{"passos-7-passo": "30"}))
-        passo = ProjetoPasso.objects.get(projeto=self.p, etapa=self.e9, componente=self.lp)
-        self.assertEqual((corpo["id"], passo.passo), (passo.pk, 30))
+    def test_passo_por_celula_sobrescreve_sem_vazias_e_volta_a_matriz(self):
+        sessao = {CAMPO_SESSAO: self.sessao()}
+        passo, sem = f"passo-{self.e9.pk}-{self.lp.pk}", f"sem-{self.e9.pk}-{self.lp.pk}"
+        linha = lambda: ProjetoPasso.objects.filter(projeto=self.p, etapa=self.e9, componente=self.lp)  # noqa: E731
+        self.assertSalvo(self.postar(self.url, campo=passo, valor="30", **sessao))
+        self.assertEqual(linha().get().passo, 30)
+        self.assertSalvo(self.postar(self.url, campo=sem, valor="on", **sessao))
+        self.assertIsNone(linha().get().passo)  # sem linhas vazias: a linha existe, com passo nulo
+        self.assertSalvo(self.postar(self.url, campo=sem, valor="", **sessao))
+        self.assertFalse(linha().exists())  # desmarcar: volta ao passo da matriz
+        self.assertSalvo(self.postar(self.url, campo=passo, valor="30", **sessao))
+        self.assertSalvo(self.postar(self.url, campo=passo, valor="", **sessao))
+        self.assertFalse(linha().exists())  # "Voltar ao passo da matriz" (campo vazio)
+        self.assertEqual(linha().model.history.filter(etapa=self.e9).count(), 5)  # 2 criações, 1 edição, 2 exclusões
 
-        linha["passos-7-id"] = passo.pk
-        self.assertSalvo(self.postar(self.url, campo="passos-7-passo", valor="", **linha, **{"passos-7-passo": ""}))
-        self.assertIsNone(ProjetoPasso.objects.get(pk=passo.pk).passo)
+    def test_passo_invalido_e_etapa_de_outro_ano(self):
+        sessao = {CAMPO_SESSAO: self.sessao()}
+        self.assertNaoSalvo(self.postar(self.url, campo=f"passo-{self.e9.pk}-{self.lp.pk}", valor="0", **sessao), 422, "erros")
+        outra = Etapa.objects.create(ano=Ano.objects.create(ano=2025), codigo="5EF", escala_max=500, ordem=1)
+        self.assertEqual(self.postar(self.url, campo=f"passo-{outra.pk}-{self.lp.pk}", valor="30", **sessao).status_code, 404)
+        self.assertFalse(ProjetoPasso.objects.exists())
 
-        corpo = self.assertSalvo(self.postar(self.url, campo="passos-7-DELETE", valor="on", **linha, **{"passos-7-DELETE": "on"}))
-        self.assertTrue(corpo["removida"])
-        self.assertFalse(ProjetoPasso.objects.filter(pk=passo.pk).exists())
+    def test_cor_sobrescreve_e_a_cor_do_ano_volta(self):
+        sessao = {CAMPO_SESSAO: self.sessao()}
+        self.assertSalvo(self.postar(self.url, campo="cor-2", valor="#123456", **sessao))
+        self.assertEqual(ProjetoCor.objects.get(projeto=self.p, padrao=2).cor, "#123456")
+        self.assertSalvo(self.postar(self.url, campo="cor-2", valor="#ff8d43", **sessao))  # a do ano (gravada #FF8D43)
+        self.assertFalse(ProjetoCor.objects.filter(projeto=self.p).exists())
+        self.assertNaoSalvo(self.postar(self.url, campo="cor-2", valor="azul", **sessao), 422, "erros")
+        self.assertNaoSalvo(self.postar(self.url, campo="cor-9", valor="#000000", **sessao), 422, "erros")
 
-    def test_linha_de_cor_incompleta_e_repetida(self):
-        sessao = self.sessao()
-        linha = {CAMPO_SESSAO: sessao, "cores-0-id": "", "cores-0-padrao": "", "cores-0-cor": "#112233"}
-        self.assertNaoSalvo(self.postar(self.url, campo="cores-0-cor", valor="#112233", **linha), 422, "erros")
-        linha["cores-0-padrao"] = "2"
-        self.assertSalvo(self.postar(self.url, campo="cores-0-padrao", valor="2", **linha))
-        linha["cores-1-id"], linha["cores-1-padrao"], linha["cores-1-cor"] = "", "2", "#445566"
-        self.assertNaoSalvo(self.postar(self.url, campo="cores-1-padrao", valor="2", **linha), 422, "erros")
-        self.assertEqual(ProjetoCor.objects.filter(projeto=self.p).count(), 1)
+    def test_cor_so_com_outra_caixa_nao_muda(self):
+        cor = ProjetoCor.objects.create(projeto=self.p, padrao=3, cor="#ABCDEF")
+        antes = cor.history.count()
+        self.assertSalvo(self.postar(self.url, campo="cor-3", valor="#abcdef", **{CAMPO_SESSAO: self.sessao()}))
+        cor.refresh_from_db()
+        self.assertEqual((cor.cor, cor.history.count()), ("#ABCDEF", antes))
 
     def test_paginas_sem_salvar_e_com_autosave(self):
         r = self.client.get(reverse("ui_projeto", args=[self.p.pk]))

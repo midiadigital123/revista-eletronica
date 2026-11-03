@@ -14,7 +14,6 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db.models import F, Prefetch
-from django.forms.utils import pretty_name
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
@@ -26,12 +25,14 @@ from nucleo import lotes, planilha_variaveis
 from nucleo.contexto import ano_da_sessao
 from nucleo.lotes import escrever_travado
 from nucleo.models import (
-    Ano, Componente, CorPadrao, Fasciculo, Matriz, MatrizEtapaCC, ParceiroAno, Projeto, ProjetoCor, ProjetoPasso, Revista, Template,
+    Ano, Componente, CorPadrao, Etapa, Fasciculo, Matriz, MatrizEtapaCC, ParceiroAno, Projeto, ProjetoCor, ProjetoPasso, Revista,
+    Template,
 )  # fmt: skip
-from nucleo.projeto import MAX_CORES, CorForm, PassoForm, ProjetoForm, formsets
+from nucleo.projeto import MAX_CORES, ProjetoForm
 from nucleo.servicos import matriz as matrizes
-from nucleo.servicos.resolver import cores_efetivas, valores_das_variaveis
+from nucleo.servicos.resolver import valores_das_variaveis
 from nucleo.ui_autosave import Conflito, form_de_um_campo, responder_campo
+from nucleo.ui_autosave import erros as erros_campo
 from nucleo.ui_bloqueio import CAMPO_SESSAO, com_bloqueio
 from nucleo.urls import cortes as aba_cortes
 from nucleo.urls import painel, ui_lotes
@@ -173,22 +174,13 @@ def _pk(valor):
     return int(valor) if valor and valor.isascii() and valor.isdigit() and len(valor) < 10 else None
 
 
-def _vestir(*forms, desabilitar=False):
-    """Classes do design system nos widgets, `aria-invalid` no campo com erro; só leitura: disabled.
-
-    Linha de formset (prefixo `passos-0`): o <th> não rotula o controle, então vai `aria-label`.
-    O checkbox Remover já tem <label>."""
-    for f in forms:
-        for nome, campo in f.fields.items():
-            tipo = campo.widget.attrs.get("type") or getattr(campo.widget, "input_type", "")
-            classe = {"select": "select", "checkbox": "", "color": "pj-cor"}.get(tipo, "input")
-            if classe:
-                campo.widget.attrs["class"] = classe
-            if "-" in (f.prefix or "") and tipo not in ("checkbox", "hidden"):
-                campo.widget.attrs.setdefault("aria-label", campo.label or pretty_name(nome))
-            if f.is_bound and nome in f.errors:
-                campo.widget.attrs["aria-invalid"] = "true"
-            campo.disabled |= desabilitar
+def _vestir(form, desabilitar=False):
+    """Classe do design system nos widgets, `aria-invalid` no campo com erro; só leitura: disabled."""
+    for nome, campo in form.fields.items():
+        campo.widget.attrs["class"] = "input"
+        if form.is_bound and nome in form.errors:
+            campo.widget.attrs["aria-invalid"] = "true"
+        campo.disabled |= desabilitar
 
 
 @require_http_methods(["GET", "POST"])
@@ -204,24 +196,16 @@ def projeto(request, pk):
     pode = request.pode_gravar and not arquivado
 
     aba = request.GET.get("aba") if request.GET.get("aba") in dict(ABAS) else "dados"
-    if request.method == "POST":
-        form = ProjetoForm(request.POST, instance=projeto)
-        passos, cores = formsets(projeto, request.POST)
-        if all([form.is_valid(), passos.is_valid(), cores.is_valid()]):  # all([...]): valida os três
+    # O POST da página só leva nome e variáveis; passo e cor gravam pelo autosave (`campo`).
+    form = ProjetoForm(request.POST if request.method == "POST" else None, instance=projeto)
+    if form.is_bound:
+        if form.is_valid():
             form.save()
-            passos.save()
-            cores.save()
             messages.success(request, f"Projeto {projeto.nome} salvo.")
             return redirect("ui_projeto", projeto.pk)
         messages.error(request, "Nada foi gravado: corrija os erros marcados.")
-    else:
-        form = ProjetoForm(instance=projeto)
-        passos, cores = formsets(projeto)
-    _vestir(form, *passos.forms, *cores.forms, desabilitar=not pode)
+    _vestir(form, desabilitar=not pode)
 
-    efetivas = cores_efetivas(projeto, projeto, MAX_CORES)  # mesma regra da revista (D-060)
-    nomes = valores_das_variaveis(projeto)
-    sobrescritas = {c.instance.padrao for c in cores.forms if c.instance.pk}
     contexto = {
         "projeto": projeto,
         "arquivado": arquivado,
@@ -229,13 +213,7 @@ def projeto(request, pk):
         "form": form,
         "tem_permissao": pode_gravar(request.user),
         "grupos": [(g, [(form[v.nome], v) for v in VARIAVEIS if v.grupo == g and not v.automatica]) for g in GRUPOS],
-        "passos": passos,
-        "cores": cores,
-        "max_cores": MAX_CORES,
-        "faixa": [
-            {"padrao": k, "cor": efetivas[f"padrao-{k}"], "nome": nomes.get(f"pd{k:02d}", ""), "projeto": k in sobrescritas}
-            for k in range(1, MAX_CORES + 1) if f"padrao-{k}" in efetivas
-        ],
+        "revistas_ativas": _revistas(projeto).select_related("componente").order_by("componente__codigo"),
         "matrizes": Matriz.objects.filter(ano_id=projeto.ano_id).order_by("nome")
         if request.bloqueio and pode_matriz(request.user) else None,
         "passos_matriz": MatrizEtapaCC.objects.filter(matriz_id=projeto.parceiro_ano.matriz_id)
@@ -245,11 +223,49 @@ def projeto(request, pk):
         "abas": ABAS,
         "aba": aba,
     }
-    if aba == "cortes":
+    if aba == "passos":
+        contexto["etapas_passo"] = _passos(projeto)
+        contexto["amostras"] = _amostras(projeto)
+    elif aba == "cortes":
         contexto["grade"] = _grade_do_parceiro(request, projeto)
     elif aba == "revistas":
         contexto["cartoes"] = _cartoes(projeto)
     return TemplateResponse(request, "ui/projeto/projeto.html", contexto)
+
+
+def _passos(projeto):
+    """Aba Passos e cores: um bloco por etapa do ano, com uma célula por componente. Cada célula traz
+    o passo da matriz (o herdado) e a sobrescrita do projeto, se houver (D-053, D-091): sem linha =
+    herda; linha com passo nulo = sem linhas vazias, de propósito."""
+    matriz = {
+        (m.etapa_id, m.componente_id): m.passo
+        for m in MatrizEtapaCC.objects.filter(matriz_id=projeto.parceiro_ano.matriz_id)
+    }
+    proprios = {(p.etapa_id, p.componente_id): p.passo for p in ProjetoPasso.objects.filter(projeto=projeto)}
+    componentes = list(Componente.objects.filter(ano_id=projeto.ano_id).order_by("codigo"))
+
+    def celula(e, c):
+        k = (e.pk, c.pk)
+        da_matriz = "fora da matriz" if k not in matriz else matriz[k] or "sem linhas vazias"
+        return {
+            "chave": f"{e.pk}-{c.pk}", "componente": c, "matriz": matriz.get(k), "da_matriz": da_matriz,
+            "sobrescrito": k in proprios, "passo": proprios.get(k), "sem_vazias": k in proprios and proprios[k] is None,
+        }  # fmt: skip
+
+    etapas = Etapa.objects.filter(ano_id=projeto.ano_id).order_by("ordem")
+    return [{"etapa": e, "celulas": [celula(e, c) for c in componentes]} for e in etapas]
+
+
+def _amostras(projeto):
+    """Aba Passos e cores: uma amostra por padrão do ano, com a cor efetiva (do projeto, senão do ano:
+    D-060) e o nome efetivo (`pdNN`, senão o nome do ano: D-175)."""
+    proprias = dict(ProjetoCor.objects.filter(projeto=projeto).values_list("padrao", "cor"))
+    nomes = valores_das_variaveis(projeto)
+    return [
+        {"padrao": cp.padrao, "nome": nomes.get(f"pd{cp.padrao:02d}", ""),
+         "cor_ano": cp.cor.lower(), "cor": proprias.get(cp.padrao, cp.cor).lower(), "sobrescrita": cp.padrao in proprias}
+        for cp in CorPadrao.objects.filter(ano_id=projeto.ano_id, padrao__lte=MAX_CORES).order_by("padrao")
+    ]  # fmt: skip
 
 
 def _grade_do_parceiro(request, projeto):
@@ -257,6 +273,13 @@ def _grade_do_parceiro(request, projeto):
     mesma rota da grade (`cortes_celula`, sem bloqueio: conflito otimista pelo `original`)."""
     grade, _ = regra_cortes.grade(request, projeto.ano, ler_post=False)
     grade["linhas"] = [l for l in grade["linhas"] if l["parceiro"].pk == projeto.parceiro_ano.parceiro_id]
+    # Um parceiro só: a grade transposta, um bloco por etapa com os componentes lado a lado.
+    grade["blocos"] = []
+    for linha in grade["linhas"]:
+        for (e, c), cel in zip(grade["colunas"], linha["celulas"]):
+            if not grade["blocos"] or grade["blocos"][-1]["etapa"] != e:
+                grade["blocos"].append({"etapa": e, "campos": []})
+            grade["blocos"][-1]["campos"].append((c, cel))
     return grade
 
 
@@ -313,34 +336,8 @@ def _gravar_matriz(request, pk):
     return responder_campo(request, form=form, gravar=gravar, revistas=lambda: _revistas(projeto), titulo="Trocar a matriz")
 
 
-@require_GET
-@login_required(login_url="admin:login")
-@com_bloqueio(_alvo, pode_gravar)
-def linha(request, pk, tipo):
-    """Fragmento HTMX: uma linha nova de passo ou cor, no índice TOTAL_FORMS, e o contador atualizado."""
-    if tipo not in ("passos", "cores"):
-        raise Http404
-    if not request.pode_gravar:
-        raise PermissionDenied
-    projeto = get_object_or_404(Projeto, pk=pk, arquivado_em__isnull=True)
-    passos, cores = formsets(projeto)
-    fs = passos if tipo == "passos" else cores
-    total = request.GET.get(f"{tipo}-TOTAL_FORMS", "")
-    i = int(total) if total.isascii() and total.isdigit() and len(total) < 4 else fs.total_form_count()
-    nova = fs.empty_form
-    nova.prefix = fs.add_prefix(i)
-    if tipo == "cores":
-        # Sugere o primeiro padrão ainda sem cor no form, já com a cor da paleta do ano.
-        usados = {request.GET.get(f"cores-{n}-padrao", "") for n in range(i)}
-        livre = next((k for k in range(1, MAX_CORES + 1) if str(k) not in usados), None)
-        paleta = dict(CorPadrao.objects.filter(ano_id=projeto.ano_id).values_list("padrao", "cor"))
-        nova.initial = {"padrao": livre, "cor": paleta.get(livre, "#000000")}
-    _vestir(nova)
-    contexto = {"projeto": projeto, "f": nova, "tipo": tipo, "total": i + 1, "cheio": tipo == "cores" and i + 1 >= MAX_CORES, "nova": True}
-    return TemplateResponse(request, "ui/parciais/projeto_linha.html", contexto)
-
-
-LINHA = re.compile(r"^(passos|cores)-(\d{1,4})-")
+PASSO = re.compile(r"^(passo|sem)-(\d{1,9})-(\d{1,9})$")  # célula etapa × componente da aba Passos e cores
+COR = re.compile(r"^cor-(\d)$")  # amostra do padrão
 
 
 def _revistas(projeto):
@@ -389,42 +386,70 @@ def _campo_na_ficha(request, pk):
     projeto = get_object_or_404(Projeto, pk=pk)
     if projeto.arquivado_em:
         raise PermissionDenied  # arquivado é congelado (D-093, D-167)
-    if m := LINHA.match(request.POST.get("campo", "")):
-        return _linha_na_ficha(request, projeto, *m.groups())
+    if m := PASSO.match(request.POST.get("campo", "")):
+        return _passo_na_ficha(request, projeto, *m.groups())
+    if m := COR.match(request.POST.get("campo", "")):
+        return _cor_na_ficha(request, projeto, int(m[1]))
     nome, form = _form_campo(request, projeto, ProjetoForm._meta.fields)
     gravar = lambda dados: _salvar_campo(projeto.pk, nome, dados[nome])  # noqa: E731
     return responder_campo(request, form=form, gravar=gravar, revistas=lambda: _revistas(projeto), titulo=_titulo(form, nome))
 
 
-def _linha_na_ficha(request, projeto, tipo, i):
-    """Linha de passo ou de cor (a linha inteira vem no POST, com o prefixo do formset da página).
-    Sem `id`: cria (a resposta leva o `id`). Com `DELETE`: remove (volta ao valor da matriz/do ano)."""
-    prefixo = f"{tipo}-{i}"
-    Modelo, Form = (ProjetoPasso, PassoForm) if tipo == "passos" else (ProjetoCor, CorForm)
-    pk_linha = request.POST.get(f"{prefixo}-id", "")
-    if pk_linha and not (pk_linha.isascii() and pk_linha.isdigit()):
-        raise Http404
-    instancia = get_object_or_404(Modelo, pk=pk_linha, projeto=projeto) if pk_linha else Modelo(projeto=projeto)
-    revistas = lambda: _revistas(projeto)  # noqa: E731
-    titulo = "Salvar o passo" if tipo == "passos" else "Salvar a cor"
-    if request.POST.get(f"{prefixo}-DELETE"):
-        def remover(_):
-            if instancia.pk:
-                Modelo.objects.filter(pk=instancia.pk).delete()
-            return {"removida": True}
+class _PassoForm(forms.Form):
+    valor = forms.IntegerField(required=False, min_value=1, label="Passo")
 
-        return responder_campo(request, form=forms.Form({}), gravar=remover, revistas=revistas, titulo="Remover a linha")
-    kwargs = {"ano_id": projeto.ano_id} if tipo == "passos" else {}
-    form = Form(request.POST, instance=instancia, prefix=prefixo, **kwargs)
 
-    def gravar(_):
-        obj = form.save(commit=False)
-        if not pk_linha:  # a simulação do impacto (savepoint desfeito) já deu um pk a esta instância
-            obj.pk, obj._state.adding = None, True
-        obj.save()
-        return {"id": obj.pk}
+class _CorForm(forms.Form):
+    valor = forms.RegexField(r"^#[0-9A-Fa-f]{6}$", label="Cor", error_messages={"invalid": "Use uma cor no formato #RRGGBB."})
 
-    return responder_campo(request, form=form, gravar=gravar, revistas=revistas, titulo=titulo)
+
+def _passo_na_ficha(request, projeto, tipo, etapa_pk, componente_pk):
+    """Célula de passo: `passo-E-C` com um número sobrescreve; vazio volta ao passo da matriz.
+    `sem-E-C` marcado = "sem linhas vazias" (a linha existe com passo nulo, D-091); desmarcado volta à matriz."""
+    filtro = {
+        "projeto": projeto,
+        "etapa": get_object_or_404(Etapa, pk=etapa_pk, ano_id=projeto.ano_id),
+        "componente": get_object_or_404(Componente, pk=componente_pk, ano_id=projeto.ano_id),
+    }
+    valor = request.POST.get("valor", "").strip()
+    form = _PassoForm({"valor": valor}) if tipo == "passo" else forms.Form({})
+
+    def gravar(dados):
+        herdar = dados["valor"] is None if tipo == "passo" else valor != "on"
+        if herdar:
+            for linha in ProjetoPasso.objects.filter(**filtro):
+                linha.delete()  # um a um: o histórico registra
+            return {}
+        passo = dados["valor"] if tipo == "passo" else None
+        ProjetoPasso.objects.update_or_create(**filtro, defaults={"passo": passo, "ano_id": projeto.ano_id})
+        return {}
+
+    return responder_campo(request, form=form, gravar=gravar, revistas=lambda: _revistas(projeto), titulo="Salvar o passo")
+
+
+def _cor_na_ficha(request, projeto, padrao):
+    """Amostra do padrão: a cor escolhida sobrescreve a do ano; a própria cor do ano apaga a
+    sobrescrita ("Voltar à cor do ano"). Só a caixa diferente não é mudança: o seletor do navegador
+    manda minúsculas e a carga gravou maiúsculas (trocar a caixa mudaria o hash da revista)."""
+    do_ano = CorPadrao.objects.filter(ano_id=projeto.ano_id, padrao=padrao).values_list("cor", flat=True).first()
+    if do_ano is None:
+        return erros_campo(["Este padrão não existe no ano. Recarregue a página."])
+    form = _CorForm({"valor": request.POST.get("valor", "").strip()})
+
+    def gravar(dados):
+        cor = dados["valor"].lower()
+        atual = ProjetoCor.objects.filter(projeto=projeto, padrao=padrao).first()
+        if cor == do_ano.lower():
+            if atual:
+                atual.delete()
+        elif atual is None:
+            ProjetoCor.objects.create(projeto=projeto, padrao=padrao, cor=cor)
+        elif atual.cor.lower() != cor:
+            atual.cor = cor
+            atual.save(update_fields=["cor"])
+        return {}
+
+    return responder_campo(request, form=form, gravar=gravar, revistas=lambda: _revistas(projeto), titulo="Salvar a cor")
 
 
 urlpatterns = [
@@ -435,7 +460,6 @@ urlpatterns = [
     path("ano/<int:ano>/variaveis/", aba_variaveis.variaveis, name="ui_variaveis"),
     path("ano/<int:ano>/massa/<str:acao>/", massa, name="ui_projeto_massa"),
     path("<int:pk>/", projeto, name="ui_projeto"),
-    path("<int:pk>/linha/<str:tipo>/", linha, name="ui_projeto_linha"),
     path("<int:pk>/campo/", campo, name="ui_projeto_campo"),
     path("<int:pk>/matriz/", matriz, name="ui_projeto_matriz"),
 ]

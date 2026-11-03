@@ -9,7 +9,7 @@ from unittest import mock
 from django.urls import reverse
 
 from nucleo.admin.bloqueio import CAMPO_SESSAO
-from nucleo.models import Matriz, ParceiroAno
+from nucleo.models import Matriz, ParceiroAno, ProjetoCor, ProjetoPasso
 from nucleo.tests.test_admin_padrao import esta_validada, validar
 from nucleo.tests.test_admin_projeto import Base
 
@@ -29,13 +29,14 @@ class AbasTest(Base):
         self.assertContains(r, f'href="{self.url}?aba=dados" aria-current="page">Dados</a>')
         self.assertContains(r, 'id="nome"')
         self.assertContains(r, 'id="variaveis"')
-        self.assertContains(r, 'id="passo" aria-labelledby="passo-titulo" hidden')  # na aba Passos e cores
+        self.assertNotContains(r, 'id="passo"')  # só na aba Passos e cores
 
     def test_aba_passos_e_cores(self):
         r = self.client.get(self.url + "?aba=passos")
         self.assertContains(r, 'aria-current="page">Passos e cores</a>')
         self.assertContains(r, 'id="nome" aria-labelledby="nome-titulo" hidden')
-        self.assertContains(r, "Sobrescrever um passo")
+        self.assertContains(r, 'id="passo" aria-labelledby="passo-titulo">')
+        self.assertContains(r, 'id="cores" aria-labelledby="cores-titulo">')
 
     def test_aba_cortes_so_com_a_linha_do_parceiro(self):
         r = self.client.get(self.url + "?aba=cortes")
@@ -43,6 +44,10 @@ class AbasTest(Base):
         self.assertNotContains(r, 'aria-label="PE 5EF LP"')
         self.assertContains(r, reverse("cortes_celula", args=[2026]))
         self.assertContains(r, reverse("cortes", args=[2026]))  # a grade do ano inteiro
+        self.assertContains(r, 'class="pj-etapa"', count=2)  # um bloco por etapa, sem tabela
+        self.assertNotContains(r, "<table")
+        self.assertContains(r, "De 1 a 4 cortes", count=1)  # a regra uma vez só
+        self.assertNotContains(r, "Cada célula salva sozinha")
 
     def test_aba_revistas_um_cartao_por_componente(self):
         lp, mt = self.go["LP"], self.go["MT"]
@@ -61,9 +66,11 @@ class AbasTest(Base):
     def test_nenhuma_acao_da_ficha_perdida(self):
         """Inventário da ficha antiga (uma página só) → aba que tem cada ação agora."""
         inventario = {
-            "dados": ['name="nome"', 'name="sigla_programa"', "Planilha de variáveis de 2026"],
+            "dados": ['name="nome"', 'name="sigla_programa"', "Ver a planilha de variáveis de 2026"],
             "matriz": ['name="matriz"', reverse("ui_projeto_matriz", args=[self.projeto_go.pk])],
-            "passos": ["Sobrescrever um passo", "Sobrescrever uma cor", "5EF LP: 25"],
+            # sobrescrever passo/cor, "sem linhas vazias" e voltar ao herdado (antes: linhas com Remover)
+            "passos": [f'name="passo-{self.e5.pk}-{self.lp.pk}"', f'name="sem-{self.e5.pk}-{self.lp.pk}"', 'name="cor-1"',
+                       "Voltar ao passo da matriz", "Voltar à cor do ano", "Matriz: 25"],
         }
         for aba, acoes in inventario.items():
             r = self.client.get(f"{self.url}?aba={aba}")
@@ -73,6 +80,64 @@ class AbasTest(Base):
 
     def test_aba_desconhecida_vira_dados(self):
         self.assertContains(self.client.get(self.url + "?aba=xyz"), 'aria-current="page">Dados</a>')
+
+
+class CabecalhoTest(Base):
+    def test_hierarquia_e_um_texto_de_ajuda_so(self):
+        r = self.client.get(reverse("ui_projeto", args=[self.projeto_go.pk]) + "?aba=passos")
+        self.assertContains(r, "<h1>Projeto GO</h1>", html=True)
+        self.assertContains(r, "<div><dt>Parceiro</dt><dd>GO</dd></div>", html=True)
+        self.assertContains(r, "<div><dt>Matriz</dt><dd>Comunitária</dd></div>", html=True)
+        self.assertContains(r, "<div><dt>Revistas</dt><dd>LP, MT</dd></div>", html=True)
+        self.assertNotContains(r, "Planilha de variáveis")  # o botão do cabeçalho saiu; o link fica na seção Variáveis
+        self.assertContains(r, "Cada campo salva sozinho", count=1)  # no status, perto do salvamento
+
+
+class SobrescritaPaginaTest(Base):
+    """Aba Passos e cores: cada valor diz se vem do ano/da matriz ou se é sobrescrito aqui."""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse("ui_projeto", args=[self.projeto_go.pk]) + "?aba=passos"
+
+    def celula(self, r, etapa, comp):
+        return next(c for b in r.context["etapas_passo"] if b["etapa"] == etapa for c in b["celulas"] if c["componente"] == comp)
+
+    def test_passo_herdado_aparece_como_herdado(self):
+        r = self.client.get(self.url)
+        c = self.celula(r, self.e5, self.lp)
+        self.assertEqual((c["sobrescrito"], c["matriz"], c["passo"]), (False, 25, None))
+        self.assertContains(r, f'name="passo-{self.e5.pk}-{self.lp.pk}" value="" placeholder="25"')
+
+    def test_sem_linhas_vazias_e_diferente_de_herdar(self):
+        ProjetoPasso.objects.create(projeto=self.projeto_go, etapa=self.e5, componente=self.lp, ano=self.ano, passo=None)
+        r = self.client.get(self.url)
+        c = self.celula(r, self.e5, self.lp)
+        self.assertEqual((c["sobrescrito"], c["sem_vazias"]), (True, True))
+        self.assertContains(r, f'name="sem-{self.e5.pk}-{self.lp.pk}" data-sem checked')
+        self.assertFalse(self.celula(r, self.e9, self.lp)["sobrescrito"])
+
+    def test_amostras_com_cor_e_nome_efetivos(self):
+        ProjetoCor.objects.create(projeto=self.projeto_go, padrao=2, cor="#123456")
+        r = self.client.get(self.url)
+        amostras = {a["padrao"]: a for a in r.context["amostras"]}
+        self.assertEqual(len(amostras), 5)
+        self.assertEqual((amostras[1]["cor"], amostras[1]["sobrescrita"], amostras[1]["nome"]), ("#f72628", False, "Padrão 01"))
+        self.assertEqual((amostras[2]["cor"], amostras[2]["sobrescrita"], amostras[2]["cor_ano"]), ("#123456", True, "#ff8d43"))
+        self.assertContains(r, 'name="cor-2" id="cor-2" value="#123456"')
+        self.assertContains(r, f'href="{reverse("ui_ano", args=[2026])}#padroes"')  # a paleta do ano
+
+    def test_impresso_nao_ve_controles_e_recebe_403(self):
+        self.client.force_login(self.imp)
+        r = self.client.get(self.url)
+        self.assertEqual(r.status_code, 200)
+        for controle in ('name="passo-', 'name="sem-', 'name="cor-', "Voltar à cor do ano", "Editar as cores do ano"):
+            self.assertNotContains(r, controle)
+        url = reverse("ui_projeto_campo", args=[self.projeto_go.pk])
+        for campo, valor in ((f"passo-{self.e5.pk}-{self.lp.pk}", "30"), ("cor-1", "#000000")):
+            self.assertEqual(self.client.post(url, {"campo": campo, "valor": valor, CAMPO_SESSAO: "x"}, **JSON).status_code, 403)
+        self.assertFalse(ProjetoPasso.objects.exists())
+        self.assertFalse(ProjetoCor.objects.exists())
 
 
 class AbaMatrizTest(Base):

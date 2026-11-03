@@ -7,7 +7,7 @@ existir = sobrescrevi; excluir a linha = voltar ao passo da matriz / à cor da p
 
 from django import forms
 from django.core.validators import MaxLengthValidator
-from django.forms import BaseInlineFormSet, inlineformset_factory
+from django.forms import BaseInlineFormSet
 
 from nucleo.models import Componente, CorPadrao, Etapa, Projeto, ProjetoCor, ProjetoPasso
 from nucleo.variaveis import EDITAVEIS, TAMANHO_MAX
@@ -79,9 +79,3 @@ class CorForm(forms.ModelForm):
         fields = ["padrao", "cor"]
         widgets = {"cor": forms.TextInput(attrs={"type": "color"})}
 
-
-def formsets(projeto, data=None):
-    """Passos e cores do projeto como inline formsets (prefixos `passos` e `cores`)."""
-    Passos = inlineformset_factory(Projeto, ProjetoPasso, form=PassoForm, formset=PassoFormSet, extra=0)
-    Cores = inlineformset_factory(Projeto, ProjetoCor, form=CorForm, extra=0, max_num=MAX_CORES)
-    return Passos(data, instance=projeto, prefix="passos"), Cores(data, instance=projeto, prefix="cores")
