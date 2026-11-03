@@ -30,7 +30,7 @@ action = a ação recusada (o Confirmar do modal reenvia o form sem botão).
     <table class="tabela painel-tabela">
       <thead><tr>
         <th scope="col" class="fixa painel-revista">{% if pode_massa %}<input type="checkbox" data-todos aria-label="Marcar todos os parceiros">{% endif %}Parceiro / revista</th>
-        <th scope="col">Situação</th><th scope="col" class="pj-acoes">Ações</th>
+        <th scope="col" class="pj-situacao">Situação</th><th scope="col" class="pj-acoes">Ações</th>
       </tr></thead>
       {% for l in linhas %}
       <tbody>
