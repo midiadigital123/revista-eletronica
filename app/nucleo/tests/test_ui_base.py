@@ -212,3 +212,32 @@ class EstaticosComVersaoTest(SimpleTestCase):
         from django.templatetags.static import static
 
         self.assertTrue(static("revista/").endswith("/static/revista/"))
+
+
+class MenuPorPerfilTest(TestCase):
+    """Impresso só no menu de quem marca revista como impressa; Admin só para o superusuário."""
+
+    def setUp(self):
+        Ano.objects.create(ano=2026)
+
+    def test_pedagogica_nao_ve_impresso_nem_admin(self):
+        from nucleo.tests.test_resolver import usuario
+
+        self.client.force_login(usuario("ped", "Pedagógica"))
+        r = self.client.get("/painel/2026/")
+        self.assertEqual([n for _, n, _ in menu(r)], ["Painel", "Projetos", "Matrizes", "Templates"])
+        self.assertNotContains(r, ">Admin</a>")
+
+    def test_impresso_ve_impresso_sem_admin(self):
+        from nucleo.tests.test_resolver import usuario
+
+        self.client.force_login(usuario("imp", "Impresso"))
+        r = self.client.get("/painel/2026/")
+        self.assertIn("Impresso", [n for _, n, _ in menu(r)])
+        self.assertNotContains(r, ">Admin</a>")
+
+    def test_superusuario_ve_tudo(self):
+        self.client.force_login(get_user_model().objects.create_superuser("ana", password="x"))
+        r = self.client.get("/painel/2026/")
+        self.assertIn("Impresso", [n for _, n, _ in menu(r)])
+        self.assertContains(r, ">Admin</a>")

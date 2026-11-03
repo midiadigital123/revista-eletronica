@@ -35,12 +35,12 @@ Projetos; `anos` não marca nenhum e destaca o seletor). O ano vem de `nucleo/co
         <a href="{% if a %}{% url 'ui_projeto_lista' a.ano %}{% else %}{% url 'ui_projeto_inicio' %}{% endif %}"{% if secao == "projetos" or secao == "cortes" or secao == "variaveis" or secao == "revistas" or secao == "lotes" %} aria-current="page"{% endif %}>Projetos</a>
         <a href="{% if a %}{% url 'ui_matriz' a.ano %}{% else %}{% url 'ui_matriz_inicio' %}{% endif %}"{% if secao == "matrizes" %} aria-current="page"{% endif %}>Matrizes</a>
         <a href="{% if a %}{% url 'ui_templates' a.ano %}{% else %}{% url 'ui_templates_inicio' %}{% endif %}"{% if secao == "templates" %} aria-current="page"{% endif %}>Templates</a>
-        <a href="{% if a %}{% url 'ui_impresso' a.ano %}{% else %}{% url 'ui_impresso' %}{% endif %}"{% if secao == "impresso" %} aria-current="page"{% endif %}>Impresso</a>
+        {% if perms.nucleo.marcar_impressa %}<a href="{% if a %}{% url 'ui_impresso' a.ano %}{% else %}{% url 'ui_impresso' %}{% endif %}"{% if secao == "impresso" %} aria-current="page"{% endif %}>Impresso</a>{% endif %}
         {% endwith %}
       </nav>
       <div class="usuario">
         <span class="mudo">{{ request.user.get_full_name|default:request.user.username }}</span>
-        <a class="btn btn-ghost btn-sm" href="{% url 'admin:index' %}">Admin</a>
+        {% if request.user.is_superuser %}<a class="btn btn-ghost btn-sm" href="{% url 'admin:index' %}">Admin</a>{% endif %}
         <form method="post" action="{% url 'admin:logout' %}">{% csrf_token %}<button class="btn btn-outline btn-sm" type="submit">Sair</button></form>
       </div>
     </div>

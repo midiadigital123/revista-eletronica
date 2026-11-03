@@ -119,4 +119,6 @@ class ImpressoUiTest(Base):
         self.assertContains(r, reverse("cortes", args=[2030]))
 
     def test_navegacao_aponta_para_a_tela_b(self):
+        # Só quem marca impressa vê o item no menu; os outros perfis não (MenuPorPerfilTest).
+        self.client.force_login(self.imp)
         self.assertContains(self.client.get(reverse("cortes", args=[2026])), f'href="{self.url}"')
