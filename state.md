@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Plano ativo: `plans/revista-express-telas-b-ux.md` (D-195–D-201). Onda 1 concluída: U0, U1, U2 (modal de impacto, `beedcb6`). Onda 2 em andamento em worktrees: U3 autosave, U6 menu e ano, U8 painel, U9b editor de template, integrando em `feat/telas-b-ux`.
-Funcionando: modal de impacto em renomear parceiro, grade de cortes, intervalo, descritor, novo descritor, item, paleta e lotes; nenhum checkbox "Confirmo" nas telas B (admin mantém). Suíte Django 575 OK (8 pulados); Playwright 32 OK.
-Quebrado/pendente: `item.spec.ts` falha no banco de dev porque o 5EF está com ordem 5 (depois do 9EF) e o preview abre no 9EF — dado do banco, não do U2; U3–U10, U8b, U9b.
+Plano ativo: `plans/revista-express-telas-b-ux.md` (D-195–D-202). Ondas 1 e 2 concluídas e mergeadas em `feat/telas-b-ux`: U0, U1, U2, U3 (autosave), U6 (menu e ano), U8 (painel), U9b (editor de template). Onda 3 em andamento: U4→U9 e U5→U8b em worktrees.
+Funcionando: integração com Django 617 OK (8 pulados), `makemigrations --check` limpo, Playwright 41/41 numa stack isolada (`COMPOSE_PROJECT_NAME=ux-integ`, porta 8030, com 2025 vazio para o `ano.spec`).
+Quebrado/pendente: U4, U5, U7, U8b, U9, U10; limpeza do banco de dev no fim; `item.spec.ts` frágil com 2027 aberto por `abrir_ano`.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Aguardar os 4 agentes da onda 2 e integrar com `git merge --no-ff` em `feat/telas-b-ux`.
+Aguardar os 2 agentes da onda 3 e integrar com `git merge --no-ff` em `feat/telas-b-ux`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1653,6 +1653,14 @@ Aguardar os 4 agentes da onda 2 e integrar com `git merge --no-ff` em `feat/tela
 - **Arquivos afetados:** `plans/revista-express-telas-b-ux.md`
 - **Status:** ativa
 
+### D-202 — Modal de impacto só quando a gravação tira o "Validado" (2026-11-03)
+- **Contexto:** no U2, o agente trocou "afeta N revistas" por "tira o Validado de N revistas" como gatilho do modal; o usuário confirmou.
+- **Decisão:** gravação que só afeta revistas ainda não validadas grava direto, sem modal; o modal aparece quando alguma revista perde o "Validado". Vale para autosave (U3) e para todos os passos seguintes. O admin mantém o checkbox antigo.
+- **Motivo:** o risco real é desfazer uma validação; avisar sobre revista não validada é atrito sem ganho.
+- **Descartadas:** confirmar sempre que houver revista afetada — o título do modal fala em Validado e o usuário pediu menos atrito.
+- **Arquivos afetados:** `app/nucleo/servicos/impacto.py`, `app/nucleo/matriz.py` (`ImpactoForm(modal=True)`)
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [ ] **Limpeza do banco de dev ao fim da reforma (autorizada por Otavio, 03/11):** apagar o que foi criado para teste — usuários `e2e`, `imp-e2e`, `demo-preview`; parceiro `DEMONSTRAÇÃO` (projeto/revista 2026, preview 13) e matriz `Demonstração`; parceiros `E2E A/B <sufixo>` criados pelo `cortes.spec.ts`; e o que os specs novos (U2+) criarem (nome com prefixo `E2E`). Não tocar em SAESE, TESTE, Novo parceiro, `otavio`, `midias`, `impresso`, `pedagogica`. Listar antes de apagar — depende de: fim do U10
 - [x] (D-189 → D-190) Auditoria das telas B: o que o back faz e a tela B não oferece. Bloqueia: abrir ano, criar matriz, criar template, paleta do ano, etapas/componentes. Leva a erro: links do painel vão ao admin (Impresso recebe 403 em "Matriz", `urls/painel.py:43`), renomear parceiro, "abra um ano no admin" para quem não pode. Menu sem Projetos e Lotes. Por onde começar — depende de: usuário
@@ -1960,3 +1968,10 @@ Aguardar os 4 agentes da onda 2 e integrar com `git merge --no-ff` em `feat/tela
 - `criar_demo --ano 2026` rodado no banco de dev (autorizado): revista DEMONSTRAÇÃO, matriz Demonstração e usuário demo-preview. Limpeza registrada em Perguntas em aberto.
 - U2 (`beedcb6`, subagente): `servicos/impacto.py` (`perdem_validado` por savepoint desfeito, `avisar_perdidos`), `ImpactoForm(modal=True)`, `_componentes/impacto.html` + componente Alpine `impacto`. Decisão do agente: "impacto" = só quem perde o Validado (afetar revista não validada grava direto); matriz segue com a aproximação de `servicos/matriz.impacto`; admin mantém checkbox. Desvio: testes escritos depois do código.
 - Branch de integração `feat/telas-b-ux` criada a partir de `feat/telas-b-lacunas`; onda 2 disparada (U3, U6, U8, U9b em worktrees, portas 8021–8024).
+- Autorização do usuário: ao fim de cada onda, mergear em `feat/telas-b-ux` (com suítes verdes no resultado) e disparar a próxima sem esperar — onda 2 → 3 → 4.
+- U8 (`521b894`) mergeado em `feat/telas-b-ux` (`116ff0b`): painel agrupado por parceiro, sem card "Próxima tarefa", select "Falta" trocado pelos contadores, "falta" neutro. Suítes no worktree: Django 578 OK, Playwright 34 OK.
+- **Incidente:** o `.env` da raiz tem `COMPOSE_PROJECT_NAME=revista-eletronica`; copiado nos worktrees, fez U8 e U9b subirem o compose no projeto do dev do usuário (app recriado nas portas 8023/8024; `migrate` sem efeito e `criar_demo` trocando a senha do `demo-preview` no banco de dev, pelo U8; o que o U9b rodou ali está em apuração). App do dev recriado a partir da raiz (porta 8000, 200 OK). Plano corrigido: apagar a linha no `.env` do worktree.
+- U9b (`2094ebf`) mergeado (`1123ded`): editor de template por seção (id em chip não editável, título, texto com barra N/I/lista/variável), ida e volta byte a byte nos seeds, id fora do fascículo → 422, prévia sem `## id` e erros por seção; Salvar explícito mantido. Suítes no worktree: Django 583 OK, Playwright 34 OK. No incidente, o U9b só rodou `up` e `migrate` (sem efeito) no projeto do dev. Decisões do agente: `passo1` fixo; numeração de passos só cresce; remover seção não abre modal (o Salvar já passa pela tela de impacto).
+- U6 (`02fe6a8`) mergeado sem conflito (`29b3e75`): menu Painel · Projetos · Matrizes · Templates · Impresso; seletor "2026 ▾" no cabeçalho (popover nativo + Alpine `seletorAno`) com "Configurar <ano>" (`view_ano`) e "Abrir novo ano" (`abrir_ano`); `contexto.py:ano_atual` troca de ano mantendo rota e query (detalhe → mesmo parceiro, senão lista do ano); `_inicio` usa o ano da sessão. Suítes no worktree: Django 581 OK, Playwright 34 OK. Avisos: o worktree do Agent nasce em commit antigo (34f3579) — o agente precisa criar a branch a partir de `feat/telas-b-ux`; `item.spec.ts` quebra com 2027 aberto por `abrir_ano` (dois "D01").
+- U3 (`556b12b`, `29deced`) mergeado (`f47cddf`), conflitos só de import e da linha de scripts na base. Protocolo de autosave em `ui_autosave.py` + `componentes/autosave.js` (`campoAuto`, `saida`); Cortes por célula (`cortes_celula`, 409 com `original`); Projeto e Variáveis na mesma rota `ui_projeto_campo`; 409 de bloqueio pelo `com_bloqueio` com `Accept: application/json`. No incidente, o U3 não tocou o banco de dev.
+- Integração da onda 2: conflito de sentido U6 × U8 — o `ano.spec` do U6 usava o select `#filtro-falta`, que o U8 removeu; ajustado para `filtrarFalta` e o campo oculto `falta`. Django 617 OK, Playwright 41/41.
