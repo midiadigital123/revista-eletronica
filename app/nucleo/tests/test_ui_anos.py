@@ -8,6 +8,8 @@ from nucleo.tests.test_admin_padrao import esta_validada, validar
 from nucleo.tests.test_admin_projeto import Base as BaseProjeto
 from nucleo.tests.test_admin_projeto import mensagens
 from nucleo.tests.test_resolver import usuario
+from nucleo.ui_autosave import proxima_ordem
+from nucleo.urls.ui_anos import EtapaForm, ordem_escolar
 
 
 class AnosUiTest(Base):
@@ -67,23 +69,28 @@ class CadastrosDoAnoTest(Base):
     def test_cria_e_edita(self):
         self.assertContains(self.client.get(reverse("ui_anos")), self.url)
         resp = self.client.get(self.url)
-        n = len(self.e)  # índice da linha vazia ("Adicionar")
-        dados = dados_da_tabela(resp, "etapas", **{f"etapas-{n}-codigo": "1EM", f"etapas-{n}-escala_max": "500", f"etapas-{n}-ordem": "9"})
+        n = len(self.e)  # índice da linha nova (o "+ Adicionar etapa" soma 1 ao TOTAL_FORMS)
+        dados = dados_da_tabela(resp, "etapas", **{"etapas-TOTAL_FORMS": str(n + 1), f"etapas-{n}-codigo": "1EM", f"etapas-{n}-escala_max": "500"})
         resp = self.client.post(self.url, dados, follow=True)
         self.assertRedirects(resp, self.url)
         self.assertContains(resp, "Etapas de 2026 salvas.")
-        self.assertTrue(Etapa.objects.filter(ano=self.a26, codigo="1EM", escala_max=500, ordem=9).exists())
+        self.assertTrue(Etapa.objects.filter(ano=self.a26, codigo="1EM", escala_max=500).exists())
+        ordem = list(Etapa.objects.filter(ano=self.a26).order_by("ordem").values_list("codigo", flat=True))
+        self.assertEqual(ordem, ["2EF", "5EF", "9EF", "1EM", "3EM"])  # U4: lógica escolar, não o fim da lista
 
         lp = list(resp.context["componentes"].queryset).index(self.c["LP"])
         n = len(self.c)
-        dados = dados_da_tabela(resp, "componentes", **{f"componentes-{lp}-nome": "Português", f"componentes-{n}-codigo": "ART", f"componentes-{n}-nome": "Arte"})
+        dados = dados_da_tabela(resp, "componentes", **{
+            f"componentes-{lp}-nome": "Português", "componentes-TOTAL_FORMS": str(n + 1),
+            f"componentes-{n}-codigo": "ART", f"componentes-{n}-nome": "Arte",
+        })  # fmt: skip
         self.assertContains(self.client.post(self.url, dados, follow=True), "Componentes de 2026 salvos.")
         self.assertEqual(Componente.objects.get(pk=self.c["LP"].pk).nome, "Português")
         self.assertTrue(Componente.objects.filter(ano=self.a26, codigo="ART", nome="Arte").exists())
 
     def test_codigo_repetido_da_mensagem(self):
         n = len(self.e)
-        dados = dados_da_tabela(self.client.get(self.url), "etapas", **{f"etapas-{n}-codigo": "5EF", f"etapas-{n}-escala_max": "500", f"etapas-{n}-ordem": "9"})
+        dados = dados_da_tabela(self.client.get(self.url), "etapas", **{"etapas-TOTAL_FORMS": str(n + 1), f"etapas-{n}-codigo": "5EF", f"etapas-{n}-escala_max": "500"})
         resp = self.client.post(self.url, dados)
         self.assertContains(resp, "Já existe a etapa 5EF em 2026.")
         self.assertEqual(Etapa.objects.filter(ano=self.a26, codigo="5EF").count(), 1)
@@ -204,3 +211,61 @@ class PaletaDoAnoTest(BaseProjeto):
         self.assertNotContains(r, 'name="p3-cor"')
         self.assertEqual(self.post(nome="X", confirmar_impacto="on").status_code, 403)
         self.assertEqual(CorPadrao.objects.get(pk=self.cp.pk).nome, "Padrão 03")
+
+
+class LinhasDoAnoTest(Base):
+    """U4: linha nova só pelo botão (formset sem linha vazia) e ordem automática. Etapa segue a
+    lógica escolar (todo EF antes do EM; no mesmo ensino, pela série): não se digita nem se arrasta."""
+
+    url = reverse("ui_ano", args=[2026])
+
+    def setUp(self):
+        self.client.force_login(usuario("ped", "Pedagógica"))
+
+    def codigos(self):
+        return list(Etapa.objects.filter(ano=self.a26).order_by("ordem").values_list("codigo", flat=True))
+
+    def incluir(self, codigo):
+        n = Etapa.objects.filter(ano=self.a26).count()
+        dados = dados_da_tabela(self.client.get(self.url), "etapas", **{
+            "etapas-TOTAL_FORMS": str(n + 1), f"etapas-{n}-codigo": codigo, f"etapas-{n}-escala_max": "500",
+        })  # fmt: skip
+        self.assertContains(self.client.post(self.url, dados, follow=True), "Etapas de 2026 salvas.")
+
+    def test_form_sem_campo_ordem(self):
+        self.assertNotIn("ordem", EtapaForm(ano=self.a26).fields)
+        resp = self.client.get(self.url)
+        self.assertNotContains(resp, "-ordem")
+        self.assertNotContains(resp, ">Ordem<")
+
+    def test_nova_etapa_entra_na_ordem_escolar(self):
+        self.assertEqual(proxima_ordem(Etapa.objects.none()), 1)
+        self.assertEqual(sorted(["3EM", "9EF", "1EM", "Z1", "10EF", "2EF"], key=ordem_escolar), ["2EF", "9EF", "10EF", "1EM", "3EM", "Z1"])
+        antes = self.codigos()
+        self.assertEqual(antes, sorted(antes, key=ordem_escolar))
+        self.incluir("2EM")
+        self.incluir("1EM")
+        self.incluir("1EF")
+        esperado = sorted([*antes, "2EM", "1EM", "1EF"], key=ordem_escolar)
+        self.assertEqual(self.codigos(), esperado)
+        self.assertEqual(esperado, ["1EF", "2EF", "5EF", "9EF", "1EM", "2EM", "3EM"])
+        ordens = list(Etapa.objects.filter(ano=self.a26).order_by("ordem").values_list("ordem", flat=True))
+        self.assertEqual(ordens, list(range(1, len(esperado) + 1)))
+
+    def test_impresso_nao_ve_adicionar(self):
+        self.client.force_login(usuario("imp", "Impresso"))
+        resp = self.client.get(self.url)
+        self.assertNotContains(resp, "Adicionar etapa")
+        self.assertNotContains(resp, "Adicionar componente")
+        self.assertNotContains(resp, "__prefix__")
+
+    def test_sem_linha_vazia(self):
+        resp = self.client.get(self.url)
+        self.assertNotContains(resp, "Preencha a última linha")
+        self.assertEqual(resp.context["etapas"].extra, 0)
+        self.assertEqual(resp.context["componentes"].extra, 0)
+        self.assertEqual(len(resp.context["etapas"].forms), len(self.e))  # só as gravadas
+        self.assertContains(resp, "Adicionar etapa")
+        self.assertContains(resp, "Adicionar componente")
+        self.assertContains(resp, 'x-data="linhaNova"', count=2)
+        self.assertNotContains(resp, 'x-data="ordenavel"')  # etapa: lógica escolar; componente: por código

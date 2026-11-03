@@ -15,7 +15,9 @@ Respostas:
 
 from collections.abc import Callable, Iterable
 
+from django import forms
 from django.db import IntegrityError, transaction
+from django.db.models import Max
 from django.forms.utils import pretty_name
 from django.http import JsonResponse
 from django.template.loader import render_to_string
@@ -104,3 +106,29 @@ def responder_campo(
     if perdem:
         corpo["perderam"] = len(perdem)
     return JsonResponse(corpo)
+
+
+# --- Linha nova e reordenar (U4) -------------------------------------------------------------
+
+
+def proxima_ordem(qs) -> int:
+    """Ordem de uma linha nova: depois da última (1 quando vazio). O usuário não digita ordem."""
+    return (qs.aggregate(m=Max("ordem"))["m"] or 0) + 1
+
+
+def reordenar(request, qs, *, revistas: Callable[[], Iterable[Revista]], titulo="Reordenar") -> JsonResponse:
+    """POST `ids=[pk,…]` (componente `ordenavel`): grava a ordem 1…N, pelo mesmo protocolo do
+    autosave (impacto no "Validado", 409 do bloqueio). 422 se a lista não for exatamente `qs`."""
+    ids = request.POST.getlist("ids")
+    atuais = set(qs.values_list("pk", flat=True))
+    if not all(i.isascii() and i.isdigit() for i in ids) or len(set(ids)) != len(ids) or {int(i) for i in ids} != atuais:
+        return erros(["A lista mudou depois que a página abriu (linha criada ou excluída). Recarregue a página e reordene de novo."])
+    posicao = {int(pk): n for n, pk in enumerate(ids, 1)}
+
+    def gravar(_):
+        for obj in qs.model.objects.filter(pk__in=posicao):
+            if obj.ordem != posicao[obj.pk]:
+                obj.ordem = posicao[obj.pk]
+                obj.save(update_fields=["ordem"])  # save, não update(): o histórico registra
+
+    return responder_campo(request, form=forms.Form({}), gravar=gravar, revistas=revistas, titulo=titulo)

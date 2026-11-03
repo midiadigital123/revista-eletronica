@@ -20,9 +20,10 @@ test("adiciona um componente na página do ano", async ({ page }) => {
   const ano = await abrirMaiorAno(page);
   const codigo = `Z${Date.now().toString().slice(-5)}`;
 
-  await page.getByLabel("Código (linha nova)").last().fill(codigo);
+  await page.getByRole("button", { name: "Adicionar componente" }).click(); // U4: a linha nasce no botão
+  await page.getByLabel("Código (linha nova)").fill(codigo);
   await page.getByLabel("Nome (linha nova)").fill(`Componente E2E ${codigo}`);
-  await page.getByRole("button", { name: "Adicionar componente" }).click(); // linha nova ainda pelo botão (U4)
+  await page.getByRole("button", { name: "Incluir componente" }).click();
 
   await expect(page.getByText(`Componentes de ${ano} salvos.`)).toBeVisible();
   await expect(page.getByLabel(`Código (${codigo})`)).toHaveValue(codigo);

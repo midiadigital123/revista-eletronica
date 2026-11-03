@@ -6,7 +6,7 @@
 // Preparar como em painel.spec.ts (criar_demo --ano 2026 e o superusuário e2e).
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { entrar, liberarBloqueio } from "./helpers";
+import { entrar, liberarBloqueio, novoParceiro } from "./helpers";
 
 const SVG = path.join(__dirname, "../../nucleo/tests/fixtures/f2-lp.svg");
 const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mP4/5oBAATXAesdPD2pAAAAAElFTkSuQmCC", "base64");
@@ -21,8 +21,7 @@ test("renomear parceiro validado abre o modal; Esc volta o nome e o foco; confir
 
   // 1. Parceiro e cortes de LP: a cascata cria o projeto e a revista.
   await entrar(page, "/cortes/2026/");
-  await page.fill("#novo-parceiro", nome);
-  await page.getByRole("button", { name: "Adicionar parceiro" }).click();
+  await novoParceiro(page, nome);
   // U3: cada célula salva sozinha ao sair dela.
   for (const coluna of ["5EF LP", "9EF LP"]) {
     const salvou = page.waitForResponse((r) => r.url().includes("/celula/") && r.status() === 200);

@@ -12,6 +12,15 @@ export async function entrar(page: Page, proxima = "/admin/") {
   await expect(page).not.toHaveURL(/\/admin\/login\//);
 }
 
+/** Cortes (U4): "+ Adicionar parceiro" abre a linha com o foco no nome; Enter cria e recarrega. */
+export async function novoParceiro(page: Page, nome: string) {
+  await page.getByRole("button", { name: "Adicionar parceiro" }).click();
+  await expect(page.locator("#novo-parceiro")).toBeFocused();
+  await page.keyboard.type(nome);
+  await page.keyboard.press("Enter");
+  await expect(page.locator(`tr[data-parceiro="${nome}"]`)).toHaveCount(1);
+}
+
 /** Painel B: roda `acao` e espera o HTMX trocar o corpo (o form velho é marcado e some na troca;
  * sem isso a próxima ação pode cair no corpo que está saindo). */
 async function trocarCorpoPainel(page: Page, acao: () => Promise<unknown>) {

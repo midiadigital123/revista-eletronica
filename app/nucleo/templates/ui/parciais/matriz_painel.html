@@ -1,7 +1,7 @@
 {% comment %}
 Painel do descritor (T11): campos, tarefas (com a faixa na escala da etapa), arquivo do item (D-180)
 e links de exclusão (D-181). Troca por HTMX em #painel; com oob=True leva junto a lista e as mensagens.
-Contexto: mec, descritor, form, tarefas, escala, itens, item_impacto, item_perdem, item_pendente, pode_gravar, excluir_*.
+Contexto: mec, descritor, form, tarefas, tarefa_nova (empty_form com estilo), escala, itens, item_impacto, item_perdem, item_pendente, pode_gravar, excluir_*.
 Impacto (U2): form.precisa_confirmar abre o modal de impacto; o modal do item lista item_perdem e enviar por ele confirma.
 {% endcomment %}{% if descritor %}{% url 'ui_matriz_descritor' mec.pk descritor.pk as url %}
 <article class="matriz-descritor" aria-labelledby="titulo-descritor">
@@ -12,16 +12,16 @@ Impacto (U2): form.precisa_confirmar abre o modal de impacto; o modal do item li
       Excluir descritor</a>{% endif %}
   </header>
 
-  {# U3: campos e tarefas gravadas salvam sozinhos (campoAuto, rota ui_matriz_campo); a tarefa nova entra pelo "Incluir tarefa" (POST da página). #}
+  {# U3: campos e tarefas gravadas salvam sozinhos (campoAuto, rota ui_matriz_campo). U4: "+ Adicionar tarefa" põe a linha nova, que entra pelo "Incluir tarefa" (POST do painel); as tarefas reordenam (ordenavel). #}
   <form method="post" action="{{ url }}" class="matriz-form" id="form-descritor" novalidate{% if pode_gravar %} x-data="campoAuto" data-url="{% url 'ui_matriz_campo' mec.pk descritor.pk %}"{% endif %}>{% csrf_token %}
     {% if request.bloqueio %}<input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">{% endif %}
+    {% if pode_gravar %}{{ form.confirmar_impacto }}{% endif %}
     <fieldset{% if not pode_gravar %} disabled{% endif %}>
       {% for e in form.non_field_errors %}<p class="aviso aviso-erro" role="alert">{{ e }}</p>{% endfor %}
       <section class="matriz-secao" aria-labelledby="sec-identificacao">
         <h3 id="sec-identificacao" class="secao-titulo">Identificação</h3>
         <div class="matriz-grade-ident">
           {% include "ui/_componentes/matriz_campo.html" with campo=form.codigo %}
-          {% include "ui/_componentes/matriz_campo.html" with campo=form.ordem %}
         </div>
         {% include "ui/_componentes/matriz_campo.html" with campo=form.descricao %}
       </section>
@@ -42,45 +42,19 @@ Impacto (U2): form.precisa_confirmar abre o modal de impacto; o modal do item li
         <h3 id="sec-tarefas" class="secao-titulo">Tarefas <span class="mudo">na escala de 0 a {{ escala }}</span></h3>
         {{ tarefas.management_form }}
         {% for e in tarefas.non_form_errors %}<p class="erro" role="alert">{{ e }}</p>{% endfor %}
-        <ul class="matriz-tarefas">
-        {% for f in tarefas.forms %}{% with t=f.instance %}
-          <li class="matriz-tarefa{% if not t.pk %} matriz-tarefa-nova{% endif %}" {% if t.pk %}data-linha{% else %}data-manual{% endif %}>
-            {% for campo in f.hidden_fields %}{{ campo }}{% endfor %}
-            {% if t.pk %}
-            <div class="matriz-faixa" role="img" aria-label="Faixa {{ t.inicio }} a {{ t.fim }} de 0 a {{ escala }}">
-              <span class="matriz-faixa-trilho"><span class="matriz-faixa-trecho" style="--ini: {% widthratio t.inicio escala 100 %}%; --fim: {% widthratio t.fim escala 100 %}%"></span></span>
-              <span class="matriz-faixa-rotulo">{{ t.inicio }}–{{ t.fim }}</span>
-            </div>
-            {% else %}<p class="mudo matriz-faixa-rotulo">Tarefa nova: preencha para incluir; em branco, nada entra.</p>{% endif %}
-            <div class="matriz-tarefa-campos">
-              {% include "ui/_componentes/matriz_campo.html" with campo=f.inicio %}
-              {% include "ui/_componentes/matriz_campo.html" with campo=f.fim %}
-              {% include "ui/_componentes/matriz_campo.html" with campo=f.ordem %}
-              <div class="matriz-tarefa-texto">{% include "ui/_componentes/matriz_campo.html" with campo=f.texto %}</div>
-            </div>
-            {% for e in f.non_field_errors %}<p class="erro" role="alert">{{ e }}</p>{% endfor %}
-            {% if t.pk %}
-            <div class="matriz-tarefa-acoes">
-              {% if t.arquivo %}<a class="badge badge-contorno" href="{% url 'admin:nucleo_descritor_item' descritor.pk t.pk %}" title="Baixar o arquivo do item">{{ t.arquivo|slice:"-3:"|upper }}</a>{% if t.texto_alternativo %}<span class="mudo matriz-alt">{{ t.texto_alternativo|truncatechars:60 }}</span>{% endif %}{% endif %}
-              {% if pode_gravar %}<button type="button" class="btn btn-ghost btn-sm" data-abrir="item-{{ t.pk }}" aria-label="Arquivo do item da tarefa {{ t.codigo }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-                Arquivo do item</button>{% endif %}
-              {% if excluir_tarefa %}<a class="btn btn-ghost btn-sm matriz-excluir" href="{% url 'ui_matriz_excluir_tarefa' mec.pk descritor.pk t.pk %}" aria-label="Excluir tarefa {{ t.codigo }}">Excluir</a>{% endif %}
-            </div>
-            {% endif %}
-          </li>
-        {% endwith %}{% empty %}
-          <li class="mudo">Nenhuma tarefa.</li>
+        {% if pode_gravar %}<div x-data="linhaNova" data-total="id_tarefas-TOTAL_FORMS">{% endif %}
+        <ul class="matriz-tarefas" data-linhas{% if pode_gravar %} x-data="ordenavel" id="tarefas-lista" data-ordem-url="{% url 'ui_matriz_reordenar' mec.pk descritor.pk %}"{% endif %}>
+        {% for f in tarefas.forms %}{% include "ui/parciais/matriz_tarefa.html" %}{% empty %}
+          <li class="mudo" data-vazio>Nenhuma tarefa.</li>
         {% endfor %}
         </ul>
+        {% if pode_gravar %}
+        <template data-molde>{% include "ui/parciais/matriz_tarefa.html" with f=tarefa_nova %}</template>
+        <div><button type="button" class="btn btn-outline btn-sm" data-abrir-linha @click="abrir">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          Adicionar tarefa</button></div>
+        </div>{% endif %}
       </section>
-      {% if pode_gravar %}
-      <div class="barra-salvar">
-        <span class="mudo">Os campos salvam sozinhos e valem para toda revista que usa esta etapa × componente. Preencha a tarefa nova e inclua.</span>
-        {{ form.confirmar_impacto }}
-        <button type="submit" class="btn btn-outline">Incluir tarefa</button>
-      </div>
-      {% endif %}
     </fieldset>
     {% if form.precisa_confirmar %}{% include "ui/_componentes/impacto.html" with form_id="form-descritor" acao="Incluir tarefa" perdem=form.perdem %}{% endif %}
   </form>

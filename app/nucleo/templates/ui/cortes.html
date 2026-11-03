@@ -76,12 +76,20 @@
 {% endfor %}{% endif %}
 
 {% if perms.nucleo.add_parceiro %}
-{# Fora do form da grade (form não aninha). Célula com envio pendente ou com erro: o `saida` avisa antes de recarregar. #}
-<form method="post" action="{% url 'cortes_novo_parceiro' ano.ano %}" class="acoes">{% csrf_token %}
-  <label for="novo-parceiro">Nova linha</label>
-  <input class="input" id="novo-parceiro" name="nome" required maxlength="200" placeholder="Nome do parceiro (ex.: SAEGO)">
-  <button class="btn btn-outline" type="submit">Adicionar parceiro</button>
-</form>
+{# U4: logo abaixo da grade, o botão abre a linha do parceiro novo com o foco no nome (componente linhaNova); #}
+{# Enter ou "Incluir parceiro" cria, Esc ou "Descartar" tira. Fora do form da grade (form não aninha). #}
+<div x-data="linhaNova">
+  <div data-linhas></div>
+  <template data-molde><form method="post" action="{% url 'cortes_novo_parceiro' ano.ano %}" class="acoes linha-nova-form">{% csrf_token %}
+    <label class="sr-only" for="novo-parceiro">Nome do parceiro novo</label>
+    <input class="input" id="novo-parceiro" name="nome" required maxlength="200" placeholder="Nome do parceiro (ex.: SAEGO)">
+    <button class="btn btn-sm" type="submit">Incluir parceiro</button>
+    <button class="btn btn-ghost btn-sm" type="button" @click="descartar">Descartar</button>
+  </form></template>
+  <button class="btn btn-outline btn-sm adicionar-linha" type="button" data-abrir-linha @click="abrir">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+    Adicionar parceiro</button>
+</div>
 {% endif %}
 
 {% endif %}

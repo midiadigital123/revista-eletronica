@@ -221,6 +221,139 @@ document.addEventListener("alpine:init", () => {
     },
   }));
 
+  // U4: <ul|ol|tbody x-data="ordenavel" id="…" data-ordem-url="…/reordenar/">, filhos [data-id] com
+  // _componentes/ordem.html: alça .alca (SortableJS) e botões [data-mover="-1|1"] para o teclado. Cada
+  // mudança manda a lista inteira (ids) pelo protocolo do autosave e entra no mesmo status da página.
+  // Impacto: o modal do U2 aponta para um form oculto deste componente; confirmar reenvia confirmado,
+  // Cancelar/Esc volta a ordem gravada. 422/409/403 também voltam; sem conexão, a ordem fica e o
+  // "Tentar de novo" reenvia.
+  Alpine.data("ordenavel", () => ({
+    init() {
+      this.chave = document.createElement("i"); // chave deste componente em `enviando`/`falhas`
+      this.gravada = this.ids();
+      this.fila = Promise.resolve();
+      this.impacto = null;
+      this.foco = null;
+      const id = `ordem-${this.$root.id}`;
+      document.getElementById(id)?.remove(); // troca HTMX da lista: um form por lista
+      this.form = Object.assign(document.createElement("form"), { id, hidden: true });
+      this.form.addEventListener("submit", (e) => this.aoConfirmar(e));
+      document.body.append(this.form);
+      this.sortable = Sortable.create(this.$root, {
+        handle: ".alca", draggable: "[data-id]", animation: 120,
+        onEnd: (e) => {
+          this.foco = e.item.querySelector("[data-mover]");
+          if (e.oldIndex !== e.newIndex) this.enfileirar(false);
+        },
+      });
+      this.$root.addEventListener("click", (e) => {
+        const b = e.target.closest("[data-mover]");
+        if (b && this.$root.contains(b)) this.mover(b);
+      });
+      window.addEventListener("autosave:tentar", () => {
+        if (falhas.has(this.chave)) this.enfileirar(false);
+      });
+    },
+    itens() {
+      return [...this.$root.children].filter((e) => e.matches("[data-id]"));
+    },
+    ids() {
+      return this.itens().map((e) => e.dataset.id);
+    },
+    mover(b) {
+      const item = b.closest("[data-id]");
+      const itens = this.itens();
+      const vizinho = itens[itens.indexOf(item) + Number(b.dataset.mover)];
+      if (!vizinho) return;
+      if (Number(b.dataset.mover) < 0) vizinho.before(item);
+      else vizinho.after(item);
+      b.focus(); // mover o nó tira o foco do botão
+      this.foco = b;
+      this.enfileirar(false);
+    },
+    restaurar() {
+      const porId = new Map(this.itens().map((e) => [e.dataset.id, e]));
+      const marca = document.createComment("");
+      this.itens()[0]?.before(marca);
+      for (const id of this.gravada) if (porId.has(id)) marca.before(porId.get(id));
+      marca.remove();
+      this.foco?.focus();
+    },
+    enfileirar(confirmar) {
+      this.fila = this.fila.then(() => this.enviar(confirmar));
+    },
+    async enviar(confirmar) {
+      const ids = this.ids();
+      if (!confirmar && ids.join() === this.gravada.join()) {
+        falhas.delete(this.chave);
+        return avisar();
+      }
+      enviando.add(this.chave);
+      falhas.delete(this.chave);
+      avisar();
+      const d = new FormData();
+      d.append("csrfmiddlewaretoken", document.querySelector("[name=csrfmiddlewaretoken]").value);
+      const sessao = document.querySelector("[name=_bloqueio_sessao]"); // ui_bloqueio.CAMPO_SESSAO
+      if (sessao) d.append(sessao.name, sessao.value);
+      d.append("form_id", this.form.id);
+      for (const id of ids) d.append("ids", id);
+      if (confirmar) d.append("confirmar_impacto", "on");
+      let r;
+      let corpo = {};
+      try {
+        r = await fetch(this.$root.dataset.ordemUrl, { method: "POST", body: d, credentials: "same-origin", headers: { Accept: "application/json" } });
+        corpo = await r.json().catch(() => ({}));
+      } catch {
+        return this.falhou("Não salvo: sem conexão");
+      }
+      if (r.ok && corpo.ok) {
+        this.gravada = ids;
+        salvoEm = corpo.salvo_em;
+        enviando.delete(this.chave);
+        return avisar();
+      }
+      if (r.ok && corpo.impacto) return this.pedirConfirmacao(corpo.impacto);
+      this.restaurar();
+      if (r.status === 422) return this.falhou(`Não salvo: ${(corpo.erros || ["ordem recusada"]).join(" ")}`);
+      if (r.status === 409 || r.status === 403) {
+        this.sortable.option("disabled", true);
+        for (const b of this.$root.querySelectorAll("[data-mover]")) b.disabled = true;
+        return this.falhou(corpo.conflito || "Não salvo: a página ficou somente leitura. Recarregue a página.");
+      }
+      return this.falhou("Não salvo: erro no servidor");
+    },
+    falhou(texto) {
+      enviando.delete(this.chave);
+      falhas.set(this.chave, texto);
+      avisar();
+    },
+    pedirConfirmacao(impacto) {
+      const molde = document.createElement("template");
+      molde.innerHTML = impacto.html;
+      const dialogo = molde.content.querySelector("dialog");
+      dialogo.addEventListener("close", () => {
+        if (this.impacto === dialogo) { // Cancelar ou Esc: nada foi gravado
+          this.impacto = null;
+          enviando.delete(this.chave);
+          this.restaurar();
+          avisar();
+        }
+        dialogo.remove();
+      });
+      this.impacto = dialogo;
+      document.body.append(dialogo); // o Alpine inicia o `impacto` do U2, que abre sozinho
+    },
+    aoConfirmar(e) {
+      e.preventDefault(); // o `impacto` chama requestSubmit() no form oculto: reenvia confirmado
+      const campo = this.form.elements.namedItem("confirmar_impacto");
+      if (campo) campo.value = "";
+      if (!this.impacto) return;
+      this.impacto = null; // o `close` do modal, que chega depois, não é cancelamento
+      this.enfileirar(true);
+      this.foco?.focus();
+    },
+  }));
+
   // <div x-data="saida"> (_componentes/status_salvo.html): mostra o status e só avisa ao sair da
   // página com envio pendente ou com erro (nunca com tudo salvo).
   Alpine.data("saida", () => ({

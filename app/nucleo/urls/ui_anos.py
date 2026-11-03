@@ -8,6 +8,8 @@ confirmação de impacto de `CorPadraoAdmin` (`nucleo/paleta.py`). Sem excluir e
 como no admin.
 """
 
+import re
+
 from django import forms
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
@@ -25,7 +27,7 @@ from nucleo.models.cadastro import COR_HEX
 from nucleo.paleta import PadraoImpactoForm, revistas_afetadas_padrao
 from nucleo.servicos.abrir_ano import AnoRecusado, abrir_ano
 from nucleo.servicos.impacto import avisar_perdidos
-from nucleo.ui_autosave import form_de_um_campo, responder_campo
+from nucleo.ui_autosave import form_de_um_campo, proxima_ordem, responder_campo
 
 
 class AbrirAnoForm(forms.Form):  # cópia do form do admin: importá-lo daria import circular (admin → urls)
@@ -85,14 +87,37 @@ class EtapaForm(_DoAno):
 
     class Meta:
         model = Etapa
-        fields = ["codigo", "escala_max", "ordem"]
-        labels = {"escala_max": "Escala máxima", "ordem": "Ordem"}
+        fields = ["codigo", "escala_max"]  # U4: a ordem vem do código (ordem_escolar), não se digita
+        labels = {"escala_max": "Escala máxima"}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Escala com corte ou matriz gravados: mudar a escala invalidaria esses dados (EtapaAdmin).
         if getattr(self.instance, "travada", False):
             self.fields["escala_max"].disabled = True
+
+    def save(self, commit=True):
+        if not self.instance.pk:  # provisória: `renumerar_etapas` acerta a ordem do ano inteiro
+            self.instance.ordem = proxima_ordem(Etapa.objects.filter(ano=self.instance.ano))
+        return super().save(commit)
+
+
+ETAPA = re.compile(r"^\s*(\d+)\s*(EF|EM)\s*$", re.IGNORECASE)
+
+
+def ordem_escolar(codigo):
+    """Lógica escolar (pedido do usuário, 03/11): todo o fundamental (EF) antes do médio (EM) e, no
+    mesmo ensino, pela série (2EF, 5EF, 9EF, 1EM, 3EM). Código fora do padrão vai para o fim."""
+    m = ETAPA.match(codigo)
+    return (("EF", "EM").index(m[2].upper()), int(m[1]), "") if m else (2, 0, codigo)
+
+
+def renumerar_etapas(ano):
+    """Ordem 1…N das etapas do ano pela `ordem_escolar`. `save` (não `update`): o histórico registra."""
+    for n, etapa in enumerate(sorted(Etapa.objects.filter(ano=ano), key=lambda e: ordem_escolar(e.codigo)), 1):
+        if etapa.ordem != n:
+            etapa.ordem = n
+            etapa.save(update_fields=["ordem"])
 
 
 class ComponenteForm(_DoAno):
@@ -117,8 +142,9 @@ class _SemRepetir(forms.BaseModelFormSet):
             vistos.add(codigo)
 
 
-EtapaFormSet = forms.modelformset_factory(Etapa, form=EtapaForm, formset=_SemRepetir, extra=1)
-ComponenteFormSet = forms.modelformset_factory(Componente, form=ComponenteForm, formset=_SemRepetir, extra=1)
+# U4: sem linha vazia no fim; o "+ Adicionar" põe a linha (molde do empty_form, componente linhaNova).
+EtapaFormSet = forms.modelformset_factory(Etapa, form=EtapaForm, formset=_SemRepetir, extra=0)
+ComponenteFormSet = forms.modelformset_factory(Componente, form=ComponenteForm, formset=_SemRepetir, extra=0)
 SALVO = {"etapas": "Etapas de {} salvas.", "componentes": "Componentes de {} salvos."}
 
 
@@ -245,6 +271,8 @@ def ano(request, ano):
         try:
             with transaction.atomic():  # tudo ou nada
                 tabelas[tabela].save()
+                if tabela == "etapas":
+                    renumerar_etapas(ano)
         except IntegrityError:  # outra pessoa gravou o mesmo código entre a checagem e o save
             messages.error(request, "Nada foi salvo: um dos códigos acabou de ser criado por outra pessoa. Confira e salve de novo.")
         else:
@@ -258,8 +286,8 @@ def ano(request, ano):
 @login_required(login_url="admin:login")
 @permission_required("nucleo.view_etapa", raise_exception=True)
 def campo(request, ano, tabela, pk):
-    """Autosave (U3) de um campo de etapa (escala máxima sem corte nem matriz, ordem) ou de
-    componente (nome) já gravados. A linha nova ainda grava pelo botão da tabela (U4)."""
+    """Autosave (U3) de um campo de etapa (escala máxima sem corte nem matriz) ou de componente
+    (nome) já gravados. A linha nova grava pelo botão "Incluir" da linha (U4)."""
     if tabela not in SALVO:
         raise Http404
     if not _pode(request.user)[tabela]:

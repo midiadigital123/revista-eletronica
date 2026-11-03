@@ -223,8 +223,8 @@ class CortesCelulaTest(Protocolo, Base):
 
 
 class AnoCampoTest(Protocolo, Base):
-    """U3b: na página do ano salvam sozinhos a escala máxima (sem corte nem matriz), a ordem da
-    etapa e o nome do componente. Código é imutável; a linha nova ainda grava pelo botão (U4)."""
+    """U3b: na página do ano salvam sozinhos a escala máxima (sem corte nem matriz) e o nome do
+    componente. Código é imutável; a ordem vem do reordenar e a linha nova grava pelo botão (U4)."""
 
     def setUp(self):
         super().setUp()
@@ -233,11 +233,12 @@ class AnoCampoTest(Protocolo, Base):
     def url(self, tabela, pk):
         return reverse("ui_ano_campo", args=[2026, tabela, pk])
 
-    def test_200_escala_ordem_e_nome(self):
+    def test_200_escala_e_nome(self):
         self.assertSalvo(self.postar(self.url("etapas", self.livre.pk), campo="escala_max", valor="1000"))
-        self.assertSalvo(self.postar(self.url("etapas", self.livre.pk), campo="ordem", valor="4"))
+        # U4: a ordem não é campo (reordena por arrastar/setas, rota ui_ano_reordenar).
+        self.assertNaoSalvo(self.postar(self.url("etapas", self.livre.pk), campo="ordem", valor="4"), 422, "erros")
         self.livre.refresh_from_db()
-        self.assertEqual((self.livre.escala_max, self.livre.ordem), (1000, 4))
+        self.assertEqual((self.livre.escala_max, self.livre.ordem), (1000, 9))
         self.assertSalvo(self.postar(self.url("componentes", self.mt.pk), campo="nome", valor="Matemática E2E"))
         self.assertEqual(Componente.objects.get(pk=self.mt.pk).nome, "Matemática E2E")
 
