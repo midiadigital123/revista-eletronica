@@ -14,6 +14,7 @@ from django.template.response import TemplateResponse
 from django.urls import path
 from django.views.decorators.http import require_POST, require_http_methods
 
+from nucleo.contexto import ano_da_sessao
 from nucleo.models import Ano
 from nucleo.planilha_variaveis import VariaveisForm, copiar, pk_do_post, planilha, pode_gravar, pode_ver, projetos_do_ano
 from nucleo.ui_bloqueio import e_htmx
@@ -63,7 +64,7 @@ def variaveis(request, ano=None):
     anos = list(Ano.objects.order_by("-ano"))
     if ano is None:  # /ui/variaveis/ → ano mais recente
         if anos:
-            return redirect("ui_variaveis", anos[0].ano)
+            return redirect("ui_variaveis", ano_da_sessao(request).ano)
         return TemplateResponse(request, "ui/variaveis/pagina.html", {"anos": anos, "secao": "variaveis"})
     ano = get_object_or_404(Ano, ano=ano)
     contexto, gravou = planilha(request, ano)

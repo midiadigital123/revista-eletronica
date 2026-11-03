@@ -168,6 +168,7 @@ class ValidadoTest(Base):
                 r = self.client.get(self.painel, filtro)
             return len(c.captured_queries), len(r.context["linhas"])
 
+        self.client.get(self.painel)  # U6: a 1ª visita grava o ano na sessão; não entra na medida
         todas, n_todas = consultas()
         go, n_go = consultas(parceiro=self.go["LP"].projeto.parceiro_ano.parceiro_id)
         por_linha = (todas - go) / (n_todas - n_go)

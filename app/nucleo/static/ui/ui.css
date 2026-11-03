@@ -92,6 +92,23 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .usuario { margin-left: auto; display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
 .usuario > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .usuario form { display: contents; }
+/* U6: seletor de ano do cabeçalho (_componentes/anos.html). Popover plano: borda, raio 10px, só shadow-xs. */
+.seletor-ano > button[aria-current="page"] { background: var(--muted); }
+.popover-ano {
+  position: fixed; inset: auto; margin: 0; min-width: 10rem; padding: 0.25rem;
+  display: none; flex-direction: column; gap: 0.125rem;
+  background: var(--background); color: var(--foreground);
+  border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow-xs);
+}
+.popover-ano:popover-open { display: flex; }
+.popover-ano a {
+  border-radius: var(--radius-md); padding: 0.375rem 0.75rem;
+  font-size: 0.875rem; line-height: 1.25rem; font-weight: 500;
+  color: var(--muted-foreground); transition: color 120ms var(--ease-saida), background-color 120ms var(--ease-saida);
+}
+.popover-ano a:hover, .popover-ano a:focus-visible { background: var(--muted); color: var(--foreground); }
+.popover-ano a[aria-current="page"] { color: var(--foreground); }
+.popover-ano hr { border: 0; border-top: 1px solid var(--border); margin: 0.25rem 0; }
 .principal { max-width: 80rem; margin: 0 auto; padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
 
 /* --- cabeçalho de página (ListaProjetos.tsx:31-34) --- */

@@ -36,7 +36,8 @@ Telas e rotas (nomes `ui_<tela>`; ações `ui_<tela>_<acao>`):
 ## 2. Casca e contexto
 
 - `{% extends "ui/base.html" %}`, blocos `titulo`, `cabeca`, `conteudo`.
-- Contexto: `secao` (`painel`, `cortes`, `variaveis`, `matrizes`, `templates`, `revistas`, `impresso`) marca a navegação (toda tela marca um item: Validar marca Painel; Projeto e Lotes marcam Variáveis); `ano` (instância `Ano`) leva o ano aos links; `anos` para o seletor.
+- Menu de 5 itens (U6): Painel, Projetos, Matrizes, Templates, Impresso. `secao` marca o item: Validar marca Painel; `cortes`, `variaveis`, `revistas` e `lotes` marcam Projetos; `anos` não marca nenhum e destaca o seletor.
+- Ano: o context processor `nucleo/contexto.py:ano_atual` dá `ano_ctx` (kwarg `ano`, objeto da página, sessão ou o mais recente) e `trocas_ano` (mesma rota e query no outro ano; em detalhe, o equivalente do mesmo parceiro ou a lista do ano). Grava `request.session["ano"]`; as rotas `_inicio` usam `ano_da_sessao`.
 - Cabeçalho de página: `<header class="pagina-cab"><div><h1>…</h1><p class="mudo">…</p></div><div class="acoes">…</div></header>` (`editor/src/projetos/ListaProjetos.tsx:31-34`).
 - Página de detalhe (um item de uma lista): o caminho de volta é `<a class="mudo voltar" href="…">‹ Lista</a>` logo acima do cabeçalho, não um botão nas ações (matriz, MEC, revista, projeto, editor de template).
 - Ações do cabeçalho: ir a outra tela = `.btn-ghost` ("Ver painel de 2026"); ação desta tela = `.btn-outline`; a principal = `.btn`.
@@ -68,7 +69,7 @@ Cores fora dos tokens só onde o admin/preview já fixou: faixa vermelha `#b0002
 |---|---|---|
 | Botão | ação principal (1 por área) / secundária / terciária / destrutiva | `.btn`, `.btn-outline`, `.btn-ghost`, `.btn-destrutivo`; tamanhos `.btn-sm`, `.btn-lg` (`components/ui/button.tsx`) |
 | Campo | rótulo + controle + ajuda/erro | `.campo > label + .input/.textarea/.select + .ajuda/.erro`; erro também em `aria-invalid="true"` |
-| Seletor de ano | telas por ano | `{% include "ui/_componentes/anos.html" with rota="ui_<tela>" %}` |
+| Seletor de ano | cabeçalho da base (só ela inclui) | `_componentes/anos.html`: popover nativo + Alpine `seletorAno` (`static/ui/componentes/seletor-ano.js`) |
 | Abas | partes da mesma tela (Templates F1/F2/Matrizes/Variáveis) | `<nav class="abas"><a aria-current="page">`; a aba é a URL (`?aba=`), não estado em JS |
 | Tabela | listas curtas | `.tabela-caixa > table.tabela` |
 | Tabela densa | painel, listas longas: cabeçalho fixo, 1ª coluna `.fixa` (é `position: relative`, para o `.sr-only` não vazar e criar rolagem na página) | `.tabela-densa > table.tabela`; `.num` alinha números; `.quebra` deixa quebrar |

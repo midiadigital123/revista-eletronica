@@ -15,6 +15,7 @@ from django.urls import path, reverse
 from django.utils.cache import patch_vary_headers
 from django.views.decorators.http import require_POST
 
+from nucleo.contexto import ano_da_sessao
 from nucleo.models import Ano, Revista
 from nucleo.ui_bloqueio import e_htmx
 from nucleo.urls.impresso import estado, gravar, pode_marcar, situacao
@@ -36,7 +37,7 @@ def impresso(request, ano=None):
 def _impresso(request, ano):
     anos = list(Ano.objects.order_by("-ano"))
     if ano is None:  # /ui/impresso/ → ano mais recente
-        return redirect("ui_impresso", anos[0].ano) if anos else redirect("ui_anos")
+        return redirect("ui_impresso", ano_da_sessao(request).ano) if anos else redirect("ui_anos")
     ano = get_object_or_404(Ano, ano=ano)
     pedido = request.GET.get("revista", "")
     if e_htmx(request):  # só o detalhe: não recalcula a lista

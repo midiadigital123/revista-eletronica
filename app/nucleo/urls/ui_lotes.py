@@ -16,6 +16,7 @@ from django.urls import path
 from django.views.decorators.http import require_http_methods
 
 from nucleo import lotes
+from nucleo.contexto import ano_da_sessao
 from nucleo.models import Ano, Componente, Fasciculo, RevistaFasciculo, RevistaSecao
 from nucleo.servicos.impacto import avisar_perdidos
 from nucleo.ui_bloqueio import e_htmx
@@ -68,7 +69,7 @@ def responder(request, pagina, parcial, contexto):
 @login_required(login_url="admin:login")
 def inicio(request):
     """/ui/lotes/ → lote de matriz do ano mais recente (menu sem `ano` no contexto); sem ano, `/`."""
-    ano = Ano.objects.order_by("-ano").first()
+    ano = ano_da_sessao(request)
     return redirect("ui_lotes_matriz", ano.ano) if ano else redirect("inicio")
 
 

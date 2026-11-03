@@ -19,7 +19,6 @@
   <span>Nenhum ano aberto. {% if perms.nucleo.abrir_ano %}<a class="link" href="{% url 'ui_anos' %}">Abra um ano</a> para cadastrar a matriz.{% else %}Peça a um administrador para abrir o ano.{% endif %}</span>
 </div>
 {% else %}
-{% include "ui/_componentes/anos.html" with rota="ui_matriz" %}
 
 {% if matrizes %}
 <div class="tabela-caixa card matriz-tabela">

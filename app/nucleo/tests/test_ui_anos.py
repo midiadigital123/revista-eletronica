@@ -36,7 +36,7 @@ class AnosUiTest(Base):
         resp = self.client.get(self.url)
         self.assertContains(resp, "2026")
         self.assertNotContains(resp, "Abrir ano")
-        self.assertNotContains(self.client.get(reverse("cortes", args=[2026])), self.url)
+        self.assertNotContains(self.client.get(reverse("cortes", args=[2026])), f'href="{self.url}"')  # "Configurar" leva a /ui/anos/2026/
         self.assertEqual(self.client.post(self.url, {"ano": 2027}).status_code, 403)
         self.assertFalse(Ano.objects.filter(ano=2027).exists())
         self.client.force_login(usuario("nada"))  # sem view_ano

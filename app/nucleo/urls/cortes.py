@@ -13,6 +13,7 @@ from django.template.response import TemplateResponse
 from django.urls import path
 from django.views.decorators.http import require_http_methods, require_POST
 
+from nucleo.contexto import ano_da_sessao
 from nucleo.cortes import grade, pode_ver
 from nucleo.models import Ano, Parceiro, Revista
 from nucleo.servicos import impacto
@@ -25,7 +26,7 @@ def cortes(request, ano=None):
         raise PermissionDenied
     anos = list(Ano.objects.order_by("-ano"))
     if ano is None:  # /cortes/ → ano mais recente
-        return redirect("cortes", anos[0].ano) if anos else TemplateResponse(request, "ui/cortes.html", {"anos": anos})
+        return redirect("cortes", ano_da_sessao(request).ano) if anos else TemplateResponse(request, "ui/cortes.html", {"anos": anos})
     ano = get_object_or_404(Ano, ano=ano)
     contexto, gravou = grade(request, ano, impacto=True)
     if gravou:
