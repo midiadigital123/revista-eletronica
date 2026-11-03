@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo S5 de S0–S9 (+fechamento) do plano telas-b-lacunas concluído: paleta do ano (nome e cor dos padrões) na página `/ui/anos/<ano>/`. Plano geral: passo 21 de 22 (S17) segue pendente.
-Funcionando: S1–S5 nas telas B; nome/cor dos padrões editáveis pela tela com a mesma confirmação de impacto do admin (lista quem perde o "Validado"); incluir padrão que falta (até 5); suíte 554 OK (8 de PDF pulados), `makemigrations --check` limpo, links `admin:` nas telas B seguem 9.
-Quebrado/pendente: Playwright de `anos.spec.ts` (4 testes, S4+S5) só pulou: faltam `E2E_ADMIN_*`/`E2E_IMPRESSO_*` (suíte: 19 OK, 11 pulados, 0 falhas); S6–S9 e fechamento; S17 executado só em ensaio; S18 não iniciado.
+Plano ativo: `plans/revista-express-telas-b-ux.md` (reforma de UX, D-195–D-199). Passo U0 de 13 concluído: contador falso de Cortes corrigido (D-200). S6–S9 do plano de lacunas ficam para depois da reforma (D-198); S17/S18 do plano geral seguem pendentes.
+Funcionando: Cortes abre com "Nenhuma alteração." e sai sem diálogo; suíte Django OK (8 de PDF pulados); Playwright de Cortes 2/2 com usuários `e2e`/`imp-e2e` no banco de dev (senhas fora do repo).
+Quebrado/pendente: U1–U10, U8b, U9b; o spec antigo de Cortes grava parceiros "E2E A/B …" no banco de dev a cada execução.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Planejar S6 (nova matriz) e S7 (novo template), que rodam em paralelo.
+Executar U1: carregar Alpine CSP 3.14.9 e SortableJS 1.15.6 do jsDelivr com SRI em `templates/ui/base.html`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1597,6 +1597,54 @@ Planejar S6 (nova matriz) e S7 (novo template), que rodam em paralelo.
 - **Arquivos afetados:** `app/nucleo/paleta.py`, `app/nucleo/admin/cadastro.py`, `app/nucleo/urls/ui_anos.py`, `app/nucleo/templates/ui/anos/ano.html`, `app/nucleo/tests/test_ui_anos.py`, `app/e2e/tests/anos.spec.ts`
 - **Status:** ativa
 
+### D-195 — Telas B: Alpine (build CSP) somado ao HTMX, com fetch no autosave (2026-11-03)
+- **Contexto:** revisão de UX de 03/11 (docx com 18 comentários + 2 prints extras) pede modal de impacto, autosave, linha nova por botão e edição inline; o usuário autorizou adicionar lib JS.
+- **Decisão:** Alpine.js `@alpinejs/csp` 3.14.9 para estado local (componentes em `Alpine.data`), SortableJS 1.15.6 para reordenar; HTMX 2.0.4 continua onde já está; autosave por campo via `fetch` com protocolo JSON único.
+- **Motivo:** HTMX já serve 6 telas; Alpine cobre só o que falta sem reescrever views.
+- **Descartadas:** migrar tudo para Alpine — reescreve 6 telas (2 a 3 dias) sem ganho; só JS puro — código demais por tela; htmx + SortableJS sem Alpine — o usuário escolheu Alpine.
+- **Arquivos afetados:** `plans/revista-express-telas-b-ux.md` (U1 em diante)
+- **Status:** ativa
+
+### D-196 — Autosave só sem impacto; com impacto, modal antes de gravar (2026-11-03)
+- **Contexto:** "é preciso clicar em Salvar em quase toda página"; e a confirmação de impacto era um checkbox (o usuário quer modal).
+- **Decisão:** campo salva ao sair dele; o servidor calcula na hora se a gravação tira o "Validado" de alguma revista e, se tirar, não grava e devolve a lista para o modal. Editor de templates mantém "Salvar" (versão assinada).
+- **Motivo:** a mesma variável pode ou não afetar revista validada; o impacto precisa aparecer antes.
+- **Descartadas:** tudo sozinho com "desfazer" — impacto só depois de gravado; manter Salvar — é a queixa.
+- **Arquivos afetados:** `plans/revista-express-telas-b-ux.md` (U2, U3)
+- **Status:** ativa
+
+### D-197 — Grade de Cortes vira visão de Projetos, e cada projeto ganha aba Cortes (2026-11-03)
+- **Contexto:** fusão de páginas (menu de 9 itens).
+- **Decisão:** Projetos com visões Lista / Cortes / Variáveis; Lotes vira ação em massa na Lista; Revistas lista some dentro de Projetos; URLs antigas redirecionam.
+- **Motivo:** a grade serve para lançar muitos parceiros de uma vez; a aba serve para um.
+- **Descartadas:** só a aba no projeto — 30 parceiros viram 30 páginas.
+- **Arquivos afetados:** `plans/revista-express-telas-b-ux.md` (U7)
+- **Status:** ativa
+
+### D-198 — Reforma de UX antes de S6–S9 (2026-11-03)
+- **Contexto:** faltavam S6–S9 do plano de lacunas.
+- **Decisão:** executar `plans/revista-express-telas-b-ux.md` (U0–U10, U8b, U9b) antes; S6–S9 nascem no padrão novo.
+- **Motivo:** evitar 4 telas novas no padrão rejeitado.
+- **Descartadas:** fazer S6–S9 antes e adaptar depois — retrabalho.
+- **Arquivos afetados:** `plans/revista-express-telas-b-lacunas.md`, `plans/revista-express-telas-b-ux.md`
+- **Status:** ativa
+
+### D-199 — Menu de 5 itens e ano no cabeçalho; CDN liberada (2026-11-03)
+- **Contexto:** "+ Abrir ano" em toda página confunde (parece adicionar parceiro); página do ano difícil de achar; usuário liberou CDN.
+- **Decisão:** menu Painel · Projetos · Matrizes · Templates · Impresso; seletor de ano no cabeçalho com "Configurar <ano>" e "Abrir novo ano" (com permissão); libs novas via jsDelivr com versão exata e SRI.
+- **Motivo:** o ano é contexto de trabalho; abrir ano é tarefa rara.
+- **Descartadas:** seletor dentro de cada página — é a queixa; vendorizar libs novas — desnecessário com CDN liberada.
+- **Arquivos afetados:** `plans/revista-express-telas-b-ux.md` (U1, U6)
+- **Status:** ativa
+
+### D-200 — Contador "alteração não salva" de Cortes comparava células deslocadas (2026-11-03)
+- **Contexto:** "2 parceiro(s) com alteração não salva" nunca sumia e o aviso de saída aparecia sem edição (comentários 3 e 6).
+- **Decisão:** limitar o seletor às células: `tr.querySelectorAll("td input.input")`. Teste Playwright "cortes sem edição não acusa alteração".
+- **Motivo:** o `input.input` do Renomear (dentro do `<th>`) entrava no índice 0 e deslocava a comparação com o gravado.
+- **Descartadas:** nenhuma. Variáveis e editor de template conferidos: comparam por nome/`defaultValue`, sem o bug.
+- **Arquivos afetados:** `app/nucleo/templates/ui/cortes.html`, `app/e2e/tests/cortes.spec.ts`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (D-189 → D-190) Auditoria das telas B: o que o back faz e a tela B não oferece. Bloqueia: abrir ano, criar matriz, criar template, paleta do ano, etapas/componentes. Leva a erro: links do painel vão ao admin (Impresso recebe 403 em "Matriz", `urls/painel.py:43`), renomear parceiro, "abra um ano no admin" para quem não pode. Menu sem Projetos e Lotes. Por onde começar — depende de: usuário
 - [x] (D-184) S17: os cortes de 2026 repetem os de 2025? Se sim, comando `importar_cortes` (~60 min) substituindo a D-119 nesse ponto — depende de: Pedagógica
@@ -1897,3 +1945,5 @@ Planejar S6 (nova matriz) e S7 (novo template), que rodam em paralelo.
 - D-193: `/ui/anos/<ano>/` com etapas e componentes. Revisor achou 500 com código repetido no mesmo envio (corrigido + teste), limite só no HTML e consulta extra por linha (corrigidos). Suíte 547 OK; Playwright 19 OK, 9 pulados (2 novos do S4, sem credenciais E2E).
 - S5 planejado e aprovado. 70bcdaa: paleta em módulo comum (testes do admin verdes sem mudança).
 - D-194: paleta na página do ano. O E2E levantou e eu confirmei: cor em maiúsculas no banco × minúsculas do seletor → pedia confirmação e trocava a caixa (hash). Corrigido com teste. Revisor: amostra mostrava a cor não salva, valor lixo no re-render, textarea no novo padrão, erros sem `role=alert`/`aria-describedby` (corrigidos). Suíte 554 OK; Playwright 19 OK, 11 pulados (4 de `anos.spec.ts`, sem credenciais).
+- Revisão de UX pedida (docx com 11 prints e 18 comentários). Só relatório, sem código. Causa achada do "2 parceiro(s) com alteração não salva" eterno e do aviso de saída sem mudança: em `ui/cortes.html`, `tr.querySelectorAll("input.input")` inclui o campo de Renomear e desloca a comparação célula × gravado.
+- Plano da reforma de UX aprovado: `plans/revista-express-telas-b-ux.md` (U0–U10 + U8b página da revista + U9b editor de template com seções travadas; ~12,5 dias). Decisões: Alpine CSP + fetch somado ao HTMX, autosave com modal de impacto, Cortes como visão de Projetos, reforma antes de S6–S9, CDN liberada (jsDelivr com SRI). Registro formal D-195+ fica no U0.
