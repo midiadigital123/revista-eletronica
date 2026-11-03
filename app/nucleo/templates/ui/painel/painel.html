@@ -1,6 +1,6 @@
 {% extends "ui/base.html" %}{% load static %}
 {% comment %}Painel da temporada (T23) fora do admin. View: urls/ui_painel.py; regra: urls/painel.py (filtrar, linha).
-Ficha: docs/telas/fichas/painel.md. O corpo (tarefa, filtros, tabela) é trocado por HTMX ao filtrar.{% endcomment %}
+Ficha: docs/telas/fichas/painel.md. O corpo (filtros, resumo por coluna, tabela por parceiro) é trocado por HTMX ao filtrar.{% endcomment %}
 {% block titulo %}Painel {{ ano.ano }}{% endblock %}
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/painel.css' %}">{% endblock %}
 
@@ -8,7 +8,7 @@ Ficha: docs/telas/fichas/painel.md. O corpo (tarefa, filtros, tabela) é trocado
 <header class="pagina-cab">
   <div>
     <h1>Painel da temporada {{ ano.ano }}</h1>
-    <p class="mudo">Uma linha por revista ativa: o que falta para cada uma sair completa, e onde resolver.</p>
+    <p class="mudo">As revistas ativas, por parceiro: o que falta para cada uma sair completa, e onde resolver.</p>
   </div>
 </header>
 
@@ -26,22 +26,38 @@ document.addEventListener("htmx:afterSwap", (e) => {
   if (e.detail.target.id !== "painel-corpo") return;
   document.getElementById("painel-anuncio").textContent = e.detail.target.querySelector(".painel-resumo")?.textContent.trim() ?? "";
 });
+// Sombra na borda do cabeçalho e da coluna Revista (fixos) só quando a tabela rolou.
+// O scroll não borbulha: escuta na captura, vale também depois da troca do HTMX.
+document.addEventListener("scroll", (e) => {
+  const caixa = e.target.classList?.contains("painel-caixa") ? e.target : null;
+  if (!caixa) return;
+  caixa.toggleAttribute("data-rolou-x", caixa.scrollLeft > 0);
+  caixa.toggleAttribute("data-rolou-y", caixa.scrollTop > 0);
+}, true);
 </script>
 
 {% if pode_validar %}
 <script>
-// Seleção para "Validar selecionadas": marca/desmarca todas, conta e libera o botão.
+// Seleção para "Validar selecionadas": todas, por parceiro (data-grupo marca as data-de dele)
+// ou uma a uma; as caixas de cima ficam marcadas, desmarcadas ou indeterminadas.
 // Delegado no documento: vale também depois que o HTMX troca o corpo.
 document.addEventListener("change", (e) => {
   const lote = e.target.closest?.("#painel-lote");
   if (!lote) return;
   const caixas = [...lote.querySelectorAll("input[name=revista]")];
+  const doGrupo = (g) => caixas.filter((c) => c.dataset.de === g.dataset.grupo);
   const todas = lote.querySelector("[data-todas]");
   if (e.target === todas) caixas.forEach((c) => { c.checked = todas.checked; });
-  const n = caixas.filter((c) => c.checked).length;
-  todas.checked = n === caixas.length;
-  todas.indeterminate = n > 0 && n < caixas.length;
-  lote.querySelector("[data-selecionadas]").textContent = n ? `${n} revista(s) selecionada(s).` : "Nenhuma revista selecionada.";
+  if (e.target.dataset.grupo) doGrupo(e.target).forEach((c) => { c.checked = e.target.checked; });
+  const resumir = (caixa, lista) => {
+    const n = lista.filter((c) => c.checked).length;
+    caixa.checked = n === lista.length;
+    caixa.indeterminate = n > 0 && n < lista.length;
+    return n;
+  };
+  lote.querySelectorAll("[data-grupo]").forEach((g) => resumir(g, doGrupo(g)));
+  const n = resumir(todas, caixas);
+  lote.querySelector("[data-selecionadas]").textContent = n ? `${n} selecionada(s)` : "Nenhuma selecionada";
   lote.querySelector("[data-validar]").disabled = !n;
 });
 </script>

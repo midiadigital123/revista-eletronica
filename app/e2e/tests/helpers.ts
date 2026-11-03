@@ -12,12 +12,25 @@ export async function entrar(page: Page, proxima = "/admin/") {
   await expect(page).not.toHaveURL(/\/admin\/login\//);
 }
 
-/** Painel B: escolhe `valor` no select `seletor` e espera o HTMX trocar o corpo (o form velho
- * é marcado e some na troca; sem isso o próximo select pode cair no form que está saindo). */
-export async function filtrarPainel(page: Page, seletor: string, valor: string | { label: string }) {
+/** Painel B: roda `acao` e espera o HTMX trocar o corpo (o form velho é marcado e some na troca;
+ * sem isso a próxima ação pode cair no corpo que está saindo). */
+async function trocarCorpoPainel(page: Page, acao: () => Promise<unknown>) {
   await page.locator("#painel-corpo form.painel-filtros").evaluate((f) => f.setAttribute("data-velho", ""));
-  await page.selectOption(seletor, valor);
+  await acao();
   await expect(page.locator("#painel-corpo form.painel-filtros:not([data-velho])")).toHaveCount(1);
+}
+
+/** Painel B: escolhe `valor` no select `seletor` (hoje só o #filtro-parceiro). */
+export async function filtrarPainel(page: Page, seletor: string, valor: string | { label: string }) {
+  await trocarCorpoPainel(page, () => page.selectOption(seletor, valor));
+}
+
+/** Painel B: clica no contador da coluna (filtro de falta) ou, com null, em "Limpar filtro". */
+export async function filtrarFalta(page: Page, coluna: string | null) {
+  const alvo = coluna
+    ? page.locator("#painel-corpo .painel-contadores a", { hasText: coluna })
+    : page.locator("#painel-corpo .painel-limpar");
+  await trocarCorpoPainel(page, () => alvo.click());
 }
 
 /** Mesmo POST do sendBeacon do pagehide: fechar o contexto não dispara o pagehide, e a

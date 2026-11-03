@@ -1,17 +1,9 @@
 {% comment %}
-Corpo do painel: próxima tarefa, filtros e tabela. A página inclui; o filtro (HTMX) devolve só isto
-para #painel-corpo. Contexto: urls/ui_painel.py.
-{% endcomment %}{% include "ui/_componentes/painel_tarefa.html" %}
-
-<form class="painel-filtros" method="get" action="{% url 'painel' ano.ano %}"
+Corpo do painel: filtros, resumo por coluna (contadores = filtro de falta) e tabela agrupada por
+parceiro. A página inclui; o filtro (HTMX) devolve só isto para #painel-corpo. Contexto: urls/ui_painel.py.
+{% endcomment %}<form class="painel-filtros" method="get" action="{% url 'painel' ano.ano %}"
       hx-get="{% url 'painel' ano.ano %}" hx-trigger="change" hx-target="#painel-corpo" hx-sync="this:replace" hx-indicator="#painel-corpo" hx-push-url="true">
-  <div class="campo">
-    <label for="filtro-falta">Falta</label>
-    <select class="select" id="filtro-falta" name="falta">
-      <option value="">Tudo</option>
-      {% for c in colunas %}<option value="{{ c.chave }}"{% if c.chave == falta %} selected{% endif %}>{{ c.rotulo }}</option>{% endfor %}
-    </select>
-  </div>
+  {% if falta %}<input type="hidden" name="falta" value="{{ falta }}">{% endif %}
   <div class="campo">
     <label for="filtro-parceiro">Parceiro</label>
     <select class="select" id="filtro-parceiro" name="parceiro">
@@ -27,49 +19,63 @@ para #painel-corpo. Contexto: urls/ui_painel.py.
   </div>
   {% endif %}
   <noscript><button class="btn btn-outline" type="submit">Filtrar</button></noscript>
-  <p class="mudo painel-resumo">{{ linhas|length }} de {{ todas|length }} revista(s) · {{ completas }} completa(s)</p>
 </form>
+
+{% if todas %}
+<section class="painel-sumario" aria-label="O que falta, por coluna" hx-target="#painel-corpo" hx-indicator="#painel-corpo" hx-push-url="true">
+  <p class="painel-resumo"><strong>{{ completas }}</strong> de {{ todas|length }} revista{{ todas|length|pluralize }} completa{{ todas|length|pluralize }}{% if falta %} · {{ linhas|length }} sem {% for c in colunas %}{% if c.chave == falta %}{{ c.rotulo }}{% endif %}{% endfor %}{% endif %}</p>
+  <ul class="painel-contadores">
+    {% for c in colunas %}<li>{% if c.faltam %}<a class="painel-contador" href="{{ c.url }}" hx-get="{{ c.url }}"{% if c.chave == falta %} aria-current="true"{% endif %} title="Ver só as revistas sem {{ c.rotulo }}"><span class="painel-contador-n">{{ c.faltam }}</span>{{ c.rotulo }}<span class="sr-only"> sem {{ c.rotulo }}</span></a>
+    {% else %}<span class="painel-contador painel-contador-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>{{ c.rotulo }}<span class="sr-only">: em dia</span></span>{% endif %}</li>{% endfor %}
+  </ul>
+  {% if falta %}<a class="link painel-limpar" href="{{ sem_falta }}" hx-get="{{ sem_falta }}">Limpar filtro</a>{% endif %}
+</section>
+{% endif %}
 
 {% if not todas and not filtrado %}
 {% url 'cortes' ano.ano as u %}
 {% include "ui/_componentes/vazio.html" with titulo="Nenhuma revista ativa neste ano" texto="As revistas nascem quando os cortes do parceiro são lançados. Lance os cortes do ano para ver as revistas aqui." url=u rotulo="Abrir cortes" %}
 {% elif not linhas %}
-{% include "ui/_componentes/vazio.html" with titulo="Nenhuma revista com esse filtro" texto="Nenhuma revista ativa tem essa pendência neste recorte. Limpe o filtro de falta para ver todas." url=sem_falta rotulo="Limpar filtro de falta" %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhuma revista com esse filtro" texto=vazio_texto url=vazio_url rotulo="Limpar filtro" %}
 {% else %}
 <form method="get" action="{% url 'ui_validar' ano.ano %}" id="painel-lote">
-  <div class="tabela-densa">
+  <div class="tabela-densa painel-caixa">
     <table class="tabela painel-tabela">
       <thead>
         <tr>
           <th scope="col" class="fixa painel-revista">{% if pode_validar %}<input type="checkbox" data-todas aria-label="Selecionar todas as revistas da lista">{% endif %}Revista</th>
-          {% for c in colunas %}
-          <th scope="col" class="painel-col{% if c.chave == falta %} painel-col-ativa{% endif %}">
-            <span>{{ c.rotulo }}</span>
-            {% if c.faltam %}<a class="badge badge-erro" href="{{ c.url }}" hx-get="{{ c.url }}" hx-target="#painel-corpo" hx-indicator="#painel-corpo" hx-push-url="true" title="Ver só as revistas sem {{ c.rotulo }}">{{ c.faltam }}<span class="sr-only"> sem {{ c.rotulo }}</span></a>
-            {% else %}<span class="badge badge-contorno" title="Nenhuma falta">0</span>{% endif %}
-          </th>
-          {% endfor %}
+          {% for c in colunas %}<th scope="col" class="painel-col{% if c.chave == falta %} painel-col-ativa{% endif %}">{{ c.rotulo }}</th>{% endfor %}
         </tr>
       </thead>
+      {% for g in grupos %}
       <tbody>
-      {% for l in linhas %}
+        <tr class="painel-grupo" data-grupo-linha="{{ g.projeto.pk }}">
+          <th scope="rowgroup" class="fixa painel-revista">
+            {% if pode_validar %}<input type="checkbox" data-grupo="{{ g.projeto.pk }}" aria-label="Selecionar as revistas de {{ g.parceiro.nome }}">{% endif %}
+            <span class="painel-grupo-nome">{{ g.parceiro.nome }}</span>
+            <a class="painel-grupo-projeto" href="{% url 'ui_projeto' g.projeto.pk %}" title="Abrir o projeto {{ g.projeto.nome }}">Projeto<span class="sr-only"> {{ g.projeto.nome }}</span></a>
+            <span class="painel-grupo-conta">{{ g.completas }} de {{ g.total }} revista{{ g.total|pluralize }} completa{{ g.total|pluralize }}</span>
+          </th>
+          <td colspan="{{ colunas|length }}"></td>
+        </tr>
+        {% for l in g.linhas %}
         <tr data-revista="{{ l.revista.pk }}">
-          <th scope="row" class="fixa painel-revista">
-            {% if pode_validar %}<input type="checkbox" name="revista" value="{{ l.revista.pk }}" aria-label="Selecionar {{ l.revista }}">{% endif %}
-            <a class="link-linha" href="{% url 'ui_revista_editar' ano.ano l.revista.pk %}">{{ l.revista.projeto.parceiro_ano.parceiro.nome }}</a>
-            <span class="badge badge-secundario">{{ l.revista.componente.codigo }}</span>
+          <th scope="row" class="fixa painel-revista painel-sub">
+            {% if pode_validar %}<input type="checkbox" name="revista" value="{{ l.revista.pk }}" data-de="{{ g.projeto.pk }}" aria-label="Selecionar {{ l.revista }}">{% endif %}
+            <a class="link-linha" href="{% url 'ui_revista_editar' ano.ano l.revista.pk %}"><span class="badge badge-secundario">{{ l.revista.componente.codigo }}</span><span class="sr-only">{{ g.parceiro.nome }} · </span>{{ l.revista.componente.nome }}</a>
             <a class="painel-preview" href="{% url 'preview' l.revista.pk %}" target="_blank" rel="noopener" title="Abre mesmo com pendências; o que falta aparece em faixa vermelha.">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Preview<span class="sr-only"> de {{ l.revista }} (abre em nova aba)</span></a>
           </th>
           {% for c in l.celulas %}<td class="painel-cel coluna-{{ c.coluna }}">{% if c.ok and c.link %}<a href="{{ c.link }}" title="Ver a última versão impressa">{% include "ui/_componentes/status.html" with ok=True titulo="ok" %}</a>{% else %}{% include "ui/_componentes/status.html" with ok=c.ok url=c.link titulo=c.dica %}{% endif %}</td>{% endfor %}
         </tr>
-      {% endfor %}
+        {% endfor %}
       </tbody>
+      {% endfor %}
     </table>
   </div>
   {% if pode_validar %}
-  <div class="barra-salvar">
-    <span class="mudo" aria-live="polite" data-selecionadas>Nenhuma revista selecionada.</span>
+  <div class="barra-salvar painel-barra">
+    <span class="mudo" aria-live="polite" data-selecionadas>Nenhuma selecionada</span>
     <button class="btn" type="submit" data-validar disabled>Validar selecionadas</button>
   </div>
   {% endif %}

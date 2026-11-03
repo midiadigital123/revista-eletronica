@@ -41,7 +41,7 @@ test("impresso: valida, vê o diff e marca impressa", async ({ browser }) => {
   const ped = await entrar(browser, adm!, admSenha!, "/painel/2026/");
   await filtrarPainel(ped, "#filtro-parceiro", { label: "DEMONSTRAÇÃO" });
   await expect(ped).toHaveURL(/parceiro=/);
-  const linha = ped.locator("#painel-corpo tbody tr").first();
+  const linha = ped.locator("#painel-corpo tbody tr[data-revista]").first();
   const variaveis = linha.locator("td.coluna-variaveis a", { hasText: "falta" });
   const urlPainel = ped.url();
   if (await variaveis.count()) {
@@ -63,7 +63,7 @@ test("impresso: valida, vê o diff e marca impressa", async ({ browser }) => {
   const page = await entrar(browser, imp!, impSenha!, urlPainel.replace(/^https?:\/\/[^/]+/, ""));
   const erros: string[] = [];
   page.on("pageerror", (e) => erros.push(e.message));
-  await page.locator("#painel-corpo tbody tr").first().locator("td.coluna-impresso a").click();
+  await page.locator("#painel-corpo tbody tr[data-revista]").first().locator("td.coluna-impresso a").click();
   await expect(page.locator("h1")).toHaveText("Impresso");  // tela B: /ui/impresso/<ano>/?revista=
   const fechamento = page.locator("#grupo-F1-fechamento");
   await expect(fechamento.locator("textarea")).toHaveValue(new RegExp(`Fechamento ${marca}\\.`));
@@ -76,7 +76,7 @@ test("impresso: valida, vê o diff e marca impressa", async ({ browser }) => {
   await expect(page.locator("#conteudo")).toContainText("Sem mudanças desde a última");
   await expect(page.locator("#botao-impressa")).toHaveCount(0);
   await page.goto(urlPainel.replace(/^https?:\/\/[^/]+/, ""));
-  await expect(page.locator("#painel-corpo tbody tr").first().locator("td.coluna-impresso .status-ok")).toBeVisible();
+  await expect(page.locator("#painel-corpo tbody tr[data-revista]").first().locator("td.coluna-impresso .status-ok")).toBeVisible();
   expect(erros).toEqual([]);
 
   // 4. Limpa: descarta a cópia (o "Validado" cai; o impresso volta a ver o fechamento como mudança).
