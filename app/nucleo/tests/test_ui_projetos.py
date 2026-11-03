@@ -22,7 +22,7 @@ def massa(acao):
 
 
 class HubListaTest(Base):
-    def test_lista_uma_linha_por_parceiro_com_selos_das_revistas(self):
+    def test_lista_um_grupo_por_parceiro_com_as_revistas(self):
         r = self.client.get(LISTA)
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, f'href="{LISTA}" aria-current="page">Lista')
@@ -34,6 +34,17 @@ class HubListaTest(Base):
         self.assertContains(r, reverse("preview", args=[lp.pk]))
         self.assertContains(r, reverse("ui_revista_zip", args=[2026, lp.pk]))
         self.assertContains(r, 'name="alvos"', count=2)  # GO e PE
+
+    def test_cada_revista_e_uma_linha_sob_o_cabecalho_do_parceiro(self):
+        """Padrão do painel: um <tbody> por projeto, cabeçalho de grupo (parceiro) e uma linha por revista."""
+        html = self.client.get(LISTA).content.decode()
+        grupo = next(t for t in html.split("<tbody")[1:] if 'aria-label="Marcar GO"' in t)
+        self.assertEqual(grupo.count('class="painel-grupo"'), 1)
+        self.assertLess(grupo.index('class="painel-grupo"'), grupo.index("data-revista="))
+        for codigo, r in self.go.items():
+            with self.subTest(codigo):
+                self.assertEqual(grupo.count(f'<tr data-revista="{r.pk}">'), 1)
+        self.assertEqual(grupo.count("<tr data-revista="), len(self.go))
 
     def test_abas_cortes_e_variaveis(self):
         r = self.client.get(CORTES)

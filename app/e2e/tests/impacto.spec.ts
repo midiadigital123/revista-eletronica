@@ -33,7 +33,7 @@ test("renomear parceiro validado pela grade abre o modal; Esc volta o nome e o f
   await expect(page.locator("[data-status-salvo]").getByText(/Salvo às/)).toBeVisible();
 
   // 2. Matriz e templates pela barra de ações em massa da Lista de Projetos (U7a; antes de abrir o
-  // projeto: a ação em massa pula projeto em edição). O id da revista vem do selo LP da linha.
+  // projeto: a ação em massa pula projeto em edição). O id da revista vem da linha LP do parceiro.
   await atribuirEmMassa(page, nome, { matriz: "Demonstração" });
   await expect(mensagens).toContainText("escolhida para 1 parceiro(s)");
   await atribuirEmMassa(page, nome, { componente: "LP · Língua Portuguesa", f1: "Padrão", f2: "Padrão" });
