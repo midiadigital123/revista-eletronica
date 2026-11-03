@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo S4 de S0–S9 (+fechamento) do plano telas-b-lacunas concluído: etapas e componentes na página do ano (`/ui/anos/<ano>/`). Plano geral: passo 21 de 22 (S17) segue pendente.
-Funcionando: S1–S4 nas telas B; Pedagógica/MD/Admin criam e editam etapas e componentes pela tela; suíte 547 OK (8 de PDF pulados), `makemigrations --check` limpo, links `admin:` nas telas B seguem 9.
-Quebrado/pendente: Playwright do S4 (`e2e/tests/anos.spec.ts`) só pulou: faltam `E2E_ADMIN_*`/`E2E_IMPRESSO_*` no ambiente (suíte: 19 OK, 9 pulados, 0 falhas); S5–S9 e fechamento; S17 executado só em ensaio; S18 não iniciado.
+Passo S5 de S0–S9 (+fechamento) do plano telas-b-lacunas concluído: paleta do ano (nome e cor dos padrões) na página `/ui/anos/<ano>/`. Plano geral: passo 21 de 22 (S17) segue pendente.
+Funcionando: S1–S5 nas telas B; nome/cor dos padrões editáveis pela tela com a mesma confirmação de impacto do admin (lista quem perde o "Validado"); incluir padrão que falta (até 5); suíte 554 OK (8 de PDF pulados), `makemigrations --check` limpo, links `admin:` nas telas B seguem 9.
+Quebrado/pendente: Playwright de `anos.spec.ts` (4 testes, S4+S5) só pulou: faltam `E2E_ADMIN_*`/`E2E_IMPRESSO_*` (suíte: 19 OK, 11 pulados, 0 falhas); S6–S9 e fechamento; S17 executado só em ensaio; S18 não iniciado.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Executar S5 do plano telas-b-lacunas (paleta do ano na mesma página `/ui/anos/<ano>/`).
+Planejar S6 (nova matriz) e S7 (novo template), que rodam em paralelo.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1589,6 +1589,14 @@ Executar S5 do plano telas-b-lacunas (paleta do ano na mesma página `/ui/anos/<
 - **Arquivos afetados:** `app/nucleo/urls/ui_anos.py`, `app/nucleo/templates/ui/anos/ano.html`, `app/nucleo/templates/ui/anos/anos.html`, `app/nucleo/tests/test_ui_anos.py`, `app/e2e/tests/anos.spec.ts`
 - **Status:** ativa
 
+### D-194 — Paleta do ano na tela B: módulo comum e um form por padrão (2026-11-03)
+- **Contexto:** item 4 da auditoria (S5 de D-190): `CorPadrao` só se editava no admin, e a confirmação de impacto (`PadraoImpactoForm`, `revistas_afetadas_padrao`) morava em `admin/cadastro.py`, que a tela B não pode importar (import circular).
+- **Decisão:** mover esse bloco, sem mudar código, para `nucleo/paleta.py` (o admin importa de lá). Na página do ano, seção "Padrões" com um form por padrão (prefixo `pN`, POST `tabela=padroes` + `padrao=<pk>` do ano da URL, senão 404); só o form enviado calcula o impacto; sem confirmar → "Não salvo" + lista; confirmado → grava e avisa quem perdeu o "Validado" (mesmo texto do admin). "Adicionar padrão" só com < 5, choices só dos livres, cor inicial cinza. Cor com outra caixa não conta como mudança (`CorField`/`clean_cor`): o seletor do navegador manda minúsculas e a carga gravou maiúsculas. Ver: `view_etapa`; editar: `change_corpadrao`; incluir: `add_corpadrao`.
+- **Motivo:** a confirmação é por padrão (cada um com sua lista de revistas), por isso não formset; calcular o impacto das 5 linhas no GET resolveria todas as revistas 5 vezes.
+- **Descartadas:** importar do admin — import circular; formset — a confirmação é por linha; exigir nome no POST (revisor, achado 3) — nome vazio é válido no admin e o navegador sempre manda o campo; checar `view_corpadrao` à parte (achado 6) — todos os papéis com `view_etapa` têm `view_corpadrao` (`ver_tudo`).
+- **Arquivos afetados:** `app/nucleo/paleta.py`, `app/nucleo/admin/cadastro.py`, `app/nucleo/urls/ui_anos.py`, `app/nucleo/templates/ui/anos/ano.html`, `app/nucleo/tests/test_ui_anos.py`, `app/e2e/tests/anos.spec.ts`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (D-189 → D-190) Auditoria das telas B: o que o back faz e a tela B não oferece. Bloqueia: abrir ano, criar matriz, criar template, paleta do ano, etapas/componentes. Leva a erro: links do painel vão ao admin (Impresso recebe 403 em "Matriz", `urls/painel.py:43`), renomear parceiro, "abra um ano no admin" para quem não pode. Menu sem Projetos e Lotes. Por onde começar — depende de: usuário
 - [x] (D-184) S17: os cortes de 2026 repetem os de 2025? Se sim, comando `importar_cortes` (~60 min) substituindo a D-119 nesse ponto — depende de: Pedagógica
@@ -1887,3 +1895,5 @@ Executar S5 do plano telas-b-lacunas (paleta do ano na mesma página `/ui/anos/<
 ### 2026-11-03
 - S4 planejado (plano aprovado: série TDD → paralelo revisor Django + E2E → correções). `npx skills find django formset` só achou skills com 1 e 4 instalações: nenhuma instalada.
 - D-193: `/ui/anos/<ano>/` com etapas e componentes. Revisor achou 500 com código repetido no mesmo envio (corrigido + teste), limite só no HTML e consulta extra por linha (corrigidos). Suíte 547 OK; Playwright 19 OK, 9 pulados (2 novos do S4, sem credenciais E2E).
+- S5 planejado e aprovado. 70bcdaa: paleta em módulo comum (testes do admin verdes sem mudança).
+- D-194: paleta na página do ano. O E2E levantou e eu confirmei: cor em maiúsculas no banco × minúsculas do seletor → pedia confirmação e trocava a caixa (hash). Corrigido com teste. Revisor: amostra mostrava a cor não salva, valor lixo no re-render, textarea no novo padrão, erros sem `role=alert`/`aria-describedby` (corrigidos). Suíte 554 OK; Playwright 19 OK, 11 pulados (4 de `anos.spec.ts`, sem credenciais).
