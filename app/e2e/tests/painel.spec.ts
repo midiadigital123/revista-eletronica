@@ -11,7 +11,7 @@
 // cópia do fechamento do F1 com uma marca nova (para o hash mudar a cada execução), valida e
 // descarta a cópia no fim (a revista volta ao texto do template, sem "Validado").
 import { expect, test, type Page } from "@playwright/test";
-import { filtrarFalta, filtrarPainel } from "./helpers";
+import { alpinePronto, filtrarFalta, filtrarPainel } from "./helpers";
 
 const FECHAMENTO = "#id_secao__F1__fechamento";
 
@@ -60,9 +60,10 @@ test("painel: filtrar e validar uma revista", async ({ page }) => {
   if (await variaveis.count()) {
     await variaveis.click();
     await expect(page).toHaveURL(/\/ui\/projeto\/\d+\/$/);
+    await alpinePronto(page);
     await page.fill("#id_nome", "DEMONSTRAÇÃO E2E");
     await page.press("#id_nome", "Tab"); // U3: o campo salva sozinho ao sair dele
-    await expect(page.locator("[data-status-salvo]")).toContainText("Salvo às");
+    await expect(page.locator("[data-status-salvo]").getByText(/Salvo às \d/)).toBeVisible(); // o texto oculto (x-show) já existe: espera o visível
     await page.goto(urlPainel);
     await expect(linha.locator("td.coluna-variaveis .status-ok")).toBeVisible();
   }

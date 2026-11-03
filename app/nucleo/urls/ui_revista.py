@@ -132,8 +132,8 @@ PASSOS = (
 def _situacao(revista, pendencias):
     projeto = reverse("ui_projeto", args=[revista.projeto_id])
     links = {
-        "matriz": f"{projeto}#matriz", "corte_sem_matriz": f"{projeto}#matriz",
-        "corte_invalido": reverse("cortes", args=[revista.ano.ano]),
+        "matriz": f"{projeto}?aba=matriz", "corte_sem_matriz": f"{projeto}?aba=matriz",  # U7b: abas do projeto
+        "corte_invalido": f"{projeto}?aba=cortes",
         "template_f1": "#templates", "template_f2": "#templates",
         "svg": "#arquivos", "ids_svg": "#arquivos", "capa": "#arquivos",
         "variaveis": f"{projeto}#variaveis", "nome_projeto": f"{projeto}#nome",

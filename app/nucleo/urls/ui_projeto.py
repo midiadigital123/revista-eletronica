@@ -1,7 +1,8 @@
 """Projeto B (T15/T16: nome, variáveis, passo e cor): /ui/projeto/<pk>/, rota ui_projeto. Convenções: docs/telas/design-system.md.
 
 Regra em `nucleo/projeto.py` (os mesmos forms do change form do admin); bloqueio pela peça comum
-(`ui_bloqueio.com_bloqueio`). Hub Projetos (U7a) em /ui/projeto/ano/<ano>/: abas Lista (projetos,
+(`ui_bloqueio.com_bloqueio`). Abas do projeto (U7b, `?aba=`): Dados, Matriz, Cortes, Passos e cores e
+Revistas. Hub Projetos (U7a) em /ui/projeto/ano/<ano>/: abas Lista (projetos,
 revistas e ações em massa; substitui Revistas e Lotes), Cortes e Variáveis (as telas antigas, que
 redirecionam o GET para cá).
 """
@@ -17,9 +18,10 @@ from django.forms.utils import pretty_name
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
-from django.urls import path
+from django.urls import path, reverse
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
+from nucleo import cortes as regra_cortes
 from nucleo import lotes, planilha_variaveis
 from nucleo.contexto import ano_da_sessao
 from nucleo.lotes import escrever_travado
@@ -27,6 +29,7 @@ from nucleo.models import (
     Ano, Componente, CorPadrao, Fasciculo, Matriz, MatrizEtapaCC, ParceiroAno, Projeto, ProjetoCor, ProjetoPasso, Revista, Template,
 )  # fmt: skip
 from nucleo.projeto import MAX_CORES, CorForm, PassoForm, ProjetoForm, formsets
+from nucleo.servicos import matriz as matrizes
 from nucleo.servicos.resolver import cores_efetivas, valores_das_variaveis
 from nucleo.ui_autosave import Conflito, form_de_um_campo, responder_campo
 from nucleo.ui_bloqueio import CAMPO_SESSAO, com_bloqueio
@@ -40,6 +43,7 @@ from nucleo.variaveis import EDITAVEIS, VARIAVEIS
 ESCRITA = [f"nucleo.{a}_{m}" for m in ("projetopasso", "projetocor") for a in ("add", "change", "delete")]
 ESCRITA.append("nucleo.change_projeto")
 GRUPOS = list(dict.fromkeys(v.grupo for v in VARIAVEIS if not v.automatica))
+ABAS = [("dados", "Dados"), ("matriz", "Matriz"), ("cortes", "Cortes"), ("passos", "Passos e cores"), ("revistas", "Revistas")]
 
 
 def pode_ver(user):
@@ -199,6 +203,7 @@ def projeto(request, pk):
         raise PermissionDenied  # arquivado é congelado (D-093, D-167)
     pode = request.pode_gravar and not arquivado
 
+    aba = request.GET.get("aba") if request.GET.get("aba") in dict(ABAS) else "dados"
     if request.method == "POST":
         form = ProjetoForm(request.POST, instance=projeto)
         passos, cores = formsets(projeto, request.POST)
@@ -237,8 +242,38 @@ def projeto(request, pk):
         .select_related("etapa", "componente").order_by("etapa__ordem", "componente__codigo"),
         "ano": projeto.ano,
         "secao": "projetos",
+        "abas": ABAS,
+        "aba": aba,
     }
+    if aba == "cortes":
+        contexto["grade"] = _grade_do_parceiro(request, projeto)
+    elif aba == "revistas":
+        contexto["cartoes"] = _cartoes(projeto)
     return TemplateResponse(request, "ui/projeto/projeto.html", contexto)
+
+
+def _grade_do_parceiro(request, projeto):
+    """Aba Cortes (U7b): a grade do ano (`cortes.grade`) só com a linha deste parceiro; grava pela
+    mesma rota da grade (`cortes_celula`, sem bloqueio: conflito otimista pelo `original`)."""
+    grade, _ = regra_cortes.grade(request, projeto.ano, ler_post=False)
+    grade["linhas"] = [l for l in grade["linhas"] if l["parceiro"].pk == projeto.parceiro_ano.parceiro_id]
+    return grade
+
+
+def _cartoes(projeto):
+    """Aba Revistas (U7b): um cartão por componente com templates F1/F2, SVG, capa e "Validado"
+    (a situação do painel); a página da revista continua sendo onde se edita."""
+    cartoes = []
+    revistas = projeto.revista_set.select_related("componente", "projeto__ano", "projeto__parceiro_ano__parceiro")
+    for r in revistas.prefetch_related("revistafasciculo_set__template").order_by("componente__codigo"):
+        templates = {rf.fasciculo: rf.template for rf in r.revistafasciculo_set.all()}
+        ativa = not (r.arquivada_em or projeto.arquivado_em)
+        faltas = painel.linha(r)["faltas"] if ativa else None
+        cartoes.append({
+            "revista": r, "ativa": ativa, "faltas": faltas,
+            "templates": [(f, templates.get(f)) for f in Fasciculo.values],
+        })  # fmt: skip
+    return cartoes
 
 
 def pode_matriz(user):
@@ -248,28 +283,34 @@ def pode_matriz(user):
 @require_http_methods(["GET", "POST"])
 @login_required(login_url="admin:login")
 def matriz(request, pk):
-    """GET volta à ficha: é para onde o com_bloqueio manda quem perdeu o bloqueio (o caminho do POST)."""
+    """GET volta à aba Matriz: é para onde o com_bloqueio manda quem perdeu o bloqueio (o caminho do POST)."""
     if request.method == "GET":
-        return redirect("ui_projeto", pk)
+        return redirect(reverse("ui_projeto", args=[pk]) + "?aba=matriz")
     return _gravar_matriz(request, pk)
+
+
+class MatrizForm(forms.Form):
+    matriz = forms.ModelChoiceField(queryset=None, label="Matriz")
+
+    def __init__(self, *args, ano, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["matriz"].queryset = Matriz.objects.filter(ano=ano)
+        erro = f"Escolha uma matriz de {ano.ano}."
+        self.fields["matriz"].error_messages.update(required=erro, invalid_choice=erro)
 
 
 @com_bloqueio(_alvo, pode_matriz)
 def _gravar_matriz(request, pk):
-    """Item 19 (D-190): matriz do parceiro no ano, a partir da ficha. Grava direto, sob a sessão de
-    bloqueio da ficha (via com_bloqueio); `lotes.aplicar` abriria outra sessão no mesmo projeto."""
-    projeto = get_object_or_404(Projeto.objects.select_related("ano", "parceiro_ano__parceiro"), pk=pk)
+    """Aba Matriz (U7b): autosave do select (protocolo de `ui_autosave`), sob a sessão de bloqueio da
+    ficha. Revista validada que mudaria passa pelo modal de impacto antes de gravar. Grava por
+    `servicos.matriz.atribuir_matriz`, o mesmo serviço da ação em massa da Lista."""
+    projeto = get_object_or_404(Projeto.objects.select_related("ano", "parceiro_ano"), pk=pk)
     if projeto.arquivado_em:
         raise PermissionDenied  # arquivado é congelado (D-093)
-    escolhida = Matriz.objects.filter(pk=request.POST.get("matriz") or None, ano_id=projeto.ano_id).first()
-    if escolhida is None:
-        messages.error(request, f"Matriz não gravada: escolha uma matriz de {projeto.ano.ano}.")
-    else:
-        pa = projeto.parceiro_ano
-        pa.matriz = escolhida
-        pa.save(update_fields=["matriz"])
-        messages.success(request, f"Matriz {escolhida.nome} escolhida para {pa.parceiro}.")
-    return redirect("ui_projeto", projeto.pk)
+    form = MatrizForm({"matriz": request.POST.get("valor")}, ano=projeto.ano) if request.POST.get("campo") == "matriz" else None
+    pa = projeto.parceiro_ano
+    gravar = lambda dados: matrizes.atribuir_matriz(pa, dados["matriz"], request.user)  # noqa: E731
+    return responder_campo(request, form=form, gravar=gravar, revistas=lambda: _revistas(projeto), titulo="Trocar a matriz")
 
 
 @require_GET

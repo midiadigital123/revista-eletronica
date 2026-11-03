@@ -8,7 +8,7 @@
 // Grava de verdade: cópia do fechamento do F1 com uma marca nova, "Validado", foto do impresso; no fim
 // descarta a cópia (a revista volta ao texto do template, sem "Validado").
 import { expect, test, type Browser, type Page } from "@playwright/test";
-import { filtrarPainel } from "./helpers";
+import { alpinePronto, filtrarPainel } from "./helpers";
 
 const FECHAMENTO = "#id_secao__F1__fechamento";
 
@@ -46,9 +46,10 @@ test("impresso: valida, vê o diff e marca impressa", async ({ browser }) => {
   const urlPainel = ped.url();
   if (await variaveis.count()) {
     await variaveis.click();  // ficha B do projeto
+    await alpinePronto(ped);
     await ped.fill("#id_nome", "DEMONSTRAÇÃO E2E");
     await ped.press("#id_nome", "Tab"); // U3: o campo salva sozinho ao sair dele
-    await expect(ped.locator("[data-status-salvo]")).toContainText("Salvo às");
+    await expect(ped.locator("[data-status-salvo]").getByText(/Salvo às \d/)).toBeVisible(); // o texto oculto (x-show) já existe: espera o visível
     await ped.goto(urlPainel);
   }
   // O nome leva à revista B; o roteiro edita no admin (mesma revista).

@@ -93,7 +93,7 @@ class RevistaUiTest(Base):
         ParceiroAno.objects.filter(pk=self.projeto_go.parceiro_ano_id).update(matriz=None)
         r = self.abrir()
         self.assertContains(r, "Falta escolher a matriz do parceiro no ano.", count=1)
-        self.assertContains(r, f'href="{reverse("ui_projeto", args=[self.projeto_go.pk])}#matriz"')
+        self.assertContains(r, f'href="{reverse("ui_projeto", args=[self.projeto_go.pk])}?aba=matriz"')
         self.assertNotContains(r, "faixa-vermelha")
 
     def test_nome_se_edita_so_no_projeto(self):

@@ -11,7 +11,7 @@ Templates e arquivos salvam sozinhos (form campoAuto, ?acao= em cada data-url); 
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/revista.css' %}">{% endblock %}
 
 {% block conteudo %}
-<a class="mudo voltar" href="{% url 'ui_projeto_lista' revista.ano.ano %}">‹ Projetos de {{ revista.ano.ano }}</a>
+<a class="mudo voltar" href="{% url 'ui_projeto' revista.projeto_id %}?aba=revistas">‹ {{ revista.projeto.nome }}</a>
 <header class="pagina-cab">
   <div>
     <h1>{{ revista.projeto }}</h1>

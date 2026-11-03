@@ -25,6 +25,7 @@ from nucleo.models import (
     Template,
 )
 from nucleo.servicos import bloqueio
+from nucleo.servicos import matriz as matrizes
 from nucleo.servicos.impacto import perdem_validado
 
 log = logging.getLogger(__name__)
@@ -117,9 +118,8 @@ class MatrizLoteForm(forms.Form):
         self.fields["matriz"].queryset = Matriz.objects.filter(ano=ano).order_by("nome")
 
 
-def _escrever_matriz(pa, matriz):
-    pa.matriz = matriz
-    pa.save(update_fields=["matriz"])
+def _escrever_matriz(pa, matriz, usuario=None):
+    matrizes.atribuir_matriz(pa, matriz, usuario)
 
 
 def perdem_matriz(form):
@@ -136,7 +136,7 @@ def gravar_matriz(request, form):
     """Grava a matriz escolhida nos parceiros do form válido; avisa feitos e pulados."""
     matriz = form.cleaned_data["matriz"]
     itens = [
-        (str(pa.parceiro), pa.ativos[0] if pa.ativos else None, lambda pa=pa: _escrever_matriz(pa, matriz))
+        (str(pa.parceiro), pa.ativos[0] if pa.ativos else None, lambda pa=pa: _escrever_matriz(pa, matriz, request.user))
         for pa in form.cleaned_data["alvos"]
     ]
     feitos = aplicar(request, itens)

@@ -7,7 +7,7 @@
 // Preparar como em painel.spec.ts (criar_demo --ano 2026 e o superusuário e2e).
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { atribuirEmMassa, entrar, liberarBloqueio, novoParceiro, revistaDaLista } from "./helpers";
+import { alpinePronto, atribuirEmMassa, entrar, liberarBloqueio, novoParceiro, revistaDaLista } from "./helpers";
 
 const SVG = path.join(__dirname, "../../nucleo/tests/fixtures/f2-lp.svg");
 const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mP4/5oBAATXAesdPD2pAAAAAElFTkSuQmCC", "base64");
@@ -43,9 +43,10 @@ test("renomear parceiro validado pela grade abre o modal; Esc volta o nome e o f
   // 3. Nome do projeto (pendência), SVG e capa; depois o "Validado".
   await page.goto("/ui/projeto/ano/2026/");
   await page.getByRole("link", { name: nome }).first().click();
+  await alpinePronto(page);
   await page.fill("#id_nome", `${nome} projeto`);
   await page.press("#id_nome", "Tab"); // U3: o campo salva sozinho ao sair dele
-  await expect(page.locator("[data-status-salvo]")).toContainText("Salvo às");
+  await expect(page.locator("[data-status-salvo]").getByText(/Salvo às \d/)).toBeVisible(); // o texto oculto (x-show) já existe: espera o visível
   await liberarBloqueio(page);
 
   await page.goto(`/admin/nucleo/revista/${revista}/change/`);
