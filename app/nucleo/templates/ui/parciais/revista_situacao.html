@@ -44,5 +44,5 @@ trocar template/arquivo troca este #situacao. Pendência é tarefa, não erro: �
   </form>
   {% endif %}
 
-  <a class="link revista-impresso" href="{% url 'impresso' revista.pk %}">O que mudou para o impresso</a>
+  <a class="link revista-impresso" href="{% url 'ui_impresso' revista.ano.ano %}?revista={{ revista.pk }}">O que mudou para o impresso</a>
 </aside>

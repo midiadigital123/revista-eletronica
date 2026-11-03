@@ -94,7 +94,8 @@ class ImpressoTest(Base):
         item = self.abrir().context["mudancas"]["F1"]["fechamento"][0]
         self.assertIn("Fim de Projeto GO.", item["antes"])
         self.assertIn("Fim de Projeto GO novo.", item["depois"])
-        self.assertIn('<span class="diff_add">&nbsp;novo</span>', item["tabela"])
+        self.assertEqual(item["trecho"], "Fim de Projeto GO novo.")  # só o parágrafo que mudou
+        self.assertIn(("ins", "GO novo."), item["blocos"][-1]["partes"])  # a pontuação vai com a palavra
 
     def test_corte_alterado_aparece_so_na_etapa(self):
         self.imprimir()
@@ -180,13 +181,14 @@ class ImpressoTest(Base):
         self.assertEqual({f: list(g) for f, g in mudou.items()}, {"F1": ["5EF"]})
         item = mudou["F1"]["5EF"][0]
         self.assertEqual(item["item"], "D01")
-        self.assertIn("  100–150: Localiza.", item["antes"])
-        self.assertIn("  100–175: Localiza.", item["depois"])
+        self.assertIn("Padrão 2: 100–150: Localiza.", item["antes"])
+        self.assertEqual(item["trecho"], "Padrão 2: 100–175: Localiza.")
+        self.assertEqual(item["rotulo"], "5EF · D01")
 
     def test_item_da_tarefa_no_diff(self):
         self.imprimir()
         Tarefa.objects.filter(pk=self.tarefa.pk).update(arquivo="itens/abc.pdf")
-        self.assertIn("  100–150: Localiza. [item: abc.pdf]", self.abrir().context["mudancas"]["F1"]["5EF"][0]["depois"])
+        self.assertIn("Padrão 2: 100–150: Localiza. [item: abc.pdf]", self.abrir().context["mudancas"]["F1"]["5EF"][0]["depois"])
 
     def test_so_formatacao_aparece_no_diff(self):
         self.imprimir()
@@ -206,7 +208,7 @@ class ImpressoTest(Base):
         self.nova_versao_f1(F1.split("## fechamento")[0])
         r = self.abrir()
         item = r.context["mudancas"]["F1"]["fechamento"][0]
-        self.assertEqual((item["depois"], item["tabela"]), (None, None))
+        self.assertEqual((item["depois"], item["blocos"], item["trecho"]), (None, None, None))
         self.assertContains(r, "fechamento (removido)")
         self.assertContains(r, "Utilização\n\nFim.</pre>")
 
@@ -217,8 +219,8 @@ class ImpressoTest(Base):
         corpo = r.content.decode()
         self.assertNotIn("<script>alert(1)", corpo)
         self.assertNotIn("</textarea>.", corpo)
-        self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt; &lt;/textarea&gt;.", corpo)  # textarea
-        self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt;&nbsp;&lt;/textarea&gt;.", corpo)  # HtmlDiff
+        self.assertIn(">Fim &lt;script&gt;alert(1)&lt;/script&gt; &lt;/textarea&gt;.</textarea>", corpo)  # textarea
+        self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt; &lt;/textarea&gt;.</ins>", corpo)  # diff
 
     def test_post_anonimo_vai_ao_login(self):
         self.client.logout()
@@ -310,3 +312,50 @@ class GabaritoPlanilhaTest(SimpleTestCase):
         dados["D01"]["description"] = '=HYPERLINK("http://exemplo.invalid","x")'
         c = openpyxl.load_workbook(io.BytesIO(planilhas.planilha_f1(dados, "9ef", "MT", {})))["Níveis"]["C2"]
         self.assertEqual((c.value, c.data_type), ('=HYPERLINK("http://exemplo.invalid","x")', "s"))
+
+
+class DiffTextoTest(SimpleTestCase):
+    """O diff que o impresso leva ao InDesign: por palavra, só o trecho que mudou (diff_texto)."""
+
+    PARAGRAFOS = "Título\n\nUm.\n\nDois.\n\nO desenvolvimento da leitura.\n\nQuatro.\n\nCinco.\n\nSeis."
+
+    def diff(self, velho, novo, prosa=True):
+        from nucleo.urls.impresso import diff_texto
+
+        return diff_texto(velho, novo, prosa)
+
+    def test_palavra_trocada_gera_so_o_paragrafo_com_del_e_ins(self):
+        blocos, _ = self.diff(self.PARAGRAFOS, self.PARAGRAFOS.replace("desenvolvimento", "crescimento"))
+        mudados = [b for b in blocos if b["tipo"] == "inline"]
+        self.assertEqual(len(mudados), 1)
+        self.assertEqual(
+            mudados[0]["partes"], [("igual", "O "), ("del", "desenvolvimento "), ("ins", "crescimento "), ("igual", "da leitura.")]
+        )
+
+    def test_paragrafos_sem_mudanca_colapsam(self):
+        blocos, _ = self.diff(self.PARAGRAFOS, self.PARAGRAFOS.replace("desenvolvimento", "crescimento"))
+        self.assertEqual([b["tipo"] for b in blocos], ["pulo", "contexto", "inline", "contexto", "pulo"])  # 1 de contexto
+        self.assertEqual([b["rotulo"] for b in blocos if b["tipo"] == "pulo"], ["2 parágrafos sem mudança"] * 2)
+        self.assertEqual((blocos[1]["texto"], blocos[3]["texto"]), ("Dois.", "Quatro."))
+        blocos, _ = self.diff(self.PARAGRAFOS, self.PARAGRAFOS.replace("Cinco", "5"))
+        self.assertEqual(blocos[0]["rotulo"], "4 parágrafos sem mudança")
+        self.assertEqual(blocos[-1]["texto"], "Seis.")  # o último é contexto, não pulo
+
+    def test_texto_novo_copiavel_tem_so_o_trecho(self):
+        novo = self.PARAGRAFOS.replace("desenvolvimento", "crescimento").replace("Seis.", "Seis!\n\nSete.")
+        _, trecho = self.diff(self.PARAGRAFOS, novo)
+        self.assertEqual(trecho, "O crescimento da leitura.\n\nSeis!\n\nSete.")
+
+    def test_linha_da_escala_vira_par_antigo_novo(self):
+        velho = "D01: Localiza.\nPadrão 1: 100–150: Localiza o tema.\nPadrão 2: 150–200: Infere."
+        blocos, trecho = self.diff(velho, velho.replace("o tema", "a ideia"), prosa=False)
+        self.assertEqual([b["tipo"] for b in blocos], ["contexto", "par", "contexto"])
+        self.assertEqual(blocos[1]["antes"], [("igual", "Padrão 1: 100–150: Localiza "), ("del", "o tema.")])
+        self.assertEqual(blocos[1]["depois"], [("igual", "Padrão 1: 100–150: Localiza "), ("ins", "a ideia.")])
+        self.assertEqual(trecho, "Padrão 1: 100–150: Localiza a ideia.")
+        blocos, trecho = self.diff(velho, velho + "\nPadrão 3: 200–250: Novo.", prosa=False)
+        self.assertEqual((blocos[-1]["antes"], blocos[-1]["depois"]), (None, [("ins", "Padrão 3: 200–250: Novo.")]))
+
+    def test_texto_sem_mudanca_nao_gera_bloco(self):
+        self.assertEqual(self.diff(self.PARAGRAFOS, self.PARAGRAFOS), ([], ""))
+        self.assertEqual(self.diff("a\n\nb", "a\n\n\nb  "), ([], ""))  # só espaço em branco

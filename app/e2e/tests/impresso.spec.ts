@@ -12,8 +12,8 @@ import { alpinePronto, filtrarPainel } from "./helpers";
 
 const FECHAMENTO = "#id_secao__F1__fechamento";
 
-async function entrar(browser: Browser, usuario: string, senha: string, destino: string) {
-  const page = await (await browser.newContext()).newPage();
+async function entrar(browser: Browser, usuario: string, senha: string, destino: string, permissions: string[] = []) {
+  const page = await (await browser.newContext({ permissions })).newPage();
   await page.goto(`/admin/login/?next=${destino}`);
   await page.fill("#id_username", usuario);
   await page.fill("#id_password", senha);
@@ -62,14 +62,23 @@ test("impresso: valida, vê o diff e marca impressa", async ({ browser }) => {
   await liberarBloqueio(ped);
 
   // 2. Impresso: entra pela coluna Impresso do painel e vê o fechamento novo.
-  const page = await entrar(browser, imp!, impSenha!, urlPainel.replace(/^https?:\/\/[^/]+/, ""));
+  const page = await entrar(browser, imp!, impSenha!, urlPainel.replace(/^https?:\/\/[^/]+/, ""), ["clipboard-read", "clipboard-write"]);
   const erros: string[] = [];
   page.on("pageerror", (e) => erros.push(e.message));
   await page.locator("#painel-corpo tbody tr[data-revista]").first().locator("td.coluna-impresso a").click();
   await expect(page.locator("h1")).toHaveText("Impresso");  // tela B: /ui/impresso/<ano>/?revista=
+  const urlImpresso = page.url();
   const fechamento = page.locator("#grupo-F1-fechamento");
-  await expect(fechamento.locator("textarea")).toHaveValue(new RegExp(`Fechamento ${marca}\\.`));
-  await expect(page.getByRole("button", { name: "Copiar texto novo" }).first()).toBeVisible();
+  // Sem tabela do HtmlDiff. "Copiar texto novo" leva o mesmo texto que a caixa mostra (na primeira entrega,
+  // a seção inteira; depois de uma foto, só o trecho que mudou: o diff por palavra é conferido no passo 5).
+  await expect(page.locator("table.diff")).toHaveCount(0);
+  const novo = fechamento.getByRole("textbox");
+  await expect(novo).toHaveValue(new RegExp(`(^|\\n)Fechamento ${marca}\\.$`));
+  const copiar = fechamento.locator("[data-copiar^='#novo-']");  // o nome muda para "Copiado" depois do clique
+  await expect(copiar).toHaveAccessibleName("Copiar texto novo");
+  await copiar.click();
+  await expect(copiar).toHaveText("Copiado");
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(await novo.inputValue());
   await expect(page.getByRole("link", { name: "Baixar planilhas" })).toBeVisible();
 
   // 3. Marca: os avisos zeram e o botão some.
@@ -87,4 +96,17 @@ test("impresso: valida, vê o diff e marca impressa", async ({ browser }) => {
   await ped.click("input[name=_continue]");
   await expect(ped.locator(".messagelist")).toContainText("Textos do F1 salvos: fechamento.");
   await liberarBloqueio(ped);
+
+  // 5. Diff contra a foto: por palavra, e o "Copiar texto novo" leva só o trecho (sem o título nem a marca);
+  // "Copiar a seção inteira" leva o título junto.
+  await page.goto(urlImpresso);
+  await expect(fechamento.locator("del").filter({ hasText: marca })).toBeVisible();
+  await expect(novo).not.toHaveValue(new RegExp(marca));
+  const trecho = await novo.inputValue();
+  await copiar.click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(trecho);
+  await fechamento.getByRole("button", { name: "Copiar a seção inteira" }).click();
+  const inteira = await page.evaluate(() => navigator.clipboard.readText());
+  expect(inteira.endsWith(trecho) && inteira.length > trecho.length).toBe(true);
+  expect(erros).toEqual([]);
 });

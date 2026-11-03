@@ -19,9 +19,9 @@
   <h2>{{ grupo }}</h2>
   {% for i in itens %}<div class="form-row item-impresso">
     <h3>{{ i.item }}{% if i.antes is None %} (novo){% elif i.depois is None %} (removido){% endif %}</h3>
-    {% if i.tabela %}{{ i.tabela }}{% elif i.depois is None %}<pre class="texto-template">{{ i.antes }}</pre>{% endif %}
+    {% if i.blocos %}{% include "ui/_componentes/impresso_diff.html" with blocos=i.blocos %}{% elif i.depois is None %}<pre class="texto-template">{{ i.antes }}</pre>{% endif %}
     {% if i.depois is not None %}
-    <textarea readonly rows="4" class="vLargeTextField" aria-label="Texto novo de {{ i.item }}">{{ i.depois }}</textarea>
+    <textarea readonly rows="4" class="vLargeTextField" aria-label="Texto novo de {{ i.item }}">{{ i.trecho }}</textarea>
     <button type="button" class="button" onclick="const t = this.previousElementSibling, b = this, sel = () => { t.select(); b.textContent = 'Selecionado: use Ctrl+C'; }; const p = navigator.clipboard?.writeText(t.value); p ? p.then(() => b.textContent = 'Copiado', sel) : sel()">Copiar texto novo</button>
     {% endif %}
   </div>{% endfor %}

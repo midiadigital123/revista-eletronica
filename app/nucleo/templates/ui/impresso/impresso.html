@@ -31,7 +31,7 @@ Lista + detalhe: a lista é só links (?revista=pk); o HTMX troca o #detalhe e p
   <nav class="lista" aria-label="Revistas do ano" data-lista>
     {% for i in itens %}
     <a href="?revista={{ i.revista.pk }}" hx-get="?revista={{ i.revista.pk }}" hx-target="#detalhe" hx-push-url="true" hx-indicator="#detalhe"{% if i.revista.pk == detalhe.revista.pk %} aria-current="page"{% endif %}>
-      <span class="impresso-nome">{{ i.revista }}</span>
+      <span class="impresso-nome" title="{{ i.revista }}"><span class="impresso-projeto">{{ i.revista.projeto }}</span><span class="badge badge-contorno">{{ i.revista.componente.codigo }}</span></span>
       {% include "ui/_componentes/impresso_situacao.html" with s=i %}
     </a>
     {% endfor %}

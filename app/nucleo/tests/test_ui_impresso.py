@@ -3,13 +3,13 @@
 from django.db import transaction
 from django.urls import reverse
 
-from nucleo.models import Ano, FotoRevista
+from nucleo.models import Ano, FotoRevista, TemplateVersao
 from nucleo.models.revista import Motivo
 from nucleo.servicos import validacao
 from nucleo.servicos.resolver import carregar, hash_validado
 from nucleo.tests.test_admin_projeto import Base, mensagens
 from nucleo.tests.test_painel import SVG_B, completar, trocar_svg
-from nucleo.tests.test_resolver import usuario
+from nucleo.tests.test_resolver import F1, usuario
 
 HTMX = {"HTTP_HX_REQUEST": "true"}
 
@@ -88,6 +88,22 @@ class ImpressoUiTest(Base):
         self.assertEqual((foto.motivo, foto.criada_por), (Motivo.IMPRESSO, self.imp))
         self.assertContains(r, "Impresso em dia")
         self.assertNotContains(r, 'id="botao-impressa"')
+
+    def test_diff_mostra_so_o_trecho_com_rotulos_humanos(self):
+        self.validar()
+        self.client.force_login(self.imp)
+        self.marcar()
+        t = self.templates["LP", "F1"]
+        TemplateVersao.objects.create(template=t, numero=2, texto=F1.replace("Fim.", "Fim novo."))
+        r = self.abrir()
+        self.assertContains(r, '<span class="impresso-projeto">Projeto GO</span><span class="badge badge-contorno">LP</span>')
+        corpo = r.content.decode()
+        self.assertIn('<h4>Utilização <span class="badge badge-secundario">alterado</span></h4>', corpo)  # título da seção, não o id "fechamento"
+        self.assertIn("<del>Fim.</del><ins>Fim novo.</ins>", corpo)
+        self.assertIn('readonly rows="2">Fim novo.</textarea>', corpo)  # só o trecho, sem o título
+        self.assertIn("Copiar a seção inteira", corpo)
+        self.assertIn('aria-hidden="true">Utilização\n\nFim novo.</textarea>', corpo)
+        self.assertNotIn("diff_add", corpo)
 
     def test_hash_velho_recusa_com_mensagem(self):
         self.validar()
