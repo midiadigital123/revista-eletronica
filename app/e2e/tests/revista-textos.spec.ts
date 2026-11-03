@@ -12,7 +12,7 @@
 // termina sem cópia na revista DEMONSTRAÇÃO (descartada no fim). Use num banco de desenvolvimento.
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { entrar, liberarBloqueio } from "./helpers";
+import { entrar, liberarBloqueio, novoParceiro } from "./helpers";
 
 const INTRO = "#id_secao__F1__introducao";
 const SVG = path.join(__dirname, "../../nucleo/tests/fixtures/f2-lp.svg");
@@ -80,8 +80,7 @@ test("revista: templates, arquivos por soltar e validar pela coluna Situação",
   const salvo = page.locator("[data-status-salvo]").getByText(/Salvo às \d/);
 
   await entrar(page, "/cortes/2026/");
-  await page.fill("#novo-parceiro", nome);
-  await page.getByRole("button", { name: "Adicionar parceiro" }).click();
+  await novoParceiro(page, nome);
   for (const coluna of ["5EF LP", "9EF LP"]) {
     const salvou = page.waitForResponse((r) => r.url().includes("/celula/") && r.status() === 200);
     await page.getByLabel(`${nome} ${coluna}`, { exact: true }).fill("150, 200, 250, 300");
