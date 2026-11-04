@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Onda 5 (U10): etapas 5.1–5.3 concluídas, e a 5.4 está quase pronta. U10d mergeado em `feat/telas-b-ux` (`66b0870`).
-Funcionando: tabela rolável com coluna e cabeçalho fixos; estados vazios com ação; Variáveis com trava por linha e sem sobrescrita; a grade de Cortes do admin abre com 40 parceiros; "+ Novo projeto" abre a linha nova em Cortes; acabamento da crítica do impeccable. Testes no dev: Django 716 OK (8 pulados), makemigrations sem mudança, Playwright 120/120 (chromium 1280 + desktop-1440, 0 pulados). `trail check` sem conflito. As caixas do U10 em `plans/revista-express-telas-b-ux.md` estão marcadas.
-Quebrado/pendente: limpeza do dev aplicada em 04/11. Não deu para apagar o usuário `e2e` nem o template "E2E editor por seção", porque o `TemplateVersao` só aceita inserção (trigger da 0006 e PROTECT em `criada_por`). O `e2e` ficou inativo e sem senha. O template real "Padrão (F1)" (id 1) recebeu 7 versões de teste com "Atualizado E2E …" no texto: a versão 8 é a atual. Onda 5 fechada. Próxima frente: a exclusão segura (D-205).
+Exclusão segura (D-205 a D-208): E0–E5 mergeados e integrados em `feat/telas-b-ux`.
+Funcionando: cada entidade tem "Excluir" na tela B (ano só para o Admin, apagando tudo; parceiro com Desativar/Reativar; etapa e componente; matriz; template sem uso com as versões). Se a entidade está em uso, a página explica o impedimento e não apaga. O admin do Django leva à mesma página. Testes na raiz: Django 764 OK (8 pulados), makemigrations limpo, Playwright 146/146 (chromium + desktop-1440, 0 pulados). Migrações 0016–0018 aplicadas no dev. `docs/regras-de-negocio.md` §9 atualizada.
+Quebrado/pendente: limpeza do dev depois do Playwright (lista apresentada, espera confirmação); "Padrão (F1)" do dev com 7 versões "Atualizado E2E" (a causa era o `revista-textos.spec`, já corrigido no E4).
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Escrever o plano da exclusão segura (D-205) em `plans/revista-express-exclusao.md`.
+Usuário confirmar a lista de limpeza do banco de dev.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1682,10 +1682,41 @@ Escrever o plano da exclusão segura (D-205) em `plans/revista-express-exclusao.
 - **Decisão:** toda entidade pode ser excluída quando nada depende dela. Quando algo depende, a tela diz o que impede e oferece arquivar ou desativar. O PROTECT continua no banco. As versões de template continuam só de inserção. Usuário é desativado, nunca excluído.
 - **Motivo:** dá ao usuário uma saída para o que foi criado por engano, sem apagar histórico em cascata (D-0xx: o banco guarda o histórico de cada ano).
 - **Descartadas:** cascata para o admin com modal de impacto — apaga histórico que não volta; arquivar tudo (soft delete) — filtro em toda consulta, de 1 a 2 dias.
-- **Arquivos afetados:** a definir no plano (`plans/revista-express-exclusao.md`)
+- **Arquivos afetados:** `plans/revista-express-exclusao.md` (E0 a E5)
+- **Status:** ativa
+
+### D-206 — Admin apaga o ano inteiro pela tela B (2026-11-04)
+- **Contexto:** o ano aberto por engano nunca saía, porque o `abrir_ano` copia templates com versões e a `TemplateVersao` só aceita inserção (D-125).
+- **Decisão:** o Admin, e só ele, apaga o ano inteiro pela tela B de Anos. A página lista as contagens do que vai sair e pede que ele digite o ano. O serviço `apagar_ano` apaga tudo na ordem das dependências, numa transação. O trigger da `TemplateVersao` passa a deixar o DELETE passar só quando a transação liga `SET LOCAL revista.apagar_versoes = 'on'`. O UPDATE continua proibido. `delete_ano` fica só no grupo Admin.
+- **Motivo:** decisão do usuário. Um ano errado precisa sair sem ajuda do banco, e só quem administra deve poder.
+- **Descartadas:** ano fica como histórico (padrão do plano): o usuário quer apagar; Pedagógica e Mídias excluírem ano: o usuário restringiu ao Admin; apagar pelo admin do Django: o usuário quer pela interface.
+- **Arquivos afetados:** `servicos/exclusao.py`, `migrations/0016_*`, `0017_versao_apagavel`, `templates/ui/anos/anos.html`, `permissoes.py`
+- **Status:** ativa (refina a D-205 e abre uma exceção na D-125)
+
+### D-207 — Template sem uso é excluído de fato, com as versões, por todos menos o Impresso (2026-11-04)
+- **Contexto:** pela D-205 o template seria arquivado, porque as versões não se apagam.
+- **Decisão:** o template que nenhuma revista usa é excluído pela tela B junto com as versões, usando a mesma chave do trigger da D-206. Se está em uso, a tela lista as revistas. Podem excluir Pedagógica, Mídias e Admin. O Impresso não pode. O campo `Template.arquivado_em` sai do plano.
+- **Motivo:** decisão do usuário. Sem uso, a versão não protege nenhum hash de revista.
+- **Descartadas:** arquivar (padrão do plano): o usuário quer apagar; campo `arquivado_em`: deixou de ser necessário.
+- **Arquivos afetados:** `servicos/exclusao.py`, `templates/ui/templates/editar.html`, `lista.html`, `permissoes.py`
+- **Status:** ativa (exceção na D-125)
+
+### D-208 — Desativar parceiro em vez de excluir quando há histórico (2026-11-04)
+- **Contexto:** o parceiro é global e aparece em todo ano na grade de Cortes. O que sai do programa ficaria numa linha vazia para sempre, e não pode ser excluído porque tem cortes antigos.
+- **Decisão:** `Parceiro.desativado_em`. O desativado some dos anos em que não tem Corte nem Projeto ativo e continua aparecendo nos anos em que tem dados (`parceiros_do_ano`). Reativar desfaz. Pedagógica, Mídias e Admin podem desativar; o Impresso não. A página de excluir parceiro em uso oferece "Desativar".
+- **Motivo:** decisão do usuário. Tira o parceiro dos anos novos sem apagar o histórico.
+- **Descartadas:** só explicar o impedimento (padrão do plano): o usuário quer a saída; boolean `ativo`: a data diz quando saiu, como o `Projeto.arquivado_em`.
+- **Arquivos afetados:** `models/cadastro.py`, `migrations/0018_*`, `servicos/exclusao.py`, `urls/ui_excluir.py` (E0); `urls/cortes.py`, `cortes_grade.html` (E2)
 - **Status:** ativa
 
 ## Perguntas em aberto
+- [x] (aplicadas em 04/11) Aplicar as migrações 0016–0018 (permissões, trigger da `TemplateVersao`, `Parceiro.desativado_em`) no banco de dev? Sem elas, as telas do dev quebram com o código novo — depende de: usuário (migração de schema)
+- [ ] (regras de negócio, seção 10.1) `docs/modelo-er.md` está desatualizado em dois pontos: o bloqueio é tomado pelo mesmo usuário, não pela mesma sessão (D-191); a foto guarda a revista resolvida inteira e roda em READ COMMITTED (D-151/D-153/D-178). Corrigir? — depende de: usuário
+- [ ] (regras de negócio) O admin ainda pede o checkbox "afeta N revistas" sempre que há revista afetada; as telas B só avisam quando alguma perde o Validado (D-202). Igualar? — depende de: usuário
+- [x] (D-206) Ano aberto por engano: fica como histórico ou exceção no trigger para apagar o ano inteiro? — depende de: usuário
+- [x] (D-207) Template sem uso: arquivar basta ou excluir de fato (exceção à D-125)? — depende de: usuário
+- [x] (D-208: sim) Criar "desativar parceiro" para quem sai do programa (hoje ele aparece numa linha vazia na grade de Cortes de todo ano novo)? Usuário não entendeu; pergunta refeita em 04/11 — depende de: usuário
+- [x] (D-206: só Admin) Quem exclui Ano: Ped/Míd/Admin ou só Admin? — depende de: usuário
 - [x] (D-205) Regras de exclusão (pedido do usuário, 04/11): o banco impede várias exclusões (PROTECT em ~40 FKs; trigger só-inserção em `TemplateVersao`), e o admin nega a exclusão de Ano, Projeto ("arquiva pela cascata"), Revista e Usuário. O que deve ficar excluível, e por quem? — depende de: usuário
 - [ ] O template "Padrão (F1)" do dev está com "Atualizado E2E …" de 7 rodadas do Playwright. Gravar uma versão nova com o texto da v1? Isso pode mudar o hash das revistas que o usam. Corrigir também o spec, para ele editar só um template próprio — depende de: usuário
 - [ ] (U10d) Trocar "(s)" por `pluralize` no sistema todo, num passo próprio (~25 mensagens e ~40 asserções)? — depende de: usuário
@@ -2071,3 +2102,19 @@ Escrever o plano da exclusão segura (D-205) em `plans/revista-express-exclusao.
 - Limpeza do dev listada: usuários `e2e`, `imp-e2e`, `demo-preview`, `e2e-outra`; parceiro DEMONSTRAÇÃO e matriz Demonstração; 50 parceiros `E2E…`; 14 componentes "Componente E2E…" em 2026; ano 2025 vazio. Aguarda confirmação.
 - Limpeza do dev aplicada (transação única, ensaio antes, trava para manter os 3 projetos reais). Saíram 3 usuários, 51 parceiros, 45 projetos, 55 revistas, 14 componentes, 70 cortes, a matriz Demonstração e o ano 2025. Ficaram o `e2e` (inativo, sem senha) e o template "E2E editor por seção", travados pelo `TemplateVersao` só-inserção.
 - Plano do U10 commitado (`7e7a3be`). Usuário: opção 1 para todas as entidades, ou seja, excluir só o que não está em uso (D-205).
+- Usuário pediu as regras de negócio num MD em `docs/`. Agente lançado em worktree, branch `feat/docs-regras-negocio`, arquivo `docs/regras-de-negocio.md`, só leitura de código, decisões vigentes e learnings. Em paralelo, o agente de planejamento da D-205 segue rodando.
+- Plano da D-205 escrito em `plans/revista-express-exclusao.md`: E0 base (serviço `exclusao.py`, rota `ui_excluir`, permissões 0016, `Template.arquivado_em` 0017), depois E1–E5 em paralelo. ~15 h de agente. Correção: a tela B não exclui Matriz hoje, só tarefa e descritor.
+- `docs/regras-de-negocio.md` (511 linhas, 10 seções com a fonte de cada regra) mergeado (`10901a6`, branch `f7c4304`). A seção 10 lista 11 divergências entre as decisões e o código; as 5 principais são a D-205 por fazer, o `modelo-er.md` (bloqueio e foto), os limites da D-055 vindos de `Etapa.escala_max` e o aviso de impacto diferente no admin.
+- Usuário respondeu a D-205: Admin apaga o ano inteiro pela tela (D-206); template sem uso sai com as versões, por todos menos o Impresso (D-207); só o Admin exclui ano. "Desativar parceiro" não ficou claro: pergunta refeita. Plano atualizado: `Template.arquivado_em` saiu, a 0017 só troca o trigger, o E4 caiu para 1,5 h. E0 lançado.
+- Usuário: sim ao "desativar parceiro" (D-208). Campo e serviço enviados ao E0 em andamento; a grade fica com o E2.
+- E0 mergeado (`54677aa`, commit `312c48a`): `servicos/exclusao.py`, rotas `ui_excluir` e `ui_parceiro_ativo`, migrações 0016–0018. Na raiz: Django 747 OK (8 pulados), makemigrations limpo. Dev ainda sem as migrações. E1–E5 lançados em paralelo a partir de `54677aa`. Specs de ano: abrir o próximo ano e apagá-lo no mesmo teste, porque o `abrir_ano` só abre o maior ano + 1. O E4 corrige os specs que gravavam no template real "Padrão (F1)".
+- E3 mergeado (`7d6859a`, commit `1390870`; Django 748 OK, Playwright 132/132). O "Excluir matriz…" ficou numa `.zona-perigo` no fim da página, e não no `.acoes` do topo, seguindo o `design-system.md` §5 e o padrão do "Excluir descritor". O que impede a exclusão da matriz são os parceiros que a usam. O scratchpad é compartilhado entre os agentes E1–E5: cada um passou a usar a própria subpasta (`excl-eN/`).
+- Migrações 0016–0018 aplicadas no banco de dev, com a autorização do usuário. O servidor responde (`/` 302, `/admin/login/` 200).
+- Usuário autorizou (04/11): mergear E1, E2, E4 e E5 quando terminarem e seguir com a integração (Django, makemigrations, Playwright nas duas larguras no dev, seção 9 de `docs/regras-de-negocio.md`) sem perguntar.
+- E5 mergeado (`0247dc5`, commit `02b0e46`; Django 755 OK, Playwright 128/128). Com o `ExclusaoAdminMixin`, o "Excluir" do admin leva ao `ui_excluir`, e o `delete_selected` sumiu, junto com o 500 do template. `AnoAdmin` usa `delete_ano`. `desativado_em` fica só leitura no admin: desativar passa pelo serviço. A grade de Cortes (`cortes.py:121`) passou a usar `parceiros_do_ano`, o que pode conflitar numa linha com o E2.
+- E1 mergeado (commit `eede0f1`; Django 749 OK, Playwright 132/132). A lixeira "Excluir ano" aparece só para o Admin. Etapa e componente têm "Excluir" por linha (Pedagógica, Mídias e Admin; o Impresso não vê). O spec abre 2027 e apaga o mesmo ano. Pendência: o `linhas.spec.ts` deixa componentes "Z…" em 2026; vai excluí-los na integração.
+- E2 mergeado (`a659a4c`, commit `b9a99b3`; Django 750 OK, Playwright 134/134). A grade tem lixeira no nome do parceiro e o selo "desativado". Na integração (`7961672`), o filtro repetido de `urls/cortes.py` saiu, porque a `grade` comum já usa `parceiros_do_ano` desde o E5, e a coluna do parceiro em 390px passou para 9–10rem.
+- E4 mergeado (`09831b3`, commit `be10375`; Django 750 OK, Playwright 132/132). Template tem lixeira na lista e `.zona-perigo` no editor. A causa do "Atualizado E2E" no "Padrão (F1)" era o `revista-textos.spec.ts`: agora ele e o `templates-editor` e o `templates-admin` criam e excluem templates próprios (helper `e2e/tests/templates.ts`).
+- `linhas.spec.ts` passou a excluir o componente que cria (`f6936c7`). `docs/regras-de-negocio.md` §9 reescrita e divergência 1 resolvida (`b5448a6`).
+- Integração final: Django 764 OK (8 pulados), makemigrations limpo, Playwright 146/146 no dev, `trail check` sem conflito.
+- O scratchpad compartilhado fez o E2 rodar 2 specs no banco descartável do E4. Os resultados não foram afetados, mas nos próximos lançamentos cada agente recebe a própria subpasta já no brief.
