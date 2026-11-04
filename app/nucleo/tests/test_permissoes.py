@@ -34,16 +34,20 @@ class GruposNoBancoTest(TestCase):
         }
         self.assertEqual(set(MODELOS_NUCLEO), registrados)
 
-    def test_so_apaga_passo_cor_tarefa_e_descritor(self):
-        """ProjetoPasso e ProjetoCor (0008), Tarefa e Descritor (D-181, 0014); Impresso nada."""
+    def test_so_apaga_o_previsto(self):
+        """ProjetoPasso e ProjetoCor (0008), Tarefa e Descritor (D-181, 0014), o sem uso (D-205/D-207, 0016)
+        e o ano inteiro só no Admin (D-206); Impresso nada."""
         so_esses = {
             "nucleo.delete_projetopasso", "nucleo.delete_projetocor",
             "nucleo.delete_tarefa", "nucleo.delete_descritor",
+            "nucleo.delete_parceiro", "nucleo.delete_etapa", "nucleo.delete_componente",
+            "nucleo.delete_matriz", "nucleo.delete_template",
         }  # fmt: skip
+        esperado = {"Impresso": set(), "Admin": so_esses | {"nucleo.delete_ano"}}
         for papel in PAPEIS:
             with self.subTest(papel=papel):
                 apaga = {p for p in permissoes(papel) if ".delete_" in p}
-                self.assertEqual(apaga, set() if papel == "Impresso" else so_esses)
+                self.assertEqual(apaga, esperado.get(papel, so_esses))
 
 
 class PerfilTest(TestCase):
@@ -60,12 +64,14 @@ class PerfilTest(TestCase):
         "nucleo.change_corpadrao", "nucleo.change_projeto", "nucleo.change_revista",
         "nucleo.delete_projetopasso", "nucleo.delete_projetocor",
         "nucleo.delete_tarefa", "nucleo.delete_descritor",
+        "nucleo.delete_parceiro", "nucleo.delete_etapa", "nucleo.delete_componente",
+        "nucleo.delete_matriz", "nucleo.delete_template", "nucleo.change_parceiro",
     )  # fmt: skip
     PEDAGOGICA_NAO = (
         "nucleo.marcar_impressa", "auth.change_user", "auth.add_group",
         "nucleo.change_templateversao", "nucleo.add_ano", "nucleo.add_fotorevista",
         "nucleo.delete_revista", "nucleo.add_revista", "nucleo.delete_matrizetapacc",
-        "nucleo.delete_matriz", "nucleo.delete_projeto",
+        "nucleo.delete_projeto", "nucleo.delete_ano", "nucleo.delete_templateversao",
     )  # fmt: skip
 
     def test_admin(self):
@@ -73,7 +79,7 @@ class PerfilTest(TestCase):
         self.confere(
             "Admin",
             pode=(
-                *self.PEDAGOGICA_PODE, "auth.change_user", "auth.add_user", "auth.view_group",
+                *self.PEDAGOGICA_PODE, "auth.change_user", "auth.add_user", "auth.view_group", "nucleo.delete_ano",
                 *(impressa if ADMIN_MARCA_IMPRESSA else ()),
             ),
             nao_pode=(
@@ -98,6 +104,8 @@ class PerfilTest(TestCase):
                 "nucleo.change_revista", "auth.change_user",
                 "nucleo.delete_projetopasso", "nucleo.delete_projetocor",
                 "nucleo.delete_tarefa", "nucleo.delete_descritor",
+                "nucleo.delete_parceiro", "nucleo.delete_etapa", "nucleo.delete_componente",
+                "nucleo.delete_matriz", "nucleo.delete_template", "nucleo.delete_ano", "nucleo.change_parceiro",
             ),
         )  # fmt: skip
 

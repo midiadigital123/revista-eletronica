@@ -7,8 +7,10 @@ Crie uma migração de dados nova que sincronize os grupos; o teste
 
 Exclusões que existem: `delete_projetopasso` e `delete_projetocor` (S11c: excluir a
 linha = voltar ao passo da matriz / à paleta do ano; migração 0008) e `delete_tarefa` e
-`delete_descritor` (D-181: só pela tela de confirmação forte do admin; migração 0014).
-Fora isso, nenhum `delete_*`: revista nunca é apagada (D-117, arquiva). Usuário se
+`delete_descritor` (D-181: só pela tela de confirmação forte do admin; migração 0014), e
+`delete_` de parceiro, etapa, componente, matriz e template, só do que não está em uso, pela
+página `ui_excluir` (D-205, D-207; migração 0016). `delete_ano` (apagar o ano inteiro, D-206) é
+só do Admin. Fora isso, nenhum `delete_*`: revista nunca é apagada (D-117, arquiva). Usuário se
 desativa, não se apaga (histórico usa SET_NULL).
 """
 
@@ -41,6 +43,9 @@ MODELOS_NUCLEO = (
 ACOES = {
     "ver_tudo": _perms("nucleo", dict.fromkeys(MODELOS_NUCLEO, ("view",))),
     "abrir_ano": frozenset({"nucleo.abrir_ano"}),
+    # D-205/D-207: só o que nada usa, pela página `ui_excluir` (`servicos/exclusao.py`).
+    "excluir_sem_uso": _perms("nucleo", dict.fromkeys(("parceiro", "etapa", "componente", "matriz", "template"), ("delete",))),
+    "apagar_ano": frozenset({"nucleo.delete_ano"}),  # D-206: o ano inteiro, com tudo; só o Admin
     "editar_cadastros": _perms("nucleo", dict.fromkeys(("parceiro", "etapa", "componente", "parceiroano"), EDITA)),
     "editar_matriz": _perms(
         "nucleo",
@@ -80,12 +85,12 @@ ACOES = {
 
 PEDAGOGICA = (
     "ver_tudo", "abrir_ano", "editar_cadastros", "editar_matriz", "preencher_cortes",
-    "editar_templates", "editar_paleta", "editar_projeto", "validar",
+    "editar_templates", "editar_paleta", "editar_projeto", "validar", "excluir_sem_uso",
 )  # fmt: skip
 
 PAPEIS = {
     # D-083: admin = Pedagógica + usuários.
-    "Admin": (*PEDAGOGICA, "gerenciar_usuarios", *(("marcar_impressa",) if ADMIN_MARCA_IMPRESSA else ())),
+    "Admin": (*PEDAGOGICA, "gerenciar_usuarios", "apagar_ano", *(("marcar_impressa",) if ADMIN_MARCA_IMPRESSA else ())),
     "Pedagógica": PEDAGOGICA,
     "Mídias Digitais": PEDAGOGICA,  # D-073: mesmo que a Pedagógica
     "Impresso": ("ver_tudo", "marcar_impressa"),  # D-074: vê tudo e marca impressa

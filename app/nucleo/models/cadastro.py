@@ -22,6 +22,9 @@ class Ano(models.Model):
 
 class Parceiro(models.Model):
     nome = models.TextField(unique=True)
+    # D-208: nulo = ativo. Desativado some da grade dos anos em que não tem corte nem projeto ativo
+    # (`servicos.exclusao.parceiros_do_ano`); nunca esconde o histórico de um ano.
+    desativado_em = models.DateTimeField(null=True, blank=True)
     history = HistoricalRecords()
 
     class Meta:
@@ -77,6 +80,12 @@ class Etapa(models.Model):
         super().save(*args, **kwargs)
         renumerar_etapas(self.ano_id)
         self.ordem = Etapa.objects.values_list("ordem", flat=True).get(pk=self.pk)
+
+    def delete(self, *args, **kwargs):
+        # Sem buraco na ordem depois de excluir (D-205). O `apagar_ano` apaga pelo Collector, sem passar aqui.
+        resultado = super().delete(*args, **kwargs)
+        renumerar_etapas(self.ano_id)
+        return resultado
 
 
 class Componente(models.Model):
