@@ -23,11 +23,11 @@
 <form method="post" class="grade grade-variaveis" id="variaveis-form" data-grade{% if pode_editar %} x-data="campoAuto"{% endif %}>{% csrf_token %}
   {{ formset.management_form }}
   {% if pode_editar %}<p class="mudo">Cada célula salva sozinha ao sair dela; só ela é gravada. Padrões vazios usam o nome do ano, em cinza na célula.</p>{% endif %}
-  <div class="tabela-caixa grade-caixa">
+  <div class="tabela-rolavel grade-caixa" x-data="tabelaRolavel">
     <table class="tabela">
       <thead>
         <tr>
-          <th rowspan="2" scope="col" class="grade-parceiro">Projeto</th>
+          <th rowspan="2" scope="col" class="grade-parceiro fixa">Projeto</th>
           {% for g, n in grupos %}<th colspan="{{ n }}" scope="colgroup" class="grade-etapa">{{ g }}</th>{% endfor %}
         </tr>
         <tr>{% for v, rotulo, inicio in cabecalho %}<th scope="col" class="grade-cc{% if inicio %} grade-inicio{% endif %}" title="{{ v.rotulo }}: {{ v.descricao }}" aria-label="{{ v.rotulo }}">{{ rotulo }}</th>{% endfor %}</tr>

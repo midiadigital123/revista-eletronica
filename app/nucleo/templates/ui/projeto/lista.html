@@ -26,7 +26,7 @@ action = a ação recusada (o Confirmar do modal reenvia o form sem botão).
 {% if linhas %}
 <form method="post" id="massa" class="lote" data-lote{% if acao %} action="{% url 'ui_projeto_massa' ano.ano acao %}"{% endif %}>{% csrf_token %}
   {% if pode_massa %}<p class="mudo">Marque os parceiros e escolha a ação na barra de baixo. Projetos em edição por outra sessão são pulados e listados.</p>{% endif %}
-  <div class="tabela-densa painel-caixa">
+  <div class="tabela-rolavel tabela-densa painel-caixa" x-data="tabelaRolavel">
     <table class="tabela painel-tabela">
       <thead><tr>
         <th scope="col" class="fixa painel-revista">{% if pode_massa %}<input type="checkbox" data-todos aria-label="Marcar todos os parceiros">{% endif %}Projeto / revista</th>
