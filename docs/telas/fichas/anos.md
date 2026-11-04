@@ -10,7 +10,8 @@ Abrir o ano novo copiando o anterior e manter o que vale para o ano inteiro: as 
 
 | Perfil | O que faz |
 |---|---|
-| Pedagógica, Mídias Digitais, Admin | Abrem o ano novo; incluem e corrigem etapas, componentes e padrões. |
+| Pedagógica, Mídias Digitais, Admin | Abrem o ano novo; incluem, corrigem e excluem (sem uso) etapas e componentes; corrigem padrões. |
+| Admin | Só ele vê "Excluir ano" e apaga o ano inteiro (D-206). |
 | Impresso | Vê a lista de anos e a página do ano em texto, sem campos nem botões; não vê "Abrir novo ano". Todo POST recebe 403. |
 | Sem login | Vai ao login do admin. |
 
@@ -33,6 +34,7 @@ Abrir o ano novo copiando o anterior e manter o que vale para o ano inteiro: as 
 ### Dados mostrados
 
 - Tabela com um ano por linha, o mais recente primeiro, e dois links: "Painel de <ano>" e "Etapas e componentes de <ano>".
+- Só para o Admin (`delete_ano`, D-206): na última coluna, o botão-ícone (lixeira, `a.btn-icone`) "Excluir ano <ano>", com a dica "Excluir ano". Leva a `/ui/excluir/ano/<ano>/?voltar=/ui/anos/` (rota `ui_excluir`), que lista o que sai junto e pede o ano digitado. Depois: "Ano <ano> apagado, com tudo o que era dele." e a lista sem ele.
 - Card "Abrir ano" (só com `abrir_ano`): campo "Ano novo", vazio de propósito, com a dica "Digite o ano. O próximo que pode ser aberto é <maior + 1>."
 
 ### Dados gravados
@@ -55,12 +57,14 @@ Cabeçalho "Ano <ano>", link "Anos" acima e a frase "Etapas e componentes valem 
 - **Mostra:** código e escala máxima. A ordem é a escolar: todo o fundamental (EF) antes do médio (EM) e, em cada um, pela série (2EF, 5EF, 9EF, 1EM, 3EM). Código fora do padrão vai para o fim. Não há campo de ordem nem arrastar.
 - **Grava:** a escala máxima de uma etapa já criada salva sozinha ao sair do campo. O código não muda depois de criado (campo desligado). A escala fica travada quando a etapa já tem corte ou matriz (dica: "Travada: a etapa já tem corte ou matriz.").
 - **Linha nova:** "+ Adicionar etapa" abaixo da tabela põe uma linha com o foco no código. "Incluir etapa" (ou Enter) grava; "Descartar" (ou Esc) tira a linha. A etapa nova entra na posição escolar, não no fim.
+- **Excluir (D-205):** cada etapa gravada tem, na última coluna, o botão-ícone (lixeira) "Excluir etapa <código>", com a dica "Excluir". É link, não form (a linha está dentro do form da tabela): leva a `/ui/excluir/etapa/<pk>/?voltar=/ui/anos/<ano>/`. Sem uso, sai digitando o código ("Exclusão feita: a etapa <código> de <ano>."); com corte, matriz ou passo de projeto, a página lista o que impede e não apaga.
 
 ### Componentes
 
 - **Mostra:** código e nome, na ordem do código.
 - **Grava:** o nome de um componente já criado salva sozinho ao sair do campo. O código não muda depois de criado.
 - **Linha nova:** "+ Adicionar componente", com "Incluir componente" e "Descartar", como nas etapas.
+- **Excluir (D-205):** "Excluir componente <código>", como nas etapas (`/ui/excluir/componente/<pk>/`). Impedem: revista, corte, matriz, passo de projeto e template.
 
 ### Padrões (`#padroes`)
 
@@ -80,15 +84,16 @@ Cabeçalho "Ano <ano>", link "Anos" acima e a frase "Etapas e componentes valem 
 ### Estados
 
 - **Ano inexistente:** 404.
-- **Só leitura (perfil):** as três tabelas viram texto (código, escala, nome, cor em hexadecimal; padrão sem nome mostra "sem nome"), sem "+ Adicionar" nem "Salvar".
+- **Só leitura (perfil):** as três tabelas viram texto (código, escala, nome, cor em hexadecimal; padrão sem nome mostra "sem nome"), sem "+ Adicionar", "Salvar" nem "Excluir".
 - **Erro na linha nova ou no padrão:** a linha volta com os campos marcados e a lista de erros logo abaixo; nada grava.
 - **Bloqueio:** não se aplica. A página não trava nada, como no admin.
 
 ## Permissões
 
 - Login obrigatório; anônimo vai ao login do admin.
-- `/ui/anos/`: ver exige `view_ano` (403). Abrir exige `abrir_ano`: sem ela o card não aparece e o POST dá 403.
+- `/ui/anos/`: ver exige `view_ano` (403). Abrir exige `abrir_ano`: sem ela o card não aparece e o POST dá 403. "Excluir ano" só com `delete_ano` (só o grupo Admin, D-206).
 - `/ui/anos/<ano>/`: ver exige `view_etapa` (403). Etapas: `add_etapa` + `change_etapa`. Componentes: `add_componente` + `change_componente`. Padrões: `change_corpadrao`; padrão novo: `add_corpadrao`. POST de uma tabela sem a permissão dela: 403.
+- "Excluir" da linha: etapa com `delete_etapa`, componente com `delete_componente` (Pedagógica, Mídias e Admin; o Impresso não). A página `ui_excluir` confere a mesma permissão (403).
 - Autosave (`POST /ui/anos/<ano>/<etapas|componentes>/<pk>/campo/`, rota `ui_ano_campo`): mesma permissão da tabela; tabela fora dessas duas: 404.
 
 ## Interações (Alpine e HTMX)
@@ -114,8 +119,8 @@ Cabeçalho "Ano <ano>", link "Anos" acima e a frase "Etapas e componentes valem 
 │ Etapas e componentes valem para todas as matrizes, cortes e revistas deste ano.                          │
 │ ┌ Etapas ─────────────────────────────┐ ┌ Componentes ─────────────────────────┐                         │
 │ │ Código   Escala máxima              │ │ Código   Nome                        │                         │
-│ │ [5EF]    [500]                      │ │ [LP]     [Língua Portuguesa     ]    │                         │
-│ │ [9EF]    [500] (travada)            │ │ [MT]     [Matemática            ]    │                         │
+│ │ [5EF]    [500]                  [x] │ │ [LP]     [Língua Portuguesa    ] [x] │                         │
+│ │ [9EF]    [500] (travada)        [x] │ │ [MT]     [Matemática           ] [x] │                         │
 │ │ [3EM]    [500]                      │ │ [+ Adicionar componente]             │                         │
 │ │ [+ Adicionar etapa]                 │ └──────────────────────────────────────┘                         │
 │ └─────────────────────────────────────┘                                                                  │
@@ -128,7 +133,7 @@ Cabeçalho "Ano <ano>", link "Anos" acima e a frase "Etapas e componentes valem 
 └──────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Em 390 px: os cards empilham; cada tabela rola na horizontal dentro da caixa.
+`[x]` é o botão-ícone "Excluir" (lixeira). Em 390 px: os cards empilham; cada tabela rola na horizontal dentro da caixa.
 
 ## Critérios de aceite
 
@@ -141,6 +146,8 @@ Em 390 px: os cards empilham; cada tabela rola na horizontal dentro da caixa.
 7. Padrão: mudar o nome de um padrão usado por revista validada e clicar "Salvar" abre o modal sem gravar; confirmar grava e avisa quem perdeu o "Validado". Salvar sem mudar não mexe na cor.
 8. "+ Adicionar padrão" só aparece com menos de 5 padrões e oferece só os números livres.
 9. Impresso vê a página do ano só em texto; POST de qualquer tabela dá 403. Ano inexistente: 404.
+10. Pedagógica, Mídias e Admin veem "Excluir" em cada etapa e componente gravados (nunca na linha nova); o Impresso não. Componente sem uso sai digitando o código e a página volta ao ano; etapa em uso mostra o que impede.
+11. Só o Admin vê "Excluir ano"; Pedagógica, Mídias e Impresso não. O Admin apaga um ano que acabou de abrir digitando o ano.
 
 ## Referências técnicas
 
@@ -148,5 +155,6 @@ Em 390 px: os cards empilham; cada tabela rola na horizontal dentro da caixa.
 - View: `app/nucleo/urls/ui_anos.py` (`anos`, `ano`, `campo`).
 - Seletor: `app/nucleo/contexto.py` (`ano_atual`, `ano_da_sessao`), `templates/ui/_componentes/anos.html`, `static/ui/componentes/seletor-ano.js`.
 - Templates: `templates/ui/anos/{anos,ano}.html`, `templates/ui/parciais/ano_linha.html`.
-- Testes: `app/nucleo/tests/test_ui_anos.py`, `test_ui_base.py`, `test_ui_links.py`; `app/e2e/tests/ano.spec.ts`, `anos.spec.ts`, `linhas.spec.ts`.
-- Decisões: D-190 (S3, S4, S5) e as do plano de UX (D-195 em diante: modal de impacto, linha nova, seletor de ano).
+- Excluir: `app/nucleo/urls/ui_excluir.py` (rota `ui_excluir`), `templates/ui/excluir.html`, `servicos/exclusao.py` (`impedimentos`, `excluir`, `resumo_ano`, `apagar_ano`).
+- Testes: `app/nucleo/tests/test_ui_anos.py`, `test_ui_base.py`, `test_ui_links.py`, `test_exclusao.py`; `app/e2e/tests/ano.spec.ts`, `anos.spec.ts`, `linhas.spec.ts`, `excluir.spec.ts`.
+- Decisões: D-190 (S3, S4, S5), as do plano de UX (D-195 em diante: modal de impacto, linha nova, seletor de ano) e as da exclusão (D-205, D-206; passo E1 de `plans/revista-express-exclusao.md`).

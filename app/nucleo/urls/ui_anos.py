@@ -4,8 +4,8 @@
 abrir exige `abrir_ano` (403 no POST, formulário escondido no GET).
 `/ui/anos/<ano>/`: etapas e componentes do ano, mesmas regras de `EtapaAdmin`/`ComponenteAdmin`
 (código só leitura na edição; escala só leitura com corte ou matriz), e a paleta (S5), com a
-confirmação de impacto de `CorPadraoAdmin` (`nucleo/paleta.py`). Sem excluir e sem bloqueio,
-como no admin.
+confirmação de impacto de `CorPadraoAdmin` (`nucleo/paleta.py`). Sem bloqueio, como no admin.
+Excluir (ano, etapa, componente) é a página `ui_excluir` (D-205/D-206); aqui só os links, por permissão.
 """
 
 

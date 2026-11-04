@@ -3,11 +3,14 @@ Uma linha da tabela de etapas ou de componentes do ano (U4). Na página, dentro 
   {% include "ui/parciais/ano_linha.html" with f=form tabela="etapas" %}
 Gravada (f.instance.pk): salva campo a campo (U3, campoAuto, rota ui_ano_campo). Nova (molde do
 empty_form ou devolvida com erro): data-manual, grava pelo "Incluir" (POST da página; Enter também)
-e sai com "Descartar"/Esc (componente linhaNova).
+e sai com "Descartar"/Esc (componente linhaNova). Gravada e com `delete_etapa`/`delete_componente`: "Excluir"
+leva ao `ui_excluir` (D-205). É link, não form: a linha já está dentro do form da tabela.
 {% endcomment %}<tr{% if f.instance.pk %} data-url="{% url 'ui_ano_campo' ano.ano tabela f.instance.pk %}" data-prefixo="{{ f.prefix }}-"{% else %} data-manual data-linha-nova{% endif %}>
   <td>{{ f.id }}{{ f.codigo }}</td>
   <td>{% if tabela == "etapas" %}{{ f.escala_max }}{% else %}{{ f.nome }}{% endif %}</td>
-  <td class="linha-nova-acoes">{% if not f.instance.pk %}
+  <td class="linha-nova-acoes">{% if f.instance.pk %}{% if tabela == "etapas" and perms.nucleo.delete_etapa %}
+    <a class="btn-icone" href="{% url 'ui_excluir' 'etapa' f.instance.pk %}?voltar={{ request.path|urlencode }}" aria-label="Excluir etapa {{ f.instance.codigo }}" data-dica="Excluir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></a>{% elif tabela == "componentes" and perms.nucleo.delete_componente %}
+    <a class="btn-icone" href="{% url 'ui_excluir' 'componente' f.instance.pk %}?voltar={{ request.path|urlencode }}" aria-label="Excluir componente {{ f.instance.codigo }}" data-dica="Excluir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></a>{% endif %}{% else %}
     <button class="btn btn-sm" type="submit">Incluir {% if tabela == "etapas" %}etapa{% else %}componente{% endif %}</button>
     <button class="btn btn-ghost btn-sm" type="button" @click="descartar">Descartar</button>{% endif %}</td>
 </tr>
