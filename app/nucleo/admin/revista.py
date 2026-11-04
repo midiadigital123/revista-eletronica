@@ -221,7 +221,7 @@ class RevistaAdmin(BloqueioAdminMixin, admin.ModelAdmin):
         return super().has_change_permission(request, obj)
 
     def has_delete_permission(self, request, obj=None):
-        return False
+        return False  # D-205: revista não se apaga; arquiva pela cascata (o corte a recriaria)
 
     def save_model(self, request, obj, form, change):
         # Nenhum campo do modelo é editável aqui (todos readonly): só uploads e textos.

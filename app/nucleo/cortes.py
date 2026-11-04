@@ -14,8 +14,9 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from openpyxl import Workbook
 
-from nucleo.models import Componente, Corte, Etapa, Parceiro, ParceiroAno
+from nucleo.models import Componente, Corte, Etapa, ParceiroAno
 from nucleo.servicos.cascata import gravar_cortes, validar_linhas
+from nucleo.servicos.exclusao import parceiros_do_ano
 
 SEPARADOR = re.compile(r"[\s,;]+")
 SEP = "|"
@@ -117,7 +118,7 @@ def grade(request, ano, ler_post=True):
     etapas = list(Etapa.objects.filter(ano=ano).order_by("ordem"))
     componentes = list(Componente.objects.filter(ano=ano).order_by("codigo"))
     colunas = [(e, c) for e in etapas for c in componentes]
-    parceiros = list(Parceiro.objects.order_by("nome"))
+    parceiros = list(parceiros_do_ano(ano).order_by("nome"))  # D-208: o desativado sem dados no ano some
     atuais = linhas_atuais(ano, colunas)
     pode = pode_gravar(request.user)
     post = request.POST if request.method == "POST" and ler_post else None

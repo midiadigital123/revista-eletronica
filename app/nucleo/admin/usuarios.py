@@ -75,4 +75,4 @@ class UsuarioAdmin(UserAdmin):
         super().save_model(request, obj, form, change)
 
     def has_delete_permission(self, request, obj=None):
-        return False
+        return False  # D-205: usuário se desativa (is_active), nunca se apaga

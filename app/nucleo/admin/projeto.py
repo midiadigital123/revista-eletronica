@@ -65,7 +65,7 @@ class ProjetoAdmin(BloqueioAdminMixin, admin.ModelAdmin):
         return False  # nasce pela cascata (S06)
 
     def has_delete_permission(self, request, obj=None):
-        return False  # arquiva pela cascata
+        return False  # D-205: arquiva pela cascata (o corte recriaria o projeto apagado)
 
     def has_change_permission(self, request, obj=None):
         if obj is not None and obj.arquivado_em is not None:
