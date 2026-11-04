@@ -339,7 +339,7 @@ input[type="color"]:focus-visible { outline: none; border-color: var(--ring); bo
   padding: 0.75rem 0; background: var(--background); border-top-width: 1px;
 }
 @media (max-width: 40rem) {
-  .grade-parceiro { min-width: 7rem; max-width: 8rem; }
+  .grade-parceiro { min-width: 9rem; max-width: 10rem; } /* lápis + lixeira (D-208) */
   .grade-caixa { max-height: calc(100dvh - 9rem); }
   .barra-salvar .btn { flex: 1; }
 }

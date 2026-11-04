@@ -3,7 +3,7 @@
 Login (redireciona ao login do admin); ver exige `view_corte` ou `change_corte` (403);
 gravar exige `add_corte` + `change_corte`, sem elas a grade é só leitura. Autosave por célula
 (U3, `celula`): sem bloqueio, o conflito entre duas abas é otimista pelo `original` da célula.
-As linhas são as de `exclusao.parceiros_do_ano` (E2, D-208): o parceiro desativado só aparece no ano
+As linhas são as de `exclusao.parceiros_do_ano`, aplicado na `grade` comum ao admin (D-208): o parceiro desativado só aparece no ano
 em que tem corte ou projeto ativo.
 """
 
@@ -24,7 +24,6 @@ from nucleo.contexto import ano_da_sessao
 from nucleo.cortes import grade, pode_ver
 from nucleo.models import Ano, Componente, Etapa, Parceiro, Revista
 from nucleo.servicos.cascata import validar_linhas
-from nucleo.servicos.exclusao import parceiros_do_ano
 from nucleo.ui_autosave import Conflito, conflito, erros, form_de_um_campo, responder_campo
 
 
@@ -37,9 +36,6 @@ def cortes(request, ano):
         raise PermissionDenied
     ano = get_object_or_404(Ano, ano=ano)
     contexto, _ = grade(request, ano, ler_post=False)
-    # ponytail: filtra depois da `grade` (comum ao admin, que é do E5); ela pode receber os parceiros se o admin também filtrar.
-    do_ano = set(parceiros_do_ano(ano).values_list("pk", flat=True))
-    contexto["linhas"] = [linha for linha in contexto["linhas"] if linha["parceiro"].pk in do_ano]
     return TemplateResponse(request, "ui/cortes.html", {**contexto, "ano": ano, "secao": "projetos", "aba": "cortes"})
 
 
