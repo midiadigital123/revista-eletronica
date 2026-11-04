@@ -27,6 +27,7 @@ from django.utils.http import urlencode
 
 from nucleo import texto
 from nucleo.admin.bloqueio import CAMPO_SESSAO, BloqueioAdminMixin
+from nucleo.admin.cadastro import ExclusaoAdminMixin
 from nucleo.models import Ano, Template
 from nucleo.servicos import bloqueio
 from nucleo.servicos.resolver import versao_atual
@@ -91,7 +92,7 @@ class TemplateForm(forms.ModelForm):
 
 
 @admin.register(Template)
-class TemplateAdmin(BloqueioAdminMixin, admin.ModelAdmin):
+class TemplateAdmin(ExclusaoAdminMixin, BloqueioAdminMixin, admin.ModelAdmin):
     form = TemplateForm
     change_list_template = "nucleo/template_change_list.html"
     list_display = ("nome", "ano", "componente", "fasciculo", "versao", "usado_por")

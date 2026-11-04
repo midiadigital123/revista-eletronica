@@ -27,6 +27,7 @@ from django.urls import path, reverse
 from django.utils.html import format_html, format_html_join
 
 from nucleo.admin.bloqueio import CAMPO_SESSAO, BloqueioAdminMixin, aviso
+from nucleo.admin.cadastro import ExclusaoAdminMixin
 from nucleo.admin.lote import rota
 from nucleo.matriz import (  # formulários comuns ao admin e à página própria (urls/ui_matriz.py)
     DescritorForm,
@@ -75,7 +76,7 @@ class MecInline(admin.TabularInline):
 
 
 @admin.register(Matriz)
-class MatrizAdmin(admin.ModelAdmin):
+class MatrizAdmin(ExclusaoAdminMixin, admin.ModelAdmin):
     form = MatrizForm
     list_display = ("nome", "ano", "duplicada_de")
     list_filter = ("ano",)

@@ -11,12 +11,14 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
 from django.test import Client, TestCase, TransactionTestCase
 from django.urls import reverse
+from django.utils import timezone
+from django.utils.http import urlencode
 from openpyxl import load_workbook
 
 from nucleo.admin.cortes import numerar_grupos
 from nucleo.models import (
     Ano, Componente, CorPadrao, Corte, Descritor, Etapa, Matriz, MatrizEtapaCC, Parceiro,
-    ParceiroAno, Projeto, Revista, Tarefa,
+    ParceiroAno, Projeto, Revista, Tarefa, Template,
 )  # fmt: skip
 from nucleo.servicos.cascata import gravar_cortes
 from nucleo.tests.test_importacao import cadastrar, planilha
@@ -391,6 +393,85 @@ class CadastroTest(Base):
         self.assertContains(self.client.post(url, {"ano": 2029}), "próximo ano que pode ser aberto é 2027")
         self.assertRedirects(self.client.post(url, {"ano": 2027}), reverse("admin:nucleo_ano_changelist"))
         self.assertTrue(Matriz.objects.filter(ano__ano=2027, duplicada_de=self.matriz).exists())
+
+
+class ExclusaoAdminTest(Base):
+    """E5 (D-205 a D-208): o "Excluir" do admin leva à página `ui_excluir`; sem exclusão em massa."""
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.parceiro = Parceiro.objects.create(nome="GO")
+        cls.template = Template.objects.create(ano=cls.a26, componente=cls.c["LP"], fasciculo="F1", nome="Livre")
+
+    def alvos(self):
+        """(modelo, objeto, chave da URL do ui_excluir): para o ano é o próprio ano, não o id."""
+        return [
+            ("ano", self.a26, 2026), ("parceiro", self.parceiro, self.parceiro.pk),
+            ("etapa", self.e["5EF"], self.e["5EF"].pk), ("componente", self.c["LP"], self.c["LP"].pk),
+            ("matriz", self.matriz, self.matriz.pk), ("template", self.template, self.template.pk),
+        ]  # fmt: skip
+
+    def test_excluir_do_admin_leva_ao_ui_excluir_com_voltar_para_a_lista(self):
+        for modelo, obj, chave in self.alvos():
+            apagar = reverse(f"admin:nucleo_{modelo}_delete", args=[obj.pk])
+            self.assertContains(self.client.get(reverse(f"admin:nucleo_{modelo}_change", args=[obj.pk])), f'href="{apagar}"')
+            lista = reverse(f"admin:nucleo_{modelo}_changelist")
+            destino = reverse("ui_excluir", args=[modelo, chave]) + "?" + urlencode({"voltar": lista})
+            self.assertRedirects(self.client.get(apagar), destino, fetch_redirect_response=False)
+            resp = self.client.get(destino)
+            self.assertEqual(resp.status_code, 200, modelo)
+            self.assertEqual(resp.context["voltar"], lista)
+
+    def test_post_no_excluir_do_admin_nao_apaga_nem_da_500(self):
+        # Antes do E5, o delete do Django batia no trigger da TemplateVersao (500) e passava por fora do serviço.
+        for modelo, obj, _ in self.alvos():
+            resp = self.client.post(reverse(f"admin:nucleo_{modelo}_delete", args=[obj.pk]), {"post": "yes"})
+            self.assertEqual(resp.status_code, 302, modelo)
+            self.assertTrue(type(obj).objects.filter(pk=obj.pk).exists(), modelo)
+
+    def test_sem_exclusao_em_massa(self):
+        for modelo, _, _ in self.alvos():
+            resp = self.client.get(reverse(f"admin:nucleo_{modelo}_changelist"))
+            self.assertEqual(resp.status_code, 200, modelo)
+            self.assertNotContains(resp, "delete_selected")
+
+    def test_so_o_admin_exclui_ano_pelo_admin(self):
+        apagar = reverse("admin:nucleo_ano_delete", args=[self.a26.pk])
+        mudar = reverse("admin:nucleo_ano_change", args=[self.a26.pk])
+        self.client.force_login(usuario("ped", "Pedagógica"))
+        self.assertNotContains(self.client.get(mudar), f'href="{apagar}"')
+        self.assertEqual(self.client.get(apagar).status_code, 403)
+        self.assertContains(self.client.get(reverse("admin:nucleo_etapa_change", args=[self.e["5EF"].pk])), "deletelink")
+        self.client.force_login(usuario("adm", "Admin"))
+        self.assertContains(self.client.get(mudar), f'href="{apagar}"')
+        self.assertEqual(self.client.get(apagar).status_code, 302)
+
+    def test_impresso_nao_ve_excluir(self):
+        self.client.force_login(usuario("imp", "Impresso"))
+        for modelo, obj, _ in self.alvos():
+            self.assertEqual(self.client.get(reverse(f"admin:nucleo_{modelo}_delete", args=[obj.pk])).status_code, 403, modelo)
+
+    def test_parceiro_mostra_desativado_em_na_lista_e_no_filtro(self):
+        Parceiro.objects.create(nome="PE", desativado_em=timezone.now())
+        cl = self.client.get(reverse("admin:nucleo_parceiro_changelist")).context["cl"]
+        self.assertIn("desativado_em", cl.list_display)
+        self.assertIn("desativado_em", [f.field_path for f in cl.filter_specs])
+        resp = self.client.get(reverse("admin:nucleo_parceiro_changelist"), {"desativado_em__isnull": "False"})
+        self.assertEqual([p.nome for p in resp.context["cl"].result_list], ["PE"])
+
+    def test_desativar_so_pela_pagina_de_excluir(self):
+        # O campo do form contornaria o serviço (D-208): no admin ele é só leitura.
+        form = self.client.get(reverse("admin:nucleo_parceiro_change", args=[self.parceiro.pk])).context["adminform"].form
+        self.assertNotIn("desativado_em", form.fields)
+
+    def test_grade_de_cortes_some_com_o_desativado_sem_dados_no_ano(self):
+        go, pe = self.parceiro, Parceiro.objects.create(nome="PE")
+        gravar_cortes(ParceiroAno.objects.create(parceiro=go, ano=self.a26), [(self.e["5EF"], self.c["LP"], [350])], self.root)
+        Parceiro.objects.filter(pk__in=[go.pk, pe.pk]).update(desativado_em=timezone.now())
+        Parceiro.objects.create(nome="MT")
+        resp = self.client.get(reverse("admin:nucleo_corte_changelist"), {"ano": 2026})
+        self.assertEqual([linha["parceiro"].nome for linha in resp.context["linhas"]], ["GO", "MT"])
 
 
 class PerfisTest(Base):
