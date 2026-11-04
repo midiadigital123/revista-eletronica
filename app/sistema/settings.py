@@ -92,3 +92,10 @@ MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# A grade de cortes do admin ("Salvar cortes") manda 1 campo por célula + 1 por parceiro, com TODOS
+# os parceiros cadastrados: 4 etapas × 7 componentes passam dos 1000 do padrão com ~35 parceiros (400).
+# O Django só lê este limite do settings (não há como subir numa view só). O tamanho do corpo continua
+# preso pelo DATA_UPLOAD_MAX_MEMORY_SIZE (2,5 MB). ponytail: ~340 parceiros com 28 células; acima disso,
+# a grade passa a mandar só as linhas alteradas (a regra já pula a linha sem "o-").
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10_000

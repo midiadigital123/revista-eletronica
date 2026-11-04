@@ -12,7 +12,7 @@ descritores reordenam (componente `ordenavel`: alça que arrasta e anda com ↑/
     {% if pode_gravar and not q %}{% include "ui/_componentes/ordem.html" with rotulo=d.codigo %}{% endif %}
     <a href="{{ u }}" hx-get="{{ u }}" hx-target="#painel" hx-push-url="{{ u }}" hx-include="#busca"{% if d.pk == ativo %} aria-current="page"{% endif %}>
       <span class="matriz-codigo">{{ d.codigo }}</span>
-      <span class="matriz-resumo">{{ d.descricao|default:"Sem descrição" }}</span>
+      <span class="matriz-resumo" title="{{ d.descricao }}">{{ d.descricao|default:"Sem descrição" }}</span>
     </a>
   </li>
   {% empty %}

@@ -62,8 +62,10 @@ document.addEventListener("alpine:init", () => {
   // Não há linha vazia na tela: ela nasce no fim, com o foco no 1º campo, e grava pelo botão submit
   // dela (o Enter usa o mesmo botão). Esc ou "Descartar" tira a linha. Sem data-total (Cortes), o
   // molde é um form próprio. Itens [data-vazio] do alvo ("Nenhuma tarefa") somem com a linha aberta.
+  // [data-abrir-ao-carregar] no x-data: a linha já nasce aberta, com o foco (U10d, Cortes ?novo=1).
   Alpine.data("linhaNova", () => ({
     init() {
+      if (this.$root.hasAttribute("data-abrir-ao-carregar")) this.abrir();
       this.$root.addEventListener("keydown", (e) => {
         if (e.key === "Escape" && e.target.closest?.("[data-linha-nova]")) {
           e.preventDefault();

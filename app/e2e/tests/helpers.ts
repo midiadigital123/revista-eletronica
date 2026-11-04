@@ -12,8 +12,14 @@ export async function entrar(page: Page, proxima = "/admin/") {
   await expect(page).not.toHaveURL(/\/admin\/login\//);
 }
 
-/** O Alpine já ligou a página (o `:data-estado` do status do autosave só existe depois do init). */
-export const alpinePronto = (page: Page) => expect(page.locator("[data-status-salvo]")).toHaveAttribute("data-estado", "");
+/** O Alpine já ligou a página (o `:data-estado` do status do autosave só existe depois do init).
+ * Espera antes o DOMContentLoaded: ele só dispara depois dos scripts `defer`, e o Alpine e o Sortable vêm
+ * do jsDelivr com o cache vazio a cada contexto novo. Sem essa espera, um CDN lento (> 5 s) estourava o
+ * prazo do expect com a página ainda carregando (U10d, estados.spec). Alpine quebrado continua falhando. */
+export async function alpinePronto(page: Page) {
+  await page.waitForLoadState("domcontentloaded");
+  await expect(page.locator("[data-status-salvo]")).toHaveAttribute("data-estado", "");
+}
 
 /** Cortes (U4): "+ Adicionar parceiro" abre a linha com o foco no nome; Enter cria e recarrega. */
 export async function novoParceiro(page: Page, nome: string) {
@@ -78,6 +84,13 @@ export async function atribuirEmMassa(
     if (escolhas.f2) await dialogo.getByLabel("Template F2").selectOption({ label: escolhas.f2 });
   }
   await dialogo.getByRole("button", { name: titulo, exact: true }).click();
+}
+
+/** A revista LP da demonstração (criar_demo), pela Lista de Projetos: a lista do admin pagina em 100 e,
+ * com os projetos E2E que cada execução cria, a DEMONSTRAÇÃO cai na 2ª página (U10d). */
+export async function revistaDemo(page: Page) {
+  await page.goto("/ui/projeto/ano/2026/");
+  return revistaDaLista(page, "DEMONSTRAÇÃO", "LP");
 }
 
 /** Lista de Projetos: o id da revista `codigo` (LP, MT) no grupo do parceiro (linha por revista). */

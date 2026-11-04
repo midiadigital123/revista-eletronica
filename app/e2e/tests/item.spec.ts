@@ -10,6 +10,7 @@
 //     npx playwright test item
 // Grava de verdade, mas termina como começou: a tarefa D01 100-150 do 5EF fica sem arquivo.
 import { expect, test, type Page } from "@playwright/test";
+import { revistaDemo } from "./helpers";
 
 // PNG 1×1
 const PNG = Buffer.from(
@@ -65,9 +66,7 @@ test("item: sobe um PNG com texto alternativo, vê no preview e remove", async (
   await expect(page.locator("#tarefa_set-group")).toContainText("PNG");
 
   // 2. Preview da revista DEMONSTRAÇÃO: o "Ver item" abre a imagem com o texto alternativo.
-  await page.goto("/admin/nucleo/revista/");
-  const href = await page.locator("#result_list a", { hasText: "DEMONSTRAÇÃO" }).first().getAttribute("href");
-  const revista = href!.match(/revista\/(\d+)\//)![1];
+  const revista = await revistaDemo(page);
   await page.goto(`/preview/${revista}/`);
   await expect(page.locator("body.app-initialized")).toBeAttached();
   await page.locator(".ver-item-btn").first().click();

@@ -21,7 +21,7 @@ Com `oob` (GET HTMX de uma seção) inclui a lista de seções para marcar o ite
       <input type="hidden" name="{{ campo_versao }}" value="{{ bloco.versao.pk }}">
       <input type="hidden" name="initial-{{ campo }}" value="{{ s.corpo }}">
       <label for="texto-secao">Texto da seção</label>
-      <textarea class="textarea mono" id="texto-secao" name="{{ campo }}" rows="12" spellcheck="true" aria-describedby="texto-secao-ajuda"{% if erros %} aria-invalid="true"{% endif %}{% if not pode_textos %} readonly{% endif %}>{{ valor }}</textarea>
+      <textarea class="textarea" id="texto-secao" name="{{ campo }}" rows="12" spellcheck="true" aria-describedby="texto-secao-ajuda"{% if erros %} aria-invalid="true"{% endif %}{% if not pode_textos %} readonly{% endif %}>{{ valor }}</textarea>
       <p class="ajuda" id="texto-secao-ajuda">{% if pode_textos %}Salva sozinho ao sair do campo; a primeira mudança cria uma cópia só desta seção. {% endif %}Markdown; variáveis entre chaves duplas, como <code>{% templatetag openvariable %}nome_parceiro{% templatetag closevariable %}</code>.</p>
       {% for e in erros %}<p class="erro" role="alert">{{ e }}</p>{% endfor %}
     </div>

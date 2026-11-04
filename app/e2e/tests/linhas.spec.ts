@@ -46,6 +46,29 @@ test("ano: + Adicionar abre a linha com foco; Esc descarta; Enter grava; etapas 
   await expect(page.getByLabel(`Código (${codigo})`)).toHaveValue(codigo);
 });
 
+// U10d: num ano sem projetos (o 2025 vazio do preparo), o "+ Novo projeto" da Lista chega na aba Cortes
+// com a linha do parceiro novo já aberta e o foco no nome; o Impresso não vê o botão.
+test("lista vazia: + Novo projeto abre Cortes com a linha do parceiro novo aberta e o foco no nome", async ({ page, browser }) => {
+  await entrar(page, "/ui/projeto/ano/2025/");
+  await expect(page.getByRole("heading", { name: "Nenhum projeto em 2025" })).toBeVisible();
+  await page.getByRole("link", { name: "Novo projeto" }).click();
+  await expect(page).toHaveURL(/\/ui\/projeto\/ano\/2025\/cortes\/\?novo=1$/);
+  await expect(page.locator("#novo-parceiro")).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#novo-parceiro")).toHaveCount(0);
+
+  const { E2E_IMPRESSO_USUARIO: imp, E2E_IMPRESSO_SENHA: senha } = process.env;
+  test.skip(!imp || !senha, "defina E2E_IMPRESSO_*");
+  const impresso = await (await browser.newContext()).newPage();
+  await impresso.goto("/admin/login/?next=/ui/projeto/ano/2025/");
+  await impresso.fill("#id_username", imp!);
+  await impresso.fill("#id_password", senha!);
+  await impresso.click("input[type=submit]");
+  await expect(impresso.getByRole("heading", { name: "Nenhum projeto em 2025" })).toBeVisible();
+  await expect(impresso.getByRole("link", { name: "Novo projeto" })).toHaveCount(0);
+  await impresso.context().close();
+});
+
 test("cortes: + Adicionar parceiro abaixo da grade abre a linha; Esc descarta", async ({ page }) => {
   await entrar(page, "/ui/projeto/ano/2026/cortes/");
   await alpinePronto(page);

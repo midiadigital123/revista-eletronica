@@ -7,7 +7,7 @@
 // Os parceiros são criados pelo próprio teste, com nome único por execução, e ficam no banco:
 // rode só contra um banco descartável (o do seu worktree), nunca contra dados reais.
 import { expect, test, type Page } from "@playwright/test";
-import { entrar } from "./helpers";
+import { alpinePronto, entrar } from "./helpers";
 
 async function criarParceiro(page: Page, nome: string) {
   await page.goto("/admin/nucleo/parceiro/add/");
@@ -53,12 +53,12 @@ test("preenche os cortes de 2 parceiros", async ({ page }) => {
 test("cortes sem edição não acusa alteração", async ({ page }) => {
   await entrar(page, "/ui/projeto/ano/2026/cortes/");
   const status = page.locator("[data-status-salvo]");
-  await expect(status).toHaveAttribute("data-estado", "");
+  await alpinePronto(page);
   await expect(status.getByText("Cada campo salva sozinho")).toBeVisible();
   await expect(page.locator("[data-grade] [aria-invalid]")).toHaveCount(0);
   page.on("dialog", (d) => { throw new Error(`diálogo inesperado: ${d.message()}`); });
   await page.reload();
-  await expect(page.locator("[data-status-salvo]")).toHaveAttribute("data-estado", "");
+  await alpinePronto(page);
 });
 
 // U7a: Cortes, Variáveis, Revistas e Lotes viraram o hub Projetos. As URLs antigas redirecionam para a

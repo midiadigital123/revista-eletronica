@@ -55,7 +55,10 @@ class AnoVazioTest(Perfis, TestCase):
         url = reverse("ui_projeto_lista", args=[2025])
         bloco = self.vazio(self.ped, url)
         self.assertIn("Nenhum projeto em 2025", bloco)
-        self.assertBotao(bloco, "Novo projeto", reverse("cortes", args=[2025]))
+        self.assertBotao(bloco, "Novo projeto", reverse("cortes", args=[2025]) + "?novo=1")
+        # U10d: o ?novo=1 chega na aba Cortes com a linha do parceiro novo já aberta (linhaNova).
+        self.assertContains(self.client.get(reverse("cortes", args=[2025]), {"novo": "1"}), 'x-data="linhaNova" data-abrir-ao-carregar')
+        self.assertNotContains(self.client.get(reverse("cortes", args=[2025])), "data-abrir-ao-carregar")
         bloco = self.vazio(self.imp, url)
         self.assertIn("Nenhum projeto em 2025", bloco)
         self.assertSemBotao(bloco)
@@ -81,6 +84,18 @@ class AnoVazioTest(Perfis, TestCase):
                 self.assertIn("Nenhum", bloco)
                 self.assertSemBotao(bloco)
         self.assert403(reverse("cortes_celula", args=[2025]), {"campo": "c-1-1-1", "valor": "1"})
+
+    def test_lote_de_template_sem_componente_leva_a_pagina_do_ano_e_nao_ao_admin(self):
+        """U10d: componentes do ano já têm tela B (página do ano); nenhum link do vazio cai no admin."""
+        url = reverse("ui_lotes_template", args=[2025])  # o GET vai à Lista (U7a): o vazio sai no POST sem JS
+        self.client.force_login(self.ped)
+        r = self.client.post(url)
+        self.assertEqual(r.status_code, 200)
+        (bloco,) = VAZIO.findall(r.content.decode())
+        self.assertIn("Nenhum componente em 2025", bloco)
+        self.assertBotao(bloco, "Abrir componentes", reverse("ui_ano", args=[2025]) + "#componentes-titulo")
+        self.assertNotIn("/admin/", bloco)
+        self.assert403(url)
 
     def test_matrizes_mostra_abrir_origem_so_para_quem_duplica(self):
         origem = Matriz.objects.create(ano=Ano.objects.create(ano=2026), nome="SAEGO")

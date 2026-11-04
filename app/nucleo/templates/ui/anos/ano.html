@@ -6,13 +6,13 @@ A ordem das etapas é a escolar (`ordem_escolar`). Sem `pode.<tabela>`, só text
 {% block titulo %}Ano {{ ano.ano }}{% endblock %}
 
 {% block conteudo %}
+<a class="mudo voltar" href="{% url 'ui_anos' %}">‹ Anos</a>
 <header class="pagina-cab">
   <div>
-    <p class="mudo"><a class="link" href="{% url 'ui_anos' %}">Anos</a></p>
     <h1>Ano {{ ano.ano }}</h1>
     <p class="mudo">Etapas e componentes valem para todas as matrizes, cortes e revistas deste ano.</p>
   </div>
-  {% if pode.etapas or pode.componentes %}<div class="acoes">{% include "ui/_componentes/status_salvo.html" %}</div>{% endif %}
+  {% if pode.etapas or pode.componentes %}<div class="acoes">{% include "ui/_componentes/status_salvo.html" with ocioso="Etapas e componentes salvam sozinhos; cada padrão, pelo Salvar dele." %}</div>{% endif %}
 </header>
 
 <section class="card" aria-labelledby="etapas-titulo">
@@ -70,7 +70,7 @@ A ordem das etapas é a escolar (`ordem_escolar`). Sem `pode.<tabela>`, só text
       <tbody>
       {% for f in padroes %}{% with cp=f.instance %}
         <tr>
-          <th scope="row" class="fixa"><span aria-hidden="true" style="display:inline-block;width:1rem;height:1rem;vertical-align:middle;border:1px solid currentColor;background:{{ f.initial.cor|default:cp.cor }}"></span> Padrão {{ cp.padrao }}</th>
+          <th scope="row" class="fixa"><span aria-hidden="true" class="amostra-padrao" style="background: {{ f.initial.cor|default:cp.cor }}"></span> Padrão {{ cp.padrao }}</th>
           {% if pode.padroes %}
           <td><form method="post" id="padrao-{{ cp.padrao }}" novalidate>{% csrf_token %}<input type="hidden" name="tabela" value="padroes"><input type="hidden" name="padrao" value="{{ cp.pk }}"></form>
             <input class="input" form="padrao-{{ cp.padrao }}" type="text" name="{{ f.nome.html_name }}" id="{{ f.nome.id_for_label }}" value="{{ f.nome.value|default_if_none:'' }}" data-original="{{ f.initial.nome|default_if_none:'' }}" maxlength="200" aria-label="Nome do Padrão {{ cp.padrao }}"{% if f.nome.errors %} aria-invalid="true"{% endif %}{% if f.errors %} aria-describedby="padrao-{{ cp.padrao }}-erros"{% endif %}></td>

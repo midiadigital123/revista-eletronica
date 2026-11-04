@@ -2,7 +2,7 @@
 
 .pj-form { display: flex; flex-direction: column; gap: 1.5rem; }
 .pj-secao { scroll-margin-top: 4.5rem; }
-.pj-secao code, .pj-referencia code { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted-foreground); }
+.pj-secao code, .pj-referencia code { font-size: 0.75rem; color: var(--muted-foreground); }
 
 /* abas do projeto (U7b): o espaço entre a nav e o conteúdo da aba */
 .abas + .pj-form, .abas ~ .pj-secao, .abas ~ .pj-cartoes, .abas ~ .aba-acoes { margin-top: 1rem; }

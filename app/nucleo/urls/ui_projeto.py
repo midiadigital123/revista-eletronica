@@ -371,17 +371,35 @@ def _titulo(form, nome):
 def campo(request, pk):
     """Autosave de um campo (U3), ponto único de escrita da ficha e da planilha de variáveis.
     Com a sessão de bloqueio (ficha): `com_bloqueio`, e vale todo campo da ficha. Sem ela
-    (planilha): só as variáveis, e o projeto fica travado só durante a escrita (D-121)."""
+    (planilha): só as variáveis, e o projeto fica travado só durante a escrita (D-121). Sem bloqueio
+    de página, duas abas na planilha são resolvidas como na grade de Cortes: `original` diferente do
+    gravado é 409 com `atual`, sem gravar (U10d)."""
     if CAMPO_SESSAO in request.POST:
         return _campo_na_ficha(request, pk)
     if not planilha_variaveis.pode_gravar(request.user):
         raise PermissionDenied
     projeto = get_object_or_404(Projeto, pk=pk)
     nome, form = _form_campo(request, projeto, EDITAVEIS)
+    original = request.POST.get("original", "")
 
     def gravar(dados):
-        if motivo := escrever_travado(projeto, request.user, lambda: _salvar_campo(projeto.pk, nome, dados[nome])):
+        mudou = []
+
+        def escrever():  # sob a trava do projeto (select_for_update em escrever_travado): relê e compara
+            if (atual := getattr(Projeto.objects.get(pk=projeto.pk), nome)) != original:
+                mudou.append(atual)
+                return "mudou"
+            _salvar_campo(projeto.pk, nome, dados[nome])
+
+        if motivo := escrever_travado(projeto, request.user, escrever):
+            if mudou:
+                raise Conflito(
+                    f"{projeto.parceiro_ano.parceiro}: outra pessoa mudou este valor depois que a página abriu "
+                    f"(agora: {mudou[0] or 'vazio'}). Seu valor ficou na célula; Tentar de novo grava por cima.",
+                    mudou[0],
+                )
             raise Conflito(f"Não salvo: {motivo}. Tente de novo quando a outra pessoa fechar o projeto.")
+        return {"valor": dados[nome]}
 
     return responder_campo(request, form=form, gravar=gravar, revistas=lambda: _revistas(projeto), titulo=_titulo(form, nome))
 

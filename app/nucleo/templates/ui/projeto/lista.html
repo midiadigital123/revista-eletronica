@@ -132,7 +132,7 @@ action = a ação recusada (o Confirmar do modal reenvia o form sem botão).
 </form>
 {% else %}{% with a=ano.ano|stringformat:"d" %}{% with titulo="Nenhum projeto em "|add:a %}
 {% if perms.nucleo.add_parceiro %}{% url 'cortes' ano.ano as u %}
-{% include "ui/_componentes/vazio.html" with texto="O projeto nasce quando os cortes de um parceiro são lançados. Na aba Cortes, adicione o parceiro (ou use um que já está lá) e lance os cortes dele." url=u rotulo="Novo projeto" mais=True %}
+{% include "ui/_componentes/vazio.html" with texto="O projeto nasce quando os cortes de um parceiro são lançados. Na aba Cortes, adicione o parceiro (ou use um que já está lá) e lance os cortes dele." url=u|add:"?novo=1" rotulo="Novo projeto" mais=True %}
 {% else %}
 {% include "ui/_componentes/vazio.html" with texto="Cada projeto nasce de um parceiro na aba Cortes, cadastrado pela equipe pedagógica." %}
 {% endif %}{% endwith %}{% endwith %}

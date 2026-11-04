@@ -23,7 +23,8 @@
 {% if perms.nucleo.add_parceiro %}
 {# U4: logo abaixo da grade, o botão abre a linha do parceiro novo com o foco no nome (componente linhaNova); #}
 {# Enter ou "Incluir parceiro" cria, Esc ou "Descartar" tira. Fora do form da grade (form não aninha). #}
-<div x-data="linhaNova">
+{# U10d: ?novo=1 (o "+ Novo projeto" da Lista vazia) chega com a linha já aberta (data-abrir-ao-carregar). #}
+<div x-data="linhaNova"{% if request.GET.novo %} data-abrir-ao-carregar{% endif %}>
   <div data-linhas></div>
   <template data-molde><form method="post" action="{% url 'cortes_novo_parceiro' ano.ano %}" class="acoes linha-nova-form">{% csrf_token %}
     <label class="sr-only" for="novo-parceiro">Nome do parceiro novo</label>
