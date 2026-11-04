@@ -16,7 +16,9 @@ descritores reordenam (componente `ordenavel`: alça que arrasta e anda com ↑/
     </a>
   </li>
   {% empty %}
-  <li class="mudo matriz-nada">{% if q %}Nenhum descritor com “{{ q }}” no código ou no texto.{% else %}Nenhum descritor nesta etapa × componente.{% endif %}</li>
+  {% if q %}<li class="matriz-nada">{% url 'ui_matriz_mec' mec.pk as u %}{% with titulo="Nenhum descritor com “"|add:q|add:"”" %}
+    {% include "ui/_componentes/vazio.html" with texto="A busca olha o código (D01) e o texto do descritor. Tente outra palavra." url=u rotulo="Limpar busca" %}
+  {% endwith %}</li>{% endif %}{# sem busca, o vazio que ensina é o do painel (matriz_painel.html) #}
   {% endfor %}
   </ol>
 </div>

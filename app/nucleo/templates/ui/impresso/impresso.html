@@ -18,8 +18,11 @@ Lista + detalhe: a lista é só links (?revista=pk); o HTMX troca o #detalhe e p
 
 
 {% if not itens %}
-{% url 'cortes' ano.ano as u %}
+{% if perms.nucleo.change_corte %}{% url 'cortes' ano.ano as u %}
 {% include "ui/_componentes/vazio.html" with titulo="Nenhuma revista ativa neste ano" texto="As revistas nascem dos cortes de cada parceiro. Lance os cortes do ano para criá-las." url=u rotulo="Abrir cortes" %}
+{% else %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhuma revista ativa neste ano" texto="As revistas nascem quando a equipe pedagógica lança os cortes de cada parceiro. Elas aparecem aqui quando ficarem prontas." %}
+{% endif %}
 {% else %}
 <p class="impresso-resumo" role="status">
   <span class="badge {% if para_marcar %}badge-alerta{% else %}badge-contorno{% endif %}">{{ para_marcar }} para atualizar</span>

@@ -141,11 +141,14 @@ document.addEventListener("alpine:init", () => {
 
       let r;
       let corpo = {};
+      c.setAttribute("aria-busy", "true"); // U10b: carregando (cursor de espera; a área de soltar também)
       try {
         r = await fetch(alvo.dataset.url, { method: "POST", body: d, credentials: "same-origin", headers: { Accept: "application/json" } });
         corpo = await r.json().catch(() => ({}));
       } catch {
         return this.falhou(c, "Não salvo: sem conexão");
+      } finally {
+        c.removeAttribute("aria-busy");
       }
       if (r.ok && corpo.ok) return this.salvou(c, atual, corpo);
       if (r.ok && corpo.impacto) return this.pedirConfirmacao(c, corpo.impacto);
@@ -345,11 +348,14 @@ document.addEventListener("alpine:init", () => {
       if (confirmar) d.append("confirmar_impacto", "on");
       let r;
       let corpo = {};
+      this.$root.setAttribute("aria-busy", "true"); // U10b: a lista em envio
       try {
         r = await fetch(this.$root.dataset.ordemUrl, { method: "POST", body: d, credentials: "same-origin", headers: { Accept: "application/json" } });
         corpo = await r.json().catch(() => ({}));
       } catch {
         return this.falhou("Não salvo: sem conexão");
+      } finally {
+        this.$root.removeAttribute("aria-busy");
       }
       if (r.ok && corpo.ok) {
         this.gravada = ids;

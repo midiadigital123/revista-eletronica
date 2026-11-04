@@ -138,4 +138,4 @@ class ListaUiTest(Base):
     def test_ano_sem_projetos(self):
         Ano.objects.create(ano=2027)
         resp = self.client.get(reverse("ui_projeto_lista", args=[2027]))
-        self.assertContains(resp, "Nenhum projeto neste ano")
+        self.assertContains(resp, "Nenhum projeto em 2027")

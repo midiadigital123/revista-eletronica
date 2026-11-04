@@ -27,7 +27,11 @@ U5: o nome do parceiro também (nomeInline: o data-url dele troca a rota para co
         </td></tr>
         {% endif %}
       {% empty %}
-        <tr><td colspan="{{ colunas|length|add:1 }}" class="mudo">Nenhum parceiro cadastrado.{% if perms.nucleo.add_parceiro %} Adicione o primeiro abaixo.{% endif %}</td></tr>
+        <tr><td colspan="{{ colunas|length|add:1 }}">{% if perms.nucleo.add_parceiro %}
+          {% include "ui/_componentes/vazio.html" with titulo="Nenhum parceiro cadastrado" texto="Cada parceiro é uma linha da grade e vira um projeto do ano. Use o botão de adicionar parceiro, logo abaixo da grade." %}
+        {% else %}
+          {% include "ui/_componentes/vazio.html" with titulo="Nenhum parceiro cadastrado" texto="Cada parceiro é uma linha da grade e vira um projeto do ano. Quem cadastra é a equipe pedagógica." %}
+        {% endif %}</td></tr>
       {% endfor %}
       </tbody>
     </table>
