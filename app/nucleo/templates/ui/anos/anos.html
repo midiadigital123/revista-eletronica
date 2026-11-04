@@ -1,5 +1,6 @@
 {% extends "ui/base.html" %}
-{% comment %}Anos (S3 de D-190). View em nucleo/urls/ui_anos.py; regra em nucleo/servicos/abrir_ano.py.{% endcomment %}
+{% comment %}Anos (S3 de D-190). View em nucleo/urls/ui_anos.py; regra em nucleo/servicos/abrir_ano.py.
+"Excluir ano" (só `delete_ano`, o Admin, D-206) leva ao `ui_excluir`, que lista o que sai junto.{% endcomment %}
 {% block titulo %}Anos{% endblock %}
 
 {% block conteudo %}
@@ -15,10 +16,11 @@
 {% else %}
 <div class="tabela-caixa">
   <table class="tabela">
-    <thead><tr><th scope="col">Ano</th><th scope="col">Abrir</th><th scope="col">Cadastros</th></tr></thead>
+    <thead><tr><th scope="col">Ano</th><th scope="col">Abrir</th><th scope="col">Cadastros</th>{% if perms.nucleo.delete_ano %}<th scope="col" class="linha-nova-acoes"><span class="sr-only">Excluir</span></th>{% endif %}</tr></thead>
     <tbody>
     {% for a in anos %}
-      <tr><th scope="row">{{ a.ano }}</th><td><a class="link" href="{% url 'painel' a.ano %}">Painel de {{ a.ano }}</a></td><td><a class="link" href="{% url 'ui_ano' a.ano %}">Etapas e componentes de {{ a.ano }}</a></td></tr>
+      <tr><th scope="row">{{ a.ano }}</th><td><a class="link" href="{% url 'painel' a.ano %}">Painel de {{ a.ano }}</a></td><td><a class="link" href="{% url 'ui_ano' a.ano %}">Etapas e componentes de {{ a.ano }}</a></td>{% if perms.nucleo.delete_ano %}
+        <td class="linha-nova-acoes"><a class="btn-icone" href="{% url 'ui_excluir' 'ano' a.ano %}?voltar={{ request.path|urlencode }}" aria-label="Excluir ano {{ a.ano }}" data-dica="Excluir ano"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></a></td>{% endif %}</tr>
     {% endfor %}
     </tbody>
   </table>

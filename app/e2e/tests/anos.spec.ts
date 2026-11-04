@@ -1,6 +1,8 @@
 // Página do ano (S4 de D-190): /ui/anos/<ano>/ com etapas e componentes.
 // Mesmo preparo de impresso.spec.ts (E2E_ADMIN_* e, para o 2º teste, E2E_IMPRESSO_*).
-// Grava de verdade: o componente criado fica no banco (não há excluir na tela); rode só contra banco de dev.
+// Grava de verdade, mas deixa o banco como achou: o componente criado aqui sai pelo "Excluir" da linha, e o ano
+// aberto no último teste (o próximo, 2027) é apagado nele mesmo (E1 de D-205/D-206). Nunca apaga 2025 nem 2026.
+// Rode só contra um banco descartável.
 import { expect, test, type Page } from "@playwright/test";
 import { alpinePronto, entrar } from "./helpers";
 
@@ -38,6 +40,27 @@ test("adiciona um componente na página do ano", async ({ page }) => {
   await expect(page.locator("[data-status-salvo]").getByText(/Salvo às/)).toBeVisible();
   await page.reload();
   await expect(page.getByLabel(`Nome (${codigo})`)).toHaveValue(`Componente E2E ${codigo} renomeado`);
+  // E1 de D-205: o "Excluir" da linha é link para a página de excluir; sem uso, sai digitando o código.
+  await page.getByRole("link", { name: `Excluir componente ${codigo}` }).click();
+  await expect(page.getByRole("heading", { level: 1, name: `Excluir o componente ${codigo} de ${ano}` })).toBeVisible();
+  await expect(page.getByText("Nada usa isto.")).toBeVisible();
+  const excluir = page.getByRole("button", { name: "Excluir", exact: true });
+  await expect(excluir).toBeDisabled();
+  await page.getByLabel("Para confirmar, digite").fill(codigo);
+  await excluir.click();
+  await expect(page).toHaveURL(new RegExp(`/ui/anos/${ano}/$`));
+  await expect(page.getByText(`Exclusão feita: o componente ${codigo} de ${ano}.`)).toBeVisible();
+  await expect(page.getByLabel(`Código (${codigo})`)).toHaveCount(0);
+});
+
+test("etapa em uso mostra o que impede e volta para o ano", async ({ page }) => {
+  await entrar(page, "/ui/anos/");
+  const ano = await abrirMaiorAno(page);
+  await page.getByRole("link", { name: "Excluir etapa 5EF" }).click(); // o demo tem cortes e matriz em 5EF
+  await expect(page.getByText("Não dá para excluir: isto está em uso.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Excluir", exact: true })).toHaveCount(0);
+  await page.getByRole("link", { name: "Voltar sem excluir" }).first().click();
+  await expect(page).toHaveURL(new RegExp(`/ui/anos/${ano}/$`));
 });
 
 test("impresso não vê o botão de salvar", async ({ browser }) => {
@@ -48,12 +71,15 @@ test("impresso não vê o botão de salvar", async ({ browser }) => {
   await page.fill("#id_username", imp!);
   await page.fill("#id_password", senha!);
   await page.click("input[type=submit]");
+  await expect(page.getByRole("rowheader", { name: "2026", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: /^Excluir ano/ })).toHaveCount(0); // E1: só o Admin (D-206)
   const ano = await abrirMaiorAno(page);
 
   await expect(page.getByRole("heading", { name: "Componentes" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Adicionar componente" })).toHaveCount(0);
   await expect(page.getByLabel("Código (linha nova)")).toHaveCount(0);
   await expect(page.getByText(`Ano ${ano}`).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: /^Excluir/ })).toHaveCount(0); // E1: o Impresso nunca exclui
 });
 
 test("salva o Padrão 5 com o mesmo nome", async ({ page }) => {
@@ -85,4 +111,27 @@ test("impresso não vê o input de cor do Padrão 1", async ({ browser }) => {
 
   await expect(page.getByRole("heading", { name: "Padrões" })).toBeVisible();
   await expect(page.getByLabel("Cor do Padrão 1", { exact: true })).toHaveCount(0);
+});
+
+test("Admin apaga pelo link \"Excluir ano\" o ano que o próprio teste abriu", async ({ page }) => {
+  await entrar(page, "/ui/anos/");
+  const anos = (await page.locator("tbody th[scope=row]").allTextContents()).map(Number);
+  const novo = Math.max(...anos) + 1;
+  expect([2025, 2026]).not.toContain(novo);
+  await page.getByLabel("Ano novo").fill(String(novo));
+  await page.getByRole("button", { name: "Abrir ano" }).click();
+  await expect(page.getByText(`Ano ${novo} aberto a partir de`)).toBeVisible();
+
+  await page.getByRole("link", { name: `Excluir ano ${novo}` }).click();
+  await expect(page).toHaveURL(new RegExp(`/ui/excluir/ano/${novo}/\\?voltar=/ui/anos/$`));
+  await expect(page.getByRole("heading", { level: 1, name: `Apagar o ano ${novo}` })).toBeVisible();
+  const apagar = page.getByRole("button", { name: `Apagar o ano ${novo}` });
+  await expect(apagar).toBeDisabled();
+  await page.getByLabel("Para confirmar, digite").fill(String(novo));
+  await apagar.click();
+
+  await expect(page).toHaveURL(/\/ui\/anos\/$/);
+  await expect(page.getByText(`Ano ${novo} apagado, com tudo o que era dele.`)).toBeVisible();
+  await expect(page.getByRole("rowheader", { name: String(novo), exact: true })).toHaveCount(0);
+  await expect(page.getByRole("rowheader", { name: "2026", exact: true })).toBeVisible();
 });

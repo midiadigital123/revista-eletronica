@@ -45,6 +45,20 @@ class AnosUiTest(Base):
         self.client.force_login(usuario("nada"))  # sem view_ano
         self.assertEqual(self.client.get(self.url).status_code, 403)
 
+    def test_so_admin_ve_excluir_ano(self):
+        """E1 de D-205: "Excluir ano" leva à página do `ui_excluir`, só com `delete_ano` (D-206)."""
+        link = f'href="{reverse("ui_excluir", args=["ano", 2026])}?voltar={self.url}"'
+        self.client.force_login(usuario("adm", "Admin"))
+        resp = self.client.get(self.url)
+        self.assertContains(resp, link)
+        self.assertContains(resp, 'aria-label="Excluir ano 2026"')
+        for nome, papel in (("ped", "Pedagógica"), ("md", "Mídias Digitais"), ("imp", "Impresso")):
+            with self.subTest(papel):
+                self.client.force_login(usuario(nome, papel))
+                resp = self.client.get(self.url)
+                self.assertNotContains(resp, reverse("ui_excluir", args=["ano", 2026]))
+                self.assertNotContains(resp, "Excluir ano")
+
 
 def dados_da_tabela(resp, tabela, **mudar):
     """POST equivalente à tabela `tabela` renderizada ("etapas" ou "componentes"), com `mudar` por cima."""
@@ -130,6 +144,26 @@ class CadastrosDoAnoTest(Base):
 
     def test_ano_inexistente(self):
         self.assertEqual(self.client.get(reverse("ui_ano", args=[1999])).status_code, 404)
+
+    def test_excluir_etapa_e_componente_por_perfil(self):
+        """E1 de D-205: cada linha gravada tem o link "Excluir" para o `ui_excluir` (link, não form: a linha
+        está dentro do form da tabela). Pedagógica, Mídias e Admin veem; o Impresso não; a linha nova não tem."""
+        voltar = f"?voltar={self.url}"
+        etapa = f'href="{reverse("ui_excluir", args=["etapa", self.e["9EF"].pk])}{voltar}"'
+        componente = f'href="{reverse("ui_excluir", args=["componente", self.c["LP"].pk])}{voltar}"'
+        for nome, papel in (("ped2", "Pedagógica"), ("md", "Mídias Digitais"), ("adm", "Admin")):
+            with self.subTest(papel):
+                self.client.force_login(usuario(nome, papel))
+                resp = self.client.get(self.url)
+                self.assertContains(resp, etapa)
+                self.assertContains(resp, componente)
+                self.assertContains(resp, 'aria-label="Excluir etapa 9EF"')
+                self.assertContains(resp, 'aria-label="Excluir componente LP"')
+                self.assertContains(resp, 'data-dica="Excluir"', count=len(self.e) + len(self.c))  # nada no molde
+        self.client.force_login(usuario("imp", "Impresso"))
+        resp = self.client.get(self.url)
+        self.assertNotContains(resp, "/ui/excluir/")
+        self.assertNotContains(resp, "Excluir")
 
 
 class PaletaDoAnoTest(BaseProjeto):

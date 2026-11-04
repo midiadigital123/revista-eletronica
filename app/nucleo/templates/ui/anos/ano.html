@@ -23,7 +23,7 @@ A ordem das etapas é a escolar (`ordem_escolar`). Sem `pode.<tabela>`, só text
   {% for e in etapas.non_form_errors %}<p class="erro">{{ e }}</p>{% endfor %}
   <div class="tabela-caixa">
     <table class="tabela">
-      <thead><tr><th scope="col">Código</th><th scope="col">Escala máxima</th>{% if pode.etapas %}<th scope="col"><span class="sr-only">Linha nova</span></th>{% endif %}</tr></thead>
+      <thead><tr><th scope="col">Código</th><th scope="col">Escala máxima</th>{% if pode.etapas %}<th scope="col"><span class="sr-only">Ações da linha</span></th>{% endif %}</tr></thead>
       <tbody data-linhas>
       {% for f in etapas %}
         {% if pode.etapas %}{% include "ui/parciais/ano_linha.html" with f=f tabela="etapas" %}
@@ -46,7 +46,7 @@ A ordem das etapas é a escolar (`ordem_escolar`). Sem `pode.<tabela>`, só text
   {% for e in componentes.non_form_errors %}<p class="erro">{{ e }}</p>{% endfor %}
   <div class="tabela-caixa">
     <table class="tabela">
-      <thead><tr><th scope="col">Código</th><th scope="col">Nome</th>{% if pode.componentes %}<th scope="col"><span class="sr-only">Linha nova</span></th>{% endif %}</tr></thead>
+      <thead><tr><th scope="col">Código</th><th scope="col">Nome</th>{% if pode.componentes %}<th scope="col"><span class="sr-only">Ações da linha</span></th>{% endif %}</tr></thead>
       <tbody data-linhas>
       {% for f in componentes %}
         {% if pode.componentes %}{% include "ui/parciais/ano_linha.html" with f=f tabela="componentes" %}
