@@ -75,7 +75,7 @@ Pré-marcadas: só as prontas (sem pendência e ainda não validadas). Com pend�
 1440 px:
 
 ```
-┌ Revista Eletrônica   Painel* Cortes Variáveis Matrizes Templates Revistas Impresso     Ana [Admin] [Sair] ┐
+┌ Revista Eletrônica  [2026 ▾]  Painel* Projetos Matrizes Templates Impresso             Ana [Admin] [Sair] ┐
 │                                                                                                         │
 │ Validar revistas                                                               [Voltar ao painel]       │
 │ 2026: 3 revista(s). Cada uma é validada na versão mostrada aqui; se mudar antes do envio, é recusada.   │
@@ -112,6 +112,6 @@ Componentes do design system: cabeçalho de página, card, badge (`badge-secunda
 
 ## Referências técnicas
 
-- Regra: `app/nucleo/urls/painel.py` (`itens_validar`, `validar_pares`, extraídas da view do admin `validar_lote`), `servicos/validacao.py`, `admin/lote.py` (`aplicar`, `escrever_travado`, `quem_edita`).
+- Regra: `app/nucleo/urls/painel.py` (`itens_validar`, `validar_pares`, extraídas da view do admin `validar_lote`), `servicos/validacao.py`, `nucleo/lotes.py` (`aplicar`, `escrever_travado`, `quem_edita`; o `admin/lote.py` reexporta).
 - Tela B: `app/nucleo/urls/ui_validar.py`, `templates/ui/validar/pagina.html`, `templates/ui/parciais/validar_cartao.html`, `static/ui/telas/validar.css`, `tests/test_ui_validar.py`.
 - Decisões: D-074, D-078, D-087, D-089, D-094, D-120, D-121, D-174, D-183, D-186.

@@ -1,159 +1,161 @@
-# Ficha: Projeto (T15 lista, T16 projeto)
+# Ficha: Projetos (T15 lista, T18/T19 ações em massa) e Projeto (T16)
+
+Endereços: `/ui/projeto/ano/<ano>/` (rota `ui_projeto_lista`, hub Projetos, aba Lista) e `/ui/projeto/<pk>/?aba=…` (rota `ui_projeto`). As outras abas do hub, Cortes e Variáveis, têm fichas próprias: [`cortes.md`](cortes.md) e [`variaveis.md`](variaveis.md).
 
 ## Objetivo
 
-Deixar cada projeto do ano pronto para gerar as revistas: o nome que sai na capa, as 24 variáveis que os textos usam, o passo da escala quando o projeto foge da matriz e as cores dos padrões quando o projeto pinta diferente do ano. Tudo numa página só, que se salva de uma vez.
+Deixar cada projeto do ano pronto para gerar as revistas: o nome que sai na capa, as 24 variáveis que os textos usam, a matriz, os cortes do parceiro, o passo da escala quando o projeto foge da matriz e as cores dos padrões quando o projeto pinta diferente do ano. A Lista mostra todos os projetos com as revistas e faz as atribuições em massa (matriz, template). Na página do projeto, cada campo salva sozinho.
 
 ## Quem usa
 
 | Perfil | O que faz |
 |---|---|
-| Pedagógica, Mídias Digitais, Admin | Veem e editam tudo: nome, variáveis, passo e cores (incluindo remover uma sobrescrita). |
-| Impresso | Vê tudo, não altera. |
-| Sem perfil | Não entra (recusado). |
+| Pedagógica, Mídias Digitais, Admin | Veem e editam tudo: nome, variáveis, matriz, cortes, passo e cores (incluindo voltar ao herdado). Atribuem matriz e template em massa na Lista. |
+| Impresso | Vê tudo, não altera: sem caixas de marcar, sem barra de ações, campos desligados. POST: 403. |
+| Sem perfil | Não entra (403). |
 
 ## Jornada
 
-- **Antes:** os cortes do parceiro são lançados (o projeto nasce sozinho) e a matriz do parceiro é escolhida em lote. A paleta e os nomes dos padrões do ano já estão definidos.
-- **Aqui:** abrir a lista de projetos do ano, entrar num projeto, preencher o que falta, salvar.
-- **Depois:** a planilha de variáveis do ano (mesmos campos, vários projetos lado a lado) e as revistas do projeto, que passam a mostrar os valores gravados.
+- **Antes:** os cortes do parceiro são lançados na aba Cortes (o projeto nasce sozinho). A paleta e os nomes dos padrões do ano já estão definidos ("Configurar <ano>", ficha [`anos.md`](anos.md)).
+- **Aqui:** na Lista, marcar parceiros e "Atribuir matriz…" / "Atribuir template…"; abrir um projeto e preencher o que falta, aba por aba.
+- **Depois:** a página da revista (templates, arquivos, textos, "Validar revista") e o Painel.
 
-## Lista de projetos do ano (T15)
+## Hub Projetos, aba Lista (T15; substitui a lista de Revistas e os Lotes)
 
-- **Mostra:** um projeto por linha, com nome (link para o projeto), parceiro, matriz (ou "sem matriz") e situação (Ativo, ou Arquivado em dd/mm/aaaa). Ativos primeiro, por parceiro.
-- **Ações:** trocar o ano; abrir a planilha de variáveis do ano; "Escolher matriz" (só quem pode escolher matriz).
-- **Vazio:** "Nenhum projeto neste ano. O projeto do parceiro nasce quando os cortes dele são lançados." com o botão "Lançar cortes".
-- Não há incluir nem excluir: projeto nasce e é arquivado pelos cortes.
+- **Cabeçalho:** "Projetos" e as abas Lista · Cortes · Variáveis (a aba é a URL; o seletor de ano mantém a aba).
+- **Mostra:** um grupo por projeto (ativos primeiro, por parceiro), com o nome do projeto (link), o parceiro em cinza e a matriz (pílula azul, ou "sem matriz" em âmbar). Selos: "Arquivado em dd/mm/aaaa", "Em edição por <nome>: será pulado", "Sem projeto ativo". Abaixo, uma linha por revista: o componente (LP/MT), o balão de pendências ("N pendências" ou ✓), o link para a revista, a Situação ("Em preparo", "Pronta para validar", "Validada", "Impressa" ou "Arquivada") e os botões-ícone "Abrir preview" (nova aba) e "Baixar zip". Parceiro do ano sem projeto aparece com "sem projeto".
+- **Ações em massa** (só quem pode): caixa de marcar por parceiro e "Marcar todos os parceiros" no cabeçalho. A barra fixa embaixo mostra "N selecionado(s)", "Atribuir matriz…" e "Atribuir template…"; sem nada marcado, os dois ficam desligados ("Marque ao menos um parceiro").
+  - **Atribuir matriz…** abre um modal com o select "Matriz" (só as do ano).
+  - **Atribuir template…** abre um modal com "Componente" e "Template F1" / "Template F2" ("Não mudar" deixa como está). Fascículo com texto próprio na revista é pulado e listado.
+  - Projeto em edição por outra sessão é pulado e listado ("Pulados: …"). Se alguma revista validada mudar, o modal de impacto lista as revistas antes de gravar. Ao gravar, volta à Lista com "Matriz <nome> escolhida para N parceiro(s)." / "Template escolhido em N revista(s)."
+- **Vazio:** "Nenhum projeto neste ano" · "O projeto do parceiro nasce quando os cortes dele são lançados." · botão "Lançar cortes". Sem ano aberto: "Nenhum ano aberto" com "Abrir anos" (só com `abrir_ano`).
+- Não há incluir nem excluir: o projeto nasce e é arquivado pelos cortes.
 
 ## Projeto (T16)
 
 ### Dados mostrados
 
-- Cabeçalho: nome do projeto, parceiro, ano, matriz; selo "Arquivado" quando for o caso.
-- Índice com âncoras: Nome, Variáveis, Passo, Cores.
-- **Nome:** campo único.
-- **Variáveis:** as 24 variáveis manuais, separadas pelos grupos Coleção, Adjetivo pátrio, Parceiro, Programa, Regional e secretaria, Padrões de desempenho. Cada campo tem o rótulo, a descrição e o marcador que aparece nos textos (`{{issn}}`). As 3 automáticas (nome do parceiro, nome do projeto, ano) não aparecem.
-- Nos nomes dos padrões (Padrão 1 a 5) vazios, a dica do campo diz o nome do ano que vale: "padrão do ano: Abaixo do básico".
-- **Passo:** a referência do passo da matriz por etapa e componente ("5EF LP: 25"), e a tabela das sobrescritas do projeto (etapa, componente, passo).
-- **Cores:** a faixa dos padrões como sai na revista (cor e nome efetivos, com "do projeto" ou "do ano"), e a tabela das sobrescritas (padrão, cor).
+- Trilha "Projetos de <ano>" acima do título.
+- Cabeçalho: nome do projeto e a lista Parceiro, Ano, Matriz ("ainda não escolhida"), Revistas (LP, MT), Situação (Ativo ou o selo "Arquivado"). O status do salvamento fica à direita, para quem grava.
+- Abas (a aba é a URL, `?aba=`; aba desconhecida vira Dados):
+  - **Dados:** "Nome do projeto" (aparece na capa e em `{{nome_projeto}}`) e as 24 variáveis manuais, nos grupos Coleção, Adjetivo pátrio, Parceiro, Programa, Regional e secretaria, Padrões de desempenho. Cada campo tem o rótulo, a descrição e o marcador (`{{issn}}`). As 3 automáticas (nome do parceiro, nome do projeto, ano) não aparecem. Link "Ver a planilha de variáveis de <ano>".
+  - **Matriz:** select "Matriz de <parceiro> em <ano>" com as matrizes do ano, a dica para usar "Atribuir matriz…" na Lista e o passo de cada etapa × componente na matriz ("5EF LP: 25").
+  - **Cortes:** a linha deste parceiro da grade de Cortes, um bloco por etapa ("5EF até 500") com os componentes lado a lado, e o link "Ver a grade de cortes de <ano>".
+  - **Passos e cores:** as amostras dos padrões (cor e nome efetivos, selo "do ano" ou "sobrescrita") e, por etapa, uma célula por componente com o passo ("Matriz: 25", "fora da matriz" ou "sem linhas vazias") e o selo "da matriz" ou "sobrescrito". Link "Editar as cores do ano" (com `change_corpadrao`). O nome do padrão se troca nas variáveis pd01 a pd05, na aba Dados.
+  - **Revistas:** um cartão por componente com Template F1 e F2 (ou "sem template"), SVG do F2 e Capa (✓ ou falta), o selo "Validada", "Sem “Validado”" ou "Arquivada", e os botões "Abrir revista" e "Preview".
 
-### Dados gravados
+### Dados gravados (um campo por vez)
 
 - Nome do projeto e as 24 variáveis (até 200 caracteres cada).
-- Sobrescritas de passo por etapa × componente: a linha existir = sobrescrevi; passo vazio = sem linhas vazias, de propósito; remover a linha = voltar ao passo da matriz.
-- Sobrescritas de cor por padrão (até 5, uma por padrão): remover = voltar à cor do ano.
-- Tudo junto, numa transação: um erro em qualquer parte, nada grava.
+- Matriz do parceiro no ano: pelo mesmo serviço da ação em massa (`servicos.matriz.atribuir_matriz`).
+- Cortes: pela rota da grade (`cortes_celula`), com o mesmo conflito otimista.
+- Passo por etapa × componente: um número sobrescreve; vazio (ou "Voltar ao passo da matriz") volta ao da matriz; "Sem linhas vazias" grava a linha com passo nulo, de propósito.
+- Cor por padrão: a cor escolhida sobrescreve a do ano; escolher a própria cor do ano (ou "Voltar à cor do ano") apaga a sobrescrita. Só a caixa diferente (`#f72628` × `#F72628`) não é mudança.
+- Qualquer gravação que mude o texto de uma revista validada abre o modal de impacto antes de gravar.
 
 ### Ações
 
 | Ação | Quem | Resultado |
 |---|---|---|
-| Salvar projeto | quem edita, com o bloqueio | grava tudo e volta à página com a mensagem de sucesso |
-| Sobrescrever um passo | quem edita | acrescenta uma linha vazia na tabela de passo (sem recarregar) |
-| Sobrescrever uma cor | quem edita | acrescenta uma linha com o primeiro padrão sem cor já escolhido e a cor do ano dele; com 5 linhas o botão desliga |
-| Remover / Descartar | quem edita | marca a linha para sair ao salvar (Remover = sobrescrita gravada; Descartar = linha nova) |
-| Planilha de variáveis do ano / Projetos do ano | todos | navegação |
+| Sair de um campo alterado (Dados, Cortes, passo) | quem edita, com o bloqueio | grava só o campo; o status mostra "Salvo às HH:MM" |
+| Escolher a matriz / uma cor | quem edita, com o bloqueio | grava ao escolher |
+| "Voltar ao passo da matriz" / "Voltar à cor do ano" | quem edita | apaga a sobrescrita daquela célula ou padrão |
+| "Sem linhas vazias" | quem edita | marca a célula como sem linhas vazias (desliga o número) |
+| Abrir revista / Preview | todos | página da revista / preview em nova aba |
+| Projetos de <ano> / planilha de variáveis / grade de cortes | todos | navegação |
 
 ### Estados
 
-- **Vazio:** sem sobrescrita de passo, a tabela diz "Nenhuma sobrescrita: vale o passo da matriz em todas as etapas e componentes."; sem cor, "Nenhuma sobrescrita: valem as cores do ano." Matriz não escolhida: o cabeçalho diz "matriz ainda não escolhida" e a referência de passo some.
-- **Erro de validação:** mensagem no topo, campo com borda vermelha e o erro embaixo; linha de passo/cor com erro destacada, com a lista dos erros logo abaixo. Nada grava.
+- **Vazio:** sem etapas no ano, a aba Passos e cores mostra "Nenhuma etapa neste ano" e a aba Cortes "Sem etapas ou componentes". Sem revistas: "Nenhuma revista neste projeto" · "As revistas nascem dos cortes do parceiro, uma por componente." Matriz não escolhida: o cabeçalho diz "ainda não escolhida".
+- **Erro (422):** o erro aparece embaixo do campo e o status diz "Não salvo: corrija o campo marcado". Nada grava.
+- **Impacto:** o modal "Salvar “<campo>” tira o “Validado” de N revista(s)" (ou "Trocar a matriz…", "Salvar o passo…", "Salvar a cor…") lista as revistas. Cancelar ou Esc volta o valor gravado e o foco.
 - **Só leitura (perfil):** aviso no topo, campos desligados, sem botões de ação.
 - **Só leitura (outra pessoa editando):** aviso de quem está editando e até quando; campos desligados.
-- **Arquivado:** aviso no topo, selo "Arquivado", campos desligados; não trava ninguém.
-- **Perdeu o bloqueio durante a edição:** o formulário vira só leitura na hora, com aviso para copiar o que precisar e recarregar.
-- **Sucesso:** volta à página com a mensagem e a faixa de cores já com o novo estado.
+- **Arquivado:** aviso no topo, selo "Arquivado", campos desligados; não trava ninguém. POST: 403.
+- **Perdeu o bloqueio durante a edição (409):** o formulário vira só leitura na hora, com aviso para copiar o que precisar e recarregar.
+- **Sem conexão:** "Não salvo: sem conexão · Tentar de novo"; só aí (ou com envio pendente) o navegador avisa ao sair.
 
 ### Mensagens exatas
 
-- Sucesso: "Projeto {nome} salvo."
-- Erro: "Nada foi gravado: corrija os erros marcados."
 - Sem permissão: "Só leitura: seu perfil vê o projeto, mas não altera. Para editar, peça a permissão de projeto a um administrador."
 - Arquivado: "Só leitura: este projeto foi arquivado e as revistas dele estão congeladas. Para mudar algo, abra o projeto ativo do parceiro."
 - Outra pessoa editando: "Somente leitura: {quem} está editando (bloqueio até {hh:mm:ss}, renovado enquanto a página estiver aberta). Recarregue para tentar editar."
 - Bloqueio perdido ao salvar: "Não salvo: você perdeu o bloqueio de edição (outra pessoa ou aba abriu esta página). Recarregue e refaça a alteração."
 - Bloqueio perdido durante a edição: "Você perdeu o bloqueio de edição: o formulário ficou somente leitura. Copie o que precisar e recarregue a página."
-- Texto longo: "Certifique-se de que o valor tenha no máximo 200 caracteres (ele possui N)." (do Django, embaixo do campo)
+- Matriz de outro ano: "Escolha uma matriz de <ano>."
+- Cor inválida: "Use uma cor no formato #RRGGBB."
+- Texto longo: "Certifique-se de que o valor tenha no máximo 200 caracteres (ele possui N)." (do Django)
+- Lista, ações em massa: "Marque ao menos um parceiro." · "Escolha a matriz." · "Escolha o template do F1, do F2 ou dos dois." · "Nada foi gravado: Escolha o componente." · "Pulados: <projeto> (projeto em edição por <nome>)."
 
 ### Permissões
 
 - Login obrigatório: anônimo vai ao login do admin.
-- Ver: permissão de ver projeto. Sem ela, recusado.
-- Editar: permissões de projeto, passo e cor (as que o perfil "editar projeto" dá juntas). Sem elas, só leitura e envio recusado.
+- Ver: `view_projeto` ou `change_projeto`. Sem elas, 403.
+- Editar a ficha: `change_projeto` e as permissões de passo e cor (`add/change/delete` de `projetopasso` e `projetocor`, que o perfil "editar projeto" dá juntas). Sem elas, só leitura e envio 403.
+- Aba Matriz: `change_parceiroano`. Aba Cortes: as permissões de cortes (ficha [`cortes.md`](cortes.md)).
+- Ações em massa: matriz com `change_parceiroano`, template com `change_revistafasciculo`. Sem elas, a barra não aparece e o POST dá 403.
 - Arquivado: ninguém altera, nem com permissão.
-- Bloqueio: um editor por projeto; quem abre depois vê só leitura.
+- Bloqueio: um editor por projeto; quem abre depois vê só leitura. A Lista não trava nada; a ação em massa trava cada projeto só durante a escrita.
 
-### Interações com HTMX
+### Interações (Alpine e HTMX)
 
-- "Sobrescrever um passo" e "Sobrescrever uma cor" pedem ao servidor uma linha nova do formulário e a acrescentam no fim da tabela; a mesma resposta atualiza o contador de linhas do formulário e, ao chegar a 5 cores, desliga o botão. Sem JavaScript, o resto da página funciona (só não se acrescentam linhas).
-- O pedido leva a sessão do bloqueio; sem o bloqueio, é recusado e aparece o aviso de erro padrão.
-- Salvar é um envio normal do formulário (recarrega a página).
+- A ficha é um `<form x-data="campoAuto" data-url="…/campo/">` (rota `ui_projeto_campo`, `POST /ui/projeto/<pk>/campo/`) com a sessão de bloqueio. É a mesma rota da planilha de Variáveis (um só ponto de escrita). Passo vai como `passo-<etapa>-<componente>` ou `sem-<etapa>-<componente>`; cor como `cor-<padrão>`. Protocolo em [`design-system.md`](../design-system.md) §5.
+- Matriz: form próprio (`campoAuto`, rota `ui_projeto_matriz`) com a mesma sessão de bloqueio.
+- Cortes: form próprio (`campoAuto`, rota `cortes_celula`).
+- Passo e cor: componente `sobrescrita` (`static/ui/componentes/sobrescrita.js`) liga o selo e o "Voltar ao…".
+- Lista: os modais ficam dentro do form `massa`; o botão de cada um envia para a sua ação (`formaction`, `POST /ui/projeto/ano/<ano>/massa/<matriz|template>/`). `lotes.js` cuida de marcar todos, do contador e de ligar os botões.
 
 ### Wireframe (1440 px)
 
 ```
-┌ Revista Eletrônica   Painel Cortes [Variáveis] Matrizes Templates Revistas Impresso     Ana  Admin  Sair ┐
-│                                                                                                     │
-│ Projeto GO                                         [Planilha de variáveis de 2026] [Projetos de 2026]│
-│ GO em 2026, matriz Comunitária.                                                                     │
-│ Nome  Variáveis  Passo  Cores                                                                       │
-│ ┌ Nome ───────────────────────────────────────────────────────────────────────────────────────────┐ │
-│ │ Nome do projeto [Projeto GO                         ]  Aparece na capa e em {{nome_projeto}}.   │ │
-│ └─────────────────────────────────────────────────────────────────────────────────────────────────┘ │
-│ ┌ Variáveis ──────────────────────────────────────────────────────────────────────────────────────┐ │
-│ │ Coleção ─────────────────────────────────────────────────────────────────────────────────────── │ │
-│ │ ISSN [            ]                                                                             │ │
-│ │ Adjetivo pátrio ─────────────────────────────────────────────────────────────────────────────── │ │
-│ │ masc. sing. [mineiro ]   fem. sing. [mineira ]   masc. plural [      ]   fem. plural [      ]   │ │
-│ │ … Parceiro, Programa, Regional e secretaria …                                                  │ │
-│ │ Padrões de desempenho ───────────────────────────────────────────────────────────────────────── │ │
-│ │ Padrão 1 [padrão do ano: Abaixo do básico]  Padrão 2 [ … ]  …                                   │ │
-│ └─────────────────────────────────────────────────────────────────────────────────────────────────┘ │
-│ ┌ Passo por etapa e componente ───────────────────────────────────────────────────────────────────┐ │
-│ │ Na matriz Comunitária: (5EF LP: 25) (5EF MT: 25) (9EF LP: 25) (9EF MT: 25)                      │ │
-│ │ Etapa      Componente    Passo                                                                  │ │
-│ │ [5EF ▾]    [LP ▾]        [   ]                                  [ ] Remover                     │ │
-│ │ [+ Sobrescrever um passo]                                                                       │ │
-│ └─────────────────────────────────────────────────────────────────────────────────────────────────┘ │
-│ ┌ Cores dos padrões ──────────────────────────────────────────────────────────────────────────────┐ │
-│ │ ███████████ ███████████ ███████████ ███████████ ███████████   ← faixa: cor efetiva de cada padrão│ │
-│ │ Padrão 1    Padrão 2    Padrão 3    Padrão 4    Padrão 5                                        │ │
-│ │ Abaixo…     Básico      Adequado    Avançado    …                                               │ │
-│ │ #F72628 do ano  #123456 do projeto …                                                            │ │
-│ │ Padrão   Cor                                                                                    │ │
-│ │ [2  ]    [■]                                                     [ ] Remover                    │ │
-│ │ [+ Sobrescrever uma cor]                                                                        │ │
-│ └─────────────────────────────────────────────────────────────────────────────────────────────────┘ │
-│ ─────────────────────────────────────────────────────────────────────────────────────────────────── │
-│ Salva nome, variáveis, passos e cores juntos.                                     [Salvar projeto]  │ ← fixa no rodapé
-└─────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌ Revista Eletrônica  [2026 ▾]  Painel [Projetos] Matrizes Templates Impresso             Ana  Admin  Sair ┐
+│ Projetos de 2026                                                                                      │
+│ Projeto GO                                                                       ✓ Salvo às 10:15     │
+│ Parceiro GO   Ano 2026   Matriz Comunitária   Revistas LP, MT   Situação Ativo                        │
+│  Dados   Matriz   Cortes   Passos e cores   Revistas                                                  │
+│  ━━━━━                                                                                                │
+│ ┌ Nome ────────────────────────────────────────────────────────────────────────────────────────────┐ │
+│ │ Nome do projeto [Projeto GO                         ]  Aparece na capa e em {{nome_projeto}}.    │ │
+│ └──────────────────────────────────────────────────────────────────────────────────────────────────┘ │
+│ ┌ Variáveis ──────────────────────────────────────── Ver a planilha de variáveis de 2026 ──────────┐ │
+│ │ Coleção ──────────────────────────────────────────────────────────────────────────────────────── │ │
+│ │ ISSN [            ]                                                                              │ │
+│ │ Adjetivo pátrio ──────────────────────────────────────────────────────────────────────────────── │ │
+│ │ masc. sing. [goiano  ]   fem. sing. [goiana  ]   …                                              │ │
+│ │ … Parceiro, Programa, Regional e secretaria, Padrões de desempenho …                            │ │
+│ └──────────────────────────────────────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+Lista:
+│  Lista   Cortes   Variáveis                                                                          │
+│ [■] Projeto / revista                                  Situação               Ações                  │
+│ [✓] Projeto GO  GO  [Comunitária]                      Em edição por Ana: será pulado                │
+│      LP (2) Língua Portuguesa                          Em preparo             ↗  ⤓                   │
+│      MT ✓  Matemática                                  Pronta para validar    ↗  ⤓                   │
+│ ── barra fixa ─────────────────────────────────────────────────────────────────────────────────────── │
+│ 1 selecionado(s)                                         [Atribuir matriz…] [Atribuir template…]     │
 ```
 
-Em 390 px: uma coluna; campos das variáveis um por linha; a faixa vira lista vertical (amostra à esquerda, padrão, nome e cor à direita); a barra de salvar ocupa a largura.
-
-Escolha visual: o resto da página é quieto (cartões do editor, tipografia Inter); a faixa dos padrões é o único elemento de cor, porque mostra exatamente o que a revista vai pintar.
+Em 390 px: uma coluna; abas quebram em linha; a tabela da Lista rola dentro da caixa, com a primeira coluna fixa.
 
 ### Critérios de aceite
 
-1. Quem edita abre o projeto e vê nome, os 6 grupos de variáveis, a referência do passo da matriz, a faixa com as cores do ano e o botão "Salvar projeto"; o projeto fica travado para essa pessoa.
-2. Padrão N vazio mostra "padrão do ano: <nome>" como dica; as variáveis automáticas não aparecem.
-3. Salvar grava nome, variáveis, passo novo (inclusive com passo vazio) e cor nova de uma vez e volta com "Projeto {nome} salvo."; a faixa passa a mostrar a cor do projeto.
-4. Remover uma cor volta à paleta do ano (a linha some do banco).
-5. Nome com mais de 200 caracteres ou passo menor que 1: "Nada foi gravado: corrija os erros marcados.", campos marcados, nada grava.
-6. Impresso vê tudo desligado, sem botões; enviar é recusado. Sem perfil: recusado ao abrir.
-7. Anônimo vai ao login do admin (projeto e lista).
-8. Arquivado: aviso, sem salvar, sem travar; envio recusado mesmo com permissão.
-9. Outra pessoa editando: aviso de quem edita, sem salvar; envio com sessão de outra aba: "Não salvo: você perdeu o bloqueio…" e nada grava.
-10. "Sobrescrever uma cor" traz a linha com o primeiro padrão livre e a cor do ano dele; a 5ª linha desliga o botão; sem o bloqueio o pedido é recusado.
-11. Só etapas e componentes do ano do projeto aparecem nas listas da tabela de passo, pelo código (`5EF`, `LP`), sem o ano.
-12. Lista do ano: projetos com link, "Escolher matriz" só para quem pode; ano vazio mostra o estado vazio; a raiz `/ui/projeto/` abre o ano mais recente.
-13. Cada controle das tabelas de passo e cor tem nome acessível (`aria-label` com o rótulo do campo: Etapa, Componente, Passo, Padrão, Cor).
+1. A Lista mostra um grupo por projeto, com as revistas, a Situação, preview e zip; o Impresso não vê caixas nem barra, e o POST em massa dá 403.
+2. "Atribuir matriz…" com dois parceiros marcados grava os dois e volta com "Matriz <nome> escolhida para 2 parceiro(s)."; projeto em edição é pulado e listado; com revista validada que muda, o modal abre antes.
+3. `/ui/lotes/2026/matriz/`, `/ui/revista/2026/`, `/ui/variaveis/2026/` e `/cortes/2026/` redirecionam (302) para a aba equivalente.
+4. O projeto abre na aba Dados; as cinco abas existem; `?aba=xyz` vira Dados.
+5. Sair de uma variável alterada grava só ela ("Salvo às"); mais de 200 caracteres dá 422 e nada grava.
+6. A aba Matriz grava ao escolher, pelo mesmo serviço da ação em massa; matriz de outro ano dá 422.
+7. Passo: número sobrescreve, vazio volta ao da matriz, "Sem linhas vazias" grava passo nulo. Cor: a cor do ano apaga a sobrescrita.
+8. Impresso vê tudo desligado; enviar é recusado (403). Sem perfil: 403 ao abrir. Anônimo: login do admin.
+9. Arquivado: aviso, sem gravar, sem travar; envio recusado mesmo com permissão.
+10. Outra pessoa editando: aviso de quem edita; envio com a sessão de outra aba dá 409 e o form vira só leitura.
 
 ## Referências técnicas
 
-- Regra: `app/nucleo/projeto.py` (ProjetoForm; PassoForm, PassoFormSet e CorForm só no admin), usada também por `app/nucleo/admin/projeto.py`. Limites e dica do `pdNN` no mesmo módulo (`limitar`, `mostrar_nome_do_ano`), também usados pela aba Variáveis do admin; `EDITAVEIS` em `nucleo/variaveis.py`.
-- Cores e nomes efetivos da faixa: `servicos/resolver.py` (`cores_efetivas`, `valores_das_variaveis`).
-- View: `app/nucleo/urls/ui_projeto.py` (rotas `ui_projeto_inicio`, `ui_projeto_lista`, `ui_projeto`, `ui_projeto_campo`; passo por célula `passo-E-C`/`sem-E-C` e cor por padrão `cor-K` no autosave).
-- Templates: `templates/ui/projeto/{projeto,lista}.html`, `templates/ui/_componentes/selo_sobrescrita.html`; JS `static/ui/componentes/sobrescrita.js`; CSS `static/ui/telas/projeto.css`.
-- Testes: `app/nucleo/tests/test_ui_projeto.py`.
-- Decisões: D-053, D-060, D-081, D-091, D-093, D-100, D-166, D-167, D-172, D-173, D-175, D-183, D-186.
+- Regra: `app/nucleo/projeto.py` (`ProjetoForm`, `MAX_CORES`), usada também por `app/nucleo/admin/projeto.py`; `EDITAVEIS` em `nucleo/variaveis.py`; `servicos/matriz.py` (`atribuir_matriz`); `nucleo/lotes.py` (forms e gravação das ações em massa).
+- Cores e nomes efetivos: `servicos/resolver.py` (`valores_das_variaveis`).
+- View: `app/nucleo/urls/ui_projeto.py` (rotas `ui_projeto_inicio`, `ui_projeto_lista`, `ui_projeto_massa`, `ui_projeto`, `ui_projeto_campo`, `ui_projeto_matriz`; também monta as rotas `cortes` e `ui_variaveis`).
+- Templates: `templates/ui/projeto/{lista,projeto}.html`, `_componentes/projetos_abas.html`, `_componentes/selo_sobrescrita.html`; JS `static/ui/componentes/sobrescrita.js`, `static/ui/telas/lotes.js`; CSS `static/ui/telas/projeto.css`.
+- Testes: `app/nucleo/tests/test_ui_projeto.py`, `test_ui_projeto_abas.py`, `test_ui_projetos.py`; `app/e2e/tests/projeto.spec.ts`.
+- Decisões: D-053, D-060, D-081, D-091, D-093, D-100, D-102, D-121, D-166, D-167, D-172, D-173, D-175, D-183, D-186 e as do plano de UX (D-195 em diante).

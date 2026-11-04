@@ -18,12 +18,12 @@ Mostrar à equipe do impresso, revista por revista, o que mudou no texto desde a
 ## Jornada
 
 - **Antes:** a pedagógica edita a revista e dá o "Validado" (tela da revista ou validação em lote). O painel do ano mostra "falta" na coluna Impresso.
-- **Aqui:** o impresso abre a tela pelo menu "Impresso" (ou pela coluna Impresso do painel), escolhe uma revista "Para atualizar", leva o texto novo ao InDesign e marca.
+- **Aqui:** o impresso abre a tela pelo menu "Impresso" (que só aparece para quem marca; os outros perfis chegam pela coluna Impresso do painel ou pelo link "Tela do impresso" da revista), escolhe uma revista "Para atualizar", leva o texto novo ao InDesign e marca.
 - **Depois:** a revista fica "Em dia"; o painel mostra ✓ na coluna Impresso até a próxima mudança de texto.
 
 ## Dados mostrados
 
-- Seletor de ano.
+- O ano troca pelo seletor do cabeçalho.
 - Resumo: quantas revistas estão para atualizar, quantas aguardam "Validado", total de revistas ativas do ano.
 - Lista das revistas ativas do ano (parceiro e componente), cada uma com a situação: **Para atualizar** (mudou e está validada), **Aguardando "Validado"** (mudou, sem validação nesta versão) ou **Em dia** (nada mudou).
 - Detalhe da revista escolhida:
@@ -38,7 +38,7 @@ Só um: a foto "impresso" da revista (o registro da "Revista Impressa Atualizada
 
 | Ação | Quem | Resultado |
 |---|---|---|
-| Trocar de ano | todos | recarrega a tela no ano escolhido |
+| Trocar de ano (seletor do cabeçalho) | todos | recarrega a tela no ano escolhido |
 | Escolher revista na lista | todos | troca só o detalhe; o endereço muda (dá para voltar e compartilhar o link) |
 | Copiar texto novo | todos | copia o texto do item; sem área de transferência, seleciona o texto para Ctrl+C |
 | Baixar planilhas | todos | baixa o zip com as planilhas do F1 (etapa × componente) e do F2 |
@@ -87,11 +87,10 @@ Só um: a foto "impresso" da revista (o registro da "Revista Impressa Atualizada
 ## Wireframe (1440 px)
 
 ```
-┌ Revista Eletrônica   Painel Cortes Variáveis Matrizes Templates Revistas [Impresso]     Nome  Admin  Sair ┐
+┌ Revista Eletrônica  [2026 ▾]  Painel Projetos Matrizes Templates [Impresso]             Nome  Admin  Sair ┐
 │                                                                                                          │
 │ Impresso                                                                              Ver no painel     │
 │ O que mudou em cada revista desde a última “Revista Impressa Atualizada”, para levar ao InDesign.      │
-│ [2026|2025]                                                                                              │
 │ (2 para atualizar) (1 aguardando “Validado”)  9 revista(s) ativa(s) em 2026                              │
 │ ┌ lista ───────────────────────┐  GO · LP                                                                │
 │ │▌GO · LP        Para atualizar│  Comparado com a última “Revista Impressa Atualizada”, de 12/03 por Ana. │
@@ -122,12 +121,12 @@ Só um: a foto "impresso" da revista (o registro da "Revista Impressa Atualizada
 6. Projeto aberto por outra pessoa: recusa "projeto em edição por …" e nada é gravado.
 7. Anônimo vai ao login do admin (GET e POST).
 8. Ano sem revistas mostra o estado vazio com o link para os cortes.
-9. O menu "Impresso" da casca aponta para esta tela.
+9. O menu "Impresso" da casca aponta para esta tela e só aparece com a permissão "marcar impressa".
 10. A página antiga do impresso e seus testes continuam iguais (mesma regra).
 
 ## Referências técnicas
 
-- Regra: `app/nucleo/urls/impresso.py` (`situacao`, `estado`, `gravar`, `pode_marcar`; extraídos da view antiga, que passou a usá-los), `servicos/validacao.py` (`marcar_impressa`), `admin/lote.py` (`escrever_travado`), `servicos/planilhas.py` (`zip_planilhas`, servido pela rota antiga `impresso_planilhas`).
+- Regra: `app/nucleo/urls/impresso.py` (`situacao`, `estado`, `gravar`, `pode_marcar`; extraídos da view antiga, que passou a usá-los), `servicos/validacao.py` (`marcar_impressa`), `nucleo/lotes.py` (`escrever_travado`; o `admin/lote.py` reexporta), `servicos/planilhas.py` (`zip_planilhas`, servido pela rota antiga `impresso_planilhas`).
 - Tela B: `app/nucleo/urls/ui_impresso.py`, `templates/ui/impresso/impresso.html`, `templates/ui/parciais/impresso_detalhe.html`, `templates/ui/_componentes/impresso_situacao.html`, `static/ui/telas/impresso.css`, `tests/test_ui_impresso.py`.
 - Decisões: D-072, D-074, D-077, D-089, D-094, D-118 (impresso só textos e escalas), D-121 (bloqueio no lote), D-178, D-183, D-186.
 - Bloqueio: esta tela não usa o bloqueio de edição de página (`com_bloqueio`), como a página antiga: ler não trava o projeto; o clique adquire e libera o bloqueio dentro da transação (`escrever_travado`).
