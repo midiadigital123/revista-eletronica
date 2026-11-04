@@ -2,7 +2,7 @@
 {% comment %}
 Hub Projetos, aba Lista (U7a). View em nucleo/urls/ui_projeto.py (lista, massa); ficha em docs/telas/fichas/projeto.md.
 Tabela no padrão do painel (classes de telas/painel.css): um <tbody> por projeto, cabeçalho de grupo
-do parceiro (caixa de marcar = ParceiroAno, projeto, matriz) e uma linha por revista (selo LP/MT, balão de pendências, Preview e Zip em botões-ícone).
+(caixa de marcar = ParceiroAno; nome do projeto como link, parceiro em cinza, matriz) e uma linha por revista (selo LP/MT, balão de pendências, Preview e Zip em botões-ícone).
 Substitui a lista de Revistas e os Lotes (barra de ações em massa:
 "Atribuir matriz…" e "Atribuir template…", regra de nucleo/lotes.py, modal de impacto do U2).
 Os diálogos ficam dentro do form `massa`: o botão de cada um envia para a sua ação (formaction).
@@ -29,7 +29,7 @@ action = a ação recusada (o Confirmar do modal reenvia o form sem botão).
   <div class="tabela-densa painel-caixa">
     <table class="tabela painel-tabela">
       <thead><tr>
-        <th scope="col" class="fixa painel-revista">{% if pode_massa %}<input type="checkbox" data-todos aria-label="Marcar todos os parceiros">{% endif %}Parceiro / revista</th>
+        <th scope="col" class="fixa painel-revista">{% if pode_massa %}<input type="checkbox" data-todos aria-label="Marcar todos os parceiros">{% endif %}Projeto / revista</th>
         <th scope="col" class="pj-situacao">Situação</th><th scope="col" class="pj-acoes">Ações</th>
       </tr></thead>
       {% for l in linhas %}
@@ -37,8 +37,9 @@ action = a ação recusada (o Confirmar do modal reenvia o form sem botão).
         <tr class="painel-grupo"{% if l.marcado %} aria-selected="true"{% endif %}{% if l.editando %} data-pulado{% endif %}>
           <th scope="rowgroup" class="fixa painel-revista">
             {% if pode_massa and l.marcar %}<input type="checkbox" name="alvos" value="{{ l.pa.pk }}"{% if l.marcado %} checked{% endif %} id="alvo-{{ l.pa.pk }}" aria-label="Marcar {{ l.pa.parceiro.nome }}">{% endif %}
-            <span class="painel-grupo-nome">{{ l.pa.parceiro.nome }}</span>
-            {% if l.projeto %}<a class="painel-grupo-projeto" href="{% url 'ui_projeto' l.projeto.pk %}" title="Abrir o projeto {{ l.projeto.nome }}">Projeto<span class="sr-only"> {{ l.projeto.nome }}</span></a>{% else %}<span class="painel-grupo-conta">sem projeto</span>{% endif %}
+            {% if l.projeto %}<a class="painel-grupo-nome" href="{% url 'ui_projeto' l.projeto.pk %}" title="Abrir o projeto">{{ l.projeto.nome }}</a>
+            <span class="painel-grupo-parceiro" title="Parceiro"><span class="sr-only">Parceiro </span>{{ l.pa.parceiro.nome }}</span>
+            {% else %}<span class="painel-grupo-nome">{{ l.pa.parceiro.nome }}</span><span class="painel-grupo-conta">sem projeto</span>{% endif %}
             <span class="painel-grupo-conta"{% if l.marcar %} data-atual="matriz" data-valor="{{ l.pa.matriz_id|default:'' }}"{% endif %}>{% if l.pa.matriz %}<span class="tag tag-azul" title="Matriz"><span class="sr-only">Matriz </span>{{ l.pa.matriz.nome }}</span>{% else %}<span class="badge badge-alerta">sem matriz</span>{% endif %}{% if l.marcar %}<span class="lote-novo" data-novo hidden></span>{% endif %}</span>
           </th>
           <td colspan="2">
@@ -53,7 +54,7 @@ action = a ação recusada (o Confirmar do modal reenvia o form sem botão).
             <span class="tag tag-lilas" title="{{ s.revista.componente.nome }}">{{ s.revista.componente.codigo }}</span>
             {% if not s.arquivada %}{% if n %}<span class="contagem" role="img" aria-label="{{ n }} pendência{{ n|pluralize }}" title="{{ n }} pendência{{ n|pluralize }}: {{ s.faltas|join:' ' }}">{{ n }}</span>
             {% else %}<span class="contagem contagem-ok" role="img" aria-label="Sem pendências" title="Sem pendências"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>{% endif %}{% endif %}
-            <a class="link-linha" href="{% url 'ui_revista_editar' ano.ano s.revista.pk %}"><span class="sr-only">{{ l.pa.parceiro.nome }} · {{ s.revista.componente.codigo }} · </span>{{ s.revista.componente.nome }}</a>
+            <a class="link-linha" href="{% url 'ui_revista_editar' ano.ano s.revista.pk %}"><span class="sr-only">{{ l.projeto.nome }} · {{ s.revista.componente.codigo }} · </span>{{ s.revista.componente.nome }}</a>
           </th>
           <td>{% if s.arquivada %}<span class="tag tag-apagada">Arquivada</span>{% else %}<span class="tag {{ s.situacao_tag }}">{{ s.situacao }}</span>{% endif %}</td>
           <td class="pj-acoes">

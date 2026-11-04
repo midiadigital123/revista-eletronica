@@ -7,14 +7,18 @@ Templates e arquivos salvam sozinhos (form campoAuto, ?acao= em cada data-url); 
 #textos, #arquivos e #situacao. A seção vai por HTMX (revista_secao.html). O bloqueio do projeto
 (bloqueio.js) vive num form próprio, fora de qualquer alvo do HTMX.
 {% endcomment %}
-{% block titulo %}{{ revista.projeto.parceiro_ano.parceiro.nome }} · {{ revista.componente.nome }} {{ revista.ano.ano }}{% endblock %}
-{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/revista.css' %}">{% endblock %}
+{% block titulo %}{{ revista.projeto.nome }} · {{ revista.componente.nome }}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/projeto.css' %}"><link rel="stylesheet" href="{% static 'ui/telas/revista.css' %}">{% endblock %}
 
 {% block conteudo %}
-<a class="mudo voltar" href="{% url 'ui_projeto' revista.projeto_id %}?aba=revistas">‹ {{ revista.projeto.nome }}</a>
+<nav class="mudo voltar pj-trilha" aria-label="Trilha"><a href="{% url 'ui_projeto_lista' revista.ano.ano %}">Projetos de {{ revista.ano.ano }}</a> <span aria-hidden="true">›</span> <a href="{% url 'ui_projeto' revista.projeto_id %}?aba=revistas">{{ revista.projeto.nome }}</a></nav>
 <header class="pagina-cab">
   <div>
-    <h1>{{ revista.projeto.parceiro_ano.parceiro.nome }} · {{ revista.componente.nome }} {{ revista.ano.ano }}</h1>
+    <h1>{{ revista.projeto.nome }} · {{ revista.componente.nome }}</h1>
+    <dl class="pj-meta">
+      <div><dt>Parceiro</dt><dd>{{ revista.projeto.parceiro_ano.parceiro.nome }}</dd></div>
+      <div><dt>Ano</dt><dd>{{ revista.ano.ano }}</dd></div>
+    </dl>
     {% if arquivada or pode_nome %}<p class="mudo">{% if arquivada %}<span class="badge badge-secundario">Arquivada</span>{% endif %}{% if arquivada and pode_nome %} · {% endif %}{% if pode_nome %}<a class="link" href="{% url 'ui_projeto' revista.projeto_id %}#nome">Editar o nome do projeto</a>{% endif %}</p>{% endif %}
   </div>
   <div class="acoes revista-cab-acoes">

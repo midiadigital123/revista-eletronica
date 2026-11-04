@@ -7,7 +7,7 @@ A página é onde o projeto sobrescreve o que vem do ano e da matriz: cada valor
 <script src="{% static 'ui/componentes/sobrescrita.js' %}"></script>{% endblock %}
 
 {% block conteudo %}
-<nav class="mudo voltar pj-trilha" aria-label="Trilha"><a href="{% url 'ui_projeto_lista' projeto.ano.ano %}">Projetos de {{ projeto.ano.ano }}</a> <span aria-hidden="true">›</span> {{ projeto.parceiro_ano.parceiro.nome }}</nav>
+<nav class="mudo voltar pj-trilha" aria-label="Trilha"><a href="{% url 'ui_projeto_lista' projeto.ano.ano %}">Projetos de {{ projeto.ano.ano }}</a></nav>
 <header class="pagina-cab">
   <div>
     <h1>{{ projeto.nome }}</h1>

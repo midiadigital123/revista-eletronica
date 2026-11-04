@@ -46,6 +46,22 @@ class HubListaTest(Base):
                 self.assertEqual(grupo.count(f'<tr data-revista="{r.pk}">'), 1)
         self.assertEqual(grupo.count("<tr data-revista="), len(self.go))
 
+    def test_grupo_mostra_o_projeto_como_link_e_o_parceiro_em_cinza(self):
+        """Projeto primeiro: o nome do projeto é o link do grupo; o parceiro vem ao lado, como contexto.
+        Sai o link genérico "Projeto". Parceiro sem projeto continua só com o nome do parceiro."""
+        Projeto.objects.filter(pk=self.projeto_go.pk).update(nome="SAEGO 2")
+        Parceiro.objects.create(nome="SEM").parceiroano_set.create(ano=self.ano)
+        html = self.client.get(LISTA).content.decode()
+        grupo = next(t for t in html.split("<tbody")[1:] if 'aria-label="Marcar GO"' in t)
+        url = reverse("ui_projeto", args=[self.projeto_go.pk])
+        self.assertIn(f'<a class="painel-grupo-nome" href="{url}" title="Abrir o projeto">SAEGO 2</a>', grupo)
+        self.assertIn('<span class="painel-grupo-parceiro" title="Parceiro"><span class="sr-only">Parceiro </span>GO</span>', grupo)
+        self.assertNotIn("painel-grupo-projeto", html)
+        self.assertIn("<span class=\"sr-only\">SAEGO 2 · LP · </span>", grupo)
+        sem = next(t for t in html.split("<tbody")[1:] if 'aria-label="Marcar SEM"' in t)
+        self.assertIn('<span class="painel-grupo-nome">SEM</span>', sem)
+        self.assertIn("sem projeto", sem)
+
     def test_pendencias_em_balao_e_acoes_com_nome(self):
         """Pendências num balão com o número (texto completo no aria-label, plural certo); Preview e Zip
         são botões-ícone com nome acessível."""
