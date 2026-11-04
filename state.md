@@ -2021,3 +2021,4 @@ Abrir `plans/revista-express-telas-b-ux.md` na seção do U10 e escolher por ond
 - Merge de `feat/ux-fix-nomes`; Django 703 OK; Playwright 51/51 depois de recriar a demo e o ano 2025 (apagados na limpeza de 03/11).
 - `templates.css` local: além da formatação, remove o `border-radius` de `.tpl-indice a`; não descartado.
 - `templates.css`: usuário confirmou que a remoção do `border-radius` foi dele; commitado.
+- Anotação do trail l-9fb3f4a9: como preparar o banco de dev para o Playwright depois da limpeza.
