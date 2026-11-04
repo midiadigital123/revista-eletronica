@@ -434,36 +434,27 @@ Fonte única: `app/nucleo/permissoes.py`. Grupos fixos criados por migração; m
 
 ## 9. Exclusão
 
-### 9.1 Regra atual do código
+Regra geral (D-205): uma entidade pode ser excluída quando nada depende dela. Quando algo depende, a página `/ui/excluir/<modelo>/<pk>/` mostra o que impede, com contagem e links, e não apaga nada. O PROTECT continua no banco. A confirmação é sempre digitar o código ou o nome. O Impresso nunca exclui. Serviço: `app/nucleo/servicos/exclusao.py`; rota: `app/nucleo/urls/ui_excluir.py`; página: `templates/ui/excluir.html`.
 
-| Entidade | Pode excluir? | Como / por quem | Fonte |
-|---|---|---|---|
-| Corte | Sim | Esvaziar a célula na grade (cascata); perfis com `preencher_cortes` | D-188, `app/nucleo/servicos/cascata.py:121-122` |
-| Sobrescrita de passo / cor do projeto | Sim | Voltar ao valor da matriz / do ano na ficha do projeto | D-166, `app/nucleo/urls/ui_projeto.py:429-470` |
-| Descritor | Sim | Tela da MEC, com lista de revistas afetadas e as que perdem o Validado; digitar o código; sob o bloqueio da MEC. Apaga as tarefas junto. | D-181, `app/nucleo/urls/ui_matriz.py:538`, `app/nucleo/matriz.py:211-234` |
-| Tarefa | Sim | Mesma confirmação, digitando `D01 100-150` | D-181, `app/nucleo/urls/ui_matriz.py:548` |
-| Arquivo do item | Sim | "Remover arquivo"; sai do disco só se nenhuma tarefa de nenhum ano aponta para ele | D-150, D-181, `app/nucleo/servicos/arquivos.py:344-362` |
-| Cópia de seção da revista | Sim | "Descartar cópia" ou troca de template com "descartar N cópia(s)" | D-170, `app/nucleo/revista.py:122-129` |
-| Revista | Não | Arquiva pela cascata | D-117, `app/nucleo/admin/revista.py:223` |
-| Projeto | Não | Arquiva pela cascata | D-065, `app/nucleo/admin/projeto.py:67` |
-| Ano | Não | Admin só leitura | `app/nucleo/admin/cadastro.py:23-40` |
-| Usuário | Não | Desativar | D-142, `app/nucleo/admin/usuarios.py:77` |
-| Versão de template | Nunca | Trigger do banco recusa UPDATE e DELETE | D-133, `app/nucleo/migrations/0006_template_versao_so_insert.py:24` |
-| Foto | Nunca pela tela | Nenhum perfil tem `delete_fotorevista` | `app/nucleo/permissoes.py:42` |
-| Parceiro, parceiro_ano, etapa, componente, padrão do ano, matriz, MEC, template | Não pelos perfis | Nenhum perfil tem `delete_*`; só o superusuário no admin, e o PROTECT do banco recusa se estiver em uso | `app/nucleo/permissoes.py:9-13`, D-129 |
+| Entidade | Em uso quando | Em uso → | Quem exclui | Onde | Fonte |
+|---|---|---|---|---|---|
+| Ano | — | O Admin apaga o **ano inteiro**, com tudo o que há nele; a página mostra as contagens e pede que ele digite o ano | Só Admin (`delete_ano`) | Lista de anos (lixeira) | D-206 |
+| Parceiro | Tem Corte ou Projeto em algum ano (ParceiroAno vazio sai junto) | Oferece **Desativar** (`desativado_em`): some dos anos em que não tem dados; Reativar desfaz | Pedagógica, Mídias, Admin | Grade de Cortes (lixeira no nome) | D-205, D-208 |
+| Etapa | Tem Corte, MEC ou passo do projeto | Explica | Pedagógica, Mídias, Admin | Página do ano (por linha) | D-205 |
+| Componente | Tem revista, MEC, corte, passo do projeto ou template | Explica | Pedagógica, Mídias, Admin | Página do ano (por linha) | D-205 |
+| Matriz | Algum parceiro usa (`ParceiroAno.matriz`) ou outra pessoa edita uma MEC dela (MEC, descritor e tarefa saem junto) | Explica, com link para Lotes | Pedagógica, Mídias, Admin | Fim da página da matriz | D-205 |
+| Template | Alguma revista usa o template ou uma versão dele, ou outra pessoa o edita | Explica, com links para as revistas. Sem uso, sai **com as versões** | Pedagógica, Mídias, Admin | Lista (lixeira) e fim do editor | D-207 |
+| Corte | Nunca | Esvaziar a célula apaga e arquiva a revista | Quem preenche cortes | Grade | D-188, `servicos/cascata.py:121-122` |
+| Descritor, Tarefa | Regra própria, com impacto no Validado | — | Pedagógica, Mídias, Admin | Tela da MEC | D-181 |
+| Sobrescrita, cópia de seção, arquivo do item | Nunca | Voltar ao valor herdado / descartar cópia / remover arquivo | Editores | Ficha do projeto, revista, MEC | D-166, D-170, D-150 |
+| Projeto, Revista | Sempre (a revista existe enquanto houver corte) | Arquivam pela cascata ao limpar os cortes | — | — | D-065, D-117 |
+| Usuário | Sempre que tem autoria | Desativar | Admin | Admin do Django | D-142, D-205 |
+| Foto | — | Nunca se apaga: é o histórico (exceto ao apagar o ano inteiro) | — | — | D-206 |
 
-### 9.2 Regra decidida (D-205) — [não implementado]
-
-| Regra | Situação |
-|---|---|
-| Toda entidade pode ser excluída quando nada depende dela. | **[não implementado]**: hoje as entidades da última linha da tabela 9.1 não têm exclusão para os perfis. |
-| Quando algo depende, a tela diz o que impede e oferece arquivar ou desativar. | **[não implementado]**: não há botão de arquivar/desativar parceiro, matriz, template ou projeto. |
-| O PROTECT continua no banco (sem cascata de exclusão). | Vigente (D-129). |
-| Versões de template continuam só de inserção. | Vigente (trigger 0006). |
-| Usuário é desativado, nunca excluído. | Vigente (`app/nucleo/admin/usuarios.py:77`). |
-| Descartados: cascata para o admin com modal; arquivar tudo (soft delete). | — |
-
-O plano da implementação (`plans/revista-express-exclusao.md`) ainda não existe; é a próxima ação do `state.md`.
+Travas que continuam:
+- **Versões de template:** o trigger recusa sempre o UPDATE. O DELETE só passa quando a transação liga `SET LOCAL revista.apagar_versoes = 'on'`, e só fazem isso a exclusão de template sem uso e o apagar do ano (migração `0017_versao_apagavel`, D-206/D-207).
+- **Admin do Django:** o "Excluir" leva à mesma página da tela B, e não existe exclusão em massa (`ExclusaoAdminMixin`, `admin/cadastro.py`).
+- **Teste-trava:** `tests/test_exclusao.py` lista toda FK que não é PROTECT contra uma lista permitida, para nenhuma cascata nova apagar histórico.
 
 ---
 
@@ -473,7 +464,7 @@ O plano da implementação (`plans/revista-express-exclusao.md`) ainda não exis
 
 | # | Decisão / documento | Código (vale este) | Efeito |
 |---|---|---|---|
-| 1 | D-205: excluir o que não está em uso, oferecer arquivar/desativar quando em uso. | Ano, Projeto, Revista e Usuário com `has_delete_permission = False`; nenhum perfil tem `delete_*` de parceiro, etapa, componente, padrão, matriz, MEC ou template (`app/nucleo/permissoes.py:9-13`). | Cadastro criado por engano só sai pelo superusuário, e ninguém arquiva parceiro, matriz ou template. |
+| 1 | ~~D-205: excluir o que não está em uso.~~ | **Resolvida em 04/11** (E0–E5, D-206 a D-208): ver seção 9. | — |
 | 2 | `docs/modelo-er.md` (Regras da aplicação, Bloqueio): aquisição aceita `sessao_edicao = EXCLUDED.sessao_edicao`. | Aceita o **mesmo usuário**, em qualquer sessão (D-191, `app/nucleo/servicos/bloqueio.py:56`). | Documento desatualizado; corrigir o ER. |
 | 3 | `docs/modelo-er.md`: "a foto do impresso guarda só os textos (D-112)" e "foto em REPEATABLE READ". | A foto guarda o resolvido inteiro; o diff do impresso cobre escalas, cores e textos (`app/nucleo/servicos/resolver.py:299`, D-151, D-153). O clique do impresso roda em READ COMMITTED com savepoint (D-178, `app/nucleo/servicos/foto.py:7-31`). | Documento desatualizado. |
 | 4 | D-055: faixa 0–1000 no 2EF e 0–500 nas demais, limites aceitos. | Limite vem de `Etapa.escala_max` (cadastro editável) e o corte fica **estritamente** dentro (D-153, `app/nucleo/servicos/cascata.py:38`). Os números só existem na carga (`carregar_cadastros.py:6`). | Etapa nova pode ter outra escala sem mudar código. |
