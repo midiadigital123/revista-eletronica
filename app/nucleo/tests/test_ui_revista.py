@@ -122,7 +122,7 @@ class RevistaUiTest(Base):
         self.assertContains(r, "<div><dt>Parceiro</dt><dd>GO</dd></div>", html=True)
         self.assertContains(r, "<div><dt>Ano</dt><dd>2026</dd></div>", html=True)
         lista, projeto = reverse("ui_projeto_lista", args=[2026]), reverse("ui_projeto", args=[self.projeto_go.pk])
-        self.assertContains(r, f'<nav class="mudo voltar pj-trilha" aria-label="Trilha"><a href="{lista}">Projetos de 2026</a> '
+        self.assertContains(r, f'<nav class="mudo voltar pj-trilha" aria-label="Trilha"><span aria-hidden="true">‹ </span><a href="{lista}">Projetos de 2026</a> '
                                f'<span aria-hidden="true">›</span> <a href="{projeto}?aba=revistas">SAEGO 2</a></nav>', html=True)
         self.assertContains(r, '<span class="revista-secao-id">Introdução</span>', html=True)
         self.assertNotContains(r, '<span class="revista-secao-id">introducao</span>', html=True)

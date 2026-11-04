@@ -11,7 +11,7 @@ Templates e arquivos salvam sozinhos (form campoAuto, ?acao= em cada data-url); 
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/projeto.css' %}"><link rel="stylesheet" href="{% static 'ui/telas/revista.css' %}">{% endblock %}
 
 {% block conteudo %}
-<nav class="mudo voltar pj-trilha" aria-label="Trilha"><a href="{% url 'ui_projeto_lista' revista.ano.ano %}">Projetos de {{ revista.ano.ano }}</a> <span aria-hidden="true">›</span> <a href="{% url 'ui_projeto' revista.projeto_id %}?aba=revistas">{{ revista.projeto.nome }}</a></nav>
+<nav class="mudo voltar pj-trilha" aria-label="Trilha"><span aria-hidden="true">‹ </span><a href="{% url 'ui_projeto_lista' revista.ano.ano %}">Projetos de {{ revista.ano.ano }}</a> <span aria-hidden="true">›</span> <a href="{% url 'ui_projeto' revista.projeto_id %}?aba=revistas">{{ revista.projeto.nome }}</a></nav>
 <header class="pagina-cab">
   <div>
     <h1>{{ revista.projeto.nome }} · {{ revista.componente.nome }}</h1>
@@ -23,11 +23,11 @@ Templates e arquivos salvam sozinhos (form campoAuto, ?acao= em cada data-url); 
   </div>
   <div class="acoes revista-cab-acoes">
     {% if request.pode_gravar %}{% include "ui/_componentes/status_salvo.html" %}{% endif %}
-    <a class="btn btn-outline" href="{% url 'preview' revista.pk %}" target="_blank" rel="noopener" title="Abre mesmo com pendências; o que falta aparece marcado.">
+    <a class="btn btn-ghost" href="{% url 'preview' revista.pk %}" target="_blank" rel="noopener" title="Abre mesmo com pendências; o que falta aparece marcado.">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
       {% if arquivada %}Abrir versão arquivada{% else %}Abrir preview{% endif %}<span class="sr-only"> (nova aba)</span>
     </a>
-    <a class="btn btn-ghost" href="{% url 'ui_revista_zip' revista.ano.ano revista.pk %}">
+    <a class="btn btn-outline" href="{% url 'ui_revista_zip' revista.ano.ano revista.pk %}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>
       Baixar zip
     </a>

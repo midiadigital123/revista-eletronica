@@ -72,6 +72,7 @@ h1, h2, h3, p, ul, dl, dd, fieldset { margin: 0; padding: 0; }
 fieldset { border: 0; min-width: 0; }
 a { color: inherit; text-decoration: none; }
 button, input, select, textarea { font: inherit; color: inherit; }
+code, kbd, samp { font-family: inherit; font-size: inherit; } /* sem mono (DESIGN.md); o fundo muted marca o código */
 ::selection { background: var(--primary); color: var(--primary-foreground); }
 :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -118,7 +119,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .popover-config {
   position: fixed; inset: auto; margin: 0; width: 18rem; padding: 1rem;
   border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--background); color: var(--foreground);
-  box-shadow: 0 6px 20px oklch(0 0 0 / 0.12);
+  box-shadow: var(--shadow-xs), 0 0 0 1px color-mix(in oklch, var(--foreground) 10%, transparent);
 }
 .popover-config:popover-open { animation: entra 120ms var(--ease-saida) both; }
 .principal { max-width: 80rem; margin: 0 auto; padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
@@ -135,7 +136,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   height: 2.25rem; padding: 0 0.625rem; border: 1px solid transparent; border-radius: var(--radius-md);
   background: var(--primary); color: var(--primary-foreground);
   font-size: 0.875rem; font-weight: 500; white-space: nowrap; cursor: pointer; user-select: none;
-  transition: background-color 150ms, box-shadow 150ms;
+  transition: background-color 150ms var(--ease-saida), box-shadow 150ms var(--ease-saida);
   --btn-hover: color-mix(in oklch, var(--primary) 80%, transparent); /* cada variante troca só o fundo do hover */
 }
 /* U10b: desligado não reage ao hover nem ao clique (cursor not-allowed e o title continuam: sem pointer-events: none) */
@@ -152,7 +153,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .input {
   height: 2.25rem; width: 100%; min-width: 0; padding: 0.25rem 0.625rem;
   border: 1px solid var(--input); border-radius: var(--radius-md); background: transparent;
-  font-size: 0.875rem; box-shadow: var(--shadow-xs); transition: border-color 150ms, box-shadow 150ms;
+  font-size: 0.875rem; box-shadow: var(--shadow-xs); transition: border-color 150ms var(--ease-saida), box-shadow 150ms var(--ease-saida);
 }
 .input::placeholder { color: var(--muted-foreground); }
 .input:focus-visible { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px var(--ring); }
@@ -172,7 +173,7 @@ input[type="color"]:focus-visible { outline: none; border-color: var(--ring); bo
 /* --- tabela (components/ui/table.tsx) --- */
 .tabela-caixa { position: relative; width: 100%; overflow-x: auto; }
 .tabela { width: 100%; border-collapse: collapse; font-size: 0.875rem; line-height: 1.25rem; }
-.tabela tr { border-bottom-width: 1px; transition: background-color 150ms; }
+.tabela tr { border-bottom-width: 1px; transition: background-color 150ms var(--ease-saida); }
 .tabela tbody tr:last-child { border-bottom-width: 0; }
 .tabela tbody tr:hover { background: color-mix(in oklch, var(--muted) 50%, transparent); }
 .tabela th { height: 2.5rem; padding: 0 0.5rem; text-align: left; vertical-align: middle; font-weight: 500; white-space: nowrap; }
@@ -241,7 +242,7 @@ input[type="color"]:focus-visible { outline: none; border-color: var(--ring); bo
 .contagem {
   display: inline-flex; align-items: center; justify-content: center; min-width: 1.25rem; height: 1.25rem; padding: 0 0.3125rem;
   border-radius: 999px; background: var(--warning-bg); color: var(--warning); border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
-  font-size: 0.6875rem; line-height: 1; font-weight: 650; font-variant-numeric: tabular-nums; vertical-align: middle; cursor: default;
+  font-size: 0.75rem; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; vertical-align: middle; cursor: default;
 }
 .contagem-ok { padding: 0; background: var(--background); color: var(--muted-foreground); border-color: var(--border); }
 .contagem svg { width: 0.75rem; height: 0.75rem; }
@@ -280,6 +281,9 @@ input[type="color"]:focus-visible { outline: none; border-color: var(--ring); bo
   border-radius: var(--radius-xl); background: var(--card); font-size: 0.875rem;
   box-shadow: var(--shadow-xs), 0 0 0 1px color-mix(in oklch, var(--foreground) 10%, transparent);
 }
+.card-estreito { max-width: 32rem; } /* form curto de uma coluna (Abrir ano) */
+/* amostra da cor do padrão numa célula (Padrões do ano); a cor vem do dado, no style */
+.amostra-padrao { display: inline-block; width: 1rem; height: 1rem; vertical-align: middle; border: 1px solid currentColor; }
 
 /* --- aviso (ui/Aviso.tsx + components/ui/alert.tsx) e mensagens do Django --- */
 .aviso {
@@ -300,7 +304,7 @@ input[type="color"]:focus-visible { outline: none; border-color: var(--ring); bo
   font-weight: 500; white-space: nowrap; color: var(--muted-foreground); transition: color 150ms var(--ease-saida);
 }
 .segmentos a:hover { color: var(--foreground); }
-.segmentos a[aria-current="page"] { background: var(--background); color: var(--foreground); box-shadow: 0 1px 2px oklch(0 0 0 / 0.08); }
+.segmentos a[aria-current="page"] { background: var(--background); color: var(--foreground); box-shadow: var(--shadow-xs); }
 
 @media (max-width: 40rem) {
   .cab-in, .principal { padding-left: 1rem; padding-right: 1rem; }
@@ -313,7 +317,7 @@ input[type="color"]:focus-visible { outline: none; border-color: var(--ring); bo
 
 /* --- grade editável (cortes; serve à planilha de Variáveis) --- */
 .grade { display: flex; flex-direction: column; gap: 0.75rem; }
-.grade-caixa { max-height: calc(100dvh - 12rem); } /* .tabela-rolavel */
+.grade-caixa { max-height: calc(100dvh - 12rem); scroll-padding: 5rem 0 0 16rem; } /* .tabela-rolavel; padding: 2 linhas de thead e a .fixa */
 .grade .tabela thead tr:nth-child(2) th { top: 2.5rem; }
 .grade-etapa { font-weight: 600; border-left-width: 1px; }
 .grade-etapa .mudo { font-weight: 400; margin-left: 0.25rem; }
@@ -353,14 +357,13 @@ input[type="color"]:focus-visible { outline: none; border-color: var(--ring); bo
 /* --- campos: rótulo, textarea, select, checkbox (components/ui/field, textarea, native-select, checkbox) --- */
 .campo { display: flex; flex-direction: column; gap: 0.375rem; min-width: 0; }
 .campo > label, .rotulo { font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; }
-.campo .ajuda { color: var(--muted-foreground); font-size: 0.8125rem; line-height: 1.125rem; }
-.erro { color: var(--destructive); font-size: 0.8125rem; line-height: 1.125rem; }
+.ajuda { color: var(--muted-foreground); font-size: 0.875rem; line-height: 1.25rem; }
+.erro { color: var(--destructive); font-size: 0.875rem; line-height: 1.25rem; }
 .textarea {
   width: 100%; min-height: 4rem; padding: 0.5rem 0.625rem; resize: vertical; field-sizing: content;
   border: 1px solid var(--input); border-radius: var(--radius-md); background: transparent;
-  font-size: 0.875rem; line-height: 1.5; box-shadow: var(--shadow-xs); transition: border-color 150ms, box-shadow 150ms;
+  font-size: 0.875rem; line-height: 1.5; box-shadow: var(--shadow-xs); transition: border-color 150ms var(--ease-saida), box-shadow 150ms var(--ease-saida);
 }
-.textarea.mono { font-family: var(--font-mono); font-size: 0.8125rem; }
 .select {
   height: 2.25rem; width: 100%; min-width: 0; padding: 0.25rem 2rem 0.25rem 0.625rem; appearance: none;
   border: 1px solid var(--input); border-radius: var(--radius-md); font-size: 0.875rem; box-shadow: var(--shadow-xs);
@@ -392,9 +395,10 @@ form.inline { display: inline; }
 .abas a {
   margin-bottom: -1px; padding: 0.5rem 0.75rem; border-bottom: 2px solid transparent;
   font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; white-space: nowrap;
-  color: var(--muted-foreground); transition: color 150ms var(--ease-saida), border-color 150ms;
+  color: var(--muted-foreground); transition: color 150ms var(--ease-saida), border-color 150ms var(--ease-saida);
 }
 .abas a:hover { color: var(--foreground); }
+.abas a:focus-visible { outline-offset: -2px; } /* o overflow do .abas cortaria o anel de fora */
 .abas a[aria-current="page"] { color: var(--foreground); border-bottom-color: var(--foreground); }
 .abas .badge { margin-left: 0.375rem; }
 /* linha logo abaixo das abas: o que a aba mostra à esquerda, as ações dela à direita (hub Projetos, U7a) */
@@ -402,7 +406,7 @@ form.inline { display: inline; }
 .aba-acoes > p { margin-right: auto; }
 
 /* --- tabela densa (painel, listas longas): linhas baixas numa .tabela-rolavel --- */
-.tabela-densa { max-height: calc(100dvh - 14rem); }
+.tabela-densa { max-height: calc(100dvh - 14rem); scroll-padding-top: 2.5rem; }
 .tabela-densa .tabela { font-size: 0.8125rem; }
 .tabela-densa .tabela :is(th, td) { padding: 0.25rem 0.5rem; }
 .tabela-densa .tabela thead th { height: 2.25rem; color: var(--muted-foreground); }
@@ -435,9 +439,9 @@ form.inline { display: inline; }
 .lado-a-lado > .detalhe { min-width: 0; display: flex; flex-direction: column; gap: 1rem; }
 .duas-colunas { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
 /* Alvo do HTMX esmaece enquanto carrega (hx-indicator nele mesmo): .detalhe ou qualquer .alvo-htmx. */
-.detalhe.htmx-request, .alvo-htmx.htmx-request { opacity: 0.6; transition: opacity 150ms; }
+.detalhe.htmx-request, .alvo-htmx.htmx-request { opacity: 0.6; transition: opacity 150ms var(--ease-saida); }
 /* Link do nome na 1ª coluna de uma tabela: sublinhado discreto que escurece no hover. */
-.link-linha { font-weight: 500; text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 4px; transition: text-decoration-color 150ms; }
+.link-linha { font-weight: 500; text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 4px; transition: text-decoration-color 150ms var(--ease-saida); }
 .link-linha:hover { text-decoration-color: currentColor; }
 
 /* --- voltar: link "‹ página de cima" acima do título (_componentes/voltar.html) --- */
@@ -462,7 +466,7 @@ fieldset:disabled .input, fieldset:disabled .textarea, fieldset:disabled .select
 .dialogo {
   width: calc(100% - 2rem); max-width: 28rem; padding: 1.5rem; border-radius: var(--radius-xl);
   background: var(--card); color: var(--foreground); font-size: 0.875rem;
-  box-shadow: 0 10px 30px oklch(0 0 0 / 0.12), 0 0 0 1px color-mix(in oklch, var(--foreground) 10%, transparent);
+  box-shadow: var(--shadow-xs), 0 0 0 1px color-mix(in oklch, var(--foreground) 10%, transparent);
 }
 .dialogo[open] { display: flex; flex-direction: column; gap: 1.5rem; animation: entra 120ms var(--ease-saida) both; }
 .dialogo-largo { max-width: 48rem; }
@@ -491,8 +495,8 @@ table.diff .diff_next { display: none; }
 .diff-lado { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
 .diff-lado > div { min-width: 0; padding: 0.75rem 1rem; }
 .diff-lado > div + div { border-left-width: 1px; }
-.diff-lado h3 { margin: 0 0 0.5rem; color: var(--muted-foreground); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-.texto-md { white-space: pre-wrap; font-family: var(--font-mono); font-size: 0.8125rem; line-height: 1.5; margin: 0; }
+.diff-lado h3 { margin: 0 0 0.5rem; color: var(--muted-foreground); font-size: 0.875rem; font-weight: 500; }
+.texto-md { white-space: pre-wrap; font-size: 0.875rem; line-height: 1.5; margin: 0; }
 
 /* --- lacuna: faixa vermelha (D-116) e variável vazia (mesmas cores do preview e do editor) --- */
 .faixa-vermelha {
@@ -502,9 +506,9 @@ table.diff .diff_next { display: none; }
 .faixa-vermelha a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 .variavel-vazia {
   background: #fde68a; color: #713f12; border-radius: 3px; padding: 0 0.1875rem;
-  font-family: var(--font-mono); font-size: 0.92em;
+  font-weight: 500;
 }
-.variavel { background: var(--muted); border-radius: 3px; padding: 0 0.1875rem; font-family: var(--font-mono); font-size: 0.92em; }
+.variavel { background: var(--muted); border-radius: 3px; padding: 0 0.1875rem; font-weight: 500; }
 
 /* --- confirmação forte: digitar o código/frase exata (ui.js libera o botão; o servidor confere) --- */
 .confirmar {
@@ -512,7 +516,7 @@ table.diff .diff_next { display: none; }
   border: 1px solid color-mix(in oklch, var(--destructive) 30%, transparent);
   background: color-mix(in oklch, var(--destructive) 4%, var(--background));
 }
-.confirmar code { font-family: var(--font-mono); font-weight: 600; user-select: all; }
+.confirmar code { padding: 0 0.1875rem; border-radius: 3px; background: var(--muted); font-weight: 600; user-select: all; }
 
 /* --- barra de salvar (.barra-salvar acima, sticky): contador à esquerda, ações à direita --- */
 .barra-salvar > .mudo { margin-right: auto; }
@@ -532,7 +536,7 @@ table.diff .diff_next { display: none; }
 .toasts { position: fixed; right: 1rem; bottom: 1rem; z-index: 50; display: flex; flex-direction: column; gap: 0.5rem; max-width: min(24rem, calc(100% - 2rem)); }
 .toast {
   padding: 0.75rem 1rem; border-radius: var(--radius-lg); background: var(--primary); color: var(--primary-foreground);
-  font-size: 0.875rem; line-height: 1.25rem; box-shadow: 0 6px 20px oklch(0 0 0 / 0.15); animation: entra 120ms var(--ease-saida) both;
+  font-size: 0.875rem; line-height: 1.25rem; box-shadow: var(--shadow-xs); animation: entra 120ms var(--ease-saida) both;
 }
 .toast-erro { background: var(--destructive); }
 
@@ -548,7 +552,7 @@ table.diff .diff_next { display: none; }
 .vazio p { max-width: 24rem; color: var(--muted-foreground); font-size: 0.875rem; line-height: 1.6; }
 
 /* --- carregando (o HTMX põe .htmx-request no elemento indicado por hx-indicator) --- */
-.htmx-indicator { opacity: 0; transition: opacity 150ms; }
+.htmx-indicator { opacity: 0; transition: opacity 150ms var(--ease-saida); }
 .htmx-request .htmx-indicator, .htmx-request.htmx-indicator { opacity: 1; }
 .girando { width: 1rem; height: 1rem; animation: girar 0.8s linear infinite; }
 /* U10b: carregando fora do HTMX. aria-busy="true" no controle em envio (autosave.js: o campo, a lista que reordena, o

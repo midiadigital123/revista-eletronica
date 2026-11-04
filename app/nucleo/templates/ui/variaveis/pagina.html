@@ -25,7 +25,7 @@
 {# U3: cada célula salva sozinha ao sair dela, pela rota da ficha do projeto (ui_projeto_campo, data-url do <tbody>). #}
 <form method="post" class="grade grade-variaveis" id="variaveis-form" data-grade{% if pode_editar %} x-data="campoAuto"{% endif %}>{% csrf_token %}
   {{ formset.management_form }}
-  {% if pode_editar %}<p class="mudo">Cada célula salva sozinha ao sair dela; só ela é gravada. Padrões vazios usam o nome do ano, em cinza na célula.</p>{% endif %}
+  {% if pode_editar %}<p class="mudo">Padrões vazios usam o nome do ano, em cinza na célula.</p>{% endif %}
   <div class="tabela-rolavel grade-caixa" x-data="tabelaRolavel">
     <table class="tabela">
       <thead>

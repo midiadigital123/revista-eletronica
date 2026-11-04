@@ -12,7 +12,7 @@
 // termina sem cópia na revista DEMONSTRAÇÃO (descartada no fim). Use num banco de desenvolvimento.
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { alpinePronto, atribuirEmMassa, entrar, liberarBloqueio, novoParceiro, revistaDaLista } from "./helpers";
+import { alpinePronto, atribuirEmMassa, entrar, liberarBloqueio, novoParceiro, revistaDaLista, revistaDemo } from "./helpers";
 
 const INTRO = "#id_secao__F1__introducao";
 const SVG = path.join(__dirname, "../../nucleo/tests/fixtures/f2-lp.svg");
@@ -23,8 +23,8 @@ test("revista: cópia por seção, aviso com diff e descartar", async ({ page })
   page.on("pageerror", (e) => erros.push(e.message));
   const marca = `E2E ${Date.now()}`;
 
-  await entrar(page, "/admin/nucleo/revista/");
-  await page.locator("#result_list a", { hasText: "DEMONSTRAÇÃO" }).first().click();
+  await entrar(page);
+  await page.goto(`/admin/nucleo/revista/${await revistaDemo(page)}/change/`);
   const urlRevista = page.url();
 
   // 1. Editar só a introdução do F1: o preview da seção funciona e a cópia nasce ao salvar.
@@ -160,9 +160,8 @@ test("revista: o texto da seção salva sozinho e não se perde ao sair", async 
   const status = page.locator("[data-status-salvo]");
   const salvo = status.getByText(/Salvo às \d/);
 
-  await entrar(page, "/admin/nucleo/revista/");
-  await page.locator("#result_list a", { hasText: "DEMONSTRAÇÃO" }).first().click();
-  const pk = page.url().match(/revista\/(\d+)\//)![1];
+  await entrar(page);
+  const pk = await revistaDemo(page);
   const url = `/ui/revista/2026/${pk}/`;
   await page.goto(url);
   await alpinePronto(page);

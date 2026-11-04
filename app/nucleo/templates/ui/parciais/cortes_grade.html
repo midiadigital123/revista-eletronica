@@ -5,7 +5,7 @@ A grade de cortes (form `grade`): aba Cortes do hub Projetos (o ano inteiro) e a
 {% endcomment %}{% comment %}U3: cada célula salva sozinha ao sair dela (componente campoAuto, rota cortes_celula, com o `original` da célula).
 U5: o nome do parceiro também (nomeInline: o data-url dele troca a rota para cortes_renomear_parceiro).{% endcomment %}
 <form method="post" class="grade" id="grade" data-grade{% if pode_gravar or perms.nucleo.change_parceiro %} x-data="campoAuto" data-url="{% url 'cortes_celula' ano.ano %}"{% endif %}>{% csrf_token %}
-  {% if pode_gravar %}<p class="mudo">De 1 a 4 cortes inteiros e crescentes, separados por vírgula, maiores que 0 e menores que o máximo da escala da etapa. Célula vazia apaga o corte. Cada célula salva sozinha ao sair dela.</p>{% endif %}
+  {% if pode_gravar %}<p class="mudo">De 1 a 4 cortes inteiros e crescentes, separados por vírgula, maiores que 0 e menores que o máximo da escala da etapa. Célula vazia apaga o corte.</p>{% endif %}
   <div class="tabela-rolavel grade-caixa" x-data="tabelaRolavel">
     <table class="tabela">
       <thead>

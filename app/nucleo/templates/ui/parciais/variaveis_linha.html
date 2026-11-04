@@ -9,7 +9,7 @@ U10d: data-trava-linha: o 409 de bloqueio (projeto aberto por outra pessoa) trav
     <th scope="row" class="grade-parceiro fixa">
       <input type="hidden" name="form-{{ l.indice }}-id" value="{{ p.pk }}">
       <a class="link-linha" href="{% url 'ui_projeto' p.pk %}">{{ p.parceiro_ano.parceiro }}</a>
-      <span class="mudo">{{ p.nome }}</span>
+      <span class="mudo" title="{{ p.nome }}">{{ p.nome }}</span>
       {% if pode_editar %}
       <button type="submit" form="copiar-{{ p.pk }}" id="copiar-btn-{{ p.pk }}" class="btn btn-ghost btn-sm"
         aria-label="Copiar de {{ ano.ano|add:-1 }} para {{ p }}"

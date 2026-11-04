@@ -41,7 +41,7 @@ Telas e rotas (nomes `ui_<tela>`; ações `ui_<tela>_<acao>`):
 - Cabeçalho de página: `<header class="pagina-cab"><div><h1>…</h1><p class="mudo">…</p></div><div class="acoes">…</div></header>` (`editor/src/projetos/ListaProjetos.tsx:31-34`).
 - Página de detalhe (um item de uma lista): o caminho de volta é `<a class="mudo voltar" href="…">‹ Lista</a>` logo acima do cabeçalho, não um botão nas ações (matriz, MEC, revista, projeto, editor de template).
 - Ações do cabeçalho: ir a outra tela = `.btn-ghost` ("Ver painel de 2026"); ação desta tela = `.btn-outline`; a principal = `.btn`.
-- Já carregados pela base, nesta ordem e todos com `defer`: `ui/ui.css`, `ui/htmx.min.js` (2.0.4, local), `ui/ui.js`, SortableJS 1.15.6 (jsDelivr), `ui/componentes.js`, `ui/componentes/autosave.js` (U3) e Alpine.js `@alpinejs/csp` 3.14.9 (jsDelivr). Fonte Inter local.
+- Já carregados pela base, nesta ordem e todos com `defer`: `ui/ui.css`, `ui/htmx.min.js` (2.0.4, local), `ui/ui.js`, SortableJS 1.15.6 (jsDelivr), `ui/componentes.js`, `ui/componentes/seletor-ano.js` (U9), `ui/componentes/autosave.js` (U3), `ui/componentes/tabela-rolavel.js` (U10a) e Alpine.js `@alpinejs/csp` 3.14.9 (jsDelivr). Fonte Inter local.
 - **CDN (D-199):** liberada para libs novas, sempre com versão exata, `integrity` (SRI sha384) e `crossorigin="anonymous"`. Hash: `curl -sL URL | openssl dgst -sha384 -binary | openssl base64 -A`.
   - `sortablejs@1.15.6/Sortable.min.js`: `sha384-HZZ/fukV+9G8gwTNjN7zQDG0Sp7MsZy5DDN6VfY3Be7V9dvQpEpR2jF2HlyFUUjU`
   - `@alpinejs/csp@3.14.9/dist/cdn.min.js`: `sha384-zaqGaLZBjCeXCLnYyKyAJrDaZcsW8AqZN7iDmFDw3TzHJvhjMckT1H52jWWza0w8`
@@ -60,7 +60,7 @@ Todos em `static/ui/ui.css` `:root`. Origem:
 | `--padrao-1..4` (cores dos padrões) | `editor/src/index.css:15-18` |
 | `--ease-saida`, animação `entra` | `editor/src/index.css:25-37` |
 | `--font-sans` (Inter Variable) | `editor/src/index.css:88-89`; arquivos em `static/ui/fontes/` (de `@fontsource-variable/inter` 5.3.0) |
-| `--font-mono` | pilha do sistema (o editor usa a do Tailwind) |
+| `--font-mono` | pilha do sistema (o editor usa a do Tailwind). Só o `table.diff` do difflib usa (alinha as colunas). Desde o U10d, `code`, variáveis, texto da seção e frase de confirmação ficam em Inter, com fundo `--muted` marcando o código (DESIGN.md: nenhuma fonte mono) |
 
 Cores fora dos tokens só onde o admin/preview já fixou: faixa vermelha `#b00020`, variável vazia `#fde68a`/`#713f12`, diff verde/amarelo/vermelho.
 
@@ -73,8 +73,9 @@ Cores fora dos tokens só onde o admin/preview já fixou: faixa vermelha `#b0002
 | Seletor de ano | cabeçalho da base (só ela inclui) | `_componentes/anos.html`: popover nativo + Alpine `seletorAno` (`static/ui/componentes/seletor-ano.js`) |
 | Abas | partes da mesma tela (Templates F1/F2/Matrizes/Variáveis) | `<nav class="abas"><a aria-current="page">`; a aba é a URL (`?aba=`), não estado em JS |
 | Tabela | listas curtas | `.tabela-caixa > table.tabela` |
-| Tabela densa | painel, listas longas: cabeçalho fixo, 1ª coluna `.fixa` (é `position: relative`, para o `.sr-only` não vazar e criar rolagem na página) | `.tabela-densa > table.tabela`; `.num` alinha números; `.quebra` deixa quebrar |
-| Grade editável | planilha de células (cortes, variáveis) | `form.grade > .grade-caixa > table.tabela` + `.barra-salvar` (ver `cortes.html`) |
+| Tabela rolável | tabela que pode ficar mais larga ou mais alta que a tela (grade de Cortes, Variáveis, Painel, lista de Projetos, Padrões do ano): cabeçalho e 1ª coluna presos, rolagem só dentro da caixa, nunca na página | `<div class="tabela-rolavel" x-data="tabelaRolavel"><table class="tabela">`; a 1ª coluna leva `.fixa` (th do thead e das linhas); o componente liga `data-rolou-esq` / `data-rolou-dir` (scroll + ResizeObserver; sem rolagem, nada) e o CSS mostra a sombra da borda daquele lado em 180 ms; variantes `.grade-caixa` (altura da grade), `.tabela-densa` (linhas baixas) e `.tabela-padroes` (dentro de card, sem borda própria) |
+| Tabela densa | painel, listas longas: linhas baixas, cabeçalho e 1ª coluna `.fixa` presos | `.tabela-rolavel.tabela-densa > table.tabela` (`x-data="tabelaRolavel"`); `.num` alinha números; `.quebra` deixa quebrar |
+| Grade editável | planilha de células (cortes, variáveis), cada célula salva sozinha (autosave) | `form.grade > .tabela-rolavel.grade-caixa > table.tabela` (`x-data="tabelaRolavel"`; ver `parciais/cortes_grade.html`) |
 | Lista + detalhe | navegar itens e editar um (matriz → descritores, revista → seções) | `.lado-a-lado > nav.lista + section.detalhe`; o item ativo com `aria-current`; o detalhe vem por HTMX |
 | Duas colunas | editor + preview ao vivo | `.duas-colunas` |
 | Modal | confirmação curta, formulário pequeno sem sair da tela | `<dialog class="dialogo" id="x"><header><h2>…</h2><p class="mudo">…</p></header>…<footer><button data-fechar class="btn btn-outline">Cancelar</button>…</footer></dialog>` + `<button data-abrir="x">`; `.dialogo-largo` para diff |
@@ -89,7 +90,7 @@ Cores fora dos tokens só onde o admin/preview já fixou: faixa vermelha `#b0002
 | Só leitura | perfil sem permissão de escrita | `{% include "ui/_componentes/so_leitura.html" with texto="Só leitura: … Para editar, peça …" %}` |
 | Mensagens | resultado de ação (Django `messages`) | já na base (`#mensagens`); fragmento HTMX que grava inclui `{% include "ui/_componentes/mensagens.html" with oob=True %}` |
 | Toast | erro de rede/servidor do HTMX (automático) ou aviso efêmero | `uiToast("texto", "erro")` (`static/ui/ui.js`) |
-| Estado vazio | lista sem itens | `{% include "ui/_componentes/vazio.html" with titulo=… texto=… url=… rotulo=… %}` |
+| Estado vazio | lista sem itens. Ensina: o título diz o que falta, o texto diz a causa e o que fazer, o botão faz a ação só para quem tem `perms`; o Impresso vê o texto que diz quem faz, sem botão | `{% include "ui/_componentes/vazio.html" with titulo=… texto=… url=… rotulo=… %}`; `abrir="dlg-…"` para abrir um modal, `mais=True` para o ícone +. O botão chega pronto para a ação: o "+ Novo projeto" da Lista vazia vai a Cortes com `?novo=1`, que abre a linha do parceiro novo com o foco no nome (U10d, `linhaNova` com `data-abrir-ao-carregar`) |
 | Badge | contagem, rótulo curto | `.badge`, `.badge-secundario`, `.badge-contorno`, `.badge-alerta`, `.badge-erro` |
 | Tag (pílula de categoria) | valor de categoria numa célula: matriz, componente, versão, "6 tópicos". Uma cor por coluna, sempre a mesma | `.tag` (neutra: fundo branco e fio), `.tag-azul` (matriz), `.tag-lilas` (componente LP/MT). Aviso continua em `.badge-alerta` ("sem matriz"). Corta com reticências acima de 18rem: ponha o nome inteiro no `title` |
 | Contagem (balão) | número de pendências ao lado de um selo | `<span class="contagem" role="img" aria-label="8 pendências" title="8 pendências: …">8</span>` (âmbar, como o contador do painel); sem pendência, `.contagem.contagem-ok` com o ✓ em cinza e `aria-label="Sem pendências"`. Plural com `pluralize`, nunca "(s)" |
@@ -98,11 +99,25 @@ Cores fora dos tokens só onde o admin/preview já fixou: faixa vermelha `#b0002
 | Carregando | pedido HTMX demorado | `hx-indicator` + `{% include "ui/_componentes/girando.html" with id=… %}` (`svg.girando.htmx-indicator`); o alvo com `.alvo-htmx` (ou `.detalhe`) e `hx-indicator` nele esmaece |
 | Link da linha | nome na 1ª coluna que abre o item (painel, matrizes, templates, revistas, variáveis) | `a.link-linha` (sublinhado discreto que escurece no hover) |
 | Link de texto | link no meio de uma frase ("usado por 2", "Limpar", "O que mudou") | `a.link` |
-| Voltar | detalhe → lista de cima | `a.mudo.voltar` acima do `.pagina-cab` |
+| Voltar | detalhe → lista de cima | `a.mudo.voltar` "‹ Lista" acima do `.pagina-cab` (matriz, MEC, template, Ano). Com dois níveis (projeto, revista): `nav.mudo.voltar.pj-trilha` com o mesmo "‹" (`aria-hidden`) antes do 1º link |
 | Recolhível | conteúdo secundário longo (diff do validar, legenda das variáveis) | `<details class="recolhivel"><summary>…</summary>…</details>` |
 | Caixa de erro | lista de pendências/erros dentro de um card (pendências da revista, prévia do template) | `.caixa-erro` com `<ul>` |
 | Só leitura nativo | form inteiro sem permissão | `<fieldset disabled>`: os campos ganham o fundo de só leitura |
 | Modal com form | o HTMX troca o form inteiro do modal | `<dialog class="dialogo"><form>…</form></dialog>` (o `form` vira a coluna do modal) |
+
+### Estados dos controles (U10b)
+
+| Estado | Como |
+|---|---|
+| Foco | `.btn`, `.input`, `.select`, `.textarea`: borda e anel de 3px em `--ring`; os demais (`.btn-icone`, `.alca`, links): `outline` 2px em `--ring`, `outline-offset` 2px; área de soltar: `:focus-within` |
+| Hover | `--btn-hover` por variante (cada uma troca só o fundo); `.btn-icone` e `.alca` ganham fundo `--muted`; 120–150 ms com `--ease-saida` |
+| Desligado | `:disabled` ou `[aria-disabled="true"]`: opacidade 0,5 e cursor `not-allowed`, sem `pointer-events: none` (o `title` precisa aparecer); em `<a>`, o servidor tira o `href` |
+| Carregando | `aria-busy="true"`, posto pelo `autosave.js` no campo em envio e no `ordenavel`: cursor `progress` e o `girando.html`; o status diz "Salvando…" |
+| Entrada | `[data-linha-nova]`, popover, modal e mensagens: `animation: entra 120ms var(--ease-saida)`; cada estado do status do autosave entra com `transition: opacity 180ms` a partir do `@starting-style`; o `prefers-reduced-motion` global corta tudo |
+
+### Profundidade (U10d)
+
+Flat Rule do DESIGN.md: a única sombra é a `--shadow-xs`. Modal e popover usam a receita do card (`var(--shadow-xs), 0 0 0 1px` foreground a 10%); toast, segmento ativo e a barra do detalhe do Impresso, só `--shadow-xs`. A sombra da borda da `.tabela-rolavel` é indicador de rolagem, não profundidade.
 
 ## 5. HTMX
 
@@ -117,13 +132,14 @@ Cores fora dos tokens só onde o admin/preview já fixou: faixa vermelha `#b0002
 
 ### Autosave por campo (U3)
 
-Campo sem impacto salva sozinho; com impacto, o modal do U2 abre antes de gravar. Servidor: `nucleo/ui_autosave.py`, `responder_campo(request, *, form, gravar, revistas, titulo)` (valida, simula com `perdem_validado` e grava ou devolve o impacto). `form_de_um_campo(Form, campo, valor, instance=…)` reaproveita o form inteiro trocando um campo só. Cliente: `static/ui/componentes/autosave.js` (`campoAuto` no `<form>`, `saida` em `_componentes/status_salvo.html`, no cabeçalho).
+Campo sem impacto salva sozinho; com impacto, o modal do U2 abre antes de gravar. Servidor: `nucleo/ui_autosave.py`, `responder_campo(request, *, form, gravar, revistas, titulo)` (valida, simula com `perdem_validado` e grava ou devolve o impacto). `form_de_um_campo(Form, campo, valor, instance=…)` reaproveita o form inteiro trocando um campo só. Cliente: `static/ui/componentes/autosave.js` (`campoAuto` no `<form>`, `saida` em `_componentes/status_salvo.html`, no cabeçalho). Página que também grava por botão passa o texto parado: `{% include "ui/_componentes/status_salvo.html" with ocioso="…" %}` (ex.: Ano, onde os Padrões têm Salvar). A instrução "salva sozinho" fica só no status, não se repete no parágrafo da tela.
 
 - POST: `campo`, `valor`, `original` (o que a tela tinha), `confirmar_impacto`, `form_id` e a sessão de bloqueio; `[data-linha]` manda também a linha inteira (passo, cor, tarefa); `Accept: application/json`.
 - `200 {"ok": true, "salvo_em": "10:15"}` (+ `valor` normalizado, `id` da linha criada, `removida`).
 - `200 {"ok": false, "impacto": {"titulo", "perdem": [str], "afetadas": int, "html"}}`: não gravou; `html` é o `_componentes/impacto.html`, inserido no form. Confirmar reenvia o campo com `confirmar_impacto=on`; Cancelar/Esc volta o valor gravado e o foco.
 - `422 {"ok": false, "erros": [str]}`: erro embaixo do campo, status "Não salvo: corrija o campo marcado".
-- `409 {"ok": false, "conflito": str}`: bloqueio perdido (o `com_bloqueio` responde JSON a quem pede JSON) → o form inteiro vira só leitura com o nome de quem edita. Com `atual` (Cortes, conflito otimista pelo `original`): mostra o conflito e "Tentar de novo" sobrescreve de propósito.
+- `409 {"ok": false, "conflito": str}`: bloqueio perdido (o `com_bloqueio` responde JSON a quem pede JSON) → o form inteiro vira só leitura com o nome de quem edita. Dentro de `[data-trava-linha]` (planilha de Variáveis, U10d), o 409 é o projeto daquela linha aberto por outra pessoa: só a linha fica só leitura, com o texto do conflito (o nome de quem edita) embaixo da célula; o resto da planilha segue editável e "Tentar de novo", quando grava, destrava a linha.
+- `409` com `atual` (conflito otimista pelo `original`: grade de Cortes e, desde o U10d, a planilha de Variáveis, que não tem bloqueio de página): a rota compara o `original` com o valor gravado e, se diferem, não grava; a tela mostra o conflito ("agora: …") e "Tentar de novo" manda o `atual` como `original`, sobrescrevendo de propósito. O `200` traz o `valor` normalizado, para o próximo `original` bater com o banco.
 - `403`: sem permissão (só leitura, como no 409 de bloqueio).
 - Marcação: `<form x-data="campoAuto" id="…" data-url="…">`; ancestral com `data-url`/`data-prefixo` troca a rota e tira o prefixo do formset; `[data-manual]` fica de fora (linha nova que ainda grava pelo botão). O aviso ao sair (`beforeunload`) só dispara com envio pendente ou com erro.
 - U8b: `200` pode trazer `trocar: {id: html}` (o cliente troca essas partes da página: o que a gravação mudou fora do campo, como a Situação da revista). `responder_campo(…, simular=, modal=)`: `simular` roda na simulação no lugar do `gravar` (ex.: arquivo, só o sha256); `modal` é contexto extra do modal e o torna obrigatório (ex.: `copias`/`frase` de "descartar N cópia(s)"); os campos com `name` dentro do modal vão junto ao confirmar.
@@ -166,3 +182,8 @@ def projeto(request, pk): ...   # usa request.pode_gravar
 - Mesmas permissões do admin equivalente: ver sem permissão → 403; sem permissão de escrita → só leitura (campos `readonly`/`disabled`, sem botão de salvar) e POST → 403.
 - Mensagens em PT-BR, causa + correção, sem "Opa": "Não salvo: <causa>. <o que fazer>." / "Nada foi gravado: corrija os erros marcados." / "Só leitura: <por quê>. Para editar, <como>."
 - Ícones: SVG inline do Lucide (o mesmo do editor), `aria-hidden="true"`, sempre com texto ao lado.
+
+## 8. Testes de navegador (Playwright)
+
+- `app/e2e/playwright.config.ts` roda todo spec em dois projetos: `chromium` (1280×720, o padrão) e `desktop-1440` (1440×900, U10d). Um `npx playwright test` cobre as duas larguras; a regra é 0 pulados (sem as `E2E_*` os specs pulam em silêncio).
+- Antes de mexer num campo, `alpinePronto(page)` (`tests/helpers.ts`): espera o `DOMContentLoaded` (o Alpine e o Sortable vêm do jsDelivr, com o cache vazio a cada contexto) e depois o `data-estado=""` do status. Gravou: espere `Salvo às \d` visível, não só presente.

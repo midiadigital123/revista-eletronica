@@ -20,7 +20,7 @@
 .htmx-request .validar-esta .htmx-indicator { display: inline; }
 
 /* Selo "validada": o verde do status ✓ da base. */
-.validar-badge-ok { background: color-mix(in oklch, var(--sucesso) 12%, transparent); color: oklch(0.4 0.13 150); }
+.validar-badge-ok { background: color-mix(in oklch, var(--sucesso) 12%, transparent); color: var(--sucesso); }
 .validar-badge-ok svg { width: 0.75rem; height: 0.75rem; }
 
 @media (max-width: 40rem) {

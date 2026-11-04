@@ -86,6 +86,13 @@ export async function atribuirEmMassa(
   await dialogo.getByRole("button", { name: titulo, exact: true }).click();
 }
 
+/** A revista LP da demonstração (criar_demo), pela Lista de Projetos: a lista do admin pagina em 100 e,
+ * com os projetos E2E que cada execução cria, a DEMONSTRAÇÃO cai na 2ª página (U10d). */
+export async function revistaDemo(page: Page) {
+  await page.goto("/ui/projeto/ano/2026/");
+  return revistaDaLista(page, "DEMONSTRAÇÃO", "LP");
+}
+
 /** Lista de Projetos: o id da revista `codigo` (LP, MT) no grupo do parceiro (linha por revista). */
 export async function revistaDaLista(page: Page, parceiro: string, codigo: string) {
   const grupo = page.locator("tbody", { has: page.getByLabel(`Marcar ${parceiro}`, { exact: true }) });
