@@ -8,7 +8,7 @@ Pendências da rodada de 03/11 fechadas em 04/11: 0015 aplicada; `feat/ux-fix-no
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Abrir `plans/revista-express-telas-b-ux.md` na seção do U10 e escolher por onde começar.
+Lançar a etapa 5.1 de `plans/revista-express-onda5-u10.md` (U10a, U10b e U10c em worktrees paralelos).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2023,3 +2023,8 @@ Abrir `plans/revista-express-telas-b-ux.md` na seção do U10 e escolher por ond
 - `templates.css`: usuário confirmou que a remoção do `border-radius` foi dele; commitado.
 - Anotação do trail l-9fb3f4a9: como preparar o banco de dev para o Playwright depois da limpeza.
 - Plano `plans/revista-express-telas-b-ux.md`: 33 caixas de U0 a U9 marcadas (todas têm commit na branch); U10 segue com 2 caixas abertas.
+
+### 2026-11-04 (tarde)
+- trail atualizado para 0.28.1 (`trail upgrade`).
+- `CLAUDE.md`: nova seção "Finding code" manda usar `trail ask`/`grep`/`callers` antes de grep/Read e `trail check` antes de commitar. Camada `--deep` do trail ficou de fora (precisa de chave de API e custo; só se a busca errar).
+- Plano da onda 5 escrito e aprovado: `plans/revista-express-onda5-u10.md` (U10a tabela rolável, U10b estados, U10c fichas em paralelo; U10d crítica do impeccable + Playwright em 1440/1280 depois da integração).
