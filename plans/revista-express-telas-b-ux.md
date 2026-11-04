@@ -80,12 +80,12 @@ Os caminhos são relativos a `app/nucleo/`.
 
 **Arquivos:** `templates/ui/cortes.html:105`; `app/e2e/tests/cortes.spec.ts`; `state.md`; `plans/revista-express-telas-b-ux.md`.
 
-- [ ] Teste Playwright `cortes sem edição não acusa alteração`: abre `/cortes/2026/`, espera o texto `Nenhuma alteração.` e que nenhuma célula tenha `[data-alterada]`. Depois recarrega, e o recarregamento não pode abrir diálogo (`page.on('dialog')` falha o teste).
-- [ ] Rode o teste e confira que **falha**.
-- [ ] Correção: `tr.querySelectorAll("td input.input")`. O seletor atual pega também o campo do "Renomear" e desloca a comparação.
-- [ ] Confira o mesmo tipo de seletor em `variaveis/pagina.html` (perto da `:112`) e em `templates/editar.html` (perto da `:94`). Corrija se houver.
-- [ ] Rode de novo e confira que passa. Registre D-195 a D-199 (decisões a–e) no `state.md`.
-- [ ] Commit `fix(ui-b): contador de alteração não salva em Cortes`.
+- [x] Teste Playwright `cortes sem edição não acusa alteração`: abre `/cortes/2026/`, espera o texto `Nenhuma alteração.` e que nenhuma célula tenha `[data-alterada]`. Depois recarrega, e o recarregamento não pode abrir diálogo (`page.on('dialog')` falha o teste).
+- [x] Rode o teste e confira que **falha**.
+- [x] Correção: `tr.querySelectorAll("td input.input")`. O seletor atual pega também o campo do "Renomear" e desloca a comparação.
+- [x] Confira o mesmo tipo de seletor em `variaveis/pagina.html` (perto da `:112`) e em `templates/editar.html` (perto da `:94`). Corrija se houver.
+- [x] Rode de novo e confira que passa. Registre D-195 a D-199 (decisões a–e) no `state.md`.
+- [x] Commit `fix(ui-b): contador de alteração não salva em Cortes`.
 
 ### U1: Fundação Alpine + SortableJS (~45 min)
 
@@ -93,10 +93,10 @@ Os caminhos são relativos a `app/nucleo/`.
 
 **Produz:** `window.Alpine` iniciado em toda tela B, e `componentes.js` registrando componentes no evento `alpine:init`.
 
-- [ ] Teste de fumaça: numa tela B, `await page.evaluate(() => !!window.Alpine && !!window.Sortable)` é `true`, e o console não mostra erro.
-- [ ] Carregue do jsDelivr com SRI: `https://cdn.jsdelivr.net/npm/@alpinejs/csp@3.14.9/dist/cdn.min.js` e `https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js`. Calcule o `integrity` com `curl -s URL | openssl dgst -sha384 -binary | openssl base64 -A`.
-- [ ] Ordem na base, toda com `defer`: `htmx.min.js` → `ui.js` → Sortable (CDN) → `componentes.js` → Alpine CSP (CDN). O Alpine fica por último para que o `alpine:init` encontre os registros.
-- [ ] Teste da fumaça passa. Na suíte Django, `test_ui_base` confere os 5 `<script>`. Commit.
+- [x] Teste de fumaça: numa tela B, `await page.evaluate(() => !!window.Alpine && !!window.Sortable)` é `true`, e o console não mostra erro.
+- [x] Carregue do jsDelivr com SRI: `https://cdn.jsdelivr.net/npm/@alpinejs/csp@3.14.9/dist/cdn.min.js` e `https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js`. Calcule o `integrity` com `curl -s URL | openssl dgst -sha384 -binary | openssl base64 -A`.
+- [x] Ordem na base, toda com `defer`: `htmx.min.js` → `ui.js` → Sortable (CDN) → `componentes.js` → Alpine CSP (CDN). O Alpine fica por último para que o `alpine:init` encontre os registros.
+- [x] Teste da fumaça passa. Na suíte Django, `test_ui_base` confere os 5 `<script>`. Commit.
 
 ### U2: Modal de impacto no lugar de todo checkbox "Confirmo" (~1 dia)
 
@@ -109,13 +109,13 @@ Os caminhos são relativos a `app/nucleo/`.
 - Componente Alpine `impacto`: abre com `showModal()` ao carregar ou depois de uma troca HTMX. "Confirmar" põe `confirmar_impacto=on` no form e chama `requestSubmit()`. "Cancelar" e Esc fecham o modal e restauram os valores do form a partir de `data-original`.
 
 Passos:
-- [ ] Testes Django, um por lugar (renomear parceiro, intervalo, descritor, novo descritor, item, paleta):
+- [x] Testes Django, um por lugar (renomear parceiro, intervalo, descritor, novo descritor, item, paleta):
   - `test_sem_confirmar_abre_modal_e_nao_grava`: `assertContains(r, 'role="dialog"')`, o nome da revista validada aparece, o dado continua igual e `esta_validada(...)` segue `True`.
   - `test_confirmado_grava_e_tira_validado`.
-- [ ] Testes novos de impacto onde hoje não existe: **grade de Cortes** (`cortes.gravar`) e **lote de matriz e de template** (`lotes.gravar_matriz` / `gravar_template`), com os mesmos dois casos.
-- [ ] Teste de regressão `test_nenhum_checkbox_confirmo`: percorre `templates/ui/**/*.html` e falha se aparecer `Confirmo:` ou `name="confirmar"` em `type="checkbox"`.
-- [ ] Implemente o serviço, o include e o componente. Troque cada checkbox pelo include.
-- [ ] Playwright `impacto.spec.ts`: renomear um parceiro validado abre o modal; Esc volta o nome antigo e devolve o foco; confirmar grava. Commit.
+- [x] Testes novos de impacto onde hoje não existe: **grade de Cortes** (`cortes.gravar`) e **lote de matriz e de template** (`lotes.gravar_matriz` / `gravar_template`), com os mesmos dois casos.
+- [x] Teste de regressão `test_nenhum_checkbox_confirmo`: percorre `templates/ui/**/*.html` e falha se aparecer `Confirmo:` ou `name="confirmar"` em `type="checkbox"`.
+- [x] Implemente o serviço, o include e o componente. Troque cada checkbox pelo include.
+- [x] Playwright `impacto.spec.ts`: renomear um parceiro validado abre o modal; Esc volta o nome antigo e devolve o foco; confirmar grava. Commit.
 
 ### U3: Autosave por campo com regra de impacto (~2 dias, em dois commits)
 
@@ -138,12 +138,12 @@ Passos:
 - Componente global `saida`: só faz `beforeunload` se houver envio pendente ou com erro.
 
 Passos:
-- [ ] **U3a: infra + Projeto + Variáveis.** Testes em `test_ui_autosave.py`, um caso por resposta do protocolo (200, impacto, 422, 409 de bloqueio, 403 para o Impresso). A planilha de Variáveis e a página do projeto usam **a mesma rota** `ui_projeto_campo`, assim o dado tem um único ponto de escrita.
+- [x] **U3a: infra + Projeto + Variáveis.** Testes em `test_ui_autosave.py`, um caso por resposta do protocolo (200, impacto, 422, 409 de bloqueio, 403 para o Impresso). A planilha de Variáveis e a página do projeto usam **a mesma rota** `ui_projeto_campo`, assim o dado tem um único ponto de escrita.
   - Implemente.
   - Tire o "Salvar projeto" e o "Salvar variáveis". Passos e cores continuam formsets, mas cada linha salva sozinha pela mesma rota.
   - Playwright: digitar uma variável, sair do campo, ver "Salvo às" e recarregar sem diálogo. Com a rede abortada, ver "Não salvo · Tentar de novo" e o diálogo ao sair.
   - Commit.
-- [ ] **U3b: Cortes + Ano + descritor.** Testes, incluindo o `409` de Cortes quando `original` não bate (duas abas).
+- [x] **U3b: Cortes + Ano + descritor.** Testes, incluindo o `409` de Cortes quando `original` não bate (duas abas).
   - Implemente.
   - Tire "Salvar cortes", "Salvar etapas", "Salvar componentes" e "Salvar descritor". O editor de Templates **mantém** o salvar explícito, porque gera uma versão assinada.
   - Apague o contador "N parceiro(s) com alteração não salva" e o `beforeunload` inline das três páginas, que passam a usar o componente `saida`.
@@ -166,14 +166,14 @@ Passos:
 - Componente `ordenavel`: alça de arrastar (SortableJS, `handle: ".alca"`) e botões "Mover para cima/baixo" para o teclado. Os dois disparam o POST de reordenação.
 
 Passos:
-- [ ] Testes:
+- [x] Testes:
   - `test_form_sem_campo_ordem` (etapa, descritor, tarefa).
   - `test_nova_etapa_vai_para_o_fim`.
   - `test_reordenar_grava_1_a_n`.
   - `test_reordenar_lista_incompleta_422`.
   - `test_sem_linha_vazia` (o texto "Preencha a última linha" não aparece, e o formset usa `extra=0`).
-- [ ] Implemente nas etapas, componentes, descritores (lista da MEC) e tarefas. Na grade de Cortes, o form "Nova linha" sai e entra o botão "+ Adicionar parceiro" **logo abaixo da tabela**, que abre a linha com o foco no nome.
-- [ ] Playwright: clicar em "+ Adicionar etapa" faz a linha aparecer com foco; Enter grava; Esc descarta; arrastar troca a ordem. Commit.
+- [x] Implemente nas etapas, componentes, descritores (lista da MEC) e tarefas. Na grade de Cortes, o form "Nova linha" sai e entra o botão "+ Adicionar parceiro" **logo abaixo da tabela**, que abre a linha com o foco no nome.
+- [x] Playwright: clicar em "+ Adicionar etapa" faz a linha aparecer com foco; Enter grava; Esc descarta; arrastar troca a ordem. Commit.
 
 ### U5: Renomear inline (~0,5 dia)
 
@@ -181,8 +181,8 @@ Passos:
 
 **Componente `nomeInline`:** o nome aparece como texto com um botão-lápis acessível ("Renomear <nome>"). O clique troca para um input já com foco; Enter salva; Esc cancela; ao sair do campo, salva. Se houver impacto, abre o modal do U2.
 
-- [ ] Testes: o renomear com o protocolo JSON (200, impacto, 422 para nome vazio ou repetido, 403); `ui_revista_editar` com `acao=nome` responde 400; o texto `Editar nome` não aparece em `revista.html`.
-- [ ] Implemente. Playwright: renomear o parceiro pela grade. Commit.
+- [x] Testes: o renomear com o protocolo JSON (200, impacto, 422 para nome vazio ou repetido, 403); `ui_revista_editar` com `acao=nome` responde 400; o texto `Editar nome` não aparece em `revista.html`.
+- [x] Implemente. Playwright: renomear o parceiro pela grade. Commit.
 
 ### U6: Menu de 5 itens + seletor de ano global (~1 dia)
 
@@ -198,13 +198,13 @@ Detalhes:
 - O seletor é um botão "2026 ▾" que abre um popover (`popover` nativo + `x-data="seletorAno"`). Ele lista os anos, "Configurar 2026" (`ui_ano`) e, com `perms.nucleo.abrir_ano`, "Abrir novo ano" (`ui_anos`).
 
 Passos:
-- [ ] Testes:
+- [x] Testes:
   - `test_menu_tem_5_itens` (os nomes exatos).
   - `test_troca_de_ano_mantem_rota_e_query` (`/painel/2026/?falta=validado` vai para `/painel/2025/?falta=validado`).
   - `test_troca_em_projeto_vai_ao_mesmo_parceiro`.
   - `test_abrir_ano_so_com_permissao`.
   - `test_nenhuma_pagina_inclui_abrir_ano`.
-- [ ] Implemente. Rode o `test_ui_links` completo. Commit.
+- [x] Implemente. Rode o `test_ui_links` completo. Commit.
 
 ### U7: Hub Projetos (~2 dias, em dois commits)
 
@@ -223,13 +223,13 @@ Passos:
 - **Interface:** `atribuir_matriz(parceiro_ano, matriz, usuario) -> None` em `servicos/`. É usada por `_gravar_matriz` (`ui_projeto.py:151`) e por `lotes.gravar_matriz`.
 
 Passos:
-- [ ] Testes:
+- [x] Testes:
   - Inventário `test_nenhuma_acao_perdida`: para cada rota antiga, a ação continua alcançável na tela nova (nomes de botão exatos).
   - Os redirects.
   - A ação em massa com e sem impacto.
   - A aba Matriz e a ação em massa chamam `atribuir_matriz` (`mock.patch`).
   - O Impresso não vê a barra de ações e recebe 403.
-- [ ] Implemente o U7a, rode o Playwright completo (`cortes`, `painel` e `lotes` atualizados) e faça o commit. Depois implemente o U7b e faça o commit.
+- [x] Implemente o U7a, rode o Playwright completo (`cortes`, `painel` e `lotes` atualizados) e faça o commit. Depois implemente o U7b e faça o commit.
 
 ### U8: Painel redesenhado (~1 dia)
 
@@ -238,12 +238,12 @@ Passos:
 - As linhas ficam agrupadas por parceiro: uma linha de grupo com o nome, o link do projeto e "N de M revistas completas", e abaixo uma sublinha por componente (o selo LP/MT, Preview e o status por coluna).
 - O card "Próxima tarefa" e a nav "Montagem" saem. Os contadores por coluna, que já são links-filtro, viram o resumo principal: um contador ativo fica destacado e há um "Limpar filtro".
 - Cabeçalho e coluna Revista ficam fixos. A barra "Validar selecionadas" também é fixa e mostra "N selecionada(s)".
-- [ ] Testes:
+- [x] Testes:
   - `test_agrupa_por_parceiro` (uma linha de grupo por parceiro, com as revistas na ordem dos componentes).
   - `test_sem_card_proxima_tarefa`.
   - `test_filtro_por_contador`.
   - Os testes atuais de seleção e validação continuam verdes.
-- [ ] Implemente e atualize o `painel.spec.ts`. Commit.
+- [x] Implemente e atualize o `painel.spec.ts`. Commit.
 
 ### U8b: Página da revista reorganizada (~1 dia)
 
@@ -276,14 +276,14 @@ Regras:
 - O nome não se edita aqui (U5): o link "Editar no projeto" vai para a aba Dados.
 
 Passos:
-- [ ] Testes:
+- [x] Testes:
   - `test_pendencias_aparecem_uma_vez`: cada texto de pendência aparece exatamente 1 vez no HTML.
   - `test_textos_sem_template_mostra_estado_vazio` (sem `class="faixa"`).
   - `test_validar_desabilitado_com_motivo`.
   - `test_upload_svg_grande_422_com_mensagem`.
   - `test_trocar_template_com_copias_pede_modal`.
   - Os testes atuais de seção, validado e permissão continuam verdes.
-- [ ] Implemente. Playwright: soltar uma capa mostra a miniatura e "Salvo às"; escolher os dois templates libera "Textos"; validar. Commit.
+- [x] Implemente. Playwright: soltar uma capa mostra a miniatura e "Salvo às"; escolher os dois templates libera "Textos"; validar. Commit.
 
 ### U9b: Editor de template com seções travadas (~1,5 dia)
 
@@ -309,14 +309,14 @@ Passos:
 - O "Salvar" explícito continua, porque cria uma versão assinada (decisão do U3). A barra mostra "Alterações não salvas", e o aviso de saída só aparece quando há alteração de verdade.
 
 Passos:
-- [ ] Testes:
+- [x] Testes:
   - `test_ida_e_volta_preserva_seeds`: para cada template seed de 2026, `form_para_corpo(secoes_para_form(t)) == t`.
   - `test_id_fora_do_permitido_422`.
   - `test_id_nao_aparece_como_campo_editavel` (nenhum `input`/`textarea` com o valor `## `).
   - `test_adicionar_passo_numera_sequencial`.
   - `test_erro_de_validacao_aparece_na_secao_certa`.
   - Os testes atuais de impacto e versão continuam verdes.
-- [ ] Implemente. Playwright: editar o título do Passo 1, inserir `{{nome_parceiro}}` pelo botão, salvar, ver a tela de impacto e criar a versão 2. Commit.
+- [x] Implemente. Playwright: editar o título do Passo 1, inserir `{{nome_parceiro}}` pelo botão, salvar, ver a tela de impacto e criar a versão 2. Commit.
 
 ### U9: Hierarquia do editor de matriz (~0,5 dia)
 
@@ -325,7 +325,7 @@ Passos:
 - Cabeçalho com o título "2EF Língua Portuguesa", a linha de contexto e o status de salvamento. À direita, um botão outline "Configurações" que abre um popover com o "Intervalo mínimo" (autosave com impacto).
 - "+ Novo descritor" sai do cabeçalho e vai para o topo da lista de descritores, como botão outline.
 - "Excluir descritor" vai para o fim do painel, numa zona de perigo separada e com o destructive suave. O fluxo de digitar o código para excluir continua.
-- [ ] Testes: os rótulos e papéis novos; a exclusão continua exigindo o código. Playwright do fluxo da MEC. Commit.
+- [x] Testes: os rótulos e papéis novos; a exclusão continua exigindo o código. Playwright do fluxo da MEC. Commit.
 
 ### U10: Acabamento visual e documentação (~1 dia)
 
