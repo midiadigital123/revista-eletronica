@@ -3,7 +3,9 @@ A grade de cortes (form `grade`): aba Cortes do hub Projetos (o ano inteiro) e a
 (U7b, só a linha do parceiro). Contexto: ano, etapas, componentes, colunas, linhas, pode_gravar
 (o de `nucleo.cortes.pode_gravar`, não o do projeto).
 {% endcomment %}{% comment %}U3: cada célula salva sozinha ao sair dela (componente campoAuto, rota cortes_celula, com o `original` da célula).
-U5: o nome do parceiro também (nomeInline: o data-url dele troca a rota para cortes_renomear_parceiro).{% endcomment %}
+U5: o nome do parceiro também (nomeInline: o data-url dele troca a rota para cortes_renomear_parceiro).
+E2 (D-208): no <th>, "Excluir…" é um link (form não aninha) para ui_excluir, que oferece Desativar quando o
+parceiro está em uso; o desativado leva o selo "desativado" (a view só traz o desativado no ano com dados).{% endcomment %}
 <form method="post" class="grade" id="grade" data-grade{% if pode_gravar or perms.nucleo.change_parceiro %} x-data="campoAuto" data-url="{% url 'cortes_celula' ano.ano %}"{% endif %}>{% csrf_token %}
   {% if pode_gravar %}<p class="mudo">De 1 a 4 cortes inteiros e crescentes, separados por vírgula, maiores que 0 e menores que o máximo da escala da etapa. Célula vazia apaga o corte.</p>{% endif %}
   <div class="tabela-rolavel grade-caixa" x-data="tabelaRolavel">
@@ -18,7 +20,10 @@ U5: o nome do parceiro também (nomeInline: o data-url dele troca a rota para co
       <tbody>
       {% for linha in linhas %}
         <tr{% if linha.erros %} class="grade-com-erro"{% endif %} data-parceiro="{{ linha.parceiro.nome }}">
-          <th scope="row" class="grade-parceiro fixa">{% if perms.nucleo.change_parceiro %}{% url 'cortes_renomear_parceiro' ano.ano linha.parceiro.pk as url %}{% include "ui/_componentes/nome_inline.html" with nome=linha.parceiro.nome %}{% else %}{{ linha.parceiro.nome }}{% endif %}</th>
+          <th scope="row" class="grade-parceiro fixa"><span class="nome-inline">{% if perms.nucleo.change_parceiro %}{% url 'cortes_renomear_parceiro' ano.ano linha.parceiro.pk as url %}{% include "ui/_componentes/nome_inline.html" with nome=linha.parceiro.nome %}{% else %}<span class="nome-inline-texto">{{ linha.parceiro.nome }}</span>{% endif %}
+            {% if perms.nucleo.delete_parceiro %}<a class="btn btn-ghost btn-sm nome-inline-lapis" href="{% url 'ui_excluir' 'parceiro' linha.parceiro.pk %}?voltar={{ request.get_full_path|urlencode }}" aria-label="Excluir {{ linha.parceiro.nome }}…" title="Excluir…">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></a>{% endif %}</span>
+            {% if linha.parceiro.desativado_em %}<br><span class="badge badge-secundario" title="Desativado em {{ linha.parceiro.desativado_em|date:'d/m/Y' }}: só aparece nos anos em que tem cortes ou projeto.">desativado</span>{% endif %}</th>
           {% for cel in linha.celulas %}<td{% if cel.inicio %} class="grade-inicio"{% endif %}><input class="input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" name="c-{{ cel.chave }}" value="{{ cel.texto }}" aria-label="{{ cel.titulo }}"{% if cel.invalida %} aria-invalid="true"{% endif %}{% if linha.erros %} aria-describedby="erros-{{ linha.parceiro.pk }}"{% endif %}{% if not pode_gravar %} readonly{% endif %}></td>{% endfor %}
         </tr>
         {% if linha.erros %}
