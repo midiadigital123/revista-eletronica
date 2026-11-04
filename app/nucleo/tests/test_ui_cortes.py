@@ -3,7 +3,9 @@
 from django.urls import reverse
 
 from nucleo.models import Corte, Parceiro, ParceiroAno, Projeto, Revista
+from nucleo.servicos.exclusao import desativar_parceiro
 from nucleo.servicos.resolver import hash_validado
+from nucleo.tests.test_importacao import cadastrar
 from nucleo.tests.test_admin_projeto import Base as ProjetoBase
 from nucleo.tests.test_admin_cadastro import Base
 from nucleo.tests.test_admin_padrao import esta_validada
@@ -99,6 +101,49 @@ class GradeUiTest(Base):
         self.client.logout()
         resp = self.client.get(self.url)
         self.assertRedirects(resp, f"{reverse('admin:login')}?next={self.url}", fetch_redirect_response=False)
+
+
+class ParceiroNaGradeTest(Base):
+    """E2 (D-208): a grade usa `parceiros_do_ano`. O desativado some do ano sem dados dele e aparece
+    marcado no ano com corte. "Excluir…" no `<th>` é um link para `ui_excluir`, com `?voltar=` a grade."""
+
+    url = reverse("cortes", args=[2026])
+
+    def excluir(self, parceiro):
+        return f'href="{reverse("ui_excluir", args=["parceiro", parceiro.pk])}?voltar={self.url}"'
+
+    def test_desativado_sem_dados_some_e_com_corte_aparece_marcado(self):
+        Parceiro.objects.create(nome="GO")
+        sai = Parceiro.objects.create(nome="SAI")
+        campo = f"c-{sai.pk}-{self.e['5EF'].pk}-{self.c['LP'].pk}"
+        self.client.post(reverse("cortes_celula", args=[2026]), {"campo": campo, "valor": "125", "original": ""}, **JSON)
+        self.assertTrue(Corte.objects.filter(parceiro_ano__parceiro=sai).exists())
+        desativar_parceiro(sai, self.root)
+        cadastrar(2027)
+        r = self.client.get(self.url)
+        self.assertContains(r, 'data-parceiro="GO"')
+        self.assertContains(r, 'data-parceiro="SAI"')
+        self.assertContains(r, ">desativado</span>", count=1)
+        r = self.client.get(reverse("cortes", args=[2027]))
+        self.assertContains(r, 'data-parceiro="GO"')
+        self.assertNotContains(r, 'data-parceiro="SAI"')
+        self.assertNotContains(r, ">desativado</span>")
+
+    def test_excluir_e_link_para_quem_exclui_parceiro(self):
+        go = Parceiro.objects.create(nome="GO")
+        for grupo in ("Admin", "Pedagógica", "Mídias Digitais"):
+            with self.subTest(grupo):
+                self.client.force_login(usuario(f"u-{grupo}", grupo))
+                r = self.client.get(self.url)
+                self.assertContains(r, f'<a class="btn btn-ghost btn-sm nome-inline-lapis" {self.excluir(go)}')
+                self.assertContains(r, 'aria-label="Excluir GO…"')
+
+    def test_impresso_nao_ve_excluir(self):
+        go = Parceiro.objects.create(nome="GO")
+        self.client.force_login(usuario("imp", "Impresso"))
+        r = self.client.get(self.url)
+        self.assertContains(r, 'data-parceiro="GO"')
+        self.assertNotContains(r, reverse("ui_excluir", args=["parceiro", go.pk]))
 
 
 class RenomearParceiroTest(ProjetoBase):

@@ -7,7 +7,7 @@
 // Os parceiros são criados pelo próprio teste, com nome único por execução, e ficam no banco:
 // rode só contra um banco descartável (o do seu worktree), nunca contra dados reais.
 import { expect, test, type Page } from "@playwright/test";
-import { alpinePronto, entrar } from "./helpers";
+import { alpinePronto, entrar, novoParceiro } from "./helpers";
 
 async function criarParceiro(page: Page, nome: string) {
   await page.goto("/admin/nucleo/parceiro/add/");
@@ -78,4 +78,68 @@ test("rotas antigas levam às abas do hub Projetos", async ({ page }) => {
   }
   await expect(page.getByRole("button", { name: "Atribuir matriz…" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Atribuir template…" })).toBeVisible();
+});
+
+// E2 (D-205, D-208): "Excluir…" no nome do parceiro leva à página de excluir e volta para a grade.
+// Os parceiros "E2E…" daqui não ficam na grade: o livre é excluído; o com corte é desativado e,
+// sem o corte, sai também de 2026. O 2025 (vazio) só é lido.
+const GRADE = "/ui/projeto/ano/2026/cortes/";
+const linha = (page: Page, nome: string) => page.locator(`tr[data-parceiro="${nome}"]`);
+
+test("exclui pela grade um parceiro sem cortes", async ({ page }) => {
+  const nome = `E2E Livre ${Date.now().toString(36).toUpperCase()}`;
+  await entrar(page, GRADE);
+  await novoParceiro(page, nome);
+  await linha(page, nome).getByRole("link", { name: `Excluir ${nome}…` }).click();
+  await expect(page).toHaveURL(/\/ui\/excluir\/parceiro\/\d+\/\?voltar=/);
+  await expect(page.getByText("Nada usa isto.")).toBeVisible();
+  await page.getByLabel("Para confirmar, digite").fill(nome);
+  await page.getByRole("button", { name: "Excluir" }).click();
+  await expect(page).toHaveURL(new RegExp(`${GRADE}$`));
+  await expect(page.getByText(`Exclusão feita: o parceiro ${nome}.`)).toBeVisible();
+  await expect(linha(page, nome)).toHaveCount(0);
+});
+
+test("parceiro com corte desativado some do ano sem dados e fica marcado no ano com dados", async ({ page }) => {
+  const nome = `E2E Sai ${Date.now().toString(36).toUpperCase()}`;
+  await entrar(page, GRADE);
+  await novoParceiro(page, nome);
+  await alpinePronto(page);
+  const celula = linha(page, nome).locator("td input.input").first();
+  const status = page.locator("[data-status-salvo]");
+  await celula.fill("125");
+  await page.keyboard.press("Tab");
+  await expect(status.getByText(/Salvo às \d\d:\d\d/)).toBeVisible();
+
+  await linha(page, nome).getByRole("link", { name: `Excluir ${nome}…` }).click();
+  await expect(page.getByText("Não dá para excluir: isto está em uso.")).toBeVisible();
+  await page.getByRole("button", { name: "Desativar o parceiro" }).click();
+  await expect(page).toHaveURL(new RegExp(`${GRADE}$`));
+  await expect(page.getByText(`Parceiro ${nome} desativado: sai da grade dos anos em que não tem cortes.`)).toBeVisible();
+  await expect(linha(page, nome).getByText("desativado", { exact: true })).toBeVisible();
+
+  await page.goto("/ui/projeto/ano/2025/cortes/");
+  await expect(page.locator("[data-grade]")).toBeVisible();
+  await expect(linha(page, nome)).toHaveCount(0);
+
+  // Limpa o corte (o projeto é arquivado): sem dados em 2026, o desativado sai da grade de 2026 também.
+  await page.goto(GRADE);
+  await alpinePronto(page);
+  await linha(page, nome).locator("td input.input").first().fill("");
+  await page.keyboard.press("Tab");
+  await expect(status.getByText(/Salvo às \d\d:\d\d/)).toBeVisible();
+  await page.reload();
+  await expect(linha(page, nome)).toHaveCount(0);
+});
+
+test("impresso não vê Excluir na grade", async ({ browser }) => {
+  const { E2E_IMPRESSO_USUARIO: imp, E2E_IMPRESSO_SENHA: senha } = process.env;
+  test.skip(!imp || !senha, "defina E2E_IMPRESSO_*");
+  const page = await (await browser.newContext()).newPage();
+  await page.goto(`/admin/login/?next=${GRADE}`);
+  await page.fill("#id_username", imp!);
+  await page.fill("#id_password", senha!);
+  await page.click("input[type=submit]");
+  await expect(page.locator("[data-grade] tbody tr[data-parceiro]").first()).toBeVisible();
+  await expect(page.locator("[data-grade]").getByRole("link", { name: /^Excluir / })).toHaveCount(0);
 });
