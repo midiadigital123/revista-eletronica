@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Finding code
+
+Use `trail ask "<task>" --source` (or `trail grep` / `trail callers`) before grep or reading whole files. Run `trail check` before committing.
+
 ## Project Overview
 
 **Escala Interativa** is a single-page web application for analyzing educational assessment results and proficiency scales for Brazilian Portuguese language instruction. It covers grade levels 5º EF, 9º EF, and 3ª EM, presenting descriptors (D01–D40) mapped to BNCC competencies and proficiency patterns.
