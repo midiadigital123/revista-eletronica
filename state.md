@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Plano ativo: `plans/revista-express-telas-b-ux.md` + rodada de correções da revisão do usuário de 03/11 (plano `~/.claude/plans/critique-plan-corrigir-estilos-quebrados-hidden-rain.md`). Ondas 1–4 e os agentes A–G + responsivo mergeados em `feat/telas-b-ux`.
-Funcionando: integração validada em `95cc0af` (Django 701 OK, Playwright 51/51, sem rolagem lateral em 1440/1024/768/390). Depois disso: cores por situação, colunas da lista, menu por perfil, ordem das etapas (`4de9cff`).
-Pendências da rodada de 03/11 fechadas em 04/11: 0015 aplicada; `feat/ux-fix-nomes` mergeada; Django 703 OK (8 pulados); Playwright 51/51 com login E2E. Banco de dev recebeu de volta `criar_demo --ano 2026` (preview 32) e um ano 2025 vazio, porque os specs dependem deles. `templates.css`: a remoção do `border-radius` de `.tpl-indice a` foi do usuário; commitada. Próxima rodada: U10 (onda 5) e S6–S9.
+Onda 5 (U10): etapas 5.1–5.3 concluídas, e a 5.4 está quase pronta. U10d mergeado em `feat/telas-b-ux` (`66b0870`).
+Funcionando: tabela rolável com coluna e cabeçalho fixos; estados vazios com ação; Variáveis com trava por linha e sem sobrescrita; a grade de Cortes do admin abre com 40 parceiros; "+ Novo projeto" abre a linha nova em Cortes; acabamento da crítica do impeccable. Testes no dev: Django 716 OK (8 pulados), makemigrations sem mudança, Playwright 120/120 (chromium 1280 + desktop-1440, 0 pulados). `trail check` sem conflito. As caixas do U10 em `plans/revista-express-telas-b-ux.md` estão marcadas.
+Quebrado/pendente: limpeza do dev aplicada em 04/11. Não deu para apagar o usuário `e2e` nem o template "E2E editor por seção", porque o `TemplateVersao` só aceita inserção (trigger da 0006 e PROTECT em `criada_por`). O `e2e` ficou inativo e sem senha. O template real "Padrão (F1)" (id 1) recebeu 7 versões de teste com "Atualizado E2E …" no texto: a versão 8 é a atual. Onda 5 fechada. Próxima frente: a exclusão segura (D-205).
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Lançar a etapa 5.1 de `plans/revista-express-onda5-u10.md` (U10a, U10b e U10c em worktrees paralelos).
+Escrever o plano da exclusão segura (D-205) em `plans/revista-express-exclusao.md`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1661,7 +1661,38 @@ Lançar a etapa 5.1 de `plans/revista-express-onda5-u10.md` (U10a, U10b e U10c e
 - **Arquivos afetados:** `app/nucleo/servicos/impacto.py`, `app/nucleo/matriz.py` (`ImpactoForm(modal=True)`)
 - **Status:** ativa
 
+### D-203 — Limite de campos do POST em 10 000 para a grade de Cortes do admin (2026-11-04)
+- **Contexto:** o "Salvar cortes" do admin manda 1 campo por célula + 1 por parceiro, de todos os parceiros. Com 4 etapas × 7 componentes, ~35 parceiros passam de 1000 campos, e o Django recusa o POST com 500.
+- **Decisão:** `DATA_UPLOAD_MAX_NUMBER_FIELDS = 10_000` em `app/sistema/settings.py`. O corpo continua limitado a 2,5 MB, o que dá um teto de ~340 parceiros com 28 células.
+- **Motivo:** o Django só lê o limite do settings, e o `CsrfViewMiddleware` lê o POST antes da view, então não dá para subir o limite numa rota só.
+- **Descartadas:** mandar só as linhas alteradas, que é uma mudança maior e fica para quando o teto chegar; subir o limite por view, que é impossível pelo motivo acima.
+- **Arquivos afetados:** `app/sistema/settings.py`, `app/nucleo/tests` (`test_40_parceiros_com_7_componentes_salvam_a_grade`)
+- **Status:** ativa
+
+### D-204 — Trava por linha na planilha de Variáveis marcada no template (2026-11-04)
+- **Contexto:** um 409 de bloqueio de um projeto desligava a planilha inteira.
+- **Decisão:** o `<tbody>` de cada projeto leva `data-trava-linha`. Um 409 ali trava só aquela linha. A rota `campo` compara o `original` com o valor gravado e responde 409 com `atual` sem gravar.
+- **Motivo:** quem edita um projeto não deve impedir os outros de editar os demais.
+- **Descartadas:** a heurística "`data-url` interno = linha", porque a revista também usa `data-url` interno e lá o 409 deve travar tudo.
+- **Arquivos afetados:** `app/nucleo/static/ui/componentes/autosave.js`, `app/nucleo/urls/ui_projeto.py`, `templates/ui/parciais/variaveis_linha.html`, `app/e2e/tests/variaveis.spec.ts`
+- **Status:** ativa
+
+### D-205 — Exclusão só do que não está em uso, em todas as entidades (2026-11-04)
+- **Contexto:** o usuário viu que o banco impede várias exclusões (PROTECT em ~40 FKs, `TemplateVersao` só aceita inserção) e que o admin nega a exclusão de Ano, Projeto, Revista e Usuário.
+- **Decisão:** toda entidade pode ser excluída quando nada depende dela. Quando algo depende, a tela diz o que impede e oferece arquivar ou desativar. O PROTECT continua no banco. As versões de template continuam só de inserção. Usuário é desativado, nunca excluído.
+- **Motivo:** dá ao usuário uma saída para o que foi criado por engano, sem apagar histórico em cascata (D-0xx: o banco guarda o histórico de cada ano).
+- **Descartadas:** cascata para o admin com modal de impacto — apaga histórico que não volta; arquivar tudo (soft delete) — filtro em toda consulta, de 1 a 2 dias.
+- **Arquivos afetados:** a definir no plano (`plans/revista-express-exclusao.md`)
+- **Status:** ativa
+
 ## Perguntas em aberto
+- [x] (D-205) Regras de exclusão (pedido do usuário, 04/11): o banco impede várias exclusões (PROTECT em ~40 FKs; trigger só-inserção em `TemplateVersao`), e o admin nega a exclusão de Ano, Projeto ("arquiva pela cascata"), Revista e Usuário. O que deve ficar excluível, e por quem? — depende de: usuário
+- [ ] O template "Padrão (F1)" do dev está com "Atualizado E2E …" de 7 rodadas do Playwright. Gravar uma versão nova com o texto da v1? Isso pode mudar o hash das revistas que o usam. Corrigir também o spec, para ele editar só um template próprio — depende de: usuário
+- [ ] (U10d) Trocar "(s)" por `pluralize` no sistema todo, num passo próprio (~25 mensagens e ~40 asserções)? — depende de: usuário
+- [ ] (U10d) `tabular-nums` só nos números, para o hífen voltar ao normal? Contraria a Tabular Rule do DESIGN.md — depende de: usuário
+- [ ] (U10d) Manter mono no `table.diff` e no editor de template? — depende de: usuário
+- [ ] (U10a) A sombra do cabeçalho do Painel ao rolar na vertical deve voltar? Saiu pela Flat Rule — depende de: usuário
+- [x] (U10c) Variáveis: célula travada desliga a planilha inteira, e duas pessoas na mesma célula = vale a última. — usuário (04/11): entram no U10d
 - [ ] **Limpeza do banco de dev ao fim da reforma (autorizada por Otavio, 03/11):** apagar o que foi criado para teste — usuários `e2e`, `imp-e2e`, `demo-preview`; parceiro `DEMONSTRAÇÃO` (projeto/revista 2026, preview 13) e matriz `Demonstração`; parceiros `E2E A/B <sufixo>` criados pelo `cortes.spec.ts`; e o que os specs novos (U2+) criarem (nome com prefixo `E2E`). Não tocar em SAESE, TESTE, Novo parceiro, `otavio`, `midias`, `impresso`, `pedagogica`. Listar antes de apagar — depende de: fim do U10
 - [x] (D-189 → D-190) Auditoria das telas B: o que o back faz e a tela B não oferece. Bloqueia: abrir ano, criar matriz, criar template, paleta do ano, etapas/componentes. Leva a erro: links do painel vão ao admin (Impresso recebe 403 em "Matriz", `urls/painel.py:43`), renomear parceiro, "abra um ano no admin" para quem não pode. Menu sem Projetos e Lotes. Por onde começar — depende de: usuário
 - [x] (D-184) S17: os cortes de 2026 repetem os de 2025? Se sim, comando `importar_cortes` (~60 min) substituindo a D-119 nesse ponto — depende de: Pedagógica
@@ -2028,3 +2059,15 @@ Lançar a etapa 5.1 de `plans/revista-express-onda5-u10.md` (U10a, U10b e U10c e
 - trail atualizado para 0.28.1 (`trail upgrade`).
 - `CLAUDE.md`: nova seção "Finding code" manda usar `trail ask`/`grep`/`callers` antes de grep/Read e `trail check` antes de commitar. Camada `--deep` do trail ficou de fora (precisa de chave de API e custo; só se a busca errar).
 - Plano da onda 5 escrito e aprovado: `plans/revista-express-onda5-u10.md` (U10a tabela rolável, U10b estados, U10c fichas em paralelo; U10d crítica do impeccable + Playwright em 1440/1280 depois da integração).
+- Etapa 5.1 lançada a partir de `0a3ba86`: U10a (`feat/ux-u10a-tabela-rolavel`, compose `ux-u10a`, porta 8021), U10b (`feat/ux-u10b-estados`, `ux-u10b`, 8022), U10c (`feat/ux-u10c-docs`, sem docker).
+- Usuário autorizou (04/11): ao fim de cada etapa da onda 5, testar, mergear e seguir para a próxima sem perguntar, até o fim da onda. Exceção: a limpeza do banco de dev (5.4) lista antes e espera confirmação.
+- U10c mergeado (`2a19eba`, só docs). Divergências achadas pelo agente: (1) célula travada desliga a planilha de Variáveis inteira (`autosave.js:156-159` com 409 sem `atual`); (2) Variáveis sem proteção contra sobrescrita (rota não compara `original`); (3) mensagem de parceiro novo ainda manda "salve" (`urls/cortes.py:novo_parceiro`); (4) `lotes/template.html:11` ainda leva ao admin. (3) e (4) entram no lote do U10d; (1) e (2) esperam o usuário.
+- Usuário: as divergências (1) e (2) de Variáveis entram no U10d, junto com (3) e (4).
+- U10a mergeado (`c10830a`): `.tabela-rolavel` + `tabelaRolavel` (Alpine), sombra esq. na `.fixa` (`--sombra-borda-esq`), dir. no `::after` sticky do invólucro; sombra vertical do painel (`data-rolou-y`) saiu pela Flat Rule do DESIGN.md. Worktree: Django 703 OK, Playwright 55/55. Preparo de worktree: `imp-e2e` precisa de `is_staff=True`.
+- U10b mergeado (`9cfa0c8`). Etapa 5.2 na integração: Django 712 OK (8 pulados), makemigrations limpo, Playwright 56/57. Única falha: `cortes.spec` 'preenche os cortes de 2 parceiros' — `Max number of fields exceeded` na grade do admin (`/admin/nucleo/corte/`) com 30 parceiros (26 `E2E`); limite do Django 1000. Bug real (30 parceiros reais quebram a grade do admin), anterior ao U10; vai para o U10d. `estados.spec` falhou 1 vez em 2 rodadas (`alpinePronto` estourou 5 s): intermitente, U10d endurece.
+- U10d lançado de `a9854f0`: passo 0 (Variáveis 409 por linha e sem sobrescrita, textos velhos, limite de campos da grade do admin, `estados.spec` intermitente) + crítica do impeccable + Playwright em 1440/1280.
+- Usuário: "+ Novo projeto" do vazio chega na aba Cortes com a linha "Adicionar parceiro" aberta (enviado ao U10d); "Novo template" do vazio segue no admin até o S7.
+- U10d mergeado (`66b0870`, commits `8cc2abc` e `1a27159`): passo 0 a–f, projeto `desktop-1440`, lote do impeccable (crítica 30/40, P1 corrigidos), `design-system.md` atualizado, 3 learnings. Na raiz: Django 716 OK, makemigrations limpo, Playwright 120/120, 0 pulados. D-203 (limite de campos) e D-204 (trava por linha) registradas.
+- Limpeza do dev listada: usuários `e2e`, `imp-e2e`, `demo-preview`, `e2e-outra`; parceiro DEMONSTRAÇÃO e matriz Demonstração; 50 parceiros `E2E…`; 14 componentes "Componente E2E…" em 2026; ano 2025 vazio. Aguarda confirmação.
+- Limpeza do dev aplicada (transação única, ensaio antes, trava para manter os 3 projetos reais). Saíram 3 usuários, 51 parceiros, 45 projetos, 55 revistas, 14 componentes, 70 cortes, a matriz Demonstração e o ano 2025. Ficaram o `e2e` (inativo, sem senha) e o template "E2E editor por seção", travados pelo `TemplateVersao` só-inserção.
+- Plano do U10 commitado (`7e7a3be`). Usuário: opção 1 para todas as entidades, ou seja, excluir só o que não está em uso (D-205).
