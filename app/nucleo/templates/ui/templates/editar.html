@@ -73,4 +73,17 @@ View: nucleo/urls/ui_templates.py (editar). Ficha: docs/telas/fichas/templates.m
   </div>
   {% endif %}
 </form>
+
+{% if perms.nucleo.delete_template %}{# D-207: fora do form (form dentro de form é inválido); a página seguinte diz se está em uso. #}
+{% url 'ui_templates' tpl.ano.ano as lista_url %}
+<section class="zona-perigo tpl-perigo" aria-labelledby="perigo-titulo">
+  <div>
+    <h2 id="perigo-titulo" class="secao-titulo">Excluir template</h2>
+    <p class="mudo">Só sai se nenhuma revista usa este template; sai junto com todas as versões. Na próxima tela, digite o nome para confirmar.</p>
+  </div>
+  <a class="btn btn-destrutivo btn-sm" href="{% url 'ui_excluir' 'template' tpl.pk %}?voltar={{ lista_url|add:'?aba='|add:tpl.fasciculo|urlencode }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+    Excluir template…</a>
+</section>
+{% endif %}
 {% endblock %}

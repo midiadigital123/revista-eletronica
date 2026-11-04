@@ -8,13 +8,16 @@
 //     python manage.py createsuperuser --noinput --username e2e --email e2e@exemplo.invalid
 //   cd app/e2e && E2E_BASE_URL=http://localhost:8014 E2E_ADMIN_USUARIO=e2e E2E_ADMIN_SENHA=<senha> \
 //     npx playwright test revista-textos
-// Grava de verdade: cada execução cria uma versão nova do template "Padrão" LP F1 de 2026 e
-// termina sem cópia na revista DEMONSTRAÇÃO (descartada no fim). Use num banco de desenvolvimento.
+// Grava de verdade: o 1º teste põe no F1 da revista DEMONSTRAÇÃO um template próprio ("E2E textos
+// <sufixo>"), cria nele a versão nova e, no fim, volta o "Padrão", descarta a cópia e exclui o próprio
+// (E4, D-207): nenhum spec grava em template que não criou. Use num banco descartável.
 import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { alpinePronto, atribuirEmMassa, entrar, liberarBloqueio, novoParceiro, revistaDaLista, revistaDemo } from "./helpers";
+import { criarTemplate, excluirTemplate } from "./templates";
 
 const INTRO = "#id_secao__F1__introducao";
+const F1 = "## introducao\nIntrodução\n\nTexto E2E da introdução.\n\n## fechamento\nFechamento\n\nTexto E2E do fechamento.\n";
 const SVG = path.join(__dirname, "../../nucleo/tests/fixtures/f2-lp.svg");
 const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mP4/5oBAATXAesdPD2pAAAAAElFTkSuQmCC", "base64");
 
@@ -23,9 +26,21 @@ test("revista: cópia por seção, aviso com diff e descartar", async ({ page })
   page.on("pageerror", (e) => erros.push(e.message));
   const marca = `E2E ${Date.now()}`;
 
+  const nome = `E2E textos ${Date.now().toString(36).toUpperCase()}`;
+
   await entrar(page);
+  const proprio = await criarTemplate(page, nome, "F1", F1);
   await page.goto(`/admin/nucleo/revista/${await revistaDemo(page)}/change/`);
   const urlRevista = page.url();
+
+  // 0. O F1 da revista passa ao template próprio (sem cópia, troca sem confirmação).
+  const linhaF1 = page.locator("tr", { has: page.locator("td.field-fasciculo", { hasText: "F1" }) });
+  const select = linhaF1.locator("select");
+  await expect(select.locator("option:checked")).toHaveText("Padrão (F1)");
+  const padrao = await select.inputValue();
+  await select.selectOption(proprio);
+  await page.click("input[name=_continue]");
+  await expect(select).toHaveValue(proprio);
 
   // 1. Editar só a introdução do F1: o preview da seção funciona e a cópia nasce ao salvar.
   const area = page.locator(INTRO);
@@ -38,10 +53,8 @@ test("revista: cópia por seção, aviso com diff e descartar", async ({ page })
   await expect(page.locator(".field-secao__F1__introducao .help")).toContainText("Texto editado nesta revista (cópia)");
   await expect(page.locator(".field-secao__F1__fechamento .help")).toContainText("Texto do template");
 
-  // 2. Versão nova do template mudando a introdução (tela de impacto → confirmar).
-  const linhaF1 = page.locator("tr", { has: page.locator("td.field-fasciculo", { hasText: "F1" }) });
-  const templateId = await linhaF1.locator("select").inputValue();
-  await page.goto(`/admin/nucleo/template/${templateId}/change/`);
+  // 2. Versão nova do template próprio mudando a introdução (tela de impacto → confirmar).
+  await page.goto(`/admin/nucleo/template/${proprio}/change/`);
   const texto = page.locator("#id_texto");
   const atual = await texto.inputValue();
   const novo = atual.replace(/(## introducao\n[^\n]*\n\n[\s\S]*?)(\n+## )/, `$1 Atualizado ${marca}.$2`);
@@ -64,9 +77,14 @@ test("revista: cópia por seção, aviso com diff e descartar", async ({ page })
   await expect(page.getByText("Seções desatualizadas")).toHaveCount(0);
   await expect(area).toHaveValue(new RegExp(`Atualizado ${marca}\\.`));
   await expect(page.locator(".field-secao__F1__introducao .help")).toContainText("Texto do template");
-  expect(erros).toEqual([]);
 
+  // 4. Volta o "Padrão" e exclui o template próprio: sem revista, sai com as versões.
+  await select.selectOption(padrao);
+  await page.click("input[name=_continue]");
+  await expect(select).toHaveValue(padrao);
   await liberarBloqueio(page);
+  await excluirTemplate(page, nome, "F1");
+  expect(erros).toEqual([]);
 });
 
 // U8b: página da revista em duas colunas. Monta um parceiro "E2E Revista <sufixo>" com cortes de LP

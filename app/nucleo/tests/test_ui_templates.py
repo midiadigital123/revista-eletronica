@@ -1,6 +1,7 @@
 """Templates B (T12-T14, /ui/templates/): critérios de aceite de docs/telas/fichas/templates.md pelo client."""
 
 import re
+from urllib.parse import quote
 
 from django.conf import settings
 from django.test import Client
@@ -8,7 +9,7 @@ from django.urls import reverse
 
 from nucleo.admin.bloqueio import CAMPO_SESSAO
 from nucleo.management.commands.carregar_templates import AVISO
-from nucleo.models import Ano, Bloqueio, FotoRevista, RevistaFasciculo, RevistaSecao, TemplateVersao
+from nucleo.models import Ano, Bloqueio, FotoRevista, RevistaFasciculo, RevistaSecao, Template, TemplateVersao
 from nucleo.models.revista import Motivo
 from nucleo.servicos.resolver import versao_atual
 from nucleo.templates_texto import form_para_corpo, proximo_passo, secoes_para_form
@@ -294,3 +295,41 @@ class EditorSecoesTest(UiBase):
         self.assertContains(r, 'id="erros-passo1" hx-swap-oob="true"')
         self.assertContains(r, "corpo vazio")
         self.assertNotContains(r, "## ")
+
+
+class ExcluirLinkTest(UiBase):
+    """E4 (D-207): "Excluir template…" na lista e no editor leva ao ui_excluir, voltando para a lista; o Impresso não vê."""
+
+    def setUp(self):
+        super().setUp()
+        self.href = f'href="{reverse("ui_excluir", args=["template", self.tpl.pk])}?voltar={quote(self.lista + "?aba=F2")}"'
+
+    def test_pedagogica_midias_e_admin_veem_o_link(self):
+        for papel in ("Pedagógica", "Mídias Digitais", "Admin"):
+            with self.subTest(papel):
+                c = Client()
+                c.force_login(usuario(f"u-{papel}", papel))
+                self.assertContains(c.get(self.lista + "?aba=F2"), self.href, count=1)
+                r = c.get(self.editar)
+                self.assertContains(r, self.href, count=1)
+                self.assertContains(r, "Excluir template…")
+                Bloqueio.objects.all().delete()  # o próximo papel abre o editor sem a trava deste
+
+    def test_impresso_nao_ve_o_link(self):
+        imp = Client()
+        imp.force_login(usuario("imp", "Impresso"))
+        for url in (self.lista + "?aba=F2", self.editar):
+            r = imp.get(url)
+            self.assertEqual(r.status_code, 200)
+            self.assertNotContains(r, "/ui/excluir/")
+            self.assertNotContains(r, "Excluir template")
+
+    def test_o_link_exclui_o_livre_e_volta_para_a_aba(self):
+        livre = Template.objects.create(ano=self.tpl.ano, componente=self.tpl.componente, fasciculo="F2", nome="E2E livre")
+        TemplateVersao.objects.create(template=livre, numero=1, texto=F2_NOVO, criada_por=usuario("autor"))
+        lista = self.ped.get(self.lista + "?aba=F2").content.decode()
+        href = re.search(rf'href="(/ui/excluir/template/{livre.pk}/[^"]+)"', lista)[1]
+        r = self.ped.post(href, {"confirmacao": "E2E livre"})
+        self.assertRedirects(r, self.lista + "?aba=F2", fetch_redirect_response=False)
+        self.assertFalse(Template.objects.filter(pk=livre.pk).exists())
+        self.assertFalse(TemplateVersao.objects.filter(template_id=livre.pk).exists())

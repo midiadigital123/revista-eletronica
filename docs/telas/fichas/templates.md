@@ -10,8 +10,8 @@ Manter os textos-modelo das revistas (fascículos F1 e F2) de cada ano. Desde o 
 
 | Perfil | O que pode |
 |---|---|
-| Pedagógica, Mídias Digitais, Admin | ver e editar (nome e texto) |
-| Impresso | só ver (lista, texto e pré-visualização) |
+| Pedagógica, Mídias Digitais, Admin | ver e editar (nome e texto); excluir o template que nenhuma revista usa (D-207) |
+| Impresso | só ver (lista, texto e pré-visualização); não vê "Excluir template…" |
 | Sem permissão de templates | nada: a página responde "acesso negado" |
 | Sem login | vai para o login e volta para a página |
 
@@ -49,6 +49,7 @@ Manter os textos-modelo das revistas (fascículos F1 e F2) de cada ano. Desde o 
 | Digitar | editor | pré-visualização atualiza 400 ms depois de parar |
 | Salvar | editor | texto igual: grava só o nome; texto mudado e válido: tela de impacto; inválido: erros na seção certa |
 | Confirmar e criar versão N | impacto | grava, volta ao editor com "Versão N criada." |
+| Excluir template… | lista (botão-ícone da lixeira na linha) e editor (zona de perigo, no fim da página), com `delete_template` | página de excluir (`/ui/excluir/template/<id>/?voltar=<lista da aba>`): sem revista, digita o nome e o template sai com todas as versões; em uso, lista as revistas (e quem está editando) e não apaga. Depois de excluir, ou em "Voltar sem excluir", volta à aba do fascículo |
 | Voltar e editar | impacto | volta ao editor com o texto pendente, nada gravado |
 
 ## Estados
@@ -63,6 +64,8 @@ Manter os textos-modelo das revistas (fascículos F1 e F2) de cada ano. Desde o 
 - **Só leitura por bloqueio:** aviso "Somente leitura: Ana está editando (bloqueio até 14:32:10…). Recarregue para tentar editar."
 - **Impacto sem revistas:** "Nenhuma revista ativa usa este template" + "Confirmar cria a versão sem mudar nenhuma revista agora."
 - **Sucesso:** mensagem verde no editor.
+- **Excluir, em uso:** "Não dá para excluir: isto está em uso. Nada foi apagado." + tabela "Revistas N" com links (as 5 primeiras) + "Para excluir, troque o template das revistas que o usam. Se alguém está editando, espere a pessoa sair." Sem botão Excluir.
+- **Excluir, livre:** "Nada usa isto. A exclusão não se desfaz pela tela." + confirmação forte (o botão só libera com o nome digitado).
 
 ## Mensagens exatas
 
@@ -76,11 +79,14 @@ Manter os textos-modelo das revistas (fascículos F1 e F2) de cada ano. Desde o 
 - "Texto grande demais: o limite é 100.000 caracteres. Encurte o texto para ver a pré-visualização."
 - Erros de validação: os do validador do texto (seção obrigatória faltando, título vazio, `#` no corpo, links, imagens, HTML, variável fora da lista), cada um na sua seção.
 - Seção fora do fascículo no envio (id adulterado): 422 "Seção não prevista neste fascículo: <id>. Recarregue o editor."
+- Zona de perigo do editor: "Excluir template" / "Só sai se nenhuma revista usa este template; sai junto com todas as versões. Na próxima tela, digite o nome para confirmar."
+- Depois de excluir: "Exclusão feita: o template <nome> (<componente> <fascículo>) de <ano>."
 
 ## Permissões
 
 - Ver: ver ou alterar template. Gravar: alterar template **e** criar versão de template (igual ao admin).
 - Sem permissão de gravar, todo POST do editor responde 403.
+- Excluir: `delete_template` (Pedagógica, Mídias Digitais e Admin; o Impresso não tem). Sem ela o link não aparece e a página de excluir responde 403. A lista não conta o uso por linha: quem diz se está em uso é a página de excluir.
 - Um editor por template: abrir o editor trava o template enquanto a página estiver aberta; o segundo vê só leitura. O POST confere a trava na mesma transação da gravação.
 
 ## HTMX
@@ -102,8 +108,8 @@ Textos-modelo das revistas, por fascículo. Editar um texto cria uma versão nov
  Textos F1 (2)   Textos F2 (2)
  ─────────────   ━━━━━━━━━━━━━
  Template   Componente              Versão   Uso nas revistas ativas
- Padrão     LP Língua Portuguesa      v1     usado por 2 (1 com cópia de seção)
- Padrão     MT Matemática             v1     usado por 2
+ Padrão     LP Língua Portuguesa      v1     usado por 2 (1 com cópia de seção)   [lixeira]
+ Padrão     MT Matemática             v1     usado por 2                          [lixeira]
 ```
 
 Editor (1440; em 390 as colunas empilham: índice, seção, pré-visualização):
@@ -123,6 +129,9 @@ Nome  [Padrão                    ]
                     └──────────────────────────────────────────────┘
 ──────────────────────────────────────────────────────────────────────────────────────────────────────
 Alterações não salvas.                                                                       [Salvar]
+┌ Excluir template ──────────────────────────────────────────────────────────────────────────────────┐
+│ Só sai se nenhuma revista usa este template; sai junto com todas as versões. ...  [Excluir template…] │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 Impacto:
@@ -150,11 +159,13 @@ Voltar e editar não grava nada e mantém o seu texto.          [Voltar e editar
 8. Impresso vê tudo em só leitura; POST dele é 403. Sem permissão de ver: 403. Sem login: vai ao login.
 9. Com outro usuário editando: só leitura com o aviso de quem edita; POST com a sessão alheia não grava e avisa "perdeu o bloqueio".
 10. O admin de templates continua funcionando igual (mesmas regras, mesmos testes).
+11. Pedagógica, Mídias e Admin veem "Excluir template…" na lista e no editor, com `?voltar=` para a aba; o Impresso não vê. Template livre sai com as versões e a página volta à aba; o "Padrão" usado pela revista da demonstração mostra as revistas e não sai.
 
 ## Referências técnicas
 
 - Rotas e views: `app/nucleo/urls/ui_templates.py` (`secoes_do_post`, `_contexto_secoes`). Templates: `templates/ui/templates/{lista,editar,impacto}.html`, `templates/ui/parciais/templates_{previa,secao,indice,secao_erros}.html`. JS: `static/ui/componentes/editor-secoes.js` (`editorSecoes`). CSS: `static/ui/telas/templates.css`.
 - Regra comum (extraída do admin): `app/nucleo/templates_texto.py` (`com_uso`, `impacto`, `assinatura`/`assinar`/`ler_assinatura`, `criar_versao`, `previa`, e do U9b `secoes_para_form`, `form_para_corpo`, `secoes_permitidas`, `id_permitido`, `rotulo`, `proximo_passo`, `previa_secoes`); o form `TemplateForm` segue em `admin/templates.py` e é reaproveitado.
 - Bloqueio: `nucleo/ui_bloqueio.com_bloqueio` + `ui/_componentes/bloqueio.html`. Envio único do impacto: `static/nucleo/template_editor.js` (`data-envio-unico`).
-- Decisões: D-076, D-098, D-099, D-102, D-105, D-109, D-115, D-118, D-123, D-125, D-162, D-163, D-183, D-186.
-- Testes: `app/nucleo/tests/test_ui_templates.py`; `app/e2e/tests/templates-editor.spec.ts`.
+- Exclusão: rota `ui_excluir` (`urls/ui_excluir.py`, `templates/ui/excluir.html`) e `servicos/exclusao.py` (E0).
+- Decisões: D-076, D-098, D-099, D-102, D-105, D-109, D-115, D-118, D-123, D-125, D-162, D-163, D-183, D-186, D-205, D-207.
+- Testes: `app/nucleo/tests/test_ui_templates.py` (`ExcluirLinkTest`); `app/e2e/tests/templates-editor.spec.ts`, `templates-admin.spec.ts`. Os specs criam o seu template "E2E …" (`e2e/tests/templates.ts`) e o excluem no fim: nenhum grava em template que não criou.
