@@ -11,8 +11,11 @@
 </div>
 
 {% if not linhas %}
-{% url 'cortes' ano.ano as u %}
-{% include "ui/_componentes/vazio.html" with titulo="Nenhum projeto ativo neste ano" texto="Os projetos nascem quando os cortes do parceiro são lançados." url=u rotulo="Abrir cortes" %}
+{% if perms.nucleo.change_corte %}{% url 'cortes' ano.ano as u %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhum projeto ativo neste ano" texto="Os projetos nascem quando os cortes do parceiro são lançados. Lance os cortes para preencher as variáveis aqui." url=u rotulo="Abrir cortes" %}
+{% else %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhum projeto ativo neste ano" texto="Os projetos nascem quando a equipe pedagógica lança os cortes do parceiro." %}
+{% endif %}
 {% else %}
 
 {% if not pode_editar %}

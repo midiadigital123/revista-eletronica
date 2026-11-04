@@ -91,6 +91,10 @@ Impacto (U2): form.precisa_confirmar abre o modal de impacto; o modal do item li
   {% endfor %}
 </article>
 {% else %}
-{% include "ui/_componentes/vazio.html" with titulo="Nenhum descritor" texto="Crie o primeiro descritor desta etapa × componente com Novo descritor, ou reimporte a matriz." %}
+{% if pode_gravar %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhum descritor" texto="Crie o primeiro descritor desta etapa × componente, ou reimporte a matriz." abrir="dlg-novo" rotulo="Novo descritor" mais=True %}
+{% else %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhum descritor" texto="Esta etapa × componente ainda não tem descritores na matriz." %}
+{% endif %}
 {% endif %}
 {% if oob %}{% include "ui/parciais/matriz_lista.html" %}{% if request.method == "POST" %}{% include "ui/_componentes/mensagens.html" with oob=True %}{% endif %}{% endif %}

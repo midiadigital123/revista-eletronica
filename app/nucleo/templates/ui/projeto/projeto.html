@@ -126,7 +126,11 @@ A página é onde o projeto sobrescreve o que vem do ano e da matriz: cada valor
       </div>
     </fieldset>
     {% empty %}
-    {% include "ui/_componentes/vazio.html" with titulo="Nenhuma etapa neste ano" texto="Cadastre as etapas na página do ano." %}
+    {% if perms.nucleo.add_etapa %}{% url 'ui_ano' projeto.ano.ano as u %}
+    {% include "ui/_componentes/vazio.html" with titulo="Nenhuma etapa neste ano" texto="Os passos do projeto saem das etapas do ano. Cadastre as etapas na página do ano." url=u rotulo="Cadastrar etapas" %}
+    {% else %}
+    {% include "ui/_componentes/vazio.html" with titulo="Nenhuma etapa neste ano" texto="Os passos do projeto saem das etapas do ano, cadastradas pela equipe pedagógica." %}
+    {% endif %}
     {% endfor %}
   </section>
   {% endif %}

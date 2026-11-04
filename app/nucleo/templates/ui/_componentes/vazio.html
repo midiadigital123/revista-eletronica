@@ -1,10 +1,14 @@
 {% comment %}
-Estado vazio: o que falta e onde resolver. O botão só sai com `url` e `rotulo` juntos: um `url` solto
-no contexto de quem inclui (ex.: `{% url … as url %}`) não vira botão vazio.
+Estado vazio que ensina (U10b): título com o que falta, `texto` com a causa e o que fazer, e o botão da
+ação só para quem pode executá-la (a view ou o `perms` decide; quem não pode recebe um texto sem
+"faça X" e nenhum botão). O botão só sai com `rotulo` e `url` (link) ou `abrir` (id de um <dialog>,
+como o `data-abrir` do ui.js): um `url` solto no contexto de quem inclui (ex.: `{% url … as url %}`)
+não vira botão vazio. `mais=True` põe o "+" de criar antes do rótulo.
   {% include "ui/_componentes/vazio.html" with titulo="Nenhuma revista" texto="Lance os cortes do ano para criar as revistas." url=u rotulo="Abrir cortes" %}
+  {% include "ui/_componentes/vazio.html" with titulo="Nenhum descritor" texto="…" abrir="dlg-novo" rotulo="Novo descritor" mais=True %}
 {% endcomment %}<div class="vazio" role="status">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2z"/></svg>
   <h2>{{ titulo }}</h2>
   {% if texto %}<p>{{ texto }}</p>{% endif %}
-  {% if url and rotulo %}<a class="btn btn-outline" href="{{ url }}">{{ rotulo }}</a>{% endif %}
+  {% if rotulo %}{% if abrir %}<button type="button" class="btn btn-outline" data-abrir="{{ abrir }}">{% elif url %}<a class="btn btn-outline" href="{{ url }}">{% endif %}{% if abrir or url %}{% if mais %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>{% endif %}{{ rotulo }}{% if abrir %}</button>{% else %}</a>{% endif %}{% endif %}{% endif %}
 </div>

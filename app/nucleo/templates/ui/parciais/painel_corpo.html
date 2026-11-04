@@ -55,8 +55,11 @@ projeto (nome do projeto primeiro, parceiro em cinza). A página inclui; o filtr
 {% endif %}
 
 {% if not todas and not filtrado %}
-{% url 'cortes' ano.ano as u %}
+{% if perms.nucleo.change_corte %}{% url 'cortes' ano.ano as u %}
 {% include "ui/_componentes/vazio.html" with titulo="Nenhuma revista ativa neste ano" texto="As revistas nascem quando os cortes do parceiro são lançados. Lance os cortes do ano para ver as revistas aqui." url=u rotulo="Abrir cortes" %}
+{% else %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhuma revista ativa neste ano" texto="As revistas nascem quando a equipe pedagógica lança os cortes do parceiro." %}
+{% endif %}
 {% elif not linhas %}
 {% include "ui/_componentes/vazio.html" with titulo="Nenhuma revista com esse filtro" texto=vazio_texto url=vazio_url rotulo="Limpar filtro" %}
 {% else %}

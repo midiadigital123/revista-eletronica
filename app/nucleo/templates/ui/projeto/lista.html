@@ -130,9 +130,12 @@ action = a ação recusada (o Confirmar do modal reenvia o form sem botão).
 
   {% if perdem %}{% include "ui/_componentes/impacto.html" with form_id="massa" acao=acao_titulo perdem=perdem %}{% endif %}
 </form>
+{% else %}{% with a=ano.ano|stringformat:"d" %}{% with titulo="Nenhum projeto em "|add:a %}
+{% if perms.nucleo.add_parceiro %}{% url 'cortes' ano.ano as u %}
+{% include "ui/_componentes/vazio.html" with texto="O projeto nasce quando os cortes de um parceiro são lançados. Na aba Cortes, adicione o parceiro (ou use um que já está lá) e lance os cortes dele." url=u rotulo="Novo projeto" mais=True %}
 {% else %}
-{% url 'cortes' ano.ano as u %}
-{% include "ui/_componentes/vazio.html" with titulo="Nenhum projeto neste ano" texto="O projeto do parceiro nasce quando os cortes dele são lançados." url=u rotulo="Lançar cortes" %}
+{% include "ui/_componentes/vazio.html" with texto="Cada projeto nasce de um parceiro na aba Cortes, cadastrado pela equipe pedagógica." %}
+{% endif %}{% endwith %}{% endwith %}
 {% endif %}
 {% endif %}
 {% endblock %}

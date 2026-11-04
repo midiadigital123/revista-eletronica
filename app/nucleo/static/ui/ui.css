@@ -136,16 +136,16 @@ button, input, select, textarea { font: inherit; color: inherit; }
   background: var(--primary); color: var(--primary-foreground);
   font-size: 0.875rem; font-weight: 500; white-space: nowrap; cursor: pointer; user-select: none;
   transition: background-color 150ms, box-shadow 150ms;
+  --btn-hover: color-mix(in oklch, var(--primary) 80%, transparent); /* cada variante troca só o fundo do hover */
 }
-.btn:hover { background: color-mix(in oklch, var(--primary) 80%, transparent); }
-.btn:active { translate: 0 1px; }
+/* U10b: desligado não reage ao hover nem ao clique (cursor not-allowed e o title continuam: sem pointer-events: none) */
+.btn:not(:disabled, [aria-disabled="true"]):hover { background: var(--btn-hover); }
+.btn:not(:disabled, [aria-disabled="true"]):active { translate: 0 1px; }
 .btn:focus-visible { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px var(--ring); }
-.btn:disabled { opacity: 0.5; pointer-events: none; }
+.btn:is(:disabled, [aria-disabled="true"]) { opacity: 0.5; cursor: not-allowed; }
 .btn svg { width: 1rem; height: 1rem; flex-shrink: 0; }
-.btn-outline { background: var(--background); color: var(--foreground); border-color: var(--border); box-shadow: var(--shadow-xs); }
-.btn-outline:hover { background: var(--muted); }
-.btn-ghost { background: transparent; color: var(--foreground); }
-.btn-ghost:hover { background: var(--muted); }
+.btn-outline { background: var(--background); color: var(--foreground); border-color: var(--border); box-shadow: var(--shadow-xs); --btn-hover: var(--muted); }
+.btn-ghost { background: transparent; color: var(--foreground); --btn-hover: var(--muted); }
 .btn-sm { height: 2rem; border-radius: min(var(--radius-md), 10px); }
 
 /* --- input (components/ui/input.tsx) --- */
@@ -253,8 +253,9 @@ input[type="color"]:focus-visible { outline: none; border-color: var(--ring); bo
   border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--background); color: var(--muted-foreground);
   cursor: pointer; transition: background-color 120ms var(--ease-saida), color 120ms var(--ease-saida), border-color 120ms var(--ease-saida);
 }
-.btn-icone:hover { background: var(--muted); color: var(--foreground); border-color: color-mix(in oklch, var(--foreground) 20%, var(--border)); }
-.btn-icone:active { translate: 0 1px; }
+.btn-icone:not(:disabled, [aria-disabled="true"]):hover { background: var(--muted); color: var(--foreground); border-color: color-mix(in oklch, var(--foreground) 20%, var(--border)); }
+.btn-icone:not(:disabled, [aria-disabled="true"]):active { translate: 0 1px; }
+.btn-icone:is(:disabled, [aria-disabled="true"]) { opacity: 0.5; cursor: not-allowed; }
 .btn-icone:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 .btn-icone svg { width: 1rem; height: 1rem; stroke-width: 1.75; }
 @media (prefers-reduced-motion: reduce) { .btn-icone { transition: none; } }
@@ -370,8 +371,7 @@ input[type="color"]:focus-visible { outline: none; border-color: var(--ring); bo
 .textarea[aria-invalid="true"], .select[aria-invalid="true"] { border-color: var(--destructive); }
 input[type="checkbox"], input[type="radio"] { width: 1rem; height: 1rem; margin: 0; vertical-align: middle; }
 .marcar { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; cursor: pointer; }
-.btn-destrutivo { background: color-mix(in oklch, var(--destructive) 10%, transparent); color: var(--destructive); }
-.btn-destrutivo:hover { background: color-mix(in oklch, var(--destructive) 20%, transparent); }
+.btn-destrutivo { background: color-mix(in oklch, var(--destructive) 10%, transparent); color: var(--destructive); --btn-hover: color-mix(in oklch, var(--destructive) 20%, transparent); }
 .btn-lg { height: 2.5rem; padding: 0 1rem; }
 form.inline { display: inline; }
 
@@ -520,11 +520,13 @@ table.diff .diff_next { display: none; }
 /* --- status do autosave (U3, _componentes/status_salvo.html + componente `saida`) --- */
 [x-cloak] { display: none !important; }
 .status-salvo { display: inline-flex; align-items: center; min-height: 2.25rem; font-size: 0.875rem; }
-.status-salvo > span { display: inline-flex; align-items: center; gap: 0.375rem; animation: status-entra 180ms var(--ease-saida) both; }
+/* U10b: cada estado entra com fade de 180 ms (o x-show tira o display: none; @starting-style dá o ponto de partida) */
+.status-salvo > span { display: inline-flex; align-items: center; gap: 0.375rem; transition: opacity 180ms var(--ease-saida); }
+@starting-style { .status-salvo > span { opacity: 0; } }
 .status-salvo svg { width: 1rem; height: 1rem; flex: none; }
 .status-salvo-erro { color: var(--destructive); }
 .status-salvo button.link { padding: 0; border: 0; background: none; color: inherit; font-weight: 500; cursor: pointer; }
-@keyframes status-entra { from { opacity: 0; } to { opacity: 1; } }
+.status-salvo .girando { opacity: 1; } /* o _componentes/girando.html é .htmx-indicator; aqui o x-show já decide */
 
 /* --- toasts (ui.js: erro de rede/servidor do HTMX ou uiToast(texto, tipo)) --- */
 .toasts { position: fixed; right: 1rem; bottom: 1rem; z-index: 50; display: flex; flex-direction: column; gap: 0.5rem; max-width: min(24rem, calc(100% - 2rem)); }
@@ -538,8 +540,10 @@ table.diff .diff_next { display: none; }
 .vazio {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem;
   padding: 3rem 1.5rem; border: 1px dashed var(--border); border-radius: var(--radius-lg); text-align: center; text-wrap: balance;
+  white-space: normal; /* dentro de célula de tabela (grade de cortes), o nowrap do td não vaza */
 }
-.vazio svg { width: 1.5rem; height: 1.5rem; color: var(--muted-foreground); }
+.vazio > .btn { margin-top: 0.25rem; }
+.vazio > svg { width: 1.5rem; height: 1.5rem; color: var(--muted-foreground); }
 .vazio h2 { font-size: 1.125rem; font-weight: 500; letter-spacing: -0.01em; }
 .vazio p { max-width: 24rem; color: var(--muted-foreground); font-size: 0.875rem; line-height: 1.6; }
 
@@ -547,6 +551,12 @@ table.diff .diff_next { display: none; }
 .htmx-indicator { opacity: 0; transition: opacity 150ms; }
 .htmx-request .htmx-indicator, .htmx-request.htmx-indicator { opacity: 1; }
 .girando { width: 1rem; height: 1rem; animation: girar 0.8s linear infinite; }
+/* U10b: carregando fora do HTMX. aria-busy="true" no controle em envio (autosave.js: o campo, a lista que reordena, o
+   input da área de soltar) ou no botão que enviou; um girando.html dentro dele aparece. */
+[aria-busy="true"] { cursor: progress; }
+[aria-busy="true"] .htmx-indicator { opacity: 1; }
+.soltar-area:has(input[aria-busy="true"]) { cursor: progress; border-style: solid; }
+.soltar-area:has(input:disabled) { cursor: not-allowed; opacity: 0.5; }
 @keyframes girar { to { rotate: 360deg; } }
 
 @media (max-width: 50rem) {
@@ -575,8 +585,8 @@ button.alca { /* button: vence o `.lista button` */
   flex: none; display: inline-flex; align-items: center; justify-content: center; width: 1rem; height: 2rem; padding: 0;
   border: 0; border-radius: var(--radius-md); background: none; color: var(--muted-foreground); cursor: grab; touch-action: none;
 }
-.alca:hover, .alca:focus-visible { color: var(--foreground); background: var(--muted); }
-.alca:disabled { cursor: default; opacity: 0.5; }
+.alca:not(:disabled):hover, .alca:focus-visible { color: var(--foreground); background: var(--muted); }
+.alca:disabled { cursor: not-allowed; opacity: 0.5; } /* a lista ficou só leitura (409/403 do ordenavel) */
 .alca svg { width: 1rem; height: 1rem; }
 .sortable-ghost { opacity: 0.4; }
 .sortable-chosen { background: var(--muted); }
