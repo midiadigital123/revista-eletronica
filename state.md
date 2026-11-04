@@ -4,11 +4,11 @@
 <!-- sobrescrever a cada atualização -->
 Exclusão segura (D-205 a D-208): E0–E5 mergeados e integrados em `feat/telas-b-ux`.
 Funcionando: cada entidade tem "Excluir" na tela B (ano só para o Admin, apagando tudo; parceiro com Desativar/Reativar; etapa e componente; matriz; template sem uso com as versões). Se a entidade está em uso, a página explica o impedimento e não apaga. O admin do Django leva à mesma página. Testes na raiz: Django 764 OK (8 pulados), makemigrations limpo, Playwright 146/146 (chromium + desktop-1440, 0 pulados). Migrações 0016–0018 aplicadas no dev. `docs/regras-de-negocio.md` §9 atualizada.
-Quebrado/pendente: limpeza do dev depois do Playwright (lista apresentada, espera confirmação); "Padrão (F1)" do dev com 7 versões "Atualizado E2E" (a causa era o `revista-textos.spec`, já corrigido no E4).
+Quebrado/pendente: "Padrão (F1)" do dev com 7 versões "Atualizado E2E" (a causa era o `revista-textos.spec`, já corrigido no E4).
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Usuário confirmar a lista de limpeza do banco de dev.
+Decidir se o "Padrão (F1)" do dev recebe uma versão nova com o texto da v1, depois seguir para S6–S9 (`plans/revista-express-telas-b-lacunas.md`).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2119,3 +2119,4 @@ Usuário confirmar a lista de limpeza do banco de dev.
 - Integração final: Django 764 OK (8 pulados), makemigrations limpo, Playwright 146/146 no dev, `trail check` sem conflito.
 - O scratchpad compartilhado fez o E2 rodar 2 specs no banco descartável do E4. Os resultados não foram afetados, mas nos próximos lançamentos cada agente recebe a própria subpasta já no brief.
 - Plano `plans/revista-express-exclusao.md` commitado.
+- Limpeza do dev aplicada com a confirmação do usuário. Antes, ensaio com rollback e uma trava para manter os 3 projetos reais. Saíram: o template "E2E editor por seção" com as versões e o ano 2025, os dois pelo `servicos/exclusao.excluir`; 21 parceiros (DEMONSTRAÇÃO e 20 "E2E…"), com 21 projetos e 25 revistas; a matriz Demonstração; os usuários `imp-e2e`, `demo-preview` e `e2e-outra`. O `e2e` ficou inativo e sem senha, porque é autor de versões do "Padrão (F1)". A senha temporária do scratchpad foi apagada.
