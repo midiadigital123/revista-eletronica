@@ -4,11 +4,11 @@
 <!-- sobrescrever a cada atualização -->
 Plano ativo: `plans/revista-express-telas-b-ux.md` + rodada de correções da revisão do usuário de 03/11 (plano `~/.claude/plans/critique-plan-corrigir-estilos-quebrados-hidden-rain.md`). Ondas 1–4 e os agentes A–G + responsivo mergeados em `feat/telas-b-ux`.
 Funcionando: integração validada em `95cc0af` (Django 701 OK, Playwright 51/51, sem rolagem lateral em 1440/1024/768/390). Depois disso: cores por situação, colunas da lista, menu por perfil, ordem das etapas (`4de9cff`).
-Quebrado/pendente (para 04/11): (1) suíte Django OK com `4de9cff` (8 pulados); falta aplicar a migração 0015 no banco de dev; (2) merge de `feat/ux-fix-nomes` (`721229e`, agente H, "projeto primeiro": testado isolado, Django 702 OK, Playwright 51/51); (3) Playwright completo na integração depois desses dois; (4) U10 (onda 5) e S6–S9 esperam o usuário; (5) `templates.css` reformatado pelo Prettier fora do git (só formatação), a descartar depois de reabrir o VS Code.
+Pendências da rodada de 03/11 fechadas em 04/11: 0015 aplicada; `feat/ux-fix-nomes` mergeada; Django 703 OK (8 pulados); Playwright 51/51 com login E2E. Banco de dev recebeu de volta `criar_demo --ano 2026` (preview 32) e um ano 2025 vazio, porque os specs dependem deles. `templates.css`: a remoção do `border-radius` de `.tpl-indice a` foi do usuário; commitada. Próxima rodada: U10 (onda 5) e S6–S9.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Rodar `docker compose exec -T app python manage.py migrate` em `app/` (aplica a 0015 no banco de dev).
+Abrir `plans/revista-express-telas-b-ux.md` na seção do U10 e escolher por onde começar.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2015,3 +2015,9 @@ Rodar `docker compose exec -T app python manage.py migrate` em `app/` (aplica a 
 3. Rodar o Playwright completo numa stack isolada (`ux-integ`, 8030) no resultado; depois commitar o `state.md`.
 4. Descartar a reformatação do Prettier em `templates.css` (só formatação).
 5. Perguntar ao usuário: onda 5 (U10) e S6–S9.
+
+### 2026-11-04
+- Retomada: 0015 já aplicada no dev; `feat/ux-fix-nomes` ainda não mergeada; `templates.css` segue modificado só por formatação.
+- Merge de `feat/ux-fix-nomes`; Django 703 OK; Playwright 51/51 depois de recriar a demo e o ano 2025 (apagados na limpeza de 03/11).
+- `templates.css` local: além da formatação, remove o `border-radius` de `.tpl-indice a`; não descartado.
+- `templates.css`: usuário confirmou que a remoção do `border-radius` foi dele; commitado.
