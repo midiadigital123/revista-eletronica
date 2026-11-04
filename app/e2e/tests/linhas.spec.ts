@@ -1,5 +1,5 @@
 // Linha nova por botão, ordem automática e reordenar (U4). Preparo de painel.spec.ts (criar_demo
-// --ano 2026 e o superusuário e2e). Grava: o componente criado fica no banco (como em anos.spec);
+// --ano 2026 e o superusuário e2e). Grava: o componente criado é excluído no fim (D-205);
 // a ordem das tarefas e dos descritores da MEC volta à original no fim de cada teste.
 import { expect, test, type Page } from "@playwright/test";
 import { alpinePronto, entrar, liberarBloqueio } from "./helpers";
@@ -44,6 +44,11 @@ test("ano: + Adicionar abre a linha com foco; Esc descarta; Enter grava; etapas 
   await page.keyboard.press("Enter");
   await expect(page.getByText("Componentes de 2026 salvos.")).toBeVisible();
   await expect(page.getByLabel(`Código (${codigo})`)).toHaveValue(codigo);
+  // D-205: o componente criado aqui sai pela página de excluir (sem uso), para não acumular em 2026.
+  await page.getByRole("link", { name: `Excluir componente ${codigo}` }).click();
+  await page.getByLabel("Para confirmar, digite").fill(codigo);
+  await page.getByRole("button", { name: "Excluir", exact: true }).click();
+  await expect(page.getByText(`Exclusão feita: o componente ${codigo} de 2026.`)).toBeVisible();
 });
 
 // U10d: num ano sem projetos (o 2025 vazio do preparo), o "+ Novo projeto" da Lista chega na aba Cortes
