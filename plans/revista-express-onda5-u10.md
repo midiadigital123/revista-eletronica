@@ -79,9 +79,14 @@ Total: cerca de 1 dia corrido, cerca de 7 h de agente.
 2. Rodo a suíte Django com `--parallel 1` (sem outro agente rodando testes ao mesmo tempo), depois `makemigrations --check --dry-run`. Depois o Playwright completo no banco de dev, com a demo, o ano 2025 e o login E2E temporário.
 3. Registro no `state.md` as decisões que aparecerem, por exemplo "tabela rolável substitui `.grade`/`.tabela-densa`".
 
-### U10d: Crítica, correção em lote e 2 larguras (~3 h)
+### U10d: Crítica, correção em lote e 2 larguras (~4 h)
 
 Roda num worktree novo, criado do topo da integração depois da 5.2.
+
+0. **Correções da planilha de Variáveis e textos velhos (achados do U10c, decisão do usuário em 04/11), em TDD:**
+   - Célula travada não desliga a planilha: o 409 de bloqueio de um projeto (`urls/ui_projeto.py` `campo`, sem `atual`) deixa só aquela linha/célula em só leitura com o nome de quem edita; o resto da planilha continua editável (`static/ui/componentes/autosave.js` ~:156-159). Teste Django do 409 + Playwright com dois contextos.
+   - Sobrescrita na planilha: a rota passa a comparar o `original` enviado com o valor gravado; se diferente, responde 409 com `atual`, como a grade de Cortes, sem gravar. Teste Django (duas abas) e Playwright.
+   - Mensagem de parceiro novo (`urls/cortes.py` `novo_parceiro`) sem "salve"; `templates/ui/lotes/template.html:11` sem link para o admin.
 
 1. Adicione um segundo projeto ao `app/e2e/playwright.config.ts`: `desktop-1440` com `viewport 1440×900`, ao lado do `chromium` padrão (1280×720). Assim, todo `npx playwright test` passa nas duas larguras (102 execuções, cerca de 3 min).
 2. Rode a skill `impeccable:impeccable` em modo **critique** e depois em modo **audit** nas telas alteradas pela reforma: Painel, Projetos (Lista, Cortes, Variáveis), Projeto, Revista, Matrizes/MEC, Templates/editor, Ano, Impresso. Use screenshots em 1440 e 1280. Junte tudo numa lista só, ordenada por gravidade.
