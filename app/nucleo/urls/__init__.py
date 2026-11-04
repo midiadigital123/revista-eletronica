@@ -30,4 +30,5 @@ urlpatterns = [
     path("ui/impresso/", include("nucleo.urls.ui_impresso")),
     path("ui/lotes/", include("nucleo.urls.ui_lotes")),
     path("ui/anos/", include("nucleo.urls.ui_anos")),
+    path("ui/excluir/", include("nucleo.urls.ui_excluir")),  # D-205: uma página para toda entidade
 ]
