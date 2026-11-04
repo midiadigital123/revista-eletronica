@@ -2,7 +2,7 @@
 // Mesmo preparo de impresso.spec.ts (E2E_ADMIN_* e, para o 2º teste, E2E_IMPRESSO_*).
 // Grava de verdade: o componente criado fica no banco (não há excluir na tela); rode só contra banco de dev.
 import { expect, test, type Page } from "@playwright/test";
-import { entrar } from "./helpers";
+import { alpinePronto, entrar } from "./helpers";
 
 /** Abre a lista de anos e clica no link do maior ano. Devolve o ano. */
 async function abrirMaiorAno(page: Page) {
@@ -29,7 +29,7 @@ test("adiciona um componente na página do ano", async ({ page }) => {
   await expect(page.getByLabel(`Código (${codigo})`)).toHaveValue(codigo);
 
   // U3: o nome do componente gravado salva sozinho ao sair do campo.
-  await expect(page.locator("[data-status-salvo]")).toHaveAttribute("data-estado", "");
+  await alpinePronto(page);
   const nome = page.getByLabel(`Nome (${codigo})`);
   await nome.fill(`Componente E2E ${codigo} renomeado`);
   const salvou = page.waitForResponse((r) => r.url().endsWith("/campo/") && r.status() === 200);

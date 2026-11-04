@@ -10,7 +10,9 @@
 // ao confirmar põe confirmar_impacto=on no form e chama requestSubmit(): o submit é interceptado
 // aqui e o campo vai de novo, confirmado. Cancelar/Esc volta o valor gravado e o foco ao campo; dentro de
 // [data-manter-ao-cancelar] (texto longo) o valor fica e o status vira "Não salvo · Tentar de novo".
-// 409 sem `atual` (bloqueio perdido) e 403: o form inteiro vira só leitura, como no bloqueio.js.
+// 409 sem `atual` (bloqueio perdido) e 403: o form inteiro vira só leitura, como no bloqueio.js. Dentro de
+// [data-trava-linha] (planilha de Variáveis, U10d), o 409 é o projeto daquela linha aberto por outra pessoa:
+// só a linha fica só leitura, com o nome de quem edita embaixo da célula; "Tentar de novo" que grava a destrava.
 // Campos do modal (ex.: a frase "descartar N cópia(s)") vão junto ao confirmar. Resposta 200 com
 // `trocar` ({id: html}): troca essas partes da página (o que a gravação mudou fora do campo).
 // Arquivo só dentro de [data-soltar] (componente `arquivoSoltar`, abaixo): envia o arquivo em `valor`.
@@ -53,6 +55,25 @@ document.addEventListener("alpine:init", () => {
       const novo = molde.content.firstElementChild;
       velho.replaceWith(novo);
       if (window.htmx) window.htmx.process(novo); // links da lista de seções, form da seção, Validar
+    }
+  };
+
+  // Mesmo efeito do desligar() do bloqueio.js: readOnly onde dá (o texto segue copiável). Marca o que
+  // travou para destravar() devolver só isso (linha da planilha, U10d).
+  const LEITURA = new Set(["text", "search", "url", "tel", "email", "number", "date"]);
+  const travar = (raiz) => {
+    for (const c of raiz.querySelectorAll("input, select, textarea, button")) {
+      if (c.type === "hidden" || c.readOnly || c.disabled) continue;
+      if (c.tagName === "TEXTAREA" || (c.tagName === "INPUT" && LEITURA.has(c.type))) c.readOnly = true;
+      else c.disabled = true;
+      c.setAttribute("data-travado-auto", "");
+    }
+  };
+  const destravar = (raiz) => {
+    for (const c of raiz.querySelectorAll("[data-travado-auto]")) {
+      c.readOnly = false;
+      c.disabled = false;
+      c.removeAttribute("data-travado-auto");
     }
   };
 
@@ -157,6 +178,10 @@ document.addEventListener("alpine:init", () => {
         salvos.set(c, corpo.atual); // "Tentar de novo" sobrescreve de propósito o que a outra pessoa gravou
         return this.falhou(c, "Não salvo: outra pessoa mudou este valor", [corpo.conflito]);
       }
+      if (r.status === 409 && alvo.hasAttribute("data-trava-linha")) {
+        travar(alvo);
+        return this.falhou(c, "Não salvo: projeto aberto por outra pessoa", [corpo.conflito || "Não salvo: projeto em edição."]);
+      }
       if (r.status === 409 || r.status === 403) {
         this.desligar(corpo.conflito || "Não salvo: sua sessão ou permissão mudou. Recarregue a página.");
         return this.falhou(c, "Não salvo: a página ficou somente leitura");
@@ -177,6 +202,8 @@ document.addEventListener("alpine:init", () => {
       salvos.set(c, "valor" in corpo ? corpo.valor : enviado);
       if (linha) for (const o of controles(linha)) if (o !== c && !enviando.has(o)) salvos.set(o, valor(o));
       salvoEm = corpo.salvo_em;
+      const travada = c.closest("[data-trava-linha]");
+      if (travada) destravar(travada);
       this.limpar(c);
       c.dispatchEvent(new CustomEvent("autosave:salvo", { bubbles: true, detail: { valor: valor(c) } })); // nomeInline (U5)
       if (corpo.trocar) trocar(corpo.trocar);
@@ -242,16 +269,10 @@ document.addEventListener("alpine:init", () => {
     tentarDeNovo() {
       for (const c of [...falhas.keys()]) if (this.$root.contains(c)) this.enfileirar(c, false);
     },
-    // Mesmo efeito do desligar() do bloqueio.js: readOnly onde dá (o texto segue copiável).
     desligar(texto) {
       if (this.desligado) return;
       this.desligado = true;
-      const LEITURA = new Set(["text", "search", "url", "tel", "email", "number", "date"]);
-      for (const c of this.$root.querySelectorAll("input, select, textarea, button")) {
-        if (c.type === "hidden") continue;
-        if (c.tagName === "TEXTAREA" || (c.tagName === "INPUT" && LEITURA.has(c.type))) c.readOnly = true;
-        else c.disabled = true;
-      }
+      travar(this.$root);
       let lista = document.querySelector("ul.mensagens");
       if (!lista) {
         lista = Object.assign(document.createElement("ul"), { className: "mensagens" });

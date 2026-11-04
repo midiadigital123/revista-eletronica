@@ -58,6 +58,9 @@ class GradeUiTest(Base):
         self.assertLess(pagina.content.index(b"</table>"), pagina.content.index(b"Adicionar parceiro"))
         resp = self.client.post(url, {"nome": "SAEGO"}, follow=True)
         self.assertContains(resp, 'data-parceiro="SAEGO"')
+        # U10d: não existe mais "Salvar" na grade; a mensagem não manda salvar.
+        self.assertContains(resp, "Parceiro SAEGO criado. Preencha os cortes da linha: cada célula salva sozinha ao sair dela.")
+        self.assertNotContains(resp, "e salve")
         self.assertContains(self.client.post(url, {"nome": "SAEGO"}, follow=True), "Parceiro não criado")
         self.assertEqual(Parceiro.objects.filter(nome="SAEGO").count(), 1)
         self.client.force_login(usuario("imp2", "Impresso"))

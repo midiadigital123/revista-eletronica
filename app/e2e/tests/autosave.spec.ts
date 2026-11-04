@@ -4,13 +4,11 @@
 // Preparar como em painel.spec.ts (criar_demo --ano 2026 e o superusuário e2e). Grava de verdade
 // numa variável do 1º projeto do ano e devolve o valor original no fim.
 import { expect, test, type Page } from "@playwright/test";
-import { entrar, liberarBloqueio, novoParceiro } from "./helpers";
+import { alpinePronto as pronto, entrar, liberarBloqueio, novoParceiro } from "./helpers";
 
 const ROTA = "**/ui/projeto/*/campo/";
 
 /** Variável de texto livre do 1º projeto da planilha (a regional raramente entra nos templates). */
-/** O Alpine já iniciou o `saida` (o :data-estado só existe depois): o `change` já tem quem ouça. */
-const pronto = (page: Page) => expect(page.locator("[data-status-salvo]")).toHaveAttribute("data-estado", "");
 
 const celula = (page: Page) => page.locator('tbody[id^="projeto-"]').first().locator('input.input[name$="-nome_regional"]');
 

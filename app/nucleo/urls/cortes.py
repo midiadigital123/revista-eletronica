@@ -52,7 +52,7 @@ def novo_parceiro(request, ano):
     """Nova linha da grade: o parceiro nasce sem cortes; o projeto nasce quando os cortes forem salvos."""
     form = modelform_factory(Parceiro, fields=["nome"])(request.POST)
     if form.is_valid():
-        messages.success(request, f"Parceiro {form.save()} criado. Preencha os cortes da linha e salve.")
+        messages.success(request, f"Parceiro {form.save()} criado. Preencha os cortes da linha: cada célula salva sozinha ao sair dela.")
     else:
         messages.error(request, "Parceiro não criado: " + " ".join(m for erros in form.errors.values() for m in erros))
     return redirect("cortes", ano)

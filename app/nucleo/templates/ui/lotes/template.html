@@ -8,8 +8,8 @@
 {% include "ui/lotes/_cab.html" %}
 {% with a=ano.ano|stringformat:"d" %}
 {% if not componente %}
-{% if perms.nucleo.add_componente %}{% url 'admin:nucleo_componente_changelist' as u %}
-{% include "ui/_componentes/vazio.html" with titulo="Nenhum componente em "|add:a texto="Cadastre os componentes do ano no admin." url=u rotulo="Abrir componentes" %}
+{% if perms.nucleo.add_componente %}{% url 'ui_ano' ano.ano as u %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhum componente em "|add:a texto="Cadastre os componentes na página do ano." url=u|add:"#componentes-titulo" rotulo="Abrir componentes" %}
 {% else %}
 {% include "ui/_componentes/vazio.html" with titulo="Nenhum componente em "|add:a texto="Peça a um administrador para cadastrar os componentes do ano." %}
 {% endif %}

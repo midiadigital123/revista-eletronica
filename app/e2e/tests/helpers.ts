@@ -12,8 +12,14 @@ export async function entrar(page: Page, proxima = "/admin/") {
   await expect(page).not.toHaveURL(/\/admin\/login\//);
 }
 
-/** O Alpine já ligou a página (o `:data-estado` do status do autosave só existe depois do init). */
-export const alpinePronto = (page: Page) => expect(page.locator("[data-status-salvo]")).toHaveAttribute("data-estado", "");
+/** O Alpine já ligou a página (o `:data-estado` do status do autosave só existe depois do init).
+ * Espera antes o DOMContentLoaded: ele só dispara depois dos scripts `defer`, e o Alpine e o Sortable vêm
+ * do jsDelivr com o cache vazio a cada contexto novo. Sem essa espera, um CDN lento (> 5 s) estourava o
+ * prazo do expect com a página ainda carregando (U10d, estados.spec). Alpine quebrado continua falhando. */
+export async function alpinePronto(page: Page) {
+  await page.waitForLoadState("domcontentloaded");
+  await expect(page.locator("[data-status-salvo]")).toHaveAttribute("data-estado", "");
+}
 
 /** Cortes (U4): "+ Adicionar parceiro" abre a linha com o foco no nome; Enter cria e recarrega. */
 export async function novoParceiro(page: Page, nome: string) {

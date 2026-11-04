@@ -288,6 +288,18 @@ class CortesTest(Base):
         self.assertContains(self.client.post(self.url + "?ano=2026", dados), "célula ausente no envio")
         self.assertEqual(Corte.objects.get().valores, [100])
 
+    def test_40_parceiros_com_7_componentes_salvam_a_grade(self):
+        """U10d: com 4 etapas × 7 componentes, 40 parceiros passam de 1000 campos no POST (o padrão do
+        DATA_UPLOAD_MAX_NUMBER_FIELDS) e o "Salvar cortes" recusava o envio inteiro."""
+        Componente.objects.bulk_create(Componente(ano=self.a26, codigo=f"C{i}", nome=f"C{i}") for i in range(5))
+        Parceiro.objects.bulk_create(Parceiro(nome=f"P{i:02}") for i in range(40))
+        dados = self.grade()
+        self.assertGreater(len(dados), 1000)
+        p = Parceiro.objects.get(nome="P39")
+        dados[f"c-{self.celula(p, '3EM', 'MT')}"] = "250, 300"
+        self.assertEqual(self.client.post(self.url + "?ano=2026", dados).status_code, 302)
+        self.assertEqual(Corte.objects.get().parceiro_ano.parceiro, p)
+
     def test_70_parceiros_cabem_no_limite_de_campos_do_post(self):
         Parceiro.objects.bulk_create(Parceiro(nome=f"P{i:02}") for i in range(70))
         dados = self.grade()

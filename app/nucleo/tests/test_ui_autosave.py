@@ -84,6 +84,34 @@ class ProjetoCampoTest(Protocolo, Base):
         self.assertIn("em edição por outro", corpo["conflito"])
         self.assertNotEqual(Projeto.objects.get(pk=self.p.pk).sigla_programa, "X")
 
+    def test_409_planilha_em_duas_abas_traz_atual_e_nao_sobrescreve(self):
+        """U10d: a planilha não tem bloqueio de página; como a grade de Cortes, o `original` que a
+        tela tinha diferente do gravado é conflito (409 com `atual`), nunca sobrescrita em silêncio."""
+        url_pagina = reverse("ui_variaveis", args=[2026])
+        outra = type(self.client)()
+        outra.force_login(self.ped)
+        abas = [c.get(url_pagina) for c in (self.client, outra)]  # as duas abas abrem a planilha
+        original = getattr(Projeto.objects.get(pk=self.p.pk), "sigla_programa")
+        self.assertContains(abas[0], f'data-url="{self.url}"')
+        self.assertSalvo(outra.post(self.url, {"campo": "sigla_programa", "valor": "SAEGO", "original": original}, **JSON))
+        corpo = self.assertNaoSalvo(self.postar(self.url, campo="sigla_programa", valor="X", original=original), 409, "conflito")
+        self.assertEqual(corpo["atual"], "SAEGO")
+        self.assertIn("outra pessoa mudou", corpo["conflito"])
+        self.assertEqual(Projeto.objects.get(pk=self.p.pk).sigla_programa, "SAEGO")
+        # "Tentar de novo": o cliente manda o `atual` como original e grava por cima, de propósito.
+        corpo = self.assertSalvo(self.postar(self.url, campo="sigla_programa", valor=" X ", original="SAEGO"))
+        self.assertEqual(corpo["valor"], "X")  # o normalizado volta: o próximo `original` bate com o banco
+        self.assertEqual(Projeto.objects.get(pk=self.p.pk).sigla_programa, "X")
+
+    def test_planilha_marca_a_linha_para_o_409_de_bloqueio_travar_so_ela(self):
+        """U10d: o 409 de bloqueio de um projeto deixa só a linha dele em só leitura (`autosave.js`)."""
+        r = self.client.get(reverse("ui_variaveis", args=[2026]))
+        self.assertContains(r, f'<tbody id="projeto-{self.p.pk}" data-url="{self.url}" data-prefixo="form-0-" data-trava-linha>', html=False)
+        self.travar(self.p)
+        corpo = self.assertNaoSalvo(self.postar(self.url, campo="sigla_programa", valor="X", original=self.p.sigla_programa), 409, "conflito")
+        self.assertNotIn("atual", corpo)
+        self.assertIn("projeto em edição por outro", corpo["conflito"])
+
     def test_403_impresso_e_arquivado(self):
         self.client.force_login(self.imp)
         self.assertEqual(self.postar(self.url, campo="sigla_programa", valor="X").status_code, 403)
