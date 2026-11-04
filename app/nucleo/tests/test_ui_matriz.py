@@ -104,11 +104,26 @@ class MatrizUiTest(BaseCadastro):
         self.assertRedirects(resp, reverse("ui_matriz_detalhe", args=[self.matriz.pk]), fetch_redirect_response=False)
         self.assertEqual(list(self.mec.descritor_set.values_list("codigo", flat=True)), ["D09"])
 
+    def test_excluir_matriz_leva_a_pagina_comum_e_volta_para_a_lista(self):
+        """E3 (D-205): zona de perigo no fim do detalhe → ui_excluir, com ?voltar= para as matrizes do ano."""
+        url = reverse("ui_excluir", args=["matriz", self.matriz.pk])
+        link = f'{url}?voltar={reverse("ui_matriz", args=[2026])}'
+        for papel in ("Pedagógica", "Mídias Digitais", "Admin"):
+            self.client.force_login(usuario(f"u-{papel}", papel))
+            html = self.client.get(reverse("ui_matriz_detalhe", args=[self.matriz.pk])).content.decode()
+            self.assertIn(f'href="{link}"', html, papel)
+            self.assertIn("Excluir matriz…", html, papel)
+            self.assertGreater(html.index(link), html.index("matriz-tabela"), "fim da página, não no topo")
+        # a página comum (E0) recebe o voltar
+        self.assertContains(self.client.get(link), f'href="{reverse("ui_matriz", args=[2026])}"')
+
     def test_impresso_so_le_e_posts_403(self):
         self.client.force_login(usuario("imp", "Impresso"))
         resp = self.client.get(reverse("ui_matriz_detalhe", args=[self.matriz.pk]))
         self.assertContains(resp, "Só leitura")
         self.assertNotContains(resp, 'data-abrir="dlg-duplicar"')
+        self.assertNotContains(resp, reverse("ui_excluir", args=["matriz", self.matriz.pk]))
+        self.assertNotContains(resp, "zona-perigo")
         for nome in ("ui_matriz_duplicar", "ui_matriz_renomear", "ui_matriz_reimportar"):
             self.assertEqual(self.client.post(reverse(nome, args=[self.matriz.pk]), {"nome": "X"}).status_code, 403)
 

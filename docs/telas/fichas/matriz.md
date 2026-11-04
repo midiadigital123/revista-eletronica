@@ -8,7 +8,7 @@ Cuidar da matriz de referência do ano: ver quais matrizes existem, criar uma a 
 
 | Perfil | O que faz |
 |---|---|
-| Pedagógica, Mídias Digitais, Admin | tudo: duplicar, reimportar, renomear, intervalo mínimo, descritores, tarefas, arquivo do item, excluir tarefa e descritor |
+| Pedagógica, Mídias Digitais, Admin | tudo: duplicar, reimportar, renomear, intervalo mínimo, descritores, tarefas, arquivo do item, excluir tarefa e descritor, excluir a matriz sem uso |
 | Impresso | só vê (aviso de só leitura; nenhum botão de gravar) |
 | Sem permissão de ver matriz | recebe "acesso negado" (403) |
 | Não logado | vai para o login do admin e volta depois |
@@ -21,11 +21,12 @@ Cuidar da matriz de referência do ano: ver quais matrizes existem, criar uma a 
 ## Páginas
 
 1. **Matrizes do ano** — lista das matrizes do ano escolhido.
-2. **Matriz** — etapas × componente da matriz; nome renomeável no título (lápis); ações Duplicar, Reimportar e Diferenças da origem.
+2. **Matriz** — etapas × componente da matriz; nome renomeável no título (lápis); ações Duplicar, Reimportar e Diferenças da origem; no fim, a zona de perigo "Excluir matriz" (E3, D-205).
 3. **Reimportar** — envio do arquivo com confirmação forte.
 4. **Diferenças** — o que a cópia tem de diferente da origem (só consulta).
 5. **Etapa × componente** — cabeçalho com o título ("5EF Língua Portuguesa"), a linha de contexto (matriz, escala, revistas afetadas), o status do salvamento e o botão "Configurações" (popover com o intervalo mínimo); lista de descritores com "+ Novo descritor" e busca à esquerda; painel do descritor à direita (campos, tarefas, arquivo do item e, no fim, a zona de perigo "Excluir descritor").
 6. **Excluir tarefa / Excluir descritor** — confirmação forte com as revistas afetadas.
+7. **Excluir matriz** — a página comum de exclusão (`ui/excluir.html`, D-205): em uso, lista os parceiros que a usam e o bloqueio de outra pessoa, com links, e não apaga; livre, pede o nome da matriz.
 
 ## Dados mostrados
 
@@ -43,7 +44,7 @@ Cuidar da matriz de referência do ano: ver quais matrizes existem, criar uma a 
 - Descritor: cada campo acima, um por vez; descritor novo (código e descrição; entra no fim da lista).
 - Tarefa: início, fim e texto de uma tarefa gravada, linha a linha; tarefa nova pelo "+ Adicionar tarefa" (entra no fim); arquivo do item e texto alternativo (enviar, trocar, remover).
 - Ordem de descritores e de tarefas: 1…N, pelo arrastar ou pelos botões "Mover para cima/baixo".
-- Exclusão: tarefa ou descritor (com as tarefas dele).
+- Exclusão: tarefa ou descritor (com as tarefas dele); a matriz sem uso, com as etapas × componente, descritores e tarefas dela.
 
 ## Ações
 
@@ -62,6 +63,7 @@ Cuidar da matriz de referência do ano: ver quais matrizes existem, criar uma a 
 | + Novo descritor | topo da lista (modal) | editar matriz + bloqueio | abre o descritor novo; "Descritor D09 criado." |
 | Arquivo do item | painel (modal por tarefa) | editar matriz + bloqueio | "Arquivo do item enviado para a tarefa D01 100-150." / removido / texto alternativo salvo |
 | Excluir tarefa / descritor | ícone da tarefa / zona de perigo no fim do painel → página de confirmação | excluir tarefa / descritor + bloqueio | volta ao descritor / à etapa × CC; "Tarefa D01 100-150 excluída." |
+| Excluir matriz… | zona de perigo no fim da Matriz → `ui_excluir` (`?voltar=` a lista do ano) | excluir matriz | em uso: "Não dá para excluir: isto está em uso.", com os parceiros que a usam (link para a aba Lotes › Matriz) e a dica de trocar a matriz deles lá; livre: digita o nome e volta às Matrizes do ano com "Exclusão feita: a matriz X de 2026." |
 
 ## Estados
 
@@ -86,7 +88,7 @@ Cuidar da matriz de referência do ano: ver quais matrizes existem, criar uma a 
 - Ver: `view_matriz` (matrizes) e `view_matrizetapacc` (etapa × CC).
 - Duplicar: `add_matriz`. Renomear e reimportar: `change_matriz`.
 - Editar etapa × CC, descritor e tarefas: as permissões de alterar/criar de etapa × CC, descritor e tarefa (o pacote "editar matriz" dos perfis).
-- Excluir: `delete_tarefa` / `delete_descritor`.
+- Excluir: `delete_tarefa` / `delete_descritor`; a matriz, `delete_matriz` (sem ele, nem a zona de perigo aparece: o Impresso não a vê).
 - Gravar na etapa × CC (campos, tarefas, ordem, intervalo, item, novo descritor) exige o bloqueio dela (um editor por vez); POST sem permissão é 403; sem o bloqueio, 409 e a página vira só leitura.
 - A permissão de ver a etapa × CC é conferida antes de pegar o bloqueio: quem só tem `delete_*` recebe 403 sem travar a etapa × CC.
 
@@ -122,6 +124,8 @@ Matriz
 │ │ Etapa    │ CC   │ Intervalo mínimo │ Descritores│ Revistas ativas  │  │
 │ │ 5EF  ›   │ LP   │ 25               │ 14         │ 23               │  │
 │ └──────────┴──────┴──────────────────┴────────────┴──────────────────┘  │
+│ ┌ Excluir matriz ─────────────────────────────── [Excluir matriz…] ┐   │
+│ └ Só sai se nenhum parceiro a usa. Na próxima tela, digite o nome. ┘   │
 └─────────────────────────────────────────────────────────────────────────┘
 
 Etapa × componente (lista + detalhe)
@@ -158,11 +162,12 @@ O elemento que marca a tela: a **faixa da tarefa na escala** (barra fina de 0 ao
 7. Busca filtra por código ou descrição; abrir descritor por HTMX devolve só o painel (com a lista fora do alvo).
 8. Arquivo do item envia, troca e remove pela mesma regra do admin (tipo pelos bytes, 5 MB).
 9. Excluir tarefa/descritor pede o código digitado; código errado não exclui; certo exclui e volta com a mensagem.
-10. Outra pessoa com a etapa × CC aberta: segunda pessoa vê "Somente leitura: … está editando" e não grava.
+10. Excluir matriz: a zona de perigo fica no fim da Matriz, só para quem tem `delete_matriz`; a matriz usada por algum parceiro mostra o que impede e não apaga; a livre sai digitando o nome e volta à lista do ano.
+11. Outra pessoa com a etapa × CC aberta: segunda pessoa vê "Somente leitura: … está editando" e não grava.
 
 ## Referências técnicas
 
 - Regra: `app/nucleo/admin/matriz.py` (formulários, impacto, exclusão), `app/nucleo/matriz.py` (reimportar, arquivo do item, `com_afetadas` e `excluir`, extraídos do admin), `app/nucleo/servicos/matriz.py`, `app/nucleo/servicos/arquivos.py`.
 - Bloqueio: `app/nucleo/ui_bloqueio.py` (`com_bloqueio`, alvo = etapa × CC).
 - Visual: `editor/src/projetos/ano/TelaAno.tsx`, `ListaDescritores.tsx`, `TelaDescritor.tsx`.
-- Decisões: D-053, D-071, D-076, D-081, D-091, D-101, D-113, D-155, D-180, D-181, D-183, D-185, D-186.
+- Decisões: D-053, D-071, D-076, D-081, D-091, D-101, D-113, D-155, D-180, D-181, D-183, D-185, D-186, D-205.

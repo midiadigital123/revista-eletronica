@@ -1,7 +1,8 @@
 // Hierarquia do editor de matriz (U9): Configurações (popover com o intervalo mínimo, autosave),
 // "+ Novo descritor" no topo da lista e "Excluir descritor" na zona de perigo do fim do painel.
 // Preparo de painel.spec.ts (criar_demo --ano 2026 e o superusuário e2e). O intervalo volta ao valor
-// original no fim; nada é excluído.
+// original no fim. Só sai a cópia "E2E Excluir …" da Demonstração que o próprio teste cria (E3, D-205);
+// o Impresso (E2E_IMPRESSO_*) só confere que não vê o botão.
 import { expect, test } from "@playwright/test";
 import { alpinePronto, entrar, liberarBloqueio } from "./helpers";
 
@@ -93,4 +94,62 @@ test("MEC: Configurações salva o intervalo sozinho; Novo descritor na lista; e
   await page.getByRole("link", { name: "Voltar sem excluir" }).first().click();
   await expect(page.locator("#form-descritor")).toBeVisible();
   await liberarBloqueio(page);
+});
+
+// E3 (D-205): "Excluir matriz…" na zona de perigo do fim da Matriz → página comum de exclusão. A Demonstração
+// está em uso (os parceiros da demo apontam para ela) e não sai; a cópia que o próprio teste cria sai pelo nome.
+test("Matriz: Excluir matriz… mostra o que impede na Demonstração e apaga a cópia sem uso", async ({ page }) => {
+  await entrar(page, "/ui/matriz/2026/");
+  await page.getByRole("link", { name: "Demonstração" }).first().click();
+  const detalhe = page.url();
+  const zona = page.locator(".zona-perigo");
+  await expect(zona.getByRole("heading", { name: "Excluir matriz" })).toBeVisible();
+  const [caixa, tabela] = await Promise.all([zona.boundingBox(), page.locator(".matriz-tabela").boundingBox()]);
+  expect(caixa!.y).toBeGreaterThan(tabela!.y + tabela!.height - 1); // no fim, não no topo
+  const excluir = zona.getByRole("link", { name: "Excluir matriz…" });
+  await expect(excluir).toHaveClass(/btn-destrutivo/);
+  await excluir.focus();
+  await expect(excluir).toBeFocused();
+  await page.keyboard.press("Enter");
+
+  await expect(page).toHaveURL(/\/ui\/excluir\/matriz\/\d+\/\?voltar=/);
+  await expect(page.getByText("Não dá para excluir: isto está em uso.")).toBeVisible();
+  const uso = page.getByRole("row", { name: /^Parceiros que usam a matriz/ });
+  await expect(uso.getByRole("link").first()).toHaveAttribute("href", /\/lotes\//);
+  await expect(page.getByRole("button", { name: "Excluir" })).toHaveCount(0);
+  await page.getByRole("link", { name: "Voltar sem excluir" }).first().click();
+  await expect(page).toHaveURL(/\/ui\/matriz\/2026\/$/);
+  await expect(page.getByRole("link", { name: "Demonstração" }).first()).toBeVisible();
+
+  // Cópia própria, sem parceiro: sai digitando o nome e volta à lista do ano.
+  const nome = `E2E Excluir ${Date.now().toString(36).toUpperCase()}`;
+  await page.goto(detalhe);
+  await page.getByRole("button", { name: "Duplicar" }).click();
+  const dialogo = page.locator("#dlg-duplicar");
+  await dialogo.getByLabel("Ano da cópia").selectOption({ label: "2026" });
+  await dialogo.getByLabel("Nome").fill(nome);
+  await dialogo.getByRole("button", { name: "Duplicar" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: nome })).toBeVisible();
+  await page.locator(".zona-perigo").getByRole("link", { name: "Excluir matriz…" }).click();
+  await expect(page.getByText("Nada usa isto.")).toBeVisible();
+  const enviar = page.getByRole("button", { name: "Excluir" });
+  await expect(enviar).toBeDisabled();
+  await page.getByLabel("Para confirmar, digite").fill(nome);
+  await enviar.click();
+  await expect(page).toHaveURL(/\/ui\/matriz\/2026\/$/);
+  await expect(page.getByText(`Exclusão feita: a matriz ${nome} de 2026.`)).toBeVisible();
+  await expect(page.getByRole("link", { name: nome })).toHaveCount(0);
+});
+
+test("Matriz: o Impresso não vê Excluir matriz…", async ({ browser }) => {
+  const { E2E_IMPRESSO_USUARIO: imp, E2E_IMPRESSO_SENHA: senha } = process.env;
+  test.skip(!imp || !senha, "defina E2E_IMPRESSO_*");
+  const page = await (await browser.newContext()).newPage();
+  await page.goto("/admin/login/?next=/ui/matriz/2026/");
+  await page.fill("#id_username", imp!);
+  await page.fill("#id_password", senha!);
+  await page.click("input[type=submit]");
+  await page.getByRole("link", { name: "Demonstração" }).first().click();
+  await expect(page.getByText(/^Só leitura/)).toBeVisible();
+  await expect(page.locator(".zona-perigo")).toHaveCount(0);
 });

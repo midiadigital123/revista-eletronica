@@ -1,6 +1,7 @@
 {% extends "ui/base.html" %}
 {% load static %}
-{% comment %}Matriz (T09): etapas × componente e as ações Renomear (inline, U5), Duplicar, Reimportar, Diferenças.{% endcomment %}
+{% comment %}Matriz (T09): etapas × componente e as ações Renomear (inline, U5), Duplicar, Reimportar, Diferenças;
+no fim, a zona de perigo "Excluir matriz…" (E3, D-205) leva a ui_excluir.{% endcomment %}
 {% block titulo %}{{ matriz.nome }} {{ matriz.ano.ano }}{% endblock %}
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/matriz.css' %}">{% endblock %}
 
@@ -60,6 +61,19 @@
 {% else %}
 {% if pode_alterar %}{% url 'ui_matriz_reimportar' matriz.pk as u %}{% endif %}
 {% include "ui/_componentes/vazio.html" with titulo="Nenhuma etapa × componente" texto="As etapas × componente entram pelo arquivo do SAEGO (PDF ou planilha)." url=u rotulo="Reimportar" %}
+{% endif %}
+
+{% if perms.nucleo.delete_matriz %}{# E3 (D-205): fim da página, separada (U9). A página comum diz o que impede ou pede o nome. #}
+<section class="zona-perigo" aria-labelledby="perigo-titulo">
+  <div>
+    <h2 id="perigo-titulo" class="secao-titulo">Excluir matriz</h2>
+    <p class="mudo">Só sai se nenhum parceiro a usa. Sai com as etapas × componente, os descritores e as tarefas dela. Na próxima tela, digite o nome para confirmar.</p>
+  </div>
+  {% url 'ui_matriz' matriz.ano.ano as lista %}
+  <a class="btn btn-destrutivo btn-sm" href="{% url 'ui_excluir' 'matriz' matriz.pk %}?voltar={{ lista|urlencode }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+    Excluir matriz…</a>
+</section>
 {% endif %}
 
 {% if pode_duplicar %}
