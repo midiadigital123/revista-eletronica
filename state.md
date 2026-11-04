@@ -2022,3 +2022,4 @@ Abrir `plans/revista-express-telas-b-ux.md` na seção do U10 e escolher por ond
 - `templates.css` local: além da formatação, remove o `border-radius` de `.tpl-indice a`; não descartado.
 - `templates.css`: usuário confirmou que a remoção do `border-radius` foi dele; commitado.
 - Anotação do trail l-9fb3f4a9: como preparar o banco de dev para o Playwright depois da limpeza.
+- Plano `plans/revista-express-telas-b-ux.md`: 33 caixas de U0 a U9 marcadas (todas têm commit na branch); U10 segue com 2 caixas abertas.
