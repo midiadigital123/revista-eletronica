@@ -333,8 +333,8 @@ Passos:
 - Estados vazios que ensinam o próximo passo; estados de foco, hover, desabilitado e carregando em todo controle novo; entrada de linha nova com `animate-entra` (120 ms) e transição do status em 180 ms.
 - Rode `impeccable critique` e `audit` nas telas alteradas. Corrija tudo num lote só. Rode `impeccable detect --json` uma vez sobre os templates e CSS alterados.
 - Atualize `docs/telas/design-system.md` (componentes Alpine, protocolo do autosave, modal de impacto, linha nova, seletor de ano, libs e sha256) e as fichas em `docs/telas/fichas/` (crie `cortes.md` e `anos.md`, que faltam, e corrija o `telas-b.md:31-33`).
-- [ ] Rode o Playwright completo em desktop (1440px) e 1280px. Commit.
-- [ ] Último commit da leva: só o `state.md` (`docs: atualiza state.md`).
+- [x] Rode o Playwright completo em desktop (1440px) e 1280px. Commit.
+- [x] Último commit da leva: só o `state.md` (`docs: atualiza state.md`).
 
 **Depois do U10:** retomar S6–S9 de `plans/revista-express-telas-b-lacunas.md`. "Nova matriz" (S6) e "Novo template" (S7) já nascem com linha nova, modal e autosave. S8 coloca os downloads nas abas do projeto e da revista.
 
