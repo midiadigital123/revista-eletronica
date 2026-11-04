@@ -2118,3 +2118,4 @@ Usuário confirmar a lista de limpeza do banco de dev.
 - `linhas.spec.ts` passou a excluir o componente que cria (`f6936c7`). `docs/regras-de-negocio.md` §9 reescrita e divergência 1 resolvida (`b5448a6`).
 - Integração final: Django 764 OK (8 pulados), makemigrations limpo, Playwright 146/146 no dev, `trail check` sem conflito.
 - O scratchpad compartilhado fez o E2 rodar 2 specs no banco descartável do E4. Os resultados não foram afetados, mas nos próximos lançamentos cada agente recebe a própria subpasta já no brief.
+- Plano `plans/revista-express-exclusao.md` commitado.
