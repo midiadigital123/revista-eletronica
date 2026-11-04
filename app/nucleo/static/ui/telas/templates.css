@@ -286,3 +286,9 @@
     max-width: none;
   }
 }
+
+/* E4 (D-207): "Excluir template…" na linha da lista e na zona de perigo do editor. */
+.tabela .tpl-acoes { width: 1%; white-space: nowrap; text-align: right; }
+td.tpl-acoes { padding-block: 0.375rem; vertical-align: middle; }
+.tpl-excluir:hover { color: var(--destructive); }
+.tpl-perigo { margin-top: 2rem; }

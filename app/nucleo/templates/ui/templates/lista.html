@@ -32,7 +32,7 @@
   {% for f, n in abas %}<a href="?aba={{ f }}"{% if f == aba %} aria-current="page"{% endif %}>Textos {{ f }}<span class="badge badge-secundario">{{ n }}</span></a>{% endfor %}
 </nav>
 
-{% if templates %}
+{% if templates %}{% url 'ui_templates' ano.ano as lista_url %}{% with voltar=lista_url|add:"?aba="|add:aba %}
 <div class="tabela-caixa">
   <table class="tabela">
     <thead><tr>
@@ -40,6 +40,7 @@
       <th scope="col">Componente</th>
       <th scope="col" class="num">Versão</th>
       <th scope="col">Uso nas revistas ativas</th>
+      {% if perms.nucleo.delete_template %}<th scope="col" class="tpl-acoes"><span class="sr-only">Ações</span></th>{% endif %}
     </tr></thead>
     <tbody>
     {% for t in templates %}
@@ -48,11 +49,16 @@
         <td>{{ t.componente.codigo }} <span class="mudo">{{ t.componente.nome }}</span></td>
         <td class="num">{% if t.n_versao %}<span class="badge badge-contorno">v{{ t.n_versao }}</span>{% else %}<span class="badge badge-alerta" title="Sem texto: abra e escreva a primeira versão.">sem texto</span>{% endif %}</td>
         <td>{% if t.n_usado %}<a class="link" href="{% url 'painel' ano.ano %}?template={{ t.pk }}" title="Abre o Painel filtrado por este template.">usado por {{ t.n_usado }}</a>{% if t.n_copia %} <span class="mudo">({{ t.n_copia }} com cópia de seção)</span>{% endif %}{% else %}<span class="mudo">nenhuma revista</span>{% endif %}</td>
+        {% if perms.nucleo.delete_template %}{# D-207: a página diz se está em uso; sem contagem prévia por linha (plano E0). #}
+        <td class="tpl-acoes"><a class="btn-icone tpl-excluir" href="{% url 'ui_excluir' 'template' t.pk %}?voltar={{ voltar|urlencode }}" aria-label="Excluir template {{ t.nome }} ({{ t.componente.codigo }})…" data-dica="Excluir template…">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></a></td>
+        {% endif %}
       </tr>
     {% endfor %}
     </tbody>
   </table>
 </div>
+{% endwith %}
 {% else %}
 {% if pode_criar %}{% url 'admin:nucleo_template_add' as novo %}{% endif %}
 {% with titulo="Nenhum template "|add:aba|add:" neste ano" %}{% if pode_criar %}

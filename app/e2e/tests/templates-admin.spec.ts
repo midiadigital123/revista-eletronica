@@ -7,9 +7,11 @@
 //     python manage.py createsuperuser --noinput --username e2e --email e2e@exemplo.invalid
 //   cd app/e2e && E2E_BASE_URL=http://localhost:8012 E2E_ADMIN_USUARIO=e2e E2E_ADMIN_SENHA=<senha> \
 //     npx playwright test templates-admin
-// Não salva nada: só digita, insere a variável e confere o preview (sair libera o bloqueio).
+// Abre um template próprio ("E2E admin <sufixo>", F2 de LP), só digita, insere a variável e confere o
+// preview, sem salvar; no fim o exclui pela tela B (E4, D-207).
 import { expect, test } from "@playwright/test";
 import { entrar, liberarBloqueio } from "./helpers";
+import { criarTemplate, excluirTemplate } from "./templates";
 
 test("template: Inserir variável atualiza o preview", async ({ page }) => {
   const erros: string[] = [];
@@ -17,7 +19,9 @@ test("template: Inserir variável atualiza o preview", async ({ page }) => {
 
   await entrar(page, "/admin/nucleo/template/?fasciculo__exact=F2");
   await expect(page.locator('.abas-templates [aria-current="page"]')).toHaveText("Textos F2");
-  await page.locator("#result_list tbody tr th a").first().click();
+  const nome = `E2E admin ${Date.now().toString(36).toUpperCase()}`;
+  const pk = await criarTemplate(page, nome, "F2", "## abertura\nAbertura\n\nOlá.\n\n## passo1\nPasso um\n\nPara todos.\n");
+  await page.goto(`/admin/nucleo/template/${pk}/change/`);
 
   const editor = page.locator(".editor-template");
   const preview = editor.locator(".editor-template-preview");
@@ -35,4 +39,5 @@ test("template: Inserir variável atualiza o preview", async ({ page }) => {
   expect(erros).toEqual([]);
 
   await liberarBloqueio(page);
+  await excluirTemplate(page, nome, "F2");
 });
