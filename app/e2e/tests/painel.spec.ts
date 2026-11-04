@@ -130,8 +130,8 @@ test("painel: agrupado por parceiro, seleção por grupo", async ({ page }) => {
 
   // Coluna Revista fixa: rolar a tabela na horizontal (tela estreita) liga a sombra da borda.
   await page.setViewportSize({ width: 480, height: 800 });
-  await page.locator(".painel-caixa").evaluate((c) => { c.scrollTop = 0; c.scrollLeft = 40; c.dispatchEvent(new Event("scroll")); });
-  await expect(page.locator(".painel-caixa")).toHaveAttribute("data-rolou-x", "");
+  await page.locator(".painel-caixa").evaluate((c) => { c.scrollTop = 0; c.scrollLeft = 40; });
+  await expect(page.locator(".painel-caixa")).toHaveAttribute("data-rolou-esq", "");
   expect(erros).toEqual([]);
 });
 

@@ -61,7 +61,7 @@ projeto (nome do projeto primeiro, parceiro em cinza). A página inclui; o filtr
 {% include "ui/_componentes/vazio.html" with titulo="Nenhuma revista com esse filtro" texto=vazio_texto url=vazio_url rotulo="Limpar filtro" %}
 {% else %}
 <form method="get" action="{% url 'ui_validar' ano.ano %}" id="painel-lote">
-  <div class="tabela-densa painel-caixa">
+  <div class="tabela-rolavel tabela-densa painel-caixa" x-data="tabelaRolavel">
     <table class="tabela painel-tabela">
       <thead>
         <tr>

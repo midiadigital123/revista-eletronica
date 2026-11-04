@@ -6,11 +6,11 @@ A grade de cortes (form `grade`): aba Cortes do hub Projetos (o ano inteiro) e a
 U5: o nome do parceiro também (nomeInline: o data-url dele troca a rota para cortes_renomear_parceiro).{% endcomment %}
 <form method="post" class="grade" id="grade" data-grade{% if pode_gravar or perms.nucleo.change_parceiro %} x-data="campoAuto" data-url="{% url 'cortes_celula' ano.ano %}"{% endif %}>{% csrf_token %}
   {% if pode_gravar %}<p class="mudo">De 1 a 4 cortes inteiros e crescentes, separados por vírgula, maiores que 0 e menores que o máximo da escala da etapa. Célula vazia apaga o corte. Cada célula salva sozinha ao sair dela.</p>{% endif %}
-  <div class="tabela-caixa grade-caixa">
+  <div class="tabela-rolavel grade-caixa" x-data="tabelaRolavel">
     <table class="tabela">
       <thead>
         <tr>
-          <th rowspan="2" scope="col" class="grade-parceiro">Parceiro</th>
+          <th rowspan="2" scope="col" class="grade-parceiro fixa">Parceiro</th>
           {% for e in etapas %}<th colspan="{{ componentes|length }}" scope="colgroup" class="grade-etapa">{{ e.codigo }} <span class="mudo">até {{ e.escala_max }}</span></th>{% endfor %}
         </tr>
         <tr>{% for e, c in colunas %}<th scope="col" class="grade-cc{% if c.pk == componentes.0.pk %} grade-inicio{% endif %}">{{ c.codigo }}</th>{% endfor %}</tr>
@@ -18,7 +18,7 @@ U5: o nome do parceiro também (nomeInline: o data-url dele troca a rota para co
       <tbody>
       {% for linha in linhas %}
         <tr{% if linha.erros %} class="grade-com-erro"{% endif %} data-parceiro="{{ linha.parceiro.nome }}">
-          <th scope="row" class="grade-parceiro">{% if perms.nucleo.change_parceiro %}{% url 'cortes_renomear_parceiro' ano.ano linha.parceiro.pk as url %}{% include "ui/_componentes/nome_inline.html" with nome=linha.parceiro.nome %}{% else %}{{ linha.parceiro.nome }}{% endif %}</th>
+          <th scope="row" class="grade-parceiro fixa">{% if perms.nucleo.change_parceiro %}{% url 'cortes_renomear_parceiro' ano.ano linha.parceiro.pk as url %}{% include "ui/_componentes/nome_inline.html" with nome=linha.parceiro.nome %}{% else %}{{ linha.parceiro.nome }}{% endif %}</th>
           {% for cel in linha.celulas %}<td{% if cel.inicio %} class="grade-inicio"{% endif %}><input class="input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" name="c-{{ cel.chave }}" value="{{ cel.texto }}" aria-label="{{ cel.titulo }}"{% if cel.invalida %} aria-invalid="true"{% endif %}{% if linha.erros %} aria-describedby="erros-{{ linha.parceiro.pk }}"{% endif %}{% if not pode_gravar %} readonly{% endif %}></td>{% endfor %}
         </tr>
         {% if linha.erros %}

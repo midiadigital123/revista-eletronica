@@ -25,14 +25,6 @@ document.addEventListener("htmx:afterSwap", (e) => {
   if (e.detail.target.id !== "painel-corpo") return;
   document.getElementById("painel-anuncio").textContent = e.detail.target.querySelector(".painel-resumo")?.textContent.trim() ?? "";
 });
-// Sombra na borda do cabeçalho e da coluna Revista (fixos) só quando a tabela rolou.
-// O scroll não borbulha: escuta na captura, vale também depois da troca do HTMX.
-document.addEventListener("scroll", (e) => {
-  const caixa = e.target.classList?.contains("painel-caixa") ? e.target : null;
-  if (!caixa) return;
-  caixa.toggleAttribute("data-rolou-x", caixa.scrollLeft > 0);
-  caixa.toggleAttribute("data-rolou-y", caixa.scrollTop > 0);
-}, true);
 </script>
 
 {% if pode_validar %}

@@ -5,7 +5,7 @@ Contexto: l (urls/ui_variaveis.linha), ano, pode_editar, colunas; oob=True na re
 Autosave (U3): o <tbody> leva a rota do projeto (data-url) e o prefixo do formset a tirar do nome (data-prefixo).
 {% endcomment %}{% with p=l.form.instance %}<tbody id="projeto-{{ p.pk }}"{% if l.erros %} class="grade-com-erro"{% endif %}{% if pode_editar %} data-url="{% url 'ui_projeto_campo' p.pk %}" data-prefixo="form-{{ l.indice }}-"{% endif %}>
   <tr>
-    <th scope="row" class="grade-parceiro">
+    <th scope="row" class="grade-parceiro fixa">
       <input type="hidden" name="form-{{ l.indice }}-id" value="{{ p.pk }}">
       <a class="link-linha" href="{% url 'ui_projeto' p.pk %}">{{ p.parceiro_ano.parceiro }}</a>
       <span class="mudo">{{ p.nome }}</span>
