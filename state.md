@@ -1773,7 +1773,24 @@ Enviar à Infra o texto do pedido com o link do repositório (main já tem `dock
 - **Arquivos afetados:** `app/nucleo/urls/ui_usuarios.py`, `app/nucleo/urls/conta.py`, `app/nucleo/usuarios.py`, `app/nucleo/management/commands/criar_usuarios.py`, `app/nucleo/templates/ui/usuarios/{lista,link}.html`, `app/nucleo/templates/ui/senha_{definir,pronto}.html`, `app/nucleo/static/ui/ui.css`, `app/nucleo/static/ui/telas/usuarios.css`, `app/nucleo/tests/test_ui_usuarios.py`, `app/e2e/tests/usuarios.spec.ts`, `docs/regras-de-negocio.md`, `README.md`
 - **Status:** ativa
 
+### D-217 — Tela Usuários: ações da linha em botões-ícone e "Mudar" só quando o grupo muda (2026-11-05 16:20)
+- **Contexto:** com "Link de acesso" a coluna Ações quebrava em duas linhas (alturas desiguais) e cada linha repetia um botão "Mudar" mesmo sem mudança.
+- **Decisão:** Link de acesso, Redefinir senha e Desativar/Ativar viram botões-ícone (lucide `link`, `key-round`, `user-x`/`user-check`) com `aria-label` e `data-dica`, coluna justa à direita. "Mudar" fica com `visibility: hidden` até o seletor sair do grupo atual (`option[selected]` + `:has`, só CSS, dentro de `@supports`). Linha de desativado com usuário e nome em `--muted-foreground`.
+- **Motivo:** padrão "Botão-ícone" do design-system.md para ação de linha; uma linha por usuário; o botão aparece quando há o que gravar. `visibility` em vez de `display` mantém a largura da coluna.
+- **Descartadas:** gravar o grupo ao mudar o seletor (no Firefox a seta do teclado já dispara `change` e trocaria a permissão por engano); menu "⋯" com as ações (um clique a mais para 3 ações).
+- **Arquivos afetados:** `app/nucleo/templates/ui/usuarios/lista.html`, `app/nucleo/static/ui/telas/usuarios.css`
+- **Status:** ativa
+
+### D-218 — Excluir usuário pela tela, só quem não tem rastro (2026-11-05 16:50)
+- **Contexto:** pedido de o perfil Admin excluir usuários, não só desativar. A D-205 dizia "usuário não é excluído". Quem trabalhou deixa rastro: `history_user` nas tabelas do simple-history (SET_NULL, escondido), versões de template, validações e fotos (PROTECT) e o log do admin (CASCADE).
+- **Decisão:** ícone "Excluir" na linha (rota `ui_usuarios_excluir`, GET/POST), com a regra de desativar (`pode_mudar_ativo`: ninguém se exclui; Admin só Pedagógica/Mídias; superusuário invisível = 404). `nucleo/usuarios.py::rastros` conta as relações diretas (menos Bloqueio) e o `history_user` de cada tabela de histórico; com rastro, a página comum `ui/excluir.html` lista o que impede e manda desativar. Sem rastro, confirmação forte digitando o usuário; `excluir` trava a linha (`select_for_update`) e confere de novo. Gate em `auth.change_user`, sem `auth.delete_user`. Escolha do usuário: "só sem rastro".
+- **Motivo:** tira da lista quem foi criado por engano ou para teste sem apagar autoria. Reaproveita a página de exclusão (D-205) e não exige migração.
+- **Descartadas:** excluir sempre, com autor vazio (perda de auditoria e migração de 3 FKs PROTECT→SET_NULL; o usuário escolheu "só sem rastro"); dar `auth.delete_user` ao Admin (o excluir do admin do Django não conhece a regra de rastro e apagaria o autor do histórico em silêncio); esconder o ícone de quem tem rastro (~20 contagens por linha na lista).
+- **Arquivos afetados:** `app/nucleo/usuarios.py`, `app/nucleo/urls/ui_usuarios.py`, `app/nucleo/templates/ui/usuarios/lista.html`, `app/nucleo/tests/test_ui_usuarios.py`, `app/e2e/tests/usuarios.spec.ts`, `app/nucleo/urls/ui_excluir.py` (docstring), `app/nucleo/permissoes.py` (comentário), `docs/regras-de-negocio.md`
+- **Status:** ativa. Modifica a D-205 só para usuário.
+
 ## Perguntas em aberto
+- [x] (05/11: só sem rastro; D-218) Excluir usuário pela tela (pedido em 05/11): contraria D-205 ("usuário não é excluído: é desativado"); o histórico perde o autor e versões de template, validações e fotos (PROTECT) impedem — depende de: usuário
 - [x] (05/11: manter a senha; D-216) Link de acesso na tela Usuários: o "Novo usuário" passa a nascer sem senha e mostrar o link (muda o fluxo atual, que pede senha)? — depende de: usuário
 - [x] Produção: `docker-compose.prod.yml` criado (D-214).
 - [ ] Produção: `check --deploy` avisa HSTS e SSL redirect (W004, W008); decidir com a Infra se o proxy já faz o redirect e o HSTS — depende de: Infra
@@ -2228,3 +2245,5 @@ Enviar à Infra o texto do pedido com o link do repositório (main já tem `dock
 - Favicon da árvore amarela nas telas B (D-215).
 - Plano do "Link de acesso" na tela Usuários (gerar pela tela o link de definir senha que hoje só sai pelo `criar_usuarios`); regra extraída para `nucleo/usuarios.py::caminho_definir_senha` (sem commit).
 - "Link de acesso" na tela Usuários + páginas de criar senha fora do admin (D-216). Django 795 OK (8 pulados), makemigrations limpo, E2E usuarios 2/2 (o usuário `e2e` do dev estava desativado: reativado só para a execução e desativado de novo).
+- UI de Usuários (D-217): ações em botões-ícone, "Mudar" só com mudança. Testes de usuários OK, E2E 2/2.
+- Excluir usuário sem rastro (D-218). E2E de Usuários agora exclui o usuário que cria (antes deixava um desativado por execução). Sobram 4 `e2e-midias-*` antigos no banco de dev.
