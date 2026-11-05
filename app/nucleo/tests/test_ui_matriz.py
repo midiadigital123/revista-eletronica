@@ -48,6 +48,33 @@ class MatrizUiTest(BaseCadastro):
         cadastrar(2027)
         self.assertContains(self.client.get(reverse("ui_matriz", args=[2027])), "Nenhuma matriz em 2027")
 
+    def test_nova_matriz_leva_ao_reimportar_e_nome_repetido_nao_grava(self):
+        """S6: Pedagógica cria a matriz vazia do ano e cai no Reimportar (sem MEC, sem pedir confirmação)."""
+        self.client.force_login(usuario("ped", "Pedagógica"))
+        lista = reverse("ui_matriz", args=[2026])
+        self.assertContains(self.client.get(lista), 'data-abrir="dlg-nova"')
+        url = reverse("ui_matriz_nova", args=[2026])
+        self.assertContains(self.client.get(url), 'name="nome"')
+        resp = self.client.post(url, {"ano": self.a26.pk, "nome": "Municipal"})
+        nova = Matriz.objects.get(ano=self.a26, nome="Municipal")
+        self.assertRedirects(resp, reverse("ui_matriz_reimportar", args=[nova.pk]))
+        self.assertContains(resp := self.client.get(reverse("ui_matriz_reimportar", args=[nova.pk])), "Reimportar Municipal")
+        self.assertNotContains(resp, "Digite Municipal para confirmar")
+        resp = self.client.post(url, {"ano": self.a26.pk, "nome": "Municipal"}, **HX)
+        self.assertTemplateUsed(resp, "ui/parciais/matriz_form.html")
+        self.assertContains(resp, "Já existe uma matriz com este nome neste ano.")
+        self.assertEqual(Matriz.objects.filter(ano=self.a26, nome="Municipal").count(), 1)
+
+    def test_nova_matriz_so_para_quem_cria(self):
+        self.client.force_login(usuario("imp", "Impresso"))
+        lista = self.client.get(reverse("ui_matriz", args=[2026]))
+        self.assertNotContains(lista, "dlg-nova")
+        self.assertNotContains(lista, "Nova matriz")
+        url = reverse("ui_matriz_nova", args=[2026])
+        self.assertEqual(self.client.get(url).status_code, 403)
+        self.assertEqual(self.client.post(url, {"ano": self.a26.pk, "nome": "X"}).status_code, 403)
+        self.assertFalse(Matriz.objects.filter(nome="X").exists())
+
     def test_duplicar_leva_a_copia_e_nome_repetido_mostra_erro(self):
         a27 = cadastrar(2027)
         url = reverse("ui_matriz_duplicar", args=[self.matriz.pk])

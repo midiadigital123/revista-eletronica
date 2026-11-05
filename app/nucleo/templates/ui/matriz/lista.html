@@ -10,7 +10,10 @@
     <h1>Matrizes</h1>
     <p class="mudo">Descritores e tarefas que as revistas do ano usam, por etapa e componente.</p>
   </div>
-  {% if ano %}<div class="acoes"><a class="btn btn-ghost" href="{% url 'painel' ano.ano %}">Ver painel de {{ ano.ano }}</a></div>{% endif %}
+  {% if ano %}<div class="acoes">
+    <a class="btn btn-ghost" href="{% url 'painel' ano.ano %}">Ver painel de {{ ano.ano }}</a>
+    {% if perms.nucleo.add_matriz %}<button type="button" class="btn" data-abrir="dlg-nova">Nova matriz</button>{% endif %}
+  </div>{% endif %}
 </header>
 
 {% if not ano %}
@@ -38,15 +41,21 @@
   </table>
 </div>
 {% else %}
-{% if outras %}
-  {% if perms.nucleo.add_matriz %}{% with o=outras.0 %}{% url 'ui_matriz_detalhe' o.pk as u %}
-  {% include "ui/_componentes/vazio.html" with titulo=vazio_titulo texto="A matriz do ano nasce duplicando uma matriz de outro ano (ou pela importação da carga). Abra a matriz de origem e use Duplicar." url=u rotulo="Abrir "|add:o.nome %}
+{% if perms.nucleo.add_matriz %}
+  {% if outras %}{% with o=outras.0 %}{% url 'ui_matriz_detalhe' o.pk as u %}
+  {% include "ui/_componentes/vazio.html" with titulo=vazio_titulo texto="Crie uma matriz vazia e importe o arquivo do SAEGO, ou abra a matriz de outro ano e use Duplicar." abrir="dlg-nova" rotulo="Nova matriz" mais=True url2=u rotulo2="Abrir "|add:o.nome %}
   {% endwith %}{% else %}
-  {% include "ui/_componentes/vazio.html" with titulo=vazio_titulo texto="A matriz do ano nasce quando a equipe pedagógica duplica a de outro ano (ou pela importação da carga)." %}
+  {% include "ui/_componentes/vazio.html" with titulo="Nenhuma matriz cadastrada" texto="Crie a primeira matriz e importe o arquivo do SAEGO (PDF ou planilha)." abrir="dlg-nova" rotulo="Nova matriz" mais=True %}
   {% endif %}
 {% else %}
-  {% include "ui/_componentes/vazio.html" with titulo="Nenhuma matriz cadastrada" texto="A primeira matriz entra pela importação da carga (comando importar_matriz)." %}
+  {% include "ui/_componentes/vazio.html" with titulo=vazio_titulo|default:"Nenhuma matriz cadastrada" texto="A matriz do ano nasce quando a equipe pedagógica a cria ou duplica a de outro ano." %}
 {% endif %}
 {% endif %}
+{% endif %}
+{% if ano and nova %}
+<dialog class="dialogo" id="dlg-nova" aria-labelledby="dlg-nova-titulo">
+  {% url 'ui_matriz_nova' ano.ano as url %}
+  {% include "ui/parciais/matriz_form.html" with form=nova chave="nova" titulo="Nova matriz" %}
+</dialog>
 {% endif %}
 {% endblock %}

@@ -113,9 +113,11 @@ def matrizes(request, ano):
         .order_by("nome")
     )  # fmt: skip
     outras = Matriz.objects.exclude(ano=ano).select_related("ano").order_by("-ano__ano", "nome")
+    nova = _estilo(NovaMatrizForm(initial={"ano": ano.pk})) if request.user.has_perm("nucleo.add_matriz") else None
     return TemplateResponse(request, "ui/matriz/lista.html", {
         **_contexto_ano(ano), "matrizes": lista, "outras": outras, "vazio_titulo": f"Nenhuma matriz em {ano.ano}",
-    })
+        "nova": nova,
+    })  # fmt: skip
 
 
 def _matriz(request, pk, permissao=None):
@@ -125,6 +127,7 @@ def _matriz(request, pk, permissao=None):
 
 
 RenomearForm = modelform_factory(Matriz, form=MatrizForm, fields=["nome"], labels={"nome": "Nome"})
+NovaMatrizForm = modelform_factory(Matriz, form=MatrizForm, fields=["ano", "nome"], labels={"ano": "Ano", "nome": "Nome"})
 
 
 def _forms_matriz(m, duplicar=None):
@@ -149,9 +152,9 @@ def matriz(request, pk):
     })  # fmt: skip
 
 
-def _form_em_dialogo(request, m, chave, form, titulo, url):
-    """Erro: HTMX devolve o form para dentro do modal; sem JS, a página do form."""
-    contexto = {**_contexto_ano(m.ano), "matriz": m, "form": _estilo(form), "titulo": titulo, "url": url, "chave": chave}
+def _form_em_dialogo(request, m, chave, form, titulo, url, ano=None):
+    """Erro: HTMX devolve o form para dentro do modal; sem JS, a página do form. `ano` quando ainda não há matriz."""
+    contexto = {**_contexto_ano(ano or m.ano), "matriz": m, "form": _estilo(form), "titulo": titulo, "url": url, "chave": chave}
     if e_htmx(request):
         return TemplateResponse(request, "ui/parciais/matriz_form.html", contexto)
     return TemplateResponse(request, "ui/matriz/form.html", contexto)
@@ -171,6 +174,21 @@ def duplicar(request, pk):
             messages.success(request, f"Matriz {nova} criada como cópia de {origem}.")
             return _redirecionar(request, reverse("ui_matriz_detalhe", args=[nova.pk]))
     return _form_em_dialogo(request, origem, "duplicar", form, f"Duplicar {origem}", reverse("ui_matriz_duplicar", args=[pk]))
+
+
+@require_http_methods(["GET", "POST"])
+@login_required(login_url="admin:login")
+def nova(request, ano):
+    """S6: matriz vazia no ano da lista; o arquivo do SAEGO entra no Reimportar (a matriz nasce sem MEC)."""
+    if not (pode_ver(request.user) and request.user.has_perm("nucleo.add_matriz")):
+        raise PermissionDenied
+    ano = get_object_or_404(Ano, ano=ano)
+    form = NovaMatrizForm(request.POST or None, initial={"ano": ano.pk})
+    if request.method == "POST" and form.is_valid():
+        criada = form.save()
+        messages.success(request, f"Matriz {criada} criada. Importe o arquivo do SAEGO para trazer os descritores.")
+        return _redirecionar(request, reverse("ui_matriz_reimportar", args=[criada.pk]))
+    return _form_em_dialogo(request, None, "nova", form, "Nova matriz", reverse("ui_matriz_nova", args=[ano.ano]), ano=ano)
 
 
 @require_POST
@@ -555,6 +573,7 @@ def excluir_tarefa(request, pk, dpk, tpk):
 urlpatterns = [
     path("", inicio, name="ui_matriz_inicio"),
     path("<int:ano>/", matrizes, name="ui_matriz"),
+    path("<int:ano>/nova/", nova, name="ui_matriz_nova"),
     path("m/<int:pk>/", matriz, name="ui_matriz_detalhe"),
     path("m/<int:pk>/duplicar/", duplicar, name="ui_matriz_duplicar"),
     path("m/<int:pk>/renomear/", renomear, name="ui_matriz_renomear"),
