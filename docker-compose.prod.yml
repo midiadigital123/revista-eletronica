@@ -1,7 +1,7 @@
 # Produção (D-214): docker compose -f docker-compose.prod.yml up --build -d
 # Diferenças do docker-compose.yml de desenvolvimento: Gunicorn no lugar do runserver, DEBUG
 # desligado, código dentro da imagem (sem montar ./app), mídia num volume e restart automático.
-# O proxy reverso do servidor (Nginx/Traefik, com HTTPS) aponta para 127.0.0.1:${APP_PORT:-8000}.
+# O proxy reverso do servidor(com HTTPS) aponta para 127.0.0.1:${APP_PORT:-8000}.
 # Variáveis no .env da raiz; o compose recusa subir sem as obrigatórias (:?).
 # POSTGRES_PASSWORD vai dentro do DATABASE_URL: use só letras e números (ex.: openssl rand -hex 24).
 # Backup: volumes pg-dados (banco) e media (capas, itens, F2). Ver docs/docker.md.
@@ -17,7 +17,17 @@ services:
       - pg-dados:/var/lib/postgresql/data
     healthcheck:
       # -h 127.0.0.1: o servidor temporário do initdb só escuta no socket.
-      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "revista", "-d", "revista"]
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-h",
+          "127.0.0.1",
+          "-U",
+          "revista",
+          "-d",
+          "revista",
+        ]
       start_period: 10s
       interval: 2s
       timeout: 5s
