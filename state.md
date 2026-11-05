@@ -2202,3 +2202,4 @@ Usuário: `git push origin feat/telas-b-ux:main` para a Infra ver o `docker-comp
 - D-214: compose de produção + `.env.prod.example`; smoke test em stack isolada (`revista-prod-teste`, apagada); Django 793 OK (8 pulados).
 - `.env` local reescrito com as variáveis do sistema atual (COMPOSE_PROJECT_NAME, POSTGRES_PASSWORD=revista do volume existente, DJANGO_*); o antigo (chaves Express/Mongo) ficou só em backup no scratchpad da sessão. Banco do dev conecta (7 usuários).
 - Revisado o texto do pedido à Infra: deploy por Portainer exige `docker-compose.prod.yml` como compose path, variáveis do `.env.prod.example` no stack, e o proxy precisa alcançar o app (porta só em 127.0.0.1).
+- Learning salva: CSRF atrás do proxy com HTTPS (origem https nas confiáveis; curl com cookie Secure dá 403 falso).
