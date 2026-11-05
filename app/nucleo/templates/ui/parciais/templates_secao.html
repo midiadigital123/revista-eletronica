@@ -1,0 +1,37 @@
+{% comment %}Uma seção do editor de template (U9b). O id é estrutura: vai num hidden e no chip, nunca num
+campo editável. Também é o modelo (<template>) das seções novas, com __ID__/__ROTULO__/__N__ que o
+editor-secoes.js troca. Contexto: s (id, rotulo, titulo, corpo, removivel, erros, erro_*), n, pode_gravar, grupos, ativa (só ela
+aparece; as outras ficam hidden no form).{% endcomment %}
+<section class="tpl-secao" id="secao-{{ s.id }}" data-secao="{{ s.id }}" aria-labelledby="rotulo-{{ s.id }}"{% if s.id != ativa %} hidden{% endif %}>
+  <header class="tpl-secao-cab">
+    <span class="badge badge-secundario tpl-chip" id="rotulo-{{ s.id }}">{{ s.rotulo }}</span>
+    {% if pode_gravar and s.removivel %}<button class="btn btn-ghost btn-sm tpl-remover" type="button" data-acao="remover">Remover seção</button>{% endif %}
+  </header>
+  <input type="hidden" name="secao-{{ n }}-id" value="{{ s.id }}" data-campo="id">
+  <div class="campo">
+    <label for="titulo-{{ s.id }}">Título</label>
+    <input class="input" id="titulo-{{ s.id }}" name="secao-{{ n }}-titulo" data-campo="titulo" value="{{ s.titulo }}" maxlength="300" autocomplete="off" aria-describedby="erros-{{ s.id }}"{% if s.erro_titulo %} aria-invalid="true"{% endif %}{% if not pode_gravar %} readonly{% endif %}>
+  </div>
+  <div class="campo">
+    <div class="tpl-barra">
+      <label for="corpo-{{ s.id }}">Texto</label>
+      {% if pode_gravar %}
+      <div class="tpl-ferramentas" role="toolbar" aria-label="Formatação: {{ s.rotulo }}">
+        <button class="btn btn-ghost btn-sm" type="button" data-acao="negrito" aria-label="Negrito" title="Negrito (**texto**)"><b>N</b></button>
+        <button class="btn btn-ghost btn-sm" type="button" data-acao="italico" aria-label="Itálico" title="Itálico (*texto*)"><i>I</i></button>
+        <button class="btn btn-ghost btn-sm" type="button" data-acao="lista" aria-label="Lista" title="Lista (- item)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+        </button>
+        <label class="sr-only" for="variavel-{{ s.id }}">Variável a inserir</label>
+        <select class="select tpl-variavel" id="variavel-{{ s.id }}" data-variavel>
+          {% for grupo, itens in grupos.items %}<optgroup label="{{ grupo }}">{% for v in itens %}<option value="{{ v.nome }}" title="{{ v.descricao }}">{{ v.rotulo }}</option>{% endfor %}</optgroup>{% endfor %}
+        </select>
+        <button class="btn btn-outline btn-sm" type="button" data-acao="variavel" title="Insere no campo em que você estava (Título ou Texto)">{ } Variável</button>
+      </div>
+      {% endif %}
+    </div>
+    <textarea class="textarea tpl-corpo" id="corpo-{{ s.id }}" name="secao-{{ n }}-corpo" data-campo="corpo" rows="3" spellcheck="true" aria-describedby="erros-{{ s.id }}"{% if s.erro_corpo %} aria-invalid="true"{% endif %}{% if not pode_gravar %} readonly{% endif %}>
+{{ s.corpo }}</textarea>
+  </div>
+  {% include "ui/parciais/templates_secao_erros.html" %}
+</section>

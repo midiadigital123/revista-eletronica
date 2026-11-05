@@ -1,0 +1,5 @@
+{% comment %}
+Alça de ordem de um item (U4) dentro de um `ordenavel` (static/ui/componentes/autosave.js): arrasta
+(SortableJS, `.alca`) e, com o foco nela, as setas ↑ e ↓ movem o item. `rotulo` nomeia o item.
+  {% include "ui/_componentes/ordem.html" with rotulo=d.codigo %}
+{% endcomment %}<button type="button" class="alca" aria-label="Mover {{ rotulo }}: use as setas para cima e para baixo" data-rotulo="{{ rotulo }}" title="Arraste ou use as setas ↑ e ↓"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></button>

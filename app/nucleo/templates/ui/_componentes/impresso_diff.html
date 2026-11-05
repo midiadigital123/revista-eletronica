@@ -1,0 +1,13 @@
+{% comment %}O que mudou num item do impresso, por palavra (`impresso.diff_texto`). Contexto: `blocos`.
+Prosa: parágrafo com <del>/<ins> no meio do texto. Linhas (escala, descritor, cores): a antiga e a nova em par.
+Sem espaço entre as tags das partes: o espaço vem no próprio texto de cada palavra.{% endcomment %}
+<div class="diff-palavras">
+{% for b in blocos %}{% if b.tipo == "pulo" %}<p class="diff-pulo">… {{ b.rotulo }}</p>
+{% elif b.tipo == "contexto" %}<p class="diff-contexto">{{ b.texto }}</p>
+{% elif b.tipo == "inline" %}<p class="diff-mudou">{% for t, x in b.partes %}{% if t == "del" %}<del>{{ x }}</del>{% elif t == "ins" %}<ins>{{ x }}</ins>{% else %}{{ x }}{% endif %}{% endfor %}</p>
+{% else %}<div class="diff-par">
+  {% if b.antes %}<p class="diff-antes"><span class="sr-only">Antes: </span>{% for t, x in b.antes %}{% if t == "del" %}<del>{{ x }}</del>{% else %}{{ x }}{% endif %}{% endfor %}</p>{% endif %}
+  {% if b.depois %}<p class="diff-depois"><span class="sr-only">Depois: </span>{% for t, x in b.depois %}{% if t == "ins" %}<ins>{{ x }}</ins>{% else %}{{ x }}{% endif %}{% endfor %}</p>{% endif %}
+</div>
+{% endif %}{% endfor %}
+</div>

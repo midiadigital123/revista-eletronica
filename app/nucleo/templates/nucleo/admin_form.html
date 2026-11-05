@@ -1,0 +1,27 @@
+{% extends "admin/base_site.html" %}
+{% load admin_urls %}
+{% comment %}Página simples do admin com um formulário (duplicar, reimportar, abrir ano).{% endcomment %}
+
+{% block breadcrumbs %}<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">Início</a>
+&rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+{% if original %}&rsaquo; <a href="{% url opts|admin_urlname:'change' original.pk %}">{{ original }}</a>{% endif %}
+&rsaquo; {{ title }}
+</div>{% endblock %}
+
+{% block content %}
+{% if aviso %}<p>{{ aviso }}</p>{% endif %}
+<form method="post" enctype="multipart/form-data" novalidate>{% csrf_token %}
+  {% if form.non_field_errors %}<p class="errornote">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+  <fieldset class="module aligned">
+  {% for campo in form %}
+    <div class="form-row{% if campo.errors %} errors{% endif %}">
+      {{ campo.errors }}
+      <div class="flex-container">{{ campo.label_tag }} {{ campo }}</div>
+      {% if campo.help_text %}<div class="help">{{ campo.help_text }}</div>{% endif %}
+    </div>
+  {% endfor %}
+  </fieldset>
+  <div class="submit-row"><input type="submit" class="default" value="{{ botao }}"></div>
+</form>
+{% endblock %}

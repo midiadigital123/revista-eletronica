@@ -1,0 +1,43 @@
+{% extends "ui/base.html" %}
+{% comment %}Anos (S3 de D-190). View em nucleo/urls/ui_anos.py; regra em nucleo/servicos/abrir_ano.py.
+"Excluir ano" (só `delete_ano`, o Admin, D-206) leva ao `ui_excluir`, que lista o que sai junto.{% endcomment %}
+{% block titulo %}Anos{% endblock %}
+
+{% block conteudo %}
+<header class="pagina-cab">
+  <div>
+    <h1>Anos</h1>
+    <p class="mudo">Cada ano tem seus cadastros, cortes, matrizes, templates e revistas.</p>
+  </div>
+</header>
+
+{% if not anos %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhum ano aberto" texto="O primeiro ano entra pela carga inicial; os seguintes se abrem aqui, copiando o anterior." %}
+{% else %}
+<div class="tabela-caixa">
+  <table class="tabela">
+    <thead><tr><th scope="col">Ano</th><th scope="col">Abrir</th><th scope="col">Cadastros</th>{% if perms.nucleo.delete_ano %}<th scope="col" class="linha-nova-acoes"><span class="sr-only">Excluir</span></th>{% endif %}</tr></thead>
+    <tbody>
+    {% for a in anos %}
+      <tr><th scope="row">{{ a.ano }}</th><td><a class="link" href="{% url 'painel' a.ano %}">Painel de {{ a.ano }}</a></td><td><a class="link" href="{% url 'ui_ano' a.ano %}">Etapas e componentes de {{ a.ano }}</a></td>{% if perms.nucleo.delete_ano %}
+        <td class="linha-nova-acoes"><a class="btn-icone" href="{% url 'ui_excluir' 'ano' a.ano %}?voltar={{ request.path|urlencode }}" aria-label="Excluir ano {{ a.ano }}" data-dica="Excluir ano"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></a></td>{% endif %}</tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if perms.nucleo.abrir_ano %}
+<form method="post" class="card card-estreito" novalidate>{% csrf_token %}
+  <h2 class="secao-titulo">Abrir ano</h2>
+  <p>Copia etapas, componentes, cores, matrizes e templates do último ano. Não copia parceiros, cortes nem projetos. Não há desfazer.</p>
+  <div class="campo">
+    <label for="ano-novo">Ano novo</label>
+    <input class="input" id="ano-novo" name="ano" inputmode="numeric" autocomplete="off" required value="{{ form.ano.value|default_if_none:'' }}" aria-describedby="ano-dica{% if form.ano.errors %} ano-erro{% endif %}"{% if form.ano.errors %} aria-invalid="true"{% endif %}>
+    <p class="ajuda" id="ano-dica">Digite o ano. O próximo que pode ser aberto é {{ proximo }}.</p>
+    {% if form.ano.errors %}<p class="erro" id="ano-erro">{{ form.ano.errors.0 }}</p>{% endif %}
+  </div>
+  <div><button class="btn" type="submit">Abrir ano</button></div>
+</form>
+{% endif %}
+{% endif %}
+{% endblock %}

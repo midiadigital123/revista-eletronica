@@ -1,0 +1,5 @@
+{% for rotulo, opcoes in filtros %}
+<p class="filtro">{{ rotulo }}:
+{% for texto, url, ativo in opcoes %}{% if ativo %}<strong>{{ texto }}</strong>{% else %}<a href="{{ url }}">{{ texto }}</a>{% endif %}{% if not forloop.last %} · {% endif %}{% empty %}nenhum{% endfor %}
+</p>
+{% endfor %}

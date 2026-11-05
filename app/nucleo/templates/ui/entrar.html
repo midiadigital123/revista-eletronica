@@ -1,0 +1,39 @@
+{% load static %}<!doctype html>
+{% comment %}
+Login das telas B (D-212). View: `LoginView` em nucleo/urls/conta.py (rota `entrar`). O login do admin
+redireciona para cá (sistema/urls.py), então é a única porta de entrada. Página solta: sem menu nem ano.
+{% endcomment %}
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrar · Revista Eletrônica</title>
+  <link rel="icon" href="data:,">
+  <link rel="preload" href="{% static 'ui/fontes/inter-latin-wght-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{% static 'ui/ui.css' %}">
+</head>
+<body class="entrar">
+  <main class="card entrar-card">
+    <header class="entrar-cab">
+      <p class="marca">Revista Eletrônica</p>
+      <h1 class="secao-titulo">Entrar</h1>
+    </header>
+    {% if form.non_field_errors %}
+    <p class="aviso aviso-erro" role="alert">Usuário ou senha incorretos. Confira os dois e tente de novo. As maiúsculas contam.</p>
+    {% endif %}
+    <form method="post" action="{% url 'entrar' %}" class="entrar-form">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+      <div class="campo">
+        <label for="id_username">Usuário</label>
+        <input class="input" type="text" name="username" id="id_username" value="{{ form.username.value|default:'' }}" autocomplete="username" autocapitalize="none" required autofocus{% if form.non_field_errors %} aria-invalid="true"{% endif %}>
+      </div>
+      <div class="campo">
+        <label for="id_password">Senha</label>
+        <input class="input" type="password" name="password" id="id_password" autocomplete="current-password" required{% if form.non_field_errors %} aria-invalid="true"{% endif %}>
+      </div>
+      <input class="btn" type="submit" value="Entrar">
+    </form>
+  </main>
+</body>
+</html>

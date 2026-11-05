@@ -1,0 +1,33 @@
+{% comment %}
+Painel de uma seção (lado direito, #secao). Contexto de urls/ui_revista._contexto_secao.
+O texto salva sozinho ao sair do campo (form campoAuto, ?acao=texto&secao= no data-url; protocolo de
+ui_autosave): a primeira mudança cria a cópia da seção. Cancelar o modal de impacto não apaga o que foi
+digitado (data-manter-ao-cancelar): fica "Não salvo" e o aviso de saída dispara.
+"Descartar cópia" e "Manter meu texto" são botões explícitos (HTMX, acao=secao), no estado da seção
+(revista_secao_estado.html), que o autosave troca depois de gravar.
+Campos com os nomes do RevistaForm (nucleo/revista.py): `initial-` é o valor que abriu
+(show_hidden_initial), `versao__F1` a versão do template que a pessoa viu.
+Com `oob` (GET HTMX de uma seção) inclui a lista de seções para marcar o item ativo.
+{% endcomment %}<section class="detalhe" id="secao" aria-live="polite">
+{% if s %}{% url 'ui_revista_editar' revista.ano.ano revista.pk as url_revista %}
+  <form id="secao-form" method="post" action="{{ url_revista }}" class="card revista-secao"{% if pode_textos %} x-data="campoAuto"{% endif %} novalidate>{% csrf_token %}
+    <input type="hidden" name="acao" value="secao">
+    <input type="hidden" name="chave" value="{{ chave }}">
+    {% if request.bloqueio %}<input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">{% endif %}
+
+    {% include "ui/parciais/revista_secao_estado.html" %}
+
+    <div class="campo"{% if pode_textos %} data-url="{{ url_revista }}?acao=texto&amp;secao={{ chave|urlencode }}" data-linha data-manter-ao-cancelar{% endif %}>
+      <input type="hidden" name="{{ campo_versao }}" value="{{ bloco.versao.pk }}">
+      <input type="hidden" name="initial-{{ campo }}" value="{{ s.corpo }}">
+      <label for="texto-secao">Texto da seção</label>
+      <textarea class="textarea" id="texto-secao" name="{{ campo }}" rows="12" spellcheck="true" aria-describedby="texto-secao-ajuda"{% if erros %} aria-invalid="true"{% endif %}{% if not pode_textos %} readonly{% endif %}>{{ valor }}</textarea>
+      <p class="ajuda" id="texto-secao-ajuda">{% if pode_textos %}Salva sozinho ao sair do campo; a primeira mudança cria uma cópia só desta seção. {% endif %}Markdown; variáveis entre chaves duplas, como <code>{% templatetag openvariable %}nome_parceiro{% templatetag closevariable %}</code>.</p>
+      {% for e in erros %}<p class="erro" role="alert">{{ e }}</p>{% endfor %}
+    </div>
+  </form>
+{% else %}
+  {% include "ui/_componentes/vazio.html" with titulo="Nenhuma seção para editar" texto="Escolha o template dos fascículos no card Templates." only %}
+{% endif %}
+</section>
+{% if oob %}{% include "ui/parciais/revista_secoes.html" with oob=True %}{% endif %}

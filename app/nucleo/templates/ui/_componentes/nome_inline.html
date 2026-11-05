@@ -1,0 +1,15 @@
+{% comment %}
+Renomear inline (U5): o nome como texto + lápis; o clique troca por um campo com foco. Enter ou sair do
+campo salva, Esc cancela. Precisa estar dentro de um form `campoAuto` (U3): o data-url daqui troca a rota
+e o protocolo (impacto, 422, 409) é o do autosave. Componente `nomeInline` em static/ui/componentes.js.
+  {% url 'cortes_renomear_parceiro' ano.ano p.pk as url %}{% include "ui/_componentes/nome_inline.html" with nome=p.nome %}
+{% endcomment %}{% with id="nome-"|add:url|slugify %}<span class="nome-inline" x-data="nomeInline" data-url="{{ url }}">
+  <span class="nome-inline-texto" x-show="lendo" x-text="nome">{{ nome }}</span>
+  <button type="button" class="btn btn-ghost btn-sm nome-inline-lapis" x-show="lendo" @click="editar" :aria-label="rotulo" aria-label="Renomear {{ nome }}" title="Renomear">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"/><path d="m15 5 4 4"/></svg>
+  </button>
+  <span class="nome-inline-campo" x-show="editando" x-cloak>
+    <label class="sr-only" for="{{ id }}">Novo nome de {{ nome }}</label>
+    <input class="input" id="{{ id }}" name="nome" value="{{ nome }}" maxlength="200" autocomplete="off" spellcheck="false">
+  </span>
+</span>{% endwith %}

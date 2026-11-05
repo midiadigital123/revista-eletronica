@@ -1,0 +1,13 @@
+{% comment %}
+Status do autosave (U3), no cabeçalho da página: "Salvando…", "Salvo às HH:MM" ou "Não salvo · Tentar de novo".
+Componente `saida` (static/ui/componentes/autosave.js): ouve os envios dos forms `campoAuto` da página e só
+avisa ao sair (beforeunload) com envio pendente ou com erro. Só para quem grava:
+  {% if pode_gravar %}{% include "ui/_componentes/status_salvo.html" %}{% endif %}
+`ocioso` troca o texto parado quando a página também grava por botão (ex.: Padrões do ano).
+U10b: cada troca de estado entra com fade de 180 ms (`.status-salvo > span`, transição + @starting-style).
+{% endcomment %}<div class="status-salvo" x-data="saida" data-status-salvo role="status" aria-live="polite" :data-estado="estado">
+  <span class="mudo" x-show="ocioso">{{ ocioso|default:"Cada campo salva sozinho ao sair dele." }}</span>
+  <span class="mudo" x-show="salvando" x-cloak>{% include "ui/_componentes/girando.html" only %}Salvando…</span>
+  <span class="mudo" x-show="salvo" x-cloak><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Salvo às <span x-text="salvoEm"></span></span>
+  <span class="status-salvo-erro" x-show="erro" x-cloak><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg><span x-text="texto"></span><template x-if="podeTentar"><span> · <button type="button" class="link" @click="tentar">Tentar de novo</button></span></template></span>
+</div>

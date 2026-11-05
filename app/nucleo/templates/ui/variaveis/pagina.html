@@ -1,0 +1,67 @@
+{% extends "ui/base.html" %}{% load static %}
+{% comment %}Aba Variáveis do hub Projetos (U7a; planilha T17, opção B). Regra em nucleo/planilha_variaveis.py; view em nucleo/urls/ui_variaveis.py.{% endcomment %}
+{% block titulo %}Variáveis {{ ano.ano }}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/variaveis.css' %}">{% endblock %}
+
+{% block conteudo %}
+{% include "ui/_componentes/projetos_abas.html" %}
+<div class="acoes aba-acoes">
+  <p class="mudo">Valores que os textos dos templates usam em cada projeto do ano.</p>
+  {% if pode_editar and linhas %}{% include "ui/_componentes/status_salvo.html" %}{% endif %}
+</div>
+
+{% if not linhas %}
+{% if perms.nucleo.change_corte %}{% url 'cortes' ano.ano as u %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhum projeto ativo neste ano" texto="Os projetos nascem quando os cortes do parceiro são lançados. Lance os cortes para preencher as variáveis aqui." url=u rotulo="Abrir cortes" %}
+{% else %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhum projeto ativo neste ano" texto="Os projetos nascem quando a equipe pedagógica lança os cortes do parceiro." %}
+{% endif %}
+{% else %}
+
+{% if not pode_editar %}
+{% include "ui/_componentes/so_leitura.html" with texto="Só leitura: seu perfil vê as variáveis, mas não altera. Para editar, peça a permissão de projetos a um administrador." %}
+{% endif %}
+
+{# U3: cada célula salva sozinha ao sair dela, pela rota da ficha do projeto (ui_projeto_campo, data-url do <tbody>). #}
+<form method="post" class="grade grade-variaveis" id="variaveis-form" data-grade{% if pode_editar %} x-data="campoAuto"{% endif %}>{% csrf_token %}
+  {{ formset.management_form }}
+  {% if pode_editar %}<p class="mudo">Padrões vazios usam o nome do ano, em cinza na célula.</p>{% endif %}
+  <div class="tabela-rolavel grade-caixa" x-data="tabelaRolavel">
+    <table class="tabela">
+      <thead>
+        <tr>
+          <th rowspan="2" scope="col" class="grade-parceiro fixa">Projeto</th>
+          {% for g, n in grupos %}<th colspan="{{ n }}" scope="colgroup" class="grade-etapa">{{ g }}</th>{% endfor %}
+        </tr>
+        <tr>{% for v, rotulo, inicio in cabecalho %}<th scope="col" class="grade-cc{% if inicio %} grade-inicio{% endif %}" title="{{ v.rotulo }}: {{ v.descricao }}" aria-label="{{ v.rotulo }}">{{ rotulo }}</th>{% endfor %}</tr>
+      </thead>
+      {% for l in linhas %}{% include "ui/parciais/variaveis_linha.html" %}{% endfor %}
+    </table>
+  </div>
+
+  <details class="legenda recolhivel">
+    <summary>O que é cada variável</summary>
+    <div class="tabela-caixa">
+      <table class="tabela">
+        <thead><tr><th scope="col">Variável</th><th scope="col">Descrição</th><th scope="col">Onde aparece (última versão dos templates)</th></tr></thead>
+        <tbody>
+        {% for v, usos in legenda %}
+          <tr>
+            <td><span class="variavel">{% templatetag openvariable %}{{ v.nome }}{% templatetag closevariable %}</span>{% if v.automatica %} <span class="badge badge-secundario">do cadastro</span>{% endif %}</td>
+            <td class="quebra">{{ v.descricao }}</td>
+            <td class="quebra">{{ usos|join:", "|default:"—" }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+</form>
+
+{% if pode_editar %}
+{# Sem JS, o "Copiar de <ano-1>" envia estes forms (fora do form da planilha) e a página recarrega. #}
+{% for l in linhas %}<form method="post" id="copiar-{{ l.form.instance.pk }}" action="{% url 'ui_variaveis_copiar' ano.ano l.form.instance.pk %}" hidden>{% csrf_token %}</form>{% endfor %}
+{% endif %}
+{% endif %}
+{% endblock %}

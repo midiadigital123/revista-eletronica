@@ -1,0 +1,91 @@
+{
+ "5ef": {
+  "scaleRange": {
+   "min": 0,
+   "max": 500
+  },
+  "cortes": {
+   "padrao-1": 100,
+   "padrao-2": 200,
+   "padrao-3": 250,
+   "padrao-4": 300
+  },
+  "padroes": [
+   {
+    "chave": "padrao-1",
+    "rotulo": "Padrão 01"
+   },
+   {
+    "chave": "padrao-2",
+    "rotulo": "Padrão 02"
+   },
+   {
+    "chave": "padrao-3",
+    "rotulo": "Padrão 03"
+   },
+   {
+    "chave": "padrao-4",
+    "rotulo": "Padrão 04"
+   },
+   {
+    "chave": "padrao-5",
+    "rotulo": "Padrão 05"
+   }
+  ],
+  "D01": {
+   "description": "Descritor 1 LP",
+   "prerequisites": [
+    "Pré 1;",
+    "Pré 2."
+   ],
+   "bncc": {
+    "practices": "Leitura",
+    "knowledge": "Estratégia",
+    "skills": [
+     "EF15LP02"
+    ]
+   },
+   "scale": {
+    "padrao-1": [],
+    "padrao-2": [
+     {
+      "level": 100,
+      "fim": 150,
+      "content": "Localiza."
+     }
+    ],
+    "padrao-3": [],
+    "padrao-4": [
+     {
+      "level": 225,
+      "fim": 275,
+      "content": "Cruza o corte 250."
+     }
+    ],
+    "padrao-5": []
+   }
+  },
+  "D02": {
+   "description": "Descritor 2",
+   "prerequisites": [],
+   "bncc": {
+    "practices": "",
+    "knowledge": "",
+    "skills": []
+   },
+   "scale": {
+    "padrao-1": [],
+    "padrao-2": [],
+    "padrao-3": [],
+    "padrao-4": [],
+    "padrao-5": [
+     {
+      "level": 300,
+      "fim": 350,
+      "content": "Infere."
+     }
+    ]
+   }
+  }
+ }
+}

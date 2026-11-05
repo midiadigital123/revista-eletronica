@@ -1,0 +1,2 @@
+{% comment %}Erros de uma seção do editor (U9b). Na prévia HTMX vem com oob (troca o bloco pelo id).
+Contexto: s (id, erros = [(mensagem, campo)]), oob. O data-alvo diz qual campo fica aria-invalid.{% endcomment %}<div class="tpl-secao-erros" id="erros-{{ s.id }}"{% if oob %} hx-swap-oob="true"{% endif %}>{% for m, campo in s.erros %}<p class="erro" data-alvo="{{ campo }}">{{ m }}</p>{% endfor %}</div>

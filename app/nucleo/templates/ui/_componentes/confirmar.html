@@ -1,0 +1,11 @@
+{% comment %}
+Confirmação forte: digitar o código/frase exata (nome da matriz, "descartar 2 cópia(s)").
+Dentro do <form>; o botão de envio leva `data-confirmado` (ui.js o libera quando o texto bate).
+O servidor confere de novo (a regra é do form, não do JS).
+  {% include "ui/_componentes/confirmar.html" with nome="confirmacao" codigo=matriz.nome texto="Isto recria os descritores de 3 etapa(s) × CC e afeta 12 revista(s)." erro=form.confirmacao.errors.0 %}
+{% endcomment %}<div class="confirmar">
+  <p>{{ texto }}</p>
+  <label class="rotulo" for="confirmar-{{ nome }}">Para confirmar, digite <code>{{ codigo }}</code></label>
+  <input class="input" id="confirmar-{{ nome }}" name="{{ nome }}" autocomplete="off" spellcheck="false" data-confirmar="{{ codigo }}"{% if erro %} aria-invalid="true" aria-describedby="confirmar-{{ nome }}-erro"{% endif %}>
+  {% if erro %}<p class="erro" id="confirmar-{{ nome }}-erro">{{ erro }}</p>{% endif %}
+</div>

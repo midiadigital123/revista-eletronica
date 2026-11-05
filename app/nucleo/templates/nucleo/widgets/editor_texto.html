@@ -1,0 +1,18 @@
+{% comment %}Widget EditorTexto (nucleo/admin/templates.py): textarea, "Inserir variável" e preview.{% endcomment %}
+<div class="editor-template" data-preview="{{ widget.preview }}" data-fasciculo="{{ widget.fasciculo }}"{% if widget.cabecalho %} data-cabecalho="{{ widget.cabecalho }}"{% endif %}>
+  <div class="editor-template-barra">
+    <label>Variável
+      <select class="editor-template-variavel">
+        {% for v in widget.variaveis %}<option value="{{ v.nome }}" title="{{ v.descricao }}">{{ v.rotulo }} ({{ v.nome }})</option>{% endfor %}
+      </select>
+    </label>
+    <button type="button" class="button editor-template-inserir">Inserir variável</button>
+  </div>
+  <div class="editor-template-colunas">
+    {% include "django/forms/widgets/textarea.html" %}
+    <div>
+      <ul class="editor-template-erros errorlist" aria-live="polite"></ul>
+      <div class="editor-template-preview" aria-label="Pré-visualização"></div>
+    </div>
+  </div>
+</div>

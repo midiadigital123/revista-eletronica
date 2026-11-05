@@ -1,0 +1,41 @@
+{% extends "ui/base.html" %}
+{% comment %}Aba Cortes do hub Projetos (U7a; grade de cortes, opção B). Regra em nucleo/cortes.py; view em nucleo/urls/cortes.py.{% endcomment %}
+{% block titulo %}Cortes {{ ano.ano }}{% endblock %}
+
+{% block conteudo %}
+{% include "ui/_componentes/projetos_abas.html" %}
+<div class="acoes aba-acoes">
+  <p class="mudo">Cortes dos padrões de cada parceiro, por etapa e componente.</p>
+  {% if pode_gravar or perms.nucleo.change_parceiro %}{% include "ui/_componentes/status_salvo.html" %}{% endif %}
+  <a class="btn btn-outline" href="{% url 'cortes_exportar' ano.ano %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>
+    Baixar planilha de grupos
+  </a>
+</div>
+
+{% if not pode_gravar %}
+{% include "ui/_componentes/so_leitura.html" with texto="Só leitura: seu perfil vê os cortes, mas não altera. Para editar, peça a permissão de cortes a um administrador." %}
+{% endif %}
+
+{% include "ui/parciais/cortes_grade.html" %}
+
+
+{% if perms.nucleo.add_parceiro %}
+{# U4: logo abaixo da grade, o botão abre a linha do parceiro novo com o foco no nome (componente linhaNova); #}
+{# Enter ou "Incluir parceiro" cria, Esc ou "Descartar" tira. Fora do form da grade (form não aninha). #}
+{# U10d: ?novo=1 (o "+ Novo projeto" da Lista vazia) chega com a linha já aberta (data-abrir-ao-carregar). #}
+<div x-data="linhaNova"{% if request.GET.novo %} data-abrir-ao-carregar{% endif %}>
+  <div data-linhas></div>
+  <template data-molde><form method="post" action="{% url 'cortes_novo_parceiro' ano.ano %}" class="acoes linha-nova-form">{% csrf_token %}
+    <label class="sr-only" for="novo-parceiro">Nome do parceiro novo</label>
+    <input class="input" id="novo-parceiro" name="nome" required maxlength="200" placeholder="Nome do parceiro (ex.: SAEGO)">
+    <button class="btn btn-sm" type="submit">Incluir parceiro</button>
+    <button class="btn btn-ghost btn-sm" type="button" @click="descartar">Descartar</button>
+  </form></template>
+  <button class="btn btn-outline btn-sm adicionar-linha" type="button" data-abrir-linha @click="abrir">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+    Adicionar parceiro</button>
+</div>
+{% endif %}
+
+{% endblock %}

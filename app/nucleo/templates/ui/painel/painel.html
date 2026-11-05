@@ -1,0 +1,56 @@
+{% extends "ui/base.html" %}{% load static %}
+{% comment %}Painel da temporada (T23) fora do admin. View: urls/ui_painel.py; regra: urls/painel.py (filtrar, linha).
+Ficha: docs/telas/fichas/painel.md. O corpo (filtros, resumo por coluna, tabela por parceiro) é trocado por HTMX ao filtrar.{% endcomment %}
+{% block titulo %}Painel {{ ano.ano }}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/painel.css' %}">{% endblock %}
+
+{% block conteudo %}
+<header class="pagina-cab">
+  <div>
+    <h1>Painel da temporada {{ ano.ano }}</h1>
+    <p class="mudo">As revistas ativas, por parceiro: o que falta para cada uma sair completa, e onde resolver.</p>
+  </div>
+</header>
+
+
+{% if not pode_validar %}
+{% include "ui/_componentes/so_leitura.html" with texto="Só leitura: seu perfil vê o painel, mas não valida revistas. Para validar, peça a permissão de validação a um administrador." %}
+{% endif %}
+
+<div id="painel-corpo" class="painel-corpo alvo-htmx">{% include "ui/parciais/painel_corpo.html" %}</div>
+<p class="sr-only" id="painel-anuncio" aria-live="polite"></p>
+<script>
+// Região viva fixa (fora do alvo do HTMX): anuncia o resumo novo depois de filtrar.
+document.addEventListener("htmx:afterSwap", (e) => {
+  if (e.detail.target.id !== "painel-corpo") return;
+  document.getElementById("painel-anuncio").textContent = e.detail.target.querySelector(".painel-resumo")?.textContent.trim() ?? "";
+});
+</script>
+
+{% if pode_validar %}
+<script>
+// Seleção para "Validar selecionadas": todas, por parceiro (data-grupo marca as data-de dele)
+// ou uma a uma; as caixas de cima ficam marcadas, desmarcadas ou indeterminadas.
+// Delegado no documento: vale também depois que o HTMX troca o corpo.
+document.addEventListener("change", (e) => {
+  const lote = e.target.closest?.("#painel-lote");
+  if (!lote) return;
+  const caixas = [...lote.querySelectorAll("input[name=revista]")];
+  const doGrupo = (g) => caixas.filter((c) => c.dataset.de === g.dataset.grupo);
+  const todas = lote.querySelector("[data-todas]");
+  if (e.target === todas) caixas.forEach((c) => { c.checked = todas.checked; });
+  if (e.target.dataset.grupo) doGrupo(e.target).forEach((c) => { c.checked = e.target.checked; });
+  const resumir = (caixa, lista) => {
+    const n = lista.filter((c) => c.checked).length;
+    caixa.checked = n === lista.length;
+    caixa.indeterminate = n > 0 && n < lista.length;
+    return n;
+  };
+  lote.querySelectorAll("[data-grupo]").forEach((g) => resumir(g, doGrupo(g)));
+  const n = resumir(todas, caixas);
+  lote.querySelector("[data-selecionadas]").textContent = n ? `${n} selecionada(s)` : "Nenhuma selecionada";
+  lote.querySelector("[data-validar]").disabled = !n;
+});
+</script>
+{% endif %}
+{% endblock %}

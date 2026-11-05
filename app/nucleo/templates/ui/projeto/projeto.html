@@ -1,0 +1,223 @@
+{% extends "ui/base.html" %}
+{% load static %}
+{% comment %}Projeto (T16) fora do admin. Regra em nucleo/projeto.py; view em nucleo/urls/ui_projeto.py; ficha em docs/telas/fichas/projeto.md.
+A página é onde o projeto sobrescreve o que vem do ano e da matriz: cada valor diz de onde vem e volta ao herdado com um clique.{% endcomment %}
+{% block titulo %}{{ projeto.nome }}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/projeto.css' %}">
+<script src="{% static 'ui/componentes/sobrescrita.js' %}"></script>{% endblock %}
+
+{% block conteudo %}
+<nav class="mudo voltar pj-trilha" aria-label="Trilha"><span aria-hidden="true">‹ </span><a href="{% url 'ui_projeto_lista' projeto.ano.ano %}">Projetos de {{ projeto.ano.ano }}</a></nav>
+<header class="pagina-cab">
+  <div>
+    <h1>{{ projeto.nome }}</h1>
+    <dl class="pj-meta">
+      <div><dt>Parceiro</dt><dd>{{ projeto.parceiro_ano.parceiro.nome }}</dd></div>
+      <div><dt>Ano</dt><dd>{{ projeto.ano.ano }}</dd></div>
+      <div><dt>Matriz</dt><dd>{% if projeto.parceiro_ano.matriz %}{{ projeto.parceiro_ano.matriz.nome }}{% else %}<span class="mudo">ainda não escolhida</span>{% endif %}</dd></div>
+      <div><dt>Revistas</dt><dd>{% for r in revistas_ativas %}{{ r.componente.codigo }}{% if not forloop.last %}, {% endif %}{% empty %}<span class="mudo">nenhuma</span>{% endfor %}</dd></div>
+      <div><dt>Situação</dt><dd>{% if arquivado %}<span class="badge badge-contorno">Arquivado</span>{% else %}Ativo{% endif %}</dd></div>
+    </dl>
+  </div>
+  {% if pode_gravar or grade.pode_gravar %}<div class="acoes">{% include "ui/_componentes/status_salvo.html" %}</div>{% endif %}
+</header>
+
+{% if arquivado %}
+{% include "ui/_componentes/so_leitura.html" with texto="Só leitura: este projeto foi arquivado e as revistas dele estão congeladas. Para mudar algo, abra o projeto ativo do parceiro." %}
+{% elif not tem_permissao %}
+{% include "ui/_componentes/so_leitura.html" with texto="Só leitura: seu perfil vê o projeto, mas não altera. Para editar, peça a permissão de projeto a um administrador." %}
+{% endif %}
+
+{# U7b: a aba é a URL (?aba=). Dados e Passos e cores são partes do mesmo form (as outras ficam hidden). #}
+<nav class="abas" aria-label="Partes do projeto">
+  {% for chave, rotulo in abas %}<a href="{% url 'ui_projeto' projeto.pk %}?aba={{ chave }}"{% if aba == chave %} aria-current="page"{% endif %}>{{ rotulo }}</a>{% endfor %}
+</nav>
+
+{# U3: cada campo, cada célula de passo e cada cor salvam sozinhos (componente campoAuto, rota ui_projeto_campo). #}
+<form method="post" class="pj-form" id="projeto-form" novalidate{% if pode_gravar %} x-data="campoAuto" data-url="{% url 'ui_projeto_campo' projeto.pk %}"{% endif %}>{% csrf_token %}
+  {% include "ui/_componentes/bloqueio.html" %}
+  {% for e in form.non_field_errors %}<p class="erro">{{ e }}</p>{% endfor %}
+
+  <section class="card pj-secao" id="nome" aria-labelledby="nome-titulo"{% if aba != "dados" %} hidden{% endif %}>
+    <h2 class="secao-titulo" id="nome-titulo">Nome</h2>
+    <div class="campo pj-nome">
+      <label for="{{ form.nome.id_for_label }}">Nome do projeto</label>
+      {{ form.nome }}
+      <p class="ajuda">Aparece na capa e na variável <code>{% templatetag openvariable %}nome_projeto}}</code>. Até 200 caracteres.</p>
+      {% for e in form.nome.errors %}<p class="erro">{{ e }}</p>{% endfor %}
+    </div>
+  </section>
+
+  <section class="card pj-secao" id="variaveis" aria-labelledby="variaveis-titulo"{% if aba != "dados" %} hidden{% endif %}>
+    <div class="pj-secao-cab">
+      <div>
+        <h2 class="secao-titulo" id="variaveis-titulo">Variáveis</h2>
+        <p class="mudo">Os textos dos templates trocam <code>{% templatetag openvariable %}nome}}</code> por estes valores. Vazio aparece em amarelo na revista. Nome do parceiro, do projeto e ano saem do cadastro.</p>
+      </div>
+      <a class="link" href="{% url 'ui_variaveis' projeto.ano.ano %}">Ver a planilha de variáveis de {{ projeto.ano.ano }}</a>
+    </div>
+    {% for grupo, campos in grupos %}
+    <fieldset class="pj-grupo">
+      <legend>{{ grupo }}</legend>
+      <div class="pj-campos">
+        {% for campo, v in campos %}
+        <div class="campo">
+          <label for="{{ campo.id_for_label }}">{{ v.rotulo }}</label>
+          {{ campo }}
+          <p class="ajuda">{{ v.descricao }} <code>{% templatetag openvariable %}{{ v.nome }}}}</code></p>
+          {% for e in campo.errors %}<p class="erro">{{ e }}</p>{% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </fieldset>
+    {% endfor %}
+  </section>
+
+  {% if aba == "passos" %}
+  <section class="card pj-secao" id="cores" aria-labelledby="cores-titulo">
+    <div class="pj-secao-cab">
+      <div>
+        <h2 class="secao-titulo" id="cores-titulo">Cores dos padrões</h2>
+        <p class="mudo">{% if pode_gravar %}Clique numa cor para trocá-la só neste projeto. {% endif %}Sem sobrescrita, vale a cor do ano. O nome também vem do ano; para trocá-lo aqui, preencha pd01 a pd05 na <a class="link" href="?aba=dados">aba Dados</a>.</p>
+      </div>
+      {% if perms.nucleo.change_corpadrao and perms.nucleo.view_etapa %}<a class="link" href="{% url 'ui_ano' projeto.ano.ano %}#padroes">Editar as cores do ano</a>{% endif %}
+    </div>
+    <ol class="pj-amostras">
+      {% for a in amostras %}
+      <li class="pj-amostra"{% if pode_gravar %} x-data="sobrescrita" data-herdado="{{ a.cor_ano }}"{% endif %}>
+        {% if pode_gravar %}<input type="color" class="pj-amostra-cor" name="cor-{{ a.padrao }}" id="cor-{{ a.padrao }}" value="{{ a.cor }}" data-valor aria-label="Cor do padrão {{ a.padrao }}{% if a.nome %} ({{ a.nome }}){% endif %}">
+        {% else %}<span class="pj-amostra-cor" style="--cor: {{ a.cor }}" aria-hidden="true"></span>{% endif %}
+        <span class="pj-amostra-nome">{% if a.nome %}{{ a.nome }}{% else %}<span class="mudo">Padrão {{ a.padrao }} sem nome</span>{% endif %}</span>
+        <span class="pj-amostra-info">
+          <span class="mudo"{% if pode_gravar %} x-text="hex"{% endif %}>{{ a.cor|upper }}</span>
+          {% include "ui/_componentes/selo_sobrescrita.html" with sobrescrito=a.sobrescrita herdado_txt="do ano" proprio_txt="sobrescrita" %}
+        </span>
+        {% if pode_gravar %}<button type="button" class="link pj-voltar" @click="voltar" x-show="sobrescrito"{% if not a.sobrescrita %} x-cloak{% endif %}>Voltar à cor do ano<span class="sr-only"> no padrão {{ a.padrao }}</span></button>{% endif %}
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+
+  <section class="card pj-secao" id="passo" aria-labelledby="passo-titulo">
+    <div>
+      <h2 class="secao-titulo" id="passo-titulo">Passo por etapa e componente</h2>
+      <p class="mudo">O passo define as linhas vazias da escala. Em branco, vale o passo da matriz{% if projeto.parceiro_ano.matriz %} {{ projeto.parceiro_ano.matriz.nome }}{% endif %}.</p>
+    </div>
+    {% for b in etapas_passo %}
+    <fieldset class="pj-etapa">
+      <legend>{{ b.etapa.codigo }}</legend>
+      <div class="pj-etapa-campos">
+        {% for c in b.celulas %}{% with chave=c.chave %}
+        <div class="pj-celula"{% if pode_gravar %} data-linha x-data="sobrescrita" data-herdado=""{% endif %}>
+          <div class="pj-celula-cab">
+            <label for="passo-{{ chave }}">{{ c.componente.codigo }}</label>
+            {% include "ui/_componentes/selo_sobrescrita.html" with sobrescrito=c.sobrescrito herdado_txt="da matriz" proprio_txt="sobrescrito" %}
+          </div>
+          {% if pode_gravar %}
+          <input class="input" type="number" min="1" step="1" inputmode="numeric" id="passo-{{ chave }}" name="passo-{{ chave }}" value="{{ c.passo|default_if_none:'' }}" placeholder="{{ c.matriz|default_if_none:'—' }}" data-valor aria-describedby="passo-{{ chave }}-matriz"{% if c.sem_vazias %} disabled{% endif %}>
+          <p class="ajuda" id="passo-{{ chave }}-matriz">Matriz: {{ c.da_matriz }}</p>
+          <label class="marcar"><input type="checkbox" name="sem-{{ chave }}" data-sem{% if c.sem_vazias %} checked{% endif %}> Sem linhas vazias<span class="sr-only"> em {{ b.etapa.codigo }} {{ c.componente.codigo }}</span></label>
+          <button type="button" class="link pj-voltar" @click="voltar" x-show="sobrescrito"{% if not c.sobrescrito %} x-cloak{% endif %}>Voltar ao passo da matriz<span class="sr-only"> em {{ b.etapa.codigo }} {{ c.componente.codigo }}</span></button>
+          {% else %}
+          <p class="pj-celula-valor" id="passo-{{ chave }}">{% if c.sem_vazias %}sem linhas vazias{% elif c.sobrescrito %}{{ c.passo }}{% else %}{{ c.da_matriz }}{% endif %}</p>
+          {% endif %}
+        </div>
+        {% endwith %}{% endfor %}
+      </div>
+    </fieldset>
+    {% empty %}
+    {% if perms.nucleo.add_etapa %}{% url 'ui_ano' projeto.ano.ano as u %}
+    {% include "ui/_componentes/vazio.html" with titulo="Nenhuma etapa neste ano" texto="Os passos do projeto saem das etapas do ano. Cadastre as etapas na página do ano." url=u rotulo="Cadastrar etapas" %}
+    {% else %}
+    {% include "ui/_componentes/vazio.html" with titulo="Nenhuma etapa neste ano" texto="Os passos do projeto saem das etapas do ano, cadastradas pela equipe pedagógica." %}
+    {% endif %}
+    {% endfor %}
+  </section>
+  {% endif %}
+
+</form>
+
+{% if aba == "matriz" %}
+<section class="card pj-secao" aria-labelledby="matriz-titulo">
+  <div>
+    <h2 class="secao-titulo" id="matriz-titulo">Matriz</h2>
+    <p class="mudo">O projeto aponta para uma matriz de {{ projeto.ano.ano }}; não herda de outro projeto. Trocar muda as escalas das revistas: se alguma validada mudar, você confirma antes de gravar.</p>
+  </div>
+  {% if matrizes is not None and not arquivado %}
+  {# Form próprio (form não aninha), com a mesma sessão de bloqueio da ficha; salva ao escolher (campoAuto). #}
+  <form method="post" id="matriz" class="campo pj-matriz" x-data="campoAuto" data-url="{% url 'ui_projeto_matriz' projeto.pk %}">{% csrf_token %}
+    <input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">
+    <label for="pj-matriz">Matriz de {{ projeto.parceiro_ano.parceiro.nome }} em {{ projeto.ano.ano }}</label>
+    <select class="select" id="pj-matriz" name="matriz">
+      {% if not projeto.parceiro_ano.matriz_id %}<option value="">Escolha a matriz</option>{% endif %}
+      {% for m in matrizes %}<option value="{{ m.pk }}"{% if m.pk == projeto.parceiro_ano.matriz_id %} selected{% endif %}>{{ m.nome }}</option>{% empty %}<option value="">Nenhuma matriz em {{ projeto.ano.ano }}</option>{% endfor %}
+    </select>
+    <p class="ajuda">Para vários parceiros de uma vez, use “Atribuir matriz…” na <a class="link" href="{% url 'ui_projeto_lista' projeto.ano.ano %}">lista de projetos</a>.</p>
+  </form>
+  {% else %}
+  <p><strong>{{ projeto.parceiro_ano.matriz.nome|default:"Ainda não escolhida" }}</strong></p>
+  {% endif %}
+  {% if passos_matriz %}
+  <p class="pj-referencia"><span class="mudo">Passo na matriz:</span>
+    {% for m in passos_matriz %}<span class="badge badge-secundario">{{ m.etapa.codigo }} {{ m.componente.codigo }}: {{ m.passo|default:"sem linhas vazias" }}</span>{% endfor %}
+  </p>
+  {% endif %}
+</section>
+
+{% elif aba == "cortes" %}
+<section class="card pj-secao" aria-labelledby="cortes-titulo">
+  <div class="pj-secao-cab">
+    <div>
+      <h2 class="secao-titulo" id="cortes-titulo">Cortes de {{ projeto.parceiro_ano.parceiro.nome }} em {{ projeto.ano.ano }}</h2>
+      {% if grade.pode_gravar %}<p class="mudo">De 1 a 4 cortes inteiros e crescentes, separados por vírgula, maiores que 0 e menores que o máximo da escala da etapa. Campo vazio apaga o corte.</p>{% endif %}
+    </div>
+    <a class="link" href="{% url 'cortes' projeto.ano.ano %}">Ver a grade de cortes de {{ projeto.ano.ano }}</a>
+  </div>
+  {# U3: cada campo salva sozinho (campoAuto, rota cortes_celula, com o `original`; 409 traz o `atual`). #}
+  <form method="post" class="pj-cortes" id="grade" novalidate{% if grade.pode_gravar %} x-data="campoAuto" data-url="{% url 'cortes_celula' projeto.ano.ano %}"{% endif %}>{% csrf_token %}
+    {% for b in grade.blocos %}
+    <fieldset class="pj-etapa">
+      <legend>{{ b.etapa.codigo }} <span class="mudo">até {{ b.etapa.escala_max }}</span></legend>
+      <div class="pj-etapa-campos">
+        {% for c, cel in b.campos %}
+        <div class="campo">
+          <label for="corte-{{ cel.chave }}" title="{{ c.codigo }} {{ c.nome }}">{{ c.codigo }} <span class="mudo">{{ c.nome }}</span></label>
+          <input class="input" id="corte-{{ cel.chave }}" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" name="c-{{ cel.chave }}" value="{{ cel.texto }}" placeholder="sem corte" aria-label="{{ cel.titulo }}"{% if not grade.pode_gravar %} readonly{% endif %}>
+        </div>
+        {% endfor %}
+      </div>
+    </fieldset>
+    {% empty %}
+    {% include "ui/_componentes/vazio.html" with titulo="Sem etapas ou componentes" texto="Cadastre as etapas e os componentes do ano antes dos cortes." %}
+    {% endfor %}
+  </form>
+</section>
+
+{% elif aba == "revistas" %}
+{% if cartoes %}
+<div class="pj-cartoes">
+  {% for c in cartoes %}{% with r=c.revista %}
+  <section class="card pj-cartao" aria-labelledby="revista-{{ r.pk }}">
+    <header class="pj-cartao-cab">
+      <h2 class="secao-titulo" id="revista-{{ r.pk }}">{{ r.componente.codigo }} <span class="mudo">{{ r.componente.nome }}</span></h2>
+      {% if not c.ativa %}<span class="badge badge-contorno">Arquivada</span>
+      {% elif c.faltas.validado.ok %}<span class="badge badge-secundario">Validada</span>
+      {% else %}<span class="badge badge-alerta">Sem “Validado”</span>{% endif %}
+    </header>
+    <dl class="pj-cartao-dados">
+      {% for f, t in c.templates %}<dt>Template {{ f }}</dt><dd>{% if t %}{{ t.nome }}{% else %}<span class="mudo">sem template</span>{% endif %}</dd>{% endfor %}
+      <dt>SVG do F2</dt><dd>{% include "ui/_componentes/status.html" with ok=r.svg_f2 titulo="Sem SVG do F2" %}</dd>
+      <dt>Capa</dt><dd>{% include "ui/_componentes/status.html" with ok=r.capa titulo="Sem capa" %}</dd>
+    </dl>
+    <div class="acoes">
+      <a class="btn btn-outline btn-sm" href="{% url 'ui_revista_editar' projeto.ano.ano r.pk %}">Abrir revista<span class="sr-only"> {{ r }}</span></a>
+      <a class="btn btn-ghost btn-sm" href="{% url 'preview' r.pk %}" target="_blank" rel="noopener">Preview<span class="sr-only"> de {{ r }} (nova aba)</span></a>
+    </div>
+  </section>
+  {% endwith %}{% endfor %}
+</div>
+{% else %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhuma revista neste projeto" texto="As revistas nascem dos cortes do parceiro, uma por componente." %}
+{% endif %}
+{% endif %}
+{% endblock %}

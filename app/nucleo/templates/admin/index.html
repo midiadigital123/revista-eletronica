@@ -1,0 +1,34 @@
+{% extends "admin/index.html" %}
+{% load temporada %}
+{% comment %}Índice do admin: módulo "Temporada AAAA" no topo, com a próxima tarefa por permissão
+(nunca por nome de grupo). A lista padrão de modelos continua abaixo.{% endcomment %}
+{% block content %}
+<div id="content-main" class="app-list">
+{% ano_temporada as ano %}
+<div class="module" id="temporada">
+{% if ano %}<table>
+  <caption>Temporada {{ ano.ano }}</caption>
+  <tr><td><strong>Próxima tarefa</strong></td></tr>
+  {% if perms.nucleo.marcar_impressa %}<tr><th scope="row"><a href="{% url 'painel' ano.ano %}?falta=impresso">Revistas para atualizar no impresso</a></th></tr>{% endif %}
+  {% if perms.nucleo.validar_revista %}
+  <tr><th scope="row"><a href="{% url 'painel' ano.ano %}">Painel: o que falta nas revistas de {{ ano.ano }}</a></th></tr>
+  <tr><th scope="row"><a href="{% url 'painel' ano.ano %}?falta=validado">Validar no Painel</a></th></tr>
+  {% elif perms.nucleo.view_revista %}<tr><th scope="row"><a href="{% url 'painel' ano.ano %}">Painel da temporada {{ ano.ano }}</a></th></tr>{% endif %}
+  {% if perms.nucleo.view_revista and not perms.nucleo.marcar_impressa %}<tr><th scope="row"><a href="{% url 'admin:nucleo_revista_changelist' %}">Revistas validadas para baixar o zip</a></th></tr>{% endif %}
+  {% if perms.nucleo.change_corte or perms.nucleo.change_projeto or perms.nucleo.change_parceiroano or perms.nucleo.change_revistafasciculo or perms.nucleo.abrir_ano %}
+  <tr><td><strong>Montagem</strong></td></tr>
+  {% if perms.nucleo.change_corte %}<tr><th scope="row"><a href="{% url 'admin:nucleo_corte_changelist' %}?ano={{ ano.ano }}">Cortes</a></th></tr>{% endif %}
+  {% if perms.nucleo.change_projeto %}<tr><th scope="row"><a href="{% url 'admin:nucleo_projeto_variaveis' %}?ano={{ ano.ano }}">Variáveis</a></th></tr>{% endif %}
+  {% if perms.nucleo.change_parceiroano %}<tr><th scope="row"><a href="{% url 'admin:nucleo_projeto_escolher_matriz' %}?ano={{ ano.ano }}">Escolher matriz</a></th></tr>{% endif %}
+  {% if perms.nucleo.change_revistafasciculo %}<tr><th scope="row"><a href="{% url 'admin:nucleo_revista_escolher_template' %}?ano={{ ano.ano }}">Escolher template F1/F2</a></th></tr>{% endif %}
+  {% if perms.nucleo.abrir_ano %}<tr><th scope="row"><a href="{% url 'admin:nucleo_ano_abrir' %}">Abrir ano {{ ano.ano|add:1 }}</a></th></tr>{% endif %}
+  {% endif %}
+  {% if perms.auth.change_user %}<tr><th scope="row"><a href="{% url 'admin:auth_user_changelist' %}">Usuários</a></th></tr>{% endif %}
+</table>
+{% else %}<h2>Temporada</h2>
+<p>{% if perms.nucleo.abrir_ano %}Nenhum ano aberto. Abra o primeiro ano em <a href="{% url 'admin:nucleo_ano_abrir' %}">Anos › Abrir ano</a>.{% else %}Nenhum ano aberto. Peça a um Admin para abrir o ano.{% endif %}</p>
+{% endif %}
+</div>
+{% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
+</div>
+{% endblock %}

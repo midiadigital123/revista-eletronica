@@ -1,0 +1,33 @@
+/* Lotes (Escolher matriz / template): só o que a base não tem. Tokens e componentes: ui/ui.css. */
+.lote { display: flex; flex-direction: column; gap: 0.75rem; }
+.lote-caixa { border: 1px solid var(--border); border-radius: var(--radius-lg); }
+.lote .tabela thead th { background: color-mix(in oklch, var(--muted) 60%, var(--background)); }
+.lote-marca { width: 2.75rem; padding-left: 0.875rem !important; }
+.lote-nome { font-weight: 500; }
+.lote-nome label { cursor: pointer; }
+.lote .tabela tbody tr:has(input[name="alvos"]) { cursor: default; }
+
+/* Prévia do que muda: "→ Nova" ao lado do valor atual, só nas linhas marcadas. */
+.lote-novo {
+  margin-left: 0.375rem; padding: 0.0625rem 0.375rem; border-radius: var(--radius-md);
+  background: var(--primary); color: var(--primary-foreground); font-size: 0.75rem; font-weight: 500;
+  animation: entra 120ms var(--ease-saida) both;
+}
+.lote-novo.lote-pulado { background: var(--warning-bg); color: var(--warning); }
+
+/* Rodapé: contador à esquerda, escolhas e botão à direita. */
+.lote-barra { justify-content: flex-start; }
+.lote-barra > [data-contador] { margin-right: auto; font-variant-numeric: tabular-nums; }
+.lote-campo { display: flex; align-items: center; gap: 0.5rem; }
+.lote-campo .select { width: 14rem; }
+.lote-erro { flex-basis: 100%; text-align: right; }
+.lote-barra .htmx-indicator { display: none; }
+.lote-barra .htmx-request.htmx-indicator, .htmx-request .lote-barra .htmx-indicator { display: inline; }
+
+@media (prefers-reduced-motion: reduce) { .lote-novo { animation: none; } }
+@media (max-width: 40rem) {
+  .lote-barra > [data-contador] { flex-basis: 100%; }
+  .lote-campo { flex: 1 1 100%; }
+  .lote-campo .select { width: auto; flex: 1; }
+  .lote-erro { text-align: left; }
+}

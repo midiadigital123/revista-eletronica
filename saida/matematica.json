@@ -1,0 +1,4813 @@
+{
+  "2ef": {
+    "scaleRange": {
+      "min": 0,
+      "max": 1000
+    },
+    "cortes": {
+      "padrao-1": 400,
+      "padrao-2": 500,
+      "padrao-3": 625
+    },
+    "D01": {
+      "topic": "",
+      "description": "Reconhecer o que os números naturais indicam em diferentes situações: quantidade, ordem, medida ou código de identificação.",
+      "prerequisites": [
+        "Compreensão básica dos números naturais.",
+        "Noção de quantidade.",
+        "Noção de ordem.",
+        "Noção inicial de medida.",
+        "Noção de código de identificação.",
+        "Observação e leitura funcional.",
+        "Vocabulário matemático básico.",
+        "Experiência com situações cotidianas envolvendo números."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Números",
+        "skills": [
+          "EF01MA01",
+          "(EF01MA01) Utilizar números naturais como indicador de quantidade ou de ordem em diferentes situações cotidianas e reconhecer situações em que os números não indicam contagem nem ordem, mas sim código de identificação."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "Reconhecer um número natural que indica ordem (posição) com suporte gráfico. Reconhecer um número que representa uma medida em uma imagem que apresenta uma balança analógica."
+          },
+          {
+            "level": 447,
+            "content": "---"
+          },
+          {
+            "level": 404,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "Reconhecer um número natural que indica um código de identificação (de pessoas). Reconhecer um número que representa uma quantidade em uma imagem que apresenta portadores numéricos indicando ordem, quantidade, código e medida."
+          },
+          {
+            "level": 530,
+            "content": "Reconhecer um número que representa uma medida em uma imagem que apresenta portadores numéricos indicando ordem, código e medida."
+          },
+          {
+            "level": 522,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D02": {
+      "topic": "",
+      "description": "Identificar a posição ordinal de um objeto ou termo em uma sequência (1º, 2º etc.).",
+      "prerequisites": [
+        "Compreensão de sequência e ordem.",
+        "Noção de correspondência um a um.",
+        "Reconhecimento de números naturais.",
+        "Vocabulário básico relacionado à ordem.",
+        "Habilidade de seguir instruções sequênciais.",
+        "Percepção visual e atenção.",
+        "Experiência prévia com situações cotidianas envolvendo ordem."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Números",
+        "skills": [
+          "EF01MA01, EF02MA01, EF02MA09",
+          "(EF01MA01) Utilizar números naturais como indicador de quantidade ou de ordem em diferentes situações cotidianas e reconhecer situações em que os números não indicam contagem nem ordem, mas sim código de identificação."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "---"
+          },
+          {
+            "level": 447,
+            "content": "Identificar a pessoa que ocupa uma determinada posição em uma corrida."
+          },
+          {
+            "level": 404,
+            "content": "Identificar o primeiro número em uma sequência de números naturais consecutivos, de dois algarismos. Identificar o último número de uma sequência de números naturais consecutivos, de dois algarismos. Identificar, em uma sequência de objetos de mesmo tipo, o quinto elemento."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "---"
+          },
+          {
+            "level": 530,
+            "content": "---"
+          },
+          {
+            "level": 522,
+            "content": "Identificar, em uma ordenação da direita para a esquerda, a posição ordinal de uma pessoa (em uma fila) de acordo com um referencial dado."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D03": {
+      "topic": "",
+      "description": "Escrever números naturais de até 3 ordens em sua representação por algarismos ou em língua materna OU associar o registro numérico de números naturais de até 3 ordens ao registro em língua materna.",
+      "prerequisites": [
+        "Conhecimentos prévios sobre o sistema de numeração.",
+        "Noções iniciais de valor posicional.",
+        "Associação entre fala e escrita dos números.",
+        "Compreender a escrita por extenso de palavras conhecidas presentes nos números.",
+        "Reconhecer semelhanças e diferenças entre palavras que nomeiam números.",
+        "Comparar quantidades usando termos como maior, menor, igual.",
+        "Ordenar números até 100 (crescente e decrescente).",
+        "Vivenciar atividades de agrupamento em dezenas e centenas com material concreto.",
+        "Representar quantidades por meio de desenhos, palitos, blocos, etc.",
+        "Conseguir registrar números de 0 a 99 de forma autônoma.",
+        "Ler pequenos textos, listas ou problemas que incluam números naturais."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Números",
+        "skills": [
+          "EF01MA04, EF02MA02",
+          "(EF02MA02) Fazer estimativas por meio de estratégias diversas a respeito da quantidade de objetos de coleções e registrar o resultado da contagem desses objetos (até 1000 unidades)."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "Associar a denominação de um número de três ordens, que tem um zero intercalado, à sua representação por algarismos. Associar a representação por algarismo de um número natural de três ordens, que tem zero intercalado, à sua escrita por extenso."
+          },
+          {
+            "level": 447,
+            "content": "Associar a representação por algarismos de um número de duas ordens à sua escrita por extenso."
+          },
+          {
+            "level": 404,
+            "content": "Identificar a representação numérica de um número natural de duas ordens, dada a sua representação em língua materna a partir de um contexto. Associar a denominação de um número de duas ordens à sua representação por algarismos."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "---"
+          },
+          {
+            "level": 530,
+            "content": "Identificar a representação numérica de um numero natural de três ordens, dada a sua representação em língua materna a partir de um contexto."
+          },
+          {
+            "level": 522,
+            "content": "Associar a escrita de um número natural de três ordens por extenso, com zero na ordem das dezenas, à sua representação por algarismos."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D04": {
+      "topic": "",
+      "description": "Comparar OU ordenar quantidades de objetos (até 2 ordens).",
+      "prerequisites": [
+        "Contar objetos um a um, sem se perder.",
+        "Saber que a ordem da contagem não altera a quantidade.",
+        "Compreender que o último número dito representa a quantidade total.",
+        "Identificar e ler numerais pelo menos até 50.",
+        "Relacionar numeral à quantidade correspondente.",
+        "Comparar conjuntos usando ideias intuitivas: “tem mais”, “tem menos”, “tem a mesma quantidade”.",
+        "Relacionar objetos de dois conjuntos fazendo pareamentos para verificar quem “sobra” ou “falta”.",
+        "Compreender ordens simples para organizar objetos ou quantidades.",
+        "Entender que ordenar envolve uma regra (da menor para a maior ou vice-versa)."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Números",
+        "skills": [
+          "EF01MA03, EF02MA03",
+          "(EF02MA03) Comparar quantidades de objetos de dois conjuntos, por estimativa e/ou por correspondência (um a um, dois a dois, entre outros), para indicar “tem mais”, “tem menos” ou “tem a mesma quantidade”, indicando, quando for o caso, quantos a mais e quantos a menos."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "---"
+          },
+          {
+            "level": 447,
+            "content": "Identificar, a partir da comparação de conjuntos de objetos iguais, quais possuem a mesma quantidade de objetos. Comparar três coleções de objetos para identificar a que tem a menor quantidade."
+          },
+          {
+            "level": 404,
+            "content": "Identificar, a partir a comparação de conjuntos de objetos iguais, qual conjunto possui a maior quantidade de objetos."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "---"
+          },
+          {
+            "level": 530,
+            "content": "---"
+          },
+          {
+            "level": 522,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D05": {
+      "topic": "",
+      "description": "Comparar OU ordenar números naturais de até 3 ordens com ou sem suporte da reta numérica.",
+      "prerequisites": [
+        "Compreensão do Sistema de Numeração Decimal.",
+        "Reconhecimento e Leitura de Números Naturais.",
+        "Recitar e escrever a sequência de números naturais pelo menos até 100.",
+        "Avançar e retroceder na contagem.",
+        "Identificar sucessor e antecessor de números naturais.",
+        "Compreender intuitivamente “maior”, “menor” e “igual”.",
+        "Trabalhar comparações diretas entre quantidades.",
+        "Produzir e interpretar conjuntos equivalentes.",
+        "Reconhecer a reta numérica como representação crescente.",
+        "Localizar números simples na reta.",
+        "Relacionar posição na reta com a ideia de grandeza.",
+        "Noções Iniciais de Agrupamento.",
+        "Compreender os termos maior, menor, igual, antes, depois, entre."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Números",
+        "skills": [
+          "EF01MA05, EF02MA01",
+          "(EF02MA01) Comparar e ordenar números naturais (até a ordem de centenas) pela compreensão de características do sistema de numeração decimal (valor posicional e função do zero)."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "---"
+          },
+          {
+            "level": 447,
+            "content": "---"
+          },
+          {
+            "level": 404,
+            "content": "Identificar o maior número natural, formado por dois algarismos, a partir de um suporte gráfico. Comparar quatro números naturais de duas ordens, os quais indicam idades, para identificar a pessoa mais velha."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "Ordenar, de maneira crescente, um conjunto de quatro números de duas ordens."
+          },
+          {
+            "level": 530,
+            "content": "Ordenar de forma crescente os números naturais apresentados no suporte do item. Ordenar, de maneira crescente, um conjunto de cinco números de duas ordens."
+          },
+          {
+            "level": 522,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D06": {
+      "topic": "",
+      "description": "Identificar a ordem ocupada por um algarismo OU seu valor posicional (ou valor relativo) em um número natural de até 3 ordens.",
+      "prerequisites": [
+        "Ler e escrever números naturais até, pelo menos, 100.",
+        "Comparar quantidades (maior, menor, igual).",
+        "Entender que o sistema numérico é organizado em grupos de dez.",
+        "Agrupar objetos de 10 em 10 para formar dezenas.",
+        "Reconhecer que 10 unidades formam 1 dezena e 10 dezenas formam 1 centena.",
+        "Representar números com unidades, dezenas e centenas utilizando materiais concretos ou desenhos.",
+        "Compreender que a mesma quantidade pode ser representada de diferentes formas.",
+        "Identificar a escrita convencional dos números até 999.",
+        "Compreender que, na leitura, a ordem das palavras indica a ordem dos algarismos.",
+        "Perceber que a posição dos algarismos altera seu valor.",
+        "Compreender termos como algarismo, número, quantidade, ordem, posição.",
+        "Utilizar linguagem oral adequada para explicar como um número foi formado."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Números",
+        "skills": [
+          "EF02MA01",
+          "(EF02MA01) Comparar e ordenar números naturais (até a ordem de centenas) pela compreensão de características do sistema de numeração decimal (valor posicional e função do zero)."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "---"
+          },
+          {
+            "level": 447,
+            "content": "---"
+          },
+          {
+            "level": 404,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "Identificar o valor relativo de um algarismo, em um número natural de três algarismos, entre os quais, o que ocupa a ordem das unidades é o zero."
+          },
+          {
+            "level": 530,
+            "content": "Identificar a ordem ocupada por um algarismo em um número natural de três algarismos. Identificar o valor posicional do algarismo das dezenas em um número de três ordens. Identificar o valor posicional do algarismo das centenas em um número de três ordens."
+          },
+          {
+            "level": 522,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "Identificar a ordem ocupada por um algarismo das dezenas em um conjunto de três números naturais"
+          }
+        ]
+      }
+    },
+    "D07": {
+      "topic": "",
+      "description": "Calcular o resultado de adições ou subtrações, envolvendo números naturais de até 3 ordens.",
+      "prerequisites": [
+        "Reconhecer, ler e escrever números naturais até 999.",
+        "Ordenar números (maior/menor, antes/depois, entre).",
+        "Identificar unidades, dezenas e centenas.",
+        "Decompor números em suas ordens.",
+        "Comparar números usando o valor posicional.",
+        "Contar de 1 em 1, 2 em 2, 5 em 5 e 10 em 10.",
+        "Compreender o significado da adição como juntar e acrescentar.",
+        "Compreender a subtração como retirar ou comparar.",
+        "Dominar fatos básicos da adição e da subtração.",
+        "Completar dezenas em adições e subtrações.",
+        "Utilizar material dourado, palitos, ábacos ou desenhos para representar quantidades.",
+        "Resolver operações simples com apoio de representações gráficas.",
+        "Registrar cálculos em diferentes formatos (horizontal e vertical).",
+        "Reconhecer o sinal de adição (+) e de subtração (?)."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Números",
+        "skills": [
+          "EF01MA06, EF02MA05",
+          "(EF02MA05) Construir fatos básicos da adição e subtração e utilizá-los no cálculo mental ou escrito."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "---"
+          },
+          {
+            "level": 447,
+            "content": "---"
+          },
+          {
+            "level": 404,
+            "content": "Calcular o resultado da adição de dois números naturais de um algarismo, apresentada no formato do algorítmo usual."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "Calcular o resultado de uma adição indicada em uma sentença matemática (horizontal) envolvendo dois termos das ordens das centenas, com reagrupamento."
+          },
+          {
+            "level": 530,
+            "content": "Calcular o resultado da adição de um número natural de três algarismos com um número natural de dois algarismos, sem reagrupamento. Calcular o resultado da adição de dois números naturais de dois algarismos, com reagrupamento, apresentada na forma do algarismo usual. Calcular o resultado de uma adição indicada em uma sentença matemática (horizontal) que envolve um número de três ordens e outro de duas ordens, sem reagrupamento."
+          },
+          {
+            "level": 522,
+            "content": "Calcular o resultado da subtração de um número de três ordens por outro de duas ordens em uma conta armada que não envolve reagrupamento. Calcular a subtração de um número de três ordens por outro de duas ordens, indicada em uma sentença matemática (horizontal) que não envolve reagrupamento."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "Calcular a subtração de um número de três ordens por outro de três ordens, indicada em uma sentença matemática (horizontal) que envolve reagrupamento."
+          },
+          {
+            "level": 635,
+            "content": "Calcular o resultado da subtração entre números naturais de dois algarismos, com recurso às ordens superiores."
+          }
+        ]
+      }
+    },
+    "D08": {
+      "topic": "",
+      "description": "Compor OU decompor números naturais de até 3 ordens por meio de diferentes adições.",
+      "prerequisites": [
+        "Entender que os números são organizados em unidades, dezenas e centenas.",
+        "Reconhecer o valor posicional dos algarismos.",
+        "Realizar contagens progressivas e regressivas até, pelo menos, 100.",
+        "Ler e escrever números naturais até 999.",
+        "Dominar adições simples sem reagrupamento.",
+        "Compreender que um número pode ser formado por diferentes adições.",
+        "Utilizar blocos base 10, palitos, tampinhas, ábacos ou outros recursos para representar quantidades.",
+        "Ser capaz de comparar quantidades e ordenar números até 999.",
+        "Identificar qual é maior/menor e perceber a diferença entre eles.",
+        "Entender a ideia de formar dezenas a partir de unidades e centenas a partir de dezenas.",
+        "Saber que é possível “trocar”, por exemplo, 10 unidades por 1 dezena e vice-versa."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Números",
+        "skills": [
+          "EF01MA07, EF02MA04",
+          "(EF02MA04) Compor e decompor números naturais de até três ordens, com suporte de material manipulável, por meio de diferentes adições."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "---"
+          },
+          {
+            "level": 447,
+            "content": "---"
+          },
+          {
+            "level": 404,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "---"
+          },
+          {
+            "level": 530,
+            "content": "Identificar a decomposição de um número natural de três algarismos a partir da adição dos valores relativos a cada algarismo que o compõe. Associar a decomposição aditiva de um número de três ordens à sua representação no sistema de numeração decimal. Decompor um número natural de três ordens na forma aditiva."
+          },
+          {
+            "level": 522,
+            "content": "Compor um número natural de três ordens, com base na apresentação desse número decomposto em centenas, dezenas e unidades."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D09": {
+      "topic": "",
+      "description": "Resolver problemas de adição ou de subtração, envolvendo números naturais de até 3 ordens, com os significados de juntar, acrescentar, separar ou retirar.",
+      "prerequisites": [
+        "Comparação de números: identificar maior, menor e igual.",
+        "Noção de ordem e valor posicional: unidades, dezenas e centenas (mesmo que de forma inicial).",
+        "Compreensão das ideias de juntar, acrescentar, separar, retirar e comparar quantidades.",
+        "Noção das situações que envolvem adição (aumento da quantidade) e subtração (diminuição ou diferença).",
+        "Vivência com problemas simples envolvendo situações do cotidiano.",
+        "Contagem a partir de um número dado como, por exemplo, “comece do 8 e acrescente 3”.",
+        "Noção de reserva e reagrupamento de forma inicial.",
+        "Identificação de palavras e expressões que indicam adição ou subtração.",
+        "Capacidade de representar um problema com desenhos, esquemas ou frases matemáticas.",
+        "Relacionar situações do cotidiano às operações básicas.",
+        "Percepção de que diferentes estratégias podem levar ao mesmo resultado."
+      ],
+      "bncc": {
+        "practices": "Resolver problemas e argumentar",
+        "knowledge": "Números",
+        "skills": [
+          "EF01MA08, EF02MA06",
+          "(EF02MA06) Resolver e elaborar problemas de adição e de subtração, envolvendo números de até três ordens, com os significados de juntar, acrescentar, separar, retirar, utilizando estratégias pessoais."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "---"
+          },
+          {
+            "level": 447,
+            "content": "Resolver problema envolvendo a adição de dois números naturais de um algarismo, com significado de juntar."
+          },
+          {
+            "level": 404,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "Resolver problema do campo aditivo que envolve o significado de composição (juntar), em que uma das partes é desconhecida, com números de duas ordens e reagrupamento nos cálculos."
+          },
+          {
+            "level": 530,
+            "content": "Resolver problema envolvendo a subtração entre dois números naturais de dois algarismos, com significado de separar, com recurso às ordens superiores. Resolver problema do campo aditivo que envolve o significado de transformação (acrescentar), em que o estado final é desconhecido, com dois números de três ordens, sem reagrupamento nos cálculos."
+          },
+          {
+            "level": 522,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "Resolver problema do campo aditivo com o significado de transformação (acrescentar), em que o estado inicial é desconhecido (? + 17 = 45) e os números são de duas ordens, com reagrupamento nos cálculos."
+          },
+          {
+            "level": 635,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D10": {
+      "topic": "",
+      "description": "Resolver problemas de multiplicação ou de divisão (por 2, 3, 4 ou 5), envolvendo números naturais, com os significados de formação de grupos iguais ou proporcionalidade (incluindo dobro, metade, triplo ou terça parte).",
+      "prerequisites": [
+        "Comparar números.",
+        "Compreender subtração como retirar e como diferença.",
+        "Contar objetos de maneira organizada, em grupos de mesmo tamanho.",
+        "Reconhecer agrupamentos de números naturais (pares, trios, quartetos, quintetos).",
+        "Agrupar elementos de 2 em 2, de 3 em 3, para facilitar a contagem.",
+        "Perceber que “repetir a mesma quantidade” gera total maior (adições repetidas).",
+        "Identificar padrões numéricos que crescem proporcionalmente.",
+        "Contagens em saltos de 2, 3, 4, 5 unidades.",
+        "Ideia de compartilhar igualmente.",
+        "Ideia de formar grupos iguais a partir de uma quantidade maior.",
+        "Relação entre dividir e organizar objetos.",
+        "Palavras como: “vezes”, “grupos de”, “cada”, “total”, “metade”, “dobro”, “triplo”, “terça parte”.",
+        "Interpretação de enunciados simples de problemas.",
+        "Ler problemas curtos e identificar dados essenciais."
+      ],
+      "bncc": {
+        "practices": "Resolver problemas e argumentar",
+        "knowledge": "Números",
+        "skills": [
+          "EF02MA07, EF02MA08",
+          "(EF02MA07) Resolver e elaborar problemas de multiplicação (por 2, 3, 4 e 5) com a ideia de adição de parcelas iguais por meio de estratégias e formas de registro pessoais, utilizando ou não suporte de imagens e/ou material manipulável."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "Resolver problema envolvendo a multiplicação entre dois números naturais de um algarismo, com suporte gráfico, com significado de soma de parcelas iguais."
+          },
+          {
+            "level": 447,
+            "content": "Resolver problema do campo multiplicativo que envolve o significado de formação de grupos iguais, em que o produto é desconhecido (proporcionalidade na relação de um para muitos), os números são de uma ordem e há suporte de imagem dos grupos."
+          },
+          {
+            "level": 404,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "Resolver problema do campo multiplicativo que envolve significado de formação de grupos iguais, em que o produto é desconhecido (proporcionalidade na relação de um para muitos), os números são de uma ordem (4 × 6 =?) e há suporte de imagem dos grupos."
+          },
+          {
+            "level": 530,
+            "content": "Resolver problema envolvendo a divisão de um número natural de dois algarismos por um número natural de um algarismo, com suporte gráfico, com significado de partilha. Resolver problema do campo multiplicativo que envolve o significado de formação de grupos iguais, em que a quantidade por grupo é desconhecida (significado de partição da divisão), com dividendo de duas ordens e divisor de uma ordem, com suporte de imagem do dividendo (o total a ser utilizado na formação dos grupos). Resolver problema do campo multiplicativo que envolve significado de formação de grupos iguais, em que o produto é desconhecido (proporcionalidade na relação de um para dois), os números são de uma ordem (5 × 2 = ?) e há suporte de imagem dos grupos."
+          },
+          {
+            "level": 522,
+            "content": "Resolver um problema do campo multiplicativo que envolve o significado de formação de grupos iguais, em que o produto é desconhecido (proporcionalidade na relação de um para muitos), os números são de uma ordem e há suporte de imagem da quantidade por grupo. Resolver um problema do campo multiplicativo que envolve o significado de formação de grupos iguais, em que a quantidade de grupos é desconhecida (significado de medida da divisão), com dividendo de duas ordens e divisor de uma ordem, com suporte de imagem do dividendo (o total a ser utilizado na formação dos grupos)."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "Resolver problema do campo multiplicativo com o significado de triplo."
+          }
+        ]
+      }
+    },
+    "D11": {
+      "topic": "",
+      "description": "Analisar argumentações sobre a resolução de problemas de adição, subtração, multiplicação ou divisão envolvendo números naturais.",
+      "prerequisites": [
+        "Compreensão do significado das operações básicas",
+        "Reconhecimento de números naturais e capacidade de lê-los e compará-los.",
+        "Representar situações-problema de diferentes formas: desenhos, esquemas, tabelas simples, calculadoras manuais.",
+        "Verificar resultados por meio de estratégias simples como contar novamente, usar fatos básicos e estimar respostas pequenas.",
+        "Compreender enunciados de problemas, identificando dados e perguntas.",
+        "Expressar oralmente ou por escrito o raciocínio utilizado na resolução de um problema.",
+        "Estabelecer relações de causa e efeito em argumentos simples como, por exemplo: “ele somou porque juntou”.",
+        "Respeitar diferentes ideias, entendendo que há múltiplas estratégias corretas.",
+        "Justificar suas escolhas, explicando por que usou determinada operação ou procedimento."
+      ],
+      "bncc": {
+        "practices": "Resolver problemas e argumentar",
+        "knowledge": "Números",
+        "skills": [
+          "EF02MA07, EF01MA08, EF02MA06, EF02MA08",
+          "(EF02MA06) Resolver e elaborar problemas de adição e de subtração, envolvendo números de até três ordens, com os significados de juntar, acrescentar, separar, retirar, utilizando estratégias pessoais."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "Analisar, entre um conjunto de argumentos, aquele que corresponde à solução correta de um problema envolvendo uma subtração de números naturais, com significado de retirar."
+          },
+          {
+            "level": 447,
+            "content": "---"
+          },
+          {
+            "level": 404,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "---"
+          },
+          {
+            "level": 530,
+            "content": "---"
+          },
+          {
+            "level": 522,
+            "content": "Analisar, entre um conjunto de argumentos, aquele que corresponde à solução correta de um problema envolvendo uma adição de números naturais, com significado de acrescentar."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D12": {
+      "topic": "",
+      "description": "Identificar a classificação OU classificar objetos ou representações por figuras, por meio de atributos, tais como cor, forma e medida.",
+      "prerequisites": [
+        "Diferenciar cores básicas.",
+        "Reconhecer semelhanças e diferenças visuais entre objetos.",
+        "Identificar detalhes relevantes em imagens e objetos.",
+        "Nomear cores.",
+        "Nomear formas básicas: círculo, quadrado, retângulo, triângulo.",
+        "Comparar objetos por um atributo de cada vez.",
+        "Julgar igualdade e diferença entre dois ou mais elementos.",
+        "Ordenar objetos por tamanho.",
+        "Posicionar objetos em grupos e fileiras para facilitar a classificação.",
+        "Entender comandos como “separe”, “organize”, “classifique”, “coloque junto”.",
+        "Registrar agrupamentos por meio de desenhos simples ou marcações.",
+        "Relacionar objetos físicos a suas representações gráficas (figuras no papel)."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Álgebra",
+        "skills": [
+          "EF01MA09",
+          "(EF01MA09) Organizar e ordenar objetos familiares ou representações por figuras, por meio de atributos, tais como cor, forma e medida."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "---"
+          },
+          {
+            "level": 447,
+            "content": "---"
+          },
+          {
+            "level": 404,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "Identificar o critério de classificação (quantidade de furos) em um conjunto de objetos de mesmo tipo (botões)."
+          },
+          {
+            "level": 530,
+            "content": "Identificar, entre diferentes conjuntos de objetos, aquele cujos elementos estão organizados por tamanho. Inferir o critério de classificação de um conjunto de objetos dados."
+          },
+          {
+            "level": 522,
+            "content": "Identificar, entre diferentes conjuntos de objetos, aquele cujos elementos estão organizados por cor."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "Identificar, entre diferentes conjuntos de objetos, aquele cujos elementos estão organizados pelo formato."
+          }
+        ]
+      }
+    },
+    "D13": {
+      "topic": "",
+      "description": "Inferir OU descrever atributos ou propriedades comuns que os elementos que constituem uma sequência de números naturais apresentam.",
+      "prerequisites": [
+        "Identificar números naturais até, pelo menos, 100.",
+        "Ler e escrever números corretamente.",
+        "Realizar contagens crescentes e regressivas.",
+        "Entender que a contagem segue uma ordem fixa e previsível.",
+        "Identificar anterior e posterior de um número.",
+        "Comparar números: maior, menor e igual.",
+        "Entender que adicionar “anda para frente” na sequência e subtrair “anda para trás”.",
+        "Resolver operações simples mentalmente.",
+        "Seguir sequências numéricas simples como contar de 2 em 2, de 5 em 5.",
+        "Comparar elementos, identificando semelhanças e diferenças.",
+        "Perceber que uma sequência segue uma regra previsível.",
+        "Tentar formular ou explicar a regra observada."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Álgebra",
+        "skills": [
+          "EF01MA10, EF02MA09, EF02MA10, EF02MA11",
+          "(EF02MA09) Construir sequências de números naturais em ordem crescente ou decrescente a partir de um número qualquer, utilizando uma regularidade estabelecida."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "Identificar, entre sequências de números naturais de até três algarismos aquela cujos elementos são números em que o algarismo dois ocupa a ordem das unidades."
+          },
+          {
+            "level": 447,
+            "content": "---"
+          },
+          {
+            "level": 404,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "Identificar, entre sequências de números naturais de até três algarismos aquela cujos elementos são números naturais de dois algarismos. Inferir um atributo comum em uma sequência numérica crescente que se inicia em 5, cujo padrão é acrescentar 10 ao termo anterior."
+          },
+          {
+            "level": 530,
+            "content": "Inferir a posição de um número em uma sequência numérica decrescente que envolve números do intervalo de 7 a 14 e que decrescem de 1 em 1."
+          },
+          {
+            "level": 522,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "Identificar, entre sequências de números naturais de até três algarismos aquela cujos elementos são números naturais de três algarismos."
+          }
+        ]
+      }
+    },
+    "D14": {
+      "topic": "",
+      "description": "Inferir o padrão ou a regularidade de uma sequência de números naturais ordenados, de objetos ou de figuras.",
+      "prerequisites": [
+        "Reconhecimento dos números naturais.",
+        "Capacidade de ler e escrever números naturais.",
+        "Compreensão da ordem dos números (anterior, posterior, maior, menor).",
+        "Noção de quantidade e correspondência termo a termo.",
+        "Contar adiante e para trás a partir de qualquer número.",
+        "Início da compreensão de contagens em intervalos simples (de 2 em 2, 5 em 5, 10 em 10).",
+        "Agrupamento de elementos por semelhança (cor, forma, tamanho).",
+        "Comparação entre elementos para identificar semelhanças e diferenças.",
+        "Capacidade de antecipar o próximo elemento de uma sequência simples.",
+        "Compreensão de termos como “sequência”, “ordem”, “padrão”, “regularidade”, “antes”, “depois” e “entre”.",
+        "Compreensão intuitiva de adição como “acrescentar” e subtração como “retirar”.",
+        "Experiências iniciais com situações de “aumentar de 1 em 1”, “aumentar de 2 em 2”, etc."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Álgebra",
+        "skills": [
+          "EF01MA10, EF02MA09, EF02MA10, EF02MA11",
+          "(EF02MA10) Descrever um padrão (ou regularidade) de sequências repetitivas e de sequências recursivas, por meio de palavras, símbolos ou desenhos."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "Inferir o padrão de regularidade numérica de uma sequência de números naturais de dois algarismos, graduada de duas em duas unidades, de forma crescente, com suporte gráfico."
+          },
+          {
+            "level": 447,
+            "content": "---"
+          },
+          {
+            "level": 404,
+            "content": "Inferir o padrão de regularidade de uma sequência de objetos de mesmo tipo."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "Inferir o padrão de uma sequência numérica crescente (adicionar 3), sendo apresentados os 4 primeiros termos."
+          },
+          {
+            "level": 530,
+            "content": "Inferir o padrão de regularidade numérica de uma sequência de números naturais de dois algarismos, graduada de uma em uma unidade, de forma crescente, com suporte gráfico."
+          },
+          {
+            "level": 522,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "Inferir um padrão de uma sequência numérica decrescente (subtrair 3), sendo apresentados os quatro termos."
+          }
+        ]
+      }
+    },
+    "D15": {
+      "topic": "",
+      "description": "Inferir os elementos ausentes em uma sequência de números naturais ordenados, de objetos ou de figuras.",
+      "prerequisites": [
+        "Identificar e nomear números naturais.",
+        "Compreender que os números seguem uma ordem crescente e decrescente.",
+        "Reconhecer o sucessor e o antecessor de um número.",
+        "Identificar padrões simples em sequências de objetos, cores ou formas.",
+        "Reconhecer regularidades visuais como repetição de figuras.",
+        "Completar sequências simples já parcialmente preenchidas.",
+        "Entender que uma sequência segue uma regra de repetição, alternância ou progressão.",
+        "Comparar elementos para perceber o que se repete ou muda.",
+        "Realizar contagem oral correta e estável.",
+        "Organizar elementos seguindo uma lógica (por cor, forma, tamanho).",
+        "Perceber diferenças e semelhanças entre figuras.",
+        "Acompanhar visualmente uma sequência sem se perder.",
+        "Testar hipóteses simples para descobrir a regra de uma sequência.",
+        "Justificar verbalmente a escolha feita (ex.: “coloquei este porque…”)."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Álgebra",
+        "skills": [
+          "EF01MA10, EF02MA09, EF02MA10, EF02MA11",
+          "–"
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "Inferir o elemento seguinte em uma sequência de objetos de mesmo tipo."
+          },
+          {
+            "level": 447,
+            "content": "---"
+          },
+          {
+            "level": 404,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "Inferir um termo ausente em uma sequência numérica crescente cujo padrão é adicionar 3 ao termo anterior."
+          },
+          {
+            "level": 530,
+            "content": "Inferir o elemento faltante em uma sequência decrescente de números naturais de dois algarismos, graduada de dois em dois. Inferir um termo ausente em uma sequência numérica crescente cujo padrão é adicionar 2 ao termo anterior."
+          },
+          {
+            "level": 522,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D16": {
+      "topic": "",
+      "description": "Identificar a localização OU a descrição/esboço do deslocamento de pessoas e/ou de objetos em representações bidimensionais (mapas, croquis, etc.).",
+      "prerequisites": [
+        "Reconhecer posições relativas: em cima/embaixo, perto/longe, frente/atrás, direita/esquerda.",
+        "Reconhecer e descrever trajetos realizados no cotidiano.",
+        "Identificar diferenças entre representações reais e desenhos esquemáticos.",
+        "Compreender que mapas e croquis são formas de representar espaços reais.",
+        "Reconhecer que elementos reais podem ser simplificados em símbolos.",
+        "Diferenciar e aplicar corretamente os conceitos de lado direito e lado esquerdo em si e nos outros.",
+        "Relacionar lateralidade ao movimento: “virar à direita/ esquerda”.",
+        "Utilizar pontos fixos para localizar objetos: “perto da janela”, “ao lado da mesa” etc.",
+        "Identificar referências em desenhos ou mapas.",
+        "Reconhecer símbolos simples usados em mapas (casinha, árvore, caminho, flecha).",
+        "Seguir e traçar linhas em percursos simples.",
+        "Reproduzir desenhos básicos (setas, caminhos, trajetos simples)."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Geometria",
+        "skills": [
+          "EF01MA11, EF01MA12, EF02MA12, EF02MA13",
+          "(EF02MA12) Identificar e registrar, em linguagem verbal ou não verbal, a localização e os deslocamentos de pessoas e de objetos no espaço, considerando mais de um ponto de referência, e indicar as mudanças de direção e de sentido."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "Identificar o objeto que se encontra à direita em uma imagem, usando como referência a mesma posição do estudante que está resolvendo a questão."
+          },
+          {
+            "level": 447,
+            "content": "---"
+          },
+          {
+            "level": 404,
+            "content": "Identificar a localização de uma pessoa em uma representação espacial, com base nos conceitos de “mais próximo” e “mais distante”. Identificar, em uma imagem com formato de linhas e colunas, o objeto que se encontra na posição acima de outro, usando como referência a mesma posição do estudante que está resolvendo a questão."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "---"
+          },
+          {
+            "level": 530,
+            "content": "Identificar a localização de uma pessoa, em uma representação espacial, com base nos conceitos de lateralidade (direita/esquerda), com o mesmo referencial do aluno. Identificar, em uma imagem, o local de chegada de um carro que percorre um trajeto descrito que envolve duas informações: uma relativa à lateralidade (direita) e outra, à ordem (segunda)."
+          },
+          {
+            "level": 522,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "Identificar a localização de uma pessoa, em uma representação espacial, com base nos conceitos de lateralidade (direita/esquerda), com o referencial diferente do aluno."
+          },
+          {
+            "level": 635,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D17": {
+      "topic": "",
+      "description": "Reconhecer/nomear figuras geométricas espaciais (cubo, bloco retangular, pirâmide, cone, cilindro e esfera), relacionando-as com objetos do mundo físico.",
+      "prerequisites": [
+        "Reconhecer e nomear figuras geométricas planas básicas: quadrado, retângulo, triângulo e círculo.",
+        "Identificar características simples das formas planas (lados, cantos).",
+        "Observar semelhanças e diferenças entre formas e objetos do cotidiano.",
+        "Comparar tamanho, forma e proporção de objetos.",
+        "Perceber diferentes orientações (em pé, deitado, inclinado).",
+        "Manipular objetos reais (brinquedos, caixas, latas, bolas) para perceber volume, faces e bordas.",
+        "Construir e desmontar blocos ou sólidos simples.",
+        "Compreender termos como em cima, embaixo, lado, frente, atrás.",
+        "Reconhecer que alguns objetos têm volume (ocupam espaço).",
+        "Diferenciar figuras “achatadas” de figuras “de volume”.",
+        "Identificar objetos com formas simples no ambiente escolar ou doméstico.",
+        "Descrever objetos utilizando termos simples ligados à forma."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Geometria",
+        "skills": [
+          "EF01MA13, EF02MA14",
+          "(EF02MA14) Reconhecer, nomear e comparar figuras geométricas espaciais (cubo, bloco retangular, pirâmide, cone, cilindro e esfera), relacionando-as com objetos do mundo físico."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "Identificar, entre diferentes objetos do mundo físico, aquele que se assemelha a uma pirâmide. Reconhecer a imagem de um objeto do mundo físico que tem o formato parecido com o de um cone em posição usual (com a “ponta” para cima e a base na horizontal), dado o nome dessa figura geométrica."
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "---"
+          },
+          {
+            "level": 447,
+            "content": "---"
+          },
+          {
+            "level": 404,
+            "content": "Nomear a imagem de um objeto do mundo físico que tem o formato parecido com o de uma figura geométrica espacial (cubo)."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "Reconhecer a imagem de um objeto do mundo físico que tem o formato parecido com o de um cilindro, dado o nome dessa figura geométrica."
+          },
+          {
+            "level": 530,
+            "content": "Identificar, entre diferentes objetos do mundo físico, aquele que se assemelha a um cilindro."
+          },
+          {
+            "level": 522,
+            "content": "Reconhecer a imagem de um objeto do mundo físico que tem o formato parecido com o de uma esfera, dado o nome dessa figura geométrica. Nomear a imagem de um objeto do mundo físico (esponja de lavar louças) que tem o formato parecido com o de uma figura geométrica espacial (bloco retangular)."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D18": {
+      "topic": "",
+      "description": "Reconhecer/nomear figuras geométricas planas (círculo, quadrado, retângulo e triângulo).",
+      "prerequisites": [
+        "Identificar semelhanças e diferenças entre objetos do cotidiano.",
+        "Perceber bordas, contornos e formatos.",
+        "Reconhecer padrões simples.",
+        "Diferenciar conceitos como dentro/fora, perto/longe, acima/abaixo.",
+        "Traçar linhas retas e curvas.",
+        "Reproduzir formas simples por meio do desenho.",
+        "Reconhecer formas presentes em brinquedos, embalagens, placas etc.",
+        "Associar figuras geométricas a objetos concretos (ex.: roda – círculo).",
+        "Agrupar objetos por forma.",
+        "Conhecer palavras como ponta, lado, curva, reto.",
+        "Conseguir verbalizar características de objetos observados.",
+        "Explorar blocos lógicos, figuras de EVA, tangram ou formas geométricas recortadas.",
+        "Construir e montar formas simples.",
+        "Comparar tamanhos (grande/pequeno) e comprimentos (longo/curto).",
+        "Perceber que figuras podem aparecer em diferentes tamanhos, mas manter suas características."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Geometria",
+        "skills": [
+          "EF01MA14, EF02MA15",
+          "(EF02MA15) Reconhecer, comparar e nomear figuras planas (círculo, quadrado, retângulo e triângulo), por meio de características comuns, em desenhos apresentados em diferentes disposições ou em sólidos geométricos."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "Reconhecer um triângulo em posição usual (com a “ponta” para cima e a base na horizontal), dado o nome dessa figura geométrica."
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "Identificar um retângulo, entre um conjunto de figuras geométricas planas desenhadas na malha quadriculada. Reconhecer a figura geométrica plana (retângulo) que mais se parece com o formato da porta de um elevador, em uma composição com outras figuras. Nomear uma figura geométrica plana (triângulo) em posição não usual (“com a ponta para baixo”), em uma composição com outras figuras geométricas no desenho de um palhaço."
+          },
+          {
+            "level": 447,
+            "content": "Nomear uma figura geométrica plana (triângulo) a partir de um suporte gráfico que representa um objeto do mundo físico. Reconhecer um círculo em uma composição com outras figuras geométricas planas."
+          },
+          {
+            "level": 404,
+            "content": "Nomear uma figura geométrica plana (quadrado) a partir de um suporte gráfico que representa um objeto do mundo físico. Identificar um triângulo, entre um conjunto de figuras geométricas planas desenhadas na malha quadriculada. Nomear uma figura geométrica plana (círculo) a partir de um suporte gráfico que representa um objeto do mundo físico."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "---"
+          },
+          {
+            "level": 530,
+            "content": "---"
+          },
+          {
+            "level": 522,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D19": {
+      "topic": "",
+      "description": "Descrever OU esboçar o deslocamento de pessoas e/ou objetos em representações bidimensionais (mapas, croquis etc.) ou plantas de ambientes, de acordo com condições dadas.",
+      "prerequisites": [
+        "Reconhecer e usar vocabulário espacial simples: frente, atrás, ao lado, perto, longe.",
+        "Identificar posições de objetos no espaço imediato.",
+        "Compreender relações como dentro/fora, acima/abaixo.",
+        "Reconhecer caminhos e trajetos cotidianos.",
+        "Identificar pontos de referência observados no percurso.",
+        "Relacionar objetos reais com suas representações gráficas.",
+        "Diferenciar lado direito e lado esquerdo no próprio corpo.",
+        "Aplicar lateralidade para localizar objetos no espaço próximo.",
+        "Organizar eventos ou ações em sequência lógica.",
+        "Seguir passos simples na ordem correta.",
+        "Reconhecer símbolos gráficos básicos (setas, ícones, marcações).",
+        "Desenhar trajetos curtos e direções em uma folha.",
+        "Conhecer termos como caminho, direção, trajeto, percurso.",
+        "Expressar com clareza um movimento realizado ou observado."
+      ],
+      "bncc": {
+        "practices": "Resolver problemas e argumentar",
+        "knowledge": "Geometria",
+        "skills": [
+          "EF02MA12",
+          "(EF02MA12) Identificar e registrar, em linguagem verbal ou não verbal, a localização e os deslocamentos de pessoas e de objetos no espaço, considerando mais de um ponto de referência, e indicar as mudanças de direção e de sentido."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "---"
+          },
+          {
+            "level": 447,
+            "content": "---"
+          },
+          {
+            "level": 404,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "Identificar a localização de uma pessoa a partir da descrição de seu deslocamento."
+          },
+          {
+            "level": 530,
+            "content": "---"
+          },
+          {
+            "level": 522,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "Identificar a imagem que representa o deslocamento de uma pessoa, descrito textualmente."
+          },
+          {
+            "level": 635,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D20": {
+      "topic": "",
+      "description": "Comparar comprimentos, capacidades ou massas OU ordenar imagens de objetos com base na comparação visual de seus comprimentos, capacidades ou massas.",
+      "prerequisites": [
+        "Percepção visual de diferenças simples entre objetos (maior/ menor, mais comprido/mais curto, mais cheio/menos cheio, mais pesado/mais leve).",
+        "Reconhecimento de atributos físicos dos objetos (forma, tamanho, volume aparentes).",
+        "Noções básicas de comparação usando termos cotidianos como “maior”, “menor”, “igual”, “pesado”, “leve”, “comprido”, “curto”.",
+        "Capacidade de observar detalhes e características relevantes dos objetos para realizar comparações.",
+        "Habilidade de classificação simples, como agrupar objetos semelhantes ou organizar pequenas sequências visuais.",
+        "Manipulação de objetos reais, permitindo que a criança experimente pesar com as mãos, comparar comprimentos aproximados e observar níveis de capacidade."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Grandezas e Medidas",
+        "skills": [
+          "EF02MA16, EF02MA17",
+          "(EF02MA16) Estimar, medir e comparar comprimentos de lados de salas (incluindo contorno) e de polígonos, utilizando unidades de medida não padronizadas e padronizadas (metro, centímetro e milímetro) e instrumentos adequados."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "Identificar o objeto mais comprido em uma coleção de objetos do mesmo tipo, desenhados na malha quadriculada, e dispostos em diferentes orientações. Comparar, de maneira indireta, comprimentos ou alturas em que seja imediato identificar o maior comprimento ou alturas iguais."
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "Identificar, entre diferentes contextos, aquele cuja representação numérica indica uma quantidade."
+          },
+          {
+            "level": 447,
+            "content": "---"
+          },
+          {
+            "level": 404,
+            "content": "Comparar o comprimento de imagens de cordas para identificar a mais curta, apenas por visualização, sem nenhuma unidade de medida envolvida."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "---"
+          },
+          {
+            "level": 530,
+            "content": "---"
+          },
+          {
+            "level": 522,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D21": {
+      "topic": "",
+      "description": "Estimar/inferir medida de comprimento, capacidade ou massa de objetos, utilizando unidades de medida convencionais ou não OU medir comprimento, capacidade ou massa de objetos.",
+      "prerequisites": [
+        "Compreender que diferentes características dos objetos podem ser medidas.",
+        "Comparar comprimentos usando a própria percepção.",
+        "Comparar massas por manipulação.",
+        "Comparar capacidades visualmente ou por enchimento (cabe mais/cabe menos).",
+        "Medir objetos usando unidades informais como palmos, passos, lápis, tampinhas, copos etc.",
+        "Reconhecer a importância de usar a mesma unidade de medida ao comparar objetos.",
+        "Entender que a quantidade não muda com a forma do recipiente.",
+        "Reconhecer instrumentos como régua, fita métrica, copo medidor e balança.",
+        "Conhecer unidades básicas como centímetro (cm), metro (m), litro (l), mililitro (ml) e grama (g).",
+        "Manusear a régua corretamente.",
+        "Encher/transferir líquidos com cuidado para medir capacidade.",
+        "Fazer tentativas iniciais de estimar medidas antes da medição real.",
+        "Comparar a estimativa com a medida e perceber diferenças."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Grandezas e Medidas",
+        "skills": [
+          "EF02MA16, EF02MA17",
+          "(EF02MA16) Estimar, medir e comparar comprimentos de lados de salas (incluindo contorno) e de polígonos, utilizando unidades de medida não padronizadas e padronizadas (metro, centímetro e milímetro) e instrumentos adequados."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "---"
+          },
+          {
+            "level": 447,
+            "content": "---"
+          },
+          {
+            "level": 404,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "---"
+          },
+          {
+            "level": 530,
+            "content": "Estimar a quantidade de objetos iguais equivale ao comprimento (largura) de um outro objeto, apresentados no mesmo suporte."
+          },
+          {
+            "level": 522,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "Estimar a medida do comprimento (largura) de um objeto a partir da indicação da medida de um outro objeto, representados no mesmo suporte gráfico. Inferir, com base na imagem de um bolo em cima de uma balança, a medida de massa, em grama e/ou quilograma."
+          },
+          {
+            "level": 635,
+            "content": "Estimar a medida de comprimento de um objeto usando unidades não padronizadas."
+          }
+        ]
+      }
+    },
+    "D22": {
+      "topic": "",
+      "description": "Identificar a medida do comprimento, da capacidade ou da massa de objetos, dada a imagem de um instrumento de medida.",
+      "prerequisites": [
+        "Identificar visualmente régua, fita métrica, copo medidor/ recipientes graduados, balança simples.",
+        "Compreender para que serve cada instrumento.",
+        "Diferenciar comprimento, capacidade e massa em situações do cotidiano.",
+        "Associar cada grandeza ao instrumento adequado.",
+        "Conhecer unidades de medida mais usuais.",
+        "Perceber que unidades menores medem objetos menores e unidades maiores medem objetos maiores.",
+        "Entender que as marcações representam quantidades crescentes.",
+        "Reconhecer marcações inteiras mais evidentes como: 0, 5, 10 na régua; 100 ml, 200 ml no copo medidor; 1 kg na balança.",
+        "Ser capaz de comparar objetos usando “maior/menor”, “mais pesado/menos pesado”, “mais comprido/menos comprido”, mesmo sem números.",
+        "Comparar medidas numéricas simples quando apresentadas."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Grandezas e Medidas",
+        "skills": [
+          "EF02MA16, EF02MA17",
+          "(EF02MA16) Estimar, medir e comparar comprimentos de lados de salas (incluindo contorno) e de polígonos, utilizando unidades de medida não padronizadas e padronizadas (metro, centímetro e milímetro) e instrumentos adequados."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "Identificar uma medida de comprimento, dado o instrumento de medida e o objeto medido. Identificar uma medida de massa, dado o instrumento de medida e o objeto medido."
+          },
+          {
+            "level": 0,
+            "content": "Identificar uma medida de capacidade, dado o instrumento de medida e o objeto medido."
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "Identificar a medida do comprimento de um objeto posicionado acima da imagem de uma régua com graduação principal de 1 em 1 centímetro e secundária de 1 em 1 milímetro, em que uma das extremidades do objeto está posicionada sobre o zero e a outra, sobre uma das graduações principais da régua."
+          },
+          {
+            "level": 447,
+            "content": "---"
+          },
+          {
+            "level": 404,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "---"
+          },
+          {
+            "level": 530,
+            "content": "---"
+          },
+          {
+            "level": 522,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D23": {
+      "topic": "",
+      "description": "Reconhecer unidades de medida e/ou instrumentos utilizados para medir comprimento, tempo, massa ou capacidade.",
+      "prerequisites": [
+        "Comparar objetos quanto ao tamanho (maior/menor, mais comprido/mais curto).",
+        "Comparar recipientes quanto à capacidade (cabe mais/ cabe menos).",
+        "Comparar pesos de objetos de forma intuitiva (mais leve/ mais pesado).",
+        "Comparar durações simples (demora mais/demora menos).",
+        "Manipular réguas, fitas métricas, copos medidores, balanças simples, relógios analógicos e digitais.",
+        "Observar e explorar instrumentos de medida usados em situações reais.",
+        "Utilizar unidades não convencionais para medir.",
+        "Compreender que medidas precisam de um padrão para serem comparadas.",
+        "Entender que medimos para resolver problemas reais (saber o tamanho de algo, o tempo que leva, quanto pesa, quanto cabe).",
+        "Reconhecer instrumentos presentes no cotidiano (relógio, régua, garrafa medidora, balança)."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Grandezas e Medidas",
+        "skills": [
+          "EF02MA16, EF02MA17",
+          "(EF02MA16) Estimar, medir e comparar comprimentos de lados de salas (incluindo contorno) e de polígonos, utilizando unidades de medida não padronizadas e padronizadas (metro, centímetro e milímetro) e instrumentos adequados."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "Reconhecer a unidade de medida de capacidade de um balde."
+          },
+          {
+            "level": 447,
+            "content": "Reconhecer instrumento para medida de massa (balança digital)."
+          },
+          {
+            "level": 404,
+            "content": "Identificar, em uma coleção de instrumentos de medida diferentes, aquele utilizado para medir quantidade de líquido (capacidade). Identificar, em uma coleção de instrumentos de medida diferentes, aquele utilizado para medir comprimento. Reconhecer instrumento utilizado para medir o tempo (relógio de ponteiro)."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "---"
+          },
+          {
+            "level": 530,
+            "content": "---"
+          },
+          {
+            "level": 522,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "Identificar, em uma coleção de instrumentos de medida, aquele utilizado para medir capacidade."
+          }
+        ]
+      }
+    },
+    "D24": {
+      "topic": "",
+      "description": "Identificar sequência de acontecimentos relativos a um dia.",
+      "prerequisites": [
+        "Noções de antes, depois, agora, mais tarde.",
+        "Identificar sequência em situações simples do cotidiano.",
+        "Perceber mudanças que ocorrem ao longo do dia (manhã, tarde, noite).",
+        "Uso de palavras como: primeiro, depois, em seguida, por fim.",
+        "Reconhecimento de expressões que indicam ordem e tempo.",
+        "Reconhecer atividades diárias familiares como acordar, tomar café, ir para a escola etc.",
+        "Relacionar eventos a períodos do dia.",
+        "Manter sequência lógica em relatos curtos.",
+        "Observar imagens, cenas ou histórias e perceber a ordem dos fatos.",
+        "Identificar mudanças entre cenas consecutivas.",
+        "Relacionar início, meio e fim.",
+        "Capacidade de ordenar figuras, frases ou ações de forma coerente.",
+        "Agrupar ações semelhantes em uma sequência.",
+        "Relatar fatos cotidianos de forma simples e com alguma ordem.",
+        "Comunicar o que fez em determinado período do dia."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Grandezas e Medidas",
+        "skills": [
+          "EF01MA16",
+          "(EF01MA16) Relatar em linguagem verbal ou não verbal sequência de acontecimentos relativos a um dia, utilizando, quando possível, os horários dos eventos."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "Identificar a sequência que apresenta a ordem correta dos acontecimentos relativos a uma tarefa cotidiana. Identificar, em três imagens, a sequência de acontecimento (treino de futebol) descrita em palavras. Identificar, em quatro imagens, a sequência de acontecimento (preparo de cupcakes) descrita em palavras."
+          },
+          {
+            "level": 447,
+            "content": "Identificar a sequência que apresenta a ordem correta dos acontecimentos relativos a uma situação cotidiana."
+          },
+          {
+            "level": 404,
+            "content": "Identificar a sequência que apresenta a ordem correta de acontecimentos relativos a um contexto."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "---"
+          },
+          {
+            "level": 530,
+            "content": "---"
+          },
+          {
+            "level": 522,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D25": {
+      "topic": "",
+      "description": "Identificar datas, dias da semana ou meses do ano em calendário OU escrever uma data, apresentando o dia, o mês e o ano.",
+      "prerequisites": [
+        "Conhecer os dias da semana em sua ordem correta.",
+        "Ter familiaridade com os meses do ano, reconhecendo seus nomes e a sequência em que aparecem.",
+        "Reconhecer a função de um calendário como instrumento de organização do tempo.",
+        "Identificar a estrutura de uma data (dia – mês – ano) em diferentes formatos comuns, como 15/03/2025 ou 15 de março de 2025.",
+        "Compreender a noção de passagem do tempo, utilizando termos como ontem, hoje, amanhã; semana; mês etc.",
+        "Saber localizar informações em quadros ou tabelas simples, facilitando a leitura do calendário.",
+        "Conhecer abreviações comuns (seg., ter., jan., fev., etc.).",
+        "Entender que diferentes meses possuem quantidades diferentes de dias.",
+        "Ser capaz de registrar informações por escrito usando números e palavras simples."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Grandezas e Medidas",
+        "skills": [
+          "EF01MA18",
+          "(EF01MA18) Produzir a escrita de uma data, apresentando o dia, o mês e o ano, e indicar o dia da semana de uma data, consultando calendários."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "---"
+          },
+          {
+            "level": 447,
+            "content": "Identificar, na imagem de um calendário, o dia da semana em que se comemora uma data indicada."
+          },
+          {
+            "level": 404,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "---"
+          },
+          {
+            "level": 530,
+            "content": "Identificar a primeria quarta-feira do mês em um calendário. Identificar o dia da semana em que começou um mês, em um calendário. Identificar, em um calendário de determinado mês, o dia da semana em que esse mês se inicia."
+          },
+          {
+            "level": 522,
+            "content": "Identificar a última terça-feira do mês em um calendário."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D26": {
+      "topic": "",
+      "description": "Relacionar valores de moedas e/ou cédulas do sistema monetário brasileiro, com base nas imagens desses objetos.",
+      "prerequisites": [
+        "Reconhecimento e escrita dos números naturais.",
+        "Noção de ordem, comparação e equivalência entre números.",
+        "Atenção a detalhes nas imagens como animais das cédulas, elementos gráficos, números, tamanho, cor etc.",
+        "Noção inicial de uso do dinheiro no cotidiano: compras, trocas, preços.",
+        "Compreensão de que diferentes valores podem ser representados por diferentes moedas e cédulas.",
+        "Reconhecimento das principais moedas brasileiras (1, 5, 10, 25, 50 centavos e 1 real).",
+        "Reconhecimento das principais cédulas (2, 5, 10, 20, 50, 100 reais).",
+        "Entendimento de que cada peça tem um valor representado numericamente.",
+        "Noção inicial de que é possível formar um valor usando combinações de moedas ou cédulas.",
+        "Capacidade de relacionar símbolos numéricos à quantidade que representam.",
+        "Capacidade de interpretar imagens simples e relacioná-las a informações numéricas."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Grandezas e Medidas",
+        "skills": [
+          "EF01MA19, EF02MA20",
+          "(EF02MA20) Estabelecer a equivalência de valores entre moedas e cédulas do sistema monetário brasileiro para resolver situações cotidianas."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "Relacionar o valor de uma cédula (20 reais) a um conjunto de três cédulas de valor equivalente."
+          },
+          {
+            "level": 447,
+            "content": "Relacionar um valor monetário menor que 10 a um conjunto de cédulas e/ou moedas equivalente, sendo a quantia escrita em algarismos e “reais” escrito por extenso."
+          },
+          {
+            "level": 404,
+            "content": "Identificar, a partir das imagens de cédulas e /ou moedas, organizadas em diferentes conjuntos de cédulas e moedas, qual é o conjunto em que há um valor específico descrito por extenso (em reais)."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "Relacionar um conjunto de moedas (valores de 25 centavos, 50 centavos ou 1 real) a uma única cédula de valor equivalente, envolvendo conversão de centavo em real."
+          },
+          {
+            "level": 530,
+            "content": "---"
+          },
+          {
+            "level": 522,
+            "content": "Relacionar um conjunto de moedas (de valores de 5 ou 10 centavos) a uma única moeda de valor equivalente, sem envolver conversão de centavo em real."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D27": {
+      "topic": "",
+      "description": "Determinar a data de início, a data de término ou a duração de um acontecimento entre duas datas.",
+      "prerequisites": [
+        "Reconhecer e nomear os dias da semana.",
+        "Identificar e nomear os meses do ano em ordem correta.",
+        "Compreender a função de um calendário, sabendo para que serve e como é organizado.",
+        "Ler e localizar informações no calendário, como dia, mês e número da semana.",
+        "Reconhecer a sequência temporal: ontem, hoje, amanhã; antes e depois.",
+        "Compreender a ideia de duração de eventos, mesmo que em unidades pequenas: quantos dias faltam, quantos dias passaram etc.",
+        "Comparar datas simples, sabendo dizer qual vem antes e qual vem depois.",
+        "Perceber que os meses têm quantidades diferentes de dias.",
+        "Relacionar acontecimentos a datas como aniversários, feriados, eventos da escola etc.",
+        "Compreender que uma mesma data se repete todos os anos, desenvolvendo noção de ciclo anual."
+      ],
+      "bncc": {
+        "practices": "Resolver problemas e argumentar",
+        "knowledge": "Grandezas e Medidas",
+        "skills": [
+          "EF02MA18",
+          "(EF02MA18) Indicar a duração de intervalos de tempo entre duas datas, como dias da semana e meses do ano, utilizando calendário, para planejamentos e organização de agenda."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "---"
+          },
+          {
+            "level": 447,
+            "content": "---"
+          },
+          {
+            "level": 404,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "---"
+          },
+          {
+            "level": 530,
+            "content": "Identificar o dia da semana a partir de um contexto do cotidiano, com base na noção de espaço e de tempo. Determinar o dia do mês em que uma pessoa retornará de uma viagem, dados o dia de ida, o dia da semana em que retornará e o calendário do mês. Determinar o mês em que termina um acontecimento, com base nas informações de seu início e de sua duração em meses completos, sem auxílio de um calendário."
+          },
+          {
+            "level": 522,
+            "content": "Identificar, na imagem de um calendário mensal, o dia da semana em que se comemora uma data indicada (aniversário)."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "Determinar a data de início de um acontecimento, dadas as informações sobre a data de término e a duração desse acontecimento, com suporte do calendário. Determinar a data de término de um acontecimento, dadas as informações sobre a data de início e a duração desse acontecimento, com suporte do calendário."
+          },
+          {
+            "level": 635,
+            "content": "Determinar a duração de um evento (em dias) dadas as informações sobre a data de início e de término, com suporte do calendário."
+          }
+        ]
+      }
+    },
+    "D28": {
+      "topic": "",
+      "description": "Determinar o horário de início, o horário de término ou a duração de um acontecimento.",
+      "prerequisites": [
+        "Compreender a sequência temporal: antes, durante e depois.",
+        "Reconhecer eventos do cotidiano organizados em ordem cronológica.",
+        "Diferenciar dia, hora, minuto e segundo, mesmo que de forma inicial.",
+        "Entender que 1 hora = 60 minutos.",
+        "Identificar e nomear ponteiros do relógio analógico (horas e minutos).",
+        "Ler horários em ponto (inteiros) como 7h, 8h, 10h etc.",
+        "Reconhecer a leitura de horários em relógio digital.",
+        "Relacionar horários com atividades cotidianas como hora do recreio, chegada na escola etc.",
+        "Entender períodos do dia: manhã, tarde e noite.",
+        "Realizar adições e subtrações simples com números naturais.",
+        "Comparar durações de eventos, classificando em mais longo e mais curto.",
+        "Identificar o tempo decorrido entre dois eventos curtos do cotidiano."
+      ],
+      "bncc": {
+        "practices": "Resolver problemas e argumentar",
+        "knowledge": "Grandezas e Medidas",
+        "skills": [
+          "EF02MA19",
+          "(EF02MA19) Medir a duração de um intervalo de tempo por meio de relógio digital e registrar o horário do início e do fim do intervalo."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "---"
+          },
+          {
+            "level": 447,
+            "content": "---"
+          },
+          {
+            "level": 404,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "Determinar o horário de término de um acontecimento, dadas as informações sobre o horário de início (horas e minutos) e o tempo de duração desse acontecimento (minutos). Determinar o horário de início de um evento, dados a duração e o horário de término, em horas inteiras (cheias). Determinar o tempo de duração de um evento, dados o horário de início e de término, em horas inteiras (cheias)."
+          },
+          {
+            "level": 530,
+            "content": "Determinar o horário de término de um acontecimento, dadas as informações sobre o horário de início (horas) e o tempo de duração desse acontecimento (horas)."
+          },
+          {
+            "level": 522,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D29": {
+      "topic": "",
+      "description": "Resolver problemas que envolvam moedas e/ou cédulas do sistema monetário brasileiro.",
+      "prerequisites": [
+        "Reconhecer números naturais.",
+        "Comparar quantidades: maior, menor e igual.",
+        "Relacionar números a quantidades concretas.",
+        "Resolver adições e subtrações simples, com e sem apoio de material concreto.",
+        "Utilizar estratégias de cálculo mental básico.",
+        "Entender situações de juntar, acrescentar, tirar e comparar.",
+        "Compreender que diferentes combinações de moedas podem representar o mesmo valor.",
+        "Entender que uma moeda de 1 real vale mais que uma moeda maior de 50 centavos.",
+        "Identificar e nomear moedas e cédulas.",
+        "Diferenciar cores, tamanhos e símbolos das moedas e cédulas.",
+        "Compreender termos como “troco”, “preço”, “custo”, “valor”, “pagar” e “receber”.",
+        "Relacionar mercadorias e seus respectivos preços.",
+        "Fazer escolhas como em “o que posso comprar com 5 reais?”.",
+        "Entender que há limites de valor e que nem sempre é possível comprar tudo."
+      ],
+      "bncc": {
+        "practices": "Resolver problemas e argumentar",
+        "knowledge": "Grandezas e Medidas",
+        "skills": [
+          "EF01MA19, EF02MA20",
+          "(EF02MA20) Estabelecer a equivalência de valores entre moedas e cédulas do sistema monetário brasileiro para resolver situações cotidianas."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "---"
+          },
+          {
+            "level": 447,
+            "content": "Identificar, a partir da imagem de duas cédulas, ambas compostas por números dois algarismos, o valor total correspondente, escrito por extenso (em reais)."
+          },
+          {
+            "level": 404,
+            "content": "Identificar, a partir da imagem de duas cédulas, sendo a primeira composta por um número de um algarismo e a segunda cédula por um número de dois algarismos, o valor total correspondente, escrito por extenso (em reais)."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "---"
+          },
+          {
+            "level": 530,
+            "content": "Resolver problema que envolve cédulas (2 cédulas de 10 reais), em uma subtração com significado de retirar (valor de 13 reais), com troco em cédulas de valores de 2 e 5 reais."
+          },
+          {
+            "level": 522,
+            "content": "Identificar, a partir da imagem de duas cédulas, sendo a primeira e a segunda compostas por um número de dois algarismos e a terceira cédula, por um número de três algarismos, o valor total correspondente, escrito por extenso (em reais)."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D30": {
+      "topic": "",
+      "description": "Classificar resultados de eventos cotidianos aleatórios como “pouco prováveis”, “muito prováveis”, “certos” ou “impossíveis”.",
+      "prerequisites": [
+        "Entender o significado de expressões como pode acontecer, não pode acontecer, acontece sempre, acontece às vezes.",
+        "Conseguir comparar objetos, quantidades ou situações usando ideias de “mais” e “menos”.",
+        "Ter vivenciado exemplos simples de eventos incertos como jogar um dado ou uma moeda; sortear objetos de uma sacola; prever condições do tempo etc.",
+        "Reconhecer que alguns acontecimentos dependem da ‘sorte’ e outros não.",
+        "Reconhecer que um mesmo experimento pode ter resultados diferentes.",
+        "Diferenciar eventos que sempre acontecem (certos) daqueles que nunca acontecem (impossíveis).",
+        "Entender que alguns resultados são mais fáceis de acontecer que outros.",
+        "Conseguir organizar e comparar pequenas quantidades como contar quantas vezes um resultado aparece."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Probabilidade e Estatística",
+        "skills": [
+          "EF01MA20, EF02MA21",
+          "(EF02MA21) Classificar resultados de eventos cotidianos aleatórios como “pouco prováveis”, “muito prováveis”, “improváveis” e “impossíveis”."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "Classificar o resultado de um evento como certo à retirada de um objeto de uma cesta que contém várias unidades do mesmo objeto."
+          },
+          {
+            "level": 447,
+            "content": "---"
+          },
+          {
+            "level": 404,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "Identificar a classificação de um evento aleatório, apresentado por meio de um suporte gráfico, como “pouco provável”."
+          },
+          {
+            "level": 530,
+            "content": "Identificar a classificação de um evento aleatório, apresentado por meio de um suporte gráfico, como “muito provável”. Identificar a classificação de um evento aleatório, apresentado por meio de um suporte gráfico, como “impossível”."
+          },
+          {
+            "level": 522,
+            "content": "Determinar a roleta em que há menor chance de o ponteiro parar em um setor circular indicado quando for acionada."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "Determinar o setor em que há mais chance de o ponteiro de uma roleta parar quando for acionada, sendo a roleta dividida em quatro setores circulares com diferentes áreas."
+          },
+          {
+            "level": 635,
+            "content": "Classificar a chance (muito provável) de a seta parar em uma das seis imagens do setor circular (quatro imagens se repetem) quando for acionada."
+          }
+        ]
+      }
+    },
+    "D31": {
+      "topic": "",
+      "description": "Ler/identificar OU comparar dados estatísticos ou informações expressos em tabelas (simples ou de dupla entrada).",
+      "prerequisites": [
+        "Reconhecer títulos, legendas e cabeçalhos.",
+        "Identificar palavras-chave e informações explícitas em frases curtas.",
+        "Classificar objetos ou imagens por características simples (cor, forma, tamanho, categoria).",
+        "Agrupar elementos de acordo com critérios definidos.",
+        "Contar elementos de cada grupo após a classificação.",
+        "Correspondência termo a termo.",
+        "Comparação de quantidades: maior, menor e igual.",
+        "Noções de ordem: primeiro, segundo, terceiro etc.",
+        "Ler e interpretar listas simples como lista de presença ou de itens.",
+        "Entender que tabelas são formas de organizar informações.",
+        "Diferenciar linha e coluna.",
+        "Localizar informação cruzando linha e coluna.",
+        "Capacidade de responder perguntas simples sobre “quantos?” e “qual tem mais/menos?”."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Probabilidade e Estatística",
+        "skills": [
+          "EF01MA21, EF02MA22, EF02MA23",
+          "(EF02MA22) Comparar informações de pesquisas apresentadas por meio de tabelas de dupla entrada e em gráficos de colunas simples ou barras, para melhor compreender aspectos da realidade próxima."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "---"
+          },
+          {
+            "level": 447,
+            "content": "Identificar uma informação em uma tabela simples. Identificar uma informação em uma tabela simples. Identificar a categoria que apresenta uma frequência específica em um gráfico de colunas simples."
+          },
+          {
+            "level": 404,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "---"
+          },
+          {
+            "level": 530,
+            "content": "Identificar um dado estatístico em uma tabela de dupla entrada."
+          },
+          {
+            "level": 522,
+            "content": "Identificar um dado estatístico em uma tabela de dupla entrada."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D32": {
+      "topic": "",
+      "description": "Ler/identificar OU comparar dados estatísticos expressos em gráficos (barras simples, colunas simples ou pictóricos).",
+      "prerequisites": [
+        "Contar objetos com precisão.",
+        "Comparar quantidades usando termos como mais, menos e igual.",
+        "Organizar objetos em pequenos conjuntos.",
+        "Identificar e ler números naturais.",
+        "Relacionar símbolos numéricos a quantidades reais.",
+        "Entender que gráficos representam informações de forma organizada.",
+        "Agrupar objetos por características como cor, forma, tamanho etc.",
+        "Identificar que conjuntos diferentes representam categorias distintas.",
+        "Identificar e comparar medidas: alto e baixo, comprido e curto, mais alto e mais baixo.",
+        "Interpretar a altura ou extensão de barras/colunas em um gráfico.",
+        "Compreender que gráficos têm partes, como categorias e valores.",
+        "Relacionar cada barra/coluna a seu respectivo rótulo.",
+        "Compreender perguntas do tipo: “Qual tem mais?”, “Qual tem menos?”, “Quantos a mais?”."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Probabilidade e Estatística",
+        "skills": [
+          "EF01MA21, EF02MA22",
+          "(EF02MA22) Comparar informações de pesquisas apresentadas por meio de tabelas de dupla entrada e em gráficos de colunas simples ou barras, para melhor compreender aspectos da realidade próxima."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "Identificar a categoria que apresenta a maior frequência em um gráfico de colunas simples. Identificar a categoria que apresenta uma frequência específica em uma tabela simples que envolve números de uma ordem. Identificar a categoria que apresenta a maior frequência em uma tabela simples que envolve números de uma ou duas ordens (menores que 20)."
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "Identificar dados estatísticos em um gráfico de colunas, cujo eixo vertical está graduado de dez em dez. Identificar a frequência de uma das categorias representadas em um gráfico de colunas simples."
+          },
+          {
+            "level": 447,
+            "content": "Identificar dados estatísticos em um gráfico de colunas, cujo eixo vertical está graduado de dez em dez."
+          },
+          {
+            "level": 404,
+            "content": "Identificar dados estatísticos em um gráfico de barras, cujo eixo horizontal está graduado de dois em dois. Identificar a categoria que apresenta a menor frequência em um gráfico de colunas simples. Identificar a categoria que apresenta uma frequência específica em um gráfico de colunas simples. Identificar a categoria que apresenta a maior frequência em uma tabela simples que envolve números de duas ordens. Identificar a categoria que apresenta a menor frequência em uma tabela simples que envolve números de duas ordens."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "---"
+          },
+          {
+            "level": 530,
+            "content": "Identificar dados estatísticos em um gráfico de colunas, cujo eixo vertical está graduado de dez em dez. Identificar a categoria que apresenta uma frequência exata (específica) em um gráfico de colunas simples."
+          },
+          {
+            "level": 522,
+            "content": "Identificar dados estatísticos em um gráfico de colunas, cujo eixo vertical está graduado de dois em dois."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D33": {
+      "topic": "",
+      "description": "Representar os dados de uma pesquisa estatística ou de um levantamento em listas, tabelas (simples ou de dupla entrada) ou gráficos (barras simples, colunas simples ou pictóricos).",
+      "prerequisites": [
+        "Agrupar objetos ou informações com base em características comuns.",
+        "Perceber que um mesmo conjunto pode ser organizado de diferentes maneiras.",
+        "Registrar informações com símbolos, palavras ou desenhos.",
+        "Organizar dados simples em listas.",
+        "Interpretar listas e tabelas simples produzidas coletivamente.",
+        "Reconhecer que gráficos representam informações de uma pesquisa ou levantamento.",
+        "Coletar informações por meio de observação, votação ou contagem.",
+        "Registrar dados coletados de forma simples, marcando, anotando ou desenhando.",
+        "Entender que barras maiores/mais altas representam quantidades maiores.",
+        "Participar de discussões sobre organização e apresentação dos dados coletados.",
+        "Manipular objetos concretos (tampinhas, palitos, fichas) para representar dados.",
+        "Utilizar quadros, cartazes ou cadernos para registrar e organizar informações."
+      ],
+      "bncc": {
+        "practices": "Resolver problemas e argumentar",
+        "knowledge": "Probabilidade e Estatística",
+        "skills": [
+          "EF01MA22, EF03MA28",
+          "(EF03MA28) Realizar pesquisa envolvendo variáveis categóricas em um universo de até 50 elementos, organizar os dados coletados utilizando listas, tabelas simples ou de dupla entrada e representá-los em gráficos de colunas simples, com e sem uso de tecnologias digitais."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 355,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 485,
+            "content": "Identificar a tabela simples que representa os dados de uma pesquisa estatística descrita em um texto."
+          },
+          {
+            "level": 447,
+            "content": "Identificar o gráfico pictórico que representa os dados de uma pesquisa estatística descrita em um texto."
+          },
+          {
+            "level": 404,
+            "content": "Identificar a tabela simples que representa os dados de uma pesquisa estatística descrita em um texto."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 596,
+            "content": "---"
+          },
+          {
+            "level": 530,
+            "content": "---"
+          },
+          {
+            "level": 522,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 681,
+            "content": "---"
+          },
+          {
+            "level": 635,
+            "content": "---"
+          }
+        ]
+      }
+    }
+  },
+  "5ef": {
+    "scaleRange": {
+      "min": 0,
+      "max": 500
+    },
+    "cortes": {
+      "padrao-1": 175,
+      "padrao-2": 225,
+      "padrao-3": 275
+    },
+    "D01": {
+      "topic": "",
+      "description": "Identificar a localização/movimentação de objeto em mapas, croquis e outras representações gráficas.",
+      "prerequisites": [
+        "Compreensão de espaço e lugar;",
+        "Noção de orientação espacial;",
+        "Noção de posição relativa;",
+        "Entendimento de símbolos e legendas;",
+        "Reconhecimento de pontos de referência",
+        "Ler e interpretar representações gráficas simples;",
+        "Usar coordenadas e eixos de referência;",
+        "Comparar diferentes tipos de representações;",
+        "Relacionar o espaço representado ao espaço real;",
+        "Seguir trajetos e indicar percursos."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Geometria",
+        "skills": [
+          "EF01MA11, EF01MA12, EF02MA12, EF02MA13, EF03MA12, EF04MA16, EF05MA14, EF05MA15.",
+          "(EF05MA14) Utilizar e compreender diferentes representações para a localização de objetos no plano, como mapas, células em planilhas eletrônicas e coordenadas geográficas, a fim de desenvolver as primeiras noções de coordenadas cartesianas."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "Identificar a localização de um objeto situado entre outros dois."
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "---"
+          },
+          {
+            "level": 175,
+            "content": "Localizar um ponto ou objeto em uma malha quadriculada ou croqui, a partir de duas coordenadas ou referências, ou vice-versa."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "---"
+          },
+          {
+            "level": 225,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "Interpretar a movimentação de um objeto utilizando referencial diferente do seu."
+          },
+          {
+            "level": 300,
+            "content": "Reconhecer uma linha paralela a outra dada como referência em um mapa."
+          },
+          {
+            "level": 275,
+            "content": "Localizar um ponto entre outros dois fixados, apresentados em uma figura composta por vários outros pontos."
+          }
+        ]
+      }
+    },
+    "D02": {
+      "topic": "",
+      "description": "Identificar propriedades comuns e diferenças entre poliedros e corpos redondos, relacionando figuras tridimensionais com suas planificações.",
+      "prerequisites": [
+        "Compreensão de figuras planas;",
+        "Noção de formas espaciais;",
+        "Relação entre figuras planas e espaciais;",
+        "Visualização espacial;",
+        "Reconhecimento de características geométricas."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Geometria",
+        "skills": [
+          "EF03MA14, EF04MA17, EF05MA16.",
+          "(EF05MA16) Associar figuras espaciais a suas planificações (prismas, pirâmides, cilindros e cones) e analisar, nomear e comparar seus atributos."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "Reconhecer a planificação de uma pirâmide entre um conjunto de planificações."
+          },
+          {
+            "level": 175,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "---"
+          },
+          {
+            "level": 225,
+            "content": "Reconhecer a planificação de um cubo entre um conjunto de planificações apresentadas."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "Reconhecer a planificação de uma caixa cilíndrica."
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "Reconhecer um cubo a partir de uma de suas planificações desenhadas em uma malha quadriculada."
+          }
+        ]
+      }
+    },
+    "D03": {
+      "topic": "",
+      "description": "Identificar propriedades comuns e diferenças entre figuras bidimensionais pelo número de lados, pelos tipos de ângulos.",
+      "prerequisites": [
+        "Reconhecimento de formas geométricas básicas.",
+        "Compreensão do que é uma figura bidimensional.",
+        "Noção de lado e vértice.",
+        "Identificação de linhas retas e curvas;",
+        "Noção de ângulo.",
+        "Contar lados e vértices.",
+        "Observar e comparar figuras.",
+        "Utilizar instrumentos geométricos simples.",
+        "Classificar figuras."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Geometria",
+        "skills": [
+          "EF02MA15, EF03MA15, EF05MA17",
+          "(EF05MA17) Reconhecer, nomear e comparar polígonos, considerando lados, vértices e ângulos, e desenhá-los, utilizando material de desenho ou tecnologias digitais."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "Reconhecer o formato do círculo em um objeto do cotidiano."
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "---"
+          },
+          {
+            "level": 175,
+            "content": "Associar figuras geométricas elementares a seus respectivos nomes. Reconhecer, entre um conjunto de polígonos, aquele que possui o maior número de ângulos."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "Reconhecer polígonos presentes em um mosaico composto por diversas formas geométricas."
+          },
+          {
+            "level": 225,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "---"
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D04": {
+      "topic": "",
+      "description": "Identificar quadriláteros observando as posições relativas entre seus lados (paralelos, concorrentes, perpendiculares).",
+      "prerequisites": [
+        "Reconhecer ponto, linha, segmento de reta e semirreta.",
+        "Compreender o que é uma reta paralela e uma reta perpendicular.",
+        "Entender o conceito de interseção entre retas (retas concorrentes).",
+        "Identificar e nomear polígonos.",
+        "Distinguir número de lados e vértices de diferentes figuras.",
+        "Reconhecer ângulos retos e ângulos não retos em figuras planas.",
+        "Comparar tamanhos e formas de lados e ângulos."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Geometria",
+        "skills": [
+          "EF02MA15, EF03MA15, EF05MA17, EF06MA18, EF06MA19, EF06MA20",
+          "(EF05MA17) Reconhecer, nomear e comparar polígonos, considerando lados, vértices e ângulos, e desenhá-los, utilizando material de desenho ou tecnologias digitais."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "Reconhecer retângulos em meio a outros quadriláteros."
+          },
+          {
+            "level": 175,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "---"
+          },
+          {
+            "level": 225,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "Reconhecer, entre um conjunto de quadriláteros, aquele que possui lados perpendiculares e com a mesma medida."
+          },
+          {
+            "level": 325,
+            "content": "---"
+          },
+          {
+            "level": 300,
+            "content": "Reconhecer os lados paralelos de um trapézio expressos em forma de segmentos de retas."
+          },
+          {
+            "level": 275,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D05": {
+      "topic": "",
+      "description": "Reconhecer a conservação ou modificação de medidas dos lados, do perímetro, da área em ampliação e/ou redução de figuras poligonais, usando malhas quadriculadas.",
+      "prerequisites": [
+        "Compreensão do que é figura plana e polígono.",
+        "Identificação e nomeação dos lados e vértices de figuras poligonais.",
+        "Reconhecimento de figuras congruentes e semelhanças visuais entre figuras.",
+        "Compreensão do que significa ampliar e reduzir figuras mantendo a forma.",
+        "Noção de proporção entre lados correspondentes em figuras semelhantes."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Grandezas e Medidas",
+        "skills": [
+          "EF05MA20, EF06MA29",
+          "(EF05MA18) Reconhecer a congruência dos ângulos e a proporcionalidade entre os lados correspondentes de figuras poligonais em situações de ampliação e de redução em malhas quadriculadas e usando tecnologias digitais."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "---"
+          },
+          {
+            "level": 175,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "---"
+          },
+          {
+            "level": 225,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "Determinar a razão entre as áreas ou perímetros de duas figuras desenhadas numa malha quadriculada."
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "Reconhecer ampliação ou redução de um polígono desenhado em malha quadriculada."
+          }
+        ]
+      }
+    },
+    "D06": {
+      "topic": "",
+      "description": "Estimar a medida de grandezas utilizando unidades de medida convencionais ou não.",
+      "prerequisites": [
+        "Compreensão do conceito de grandeza.",
+        "Diferenciação entre grandezas.",
+        "Noção de unidade de medida.",
+        "Conhecimento de unidades não convencionais.",
+        "Conhecimento de unidades convencionais."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Grandezas e Medidas",
+        "skills": [
+          "EF01MA15, EF02MA16, EF02MA17, EF03MA19, EF03MA20, EF04MA20",
+          "(EF04MA20) Medir e estimar comprimentos (incluindo perímetros), massas e capacidades, utilizando unidades de medida padronizadas mais usuais, valorizando e respeitando a cultura local."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "---"
+          },
+          {
+            "level": 175,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "---"
+          },
+          {
+            "level": 225,
+            "content": "Estimar a altura de um determinado objeto com referência aos dados fornecidos por uma régua graduada em centímetros."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "---"
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D07": {
+      "topic": "",
+      "description": "Resolver problemas significativos utilizando unidades de medida padronizadas como km/m/cm/mm, kg/g/mg, l/ml.",
+      "prerequisites": [
+        "Compreensão do sistema métrico decimal;",
+        "Conhecimento das principais grandezas e unidades de medida;",
+        "Noção de grandeza e atributo mensurável;",
+        "Entendimento do conceito de estimativa e comparação entre medidas;",
+        "Ler e interpretar instrumentos de medida."
+      ],
+      "bncc": {
+        "practices": "Resolver problemas e argumentar",
+        "knowledge": "Grandezas e Medidas",
+        "skills": [
+          "EF05MA19",
+          "(EF05MA19) Resolver e elaborar problemas envolvendo medidas das grandezas comprimento, área, massa, tempo, temperatura e capacidade, recorrendo a transformações entre as unidades mais usuais em contextos socioculturais."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "---"
+          },
+          {
+            "level": 175,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "---"
+          },
+          {
+            "level": 225,
+            "content": "Resolver problemas envolvendo conversão de litro para mililitro."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "Converter uma medida de comprimento, expressando decímetros e centímetros, para milímetros. Resolver problemas que envolvem a conversão entre unidades de medida de comprimento."
+          },
+          {
+            "level": 300,
+            "content": "Resolver problemas que envolvem a conversão entre diferentes unidades de medida de massa. Converter medidas lineares de comprimento (m/cm, km/m)."
+          },
+          {
+            "level": 275,
+            "content": "Converter medidas dadas em toneladas para quilogramas. Resolver problemas envolvendo conversão de quilograma para grama."
+          }
+        ]
+      }
+    },
+    "D08": {
+      "topic": "",
+      "description": "Estabelecer relações entre unidades de medida de tempo.",
+      "prerequisites": [
+        "Compreensão da noção de tempo.",
+        "Reconhecimento das unidades de medida de tempo e seus significados.",
+        "Noção de repetição e ciclicidade (dias da semana, meses do ano, estações).",
+        "Contagem e comparação de intervalos de tempo."
+      ],
+      "bncc": {
+        "practices": "Resolver problemas e argumentar",
+        "knowledge": "Grandezas e Medidas",
+        "skills": [
+          "EF01MA17, EF01MA18, EF02MA18, EF02MA19, EF03MA22, EF03MA23, EF04MA22, EF05MA19",
+          "(EF05MA19) Resolver e elaborar problemas envolvendo medidas das grandezas comprimento, área, massa, tempo, temperatura e capacidade, recorrendo a transformações entre as unidades mais usuais em contextos socioculturais."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "---"
+          },
+          {
+            "level": 175,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "Resolver problemas envolvendo intervalos de tempo em meses, inclusive passando pelo fim do ano (outubro a janeiro). Converter a duração de um intervalo de tempo, dado em horas e minutos, para minutos."
+          },
+          {
+            "level": 225,
+            "content": "Converter mais de uma hora inteira em minutos."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "Resolver problemas que envolvem a conversão entre unidades de medida de tempo (minutos em horas, meses em anos)."
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "Resolver problemas sobre intervalos de tempo envolvendo adição e subtração e com intervalo de tempo passando pela meia-noite."
+          }
+        ]
+      }
+    },
+    "D09": {
+      "topic": "",
+      "description": "Estabelecer relações entre o horário de início e término e/ou o intervalo da duração de um evento ou acontecimento.",
+      "prerequisites": [
+        "Compreensão da sequência temporal;",
+        "Noção de tempo cronológico e duração;",
+        "Reconhecimento e leitura das horas em relógios analógicos e digitais;",
+        "Compreensão da unidade de medida “hora” e “minuto”;",
+        "Conhecimento da relação entre as unidades de tempo;",
+        "Identificação da passagem do tempo em situações do cotidiano;",
+        "Conhecimento do sistema de 24 horas."
+      ],
+      "bncc": {
+        "practices": "Resolver problemas e argumentar",
+        "knowledge": "Grandezas e Medidas",
+        "skills": [
+          "EF02MA19, EF03MA22, EF04MA22",
+          "(EF04MA22) Ler e registrar medidas e intervalos de tempo em horas, minutos e segundos em situações relacionadas ao seu cotidiano, como informar os horários de início e término de realização de uma tarefa e sua duração."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "---"
+          },
+          {
+            "level": 175,
+            "content": "Determinar o horário final de um evento a partir de seu horário de início e de um intervalo de tempo dado, todos no formato de horas inteiras."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "Determinar a duração de um evento a partir dos horários de início, informado em horas e minutos, e de término, também informado em horas e minutos, sem coincidência nas horas ou nos minutos dos dois horários informados."
+          },
+          {
+            "level": 225,
+            "content": "Determinar o horário final de um evento a partir do horário de início, dado em horas e minutos, e de um intervalo dado em quantidade de minutos superior a uma hora."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "---"
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D10": {
+      "topic": "",
+      "description": "Num problema, estabelecer trocas entre cédulas e moedas do sistema monetário brasileiro, em função de seus valores.",
+      "prerequisites": [
+        "Reconhecer números naturais e compreender sua sequência e valor posicional;",
+        "Compreender o conceito de valor — distinguir quantidade de valor numérico;",
+        "Identificar e nomear as cédulas e moedas do sistema monetário brasileiro;",
+        "Comparar valores numéricos;",
+        "Compreender a ideia de equivalência;",
+        "Compreender o significado de “troco” e “troca”."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Grandezas e Medidas",
+        "skills": [
+          "EF01MA19, EF02MA20, EF03MA24",
+          "(EF03MA24) Resolver e elaborar problemas que envolvam a comparação e a equivalência de valores monetários do sistema brasileiro em situações de compra, venda e troca."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "Converter mais de uma semana inteira em dias. Converter uma hora em minutos. Determinar o total de uma quantia a partir da quantidade de moedas de 25 e/ou 50 centavos que a compõe, ou vice-versa."
+          },
+          {
+            "level": 175,
+            "content": "Converter uma quantia, dada na ordem das unidades de real, em seu equivalente em moedas."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "---"
+          },
+          {
+            "level": 225,
+            "content": "Converter uma quantia dada em moedas de 5, 10, 25 e 50 centavos e de 1 real em cédulas de real."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "---"
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "Converter uma quantia, dada na ordem das dezenas de real, em moedas de 50 centavos."
+          }
+        ]
+      }
+    },
+    "D11": {
+      "topic": "",
+      "description": "Resolver problema envolvendo o cálculo do perímetro de figuras planas, desenhadas em malhas quadriculadas.",
+      "prerequisites": [
+        "Reconhecimento e nomeação de figuras planas.",
+        "Noção de forma e contorno de uma figura.",
+        "Entendimento do conceito de unidade de medida.",
+        "Capacidade de contar unidades lineares em uma malha quadriculada.",
+        "Reconhecimento da relação entre unidade padrão e unidade não padrão.",
+        "Contagem e adição de números naturais."
+      ],
+      "bncc": {
+        "practices": "Resolver problemas e argumentar",
+        "knowledge": "Grandezas e Medidas",
+        "skills": [
+          "EF04MA20, EF05MA20, EF06MA29",
+          "(EF05MA20) Concluir, por meio de investigações, que figuras de perímetros iguais podem ter áreas diferentes e que, também, figuras que têm a mesma área podem ter perímetros diferentes."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "---"
+          },
+          {
+            "level": 175,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "---"
+          },
+          {
+            "level": 225,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "Determinar o perímetro de um polígono não convexo desenhado sobre as linhas de uma malha quadriculada."
+          },
+          {
+            "level": 300,
+            "content": "Calcular o perímetro de uma figura poligonal irregular desenhada sobre uma malha quadriculada, na resolução de problemas."
+          },
+          {
+            "level": 275,
+            "content": "Determinar o perímetro de um retângulo desenhado em malha quadriculada."
+          }
+        ]
+      }
+    },
+    "D12": {
+      "topic": "",
+      "description": "Resolver problema envolvendo o cálculo ou estimativa de áreas de figuras planas, desenhadas em malhas quadriculadas.",
+      "prerequisites": [
+        "Reconhecimento e nomeação de figuras planas.",
+        "Noção de forma e contorno de uma figura.",
+        "Entendimento do conceito de unidade de medida.",
+        "Capacidade de contar unidades em uma malha quadriculada.",
+        "Reconhecimento da relação entre unidade padrão e unidade não padrão.",
+        "Contagem e adição de números naturais.",
+        "Relação entre multiplicação e área."
+      ],
+      "bncc": {
+        "practices": "Resolver problemas e argumentar",
+        "knowledge": "Grandezas e Medidas",
+        "skills": [
+          "EF03MA21, EF04MA21, EF05MA19.",
+          "(EF05MA19) Resolver e elaborar problemas envolvendo medidas das grandezas comprimento, área, massa, tempo, temperatura e capacidade, recorrendo a transformações entre as unidades mais usuais em contextos socioculturais."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "Determinar a área de figuras desenhadas em malhas quadriculadas por meio de contagem."
+          },
+          {
+            "level": 125,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "---"
+          },
+          {
+            "level": 175,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "Reconhecer que, entre quatro ladrilhos apresentados, quanto maior o ladrilho, menor a quantidade necessária para cobrir uma dada região. Reconhecer o m² como unidade de medida de área."
+          },
+          {
+            "level": 225,
+            "content": "Determinar a área de uma região retangular representado em uma malha quadriculada."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "---"
+          },
+          {
+            "level": 300,
+            "content": "Determinar a área de uma figura poligonal não convexa desenhada sobre uma malha quadriculada."
+          },
+          {
+            "level": 275,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D13": {
+      "topic": "",
+      "description": "Reconhecer e utilizar características do sistema de numeração decimal, tais como agrupamentos e trocas na base 10 e princípio do valor posicional.",
+      "prerequisites": [
+        "Compreensão de número como representação de quantidade;",
+        "Capacidade de contar objetos em coleções;",
+        "Entendimento de que a contagem segue uma ordem estável;",
+        "Reconhecimento da correspondência um a um entre número e objeto contado;",
+        "Noção de que o último número contado representa o total da coleção;",
+        "Capacidade de comparar quantidades;",
+        "Familiaridade com a leitura e escrita de números naturais;",
+        "Noção de agrupamento."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Números",
+        "skills": [
+          "EF02MA01, EF03MA02",
+          "(EF03MA02) Identificar características do sistema de numeração decimal, utilizando a composição e a decomposição de número natural de até quatro ordens."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "Reconhecer o princípio do valor posicional do Sistema de Numeração Decimal. Associar um número natural às suas ordens, ou vice-versa."
+          },
+          {
+            "level": 175,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "Associar números naturais à quantidade de agrupamentos de 1 000. Reconhecer a modificação sofrida no valor de um número quando um algarismo é alterado."
+          },
+          {
+            "level": 225,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "---"
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "Associar números naturais à quantidade de agrupamentos menos usuais, como 300 dezenas. Determinar a quantidade de dezenas presentes em um número de quatro ordens."
+          }
+        ]
+      }
+    },
+    "D14": {
+      "topic": "",
+      "description": "Identificar a localização de números naturais na reta numérica.",
+      "prerequisites": [
+        "Compreensão da contagem e da sequência numérica;",
+        "Reconhecimento dos números naturais e sua escrita simbólica;",
+        "Noção de quantidade;",
+        "Compreensão da ordem dos números;",
+        "Percepção de regularidade na contagem."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Números",
+        "skills": [
+          "EF01MA05, EF03MA04",
+          "(EF03MA04) Estabelecer a relação entre números naturais e pontos da reta numérica para utilizá-la na ordenação dos números naturais e também na construção de fatos da adição e da subtração, relacionando-os com deslocamentos para a direita ou para a esquerda."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "Corresponder pontos dados em uma reta numérica, graduada de 2 em 2 ou de 5 em 5 unidades, ao número natural composto por até 3 algarismos que eles representam."
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "Localizar um número em uma reta numérica graduada na qual estão expressos números naturais consecutivos e uma subdivisão equivalente à metade do intervalo entre eles."
+          },
+          {
+            "level": 175,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "Localizar números em uma reta numérica graduada na qual estão expressos diversos números naturais não consecutivos e crescentes, com uma subdivisão entre eles."
+          },
+          {
+            "level": 225,
+            "content": "Localizar um número em uma reta numérica graduada na qual estão expressos o primeiro e o último número representando um intervalo de tempo de dez anos, com dez subdivisões entre eles."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "Localizar um número natural em uma reta numérica graduada na qual estão expressos apenas dois números naturais com dez subdivisões entre eles."
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D15": {
+      "topic": "",
+      "description": "Reconhecer a decomposição de números naturais nas suas diversas ordens.",
+      "prerequisites": [
+        "Compreensão da contagem e sequência numérica;",
+        "Reconhecimento dos números naturais e sua escrita na forma simbólica;",
+        "Noção de quantidade;",
+        "Percepção de agrupamentos;",
+        "Noção de ordem e posição;",
+        "Conhecimento das unidades de numeração;",
+        "Capacidade de comparar números."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Números",
+        "skills": [
+          "EF01MA07, EF02MA04, EF03MA02, EF04MA02, EF05MA02",
+          "(EF05MA02) Ler, escrever e ordenar números racionais na forma decimal com compreensão das principais características do sistema de numeração decimal, utilizando, como recursos, a composição e decomposição e a reta numérica."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "Associar um número natural à sua decomposição expressa por extenso."
+          },
+          {
+            "level": 175,
+            "content": "Associar um número natural, formado por até 4 dígitos, a sua decomposição representada pela soma dos valores relativos de seus algarismos."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "---"
+          },
+          {
+            "level": 225,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "–."
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "---"
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D16": {
+      "topic": "",
+      "description": "Reconhecer a composição e a decomposição de números naturais em sua forma polinomial.",
+      "prerequisites": [
+        "Compreensão do sistema de numeração decimal.",
+        "Reconhecimento do valor posicional dos algarismos.",
+        "Identificação da ordem e da classe dos números naturais.",
+        "Leitura e escrita de números naturais.",
+        "Noção de agrupamentos e trocas.",
+        "Entendimento do conceito de adição e decomposição numérica.",
+        "Compreensão da operação de multiplicação, em especial por 10 e seus múltiplos (potência de base 10: 10¹ = 10; 10² = 100; 10³ = 1 000, etc.)."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Números",
+        "skills": [
+          "EF01MA07, EF02MA04, EF03MA02, EF04MA02, EF05MA02",
+          "(EF05MA02) Ler, escrever e ordenar números racionais na forma decimal com compreensão das principais características do sistema de numeração decimal, utilizando, como recursos, a composição e decomposição e a reta numérica."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "---"
+          },
+          {
+            "level": 175,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "Resolver problemas que envolvam a composição e a decomposição polinomial de números naturais de até cinco ordens."
+          },
+          {
+            "level": 225,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "---"
+          },
+          {
+            "level": 300,
+            "content": "Associar um número natural de seis ordens à sua forma polinomial."
+          },
+          {
+            "level": 275,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D17": {
+      "topic": "",
+      "description": "Calcular o resultado de uma adição ou subtração de números naturais.",
+      "prerequisites": [
+        "Reconhecer e compreender a sequência dos números naturais e sua função na contagem;",
+        "Entender que os números representam quantidades (cardinalidade);",
+        "Perceber que cada número sucessor representa uma unidade a mais e o antecessor, uma unidade a menos;",
+        "Entendimento das operações como ações."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Números",
+        "skills": [
+          "EF01MA06, EF02MA05, EF03MA03, EF04MA03",
+          "(EF04MA03) Resolver e elaborar problemas com números naturais envolvendo adição e subtração, utilizando estratégias diversas, como cálculo, cálculo mental e algoritmos, além de fazer estimativas do resultado."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "Executar adição ou subtração de números naturais de até 3 algarismos sem reagrupamento."
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "Determinar o resultado da subtração, com recursos à ordem superior, entre números naturais de até cinco ordens, utilizando as ideias de retirar e comparar. Determinar a subtração de números naturais, usando a noção de completar. Determinar a adição, com reserva, de até três números naturais com até quatro ordens."
+          },
+          {
+            "level": 175,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "---"
+          },
+          {
+            "level": 225,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "Determinar o minuendo de uma subtração entre números naturais, de três ordens, a partir do conhecimento do subtraendo e da diferença."
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D18": {
+      "topic": "",
+      "description": "Calcular o resultado de uma multiplicação ou divisão de números naturais.",
+      "prerequisites": [
+        "Compreensão do conceito de número natural e sua ordem na sequência numérica.",
+        "Entendimento das operações de adição e subtração como base para multiplicação e divisão.",
+        "Noção de agrupamentos e repartições (formar grupos iguais e repartir igualmente).",
+        "Compreensão do significado da multiplicação como adição de parcelas iguais.",
+        "Compreensão do significado da divisão como partilha (distribuir igualmente) e como medida (quantas vezes cabe)."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Números",
+        "skills": [
+          "EF02MA07, EF03MA03, EF04MA04",
+          "(EF04MA04) Utilizar as relações entre adição e subtração, bem como entre multiplicação e divisão, para ampliar as estratégias de cálculo."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "Determinar a divisão exata de número formados por 2 algarismos por números de um algarismo. Determinar a multiplicação de um número natural de até três ordens por cinco, com reserva."
+          },
+          {
+            "level": 175,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "Determinar o resultado da divisão exata entre dois números naturais, com divisor até quatro e dividendo com até quatro ordens."
+          },
+          {
+            "level": 225,
+            "content": "Determinar o resultado da divisão de números naturais formados por 3 algarismos, por um número de uma ordem, usando noção de agrupamento."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "Determinar o resultado da multiplicação entre o número 8 e um número de quatro ordens com reserva."
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D19": {
+      "topic": "",
+      "description": "Resolver problema com números naturais, envolvendo diferentes significados da adição ou subtração: juntar, alteração de um estado inicial (positiva ou negativa), comparação e mais de uma transformação (positiva ou negativa).",
+      "prerequisites": [
+        "Compreensão do número natural como indicador de quantidade ou ordem;",
+        "Reconhecimento da sequência numérica e noção de antecessor e sucessor;",
+        "Correspondência um a um entre elementos;",
+        "Conceito de zero como ausência de quantidade;",
+        "Entendimento da reta numérica como representação de grandezas e de deslocamentos."
+      ],
+      "bncc": {
+        "practices": "Resolver problemas e argumentar",
+        "knowledge": "Números",
+        "skills": [
+          "EF01MA06, EF01MA08, EF02MA05, EF02MA06, EF02MA07, EF03MA03, EF03MA04, EF03MA05, EF03MA06, EF04MA03, EF04MA04, EF04MA13",
+          "(EF04MA03) Resolver e elaborar problemas com números naturais envolvendo adição e subtração, utilizando estratégias diversas, como cálculo, cálculo mental e algoritmos, além de fazer estimativas do resultado."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "---"
+          },
+          {
+            "level": 175,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "Resolver problemas por meio da realização de subtrações e divisões, para determinar o valor das prestações de uma compra a prazo (sem incidência de juros)."
+          },
+          {
+            "level": 225,
+            "content": "Resolver problemas envolvendo a análise do algoritmo da adição de dois números naturais."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "---"
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D20": {
+      "topic": "",
+      "description": "Resolver problema com números naturais, envolvendo diferentes significados da multiplicação ou divisão: multiplicação comparativa, ideia de proporcionalidade, configuração retangular e combinatória.",
+      "prerequisites": [
+        "Compreensão do conceito de número natural e sua ordem na sequência numérica.",
+        "Domínio da adição e subtração como operações de composição e decomposição de quantidades.",
+        "Entendimento da multiplicação como adição de parcelas iguais.",
+        "Compreensão da divisão como repartição e medida (quantas vezes uma quantidade cabe em outra).",
+        "Reconhecimento das relações entre multiplicação e divisão (operações inversas).",
+        "Conhecimento dos fatores e múltiplos de um número."
+      ],
+      "bncc": {
+        "practices": "Resolver problemas e argumentar",
+        "knowledge": "Números",
+        "skills": [
+          "EF02MA07, EF03MA03, EF03MA07, EF04MA04, EF04MA06, EF04MA13, EF05MA08",
+          "(EF05MA08) Resolver e elaborar problemas de multiplicação e divisão com números naturais e com números racionais cuja representação decimal é finita (com multiplicador natural e divisor natural e diferente de zero), utilizando estratégias diversas, como cálculo por estimativa, cálculo mental e algoritmos."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "---"
+          },
+          {
+            "level": 175,
+            "content": "Resolver problemas de multiplicação de números naturais que envolvam o conceito de dobro. Utilizar a multiplicação de 2 números naturais, com multiplicador formado por 1 algarismo e multiplicando formado por até 3 algarismos, com até 2 reagrupamentos, na resolução de problemas do campo multiplicativo envolvendo a ideia de soma de parcelas iguais."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "Resolver problemas que utilizam a multiplicação envolvendo a noção de proporcionalidade."
+          },
+          {
+            "level": 225,
+            "content": "Resolver problemas que envolvam a metade e o triplo de números naturais."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "Resolver problemas envolvendo multiplicação com significado de combinatória."
+          },
+          {
+            "level": 300,
+            "content": "Resolver problemas envolvendo divisão de números naturais com resto."
+          },
+          {
+            "level": 275,
+            "content": "Resolver problemas que envolvem a divisão exata ou a multiplicação de números naturais."
+          }
+        ]
+      }
+    },
+    "D21": {
+      "topic": "",
+      "description": "Identificar diferentes representações de um mesmo número racional.",
+      "prerequisites": [
+        "Compreender o significado de número racional (como razão entre dois inteiros).",
+        "Entender a estrutura de uma fração (numerador e denominador).",
+        "Diferenciar fração própria, imprópria e aparente.",
+        "Reconhecer que uma fração pode representar a mesma quantidade mesmo com números diferentes.",
+        "Saber que números racionais podem ser representados por frações, decimais exatos ou periódicos e porcentagens."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Números",
+        "skills": [
+          "EF04MA09, EF04MA10, EF05MA02, EF05MA03, EF05MA05",
+          "(EF05MA05) Comparar e ordenar números racionais positivos (representações fracionária e decimal), relacionando-os a pontos na reta numérica."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "Associar a metade de um total a algum equivalente, apresentado como fração ou porcentagem."
+          },
+          {
+            "level": 175,
+            "content": "Associar a fração um quarto a uma de suas representações gráficas."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "---"
+          },
+          {
+            "level": 225,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "Associar as frações um quinto ou um décimo à sua representação percentual. Associar uma fração com denominador diferente de 10 à sua representação decimal."
+          },
+          {
+            "level": 300,
+            "content": "Associar a fração um meio à sua representação na forma decimal. Associar uma fração com denominador 10 à sua representação decimal. Associar 50% à sua representação na forma de fração."
+          },
+          {
+            "level": 275,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D22": {
+      "topic": "",
+      "description": "Identificar a localização de números racionais, representados na forma decimal, na reta numérica.",
+      "prerequisites": [
+        "Compreensão do sistema de numeração decimal (valor posicional e relação entre fração e número decimal).",
+        "Entender que racionais podem ser representados por frações e por números decimais.",
+        "Comparação e ordenação de números decimais.",
+        "Reconhecer a reta como representação contínua de números.",
+        "Identificar pontos marcados na reta.",
+        "Entender que intervalos podem ser subdivididos em partes iguais.",
+        "Relacionar subdivisões com décimos, centésimos etc."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Números",
+        "skills": [
+          "EF04MA09,EF05MA02, EF05MA03, EF05MA05",
+          "(EF05MA02) Ler, escrever e ordenar números racionais na forma decimal com compreensão das principais características do sistema de numeração decimal, utilizando, como recursos, a composição e decomposição e a reta numérica."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "---"
+          },
+          {
+            "level": 175,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "---"
+          },
+          {
+            "level": 225,
+            "content": "Localizar um número racional dado em sua forma decimal em uma reta numérica graduada na qual estão expressos diversos números naturais consecutivos, com dez subdivisões entre eles."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "Localizar um número em uma reta numérica graduada na qual estão expressos números naturais consecutivos e uma subdivisão equivalente à metade do intervalo entre eles."
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D23": {
+      "topic": "",
+      "description": "Resolver problema utilizando a escrita decimal de cédulas e moedas do sistema monetário brasileiro.",
+      "prerequisites": [
+        "Compreender o valor posicional dos números no sistema decimal.",
+        "Saber ler, escrever e comparar números naturais.",
+        "Entender o significado da vírgula decimal e sua função na representação de valores monetários.",
+        "Conhecer a composição e decomposição de números decimais.",
+        "Compreender a relação entre frações decimais e números decimais.",
+        "Reconhecer e identificar cédulas e moedas brasileiras (valores, tamanhos, cores e símbolos).",
+        "Entender que o dinheiro é um sistema de medida de valor.",
+        "Relacionar valores de cédulas e moedas com seus correspondentes em escrita decimal.",
+        "Saber montar valores usando combinações de cédulas e moedas."
+      ],
+      "bncc": {
+        "practices": "Resolver problemas e argumentar",
+        "knowledge": "Números",
+        "skills": [
+          "EF04MA10",
+          "(EF04MA10) Reconhecer que as regras do sistema de numeração decimal podem ser estendidas para a representação decimal de um número racional e relacionar décimos e centésimos com a representação do sistema monetário brasileiro."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "Resolver problemas do cotidiano envolvendo adição de pequenas quantias de dinheiro."
+          },
+          {
+            "level": 125,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "Determinar o resultado da multiplicação de números naturais por valores do Sistema Monetário Nacional, expressos em números de até duas ordens, e posterior adição."
+          },
+          {
+            "level": 175,
+            "content": "Determinar o resultado da subtração de números representados na forma decimal, tendo como contexto o sistema monetário."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "Resolver problemas que envolvam soma e subtração de valores monetários."
+          },
+          {
+            "level": 225,
+            "content": "Determinar o resultado da multiplicação de um número inteiro por um número representado na forma decimal, em contexto envolvendo o sistema monetário. Resolver problemas envolvendo adição, subtração e/ou multiplicação de números racionais em contexto do sistema monetário."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "–."
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "---"
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D24": {
+      "topic": "",
+      "description": "Identificar fração como representação que pode estar associada a diferentes significados.",
+      "prerequisites": [
+        "Reconhecer quando um objeto, figura ou conjunto está dividido em partes.",
+        "Entender que as partes devem ser iguais para formar uma fração válida.",
+        "Contar elementos de um conjunto.",
+        "Comparar quantidades para perceber relações entre partes e o todo.",
+        "Identificar divisões simétricas e não simétricas.",
+        "Diferenciar representações corretas e incorretas de frações.",
+        "Saber que o denominador indica em quantas partes o todo foi dividido.",
+        "Saber que o numerador indica quantas dessas partes estão sendo tomadas.",
+        "Perceber que diferentes figuras podem representar a mesma fração.",
+        "Relacionar frações equivalentes em contextos simples (ex.: 1/2 como duas partes de 4).",
+        "Identificar o que está sendo considerado como unidade em cada situação.",
+        "Perceber que a mesma fração pode variar dependendo do “todo”."
+      ],
+      "bncc": {
+        "practices": "Resolver problemas e argumentar",
+        "knowledge": "Números",
+        "skills": [
+          "EF04MA09, EF05MA03, EF05MA05, EF05MA06, EF06MA07",
+          "(EF05MA03) Identificar e representar frações (menores e maiores que a unidade), associando-as ao resultado de uma divisão ou à ideia de parte de um todo, utilizando a reta numérica como recurso."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "Reconhecer uma fração como representação da relação parte-todo com o apoio de figuras."
+          },
+          {
+            "level": 175,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "Reconhecer uma fração como representação da relação parte-todo, sem apoio de figuras."
+          },
+          {
+            "level": 225,
+            "content": "Reconhecer uma fração como representação da relação parte-todo, com apoio de um polígono dividido em oito partes ou mais."
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "---"
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D25": {
+      "topic": "",
+      "description": "Resolver problema com números racionais expressos na forma decimal, envolvendo diferentes significados da adição ou subtração.",
+      "prerequisites": [
+        "Compreender o valor posicional no sistema decimal (unidades, décimos, centésimos, milésimos).",
+        "Entender que números decimais são uma forma de representar frações decimais.",
+        "Reconhecer a equivalência entre frações decimais e números decimais.",
+        "Diferenciar números naturais, racionais na forma decimal e números inteiros.",
+        "Interpretar corretamente o significado da vírgula decimal."
+      ],
+      "bncc": {
+        "practices": "Resolver problemas e argumentar",
+        "knowledge": "Números",
+        "skills": [
+          "EF05MA07",
+          "(EF05MA07) Resolver e elaborar problemas de adição e subtração com números naturais e com números racionais, cuja representação decimal seja finita, utilizando estratégias diversas, como cálculo por estimativa, cálculo mental e algoritmos."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "---"
+          },
+          {
+            "level": 175,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "Determinar o resultado da diferença entre dois números racionais representados na forma decimal ou entre frações de denominadores iguais."
+          },
+          {
+            "level": 225,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "Utilizar números racionais, dados em representação fracionária com denominadores diferentes, envolvendo um dos significados da operação subtração, na resolução de problema."
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D26": {
+      "topic": "",
+      "description": "Resolver problema envolvendo noções de porcentagem (25%, 50%, 100%).",
+      "prerequisites": [
+        "Compreensão de frações simples, especialmente.",
+        "Compreensão de decimais simples e sua relação com frações.",
+        "Entendimento de proporcionalidade (aumento/diminuição proporcional).",
+        "Capacidade de comparar quantidades em diferentes representações (fração, decimal, razão).",
+        "Noção de unidade inteira e suas partes."
+      ],
+      "bncc": {
+        "practices": "Resolver problemas e argumentar",
+        "knowledge": "Números",
+        "skills": [
+          "EF05MA06",
+          "(EF05MA06) Associar as representações 10%, 25%, 50%, 75% e 100% respectivamente à décima parte, quarta parte, metade, três quartos e um inteiro, para calcular porcentagens, utilizando estratégias pessoais, cálculo mental e calculadora, em contextos de educação financeira, entre outros."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "---"
+          },
+          {
+            "level": 125,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "Associar a metade de um total ao seu equivalente em porcentagem."
+          },
+          {
+            "level": 175,
+            "content": "---"
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "Determinar porcentagens simples (25%, 50%, 100%)."
+          },
+          {
+            "level": 225,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "---"
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D27": {
+      "topic": "",
+      "description": "Ler informações e dados apresentados em tabelas.",
+      "prerequisites": [
+        "Ler e escrever números.",
+        "Compreender de conceitos básicos de quantidade.",
+        "Noção de ordenação.",
+        "Identificação de categorias.",
+        "Entendimento de linhas e colunas e sua função na organização de informações.",
+        "Capacidade de localizar informações específicas dentro de um conjunto organizado.",
+        "Leitura e interpretação de títulos e legendas.",
+        "Compreensão de símbolos e abreviações simples.",
+        "Atenção e organização visual para acompanhar estruturas em grade.",
+        "Vocabulário básico relacionado ao contexto da tabela."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Probabilidade e Estatística",
+        "skills": [
+          "EF01MA21, EF02MA22, EF02MA23, EF03MA26, EF03MA27, EF03MA28, EF04MA27, EF04MA28, EF05MA24, EF05MA25.",
+          "(EF05MA24) Interpretar dados estatísticos apresentados em textos, tabelas e gráficos (colunas ou linhas), referentes a outras áreas do conhecimento ou a outros contextos, como saúde e trânsito, e produzir textos com o objetivo de sintetizar conclusões."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "Localizar informações em tabelas simples."
+          },
+          {
+            "level": 125,
+            "content": "---"
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "Reconhecer o maior valor em uma tabela cujos dados possuem até oito ordens. Localizar dados em tabelas de múltiplas entradas."
+          },
+          {
+            "level": 175,
+            "content": "Reconhecer o maior valor em uma tabela de dupla entrada cujos dados possuem até duas ordens."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "Interpretar dados em uma tabela simples."
+          },
+          {
+            "level": 225,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "–."
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "---"
+          },
+          {
+            "level": 300,
+            "content": "---"
+          },
+          {
+            "level": 275,
+            "content": "---"
+          }
+        ]
+      }
+    },
+    "D28": {
+      "topic": "",
+      "description": "Ler informações e dados apresentados em gráficos (particularmente, em gráficos de colunas).",
+      "prerequisites": [
+        "Entender que gráficos são formas de representar dados de maneira visual.",
+        "Reconhecer que cada parte do gráfico tem um significado (título, eixos, legendas etc.).",
+        "Saber ler e comparar números naturais.",
+        "Compreender contagem, quantidades e diferenças entre valores.",
+        "Identificar eixo horizontal (categorias) e eixo vertical (valores).",
+        "Entender que a altura das colunas de um gráfico estatístico expressa quantidade.",
+        "Reconhecer que o eixo dos valores pode ser dividido em intervalos.",
+        "Saber que nem sempre a escala começa do zero.",
+        "Conseguir relacionar a altura da coluna com números da escala.",
+        "Reconhecer a importância do título para entender o tema do gráfico.",
+        "Saber usar a legenda para identificar categorias ou grupos."
+      ],
+      "bncc": {
+        "practices": "Compreender e aplicar conceitos e procedimentos",
+        "knowledge": "Probabilidade e Estatística",
+        "skills": [
+          "EF01MA21, EF02MA22, EF02MA23, EF03MA26, EF03MA27, EF03MA28, EF04MA24, EF04MA27, EF04MA28, EF05MA24, EF05MA25",
+          "(EF05MA24) Interpretar dados estatísticos apresentados em textos, tabelas e gráficos (colunas ou linhas), referentes a outras áreas do conhecimento ou a outros contextos, como saúde e trânsito, e produzir textos com o objetivo de sintetizar conclusões."
+        ]
+      },
+      "scale": {
+        "padrao-1": [
+          {
+            "level": 150,
+            "content": "Localizar informações, relativas ao menor elemento, em gráficos de colunas."
+          },
+          {
+            "level": 125,
+            "content": "Localizar informações, relativas ao maior elemento, em gráficos de colunas. Localizar informações apresentadas em gráficos de colunas, associando às informações dos eixos."
+          }
+        ],
+        "padrao-2": [
+          {
+            "level": 200,
+            "content": "---"
+          },
+          {
+            "level": 175,
+            "content": "Reconhecer informações em um gráfico de colunas duplas."
+          }
+        ],
+        "padrao-3": [
+          {
+            "level": 250,
+            "content": "Comparar dados representados pelas alturas de colunas presentes em um gráfico."
+          },
+          {
+            "level": 225,
+            "content": "---"
+          }
+        ],
+        "padrao-4": [
+          {
+            "level": 450,
+            "content": "---"
+          },
+          {
+            "level": 425,
+            "content": "---"
+          },
+          {
+            "level": 400,
+            "content": "---"
+          },
+          {
+            "level": 375,
+            "content": "---"
+          },
+          {
+            "level": 350,
+            "content": "---"
+          },
+          {
+            "level": 325,
+            "content": "Reconhecer o gráfico de linhas correspondente a uma sequência de valores ao longo do tempo."
+          },
+          {
+            "level": 300,
+            "content": "Interpretar dados em um gráfico de colunas duplas."
+          },
+          {
+            "level": 275,
+            "content": "---"
+          }
+        ]
+      }
+    }
+  }
+}

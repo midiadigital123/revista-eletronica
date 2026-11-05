@@ -1,0 +1,57 @@
+{% comment %}
+Passo 2 da revista (U8b): SVG do F2 e capa. Dentro do form campoAuto da página: cada área de soltar
+(componente `arquivoSoltar`) envia ao escolher, pela `?acao=arquivos`; a resposta troca este #arquivos
+e a #situacao. Contexto: urls/ui_revista._contexto. Só o que falta vai para a Situação; aqui, o estado.
+{% endcomment %}{% url 'ui_revista_editar' revista.ano.ano revista.pk as url %}<section class="card revista-passo" id="arquivos" aria-labelledby="arquivos-titulo" data-url="{{ url }}?acao=arquivos">
+  <header class="revista-passo-cab">
+    <span class="revista-passo-num" aria-hidden="true">2</span>
+    <div>
+      <h2 class="secao-titulo" id="arquivos-titulo">Arquivos</h2>
+      <p class="mudo">{% if request.pode_gravar %}Envia ao escolher. {% endif %}O SVG do F2 e a capa entram no preview e no zip.</p>
+    </div>
+  </header>
+
+  <div class="revista-arquivo">
+    <h3>SVG do F2</h3>
+    {% if revista.svg_f2 %}
+    <p class="revista-arquivo-atual">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
+      <span>SVG enviado{% if svg_tamanho %} · {{ svg_tamanho|filesizeformat }}{% endif %} · {{ revista.svg_ids|length }} id(s)</span>
+    </p>
+    {% if ids %}<p class="mudo">Ids que o template do F2 pede: {{ ids.0|join:", " }}.{% if not ids.1 %} Todos estão no SVG.{% endif %}</p>
+    {% else %}<p class="mudo">Sem template do F2: nada a conferir.</p>{% endif %}
+    {% endif %}
+    {% if request.pode_gravar %}
+    <div class="soltar" x-data="arquivoSoltar" data-soltar data-max="{{ svg_max }}" data-tipo="SVG" :data-sobre="sobre">
+      <label class="soltar-area" for="arquivo-svg">
+        <input class="sr-only" type="file" id="arquivo-svg" name="arquivo_svg" accept=".svg,image/svg+xml" aria-describedby="arquivo-svg-ajuda">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
+        <span><strong>{% if revista.svg_f2 %}Substituir o SVG{% else %}Enviar o SVG{% endif %}</strong>: solte aqui ou clique para escolher</span>
+        <span class="mudo" id="arquivo-svg-ajuda">Até 3 MB. Ids pela convenção: passoN, btn-action-xx.</span>
+      </label>
+      <p class="soltar-progresso" x-show="enviando" x-cloak><progress aria-label="Enviando o SVG"></progress><span>Enviando <span x-text="nome"></span>…</span></p>
+      <p class="erro" role="alert" x-show="erro" x-text="erro" x-cloak></p>
+    </div>
+    {% elif not revista.svg_f2 %}<p class="mudo">Sem SVG do F2.</p>{% endif %}
+    {% if tem_f2 %}<a class="link revista-gabarito" href="{% url 'ui_revista_gabarito' revista.ano.ano revista.pk %}">Baixar gabarito de ids</a>{% endif %}
+  </div>
+
+  <div class="revista-arquivo">
+    <h3>Capa</h3>
+    <div class="revista-capa-linha">
+      {% if revista.capa %}<img class="revista-capa" src="{% url 'preview_capa' revista.pk %}?v={{ revista.capa_sha256|slice:':12' }}" alt="Capa atual da revista" width="96" loading="lazy">{% endif %}
+      {% if request.pode_gravar %}
+      <div class="soltar" x-data="arquivoSoltar" data-soltar data-max="{{ capa_max }}" data-tipo="Capa" :data-sobre="sobre">
+        <label class="soltar-area" for="arquivo-capa">
+          <input class="sr-only" type="file" id="arquivo-capa" name="arquivo_capa" accept="image/png,image/jpeg,image/webp" aria-describedby="arquivo-capa-ajuda">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+          <span><strong>{% if revista.capa %}Substituir a capa{% else %}Enviar a capa{% endif %}</strong>: solte aqui ou clique para escolher</span>
+          <span class="mudo" id="arquivo-capa-ajuda">{% if capa_tamanho %}Atual: {{ capa_tamanho|filesizeformat }}. {% endif %}PNG, JPG ou WebP até 5 MB.</span>
+        </label>
+        <p class="soltar-progresso" x-show="enviando" x-cloak><progress aria-label="Enviando a capa"></progress><span>Enviando <span x-text="nome"></span>…</span></p>
+        <p class="erro" role="alert" x-show="erro" x-text="erro" x-cloak></p>
+      </div>
+      {% elif not revista.capa %}<p class="mudo">Sem capa.</p>{% endif %}
+    </div>
+  </div>
+</section>

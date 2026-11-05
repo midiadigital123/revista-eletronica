@@ -1,0 +1,34 @@
+{% extends "ui/base.html" %}
+{% load static %}
+{% comment %}Diferenças da cópia para a origem (T09, D-113): só consulta. Regra: servicos/matriz.py (diferencas).{% endcomment %}
+{% block titulo %}Diferenças de {{ matriz.nome }}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/matriz.css' %}">{% endblock %}
+
+{% block conteudo %}
+<a class="mudo voltar" href="{% url 'ui_matriz_detalhe' matriz.pk %}">‹ {{ matriz.nome }}</a>
+<header class="pagina-cab">
+  <div>
+    <h1>Diferenças da origem</h1>
+    <p class="mudo">{% if matriz.duplicada_de %}O que {{ matriz.nome }} ({{ matriz.ano.ano }}) tem de diferente de {{ matriz.duplicada_de.nome }} ({{ matriz.duplicada_de.ano.ano }}).{% else %}{{ matriz.nome }} não foi duplicada de outra matriz.{% endif %}</p>
+  </div>
+</header>
+
+{% if not matriz.duplicada_de %}
+{% include "ui/_componentes/vazio.html" with titulo="Sem origem" texto="Só uma matriz criada por Duplicar tem diferenças para comparar." %}
+{% elif not linhas %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhuma diferença para "|add:matriz.duplicada_de.nome texto="A cópia está igual à origem." %}
+{% else %}
+<div class="tabela-caixa card matriz-tabela">
+  <table class="tabela" id="diferencas">
+    <thead><tr><th scope="col">Onde</th><th scope="col">O quê</th><th scope="col">Na origem</th><th scope="col">Nesta matriz</th></tr></thead>
+    <tbody>{% for onde, campo, antes, depois in linhas %}
+      <tr>
+        <th scope="row">{{ onde }}</th><td>{{ campo }}</td>
+        <td class="quebra"><span class="diff-velho matriz-diff">{{ antes|linebreaksbr }}</span></td>
+        <td class="quebra"><span class="diff-novo matriz-diff">{{ depois|linebreaksbr }}</span></td>
+      </tr>
+    {% endfor %}</tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

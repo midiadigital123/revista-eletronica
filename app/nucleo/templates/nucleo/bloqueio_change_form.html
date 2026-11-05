@@ -1,0 +1,13 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+{% comment %}Change form do BloqueioAdminMixin: sessão da aba no formulário + renovação.{% endcomment %}
+
+{% block extrahead %}{{ block.super }}
+{% if bloqueio %}<script src="{% static 'nucleo/bloqueio.js' %}" defer></script>{% endif %}
+{% endblock %}
+
+{% block form_top %}{{ block.super }}
+{% if bloqueio %}<input type="hidden" id="bloqueio-sessao" name="{{ bloqueio_campo_sessao }}" value="{{ bloqueio.sessao }}"
+  data-alvo="{{ bloqueio.alvo }}" data-id="{{ bloqueio.id }}"
+  data-renovar="{% url 'bloqueio_renovar' %}" data-liberar="{% url 'bloqueio_liberar' %}">{% endif %}
+{% endblock %}

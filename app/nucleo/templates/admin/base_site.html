@@ -1,0 +1,4 @@
+{% extends "admin/base_site.html" %}
+{% load temporada %}
+{% comment %}Todas as páginas do admin (e as próprias, que estendem esta): "Painel AAAA" no topo.{% endcomment %}
+{% block userlinks %}{% if perms.nucleo.view_revista %}{% ano_temporada as ano %}{% if ano %}<a href="{% url 'painel' ano.ano %}">Painel {{ ano.ano }}</a> / {% endif %}{% endif %}{{ block.super }}{% endblock %}

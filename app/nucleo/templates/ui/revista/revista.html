@@ -1,0 +1,90 @@
+{% extends "ui/base.html" %}{% load static %}
+{% comment %}
+T21: uma revista. View em nucleo/urls/ui_revista.py (revista); regra em nucleo/revista.py.
+U8b: duas colunas. À esquerda, os passos na ordem em que se resolvem (1 Templates, 2 Arquivos,
+3 Textos); à direita, a coluna Situação, fixa ao rolar: a única lista de pendências e o "Validar".
+Templates e arquivos salvam sozinhos (form campoAuto, ?acao= em cada data-url); a resposta troca
+#textos, #arquivos e #situacao. A seção vai por HTMX (revista_secao.html). O bloqueio do projeto
+(bloqueio.js) vive num form próprio, fora de qualquer alvo do HTMX.
+{% endcomment %}
+{% block titulo %}{{ revista.projeto.nome }} · {{ revista.componente.nome }}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/projeto.css' %}"><link rel="stylesheet" href="{% static 'ui/telas/revista.css' %}">{% endblock %}
+
+{% block conteudo %}
+<nav class="mudo voltar pj-trilha" aria-label="Trilha"><span aria-hidden="true">‹ </span><a href="{% url 'ui_projeto_lista' revista.ano.ano %}">Projetos de {{ revista.ano.ano }}</a> <span aria-hidden="true">›</span> <a href="{% url 'ui_projeto' revista.projeto_id %}?aba=revistas">{{ revista.projeto.nome }}</a></nav>
+<header class="pagina-cab">
+  <div>
+    <h1>{{ revista.projeto.nome }} · {{ revista.componente.nome }}</h1>
+    <dl class="pj-meta">
+      <div><dt>Parceiro</dt><dd>{{ revista.projeto.parceiro_ano.parceiro.nome }}</dd></div>
+      <div><dt>Ano</dt><dd>{{ revista.ano.ano }}</dd></div>
+    </dl>
+    {% if arquivada or pode_nome %}<p class="mudo">{% if arquivada %}<span class="badge badge-secundario">Arquivada</span>{% endif %}{% if arquivada and pode_nome %} · {% endif %}{% if pode_nome %}<a class="link" href="{% url 'ui_projeto' revista.projeto_id %}#nome">Editar o nome do projeto</a>{% endif %}</p>{% endif %}
+  </div>
+  <div class="acoes revista-cab-acoes">
+    {% if request.pode_gravar %}{% include "ui/_componentes/status_salvo.html" %}{% endif %}
+    <a class="btn btn-ghost" href="{% url 'preview' revista.pk %}" target="_blank" rel="noopener" title="Abre mesmo com pendências; o que falta aparece marcado.">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+      {% if arquivada %}Abrir versão arquivada{% else %}Abrir preview{% endif %}<span class="sr-only"> (nova aba)</span>
+    </a>
+    <a class="btn btn-outline" href="{% url 'ui_revista_zip' revista.ano.ano revista.pk %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>
+      Baixar zip
+    </a>
+    {% if perms.nucleo.view_revista %}<a class="btn btn-outline" href="{% url 'impresso_planilhas' revista.pk %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>
+      Baixar planilhas
+    </a>{% endif %}
+    <a class="link mudo revista-cab-link" href="{% url 'ui_impresso' revista.ano.ano %}?revista={{ revista.pk }}">Tela do impresso</a>
+  </div>
+</header>
+
+{% if arquivada %}
+{% include "ui/_componentes/so_leitura.html" with texto="Só leitura: revista arquivada. O texto mostrado é a foto do arquivamento." %}
+{% elif not perms.nucleo.change_revista %}
+{% include "ui/_componentes/so_leitura.html" with texto="Só leitura: seu perfil vê a revista, mas não altera. Para editar, peça a permissão de revista a um administrador." %}
+{% endif %}
+{% if request.bloqueio %}<form class="sr-only" aria-hidden="true">{% csrf_token %}{% include "ui/_componentes/bloqueio.html" %}</form>{% endif %}
+
+<div class="revista-layout">
+  <div class="revista-principal">
+    {% if request.pode_gravar %}
+    <form id="revista-form" class="revista-passos" x-data="campoAuto" novalidate>{% csrf_token %}
+      <input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">
+    {% else %}
+    <div class="revista-passos">
+    {% endif %}
+      {% url 'ui_revista_editar' revista.ano.ano revista.pk as url %}
+      <section class="card revista-passo" id="templates" aria-labelledby="templates-titulo">
+        <header class="revista-passo-cab">
+          <span class="revista-passo-num" aria-hidden="true">1</span>
+          <div>
+            <h2 class="secao-titulo" id="templates-titulo">Templates</h2>
+            <p class="mudo">{% if pode_templates %}Salva ao escolher. {% endif %}Só aparecem templates do mesmo ano, componente e fascículo.</p>
+          </div>
+        </header>
+        {% if pode_templates %}
+        <div class="revista-templates" data-url="{{ url }}?acao=templates">
+          {% for f in fasciculos %}
+          <div class="campo">
+            <label for="template-{{ f.prefix }}">Template do {{ f.prefix }}</label>
+            {{ f.template }}
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <dl class="revista-dl">
+          {% for f in fasciculos %}<div><dt>{{ f.prefix }}</dt><dd>{{ f.instance.template.nome|default:"Sem template" }}</dd></div>{% endfor %}
+        </dl>
+        {% endif %}
+      </section>
+
+      {% include "ui/parciais/revista_arquivos.html" %}
+    {% if request.pode_gravar %}</form>{% else %}</div>{% endif %}
+
+    {% include "ui/parciais/revista_textos.html" %}
+  </div>
+
+  {% include "ui/parciais/revista_situacao.html" %}
+</div>
+{% endblock %}

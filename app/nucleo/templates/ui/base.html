@@ -1,0 +1,56 @@
+{% load static %}<!doctype html>
+{% comment %}
+Casca das páginas próprias (opção B), espelho de editor/src/layout/AppLayout.tsx.
+Contexto: `secao` marca o item ativo dos 5 do menu (Cortes, Variáveis, Revistas e Lotes marcam
+Projetos; `anos` não marca nenhum e destaca o seletor). O ano vem de `nucleo/contexto.py` (`ano_ctx`,
+`trocas_ano`): cada item aponta para a rota B daquele ano; sem ano, para a rota `_inicio`. Referência: docs/telas/design-system.md.
+{% endcomment %}
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}{% endblock %} · Revista Eletrônica</title>
+  <link rel="icon" href="data:,">
+  <link rel="preload" href="{% static 'ui/fontes/inter-latin-wght-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{% static 'ui/ui.css' %}">
+  <script src="{% static 'ui/htmx.min.js' %}" defer></script>
+  <script src="{% static 'ui/ui.js' %}" defer></script>
+  {# D-195: Sortable e componentes.js antes do Alpine (o alpine:init precisa achar os Alpine.data). #}
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js" integrity="sha384-HZZ/fukV+9G8gwTNjN7zQDG0Sp7MsZy5DDN6VfY3Be7V9dvQpEpR2jF2HlyFUUjU" crossorigin="anonymous" defer></script>
+  <script src="{% static 'ui/componentes.js' %}" defer></script>
+  <script src="{% static 'ui/componentes/seletor-ano.js' %}" defer></script>
+  <script src="{% static 'ui/componentes/autosave.js' %}" defer></script>
+  <script src="{% static 'ui/componentes/tabela-rolavel.js' %}" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@alpinejs/csp@3.14.9/dist/cdn.min.js" integrity="sha384-zaqGaLZBjCeXCLnYyKyAJrDaZcsW8AqZN7iDmFDw3TzHJvhjMckT1H52jWWza0w8" crossorigin="anonymous" defer></script>
+  {% block cabeca %}{% endblock %}
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+  <a class="pular" href="#conteudo">Pular para o conteúdo</a>
+  <header class="cab">
+    <div class="cab-in">
+      <a class="marca" href="{% url 'inicio' %}">Revista Eletrônica</a>
+      {% include "ui/_componentes/anos.html" %}
+      <nav class="nav" aria-label="Principal">
+        {% with a=ano_ctx %}
+        <a href="{% if a %}{% url 'painel' a.ano %}{% else %}{% url 'inicio' %}{% endif %}"{% if secao == "painel" %} aria-current="page"{% endif %}>Painel</a>
+        <a href="{% if a %}{% url 'ui_projeto_lista' a.ano %}{% else %}{% url 'ui_projeto_inicio' %}{% endif %}"{% if secao == "projetos" or secao == "cortes" or secao == "variaveis" or secao == "revistas" or secao == "lotes" %} aria-current="page"{% endif %}>Projetos</a>
+        <a href="{% if a %}{% url 'ui_matriz' a.ano %}{% else %}{% url 'ui_matriz_inicio' %}{% endif %}"{% if secao == "matrizes" %} aria-current="page"{% endif %}>Matrizes</a>
+        <a href="{% if a %}{% url 'ui_templates' a.ano %}{% else %}{% url 'ui_templates_inicio' %}{% endif %}"{% if secao == "templates" %} aria-current="page"{% endif %}>Templates</a>
+        {% if perms.nucleo.marcar_impressa %}<a href="{% if a %}{% url 'ui_impresso' a.ano %}{% else %}{% url 'ui_impresso' %}{% endif %}"{% if secao == "impresso" %} aria-current="page"{% endif %}>Impresso</a>{% endif %}
+        {% endwith %}
+      </nav>
+      <div class="usuario">
+        <span class="mudo">{{ request.user.get_full_name|default:request.user.username }}</span>
+        {% if request.user.is_superuser %}<a class="btn btn-ghost btn-sm" href="{% url 'admin:index' %}">Admin</a>{% endif %}
+        {% if perms.auth.change_user %}<a class="btn btn-ghost btn-sm" href="{% url 'ui_usuarios' %}"{% if secao == "usuarios" %} aria-current="page"{% endif %}>Usuários</a>{% endif %}
+        <form method="post" action="{% url 'sair' %}">{% csrf_token %}<button class="btn btn-outline btn-sm" type="submit">Sair</button></form>
+      </div>
+    </div>
+  </header>
+  <main class="principal" id="conteudo">
+    {% include "ui/_componentes/mensagens.html" %}
+    {% block conteudo %}{% endblock %}
+  </main>
+  <div class="toasts" id="toasts" aria-live="assertive"></div>
+</body>
+</html>

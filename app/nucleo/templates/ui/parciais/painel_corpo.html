@@ -1,0 +1,108 @@
+{% comment %}
+Corpo do painel: filtros, resumo por coluna (contadores = filtro de falta) e tabela agrupada por
+projeto (nome do projeto primeiro, parceiro em cinza). A página inclui; o filtro (HTMX) devolve só isto para #painel-corpo. Contexto: urls/ui_painel.py.
+{% endcomment %}<form class="painel-filtros" method="get" action="{% url 'painel' ano.ano %}"
+      hx-get="{% url 'painel' ano.ano %}" hx-trigger="change" hx-target="#painel-corpo" hx-sync="this:replace" hx-indicator="#painel-corpo" hx-push-url="true">
+  {% if falta %}<input type="hidden" name="falta" value="{{ falta }}">{% endif %}
+  <div class="campo">
+    <label for="filtro-parceiro">Parceiro</label>
+    <select class="select" id="filtro-parceiro" name="parceiro">
+      <option value="">Todos</option>
+      {% for p in opcoes_parceiro %}<option value="{{ p.pk }}"{% if p.pk == parceiro.pk %} selected{% endif %}>{{ p.nome }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="campo">
+    <label for="filtro-componente">Componente</label>
+    <select class="select" id="filtro-componente" name="componente">
+      <option value="">Todos</option>
+      {% for c in opcoes_componente %}<option value="{{ c.pk }}"{% if c.pk == componente.pk %} selected{% endif %}>{{ c.codigo }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="campo painel-filtro-largo">
+    <label for="filtro-template">Template</label>
+    <select class="select" id="filtro-template" name="template">
+      <option value="">Todos</option>
+      {% for t in opcoes_template %}<option value="{{ t.pk }}"{% if t.pk == template.pk %} selected{% endif %}>{{ t.componente.codigo }} · {{ t }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="campo">
+    <label for="filtro-matriz">Matriz</label>
+    <select class="select" id="filtro-matriz" name="matriz">
+      <option value="">Todas</option>
+      {% for m in opcoes_matriz %}<option value="{{ m.pk }}"{% if m.pk == matriz.pk %} selected{% endif %}>{{ m.nome }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="campo">
+    <label for="filtro-situacao">Situação</label>
+    <select class="select" id="filtro-situacao" name="situacao">
+      <option value="">Todas</option>
+      {% for valor, rotulo in situacoes.items %}<option value="{{ valor }}"{% if valor == situacao %} selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+    </select>
+  </div>
+  {% if filtrado %}<a class="link painel-limpar-tudo" href="{{ request.path }}" hx-get="{{ request.path }}" hx-target="#painel-corpo" hx-indicator="#painel-corpo" hx-push-url="true">Limpar filtros</a>{% endif %}
+  <noscript><button class="btn btn-outline" type="submit">Filtrar</button></noscript>
+</form>
+
+{% if todas %}
+<section class="painel-sumario" aria-label="O que falta, por coluna" hx-target="#painel-corpo" hx-indicator="#painel-corpo" hx-push-url="true">
+  <p class="painel-resumo"><strong>{{ completas }}</strong> de {{ todas|length }} revista{{ todas|length|pluralize }} completa{{ todas|length|pluralize }}{% if falta %} · {{ linhas|length }} sem {% for c in colunas %}{% if c.chave == falta %}{{ c.rotulo }}{% endif %}{% endfor %}{% endif %}</p>
+  <ul class="painel-contadores">
+    {% for c in colunas %}<li>{% if c.faltam %}<button type="button" class="painel-contador" aria-pressed="{% if c.chave == falta %}true{% else %}false{% endif %}" hx-get="{{ c.url }}" title="{% if c.chave == falta %}Voltar a todas as revistas{% else %}Ver só as revistas sem {{ c.rotulo }}{% endif %}"><span class="painel-contador-n">{{ c.faltam }}</span>{{ c.rotulo }}<span class="sr-only"> sem {{ c.rotulo }}</span></button>
+    {% else %}<span class="painel-contador painel-contador-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>{{ c.rotulo }}<span class="sr-only">: em dia</span></span>{% endif %}</li>{% endfor %}
+  </ul>
+  {% if falta %}<a class="link painel-limpar" href="{{ sem_falta }}" hx-get="{{ sem_falta }}">Limpar filtro</a>{% endif %}
+</section>
+{% endif %}
+
+{% if not todas and not filtrado %}
+{% if perms.nucleo.change_corte %}{% url 'cortes' ano.ano as u %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhuma revista ativa neste ano" texto="As revistas nascem quando os cortes do parceiro são lançados. Lance os cortes do ano para ver as revistas aqui." url=u rotulo="Abrir cortes" %}
+{% else %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhuma revista ativa neste ano" texto="As revistas nascem quando a equipe pedagógica lança os cortes do parceiro." %}
+{% endif %}
+{% elif not linhas %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhuma revista com esse filtro" texto=vazio_texto url=vazio_url rotulo="Limpar filtro" %}
+{% else %}
+<form method="get" action="{% url 'ui_validar' ano.ano %}" id="painel-lote">
+  <div class="tabela-rolavel tabela-densa painel-caixa" x-data="tabelaRolavel">
+    <table class="tabela painel-tabela">
+      <thead>
+        <tr>
+          <th scope="col" class="fixa painel-revista">{% if pode_validar %}<input type="checkbox" data-todas aria-label="Selecionar todas as revistas da lista">{% endif %}Revista</th>
+          {% for c in colunas %}<th scope="col" class="painel-col{% if c.chave == falta %} painel-col-ativa{% endif %}">{{ c.rotulo }}</th>{% endfor %}
+        </tr>
+      </thead>
+      {% for g in grupos %}
+      <tbody>
+        <tr class="painel-grupo" data-grupo-linha="{{ g.projeto.pk }}">
+          <th scope="rowgroup" class="fixa painel-revista">
+            {% if pode_validar %}<input type="checkbox" data-grupo="{{ g.projeto.pk }}" aria-label="Selecionar as revistas de {{ g.projeto.nome }}">{% endif %}
+            <a class="painel-grupo-nome" href="{% url 'ui_projeto' g.projeto.pk %}" title="Abrir o projeto">{{ g.projeto.nome }}</a>
+            <span class="painel-grupo-parceiro" title="Parceiro"><span class="sr-only">Parceiro </span>{{ g.parceiro.nome }}</span>
+            <span class="painel-grupo-conta">{{ g.completas }} de {{ g.total }} revista{{ g.total|pluralize }} completa{{ g.total|pluralize }}</span>
+          </th>
+          <td colspan="{{ colunas|length }}"></td>
+        </tr>
+        {% for l in g.linhas %}
+        <tr data-revista="{{ l.revista.pk }}">
+          <th scope="row" class="fixa painel-revista painel-sub">
+            {% if pode_validar %}<input type="checkbox" name="revista" value="{{ l.revista.pk }}" data-de="{{ g.projeto.pk }}" aria-label="Selecionar {{ l.revista }}">{% endif %}
+            <a class="link-linha" href="{% url 'ui_revista_editar' ano.ano l.revista.pk %}"><span class="badge badge-secundario">{{ l.revista.componente.codigo }}</span><span class="sr-only">{{ g.projeto.nome }} · </span>{{ l.revista.componente.nome }}</a>
+            <a class="painel-preview" href="{% url 'preview' l.revista.pk %}" target="_blank" rel="noopener" title="Abre mesmo com pendências; o que falta aparece em faixa vermelha.">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Preview<span class="sr-only"> de {{ l.revista }} (abre em nova aba)</span></a>
+          </th>
+          {% for c in l.celulas %}<td class="painel-cel coluna-{{ c.coluna }}">{% if c.ok and c.link %}<a href="{{ c.link }}" title="Ver a última versão impressa">{% include "ui/_componentes/status.html" with ok=True titulo="ok" %}</a>{% else %}{% include "ui/_componentes/status.html" with ok=c.ok url=c.link titulo=c.dica %}{% endif %}</td>{% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+      {% endfor %}
+    </table>
+  </div>
+  {% if pode_validar %}
+  <div class="barra-salvar painel-barra">
+    <span class="mudo" aria-live="polite" data-selecionadas>Nenhuma selecionada</span>
+    <button class="btn" type="submit" data-validar disabled>Validar selecionadas</button>
+  </div>
+  {% endif %}
+</form>
+{% endif %}

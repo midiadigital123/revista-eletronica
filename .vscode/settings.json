@@ -1,3 +1,10 @@
 {
-    "liveServer.settings.port": 5501
+    "liveServer.settings.port": 5501,
+    // Templates Django: o Prettier quebra {{ }} e {# #} em várias linhas e o Django mostra a tag crua.
+    "files.associations": {
+        "**/templates/**/*.html": "django-html"
+    },
+    "[django-html]": {
+        "editor.formatOnSave": false
+    }
 }

@@ -1,0 +1,43 @@
+{% extends "ui/base.html" %}
+{% load static %}
+{% comment %}Confirmação forte da exclusão de tarefa ou descritor (D-181): revistas afetadas, as que perdem o
+"Validado" e o código digitado. Regra do form: admin/matriz.py (ExcluirForm). Bloqueio: MEC.{% endcomment %}
+{% block titulo %}Excluir {{ rotulo }} {{ obj.codigo }}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/matriz.css' %}">{% endblock %}
+
+{% block conteudo %}
+<a class="mudo voltar" href="{{ voltar }}">‹ Voltar sem excluir</a>
+<header class="pagina-cab">
+  <div>
+    <h1>Excluir {{ rotulo }} {{ obj.codigo }}</h1>
+    <p class="mudo">De {{ mec.matriz.nome }} {{ mec.etapa.codigo }} {{ mec.componente.codigo }}{% if rotulo == "descritor" %}, com as tarefas dele{% endif %}. A exclusão vale para toda revista que usa esta matriz e não se desfaz pela tela.</p>
+  </div>
+</header>
+
+{% if revistas %}
+<div class="tabela-caixa card matriz-tabela">
+  <table class="tabela">
+    <caption class="matriz-legenda">Revistas ativas afetadas: {{ revistas|length }}; perdem o “Validado”: {{ validadas }}</caption>
+    <thead><tr><th scope="col">Revista</th><th scope="col">Validado</th></tr></thead>
+    <tbody>
+    {% for revista, validada in revistas %}
+      <tr><th scope="row">{{ revista }}</th><td>{% if validada %}<span class="badge badge-erro">Perde o “Validado”</span>{% else %}<span class="mudo">—</span>{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="aviso">Nenhuma revista ativa usa esta etapa × componente.</p>
+{% endif %}
+
+{% if pode_gravar %}
+<form method="post" class="matriz-cartao-form" novalidate>{% csrf_token %}
+  {% include "ui/_componentes/bloqueio.html" %}
+  {% include "ui/_componentes/confirmar.html" with nome="confirmacao" codigo=obj.codigo texto="Confira a lista acima: a exclusão não se desfaz pela tela." erro=form.confirmacao.errors.0 %}
+  <div class="acoes matriz-fim">
+    <a class="btn btn-outline" href="{{ voltar }}">Voltar sem excluir</a>
+    <button type="submit" class="btn btn-destrutivo" data-confirmado>Excluir {{ rotulo }}</button>
+  </div>
+</form>
+{% endif %}
+{% endblock %}

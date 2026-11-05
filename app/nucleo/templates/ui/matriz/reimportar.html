@@ -1,0 +1,30 @@
+{% extends "ui/base.html" %}
+{% load static %}
+{% comment %}Reimportar a matriz pelo PDF do SAEGO ou planilha (T09). Regra: nucleo/matriz.py (reimportar).{% endcomment %}
+{% block titulo %}Reimportar {{ matriz.nome }}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/matriz.css' %}">{% endblock %}
+
+{% block conteudo %}
+<a class="mudo voltar" href="{% url 'ui_matriz_detalhe' matriz.pk %}">‹ {{ matriz.nome }}</a>
+<header class="pagina-cab">
+  <div>
+    <h1>Reimportar {{ matriz.nome }}</h1>
+    <p class="mudo">Só as etapas × componente do arquivo são tocadas. Nelas, descritores e tarefas são apagados e recriados a partir do arquivo; edições feitas no sistema se perdem.</p>
+  </div>
+</header>
+
+<form method="post" enctype="multipart/form-data" class="card matriz-cartao-form" novalidate>{% csrf_token %}
+  {% for e in form.non_field_errors %}<p class="aviso aviso-erro" role="alert">{{ e }}</p>{% endfor %}
+  {% include "ui/_componentes/matriz_campo.html" with campo=form.arquivo %}
+  {% include "ui/_componentes/matriz_campo.html" with campo=form.passo %}
+  {% if tem_mec %}
+    {% include "ui/_componentes/confirmar.html" with nome="confirmacao" codigo=matriz.nome texto=aviso_confirmar erro=form.confirmacao.errors.0 %}
+  {% else %}
+    {% include "ui/_componentes/matriz_campo.html" with campo=form.confirmacao %}
+  {% endif %}
+  <div class="acoes matriz-fim">
+    <a class="btn btn-outline" href="{% url 'ui_matriz_detalhe' matriz.pk %}">Voltar sem importar</a>
+    <button type="submit" class="btn btn-destrutivo">Importar e substituir</button>
+  </div>
+</form>
+{% endblock %}

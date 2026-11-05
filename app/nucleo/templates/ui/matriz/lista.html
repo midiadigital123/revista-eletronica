@@ -1,0 +1,61 @@
+{% extends "ui/base.html" %}
+{% load static %}
+{% comment %}Matrizes do ano (T09). View: nucleo/urls/ui_matriz.py (matrizes). Ficha: docs/telas/fichas/matriz.md.{% endcomment %}
+{% block titulo %}Matrizes{% if ano %} {{ ano.ano }}{% endif %}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/matriz.css' %}">{% endblock %}
+
+{% block conteudo %}
+<header class="pagina-cab">
+  <div>
+    <h1>Matrizes</h1>
+    <p class="mudo">Descritores e tarefas que as revistas do ano usam, por etapa e componente.</p>
+  </div>
+  {% if ano %}<div class="acoes">
+    <a class="btn btn-ghost" href="{% url 'painel' ano.ano %}">Ver painel de {{ ano.ano }}</a>
+    {% if perms.nucleo.add_matriz %}<button type="button" class="btn" data-abrir="dlg-nova">Nova matriz</button>{% endif %}
+  </div>{% endif %}
+</header>
+
+{% if not ano %}
+{% if perms.nucleo.abrir_ano %}{% url 'ui_anos' as u %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhum ano aberto" texto="Abra um ano para cadastrar a matriz." url=u rotulo="Abrir anos" %}
+{% else %}
+{% include "ui/_componentes/vazio.html" with titulo="Nenhum ano aberto" texto="Peça a um administrador para abrir o ano." %}
+{% endif %}
+{% else %}
+
+{% if matrizes %}
+<div class="tabela-caixa card matriz-tabela">
+  <table class="tabela">
+    <thead><tr><th scope="col">Matriz</th><th scope="col">Duplicada de</th><th scope="col" class="num">Etapas × componente</th><th scope="col" class="num">Descritores</th></tr></thead>
+    <tbody>
+    {% for m in matrizes %}
+      <tr>
+        <th scope="row"><a class="link-linha" href="{% url 'ui_matriz_detalhe' m.pk %}">{{ m.nome }}</a></th>
+        <td>{% if m.duplicada_de %}{{ m.duplicada_de.nome }} <span class="mudo">({{ m.duplicada_de.ano.ano }})</span>{% else %}<span class="mudo">—</span>{% endif %}</td>
+        <td class="num">{{ m.n_mec }}</td>
+        <td class="num">{{ m.n_desc }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+{% if perms.nucleo.add_matriz %}
+  {% if outras %}{% with o=outras.0 %}{% url 'ui_matriz_detalhe' o.pk as u %}
+  {% include "ui/_componentes/vazio.html" with titulo=vazio_titulo texto="Crie uma matriz vazia e importe o arquivo do SAEGO, ou abra a matriz de outro ano e use Duplicar." abrir="dlg-nova" rotulo="Nova matriz" mais=True url2=u rotulo2="Abrir "|add:o.nome %}
+  {% endwith %}{% else %}
+  {% include "ui/_componentes/vazio.html" with titulo="Nenhuma matriz cadastrada" texto="Crie a primeira matriz e importe o arquivo do SAEGO (PDF ou planilha)." abrir="dlg-nova" rotulo="Nova matriz" mais=True %}
+  {% endif %}
+{% else %}
+  {% include "ui/_componentes/vazio.html" with titulo=vazio_titulo|default:"Nenhuma matriz cadastrada" texto="A matriz do ano nasce quando a equipe pedagógica a cria ou duplica a de outro ano." %}
+{% endif %}
+{% endif %}
+{% endif %}
+{% if ano and nova %}
+<dialog class="dialogo" id="dlg-nova" aria-labelledby="dlg-nova-titulo">
+  {% url 'ui_matriz_nova' ano.ano as url %}
+  {% include "ui/parciais/matriz_form.html" with form=nova chave="nova" titulo="Nova matriz" %}
+</dialog>
+{% endif %}
+{% endblock %}

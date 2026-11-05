@@ -1,0 +1,5 @@
+{% comment %}
+Selo "herdado × sobrescrito" de um valor da página do projeto. Dentro de x-data="sobrescrita" o Alpine
+alterna os dois (x-show); fora dele (só leitura) o x-cloak esconde o que não vale.
+  {% include "ui/_componentes/selo_sobrescrita.html" with sobrescrito=… herdado_txt="do ano" proprio_txt="sobrescrita" %}
+{% endcomment %}<span class="badge badge-contorno" x-show="herdado"{% if sobrescrito %} x-cloak{% endif %}>{{ herdado_txt }}</span><span class="badge" x-show="sobrescrito"{% if not sobrescrito %} x-cloak{% endif %}>{{ proprio_txt }}</span>

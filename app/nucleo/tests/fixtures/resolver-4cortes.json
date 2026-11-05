@@ -1,0 +1,564 @@
+{
+ "5ef": {
+  "scaleRange": {
+   "min": 0,
+   "max": 500
+  },
+  "cortes": {
+   "padrao-1": 100,
+   "padrao-2": 200,
+   "padrao-3": 250,
+   "padrao-4": 300
+  },
+  "padroes": [
+   {
+    "chave": "padrao-1",
+    "rotulo": "Padrão 01"
+   },
+   {
+    "chave": "padrao-2",
+    "rotulo": "Padrão 02"
+   },
+   {
+    "chave": "padrao-3",
+    "rotulo": "Padrão 03"
+   },
+   {
+    "chave": "padrao-4",
+    "rotulo": "Padrão 04"
+   },
+   {
+    "chave": "padrao-5",
+    "rotulo": "Padrão 05"
+   }
+  ],
+  "D01": {
+   "description": "Descritor 1 LP",
+   "prerequisites": [
+    "Pré 1;",
+    "Pré 2."
+   ],
+   "bncc": {
+    "practices": "Leitura",
+    "knowledge": "Estratégia",
+    "skills": [
+     "EF15LP02"
+    ]
+   },
+   "scale": {
+    "padrao-1": [
+     {
+      "level": 75,
+      "fim": 100,
+      "content": "---"
+     },
+     {
+      "level": 50,
+      "fim": 75,
+      "content": "---"
+     },
+     {
+      "level": 25,
+      "fim": 50,
+      "content": "---"
+     },
+     {
+      "level": 0,
+      "fim": 25,
+      "content": "---"
+     }
+    ],
+    "padrao-2": [
+     {
+      "level": 175,
+      "fim": 200,
+      "content": "---"
+     },
+     {
+      "level": 150,
+      "fim": 175,
+      "content": "---"
+     },
+     {
+      "level": 125,
+      "fim": 150,
+      "content": "---"
+     },
+     {
+      "level": 100,
+      "fim": 150,
+      "content": "Localiza."
+     }
+    ],
+    "padrao-3": [
+     {
+      "level": 200,
+      "fim": 225,
+      "content": "---"
+     }
+    ],
+    "padrao-4": [
+     {
+      "level": 275,
+      "fim": 300,
+      "content": "---"
+     },
+     {
+      "level": 250,
+      "fim": 275,
+      "content": "---"
+     },
+     {
+      "level": 225,
+      "fim": 275,
+      "content": "Cruza o corte 250."
+     }
+    ],
+    "padrao-5": [
+     {
+      "level": 475,
+      "fim": 500,
+      "content": "---"
+     },
+     {
+      "level": 450,
+      "fim": 475,
+      "content": "---"
+     },
+     {
+      "level": 425,
+      "fim": 450,
+      "content": "---"
+     },
+     {
+      "level": 400,
+      "fim": 425,
+      "content": "---"
+     },
+     {
+      "level": 375,
+      "fim": 400,
+      "content": "---"
+     },
+     {
+      "level": 350,
+      "fim": 375,
+      "content": "---"
+     },
+     {
+      "level": 325,
+      "fim": 350,
+      "content": "---"
+     },
+     {
+      "level": 300,
+      "fim": 325,
+      "content": "---"
+     }
+    ]
+   }
+  },
+  "D02": {
+   "description": "Descritor 2",
+   "prerequisites": [],
+   "bncc": {
+    "practices": "",
+    "knowledge": "",
+    "skills": []
+   },
+   "scale": {
+    "padrao-1": [
+     {
+      "level": 75,
+      "fim": 100,
+      "content": "---"
+     },
+     {
+      "level": 50,
+      "fim": 75,
+      "content": "---"
+     },
+     {
+      "level": 25,
+      "fim": 50,
+      "content": "---"
+     },
+     {
+      "level": 0,
+      "fim": 25,
+      "content": "---"
+     }
+    ],
+    "padrao-2": [
+     {
+      "level": 175,
+      "fim": 200,
+      "content": "---"
+     },
+     {
+      "level": 150,
+      "fim": 175,
+      "content": "---"
+     },
+     {
+      "level": 125,
+      "fim": 150,
+      "content": "---"
+     },
+     {
+      "level": 100,
+      "fim": 125,
+      "content": "---"
+     }
+    ],
+    "padrao-3": [
+     {
+      "level": 225,
+      "fim": 250,
+      "content": "---"
+     },
+     {
+      "level": 200,
+      "fim": 225,
+      "content": "---"
+     }
+    ],
+    "padrao-4": [
+     {
+      "level": 275,
+      "fim": 300,
+      "content": "---"
+     },
+     {
+      "level": 250,
+      "fim": 275,
+      "content": "---"
+     }
+    ],
+    "padrao-5": [
+     {
+      "level": 475,
+      "fim": 500,
+      "content": "---"
+     },
+     {
+      "level": 450,
+      "fim": 475,
+      "content": "---"
+     },
+     {
+      "level": 425,
+      "fim": 450,
+      "content": "---"
+     },
+     {
+      "level": 400,
+      "fim": 425,
+      "content": "---"
+     },
+     {
+      "level": 375,
+      "fim": 400,
+      "content": "---"
+     },
+     {
+      "level": 350,
+      "fim": 375,
+      "content": "---"
+     },
+     {
+      "level": 325,
+      "fim": 350,
+      "content": "---"
+     },
+     {
+      "level": 300,
+      "fim": 350,
+      "content": "Infere."
+     }
+    ]
+   }
+  }
+ },
+ "9ef": {
+  "scaleRange": {
+   "min": 0,
+   "max": 500
+  },
+  "cortes": {
+   "padrao-1": 100,
+   "padrao-2": 200,
+   "padrao-3": 250,
+   "padrao-4": 300
+  },
+  "padroes": [
+   {
+    "chave": "padrao-1",
+    "rotulo": "Padrão 01"
+   },
+   {
+    "chave": "padrao-2",
+    "rotulo": "Padrão 02"
+   },
+   {
+    "chave": "padrao-3",
+    "rotulo": "Padrão 03"
+   },
+   {
+    "chave": "padrao-4",
+    "rotulo": "Padrão 04"
+   },
+   {
+    "chave": "padrao-5",
+    "rotulo": "Padrão 05"
+   }
+  ],
+  "D01": {
+   "description": "Descritor 1 LP",
+   "prerequisites": [
+    "Pré 1;",
+    "Pré 2."
+   ],
+   "bncc": {
+    "practices": "Leitura",
+    "knowledge": "Estratégia",
+    "skills": [
+     "EF15LP02"
+    ]
+   },
+   "scale": {
+    "padrao-1": [
+     {
+      "level": 75,
+      "fim": 100,
+      "content": "---"
+     },
+     {
+      "level": 50,
+      "fim": 75,
+      "content": "---"
+     },
+     {
+      "level": 25,
+      "fim": 50,
+      "content": "---"
+     },
+     {
+      "level": 0,
+      "fim": 25,
+      "content": "---"
+     }
+    ],
+    "padrao-2": [
+     {
+      "level": 175,
+      "fim": 200,
+      "content": "---"
+     },
+     {
+      "level": 150,
+      "fim": 175,
+      "content": "---"
+     },
+     {
+      "level": 125,
+      "fim": 150,
+      "content": "---"
+     },
+     {
+      "level": 100,
+      "fim": 150,
+      "content": "Localiza."
+     }
+    ],
+    "padrao-3": [
+     {
+      "level": 200,
+      "fim": 225,
+      "content": "---"
+     }
+    ],
+    "padrao-4": [
+     {
+      "level": 275,
+      "fim": 300,
+      "content": "---"
+     },
+     {
+      "level": 250,
+      "fim": 275,
+      "content": "---"
+     },
+     {
+      "level": 225,
+      "fim": 275,
+      "content": "Cruza o corte 250."
+     }
+    ],
+    "padrao-5": [
+     {
+      "level": 475,
+      "fim": 500,
+      "content": "---"
+     },
+     {
+      "level": 450,
+      "fim": 475,
+      "content": "---"
+     },
+     {
+      "level": 425,
+      "fim": 450,
+      "content": "---"
+     },
+     {
+      "level": 400,
+      "fim": 425,
+      "content": "---"
+     },
+     {
+      "level": 375,
+      "fim": 400,
+      "content": "---"
+     },
+     {
+      "level": 350,
+      "fim": 375,
+      "content": "---"
+     },
+     {
+      "level": 325,
+      "fim": 350,
+      "content": "---"
+     },
+     {
+      "level": 300,
+      "fim": 325,
+      "content": "---"
+     }
+    ]
+   }
+  },
+  "D02": {
+   "description": "Descritor 2",
+   "prerequisites": [],
+   "bncc": {
+    "practices": "",
+    "knowledge": "",
+    "skills": []
+   },
+   "scale": {
+    "padrao-1": [
+     {
+      "level": 75,
+      "fim": 100,
+      "content": "---"
+     },
+     {
+      "level": 50,
+      "fim": 75,
+      "content": "---"
+     },
+     {
+      "level": 25,
+      "fim": 50,
+      "content": "---"
+     },
+     {
+      "level": 0,
+      "fim": 25,
+      "content": "---"
+     }
+    ],
+    "padrao-2": [
+     {
+      "level": 175,
+      "fim": 200,
+      "content": "---"
+     },
+     {
+      "level": 150,
+      "fim": 175,
+      "content": "---"
+     },
+     {
+      "level": 125,
+      "fim": 150,
+      "content": "---"
+     },
+     {
+      "level": 100,
+      "fim": 125,
+      "content": "---"
+     }
+    ],
+    "padrao-3": [
+     {
+      "level": 225,
+      "fim": 250,
+      "content": "---"
+     },
+     {
+      "level": 200,
+      "fim": 225,
+      "content": "---"
+     }
+    ],
+    "padrao-4": [
+     {
+      "level": 275,
+      "fim": 300,
+      "content": "---"
+     },
+     {
+      "level": 250,
+      "fim": 275,
+      "content": "---"
+     }
+    ],
+    "padrao-5": [
+     {
+      "level": 475,
+      "fim": 500,
+      "content": "---"
+     },
+     {
+      "level": 450,
+      "fim": 475,
+      "content": "---"
+     },
+     {
+      "level": 425,
+      "fim": 450,
+      "content": "---"
+     },
+     {
+      "level": 400,
+      "fim": 425,
+      "content": "---"
+     },
+     {
+      "level": 375,
+      "fim": 400,
+      "content": "---"
+     },
+     {
+      "level": 350,
+      "fim": 375,
+      "content": "---"
+     },
+     {
+      "level": 325,
+      "fim": 350,
+      "content": "---"
+     },
+     {
+      "level": 300,
+      "fim": 350,
+      "content": "Infere."
+     }
+    ]
+   }
+  }
+ }
+}

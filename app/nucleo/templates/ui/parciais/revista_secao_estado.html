@@ -1,0 +1,30 @@
+{% comment %}
+Estado de uma seção da revista (dentro do form de revista_secao.html): título, selo (template, cópia,
+desatualizada), o aviso com o diff e as ações explícitas da cópia. O id leva a seção: o autosave do
+texto troca só esta parte, e só se a pessoa ainda estiver na mesma seção.
+As ações vão por HTMX (acao=secao) com os campos do form (o HTMX inclui o form de quem dispara); o
+hx-vals marca qual. A div das ações passa o alvo aos botões (atributos hx- herdados).
+{% endcomment %}{% url 'ui_revista_editar' revista.ano.ano revista.pk as url_revista %}<div class="revista-secao-estado" id="secao-estado-{{ bloco.rf.fasciculo }}-{{ s.id }}">
+  <header class="revista-secao-cab">
+    <div>
+      <h3>{{ s.rotulo }} <span class="mudo">· {{ bloco.rf.fasciculo }}</span></h3>
+      <p class="mudo">Título (vem do template): {{ s.titulo }}</p>
+    </div>
+    {% if s.desatualizada %}<span class="badge badge-alerta">desatualizada</span>{% elif s.copia %}<span class="badge badge-secundario">cópia desta revista</span>{% else %}<span class="badge badge-contorno">texto do template</span>{% endif %}
+  </header>
+
+  {% if s.desatualizada %}
+  <div class="aviso aviso-alerta" role="status">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+    <span>O template mudou nesta seção depois da sua cópia. Edite o texto (o aviso some ao salvar), mantenha o seu texto como está ou descarte a cópia.</span>
+  </div>
+  <div class="revista-diff">{{ diff }}</div>
+  {% endif %}
+
+  {% if pode_textos and s.copia %}
+  <div class="revista-secao-acoes" hx-target="#secao" hx-select="#secao" hx-swap="outerHTML" hx-select-oob="#secoes,#situacao,#mensagens" hx-indicator="#secao">
+    {% if s.desatualizada %}<button type="button" class="btn btn-outline btn-sm" hx-post="{{ url_revista }}" hx-vals='{"{{ campo_manter }}": "on"}'>Manter meu texto</button>{% endif %}
+    <button type="button" class="btn btn-destrutivo btn-sm" hx-post="{{ url_revista }}" hx-vals='{"{{ campo_descartar }}": "on"}' hx-confirm="Descartar a cópia desta seção? O texto volta ao do template e o que foi editado aqui se perde.">Descartar cópia</button>
+  </div>
+  {% endif %}
+</div>

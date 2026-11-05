@@ -1,0 +1,56 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% comment %}Tela de impacto do TemplateAdmin: confirma a versão nova. O POST original volta inteiro
+nos hidden; o bloqueio segue com a mesma sessão (bloqueio.js renova).{% endcomment %}
+
+{% block extrahead %}{{ block.super }}
+<script src="{% static 'nucleo/bloqueio.js' %}" defer></script>
+<script src="{% static 'nucleo/template_editor.js' %}" defer></script>
+<link rel="stylesheet" href="{% static 'nucleo/template_editor.css' %}">
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">Início</a> &rsaquo;
+  <a href="{% url 'admin:nucleo_template_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a> &rsaquo;
+  {{ original }}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main" class="impacto-template">
+  <p>O texto passou na validação. Confirmar cria uma versão nova; a atual fica guardada.
+  Revistas sem cópia da seção mudam na hora; seções com cópia mantêm a cópia.</p>
+
+  {% if revistas %}
+  <table>
+    <caption>Revistas ativas afetadas: {{ revistas|length }}</caption>
+    <thead><tr><th scope="col">Revista</th><th scope="col">Seções com cópia (não mudam)</th>
+      <th scope="col">Impresso</th><th scope="col">Ids que faltariam no SVG</th></tr></thead>
+    <tbody>
+    {% for r in revistas %}
+      <tr>
+        <td>{{ r.revista.projeto }} · {{ r.revista.componente.codigo }}</td>
+        <td>{{ r.copias|join:", "|default:"—" }}</td>
+        <td>{% if r.impresso %}<strong class="impacto-alerta">Já tem foto do impresso</strong>{% else %}—{% endif %}</td>
+        <td>{% if r.ids_faltando %}<strong class="impacto-alerta">SVG incompleto: {{ r.ids_faltando|join:", " }}</strong>{% else %}—{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>Nenhuma revista ativa usa este template.</p>
+  {% endif %}
+
+  <form method="post" data-envio-unico>{% csrf_token %}
+    {% for nome, valor in dados %}<input type="hidden" name="{{ nome }}" value="{{ valor }}">{% endfor %}
+    <input type="hidden" id="bloqueio-sessao" name="{{ bloqueio_campo_sessao }}" value="{{ bloqueio.sessao }}"
+      data-alvo="{{ bloqueio.alvo }}" data-id="{{ bloqueio.id }}"
+      data-renovar="{% url 'bloqueio_renovar' %}" data-liberar="{% url 'bloqueio_liberar' %}">
+    <div class="submit-row">
+      <input type="submit" class="default" name="_confirmar" value="Confirmar e criar versão">
+      <input type="submit" name="_voltar" value="Voltar e editar">
+    </div>
+  </form>
+</div>
+{% endblock %}

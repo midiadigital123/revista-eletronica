@@ -1,0 +1,73 @@
+{% extends "ui/base.html" %}
+{% comment %}Excluir o que não está em uso (D-205), rota ui_excluir (urls/ui_excluir.py). Em uso: o que impede, com
+contagem e até 5 links, e nada de botão de excluir. Livre: confirmação forte (código ou nome digitado). Ano: o que
+sai junto (resumo_ano) e só o Admin chega aqui (D-206). Parceiro em uso: Desativar/Reativar (D-208).{% endcomment %}
+{% block titulo %}{% if resumo is not None %}Apagar o ano {{ obj.ano }}{% else %}Excluir {{ titulo }}{% endif %}{% endblock %}
+
+{% block conteudo %}
+<a class="mudo voltar" href="{{ voltar }}">‹ Voltar sem excluir</a>
+<header class="pagina-cab">
+  <div>
+    {% if resumo is not None %}
+    <h1>Apagar o ano {{ obj.ano }}</h1>
+    <p class="mudo">Sai o ano inteiro, com tudo o que é dele. Parceiros e usuários ficam, porque são de todos os anos. Não se desfaz pela tela.</p>
+    {% else %}
+    <h1>Excluir {{ titulo }}</h1>
+    {% if impedimentos %}<p class="mudo">Não dá para excluir: isto está em uso. Nada foi apagado.</p>{% else %}<p class="mudo">Nada usa isto. A exclusão não se desfaz pela tela.</p>{% endif %}
+    {% endif %}
+  </div>
+</header>
+
+{% if impedimentos %}
+<div class="tabela-caixa card">
+  <table class="tabela">
+    <caption class="mudo">O que impede a exclusão</caption>
+    <thead><tr><th scope="col">Em uso por</th><th scope="col">Quantos</th><th scope="col">Onde ver</th></tr></thead>
+    <tbody>
+    {% for imp in impedimentos %}
+      <tr>
+        <th scope="row">{{ imp.rotulo|capfirst }}</th>
+        <td>{{ imp.contagem }}</td>
+        <td>{% for texto, url in imp.links %}<a href="{{ url }}">{{ texto }}</a>{% if not forloop.last %}; {% endif %}{% empty %}<span class="mudo">—</span>{% endfor %}{% if imp.contagem > imp.links|length and imp.links %} <span class="mudo">(os primeiros {{ imp.links|length }} de {{ imp.contagem }})</span>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% if dica %}<p class="aviso aviso-alerta">{{ dica }}</p>{% endif %}
+{% if pode_desativar %}
+<form method="post" action="{% url 'ui_parceiro_ativo' obj.pk %}{% if voltar_query %}?voltar={{ voltar_query|urlencode }}{% endif %}" class="acoes">{% csrf_token %}
+  {% if obj.desativado_em %}
+  <p class="mudo">Desativado em {{ obj.desativado_em|date:"d/m/Y" }}: só aparece nos anos em que tem cortes ou projeto.</p>
+  <button type="submit" name="acao" value="reativar" class="btn btn-outline">Reativar o parceiro</button>
+  {% else %}
+  <button type="submit" name="acao" value="desativar" class="btn btn-outline">Desativar o parceiro</button>
+  <p class="mudo">Desativado, ele sai da grade dos anos em que não tem cortes. Os anos com dados dele continuam iguais.</p>
+  {% endif %}
+</form>
+{% endif %}
+{% else %}
+{% if resumo %}
+<div class="tabela-caixa card">
+  <table class="tabela">
+    <caption class="mudo">O que sai junto com {{ obj.ano }}</caption>
+    <thead><tr><th scope="col">O quê</th><th scope="col">Quantos</th></tr></thead>
+    <tbody>{% for rotulo, n in resumo %}<tr><th scope="row">{{ rotulo|capfirst }}</th><td>{{ n }}</td></tr>{% endfor %}</tbody>
+  </table>
+</div>
+{% elif resumo is not None %}
+<p class="aviso">O ano {{ obj.ano }} está vazio.</p>
+{% endif %}
+<form method="post" class="card card-estreito" novalidate>{% csrf_token %}
+  {% if resumo is not None %}
+  {% include "ui/_componentes/confirmar.html" with nome="confirmacao" codigo=codigo texto="Confira a lista acima: o ano inteiro sai e não volta." erro=form.confirmacao.errors.0 %}
+  {% else %}
+  {% include "ui/_componentes/confirmar.html" with nome="confirmacao" codigo=codigo texto="A exclusão não se desfaz pela tela." erro=form.confirmacao.errors.0 %}
+  {% endif %}
+  <div class="acoes">
+    <a class="btn btn-outline" href="{{ voltar }}">Voltar sem excluir</a>
+    <button type="submit" class="btn btn-destrutivo" data-confirmado>{% if resumo is not None %}Apagar o ano {{ obj.ano }}{% else %}Excluir{% endif %}</button>
+  </div>
+</form>
+{% endif %}
+{% endblock %}

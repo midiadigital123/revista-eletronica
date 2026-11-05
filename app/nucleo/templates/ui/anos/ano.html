@@ -1,0 +1,107 @@
+{% extends "ui/base.html" %}
+{% comment %}Página do ano (S4 de D-190): etapas e componentes. View em nucleo/urls/ui_anos.py (`ano`).
+Sem linha vazia (U4): "+ Adicionar" põe a linha nova (molde do empty_form, componente linhaNova), que
+grava pelo "Incluir". As linhas gravadas salvam campo a campo (U3, campoAuto, rota ui_ano_campo).
+A ordem das etapas é a escolar (`ordem_escolar`). Sem `pode.<tabela>`, só texto.{% endcomment %}
+{% block titulo %}Ano {{ ano.ano }}{% endblock %}
+
+{% block conteudo %}
+<a class="mudo voltar" href="{% url 'ui_anos' %}">‹ Anos</a>
+<header class="pagina-cab">
+  <div>
+    <h1>Ano {{ ano.ano }}</h1>
+    <p class="mudo">Etapas e componentes valem para todas as matrizes, cortes e revistas deste ano.</p>
+  </div>
+  {% if pode.etapas or pode.componentes %}<div class="acoes">{% include "ui/_componentes/status_salvo.html" with ocioso="Etapas e componentes salvam sozinhos; cada padrão, pelo Salvar dele." %}</div>{% endif %}
+</header>
+
+<section class="card" aria-labelledby="etapas-titulo">
+  <h2 class="secao-titulo" id="etapas-titulo">Etapas</h2>
+  <p class="mudo">O código não muda depois de criado. A escala máxima fica travada quando a etapa já tem corte ou matriz. A ordem é a escolar: o fundamental (EF) antes do médio (EM) e, em cada um, pela série.</p>
+  {% if pode.etapas %}<form method="post" id="etapas-form" novalidate x-data="campoAuto">{% csrf_token %}<input type="hidden" name="tabela" value="etapas">{{ etapas.management_form }}
+  <div x-data="linhaNova" data-total="id_etapas-TOTAL_FORMS">{% endif %}
+  {% for e in etapas.non_form_errors %}<p class="erro">{{ e }}</p>{% endfor %}
+  <div class="tabela-caixa">
+    <table class="tabela">
+      <thead><tr><th scope="col">Código</th><th scope="col">Escala máxima</th>{% if pode.etapas %}<th scope="col"><span class="sr-only">Ações da linha</span></th>{% endif %}</tr></thead>
+      <tbody data-linhas>
+      {% for f in etapas %}
+        {% if pode.etapas %}{% include "ui/parciais/ano_linha.html" with f=f tabela="etapas" %}
+        {% elif f.instance.pk %}<tr><th scope="row">{{ f.instance.codigo }}</th><td>{{ f.instance.escala_max }}</td></tr>{% endif %}
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if pode.etapas %}
+  <template data-molde>{% include "ui/parciais/ano_linha.html" with f=etapas.empty_form tabela="etapas" %}</template>
+  <button class="btn btn-outline btn-sm adicionar-linha" type="button" data-abrir-linha @click="abrir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Adicionar etapa</button>
+  </div></form>{% endif %}
+</section>
+
+<section class="card" aria-labelledby="componentes-titulo">
+  <h2 class="secao-titulo" id="componentes-titulo">Componentes</h2>
+  <p class="mudo">O código não muda depois de criado; o nome pode ser corrigido. A lista segue o código.</p>
+  {% if pode.componentes %}<form method="post" id="componentes-form" novalidate x-data="campoAuto">{% csrf_token %}<input type="hidden" name="tabela" value="componentes">{{ componentes.management_form }}
+  <div x-data="linhaNova" data-total="id_componentes-TOTAL_FORMS">{% endif %}
+  {% for e in componentes.non_form_errors %}<p class="erro">{{ e }}</p>{% endfor %}
+  <div class="tabela-caixa">
+    <table class="tabela">
+      <thead><tr><th scope="col">Código</th><th scope="col">Nome</th>{% if pode.componentes %}<th scope="col"><span class="sr-only">Ações da linha</span></th>{% endif %}</tr></thead>
+      <tbody data-linhas>
+      {% for f in componentes %}
+        {% if pode.componentes %}{% include "ui/parciais/ano_linha.html" with f=f tabela="componentes" %}
+        {% elif f.instance.pk %}<tr><th scope="row">{{ f.instance.codigo }}</th><td>{{ f.instance.nome }}</td></tr>{% endif %}
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if pode.componentes %}
+  <template data-molde>{% include "ui/parciais/ano_linha.html" with f=componentes.empty_form tabela="componentes" %}</template>
+  <button class="btn btn-outline btn-sm adicionar-linha" type="button" data-abrir-linha @click="abrir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Adicionar componente</button>
+  </div></form>{% endif %}
+</section>
+
+<section class="card" id="padroes" aria-labelledby="padroes-titulo">
+  <h2 class="secao-titulo" id="padroes-titulo">Padrões</h2>
+  <p class="mudo">Nome e cor de cada padrão valem para todos os projetos do ano, menos os que sobrescrevem no projeto.{% if pode.padroes %} Aqui cada linha grava pelo seu botão Salvar (não salva sozinha): mudar pode tirar o “Validado” de revistas, e a lista aparece antes de gravar.{% endif %}</p>
+  <div class="tabela-rolavel tabela-padroes" x-data="tabelaRolavel">
+    <table class="tabela">
+      <thead><tr><th scope="col" class="fixa">Padrão</th><th scope="col">Nome</th><th scope="col">Cor</th>{% if pode.padroes %}<th scope="col"><span class="sr-only">Salvar</span></th>{% endif %}</tr></thead>
+      <tbody>
+      {% for f in padroes %}{% with cp=f.instance %}
+        <tr>
+          <th scope="row" class="fixa"><span aria-hidden="true" class="amostra-padrao" style="background: {{ f.initial.cor|default:cp.cor }}"></span> Padrão {{ cp.padrao }}</th>
+          {% if pode.padroes %}
+          <td><form method="post" id="padrao-{{ cp.padrao }}" novalidate>{% csrf_token %}<input type="hidden" name="tabela" value="padroes"><input type="hidden" name="padrao" value="{{ cp.pk }}"></form>
+            <input class="input" form="padrao-{{ cp.padrao }}" type="text" name="{{ f.nome.html_name }}" id="{{ f.nome.id_for_label }}" value="{{ f.nome.value|default_if_none:'' }}" data-original="{{ f.initial.nome|default_if_none:'' }}" maxlength="200" aria-label="Nome do Padrão {{ cp.padrao }}"{% if f.nome.errors %} aria-invalid="true"{% endif %}{% if f.errors %} aria-describedby="padrao-{{ cp.padrao }}-erros"{% endif %}></td>
+          <td><input form="padrao-{{ cp.padrao }}" type="color" name="{{ f.cor.html_name }}" id="{{ f.cor.id_for_label }}" value="{% if f.cor.errors %}{{ f.initial.cor }}{% else %}{{ f.cor.value }}{% endif %}" data-original="{{ f.initial.cor }}" aria-label="Cor do Padrão {{ cp.padrao }}"{% if f.cor.errors %} aria-invalid="true"{% endif %}{% if f.errors %} aria-describedby="padrao-{{ cp.padrao }}-erros"{% endif %}> <span class="mudo">{{ f.initial.cor|upper }}</span></td>
+          <td><button class="btn btn-outline btn-sm" type="submit" form="padrao-{{ cp.padrao }}" aria-label="Salvar Padrão {{ cp.padrao }}">Salvar</button>
+            {% if f.precisa_confirmar %}{% with n=cp.padrao|stringformat:"s" %}{% include "ui/_componentes/impacto.html" with form_id="padrao-"|add:n campo=f.confirmar_impacto.html_name acao="Salvar" perdem=f.perdem %}{% endwith %}{% endif %}</td>
+          {% else %}
+          <td>{{ cp.nome|default:"sem nome" }}</td><td>{{ cp.cor|upper }}</td>
+          {% endif %}
+        </tr>
+        {% if f.errors %}
+        <tr><td colspan="4" id="padrao-{{ cp.padrao }}-erros" role="alert">
+          {% for e in f.non_field_errors %}<p class="erro">{{ e }}</p>{% endfor %}
+          {% for campo in f %}{% for e in campo.errors %}<p class="erro">{{ campo.label }}: {{ e }}</p>{% endfor %}{% endfor %}
+        </td></tr>
+        {% endif %}
+      {% endwith %}{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if novo and pode.novo_padrao %}
+  <details class="novo-padrao"{% if novo.errors %} open{% endif %}>
+    <summary class="btn btn-outline btn-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Adicionar padrão</summary>
+    <form method="post" class="novo-padrao-form" novalidate>{% csrf_token %}<input type="hidden" name="tabela" value="novo_padrao">
+      {% for campo in novo %}
+      <div class="campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% for e in campo.errors %}<p class="erro">{{ e }}</p>{% endfor %}</div>
+      {% endfor %}
+      <button class="btn btn-sm" type="submit">Incluir padrão</button>
+    </form>
+    {% for e in novo.non_field_errors %}<p class="erro">{{ e }}</p>{% endfor %}
+  </details>
+  {% endif %}
+</section>
+{% endblock %}

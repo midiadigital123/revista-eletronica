@@ -1,0 +1,4 @@
+{% comment %}
+Situação do impresso de uma revista (lista e cabeçalho do detalhe). `s` = situacao(revista).
+  {% include "ui/_componentes/impresso_situacao.html" with s=i %}
+{% endcomment %}{% if not s.pendente %}<span class="status status-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Em dia</span>{% elif s.validada %}<span class="badge badge-alerta">Para atualizar</span>{% else %}<span class="badge badge-secundario">Aguardando “Validado”</span>{% endif %}
