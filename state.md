@@ -8,7 +8,7 @@ Quebrado/pendente: S17 — falta a ação D (arquivar o svg-tour) e o preenchime
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Usuário decide a ação D do S17: arquivar o repositório svg-tour (`gh repo archive midiadigital123/svg-tour --yes`).
+Usuário: `git push origin feat/telas-b-ux:main` para a Infra ver o `docker-compose.prod.yml` (commits c3da7b2 e 539b4ce ainda só locais).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1749,8 +1749,17 @@ Usuário decide a ação D do S17: arquivar o repositório svg-tour (`gh repo ar
 - **Arquivos afetados:** `api/`, `editor/`, `revista/`, `scripts/` (apagados), `docs/fontes/2025/` (movido), `README.md`, `CLAUDE.md`, `docs/s17-carga-2026.md`, `docs/design-revista-impressa.md`, `app/nucleo/tests/test_importacao.py`
 - **Status:** ativa
 
+### D-214 — Compose de produção: Gunicorn, Django serve os estáticos, HTTPS atrás do proxy (2026-11-05)
+- **Contexto:** pedido de servidor à Infra; o repositório só tinha o compose de dev (`runserver`, DEBUG ligado, código montado de `./app`).
+- **Decisão:** `docker-compose.prod.yml` separado: Gunicorn (`-w 3 --timeout 120`), `DEBUG=0`, código na imagem, volume `media` em `/app/media`, `restart: unless-stopped`, `migrate` + `collectstatic` ao subir, porta só em `127.0.0.1:${APP_PORT:-8000}`, variáveis obrigatórias com `:?`. Settings: `STATIC_ROOT`, `CSRF_TRUSTED_ORIGINS` e `SESSION/CSRF_COOKIE_SECURE` por variável. `sistema/urls.py` serve `/static/` com `django.views.static.serve` só sem DEBUG. Modelo `.env.prod.example` na raiz.
+- **Motivo:** menor diff que roda sozinho, sem depender da Infra configurar o Nginx para estáticos. Testado numa stack isolada: login, CSRF com origem https, estáticos, admin, host errado 400, path traversal 400.
+- **Descartadas:** override do compose de dev (`ports` e `volumes` se somam: o `./app` montado e duas ligações na 8000); whitenoise (dependência nova para o que uma linha faz com poucos usuários internos; vira o caminho se o tráfego crescer); `SECURE_PROXY_SSL_HEADER` (depende de o proxy mandar `X-Forwarded-Proto`; `CSRF_TRUSTED_ORIGINS` não depende); `collectstatic` no build (o settings exige `DJANGO_SECRET_KEY` sem DEBUG).
+- **Arquivos afetados:** `docker-compose.prod.yml` (novo), `.env.prod.example` (novo), `app/requirements.txt`, `app/sistema/settings.py`, `app/sistema/urls.py`, `docs/docker.md`, `README.md`, `.gitignore`
+- **Status:** ativa
+
 ## Perguntas em aberto
-- [ ] Produção: falta `docker-compose.prod.yml` (Gunicorn no lugar do runserver, `STATIC_ROOT` + collectstatic, DEBUG=0, Postgres em container ou gerenciado) — depende de: resposta da Infra ao pedido de servidor (2026-11-05)
+- [x] Produção: `docker-compose.prod.yml` criado (D-214).
+- [ ] Produção: `check --deploy` avisa HSTS e SSL redirect (W004, W008); decidir com a Infra se o proxy já faz o redirect e o HSTS — depende de: Infra
 - [x] (aplicadas em 04/11) Aplicar as migrações 0016–0018 (permissões, trigger da `TemplateVersao`, `Parceiro.desativado_em`) no banco de dev? Sem elas, as telas do dev quebram com o código novo — depende de: usuário (migração de schema)
 - [x] (05/11: usuário mandou corrigir; Agente D) (regras de negócio, seção 10.1) `docs/modelo-er.md` está desatualizado em dois pontos: o bloqueio é tomado pelo mesmo usuário, não pela mesma sessão (D-191); a foto guarda a revista resolvida inteira e roda em READ COMMITTED (D-151/D-153/D-178). Corrigir? — depende de: usuário
 - [ ] (regras de negócio) O admin ainda pede o checkbox "afeta N revistas" sempre que há revista afetada; as telas B só avisam quando alguma perde o Validado (D-202). Igualar? — depende de: usuário
@@ -2190,3 +2199,6 @@ Usuário decide a ação D do S17: arquivar o repositório svg-tour (`gh repo ar
 - Usuário autorizou as ações A e C do S17 e o push para `dev`. A: tag `legado-express` (`30b0de3`) publicada. C: `fa7b748` (201 arquivos; `revista/modelo` → `docs/fontes/2025`). Suíte com os PDFs: 793 OK, 0 pulados. `docker-compose.yml` da D-209 commitado antes da tag (`30b0de3`).
 - `api/.env` apagado a pedido do usuário (fora do git; a pasta `api/` sumiu do disco).
 - Restos apagados a pedido do usuário: `contrato/`, `escala.html`, `script.js`, `styles.css`, `descritores.json`, `saida/`, `.env.example` da raiz (todos na tag `legado-express`). README e CLAUDE.md atualizados.
+- D-214: compose de produção + `.env.prod.example`; smoke test em stack isolada (`revista-prod-teste`, apagada); Django 793 OK (8 pulados).
+- `.env` local reescrito com as variáveis do sistema atual (COMPOSE_PROJECT_NAME, POSTGRES_PASSWORD=revista do volume existente, DJANGO_*); o antigo (chaves Express/Mongo) ficou só em backup no scratchpad da sessão. Banco do dev conecta (7 usuários).
+- Revisado o texto do pedido à Infra: deploy por Portainer exige `docker-compose.prod.yml` como compose path, variáveis do `.env.prod.example` no stack, e o proxy precisa alcançar o app (porta só em 127.0.0.1).
