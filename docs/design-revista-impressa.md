@@ -1,7 +1,7 @@
 ---
 name: Revista da Escola SAEGO 2025 (impressa)
 description: Revista editorial em preto sobre branco, com um único amarelo de marca-texto e cor reservada aos dados (padrões, progressão, acerto).
-source: "revista/modelo/PDFs Matriz Comunitária/SAEGO_2025_RE_{Alfa_2EF_5EF,LP,MT} Web.pdf (InDesign 21.2, 210 × 280 mm)"
+source: "docs/fontes/2025/PDFs Matriz Comunitária/SAEGO_2025_RE_{Alfa_2EF_5EF,LP,MT} Web.pdf (InDesign 21.2, 210 × 280 mm)"
 colors:
   ink: "#000000"
   paper: "#ffffff"

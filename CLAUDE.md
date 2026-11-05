@@ -16,8 +16,9 @@ O dia a dia roda em telas próprias ("telas B": menu Painel · Projetos · Matri
 Impresso, HTMX + Alpine); toda função do back tem controle na tela B
 (D-189, D-210); o admin do Django é ferramenta do superusuário.
 
-O sistema antigo (Express + Mongo + React: `api/`, `editor/`, `contrato/`, `scripts/`) está
-aposentado e fora do compose (D-187); `editor/` só serve de referência visual. `escala.html`,
+O sistema antigo (Express + Mongo + React: `api/`, `editor/`, `revista/`, `scripts/`) foi apagado
+(D-213) e vive na tag `legado-express`; `contrato/` sobrou sem uso. As fontes SAEGO 2025 (PDFs e
+planilhas) ficam em `docs/fontes/2025/`. `escala.html`,
 `script.js` e `styles.css` na raiz são o protótipo estático original, sem uso.
 
 Leia antes de mudar algo: `state.md` (decisões D-xxx, append-only), `docs/regras-de-negocio.md`

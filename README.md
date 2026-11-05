@@ -44,7 +44,7 @@ Abra `http://localhost:8000/` (vai para o Painel do ano mais novo; sem ano, para
 | O que | Comando | Observação |
 |---|---|---|
 | Suíte Django | `docker compose run --rm app python manage.py test` | O esperado é OK; 8 testes dependem dos PDFs SAEGO e ficam pulados sem eles. |
-| Com os PDFs | `docker compose run --rm -v "$PWD/<pasta dos PDFs>:/pdfs:ro" app python manage.py test` | Pasta: `revista/modelo/PDFs Matriz Comunitária/`. 0 pulados. |
+| Com os PDFs | `docker compose run --rm -v "$PWD/<pasta dos PDFs>:/pdfs:ro" app python manage.py test` | Pasta: `docs/fontes/2025/PDFs Matriz Comunitária/`. 0 pulados. |
 | Migrações | `docker compose run --rm app python manage.py makemigrations --check` | Tem que dizer `No changes detected`. |
 | Régua do F1 (JS) | `node app/nucleo/static/revista/f1/regua.test.mjs` | Sem dependências. |
 | Navegador (Playwright) | `docker compose up -d app && cd app/e2e && npm ci && E2E_ADMIN_USUARIO=… E2E_ADMIN_SENHA=… npx playwright test` | baseURL `http://localhost:8000`; roda em chromium 1280 e 1440. Sem as `E2E_*`, os specs pulam em silêncio. |
@@ -104,7 +104,8 @@ o que resta só nele está na seção 2 de [`docs/telas/telas-b.md`](docs/telas/
 | [`docs/`](docs/) | modelo ER, regras de negócio, variáveis, telas, roteiro do S17 |
 | [`plans/`](plans/) | planos de trabalho (refatoração S01–S18, reforma de UX, exclusão, lacunas das telas B) |
 | [`state.md`](state.md) | decisões técnicas (D-001…), estado atual e perguntas em aberto |
-| `api/`, `editor/`, `contrato/`, `scripts/` | sistema antigo (Express + Mongo + React), aposentado; o compose não o sobe. Fica como referência de visual (`editor/`) e de extração de PDF. Está também na tag `legado-express` |
+| [`docs/fontes/2025/`](docs/fontes/2025/) | PDFs e planilhas SAEGO 2025 (fonte da matriz e dos testes de importação) |
+| `contrato/` | resto do sistema antigo, sem uso. O resto (`api/`, `editor/`, `revista/`, `scripts/`) foi apagado (D-213) e está na tag `legado-express` |
 
 ## 6. Operação
 

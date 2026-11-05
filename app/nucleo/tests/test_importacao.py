@@ -1,9 +1,9 @@
 """Cadastros iniciais e importação de matriz (S04).
 
-Os 3 PDFs do SAEGO 2025 ficam em `revista/modelo/PDFs Matriz Comunitária/`, fora da imagem
+Os 3 PDFs do SAEGO 2025 ficam em `docs/fontes/2025/PDFs Matriz Comunitária/`, fora da imagem
 do app. Os testes com PDF procuram os arquivos nas pastas de SAEGO_PDFS (separadas por ":";
 padrão "/pdfs:/pdfs-alfa") e são pulados quando faltam. Exemplo:
-  docker compose run --rm -v "$PWD/revista/modelo/PDFs Matriz Comunitária:/pdfs:ro" \
+  docker compose run --rm -v "$PWD/docs/fontes/2025/PDFs Matriz Comunitária:/pdfs:ro" \
     app python manage.py test nucleo.tests.test_importacao
 """
 import os
