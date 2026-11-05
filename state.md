@@ -4,11 +4,11 @@
 <!-- sobrescrever a cada atualização -->
 Exclusão segura (D-205 a D-208): E0–E5 mergeados e integrados em `feat/telas-b-ux`.
 Funcionando: cada entidade tem "Excluir" na tela B (ano só para o Admin, apagando tudo; parceiro com Desativar/Reativar; etapa e componente; matriz; template sem uso com as versões). Se a entidade está em uso, a página explica o impedimento e não apaga. O admin do Django leva à mesma página. Testes na raiz: Django 764 OK (8 pulados), makemigrations limpo, Playwright 146/146 (chromium + desktop-1440, 0 pulados). Migrações 0016–0018 aplicadas no dev. `docs/regras-de-negocio.md` §9 atualizada.
-Quebrado/pendente: "Padrão (F1)" do dev com 7 versões "Atualizado E2E" (a causa era o `revista-textos.spec`, já corrigido no E4).
+Quebrado/pendente: nada aberto da exclusão. S6–S9 esperam a ordem do usuário.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Decidir se o "Padrão (F1)" do dev recebe uma versão nova com o texto da v1, depois seguir para S6–S9 (`plans/revista-express-telas-b-lacunas.md`).
+Esperar o usuário dizer quando começar S6–S9 (`plans/revista-express-telas-b-lacunas.md`). Não começar antes.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1718,7 +1718,7 @@ Decidir se o "Padrão (F1)" do dev recebe uma versão nova com o texto da v1, de
 - [x] (D-208: sim) Criar "desativar parceiro" para quem sai do programa (hoje ele aparece numa linha vazia na grade de Cortes de todo ano novo)? Usuário não entendeu; pergunta refeita em 04/11 — depende de: usuário
 - [x] (D-206: só Admin) Quem exclui Ano: Ped/Míd/Admin ou só Admin? — depende de: usuário
 - [x] (D-205) Regras de exclusão (pedido do usuário, 04/11): o banco impede várias exclusões (PROTECT em ~40 FKs; trigger só-inserção em `TemplateVersao`), e o admin nega a exclusão de Ano, Projeto ("arquiva pela cascata"), Revista e Usuário. O que deve ficar excluível, e por quem? — depende de: usuário
-- [ ] O template "Padrão (F1)" do dev está com "Atualizado E2E …" de 7 rodadas do Playwright. Gravar uma versão nova com o texto da v1? Isso pode mudar o hash das revistas que o usam. Corrigir também o spec, para ele editar só um template próprio — depende de: usuário
+- [x] (05/11: v9 gravada com o texto da v1) O template "Padrão (F1)" do dev está com "Atualizado E2E …" de 7 rodadas do Playwright. Gravar uma versão nova com o texto da v1? Isso pode mudar o hash das revistas que o usam. Corrigir também o spec, para ele editar só um template próprio — depende de: usuário
 - [ ] (U10d) Trocar "(s)" por `pluralize` no sistema todo, num passo próprio (~25 mensagens e ~40 asserções)? — depende de: usuário
 - [ ] (U10d) `tabular-nums` só nos números, para o hífen voltar ao normal? Contraria a Tabular Rule do DESIGN.md — depende de: usuário
 - [ ] (U10d) Manter mono no `table.diff` e no editor de template? — depende de: usuário
@@ -2120,3 +2120,8 @@ Decidir se o "Padrão (F1)" do dev recebe uma versão nova com o texto da v1, de
 - O scratchpad compartilhado fez o E2 rodar 2 specs no banco descartável do E4. Os resultados não foram afetados, mas nos próximos lançamentos cada agente recebe a própria subpasta já no brief.
 - Plano `plans/revista-express-exclusao.md` commitado.
 - Limpeza do dev aplicada com a confirmação do usuário. Antes, ensaio com rollback e uma trava para manter os 3 projetos reais. Saíram: o template "E2E editor por seção" com as versões e o ano 2025, os dois pelo `servicos/exclusao.excluir`; 21 parceiros (DEMONSTRAÇÃO e 20 "E2E…"), com 21 projetos e 25 revistas; a matriz Demonstração; os usuários `imp-e2e`, `demo-preview` e `e2e-outra`. O `e2e` ficou inativo e sem senha, porque é autor de versões do "Padrão (F1)". A senha temporária do scratchpad foi apagada.
+
+### 2026-11-05
+- Containers `db` e `app` do dev estavam parados depois do reinício da máquina; foram subidos de novo (`docker compose up -d db app`).
+- "Padrão (F1)" do dev ganhou a v9 com o texto da v1, sem os "Atualizado E2E…", com autor `otavio`, por `templates_texto.criar_versao`. Antes de gravar, o `perdem_validado` foi simulado: nenhuma revista perde o Validado, porque PAEBES, SAEGO e SAESE LP usam cópia própria da introdução.
+- Usuário: esperar a ordem dele para começar S6–S9.
