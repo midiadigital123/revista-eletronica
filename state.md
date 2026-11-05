@@ -2,12 +2,12 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-D-221 a D-225 em `origin/main`. Funcionando: etiqueta "será pulado" sem o próprio bloqueio; voltar/avançar recarrega com bloqueio novo; diálogo "Alterações não salvas" ao sair por clique; Playwright apaga no fim os "E2E …" que cria (`limpar_e2e`).
-Quebrado/pendente: specs que gravam em dados que não criaram (D-225, ver Perguntas em aberto); S17 — falta a ação D (arquivar o svg-tour) e o preenchimento da equipe; S18 não começou.
+D-221 a D-225 feitas. Funcionando: nenhum spec E2E grava em dado que não criou (D-225): planilha, matriz e revista vêm de `parceiroComProjeto`, `matrizPropria` e `revistaPropria` (e2e/tests/helpers.ts); o `limpar_e2e` apaga parceiros, matrizes e templates "E2E …" no fim. Suíte E2E 164/164 numa stack isolada com `criar_demo`.
+Quebrado/pendente: passo 4 da D-225 sem commit; S17 — falta a ação D (arquivar o svg-tour) e o preenchimento da equipe; S18 não começou.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Trocar o teste "sair por link" do `autosave.spec.ts` para um parceiro "E2E …" criado pelo próprio teste (`novoParceiro`).
+Commitar e fazer push do passo 4 da D-225 (specs + `limpar_e2e` com matrizes).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1845,7 +1845,7 @@ Trocar o teste "sair por link" do `autosave.spec.ts` para um parceiro "E2E …" 
 - **Status:** ativa
 
 ## Perguntas em aberto
-- [ ] (D-225) Ajustar os specs que gravam em dados que não criaram: `autosave.spec` (planilha de Variáveis na 1ª/última linha, incluindo o teste do diálogo D-223), `estados.spec` ("E2E Ocupado") e os que usam a revista DEMONSTRAÇÃO (`painel`, `impresso`, `item`, `revista-textos`, `mec`). Corrigir? — depende de: Otavio
+- [x] (D-225, 05/11) Specs que gravavam na matriz/revista DEMONSTRAÇÃO passaram a usar `matrizPropria` (cópia "E2E …" da Demonstração) e `revistaPropria` (parceiro com revista 6 de 6); `limpar_e2e` apaga também matrizes "E2E …". Suíte inteira 164/164 numa stack isolada, sem sobra.
 - [ ] Versões 2 a 8 do template "Padrão (F1)" LP 2026 (texto "Atualizado E2E…", de 03 e 04/11) continuam no banco de dev. A v9 já tem o texto limpo; a v8 é a base das cópias da introdução de SAESE LP e SAEGO LP. Versão só sai com o template (D-207). Apagar as v2–v7 por fora da tela, ou deixar como histórico? — depende de: Otavio
 - [ ] Editor de templates (`editor-secoes.js`, Salvar explícito) ainda usa o aviso nativo ao sair com alteração; levar o diálogo do D-223 para ele? — depende de: Otavio
 - [x] (05/11: liberar e deixar o Admin marcar; D-220) Admin atribuir o grupo Impresso (pedido em 05/11): dá ao Admin, na prática, "marcar impressa" (cria um usuário com senha conhecida, move para o Impresso e entra como ele), contra D-211 e `ADMIN_MARCA_IMPRESSA = False` — depende de: usuário
@@ -2314,3 +2314,6 @@ Trocar o teste "sair por link" do `autosave.spec.ts` para um parceiro "E2E …" 
 - D-222: voltar/avançar numa página com bloqueio recarrega em vez de mostrar "perdeu o bloqueio". `bfcache.spec` passa com a correção e falha sem ela.
 - D-223: diálogo "Alterações não salvas" (Salvar e sair / Descartar e sair / Continuar editando) ao sair por clique com campo sujo. Django completo OK (8 pulados); E2E autosave/bfcache 8 OK. Apagados os 7 parceiros "E2E …" que os specs criaram hoje no banco de dev; regional do SAESE devolvida ao vazio.
 - D-224: `limpar_e2e` + `globalTeardown` do Playwright; comprovado numa execução real (apagou "E2E Autosave …" no fim). Template "E2E textos MW3X7F87" (de uma rodada que falhou) excluído pela regra da tela.
+- D-225: helper `parceiroComProjeto` (e2e/tests/helpers.ts); o teste do diálogo (D-223) passou a gravar só no parceiro "E2E Saida …" que cria. 2/2 OK, limpos no fim.
+- D-225: `autosave` (4 testes da planilha) e `estados` passaram a gravar só em parceiro próprio (helper `regional` em helpers.ts); 10/10 OK, limpos no fim. `variaveis` já cumpria a regra (só o comentário mudou).
+- D-225 concluída: `painel`, `impresso`, `revista-textos`, `item` (revista própria) e `mec`, `linhas`, `autosave` descritor (matriz própria). `limpar_e2e` apaga matrizes "E2E …". Suíte E2E 164/164 na stack isolada `e2eiso` (porta 8040, desfeita no fim); 0 sobra.
