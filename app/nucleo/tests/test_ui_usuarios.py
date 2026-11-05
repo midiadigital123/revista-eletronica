@@ -93,18 +93,25 @@ class UsuariosUiTest(Base):
         self.assertNotIn("groups", form.fields)
         self.assertNotIn("is_active", form.fields)
 
-    def test_nao_mexe_nos_grupos_de_quem_tem_grupo_fora_dos_permitidos(self):
+    def test_nao_altera_quem_tem_grupo_fora_dos_permitidos(self):
+        """Impresso: só vê. Redefinir a senha e entrar como ele daria marcar_impressa ao Admin."""
         imp = usuario("imp", "Impresso")
         resp = self.client.get(LISTA)
         self.assertNotContains(resp, f'id="grupo-{imp.pk}"')
-        self.assertContains(resp, 'aria-label="Desativar imp"')  # o resto continua
+        for rotulo in ("Desativar imp", "Redefinir senha de imp"):
+            self.assertNotContains(resp, f'aria-label="{rotulo}"')
+        senha = reverse("ui_usuarios_senha", args=[imp.pk])
         self.assertEqual(self.mudar_grupo(imp, "Pedagógica").status_code, 403)
-        self.assertEqual(grupos_de(imp), ["Impresso"])
-        self.assertRedirects(self.ativo(imp, "desativar"), LISTA)
+        self.assertEqual(self.ativo(imp, "desativar").status_code, 403)
+        self.assertEqual(self.client.get(senha).status_code, 403)
+        self.assertEqual(self.client.post(senha, {"new_password1": SENHA_BOA, "new_password2": SENHA_BOA}).status_code, 403)
         imp.refresh_from_db()
-        self.assertFalse(imp.is_active)
+        self.assertEqual(grupos_de(imp), ["Impresso"])
+        self.assertTrue(imp.is_active)
+        self.assertTrue(imp.check_password("x"))
         # admin
-        self.assertNotIn("groups", self.admin_form(imp).fields)
+        self.assertEqual(self.admin_post(imp, is_active="").status_code, 403)
+        self.assertEqual(self.client.get(reverse("admin:auth_user_password_change", args=[imp.pk])).status_code, 403)
 
     def test_nao_edita_outro_admin(self):
         outro = usuario("outro-admin", "Admin")

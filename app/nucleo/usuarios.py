@@ -7,8 +7,9 @@ O superusuário pode tudo. Quem não é superusuário (o perfil Admin, `gerencia
   anularia ADMIN_MARCA_IMPRESSA = False, e Admin multiplicaria quem gerencia usuários;
   esses dois ficam com o superusuário;
 - não muda os próprios grupos nem se desativa;
-- não altera outro usuário do grupo Admin (só vê);
-- não mexe nos grupos de quem já tem um grupo fora dos permitidos (ex.: Impresso).
+- não altera (dados, senha, grupo, ativo) quem tem grupo fora dos permitidos, ou seja, outro
+  Admin ou o Impresso: só vê. Redefinir a senha de um Impresso e entrar como ele daria
+  `marcar_impressa` ao Admin.
 Usuário novo nasce `is_staff` (todo perfil usa o admin). Ninguém exclui: desativa com
 `is_active` (D-205).
 """
@@ -35,10 +36,10 @@ def visiveis(ator, qs=None):
 
 
 def pode_editar(ator, alvo):
-    """Alterar qualquer coisa do alvo (dados, senha). Outro Admin e superusuário: só o superusuário."""
+    """Alterar qualquer coisa do alvo (dados, senha). Superusuário, outro Admin e Impresso: só o superusuário."""
     if ator.is_superuser or alvo == ator:
         return True
-    return not alvo.is_superuser and not alvo.groups.filter(name="Admin").exists()
+    return not alvo.is_superuser and not alvo.groups.exclude(name__in=grupos_permitidos(ator)).exists()
 
 
 def pode_mudar_ativo(ator, alvo):
@@ -48,11 +49,7 @@ def pode_mudar_ativo(ator, alvo):
 def pode_mudar_grupos(ator, alvo):
     if ator.is_superuser:
         return True
-    return (
-        alvo != ator
-        and pode_editar(ator, alvo)
-        and not alvo.groups.exclude(name__in=grupos_permitidos(ator)).exists()
-    )
+    return alvo != ator and pode_editar(ator, alvo)
 
 
 def preparar_novo(usuario):

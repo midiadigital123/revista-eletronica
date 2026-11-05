@@ -421,7 +421,7 @@ Fonte única: `app/nucleo/permissoes.py`. Grupos fixos criados por migração; m
 |---|---|
 | Usuário não é excluído: é desativado (`is_active`). | D-142, D-205, `app/nucleo/admin/usuarios.py:77` |
 | O formulário de usuário não tem `is_superuser`, `is_staff` nem permissões avulsas; usuário novo nasce `is_staff`. | D-142, `app/nucleo/admin/usuarios.py:34-75` |
-| O Admin (não superusuário) só atribui Pedagógica e Mídias Digitais; não vê superusuários; não muda os próprios grupos nem se desativa; não altera outro Admin. | D-168, `app/nucleo/usuarios.py` (módulo comum do admin e da tela B) |
+| O Admin (não superusuário) só atribui Pedagógica e Mídias Digitais; não vê superusuários; não muda os próprios grupos nem se desativa; não altera (dados, senha, grupo, ativo) outro Admin nem o Impresso, só vê (D-211: redefinir a senha do Impresso e entrar como ele daria `marcar_impressa`). | D-168, `app/nucleo/usuarios.py` (módulo comum do admin e da tela B) |
 | Gerenciar usuários também pela tela B (`/ui/usuarios/`): listar, criar (nasce `is_staff`), trocar o grupo (um por usuário na B), ativar/desativar, redefinir a senha. Exige `auth.change_user` (criar: também `add_user`). O superusuário não tem restrição. | D-190, D-210, `app/nucleo/urls/ui_usuarios.py` |
 
 ### 8.3 Regras de tela

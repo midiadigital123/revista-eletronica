@@ -565,9 +565,11 @@ class PerfisTest(Base):
         senha = reverse("admin:auth_user_password_change", args=[outro.pk])
         self.assertEqual(self.client.get(senha).status_code, 403)
 
-        imp = usuario("Impresso", "Impresso")  # grupo fora dos permitidos: grupos dele ficam readonly
-        self.assertNotIn("groups", self.form_de(imp).fields)
-        self.assertEqual(self.post_usuario(imp, first_name="Ana").status_code, 302)
+        imp = usuario("Impresso", "Impresso")  # grupo fora dos permitidos: só vê (senha daria marcar_impressa)
+        self.assertEqual(self.post_usuario(imp, first_name="Ana").status_code, 403)
+        self.assertEqual(self.client.get(reverse("admin:auth_user_password_change", args=[imp.pk])).status_code, 403)
+        imp.refresh_from_db()
+        self.assertEqual(imp.first_name, "")
         self.assertEqual(list(imp.groups.values_list("name", flat=True)), ["Impresso"])
 
 
