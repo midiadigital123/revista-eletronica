@@ -8,7 +8,7 @@ Quebrado/pendente: S17 — falta a ação D (arquivar o svg-tour) e o preenchime
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Usuário: `git push origin feat/telas-b-ux:main` para a Infra ver o `docker-compose.prod.yml` (commits c3da7b2 e 539b4ce ainda só locais).
+Enviar à Infra o texto do pedido com o link do repositório (main já tem `docker-compose.prod.yml`, `.env.prod.example` e `INFRA.md`).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2203,3 +2203,5 @@ Usuário: `git push origin feat/telas-b-ux:main` para a Infra ver o `docker-comp
 - `.env` local reescrito com as variáveis do sistema atual (COMPOSE_PROJECT_NAME, POSTGRES_PASSWORD=revista do volume existente, DJANGO_*); o antigo (chaves Express/Mongo) ficou só em backup no scratchpad da sessão. Banco do dev conecta (7 usuários).
 - Revisado o texto do pedido à Infra: deploy por Portainer exige `docker-compose.prod.yml` como compose path, variáveis do `.env.prod.example` no stack, e o proxy precisa alcançar o app (porta só em 127.0.0.1).
 - Learning salva: CSRF atrás do proxy com HTTPS (origem https nas confiáveis; curl com cookie Secure dá 403 falso).
+- `INFRA.md` na raiz: guia da Infra (variáveis, stack no Portainer com `docker-compose.prod.yml`, Nginx com `Host`/50 MB/120 s, primeiro admin, backup com `pg_dump -Fc` + tar do volume `media`, restore, problemas comuns). Backup/restore testados num banco temporário do dev (7 usuários restaurados).
+- `INFRA.md` seção 3 reduzida a pedido do usuário: só "proxy com HTTPS necessário" + particularidades (Host, 50 MB, 120 s, proxy em container). Push de `feat/telas-b-ux` para `main`.
