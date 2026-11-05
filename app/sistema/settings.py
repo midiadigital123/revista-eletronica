@@ -14,6 +14,10 @@ if not DEBUG and SECRET_KEY == CHAVE_DEV:
 
     raise ImproperlyConfigured("Sem DEBUG, defina DJANGO_SECRET_KEY (a chave padrão é só de desenvolvimento).")
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+# Produção atrás do proxy com HTTPS (D-214): o Django recebe HTTP, então a origem https:// do
+# formulário precisa estar aqui, senão todo POST cai no 403 do CSRF. Ex.: https://revista.exemplo.org
+CSRF_TRUSTED_ORIGINS = [o for o in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if o]
+SESSION_COOKIE_SECURE = CSRF_COOKIE_SECURE = os.environ.get("DJANGO_COOKIE_SECURE", "0") == "1"
 
 INSTALLED_APPS = [
     "nucleo",  # antes do admin: sobrescreve admin/index.html e admin/base_site.html
@@ -88,6 +92,7 @@ STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "nucleo.estaticos.EstaticosComVersao"},
 }
+STATIC_ROOT = BASE_DIR / "staticfiles"  # só produção: collectstatic do docker-compose.prod.yml (D-214)
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 

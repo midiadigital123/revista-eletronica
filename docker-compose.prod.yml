@@ -1,0 +1,52 @@
+# Produção (D-214): docker compose -f docker-compose.prod.yml up --build -d
+# Diferenças do docker-compose.yml de desenvolvimento: Gunicorn no lugar do runserver, DEBUG
+# desligado, código dentro da imagem (sem montar ./app), mídia num volume e restart automático.
+# O proxy reverso do servidor (Nginx/Traefik, com HTTPS) aponta para 127.0.0.1:${APP_PORT:-8000}.
+# Variáveis no .env da raiz; o compose recusa subir sem as obrigatórias (:?).
+# POSTGRES_PASSWORD vai dentro do DATABASE_URL: use só letras e números (ex.: openssl rand -hex 24).
+# Backup: volumes pg-dados (banco) e media (capas, itens, F2). Ver docs/docker.md.
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: revista
+      POSTGRES_USER: revista
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+    volumes:
+      - pg-dados:/var/lib/postgresql/data
+    healthcheck:
+      # -h 127.0.0.1: o servidor temporário do initdb só escuta no socket.
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "revista", "-d", "revista"]
+      start_period: 10s
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  app:
+    build: ./app
+    restart: unless-stopped
+    # timeout 120: importar matriz (PDF) e montar o zip da revista passam dos 30 s do padrão.
+    command: >-
+      sh -c "python manage.py migrate --noinput
+      && python manage.py collectstatic --noinput
+      && gunicorn sistema.wsgi -b 0.0.0.0:8000 -w 3 --timeout 120 --access-logfile -"
+    environment:
+      # PostgreSQL gerenciado: defina DATABASE_URL no .env e remova o serviço db.
+      DATABASE_URL: ${DATABASE_URL:-postgres://revista:${POSTGRES_PASSWORD}@db:5432/revista}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?defina DJANGO_SECRET_KEY no .env}
+      DJANGO_DEBUG: "0"
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:?defina DJANGO_ALLOWED_HOSTS no .env (ex. revista.exemplo.org)}
+      DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:?defina DJANGO_CSRF_TRUSTED_ORIGINS no .env (ex. https://revista.exemplo.org)}
+      DJANGO_COOKIE_SECURE: ${DJANGO_COOKIE_SECURE:-1}
+    volumes:
+      - media:/app/media
+    ports:
+      - "127.0.0.1:${APP_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pg-dados:
+  media:
