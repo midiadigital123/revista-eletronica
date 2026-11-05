@@ -67,3 +67,57 @@ def caminho_definir_senha(usuario):
     Vale `PASSWORD_RESET_TIMEOUT` e deixa de valer quando a senha muda ou a pessoa entra."""
     uid = urlsafe_base64_encode(force_bytes(usuario.pk))
     return reverse("password_reset_confirm", args=[uid, default_token_generator.make_token(usuario)])
+
+
+# Rastro de um usuário: o que ele fez e o sistema guarda (D-218). Bloqueio é trava de 30 s, não rastro.
+ROTULOS = {
+    "TemplateVersao": "versões de template que criou",
+    "Revista": "revistas que validou",
+    "FotoRevista": "fotos de revista que gerou",
+    "LogEntry": "ações registradas no admin",
+}
+NAO_E_RASTRO = {"Bloqueio"}
+HISTORICO = "edições registradas no histórico"
+
+
+def rastros(alvo):
+    """[(rótulo, contagem)] do que impede excluir `alvo`; vazio = pode excluir.
+
+    Relações diretas (as PROTECT e o log do admin) e o `history_user` das tabelas do django-simple-history,
+    que é SET_NULL e escondido (`related_name="+"`): sem esta conta, excluir apagaria o autor do histórico."""
+    from django.apps import apps
+
+    saida = []
+    for rel in alvo._meta.related_objects:
+        nome = rel.related_model.__name__
+        if rel.many_to_many or nome in NAO_E_RASTRO:
+            continue
+        n = rel.related_model._base_manager.filter(**{rel.field.name: alvo}).count()
+        if n:
+            saida.append((ROTULOS.get(nome, str(rel.related_model._meta.verbose_name_plural)), n))
+    historico = sum(
+        m._base_manager.filter(history_user=alvo).count()
+        for m in apps.get_models()
+        if any(f.name == "history_user" for f in m._meta.fields)
+    )  # ponytail: uma contagem por tabela de histórico (~20); é uma página, não uma lista
+    if historico:
+        saida.append((HISTORICO, historico))
+    return saida
+
+
+class TemRastro(Exception):
+    def __init__(self, rastros):
+        super().__init__("tem rastro")
+        self.rastros = rastros
+
+
+def excluir(alvo):
+    """Exclui `alvo` sem rastro. Trava a linha do usuário e confere de novo; com rastro, levanta TemRastro."""
+    from django.db import transaction
+
+    with transaction.atomic():
+        alvo = get_user_model().objects.select_for_update().get(pk=alvo.pk)
+        achados = rastros(alvo)
+        if achados:
+            raise TemRastro(achados)
+        alvo.delete()  # leva junto grupos, permissões avulsas e bloqueios (CASCADE)

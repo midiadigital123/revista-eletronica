@@ -1,6 +1,8 @@
 """Usuários na tela B (S9): cada regra de `nucleo/usuarios.py` contra a tela B e contra o admin
 (o admin também tem os testes de `test_admin_cadastro.PerfisTest`)."""
 
+from unittest import mock
+
 from django.contrib.auth.models import Group, User
 from django.test import Client, override_settings
 from django.urls import reverse
@@ -169,9 +171,7 @@ class UsuariosUiTest(Base):
         self.ped.refresh_from_db()
         self.assertEqual((self.ped.is_superuser, self.ped.is_staff), (False, True))
 
-    def test_nunca_apaga_so_desativa(self):
-        resp = self.client.get(LISTA)
-        self.assertNotContains(resp, "Excluir")
+    def test_desativa_e_o_admin_do_django_nunca_apaga(self):
         self.assertRedirects(self.ativo(self.ped, "desativar"), LISTA)
         self.ped.refresh_from_db()
         self.assertFalse(self.ped.is_active)
@@ -185,6 +185,53 @@ class UsuariosUiTest(Base):
             self.client.force_login(quem)
             self.assertEqual(self.client.get(reverse("admin:auth_user_delete", args=[self.ped.pk])).status_code, 403)
         self.assertTrue(User.objects.filter(pk=self.ped.pk).exists())
+
+    def excluir(self, alvo, codigo=None):
+        return self.client.post(reverse("ui_usuarios_excluir", args=[alvo.pk]), {"confirmacao": codigo or alvo.username}, follow=True)
+
+    def test_exclui_quem_nao_tem_rastro(self):
+        """D-218: criado por engano, nunca registrou nada: sai com confirmação forte."""
+        novo = usuario("criado-por-engano", "Mídias Digitais")
+        self.assertContains(self.client.get(LISTA), 'aria-label="Excluir criado-por-engano"')
+        resp = self.client.get(reverse("ui_usuarios_excluir", args=[novo.pk]))
+        self.assertContains(resp, "Nada usa isto.")
+        self.assertContains(resp, "data-confirmado")
+        self.assertContains(self.excluir(novo, "outro-nome"), "o código não confere")
+        self.assertTrue(User.objects.filter(pk=novo.pk).exists())
+        resp = self.excluir(novo)
+        self.assertRedirects(resp, LISTA)
+        self.assertContains(resp, "Exclusão feita: o usuário criado-por-engano.")
+        self.assertFalse(User.objects.filter(pk=novo.pk).exists())
+
+    def test_com_rastro_so_desativa(self):
+        """Quem editou algo fica: excluir apagaria o autor do histórico (history_user é SET_NULL)."""
+        from nucleo.models import Ano
+
+        ano = Ano.objects.first() or Ano.objects.create(ano=2099)
+        ano._history_user = self.ped
+        ano.save()
+        resp = self.client.get(reverse("ui_usuarios_excluir", args=[self.ped.pk]))
+        self.assertContains(resp, "Edições registradas no histórico")
+        self.assertContains(resp, "Para tirar o acesso, desative")
+        self.assertNotContains(resp, "data-confirmado")
+        self.assertEqual(self.excluir(self.ped).status_code, 200)
+        self.assertTrue(User.objects.filter(pk=self.ped.pk).exists())
+
+    def test_excluir_corrida_com_rastro_novo(self):
+        """O rastro que surge entre a página e o POST é visto de novo com a linha travada."""
+        with mock.patch("nucleo.usuarios.rastros", side_effect=[[], [("revistas que validou", 1)]]):
+            resp = self.excluir(self.ped)
+        self.assertContains(resp, "Nada foi excluído: ped passou a ter registro")
+        self.assertTrue(User.objects.filter(pk=self.ped.pk).exists())
+
+    def test_excluir_segue_a_regra_de_desativar(self):
+        url = lambda u: reverse("ui_usuarios_excluir", args=[u.pk])  # noqa: E731
+        for alvo in (usuario("imp", "Impresso"), usuario("outro-admin", "Admin"), self.eu):
+            self.assertEqual(self.client.get(url(alvo)).status_code, 403, alvo)
+            self.assertEqual(self.excluir(alvo).status_code, 403, alvo)
+            self.assertNotContains(self.client.get(LISTA), f'aria-label="Excluir {alvo.username}"')
+        self.assertEqual(self.client.get(url(self.root)).status_code, 404)
+        self.assertEqual(User.objects.filter(username__in=["imp", "outro-admin", "eu-admin", "root"]).count(), 4)
 
     def test_redefinir_senha(self):
         url = reverse("ui_usuarios_senha", args=[self.ped.pk])
@@ -262,12 +309,13 @@ class UsuariosUiTest(Base):
     def test_sem_gerenciar_usuarios_recebe_403(self):
         alvo = self.ped
         rotas = [("get", LISTA), ("get", NOVO), ("post", NOVO), ("get", reverse("ui_usuarios_senha", args=[alvo.pk]))]
-        rotas += [("post", reverse(n, args=[alvo.pk])) for n in ("ui_usuarios_grupo", "ui_usuarios_ativo", "ui_usuarios_senha", "ui_usuarios_link")]
+        rotas += [("post", reverse(n, args=[alvo.pk])) for n in ("ui_usuarios_grupo", "ui_usuarios_ativo", "ui_usuarios_senha", "ui_usuarios_link", "ui_usuarios_excluir")]
         for papel in ("Pedagógica", "Mídias Digitais", "Impresso"):
             self.client.force_login(usuario(f"x-{papel}", papel))
             self.assertNotContains(self.client.get(reverse("ui_anos")), f'href="{LISTA}"')
             for metodo, url in rotas:
-                dados = {**self.dados_novo("intruso"), "acao": "desativar", "new_password1": SENHA_BOA, "new_password2": SENHA_BOA}
+                dados = {**self.dados_novo("intruso"), "acao": "desativar", "new_password1": SENHA_BOA, "new_password2": SENHA_BOA,
+                         "confirmacao": alvo.username}  # fmt: skip
                 resp = getattr(self.client, metodo)(url, dados if metodo == "post" else None)
                 self.assertEqual(resp.status_code, 403, f"{papel} {metodo} {url}")
         alvo.refresh_from_db()

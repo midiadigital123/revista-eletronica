@@ -12,3 +12,18 @@
 .usuarios-copiar { display: flex; flex-direction: column; gap: 0.375rem; }
 .usuarios-copiar label { font-size: 0.875rem; font-weight: 500; }
 .usuarios-copiar .textarea { field-sizing: content; line-height: 1.5; }
+
+/* "Mudar" só aparece quando o seletor sai do grupo atual (o atual leva `selected` no HTML).
+   visibility, não display: a coluna não muda de largura ao aparecer. Sem :has, o botão fica sempre. */
+@supports selector(:has(*)) {
+  .usuarios-grupo .btn { visibility: hidden; }
+  .usuarios-grupo:has(option:checked:not([selected])) .btn { visibility: visible; animation: entra 120ms var(--ease-saida); }
+}
+
+/* Ações da linha: botões-ícone numa fileira, coluna justa à direita. */
+.tabela .usuarios-acoes { width: 1%; text-align: right; }
+.usuarios-acoes .acoes { justify-content: flex-end; flex-wrap: nowrap; gap: 0.25rem; }
+.usuarios-acoes form { display: contents; }
+
+/* Desativado: nome e usuário recuam; o selo âmbar já diz a situação. */
+.usuarios-inativo > th, .usuarios-inativo > td:nth-child(2) { color: var(--muted-foreground); font-weight: 400; }

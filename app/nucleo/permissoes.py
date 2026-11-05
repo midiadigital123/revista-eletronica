@@ -75,7 +75,8 @@ ACOES = {
     ),
     "validar": frozenset({"nucleo.validar_revista"}),
     "marcar_impressa": frozenset({"nucleo.marcar_impressa"}),
-    # Grupos são fixos (migração): admin só os vê. Usuário: sem delete (desativar).
+    # Grupos são fixos (migração): admin só os vê. Usuário: sem delete. A tela B exclui quem não tem
+    # rastro com change_user (D-218); o delete do admin apagaria o autor do histórico sem perguntar.
     # S11 OBRIGATÓRIO: registrar User no admin com form/readonly_fields SEM
     # is_superuser, is_staff e user_permissions, e com `groups` limitado aos 4
     # grupos fixos. Sem isso, change_user deixa o admin se dar qualquer

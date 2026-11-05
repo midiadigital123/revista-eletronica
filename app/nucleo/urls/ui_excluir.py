@@ -8,7 +8,8 @@ próprio ano (2027), não o id.
 
 Parceiro em uso oferece "Desativar"/"Reativar" (D-208), num POST para `ui_parceiro_ativo`.
 `?voltar=` (só deste site) é o "Voltar sem excluir" e o destino depois de excluir.
-Usuário, Projeto e Revista ficam fora: desativa ou arquiva (D-205).
+Projeto e Revista ficam fora: arquiva (D-205). Usuário tem rota própria em `ui_usuarios` (D-218), com
+este mesmo template e a regra de rastro de `nucleo/usuarios.py`.
 """
 
 from django.contrib import messages
