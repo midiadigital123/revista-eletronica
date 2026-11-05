@@ -1,5 +1,7 @@
 # Inventário das telas (UI) — revista-express em Django admin
 
+> **Retrato de 30/10/2026, histórico.** Descreve as telas do **admin** daquele dia (as colunas "URL" e "Existe" não valem mais). Os requisitos T01–T28 continuam como lista de origem; o que já virou tela B, com a URL e a rota de hoje, está em [`telas-b.md`](telas-b.md) e nas fichas. T26 e T27 já existem (ficha [`impresso.md`](fichas/impresso.md)). O que ainda é só admin está na seção 2 de `telas-b.md`.
+
 Fonte: branch `refatoracao-django` em 2026-10-30 (D-046 a D-175; S01–S12 e S16 feitos; S13, S17, S18 não iniciados). Trabalho só leitura.
 Caminhos relativos a `/home/otavio.peres/dev/revista-express/`.
 

@@ -101,7 +101,7 @@ Reunir numa página o que a equipe precisa para deixar uma revista pronta: o tem
 ## Wireframe (1440 px)
 
 ```
-Revista Eletrônica  [2026 ▾]  Painel [Projetos] Matrizes Templates Impresso                  Ana  Admin  Sair
+Revista Eletrônica  [2026 ▾]  Painel [Projetos] Matrizes Templates Impresso                  Ana         Sair
 ──────────────────────────────────────────────────────────────────────────────────────────────────────────────
 Projetos de 2026 › Projeto GO
 Projeto GO · Língua Portuguesa            ✓ Salvo às 10:15  [Abrir preview ↗]  Baixar zip  Tela do impresso

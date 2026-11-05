@@ -1,3 +1,5 @@
+> **Superado em 05/11/2026.** Esta era a proposta de README do S17 (quando tudo ainda rodava no admin). O `README.md` da raiz foi reescrito a partir dela e já descreve as telas B; use o da raiz.
+
 # Revista Express
 
 Sistema para montar as **revistas eletrônicas de resultados de avaliação** da Fundação CAEd.

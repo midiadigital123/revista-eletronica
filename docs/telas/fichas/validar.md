@@ -75,7 +75,7 @@ Pré-marcadas: só as prontas (sem pendência e ainda não validadas). Com pend�
 1440 px:
 
 ```
-┌ Revista Eletrônica  [2026 ▾]  Painel* Projetos Matrizes Templates Impresso             Ana [Admin] [Sair] ┐
+┌ Revista Eletrônica  [2026 ▾]  Painel* Projetos Matrizes Templates Impresso             Ana          Sair  ┐
 │                                                                                                         │
 │ Validar revistas                                                               [Voltar ao painel]       │
 │ 2026: 3 revista(s). Cada uma é validada na versão mostrada aqui; se mudar antes do envio, é recusada.   │

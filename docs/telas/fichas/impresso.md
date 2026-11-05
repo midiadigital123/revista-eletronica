@@ -87,7 +87,7 @@ Só um: a foto "impresso" da revista (o registro da "Revista Impressa Atualizada
 ## Wireframe (1440 px)
 
 ```
-┌ Revista Eletrônica  [2026 ▾]  Painel Projetos Matrizes Templates [Impresso]             Nome  Admin  Sair ┐
+┌ Revista Eletrônica  [2026 ▾]  Painel Projetos Matrizes Templates [Impresso]             Nome         Sair ┐
 │                                                                                                          │
 │ Impresso                                                                              Ver no painel     │
 │ O que mudou em cada revista desde a última “Revista Impressa Atualizada”, para levar ao InDesign.      │

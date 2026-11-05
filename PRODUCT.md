@@ -1,5 +1,7 @@
 # Product
 
+> **Contexto do editor React antigo.** Este arquivo descreve o editor (React + API + Mongo) que o Django substituiu; o produto atual está no `README.md` e em `docs/regras-de-negocio.md`. Os princípios de produto e de acessibilidade abaixo continuam valendo para as telas B (`docs/telas/design-system.md`).
+
 <!-- impeccable:product-schema 1 -->
 
 ## Platform

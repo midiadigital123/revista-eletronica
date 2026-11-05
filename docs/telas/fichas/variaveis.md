@@ -88,7 +88,7 @@ Preencher, numa só tela, os valores que os textos dos templates usam por projet
 ## Wireframe
 
 ```
-┌─ Revista Eletrônica  [2026 ▾]  Painel  [Projetos]  Matrizes  Templates  Impresso                 Ana  Admin  Sair ┐
+┌─ Revista Eletrônica  [2026 ▾]  Painel  [Projetos]  Matrizes  Templates  Impresso                 Ana         Sair ┐
 │                                                                                                              │
 │ Projetos                                                                                                     │
 │  Lista   Cortes   Variáveis                                                                                  │
