@@ -1805,7 +1805,32 @@ Enviar à Infra o texto do pedido com o link do repositório (main já tem `dock
 - **Arquivos afetados:** `app/nucleo/permissoes.py`, `app/nucleo/usuarios.py`, `app/nucleo/migrations/0019_admin_marca_impressa.py` (nova), `app/nucleo/tests/test_ui_usuarios.py`, `app/nucleo/tests/test_admin_cadastro.py`, `README.md`, `docs/regras-de-negocio.md`
 - **Status:** ativa. Substitui a parte da D-211 (e da D-168) que deixava o Impresso só com o superusuário.
 
+### D-221 — "Em edição por … será pulado" ignora o próprio usuário (2026-11-05 19:00)
+- **Contexto:** voltando de Cortes/Variáveis/projeto para a Lista (ou Lotes, Validar), o projeto aparecia "Em edição por otavio: será pulado" até recarregar. A página deixada só solta o bloqueio no `pagehide` (sendBeacon), que chega depois do GET da página nova.
+- **Decisão:** `lotes.em_edicao(projetos, usuario)` exclui o bloqueio do próprio usuário; Lista, Lotes (matriz e template) e Validar (`itens_validar`) usam essa função.
+- **Motivo:** o lote usa `bloqueio.adquirir`, que deixa o mesmo usuário tomar o próprio bloqueio (D-191): esse projeto nunca é pulado, então a etiqueta mentia. Mesma regra de `exclusao._em_edicao`.
+- **Descartadas:** liberar o bloqueio no clique do link antes de navegar — corrida continua (beacon assíncrono) e não cobre voltar/abrir em nova aba; `location.reload()` no `pageshow` — não é a causa.
+- **Arquivos afetados:** `app/nucleo/lotes.py`, `app/nucleo/urls/ui_projeto.py`, `app/nucleo/urls/ui_lotes.py`, `app/nucleo/urls/painel.py`, `app/nucleo/urls/ui_validar.py`, `app/nucleo/templates/ui/parciais/validar_cartao.html`, testes `test_ui_projetos.py` e `test_ui_validar.py`.
+- **Status:** ativa
+
+### D-222 — Página restaurada do bfcache recarrega em vez de renovar o bloqueio (2026-11-05 19:30)
+- **Contexto:** abrir uma revista, voltar e avançar mostrava "Você perdeu o bloqueio de edição" até recarregar. Ao voltar, o `pagehide` libera o bloqueio da sessão da aba; ao avançar, o navegador restaura a página do bfcache com a sessão antiga, o `renovar` responde 409 (nunca readquire) e o formulário vira somente leitura.
+- **Decisão:** `bloqueio.js`: no `pageshow` com `persisted`, `location.reload()`. O GET novo adquire outro bloqueio (o mesmo usuário assume, D-191) e traz a página atualizada. Vale para as telas B e o change form do admin.
+- **Motivo:** a página do bfcache já não tem bloqueio e pode estar velha; recarregar é o que o usuário fazia à mão.
+- **Descartadas:** não liberar no `pagehide` quando a página entra no bfcache — o bloqueio ficaria preso 30 s ao sair de verdade; readquirir pelo JS com a sessão antiga — exigiria rota nova e o conteúdo continuaria velho; `Cache-Control: no-store` — o Chrome já restaura páginas no-store do bfcache em alguns casos.
+- **Arquivos afetados:** `app/nucleo/static/nucleo/bloqueio.js`, `app/e2e/tests/bfcache.spec.ts` (simula o bfcache: o Playwright o mascara, `notRestoredReasons: "masked"`).
+- **Status:** ativa
+
+### D-223 — Diálogo do sistema ao sair por clique com campo não salvo (2026-11-05 20:00)
+- **Contexto:** digitar num campo de autosave e sair da página sem sair do campo abria o diálogo nativo do navegador. O usuário quer um diálogo do sistema que obrigue a salvar ou descartar.
+- **Decisão:** componente `sairSemSalvar` (`autosave.js`) + `<dialog>` em `_componentes/status_salvo.html` (só para quem grava). Intercepta (captura) mousedown/click em link, gatilho HTMX e botão de outro form quando há campo sujo em foco, falha ou envio pendente. Botões: Salvar e sair (dispara o change; impacto abre o modal; sai no `autosave:salvo`), Descartar e sair (volta o gravado), Continuar editando. Envio já em andamento sem campo sujo: sai sozinho quando termina. O campo fica "segurado" (`segurado`) enquanto o diálogo está aberto; ao continuar, o próximo blur salva.
+- **Motivo:** o usuário escolheu os 3 botões e manter o nativo no Voltar. O `beforeunload` não aceita diálogo próprio em Voltar/Avançar, fechar, recarregar ou URL digitada.
+- **Descartadas:** truque de entrada falsa no histórico para o Voltar — frágil (o Chrome pula entradas sem gesto, conflita com o hx-push-url das seções, entrada extra no histórico); diálogo no `base.html` — aparecia em páginas somente leitura ("Salvar" no HTML) e só faz sentido onde há autosave.
+- **Arquivos afetados:** `app/nucleo/static/ui/componentes/autosave.js`, `app/nucleo/templates/ui/_componentes/status_salvo.html`, `docs/telas/design-system.md`, `app/e2e/tests/autosave.spec.ts`, `app/nucleo/tests/test_ui_matriz.py` (o recorte do cabeçalho parava no `</header>` do diálogo).
+- **Status:** ativa
+
 ## Perguntas em aberto
+- [ ] Editor de templates (`editor-secoes.js`, Salvar explícito) ainda usa o aviso nativo ao sair com alteração; levar o diálogo do D-223 para ele? — depende de: Otavio
 - [x] (05/11: liberar e deixar o Admin marcar; D-220) Admin atribuir o grupo Impresso (pedido em 05/11): dá ao Admin, na prática, "marcar impressa" (cria um usuário com senha conhecida, move para o Impresso e entra como ele), contra D-211 e `ADMIN_MARCA_IMPRESSA = False` — depende de: usuário
 - [x] (05/11: só sem rastro; D-218) Excluir usuário pela tela (pedido em 05/11): contraria D-205 ("usuário não é excluído: é desativado"); o histórico perde o autor e versões de template, validações e fotos (PROTECT) impedem — depende de: usuário
 - [x] (05/11: manter a senha; D-216) Link de acesso na tela Usuários: o "Novo usuário" passa a nascer sem senha e mostrar o link (muda o fluxo atual, que pede senha)? — depende de: usuário
@@ -2266,3 +2291,8 @@ Enviar à Infra o texto do pedido com o link do repositório (main já tem `dock
 - Excluir usuário sem rastro (D-218). E2E de Usuários agora exclui o usuário que cria (antes deixava um desativado por execução). Sobram 4 `e2e-midias-*` antigos no banco de dev.
 - 13 usuários conferidos/criados no banco de dev (12 da lista + fabiano.santana no Admin), sem senha: acesso pelo "Link de acesso". Comando `tornar_superusuario` (D-219).
 - D-220: Admin atribui Impresso e marca impressa; migração 0019 aplicada no banco de dev.
+
+### 2026-11-05 19:00
+- D-221: a etiqueta "Em edição por … será pulado" deixa de contar o bloqueio do próprio usuário (Lista, Lotes, Validar). Testes: 90 OK nos módulos afetados.
+- D-222: voltar/avançar numa página com bloqueio recarrega em vez de mostrar "perdeu o bloqueio". `bfcache.spec` passa com a correção e falha sem ela.
+- D-223: diálogo "Alterações não salvas" (Salvar e sair / Descartar e sair / Continuar editando) ao sair por clique com campo sujo. Django completo OK (8 pulados); E2E autosave/bfcache 8 OK. Apagados os 7 parceiros "E2E …" que os specs criaram hoje no banco de dev; regional do SAESE devolvida ao vazio.
