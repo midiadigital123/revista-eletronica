@@ -14,9 +14,10 @@ só do Admin. Fora isso, nenhum `delete_*`: revista nunca é apagada (D-117, arq
 desativa; só sai quem não tem rastro, pela tela Usuários com `change_user` (D-218), nunca pelo admin.
 """
 
-# Pergunta em aberto: admin pode clicar "Revista Impressa Atualizada"?
-# Padrão: não. Mudar só aqui (e sincronizar os grupos numa migração nova).
-ADMIN_MARCA_IMPRESSA = False
+# D-220: o Admin clica "Revista Impressa Atualizada". Ele também atribui o grupo Impresso, e com isso
+# já poderia entrar como um Impresso; o usuário preferiu dar a permissão às claras. Mudar só aqui
+# (e sincronizar os grupos numa migração nova: a 0019 ligou esta).
+ADMIN_MARCA_IMPRESSA = True
 
 EDITA = ("add", "change", "view")
 

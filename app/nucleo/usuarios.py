@@ -3,15 +3,13 @@
 
 O superusuário pode tudo. Quem não é superusuário (o perfil Admin, `gerenciar_usuarios`):
 - não vê superusuários (trocaria a senha de um e entraria como ele);
-- só dá os grupos Pedagógica e Mídias Digitais: Impresso daria `marcar_impressa`, o que
-  anularia ADMIN_MARCA_IMPRESSA = False, e Admin multiplicaria quem gerencia usuários;
-  esses dois ficam com o superusuário;
+- dá os grupos Pedagógica, Mídias Digitais e Impresso (D-220; ele mesmo marca impressa,
+  ADMIN_MARCA_IMPRESSA). Admin, não: multiplicaria quem gerencia usuários; fica com o superusuário;
 - não muda os próprios grupos nem se desativa;
 - não altera (dados, senha, grupo, ativo) quem tem grupo fora dos permitidos, ou seja, outro
-  Admin ou o Impresso: só vê. Redefinir a senha de um Impresso e entrar como ele daria
-  `marcar_impressa` ao Admin.
-Usuário novo nasce `is_staff` (todo perfil usa o admin). Ninguém exclui: desativa com
-`is_active` (D-205).
+  Admin: só vê.
+Usuário novo nasce `is_staff` (todo perfil usa o admin). Sai desativado (`is_active`); excluir só
+quem não tem rastro (D-218).
 """
 
 from django.contrib.auth import get_user_model
@@ -23,7 +21,7 @@ from django.utils.http import urlsafe_base64_encode
 
 from nucleo.permissoes import PAPEIS
 
-GRUPOS_DO_ADMIN = ("Pedagógica", "Mídias Digitais")  # o que um não superusuário pode atribuir
+GRUPOS_DO_ADMIN = ("Pedagógica", "Mídias Digitais", "Impresso")  # o que um não superusuário pode atribuir (D-220)
 
 
 def grupos_permitidos(ator):

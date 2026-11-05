@@ -532,8 +532,8 @@ class PerfisTest(Base):
         for campo in ("is_superuser", "is_staff", "user_permissions"):
             self.assertNotIn(campo, form.fields)
         Group.objects.create(name="Outro")
-        self.assertEqual(set(form.fields["groups"].queryset.values_list("name", flat=True)), {"Pedagógica", "Mídias Digitais"})
-        resp = self.post_usuario(ped, groups=[Group.objects.get(name="Impresso").pk])
+        self.assertEqual(set(form.fields["groups"].queryset.values_list("name", flat=True)), {"Pedagógica", "Mídias Digitais", "Impresso"})
+        resp = self.post_usuario(ped, groups=[Group.objects.get(name="Admin").pk])
         self.assertEqual(resp.status_code, 200)  # escolha fora da lista: erro no form
         self.assertEqual(list(ped.groups.values_list("name", flat=True)), ["Pedagógica"])
         self.post_usuario(ped, groups=[Group.objects.get(name="Mídias Digitais").pk])
@@ -547,7 +547,7 @@ class PerfisTest(Base):
         self.assertTrue(nova.is_staff)
         self.assertFalse(nova.is_superuser)
 
-    def test_admin_nao_se_poe_no_impresso_nem_mexe_em_outro_admin(self):
+    def test_admin_nao_muda_os_proprios_grupos_nem_mexe_em_outro_admin(self):
         eu = usuario("Admin", "Admin")
         self.client.force_login(eu)
         self.assertNotIn("groups", self.form_de(eu).fields)  # readonly para si mesmo
@@ -565,11 +565,11 @@ class PerfisTest(Base):
         senha = reverse("admin:auth_user_password_change", args=[outro.pk])
         self.assertEqual(self.client.get(senha).status_code, 403)
 
-        imp = usuario("Impresso", "Impresso")  # grupo fora dos permitidos: só vê (senha daria marcar_impressa)
-        self.assertEqual(self.post_usuario(imp, first_name="Ana").status_code, 403)
-        self.assertEqual(self.client.get(reverse("admin:auth_user_password_change", args=[imp.pk])).status_code, 403)
+        imp = usuario("Impresso", "Impresso")  # D-220: o Admin gerencia o Impresso (ele mesmo marca impressa)
+        self.assertEqual(self.post_usuario(imp, first_name="Ana", groups=[Group.objects.get(name="Impresso").pk]).status_code, 302)
+        self.assertEqual(self.client.get(reverse("admin:auth_user_password_change", args=[imp.pk])).status_code, 200)
         imp.refresh_from_db()
-        self.assertEqual(imp.first_name, "")
+        self.assertEqual(imp.first_name, "Ana")
         self.assertEqual(list(imp.groups.values_list("name", flat=True)), ["Impresso"])
 
 

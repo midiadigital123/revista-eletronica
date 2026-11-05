@@ -51,23 +51,26 @@ class UsuariosUiTest(Base):
         self.assertContains(resp, "Nunca entrou")
         self.assertContains(self.client.get(reverse("ui_anos")), f'href="{LISTA}"')
 
-    def test_so_atribui_pedagogica_e_midias(self):
+    def test_atribui_pedagogica_midias_e_impresso_mas_nao_admin(self):
+        """D-220: o Admin dá o Impresso (ele mesmo marca impressa); Admin continua só com o superusuário."""
         resp = self.client.get(LISTA)
-        self.assertEqual({g.name for g in resp.context["grupos"]}, {"Pedagógica", "Mídias Digitais"})
-        self.assertNotContains(resp, f'<option value="{grupo("Impresso").pk}"')
-        for nome in ("Impresso", "Admin"):
-            self.mudar_grupo(self.ped, nome)
-            self.assertEqual(grupos_de(self.ped), ["Pedagógica"], nome)
-        self.assertRedirects(self.mudar_grupo(self.ped, "Mídias Digitais"), LISTA)
-        self.assertEqual(grupos_de(self.ped), ["Mídias Digitais"])
-        resp = self.client.post(NOVO, self.dados_novo("nova-imp", grupo=grupo("Impresso").pk))
+        self.assertEqual({g.name for g in resp.context["grupos"]}, {"Pedagógica", "Mídias Digitais", "Impresso"})
+        self.assertNotContains(resp, f'<option value="{grupo("Admin").pk}"')
+        self.mudar_grupo(self.ped, "Admin")
+        self.assertEqual(grupos_de(self.ped), ["Pedagógica"])
+        self.assertRedirects(self.mudar_grupo(self.ped, "Impresso"), LISTA)
+        self.assertEqual(grupos_de(self.ped), ["Impresso"])
+        resp = self.client.post(NOVO, self.dados_novo("novo-admin", grupo=grupo("Admin").pk))
         self.assertEqual(resp.status_code, 200)  # erro no form, nada criado
-        self.assertFalse(User.objects.filter(username="nova-imp").exists())
+        self.assertFalse(User.objects.filter(username="novo-admin").exists())
+        self.client.post(NOVO, self.dados_novo("nova-imp", grupo=grupo("Impresso").pk))
+        self.assertEqual(grupos_de(User.objects.get(username="nova-imp")), ["Impresso"])
+        self.assertTrue(self.eu.has_perm("nucleo.marcar_impressa"))
         # admin
         self.assertEqual(set(self.admin_form(self.ped).fields["groups"].queryset.values_list("name", flat=True)),
-                         {"Pedagógica", "Mídias Digitais"})  # fmt: skip
-        self.admin_post(self.ped, groups=[grupo("Impresso").pk])
-        self.assertEqual(grupos_de(self.ped), ["Mídias Digitais"])
+                         {"Pedagógica", "Mídias Digitais", "Impresso"})  # fmt: skip
+        self.admin_post(self.ped, groups=[grupo("Admin").pk])
+        self.assertEqual(grupos_de(self.ped), ["Impresso"])
 
     def test_superusuario_fora_da_lista(self):
         self.assertNotContains(self.client.get(LISTA), ">root<")
@@ -95,26 +98,19 @@ class UsuariosUiTest(Base):
         self.assertNotIn("groups", form.fields)
         self.assertNotIn("is_active", form.fields)
 
-    def test_nao_altera_quem_tem_grupo_fora_dos_permitidos(self):
-        """Impresso: só vê. Redefinir a senha e entrar como ele daria marcar_impressa ao Admin."""
+    def test_gerencia_o_impresso(self):
+        """D-220: o Impresso deixou de ser só leitura para o Admin."""
         imp = usuario("imp", "Impresso")
         resp = self.client.get(LISTA)
-        self.assertNotContains(resp, f'id="grupo-{imp.pk}"')
-        for rotulo in ("Desativar imp", "Redefinir senha de imp", "Link de acesso de imp"):
-            self.assertNotContains(resp, f'aria-label="{rotulo}"')
-        senha = reverse("ui_usuarios_senha", args=[imp.pk])
-        self.assertEqual(self.mudar_grupo(imp, "Pedagógica").status_code, 403)
-        self.assertEqual(self.ativo(imp, "desativar").status_code, 403)
-        self.assertEqual(self.client.get(senha).status_code, 403)
-        self.assertEqual(self.client.post(senha, {"new_password1": SENHA_BOA, "new_password2": SENHA_BOA}).status_code, 403)
-        self.assertEqual(self.client.post(reverse("ui_usuarios_link", args=[imp.pk])).status_code, 403)
+        self.assertContains(resp, f'id="grupo-{imp.pk}"')
+        for rotulo in ("Desativar imp", "Redefinir senha de imp", "Link de acesso de imp", "Excluir imp"):
+            self.assertContains(resp, f'aria-label="{rotulo}"')
+        self.assertEqual(self.client.post(reverse("ui_usuarios_link", args=[imp.pk])).status_code, 200)
+        self.assertRedirects(self.mudar_grupo(imp, "Pedagógica"), LISTA)
+        self.assertRedirects(self.ativo(imp, "desativar"), LISTA)
         imp.refresh_from_db()
-        self.assertEqual(grupos_de(imp), ["Impresso"])
-        self.assertTrue(imp.is_active)
-        self.assertTrue(imp.check_password("x"))
-        # admin
-        self.assertEqual(self.admin_post(imp, is_active="").status_code, 403)
-        self.assertEqual(self.client.get(reverse("admin:auth_user_password_change", args=[imp.pk])).status_code, 403)
+        self.assertEqual(grupos_de(imp), ["Pedagógica"])
+        self.assertFalse(imp.is_active)
 
     def test_nao_edita_outro_admin(self):
         outro = usuario("outro-admin", "Admin")
@@ -226,12 +222,12 @@ class UsuariosUiTest(Base):
 
     def test_excluir_segue_a_regra_de_desativar(self):
         url = lambda u: reverse("ui_usuarios_excluir", args=[u.pk])  # noqa: E731
-        for alvo in (usuario("imp", "Impresso"), usuario("outro-admin", "Admin"), self.eu):
+        for alvo in (usuario("outro-admin", "Admin"), self.eu):
             self.assertEqual(self.client.get(url(alvo)).status_code, 403, alvo)
             self.assertEqual(self.excluir(alvo).status_code, 403, alvo)
             self.assertNotContains(self.client.get(LISTA), f'aria-label="Excluir {alvo.username}"')
         self.assertEqual(self.client.get(url(self.root)).status_code, 404)
-        self.assertEqual(User.objects.filter(username__in=["imp", "outro-admin", "eu-admin", "root"]).count(), 4)
+        self.assertEqual(User.objects.filter(username__in=["outro-admin", "eu-admin", "root"]).count(), 3)
 
     def test_redefinir_senha(self):
         url = reverse("ui_usuarios_senha", args=[self.ped.pk])

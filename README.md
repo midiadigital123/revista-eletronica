@@ -58,9 +58,9 @@ Grupos fixos, criados por migração. Tabela única em `app/nucleo/permissoes.py
 |---|---|
 | **Pedagógica** | tudo do ano: cadastros, matriz, cortes, templates, padrões, projetos, variáveis, revistas, validar, excluir o que não está em uso |
 | **Mídias Digitais** | o mesmo que a Pedagógica |
-| **Admin** | o da Pedagógica + gerenciar usuários (só dá os grupos Pedagógica e Mídias Digitais; outro Admin e o Impresso só vê) + apagar o ano inteiro. Não marca "Revista Impressa Atualizada" |
+| **Admin** | o da Pedagógica + gerenciar usuários (dá os grupos Pedagógica, Mídias Digitais e Impresso; outro Admin só vê) + apagar o ano inteiro + marcar "Revista Impressa Atualizada" (D-220) |
 | **Impresso** | ver tudo + marcar "Revista Impressa Atualizada" |
-| superusuário | tudo, inclusive marcar impressa; é o único que põe alguém em Admin ou Impresso, altera outro Admin ou o Impresso, e vê o botão "Admin" no cabeçalho. Nenhuma tela cria superusuário: `createsuperuser` ou `tornar_superusuario` |
+| superusuário | tudo; é o único que põe alguém em Admin, altera outro Admin e vê o botão "Admin" no cabeçalho. Nenhuma tela cria superusuário: `createsuperuser` ou `tornar_superusuario` |
 
 Superusuário novo: `createsuperuser`; tornar superusuário quem já existe: `manage.py
 tornar_superusuario <usuario>...` (nenhuma tela faz isso, D-142).

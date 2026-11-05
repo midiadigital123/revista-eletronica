@@ -389,7 +389,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 
 Fonte única: `app/nucleo/permissoes.py`. Grupos fixos criados por migração; mudar a tabela exige migração de dados nova (o teste `GruposNoBancoTest` falha sem ela) (D-136, learning "No admin só se exclui a sobrescrita do projeto").
 
-- **Admin** = Pedagógica + gerenciar usuários (D-083, `app/nucleo/permissoes.py:93`).
+- **Admin** = Pedagógica + gerenciar usuários + apagar o ano + marcar impressa (D-083, D-220, `app/nucleo/permissoes.py`, `ADMIN_MARCA_IMPRESSA = True`).
 - **Mídias Digitais** = exatamente a Pedagógica (D-073, `app/nucleo/permissoes.py:95`).
 - **Impresso** = ver tudo + marcar impressa (D-074, `app/nucleo/permissoes.py:96`).
 - Todos os perfis veem tudo (`ver_tudo`) (`app/nucleo/permissoes.py:44`).
@@ -421,8 +421,8 @@ Fonte única: `app/nucleo/permissoes.py`. Grupos fixos criados por migração; m
 |---|---|
 | Usuário sai desativado (`is_active`). Excluir só pela tela Usuários e só quem não tem rastro: nenhuma edição no histórico (`history_user`), versão de template, validação, foto de revista nem ação no admin. Com rastro, a página lista o que impede e manda desativar. Mesma regra de quem pode desativar; o admin do Django não exclui (sem `auth.delete_user`). | D-142, D-205, D-218, `app/nucleo/usuarios.py::rastros` |
 | O formulário de usuário não tem `is_superuser`, `is_staff` nem permissões avulsas; usuário novo nasce `is_staff`. | D-142, `app/nucleo/admin/usuarios.py:34-75` |
-| Superusuário só por comando, com acesso ao servidor: `createsuperuser` (novo) ou `tornar_superusuario <usuario>...` (quem já existe; nome inexistente não muda nada). Ele tem tudo, inclusive marcar impressa, que o Admin não tem (`ADMIN_MARCA_IMPRESSA = False`). | D-142, D-219, `app/nucleo/management/commands/tornar_superusuario.py` |
-| O Admin (não superusuário) só atribui Pedagógica e Mídias Digitais; não vê superusuários; não muda os próprios grupos nem se desativa; não altera (dados, senha, grupo, ativo) outro Admin nem o Impresso, só vê (D-211: redefinir a senha do Impresso e entrar como ele daria `marcar_impressa`). | D-168, `app/nucleo/usuarios.py` (módulo comum do admin e da tela B) |
+| Superusuário só por comando, com acesso ao servidor: `createsuperuser` (novo) ou `tornar_superusuario <usuario>...` (quem já existe; nome inexistente não muda nada). Ele tem tudo; o que o Admin não tem é pôr alguém no grupo Admin e alterar outro Admin. | D-142, D-219, D-220, `app/nucleo/management/commands/tornar_superusuario.py` |
+| O Admin (não superusuário) atribui Pedagógica, Mídias Digitais e Impresso; não vê superusuários; não muda os próprios grupos nem se desativa; não altera (dados, senha, grupo, ativo) outro Admin, só vê. O Impresso ele gerencia por inteiro e ele mesmo marca impressa (D-220, substitui a parte da D-211 que deixava o Impresso só com o superusuário). | D-168, D-220, `app/nucleo/usuarios.py` (módulo comum do admin e da tela B) |
 | Gerenciar usuários também pela tela B (`/ui/usuarios/`): listar, criar (nasce `is_staff`), trocar o grupo (um por usuário na B), ativar/desativar, redefinir a senha. Exige `auth.change_user` (criar: também `add_user`). O superusuário não tem restrição. | D-190, D-210, `app/nucleo/urls/ui_usuarios.py` |
 | "Link de acesso" (tela Usuários, só POST): link para a pessoa definir a própria senha, o mesmo do `criar_usuarios`, com mensagem pronta para enviar. Mesma regra de "Redefinir senha" (`pode_editar`) e só para ativo. Vale `PASSWORD_RESET_TIMEOUT` (3 dias) e cai quando a senha muda ou a pessoa entra. O endereço vem do `Origin` do POST (https atrás do proxy). A página aberta pelo link é tela B, não o admin (D-212). | D-216, `app/nucleo/usuarios.py::caminho_definir_senha`, `app/nucleo/urls/conta.py` |
 
