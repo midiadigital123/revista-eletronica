@@ -4,11 +4,11 @@
 <!-- sobrescrever a cada atualização -->
 S6–S9 e Fechamento do blueprint de lacunas concluídos (D-210), integrados em `feat/telas-b-ux`.
 Funcionando: toda função do back tem tela B. Nova matriz (lista de Matrizes → Reimportar), Novo template (lista de Templates → editor na versão 1), downloads (planilha de grupos de corte, gabarito de ids, arquivo do item, planilhas F1/F2 na ficha da revista) e Usuários (link no cabeçalho, só com `auth.change_user`). `grep admin:` nas telas B: só o botão Admin (superusuário) e o logout. Docs atualizadas (modelo-er, regras de negócio, README, CLAUDE.md, fichas). Testes na stack isolada `lac-integ` (8030): Django 790 OK (8 pulados), makemigrations limpo, Playwright 159/160 + o que falhou passou 3/3 isolado (timeout de `page.goto` sob carga em `templates-editor`).
-Quebrado/pendente: furo herdado no S9 — o Admin pode redefinir a senha de um usuário Impresso e entrar como ele (ganha `marcar_impressa`); espera decisão. Dev do usuário com containers parados; stack `lac-integ` ainda de pé.
+Quebrado/pendente: nada aberto de S6–S9 nem da D-211. Dev do usuário com containers parados; stack `lac-integ` ainda de pé.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Usuário decide: bloquear "redefinir senha" de quem tem grupo fora dos permitidos (Impresso) para o perfil Admin? (1 linha em `nucleo/usuarios.py`, vale para admin e tela B.)
+Usuário responde as perguntas em aberto (D-055 escala_max × 1000/500 é a primeira).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1725,6 +1725,14 @@ Usuário decide: bloquear "redefinir senha" de quem tem grupo fora dos permitido
 - **Arquivos afetados:** `urls/ui_matriz.py`, `urls/ui_templates.py`, `urls/ui_revista.py`, `urls/cortes.py`, `servicos/arquivos.py`, `admin/revista.py`, `admin/usuarios.py`, `nucleo/usuarios.py` (novo), `urls/ui_usuarios.py` (novo), templates em `ui/matriz/`, `ui/templates/lista.html`, `ui/revista/revista.html`, `ui/cortes.html`, `ui/base.html`
 - **Status:** ativa
 
+### D-211 — Perfil Admin só vê usuário Impresso: não redefine senha nem altera (2026-11-05)
+- **Contexto:** o S9 apontou um furo herdado do admin: o perfil Admin (não superusuário) podia redefinir a senha de um usuário Impresso e entrar como ele, ganhando `marcar_impressa`, o que anula `ADMIN_MARCA_IMPRESSA = False`.
+- **Decisão:** `pode_editar` passa a recusar qualquer alvo com grupo fora de `grupos_permitidos(ator)` (Admin e Impresso), para dados, senha, grupo e ativo. Só o superusuário altera esses usuários. Vale para o admin e para a tela B, que usam o mesmo `nucleo/usuarios.py`.
+- **Motivo:** decisão do usuário ("fecha o furo"). Uma regra num lugar só fecha as duas telas.
+- **Descartadas:** bloquear só a senha — dados e "Desativar" continuariam abertos a um perfil que não pode dar o grupo Impresso; manter (o furo anula a regra do Impresso).
+- **Arquivos afetados:** `app/nucleo/usuarios.py`, `nucleo/tests/test_ui_usuarios.py`, `nucleo/tests/test_admin_cadastro.py`, `docs/regras-de-negocio.md`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (aplicadas em 04/11) Aplicar as migrações 0016–0018 (permissões, trigger da `TemplateVersao`, `Parceiro.desativado_em`) no banco de dev? Sem elas, as telas do dev quebram com o código novo — depende de: usuário (migração de schema)
 - [x] (05/11: usuário mandou corrigir; Agente D) (regras de negócio, seção 10.1) `docs/modelo-er.md` está desatualizado em dois pontos: o bloqueio é tomado pelo mesmo usuário, não pela mesma sessão (D-191); a foto guarda a revista resolvida inteira e roda em READ COMMITTED (D-151/D-153/D-178). Corrigir? — depende de: usuário
@@ -1732,7 +1740,7 @@ Usuário decide: bloquear "redefinir senha" de quem tem grupo fora dos permitido
 - [ ] (regras de negócio 10.1, divergência 4, D-055) O limite do corte é o `Etapa.escala_max` de cada etapa (código: `models/cadastro.py:60`, `servicos/cascata.py:38`) ou os valores fixos 1000/500 da D-055? Se for o `escala_max`, reescrever a D-055 — depende de: usuário
 - [ ] (regras de negócio 10.1, divergências 8–10) Corrigir 3 comentários de código desatualizados (`permissoes.py:14`, `permissoes.py:17`, `models/controle.py:18`), sem mudar comportamento? — depende de: usuário
 - [ ] `.env.example` da raiz ainda é do sistema antigo (`SESSION_SECRET`, `ADMIN_EMAIL`); o certo é `app/.env.example`. Apagar ou substituir? — depende de: usuário
-- [ ] (S9) O perfil Admin pode redefinir a senha de um usuário Impresso e entrar como ele, ganhando `marcar_impressa` (anula `ADMIN_MARCA_IMPRESSA = False`). Furo já existia no admin. Fechar com `pode_editar` em `nucleo/usuarios.py` exigindo alvo sem grupo fora dos permitidos? — depende de: usuário
+- [x] (D-211, fechado) (S9) O perfil Admin pode redefinir a senha de um usuário Impresso e entrar como ele, ganhando `marcar_impressa` (anula `ADMIN_MARCA_IMPRESSA = False`). Furo já existia no admin. Fechar com `pode_editar` em `nucleo/usuarios.py` exigindo alvo sem grupo fora dos permitidos? — depende de: usuário
 - [x] (D-206) Ano aberto por engano: fica como histórico ou exceção no trigger para apagar o ano inteiro? — depende de: usuário
 - [x] (D-207) Template sem uso: arquivar basta ou excluir de fato (exceção à D-125)? — depende de: usuário
 - [x] (D-208: sim) Criar "desativar parceiro" para quem sai do programa (hoje ele aparece numa linha vazia na grade de Cortes de todo ano novo)? Usuário não entendeu; pergunta refeita em 04/11 — depende de: usuário
@@ -2156,3 +2164,4 @@ Usuário decide: bloquear "redefinir senha" de quem tem grupo fora dos permitido
 - Os 3 worktrees (A, B, D) nasceram em `34f3579` (main), não no HEAD de `feat/telas-b-ux`; os agentes refizeram a branch a partir de `2dc2825`. Em lançamentos futuros, o brief manda conferir o HEAD.
 - Agente C (S9: `0ada222` regras de usuário em `nucleo/usuarios.py`, usadas pelo admin e pela B; `813b3a2` tela `/ui/usuarios/`) mergeado sem conflito. Permissão `auth.change_user` (criar: + `add_user`). Na B, um grupo por usuário; criar e redefinir senha em páginas próprias; superusuário sem restrição (como no admin). `usuarios.spec.ts` deixa um `e2e-midias-<sufixo>` desativado por execução.
 - Fechamento: Django 790 OK (8 pulados), makemigrations limpo, Playwright na stack `lac-integ` com `E2E_ADMIN_*` e `E2E_IMPRESSO_*`: 159/160; a falha (`templates-editor.spec.ts:12`, chromium, timeout do `page.goto`) passou 3/3 isolada. Docs de S6–S9 e blueprint marcado como concluído em `eefde3c`, com a learning l-da214a7e (worktree de agente nasce no main).
+- Usuário: "fecha o furo". D-211: `pode_editar` recusa alvo com grupo fora dos permitidos (Admin e Impresso); admin e tela B dão 403 em dados, senha, grupo e ativo do Impresso. Django 790 OK (8 pulados) na `lac-integ`. Commitado com a autorização do usuário.
