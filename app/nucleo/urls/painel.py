@@ -199,7 +199,7 @@ def itens_validar(ano, ids):
 
 
 @require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
+@login_required
 @permission_required("nucleo.validar_revista", raise_exception=True)
 def validar_lote(request, ano):
     ano = get_object_or_404(Ano, ano=ano)

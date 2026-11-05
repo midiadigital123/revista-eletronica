@@ -71,7 +71,7 @@ def responder(request, pagina, parcial, contexto):
 
 
 @require_http_methods(["GET"])
-@login_required(login_url="admin:login")
+@login_required
 def inicio(request):
     """/ui/lotes/ → Lista de Projetos do ano da sessão (U7a); sem ano, `/`."""
     ano = ano_da_sessao(request)
@@ -87,7 +87,7 @@ def para_a_lista(view):
 
 
 @require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
+@login_required
 @para_a_lista
 def matriz(request, ano):
     pode_gravar = permissoes(request, "parceiroano")
@@ -114,7 +114,7 @@ def matriz(request, ano):
 
 
 @require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
+@login_required
 @para_a_lista
 def template(request, ano):
     pode_gravar = permissoes(request, "revistafasciculo")

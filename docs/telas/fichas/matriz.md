@@ -11,7 +11,7 @@ Cuidar da matriz de referência do ano: ver quais matrizes existem, criar uma a 
 | Pedagógica, Mídias Digitais, Admin | tudo: duplicar, reimportar, renomear, intervalo mínimo, descritores, tarefas, arquivo do item, excluir tarefa e descritor, excluir a matriz sem uso |
 | Impresso | só vê (aviso de só leitura; nenhum botão de gravar) |
 | Sem permissão de ver matriz | recebe "acesso negado" (403) |
-| Não logado | vai para o login do admin e volta depois |
+| Não logado | vai para o login das telas B (`/conta/entrar/`) e volta depois |
 
 ## Jornada
 
@@ -154,7 +154,7 @@ O elemento que marca a tela: a **faixa da tarefa na escala** (barra fina de 0 ao
 
 ## Critérios de aceite
 
-1. Com perfil Pedagógica: as páginas abrem (200), com botões de gravar; anônimo vai ao login do admin; sem `view_matriz` → 403.
+1. Com perfil Pedagógica: as páginas abrem (200), com botões de gravar; anônimo vai ao login das telas B (`/conta/entrar/`); sem `view_matriz` → 403.
 2. Impresso vê tudo em só leitura (aviso, campos desabilitados, sem "Salvar") e todo POST dá 403.
 3. Duplicar cria a cópia com a origem e leva a ela; nome repetido no ano mostra o erro no modal. Renomear pelo lápis grava pelo autosave; nome vazio ou repetido dá 422.
 4. Reimportar grava pela regra do admin; com etapas × CC existentes, exige digitar o nome da matriz.

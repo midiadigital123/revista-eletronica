@@ -78,7 +78,7 @@ class LoteMatrizUiTest(Base):
         self.client.force_login(usuario("nada"))
         self.assertEqual(self.client.post(self.url, {"alvos": [pe.pk], "matriz": self.matriz.pk}).status_code, 403)
         self.client.logout()
-        self.assertRedirects(self.client.get(self.url), f"{reverse('admin:login')}?next={self.url}", fetch_redirect_response=False)
+        self.assertRedirects(self.client.get(self.url), f"{reverse('entrar')}?next={self.url}", fetch_redirect_response=False)
 
 class LoteTemplateUiTest(Base):
     novo_template = test_admin_projeto.LoteTemplateTest.novo_template

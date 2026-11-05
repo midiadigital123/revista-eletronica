@@ -59,7 +59,7 @@ class PainelUiTest(Base):
         self.client.force_login(usuario("nada"))  # sem view_revista
         self.assertEqual(self.client.get(self.url).status_code, 403)
         self.client.logout()
-        self.assertRedirects(self.client.get(self.url), f"{reverse('admin:login')}?next={self.url}", fetch_redirect_response=False)
+        self.assertRedirects(self.client.get(self.url), f"{reverse('entrar')}?next={self.url}", fetch_redirect_response=False)
         self.client.force_login(self.ped)
         self.assertEqual(self.client.get(reverse("painel", args=[1999])).status_code, 404)
 

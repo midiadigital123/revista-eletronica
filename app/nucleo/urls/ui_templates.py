@@ -62,7 +62,7 @@ def pode_criar(user):  # criar grava o template e a versão 1 (D-115)
 
 
 @require_GET
-@login_required(login_url="admin:login")
+@login_required
 def lista(request, ano=None):
     if not pode_ver(request.user):
         raise PermissionDenied
@@ -97,7 +97,7 @@ def esqueleto(fasciculo):
 
 
 @require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
+@login_required
 def novo(request, ano):
     """Novo template do ano (S7): mesmo form e validação do admin; grava o template e a versão 1 juntos."""
     if not pode_criar(request.user):
@@ -195,7 +195,7 @@ def _editor(request, tpl, form, secoes=None, status=200):
 
 
 @require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
+@login_required
 @com_bloqueio(lambda request, pk: get_object_or_404(Template, pk=pk), pode_gravar)
 def editar(request, pk):
     if not pode_ver(request.user):

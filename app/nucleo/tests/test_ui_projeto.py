@@ -72,7 +72,7 @@ class ProjetoUiTest(Base):
         self.client.logout()
         for url in (self.url, reverse("ui_projeto_lista", args=[2026])):
             resp = self.client.get(url)
-            self.assertRedirects(resp, f"{reverse('admin:login')}?next={url}", fetch_redirect_response=False)
+            self.assertRedirects(resp, f"{reverse('entrar')}?next={url}", fetch_redirect_response=False)
 
     def test_arquivado_so_leitura(self):
         Projeto.objects.filter(pk=self.projeto_go.pk).update(arquivado_em=timezone.now())

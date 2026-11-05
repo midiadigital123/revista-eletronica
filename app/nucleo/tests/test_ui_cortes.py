@@ -52,7 +52,7 @@ class GradeUiTest(Base):
         self.client.force_login(usuario("nada"))
         self.assertEqual(self.client.get(url).status_code, 403)
         self.client.logout()
-        self.assertRedirects(self.client.get(url), f"{reverse('admin:login')}?next={url}", fetch_redirect_response=False)
+        self.assertRedirects(self.client.get(url), f"{reverse('entrar')}?next={url}", fetch_redirect_response=False)
 
     def test_todos_os_grupos_menos_impresso_gravam(self):
         Parceiro.objects.create(nome="GO")
@@ -116,7 +116,7 @@ class GradeUiTest(Base):
     def test_anonimo_vai_para_o_login(self):
         self.client.logout()
         resp = self.client.get(self.url)
-        self.assertRedirects(resp, f"{reverse('admin:login')}?next={self.url}", fetch_redirect_response=False)
+        self.assertRedirects(resp, f"{reverse('entrar')}?next={self.url}", fetch_redirect_response=False)
 
 
 class ParceiroNaGradeTest(Base):

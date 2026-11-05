@@ -56,7 +56,7 @@ class PaginaTest(MediaTemporaria, TestCase):
         self.client.logout()
         r = self.get(self.rev)
         self.assertEqual(r.status_code, 302)
-        self.assertIn("/admin/login/", r["Location"])
+        self.assertIn("/conta/entrar/", r["Location"])
 
     def test_sem_view_revista_403(self):
         staff = get_user_model().objects.create(username="staff", is_staff=True)  # sem grupo

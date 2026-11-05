@@ -78,7 +78,7 @@ def _alvo(request, ano, pk):
 
 
 @require_GET
-@login_required(login_url="admin:login")
+@login_required
 def lista(request, ano=None):
     """A lista antiga (T20) virou a aba Lista de Projetos (U7a): GET redireciona (302)."""
     ano = ano or getattr(ano_da_sessao(request), "ano", None)
@@ -160,7 +160,7 @@ def _validacao(request, revista):
 
 
 @require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
+@login_required
 @com_bloqueio(_alvo, lambda u: u.has_perm("nucleo.change_revista"))
 def revista(request, ano, pk):
     """T21. GET HTMX com `?secao=` devolve só o painel da seção (+ lista de seções, oob).
@@ -361,7 +361,7 @@ def _validar(request, revista):
 
 
 @require_GET
-@login_required(login_url="admin:login")
+@login_required
 def zip_(request, ano, pk):
     """Zip da revista (a action "Baixar zip" do admin): recusa com pendências (D-112)."""
     if not pode_ver(request.user):
@@ -378,7 +378,7 @@ def zip_(request, ano, pk):
 
 
 @require_GET
-@login_required(login_url="admin:login")
+@login_required
 def gabarito(request, ano, pk):
     """CSV dos ids que o design põe no SVG do F2 (o "Baixar gabarito de ids" do admin, mesma função)."""
     if not pode_ver(request.user):

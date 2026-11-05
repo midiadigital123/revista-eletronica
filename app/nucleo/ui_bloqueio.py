@@ -3,7 +3,7 @@
 Mesma regra do admin (D-080, D-081, D-121), mesmo serviço (`servicos/bloqueio.py`), mesmo JS
 (`static/nucleo/bloqueio.js`) e mesmo campo de sessão (`_bloqueio_sessao`). Uso:
 
-    @login_required(login_url="admin:login")
+    @login_required
     @com_bloqueio(lambda request, pk: get_object_or_404(Projeto, pk=pk), pode_gravar)
     def projeto(request, pk): ...
 

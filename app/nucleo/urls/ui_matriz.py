@@ -94,7 +94,7 @@ def _contexto_ano(ano):
 
 
 @require_GET
-@login_required(login_url="admin:login")
+@login_required
 def inicio(request):
     ano = ano_da_sessao(request)
     if ano:
@@ -105,7 +105,7 @@ def inicio(request):
 
 
 @require_GET
-@login_required(login_url="admin:login")
+@login_required
 def matrizes(request, ano):
     if not pode_ver(request.user):
         raise PermissionDenied
@@ -140,7 +140,7 @@ def _forms_matriz(m, duplicar=None):
 
 
 @require_GET
-@login_required(login_url="admin:login")
+@login_required
 def matriz(request, pk):
     m = _matriz(request, pk)
     mecs = (
@@ -164,7 +164,7 @@ def _form_em_dialogo(request, m, chave, form, titulo, url, ano=None):
 
 
 @require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
+@login_required
 def duplicar(request, pk):
     origem = _matriz(request, pk, "nucleo.add_matriz")
     form = DuplicarForm(request.POST or None, initial={"nome": f"{origem.nome} (cópia)", "ano": origem.ano_id})
@@ -180,7 +180,7 @@ def duplicar(request, pk):
 
 
 @require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
+@login_required
 def nova(request, ano):
     """S6: matriz vazia no ano da lista; o arquivo do SAEGO entra no Reimportar (a matriz nasce sem MEC)."""
     if not (pode_ver(request.user) and request.user.has_perm("nucleo.add_matriz")):
@@ -195,7 +195,7 @@ def nova(request, ano):
 
 
 @require_POST
-@login_required(login_url="admin:login")
+@login_required
 def renomear(request, pk):
     """U5: renomear inline no título (componente `nomeInline`), pelo protocolo do autosave (U3).
     O nome da matriz não entra no texto da revista; o impacto é calculado mesmo assim (U2)."""
@@ -206,7 +206,7 @@ def renomear(request, pk):
 
 
 @require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
+@login_required
 def reimportar_view(request, pk):
     m = _matriz(request, pk, "nucleo.change_matriz")
     form = ReimportarForm(request.POST or None, request.FILES or None)
@@ -228,7 +228,7 @@ def reimportar_view(request, pk):
 
 
 @require_GET
-@login_required(login_url="admin:login")
+@login_required
 def diferencas_view(request, pk):
     m = _matriz(request, pk)
     return TemplateResponse(request, "ui/matriz/diferencas.html", {**_contexto_ano(m.ano), "matriz": m, "linhas": diferencas(m)})
@@ -381,7 +381,7 @@ def _pagina_mec(request, mec, descritor, form=None, tarefas=None, item_pendente=
 
 
 @require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
+@login_required
 @com_bloqueio(_mec, pode_editar)
 def mec(request, pk, dpk=None):
     m = _mec(request, pk)
@@ -410,7 +410,7 @@ def mec(request, pk, dpk=None):
 
 
 @require_http_methods(["POST"])
-@login_required(login_url="admin:login")
+@login_required
 @com_bloqueio(_mec, pode_editar)
 def intervalo(request, pk):
     """Intervalo mínimo. U9: no popover "Configurações" salva sozinho (campoAuto, protocolo do
@@ -441,7 +441,7 @@ def intervalo(request, pk):
 
 
 @require_http_methods(["POST"])
-@login_required(login_url="admin:login")
+@login_required
 @com_bloqueio(_mec, pode_editar)
 def novo_descritor(request, pk):
     m = _mec(request, pk)
@@ -457,7 +457,7 @@ def novo_descritor(request, pk):
 
 
 @require_GET
-@login_required(login_url="admin:login")
+@login_required
 def item_baixar(request, pk, dpk, tpk):
     """Download do arquivo do item (D-180, a mesma regra do GET do admin): sem arquivo, tipo
     desconhecido ou arquivo sumido do storage, 404. Só leitura: não passa pelo bloqueio da MEC."""
@@ -473,7 +473,7 @@ def item_baixar(request, pk, dpk, tpk):
 
 
 @require_http_methods(["POST"])
-@login_required(login_url="admin:login")
+@login_required
 @com_bloqueio(_mec, pode_editar)
 def item(request, pk, dpk, tpk):
     """Arquivo do item da tarefa (D-180): envia, troca ou remove. O download é `item_baixar`."""
@@ -505,7 +505,7 @@ TAREFA = re.compile(r"^tarefas-(\d{1,4})-")
 
 
 @require_POST
-@login_required(login_url="admin:login")
+@login_required
 @com_bloqueio(_mec, pode_editar)
 def campo(request, pk, dpk):
     """Autosave (U3) de um campo do descritor ou de uma tarefa já gravada (a linha inteira vem no
@@ -537,7 +537,7 @@ def campo(request, pk, dpk):
 
 
 @require_POST
-@login_required(login_url="admin:login")
+@login_required
 @com_bloqueio(_mec, pode_editar)
 def reordenar_view(request, pk, dpk=None):
     """U4: ordem dos descritores da MEC (sem `dpk`) ou das tarefas de um descritor, pela alça
@@ -569,7 +569,7 @@ def _excluir(request, mec, obj, rotulo, voltar):
 
 
 @require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
+@login_required
 @permission_required("nucleo.delete_descritor", raise_exception=True)  # sem poder excluir, nem a página (GET 403, como o Reimportar)
 @com_bloqueio(_mec, lambda u: u.has_perm("nucleo.delete_descritor"))
 def excluir_descritor(request, pk, dpk):
@@ -579,7 +579,7 @@ def excluir_descritor(request, pk, dpk):
 
 
 @require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
+@login_required
 @permission_required("nucleo.delete_tarefa", raise_exception=True)  # sem poder excluir, nem a página (GET 403, como o Reimportar)
 @com_bloqueio(_mec, lambda u: u.has_perm("nucleo.delete_tarefa"))
 def excluir_tarefa(request, pk, dpk, tpk):

@@ -120,7 +120,7 @@ class VariaveisUiTest(Base):
     def test_anonimo_vai_para_o_login(self):
         self.client.logout()
         r = self.client.get(self.url)
-        self.assertRedirects(r, f"{reverse('admin:login')}?next={self.url}", fetch_redirect_response=False)
+        self.assertRedirects(r, f"{reverse('entrar')}?next={self.url}", fetch_redirect_response=False)
 
     def test_ano_sem_projetos_mostra_vazio(self):
         Ano.objects.create(ano=2030)

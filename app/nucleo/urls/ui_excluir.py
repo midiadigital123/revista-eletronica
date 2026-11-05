@@ -57,7 +57,7 @@ def _voltar(request):
 
 
 @require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
+@login_required
 def excluir(request, modelo, pk):
     if modelo not in REGISTRO:
         raise Http404
@@ -92,7 +92,7 @@ def excluir(request, modelo, pk):
 
 
 @require_POST
-@login_required(login_url="admin:login")
+@login_required
 @permission_required("nucleo.change_parceiro", raise_exception=True)
 def parceiro_ativo(request, pk):
     """D-208: desativar (ou reativar) o parceiro em uso. Desativado some da grade dos anos sem dados dele."""

@@ -54,7 +54,7 @@ Atribuir, de uma vez, a mesma matriz a vários parceiros do ano, ou o mesmo temp
 
 ## Permissões
 
-- Login obrigatório; anônimo vai ao login do admin.
+- Login obrigatório; anônimo vai ao login das telas B (`/conta/entrar/`).
 - Ver a Lista: `view_projeto` ou `change_projeto`.
 - Atribuir matriz: `change_parceiroano`. Atribuir template: `change_revistafasciculo`. Sem a permissão, o botão não aparece e o POST dá 403. Ação desconhecida na URL: 404.
 
@@ -71,7 +71,7 @@ Atribuir, de uma vez, a mesma matriz a vários parceiros do ano, ou o mesmo temp
 4. Matriz de outro ano é recusada.
 5. Template: só templates do ano, componente e fascículo; revista com texto próprio no F1 é pulada no F1; F2 em "Não mudar" não muda.
 6. Revista validada que muda: o modal de impacto abre e nada grava até confirmar.
-7. Impresso não vê caixas nem barra; POST 403. Anônimo: login do admin.
+7. Impresso não vê caixas nem barra; POST 403. Anônimo: login das telas B (`/conta/entrar/`).
 8. `GET /ui/lotes/2026/matriz/` redireciona (302) para `/ui/projeto/ano/2026/`; o POST antigo continua gravando.
 9. O lote do admin segue funcionando (mesma regra).
 

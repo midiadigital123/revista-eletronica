@@ -126,7 +126,7 @@ class ImpressoUiTest(Base):
         self.client.logout()
         for r in (self.client.get(self.url), self.client.post(self.marcar_url, {"hash_visto": "x"})):
             self.assertEqual(r.status_code, 302)
-            self.assertTrue(r["Location"].startswith(reverse("admin:login")))
+            self.assertTrue(r["Location"].startswith(reverse("entrar")))
 
     def test_ano_sem_revistas_mostra_vazio(self):
         Ano.objects.create(ano=2030)

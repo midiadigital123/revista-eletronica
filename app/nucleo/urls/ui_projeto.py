@@ -62,7 +62,7 @@ def _alvo(request, pk, **kwargs):
 
 
 @require_GET
-@login_required(login_url="admin:login")
+@login_required
 def inicio(request):
     """Ano da sessão; sem ano nenhum, a página vazia com o caminho para abrir um (U7a: é para cá que
     as rotas `_inicio` de Cortes, Variáveis, Revistas e Lotes mandam)."""
@@ -136,7 +136,7 @@ def _pagina_lista(request, ano, *, post=None, acao=None, perdem=()):
 
 
 @require_GET
-@login_required(login_url="admin:login")
+@login_required
 def lista(request, ano):
     """Hub Projetos (U7a), aba Lista: substitui a lista de Revistas e os Lotes (ações em massa)."""
     if not pode_ver(request.user):
@@ -145,7 +145,7 @@ def lista(request, ano):
 
 
 @require_POST
-@login_required(login_url="admin:login")
+@login_required
 def massa(request, ano, acao):
     """Barra da Lista (U7a): "Atribuir matriz…" e "Atribuir template…" aos parceiros marcados
     (`alvos` = ParceiroAno). Mesma regra dos Lotes (`nucleo/lotes.py`): projeto em edição é pulado e
@@ -189,7 +189,7 @@ def _vestir(form, desabilitar=False):
 
 
 @require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
+@login_required
 @com_bloqueio(_alvo, pode_gravar)
 def projeto(request, pk):
     if not pode_ver(request.user):
@@ -309,7 +309,7 @@ def pode_matriz(user):
 
 
 @require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
+@login_required
 def matriz(request, pk):
     """GET volta à aba Matriz: é para onde o com_bloqueio manda quem perdeu o bloqueio (o caminho do POST)."""
     if request.method == "GET":
@@ -367,7 +367,7 @@ def _titulo(form, nome):
 
 
 @require_POST
-@login_required(login_url="admin:login")
+@login_required
 def campo(request, pk):
     """Autosave de um campo (U3), ponto único de escrita da ficha e da planilha de variáveis.
     Com a sessão de bloqueio (ficha): `com_bloqueio`, e vale todo campo da ficha. Sem ela

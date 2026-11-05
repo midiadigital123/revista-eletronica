@@ -2,7 +2,7 @@
 
 Telas do dia a dia como páginas próprias no Django, com o visual do editor React (D-183) e HTMX local (D-186). Branch `feat/ui-b`. Convenções e componentes: [`design-system.md`](design-system.md). Requisitos de origem: [`inventario.md`](inventario.md) (ids T01–T28).
 
-Todas: login obrigatório (anônimo vai ao login do admin), mesmas permissões do admin equivalente, só leitura sem permissão de escrita (POST → 403), bloqueio de edição onde o admin usa `BloqueioAdminMixin` (`nucleo/ui_bloqueio.py`) e mensagens no padrão causa + correção. O admin continua funcionando para tudo.
+Todas: login obrigatório (anônimo vai ao login das telas B (`/conta/entrar/`)), mesmas permissões do admin equivalente, só leitura sem permissão de escrita (POST → 403), bloqueio de edição onde o admin usa `BloqueioAdminMixin` (`nucleo/ui_bloqueio.py`) e mensagens no padrão causa + correção. O admin continua funcionando para tudo.
 
 ## 1. Telas integradas
 
@@ -34,7 +34,7 @@ Anos, Abrir ano, etapas, componentes, Padrões do ano e parceiros (criar e renom
 
 | O quê | Inventário | Onde fica |
 |---|---|---|
-| Login, índice | T01, T02 | `/admin/login/`, `/admin/` (a navegação B tem "Admin", só para superusuário, e "Sair") |
+| Índice | T02 | `/admin/` (a navegação B tem "Admin", só para superusuário). O login e o "Sair" são das telas B (`/conta/entrar/`, `/conta/sair/`, D-212); `/admin/login/` redireciona para o login B com o `next` |
 | Histórico por registro | T28 | não existe (falta também no admin) |
 
 Preview (T22) não é admin nem tela B: é a página da revista em `/preview/<id>/`.

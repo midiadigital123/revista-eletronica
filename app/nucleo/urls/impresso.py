@@ -222,7 +222,7 @@ def impresso(request, pk):
 
 
 @require_POST
-@login_required(login_url="admin:login")
+@login_required
 @permission_required("nucleo.marcar_impressa", raise_exception=True)
 def marcar(request, pk):
     gravar(request, _revista(pk))

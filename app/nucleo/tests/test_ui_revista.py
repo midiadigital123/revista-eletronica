@@ -437,7 +437,7 @@ class RevistaUiTest(Base):
     def test_anonimo_vai_para_o_login(self):
         self.client.logout()
         for url in (self.url, reverse("ui_revista", args=[2026])):
-            self.assertRedirects(self.client.get(url), f"{reverse('admin:login')}?next={url}", fetch_redirect_response=False)
+            self.assertRedirects(self.client.get(url), f"{reverse('entrar')}?next={url}", fetch_redirect_response=False)
 
     def test_gabarito_de_ids_e_planilhas_pela_tela_b(self):
         """S8: o gabarito sai da mesma função do admin (servicos/arquivos); as planilhas, pela rota do impresso."""

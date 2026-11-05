@@ -83,7 +83,7 @@ Reunir numa página o que a equipe precisa para deixar uma revista pronta: o tem
 
 ## Permissões
 
-- Login obrigatório; anônimo vai ao login do admin.
+- Login obrigatório; anônimo vai ao login das telas B (`/conta/entrar/`).
 - Ver: `view_revista` ou `change_revista`; sem isso, 403.
 - Arquivos: `change_revista`. Templates: + `change_revistafasciculo`. Textos: + `add/change_revistasecao`. Validar: `validar_revista`. "Editar o nome do projeto": `change_projeto`.
 - Revista ou projeto arquivado: só leitura para todos; POST é 403.
@@ -134,7 +134,7 @@ Abaixo de 64rem (1024 px): uma coluna, com a Situação primeiro (o resumo antes
 7. Seção desatualizada mostra o diff, "Manter meu texto" e "Descartar cópia".
 8. "Validar revista" fica desligado com o motivo enquanto houver pendência; pronto, grava com o hash da página; com hash velho, recusa com a mensagem.
 9. `acao=nome` responde 400; o texto "Editar nome" não aparece (o link é "Editar o nome do projeto").
-10. Revista arquivada: só leitura com a foto; sem bloqueio; POST 403. Outra pessoa com o projeto aberto: só leitura. Anônimo: login do admin.
+10. Revista arquivada: só leitura com a foto; sem bloqueio; POST 403. Outra pessoa com o projeto aberto: só leitura. Anônimo: login das telas B (`/conta/entrar/`).
 
 ## Referências técnicas
 

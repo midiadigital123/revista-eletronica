@@ -180,7 +180,7 @@ def projeto(request, pk): ...   # usa request.pode_gravar
 
 ## 7. Permissões e mensagens
 
-- Login obrigatório: `@login_required(login_url="admin:login")` (anônimo vai ao login do admin).
+- Login obrigatório: `@login_required` (`LOGIN_URL = "entrar"`, D-212) (anônimo vai ao login das telas B (`/conta/entrar/`)).
 - Mesmas permissões do admin equivalente: ver sem permissão → 403; sem permissão de escrita → só leitura (campos `readonly`/`disabled`, sem botão de salvar) e POST → 403.
 - Mensagens em PT-BR, causa + correção, sem "Opa": "Não salvo: <causa>. <o que fazer>." / "Nada foi gravado: corrija os erros marcados." / "Só leitura: <por quê>. Para editar, <como>."
 - Ícones: SVG inline do Lucide (o mesmo do editor), `aria-hidden="true"`, sempre com texto ao lado.

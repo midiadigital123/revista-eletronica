@@ -57,7 +57,7 @@ def linha(form, indice):
 
 
 @require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
+@login_required
 def variaveis(request, ano):
     """Aba Variáveis do hub Projetos (U7a, rota `ui_variaveis` em /ui/projeto/ano/<ano>/variaveis/)."""
     if not pode_ver(request.user):
@@ -82,7 +82,7 @@ def variaveis(request, ano):
 
 
 @require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
+@login_required
 def antiga(request, ano=None):
     """Planilha antiga (/ui/variaveis/, /ui/variaveis/<ano>/): GET vai à aba Variáveis de Projetos (302);
     o POST continua gravando (U7a)."""
@@ -93,7 +93,7 @@ def antiga(request, ano=None):
 
 
 @require_POST
-@login_required(login_url="admin:login")
+@login_required
 def copiar_linha(request, ano, pk):
     """Copia do ano anterior (só vazias) e devolve a linha nova (HTMX) ou volta à página."""
     if not pode_gravar(request.user):

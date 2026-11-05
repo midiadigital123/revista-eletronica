@@ -611,3 +611,12 @@ button.alca { /* button: vence o `.lista button` */
 .nome-inline-campo { display: inline-flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
 .nome-inline-campo .input { width: 100%; min-width: 8rem; font: inherit; }
 .grade-parceiro .nome-inline-campo .input { height: 2rem; }
+
+/* --- login (D-212, ui/entrar.html): um card estreito no centro da tela, sem casca --- */
+.entrar { display: grid; place-items: center; min-height: 100dvh; padding: 1rem; }
+.entrar-card { width: 100%; max-width: 24rem; }
+.entrar-cab { display: flex; flex-direction: column; gap: 0.25rem; }
+.entrar-cab .marca { margin: 0; color: var(--muted-foreground); font-size: 0.875rem; }
+.entrar-cab h1 { margin: 0; }
+.entrar-form { display: flex; flex-direction: column; gap: 1rem; }
+.entrar-form .btn { width: 100%; }

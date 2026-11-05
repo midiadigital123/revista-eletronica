@@ -70,7 +70,7 @@ class ListaTest(UiBase):
         self.assertEqual(sem.get(self.editar).status_code, 403)
         for url in (self.lista, self.editar):
             r = Client().get(url)
-            self.assertRedirects(r, f"{reverse('admin:login')}?next={url}", fetch_redirect_response=False)
+            self.assertRedirects(r, f"{reverse('entrar')}?next={url}", fetch_redirect_response=False)
         self.assertEqual(Client().post(reverse("ui_templates_previa", args=[self.tpl.pk]), {"texto": "x"}).status_code, 403)
 
 

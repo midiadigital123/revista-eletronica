@@ -71,7 +71,7 @@ class ValidarUiTest(Base):
         self.client.force_login(usuario("nada"))  # sem view_revista
         self.assertEqual(self.client.get(URL).status_code, 403)
         self.client.logout()
-        self.assertRedirects(self.client.get(URL), f"{reverse('admin:login')}?next={URL}")
+        self.assertRedirects(self.client.get(URL), f"{reverse('entrar')}?next={URL}")
 
     def test_post_grava_pela_regra_e_volta_a_tela(self):
         r = self.enviar(self.lp, self.mt)

@@ -13,7 +13,7 @@ Abrir o ano novo copiando o anterior e manter o que vale para o ano inteiro: as 
 | Pedagógica, Mídias Digitais, Admin | Abrem o ano novo; incluem, corrigem e excluem (sem uso) etapas e componentes; corrigem padrões. |
 | Admin | Só ele vê "Excluir ano" e apaga o ano inteiro (D-206). |
 | Impresso | Vê a lista de anos e a página do ano em texto, sem campos nem botões; não vê "Abrir novo ano". Todo POST recebe 403. |
-| Sem login | Vai ao login do admin. |
+| Sem login | Vai ao login das telas B (`/conta/entrar/`). |
 
 ## Jornada
 
@@ -90,7 +90,7 @@ Cabeçalho "Ano <ano>", link "Anos" acima e a frase "Etapas e componentes valem 
 
 ## Permissões
 
-- Login obrigatório; anônimo vai ao login do admin.
+- Login obrigatório; anônimo vai ao login das telas B (`/conta/entrar/`).
 - `/ui/anos/`: ver exige `view_ano` (403). Abrir exige `abrir_ano`: sem ela o card não aparece e o POST dá 403. "Excluir ano" só com `delete_ano` (só o grupo Admin, D-206).
 - `/ui/anos/<ano>/`: ver exige `view_etapa` (403). Etapas: `add_etapa` + `change_etapa`. Componentes: `add_componente` + `change_componente`. Padrões: `change_corpadrao`; padrão novo: `add_corpadrao`. POST de uma tabela sem a permissão dela: 403.
 - "Excluir" da linha: etapa com `delete_etapa`, componente com `delete_componente` (Pedagógica, Mídias e Admin; o Impresso não). A página `ui_excluir` confere a mesma permissão (403).

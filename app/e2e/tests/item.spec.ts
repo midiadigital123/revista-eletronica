@@ -47,7 +47,7 @@ test("item: sobe um PNG com texto alternativo, vê no preview e remove", async (
   page.on("pageerror", (e) => erros.push(e.message));
   const alt = `Gráfico do item E2E ${Date.now()}`;
 
-  await page.goto("/admin/login/");
+  await page.goto("/admin/login/?next=/admin/");
   await page.fill("#id_username", usuario!);
   await page.fill("#id_password", senha!);
   await page.click("input[type=submit]");

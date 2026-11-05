@@ -32,7 +32,7 @@ class MatrizUiTest(BaseCadastro):
                 reverse("ui_matriz_mec", args=[self.mec.pk])]  # fmt: skip
         for url in urls:
             r = Client().get(url)
-            self.assertRedirects(r, f"/admin/login/?next={url}", fetch_redirect_response=False)
+            self.assertRedirects(r, f"/conta/entrar/?next={url}", fetch_redirect_response=False)
         self.client.force_login(usuario("nada"))
         for url in urls:
             self.assertEqual(self.client.get(url).status_code, 403, url)

@@ -74,7 +74,7 @@ Preencher, numa só tela, os valores que os textos dos templates usam por projet
 
 ## Permissões
 
-- Login obrigatório; sem login vai ao login do admin.
+- Login obrigatório; sem login vai ao login das telas B (`/conta/entrar/`).
 - Ver: permissão de ver ou de alterar projetos; sem ela, 403.
 - Gravar e copiar: permissão de alterar projetos; sem ela, só leitura e qualquer envio dá 403.
 - Mesmas regras da aba Variáveis do admin (a regra é a mesma, compartilhada).

@@ -99,3 +99,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # preso pelo DATA_UPLOAD_MAX_MEMORY_SIZE (2,5 MB). ponytail: ~340 parceiros com 28 células; acima disso,
 # a grade passa a mandar só as linhas alteradas (a regra já pula a linha sem "o-").
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10_000
+
+# Login e logout das telas B (D-212): o login do admin redireciona para cá (sistema/urls.py).
+LOGIN_URL = "entrar"
+LOGIN_REDIRECT_URL = "inicio"
+LOGOUT_REDIRECT_URL = "entrar"

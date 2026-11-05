@@ -89,7 +89,7 @@ Deixar cada projeto do ano pronto para gerar as revistas: o nome que sai na capa
 
 ### Permissões
 
-- Login obrigatório: anônimo vai ao login do admin.
+- Login obrigatório: anônimo vai ao login das telas B (`/conta/entrar/`).
 - Ver: `view_projeto` ou `change_projeto`. Sem elas, 403.
 - Editar a ficha: `change_projeto` e as permissões de passo e cor (`add/change/delete` de `projetopasso` e `projetocor`, que o perfil "editar projeto" dá juntas). Sem elas, só leitura e envio 403.
 - Aba Matriz: `change_parceiroano`. Aba Cortes: as permissões de cortes (ficha [`cortes.md`](cortes.md)).
@@ -147,7 +147,7 @@ Em 390 px: uma coluna; abas quebram em linha; a tabela da Lista rola dentro da c
 5. Sair de uma variável alterada grava só ela ("Salvo às"); mais de 200 caracteres dá 422 e nada grava.
 6. A aba Matriz grava ao escolher, pelo mesmo serviço da ação em massa; matriz de outro ano dá 422.
 7. Passo: número sobrescreve, vazio volta ao da matriz, "Sem linhas vazias" grava passo nulo. Cor: a cor do ano apaga a sobrescrita.
-8. Impresso vê tudo desligado; enviar é recusado (403). Sem perfil: 403 ao abrir. Anônimo: login do admin.
+8. Impresso vê tudo desligado; enviar é recusado (403). Sem perfil: 403 ao abrir. Anônimo: login das telas B (`/conta/entrar/`).
 9. Arquivado: aviso, sem gravar, sem travar; envio recusado mesmo com permissão.
 10. Outra pessoa editando: aviso de quem edita; envio com a sessão de outra aba dá 409 e o form vira só leitura.
 

@@ -43,7 +43,7 @@ Projetos; `anos` não marca nenhum e destaca o seletor). O ano vem de `nucleo/co
         <span class="mudo">{{ request.user.get_full_name|default:request.user.username }}</span>
         {% if request.user.is_superuser %}<a class="btn btn-ghost btn-sm" href="{% url 'admin:index' %}">Admin</a>{% endif %}
         {% if perms.auth.change_user %}<a class="btn btn-ghost btn-sm" href="{% url 'ui_usuarios' %}"{% if secao == "usuarios" %} aria-current="page"{% endif %}>Usuários</a>{% endif %}
-        <form method="post" action="{% url 'admin:logout' %}">{% csrf_token %}<button class="btn btn-outline btn-sm" type="submit">Sair</button></form>
+        <form method="post" action="{% url 'sair' %}">{% csrf_token %}<button class="btn btn-outline btn-sm" type="submit">Sair</button></form>
       </div>
     </div>
   </header>

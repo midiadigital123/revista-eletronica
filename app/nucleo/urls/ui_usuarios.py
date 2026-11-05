@@ -63,7 +63,7 @@ class NovoUsuarioForm(UserCreationForm):
 
 
 @require_GET
-@login_required(login_url="admin:login")
+@login_required
 @permission_required(GERENCIAR, raise_exception=True)
 def lista(request):
     ator = request.user
@@ -86,7 +86,7 @@ def lista(request):
 
 
 @require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
+@login_required
 @permission_required([GERENCIAR, "auth.add_user"], raise_exception=True)
 def novo(request):
     form = _classes(NovoUsuarioForm(request.user, _dados(request)))
@@ -103,7 +103,7 @@ def novo(request):
 
 
 @require_POST
-@login_required(login_url="admin:login")
+@login_required
 @permission_required(GERENCIAR, raise_exception=True)
 def grupo(request, pk):
     alvo = _alvo(request, pk)
@@ -119,7 +119,7 @@ def grupo(request, pk):
 
 
 @require_POST
-@login_required(login_url="admin:login")
+@login_required
 @permission_required(GERENCIAR, raise_exception=True)
 def ativo(request, pk):
     alvo = _alvo(request, pk)
@@ -138,7 +138,7 @@ def ativo(request, pk):
 
 
 @require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
+@login_required
 @permission_required(GERENCIAR, raise_exception=True)
 def senha(request, pk):
     alvo = _alvo(request, pk)

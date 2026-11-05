@@ -226,7 +226,7 @@ class ImpressoTest(Base):
         self.client.logout()
         url = reverse("impresso_marcar", args=[self.rev.pk])
         r = self.client.post(url, {"hash_visto": "x"})
-        self.assertRedirects(r, f"{reverse('admin:login')}?next={url}", fetch_redirect_response=False)
+        self.assertRedirects(r, f"{reverse('entrar')}?next={url}", fetch_redirect_response=False)
         self.assertFalse(FotoRevista.objects.exists())
 
     def planilha(self, nome):

@@ -13,7 +13,7 @@ Lançar os cortes dos padrões de cada parceiro no ano, numa grade só: uma linh
 | Pedagógica, Mídias Digitais, Admin | Lançam e corrigem cortes, criam, renomeiam, excluem e desativam parceiros. |
 | Impresso | Vê a grade com as células só leitura; não vê "+ Adicionar parceiro", o lápis de renomear nem a lixeira "Excluir…". Todo POST recebe 403. |
 | Sem permissão de ver cortes | Recebe 403. |
-| Sem login | Vai ao login do admin. |
+| Sem login | Vai ao login das telas B (`/conta/entrar/`). |
 
 ## Jornada
 
@@ -68,7 +68,7 @@ Lançar os cortes dos padrões de cada parceiro no ano, numa grade só: uma linh
 
 ## Permissões
 
-- Login obrigatório; anônimo vai ao login do admin.
+- Login obrigatório; anônimo vai ao login das telas B (`/conta/entrar/`).
 - Ver: `view_corte` ou `change_corte`. Sem elas, 403.
 - Gravar célula: `add_corte` + `change_corte`. Sem elas, células só leitura e POST 403.
 - Criar parceiro: `add_parceiro`. Renomear parceiro: `change_parceiro`. Sem elas, o botão não aparece e o POST dá 403.

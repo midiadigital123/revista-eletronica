@@ -11,7 +11,7 @@ Dar o "Validado" a várias revistas de uma vez, depois de conferir o que mudou e
 | Pedagógica, Mídias, Administrador (permissão de validar revista) | confere e valida |
 | Impresso e quem só vê revistas | confere em só leitura (vê pendências e mudanças, não valida) |
 | Sem permissão de ver revistas | não entra (acesso negado) |
-| Anônimo | vai ao login do admin e volta depois |
+| Anônimo | vai ao login das telas B (`/conta/entrar/`) e volta depois |
 
 ## Jornada
 
@@ -60,7 +60,7 @@ Pré-marcadas: só as prontas (sem pendência e ainda não validadas). Com pend�
 
 ## Regras de permissão
 
-- Login obrigatório (anônimo → login do admin).
+- Login obrigatório (anônimo → login das telas B (`/conta/entrar/`)).
 - Ver: permissão de ver revista. Sem ela: 403.
 - Validar: permissão de validar revista. Sem ela: só leitura, e o envio dá 403.
 - Bloqueio: a tela não trava projetos ao abrir (é um lote). Ao gravar, cada revista trava o seu projeto só durante a gravação; projeto aberto por outra sessão é pulado e listado.
@@ -103,7 +103,7 @@ Componentes do design system: cabeçalho de página, card, badge (`badge-secunda
 ## Critérios de aceite
 
 1. Com permissão de validar, `GET /ui/validar/2026/?revista=…` mostra um cartão por revista ativa pedida, pré-marca só as prontas e não validadas, e mostra o diff ou o texto de primeira impressão.
-2. Sem permissão de validar (com permissão de ver): mesma lista, aviso de só leitura, nenhuma caixa nem botão de validar; POST → 403. Sem permissão de ver: 403. Anônimo: login do admin.
+2. Sem permissão de validar (com permissão de ver): mesma lista, aviso de só leitura, nenhuma caixa nem botão de validar; POST → 403. Sem permissão de ver: 403. Anônimo: login das telas B (`/conta/entrar/`).
 3. "Validar marcadas" grava pela mesma regra do admin (versão vista, pendências, bloqueio por projeto) e volta à mesma tela com "Validadas N revista(s)."; a revista que mudou no meio é recusada e listada em "Pulados".
 4. Projeto aberto por outra sessão: o cartão mostra "Em edição por …" e o envio pula essa revista, listando o motivo.
 5. "Validar esta" via HTMX devolve só o cartão atualizado (estado "Validada nesta versão") com as mensagens fora do alvo.

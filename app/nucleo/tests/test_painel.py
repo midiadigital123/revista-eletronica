@@ -134,7 +134,7 @@ class ValidadoTest(Base):
         self.assertContains(self.client.get(self.painel), "Validar selecionadas")
         self.assertEqual(self.client.get(url).status_code, 405)
         self.client.logout()
-        self.assertRedirects(self.client.get(self.painel), f"{reverse('admin:login')}?next={self.painel}")
+        self.assertRedirects(self.client.get(self.painel), f"{reverse('entrar')}?next={self.painel}")
 
     def test_painel_colunas_links_e_filtros(self):
         r = self.client.get(self.painel)

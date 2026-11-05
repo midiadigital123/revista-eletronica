@@ -62,7 +62,7 @@ def _impresso(request, ano):
 
 
 @require_POST
-@login_required(login_url="admin:login")
+@login_required
 @permission_required("nucleo.marcar_impressa", raise_exception=True)
 def marcar(request, ano, pk):
     # Arquivada depois que a página abriu: a regra recusa com mensagem (não 404).

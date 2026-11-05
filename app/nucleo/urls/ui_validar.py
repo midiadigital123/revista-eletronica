@@ -28,7 +28,7 @@ def ids_de(lista):
 
 
 @require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
+@login_required
 @permission_required("nucleo.view_revista", raise_exception=True)
 def validar(request, ano):
     ano = get_object_or_404(Ano, ano=ano)

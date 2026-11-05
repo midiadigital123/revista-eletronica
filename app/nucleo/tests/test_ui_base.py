@@ -27,7 +27,7 @@ PAGINA = Tpl(
 )
 
 
-@login_required(login_url="admin:login")
+@login_required
 @com_bloqueio(lambda request, pk: get_object_or_404(Template, pk=pk), lambda u: u.has_perm("nucleo.change_template"))
 def pagina(request, pk):
     tpl = Template.objects.get(pk=pk)
@@ -107,7 +107,7 @@ class BloqueioUiTest(TransactionTestCase):
 
     def test_anonimo_vai_ao_login(self):
         r = Client().get(self.url)
-        self.assertRedirects(r, f"/admin/login/?next={self.url}", fetch_redirect_response=False)
+        self.assertRedirects(r, f"/conta/entrar/?next={self.url}", fetch_redirect_response=False)
 
     def test_servico_e_o_mesmo_do_admin(self):
         self.ana.get(self.url)
@@ -241,3 +241,30 @@ class MenuPorPerfilTest(TestCase):
         r = self.client.get("/painel/2026/")
         self.assertIn("Impresso", [n for _, n, _ in menu(r)])
         self.assertContains(r, ">Admin</a>")
+
+
+class EntrarTest(TestCase):
+    """D-212: o login e o logout são das telas B; o login do admin nunca aparece."""
+
+    def setUp(self):
+        get_user_model().objects.create_user("ana", password="senha-da-ana-123", is_staff=True)
+
+    def test_login_do_admin_redireciona_para_entrar_com_o_next(self):
+        self.assertRedirects(self.client.get("/admin/login/?next=/admin/"), "/conta/entrar/?next=/admin/",
+                             fetch_redirect_response=False)
+        r = self.client.get("/admin/", follow=True)
+        self.assertEqual(r.redirect_chain[-1][0], "/conta/entrar/?next=%2Fadmin%2F")
+        self.assertNotContains(r, "Administração do Django")
+        self.assertContains(r, 'id="id_username"')
+
+    def test_entrar_sem_next_vai_ao_inicio_e_senha_errada_avisa(self):
+        r = self.client.post("/conta/entrar/", {"username": "ana", "password": "errada"})
+        self.assertContains(r, "Usuário ou senha incorretos")
+        r = self.client.post("/conta/entrar/", {"username": "ana", "password": "senha-da-ana-123"})
+        self.assertRedirects(r, "/", fetch_redirect_response=False)
+        self.assertRedirects(self.client.get("/conta/entrar/"), "/", fetch_redirect_response=False)
+
+    def test_sair_volta_ao_entrar(self):
+        self.client.login(username="ana", password="senha-da-ana-123")
+        self.assertRedirects(self.client.post("/conta/sair/"), "/conta/entrar/", fetch_redirect_response=False)
+        self.assertNotIn("_auth_user_id", self.client.session)

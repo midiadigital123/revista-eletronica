@@ -29,7 +29,7 @@ from nucleo.ui_autosave import Conflito, conflito, erros, form_de_um_campo, resp
 
 
 @require_GET
-@login_required(login_url="admin:login")
+@login_required
 def cortes(request, ano):
     """Aba Cortes do hub Projetos (U7a, rota `cortes` em /ui/projeto/ano/<ano>/cortes/). Só GET:
     cada célula grava sozinha pela rota `cortes_celula` (U3)."""
@@ -41,7 +41,7 @@ def cortes(request, ano):
 
 
 @require_GET
-@login_required(login_url="admin:login")
+@login_required
 def exportar(request, ano):
     """Planilha de grupos do ano (a "Exportar" do admin, mesma `planilha`); ver = ver a aba."""
     if not pode_ver(request.user):
@@ -53,7 +53,7 @@ def exportar(request, ano):
 
 
 @require_GET
-@login_required(login_url="admin:login")
+@login_required
 def antiga(request, ano=None):
     """GET da grade antiga (/cortes/, /cortes/<ano>/): 302 para a aba Cortes de Projetos (U7a)."""
     ano = ano or getattr(ano_da_sessao(request), "ano", None)
@@ -61,7 +61,7 @@ def antiga(request, ano=None):
 
 
 @require_POST
-@login_required(login_url="admin:login")
+@login_required
 @permission_required("nucleo.add_parceiro", raise_exception=True)
 def novo_parceiro(request, ano):
     """Nova linha da grade: o parceiro nasce sem cortes; o projeto nasce quando os cortes forem salvos."""
@@ -74,7 +74,7 @@ def novo_parceiro(request, ano):
 
 
 @require_POST
-@login_required(login_url="admin:login")
+@login_required
 @permission_required("nucleo.change_parceiro", raise_exception=True)
 def renomear_parceiro(request, ano, pk):
     """Item 6 (D-190), U5: renomear inline (componente `nomeInline`), pelo protocolo do autosave.
@@ -117,7 +117,7 @@ class CelulaForm(forms.Form):
 
 
 @require_POST
-@login_required(login_url="admin:login")
+@login_required
 def celula(request, ano):
     """Autosave de uma célula (U3, protocolo de `ui_autosave`). Cortes não tem bloqueio: o `original`
     (o texto da célula na tela) diferente do gravado é conflito (409, com o `atual`), nunca sobrescrita."""

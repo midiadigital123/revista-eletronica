@@ -13,7 +13,7 @@ Mostrar à equipe do impresso, revista por revista, o que mudou no texto desde a
 | Impresso | Vê, copia, baixa planilhas e marca "Revista Impressa Atualizada". É o único que marca. |
 | Pedagógica, Mídias Digitais, Admin | Veem o que mudou e baixam planilhas; não marcam (só leitura). |
 | Sem permissão de ver revistas | Recebe "acesso negado". |
-| Sem login | Vai para o login do admin e volta depois de entrar. |
+| Sem login | Vai para o login das telas B (`/conta/entrar/`) e volta depois de entrar. |
 
 ## Jornada
 
@@ -119,7 +119,7 @@ Só um: a foto "impresso" da revista (o registro da "Revista Impressa Atualizada
 4. Impresso, com a revista validada, vê o botão; o clique grava a foto "impresso" com ele como autor, volta à mesma revista com a mensagem de sucesso e a revista aparece "Impresso em dia".
 5. Versão mudou depois que a página abriu: recusa com a mensagem exata e nada é gravado.
 6. Projeto aberto por outra pessoa: recusa "projeto em edição por …" e nada é gravado.
-7. Anônimo vai ao login do admin (GET e POST).
+7. Anônimo vai ao login das telas B (`/conta/entrar/`) (GET e POST).
 8. Ano sem revistas mostra o estado vazio com o link para os cortes.
 9. O menu "Impresso" da casca aponta para esta tela e só aparece com a permissão "marcar impressa".
 10. A página antiga do impresso e seus testes continuam iguais (mesma regra).

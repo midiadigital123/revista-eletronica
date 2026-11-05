@@ -60,7 +60,7 @@ Nenhum. O painel só lê. "Validar selecionadas" leva à tela de validação em 
 
 ## Permissões
 
-- Sem login: vai ao login do admin e volta ao painel.
+- Sem login: vai ao login das telas B (`/conta/entrar/`) e volta ao painel.
 - Ver: `view_revista`; sem ela, 403.
 - Seleção e "Validar selecionadas": `validar_revista`.
 - POST: 405 (a tela não aceita gravação).
@@ -105,7 +105,7 @@ Em 390 px: filtros empilhados em largura total; contadores quebram linha; a tabe
 5. Filtros dão o mesmo resultado do painel do admin; inválidos são ignorados.
 6. Pedido HTMX devolve só o corpo (sem `<html>`); a resposta tem `Vary: HX-Request`; pedido de restauração de histórico recebe a página inteira.
 7. Impresso: aviso de só leitura, sem seleção nem botão; POST 405.
-8. Sem `view_revista`: 403. Anônimo: login do admin com `next`. Ano inexistente: 404.
+8. Sem `view_revista`: 403. Anônimo: login das telas B (`/conta/entrar/`) com `next`. Ano inexistente: 404.
 9. Estados vazios com as mensagens exatas acima.
 10. Em 1440 px e 390 px a tela não tem rolagem horizontal da página (só a da tabela).
 

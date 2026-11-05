@@ -29,9 +29,9 @@ TIPOS_ITEM = {".pdf": "application/pdf", ".png": "image/png", ".jpg": "image/jpe
 
 
 def protegida(view):
-    """GET, login (redireciona ao admin) e view_revista (403)."""
+    """GET, login (redireciona a `entrar`) e view_revista (403)."""
     view = permission_required("nucleo.view_revista", raise_exception=True)(view)
-    return require_GET(login_required(view, login_url="admin:login"))
+    return require_GET(login_required(view))
 
 
 @protegida

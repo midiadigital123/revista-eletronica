@@ -34,7 +34,7 @@ class AbrirAnoForm(forms.Form):  # cópia do form do admin: importá-lo daria im
 
 
 @require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
+@login_required
 @permission_required("nucleo.view_ano", raise_exception=True)
 def anos(request):
     if request.method == "POST" and not request.user.has_perm("nucleo.abrir_ano"):
@@ -231,7 +231,7 @@ def _gravar_padrao(request, ano, cps, novo, enviado):
 
 
 @require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
+@login_required
 @permission_required("nucleo.view_etapa", raise_exception=True)
 def ano(request, ano):
     ano = get_object_or_404(Ano, ano=ano)
@@ -268,7 +268,7 @@ def ano(request, ano):
 
 
 @require_POST
-@login_required(login_url="admin:login")
+@login_required
 @permission_required("nucleo.view_etapa", raise_exception=True)
 def campo(request, ano, tabela, pk):
     """Autosave (U3) de um campo de etapa (escala máxima sem corte nem matriz) ou de componente
