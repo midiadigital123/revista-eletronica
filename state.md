@@ -1797,7 +1797,16 @@ Enviar à Infra o texto do pedido com o link do repositório (main já tem `dock
 - **Arquivos afetados:** `app/nucleo/management/commands/tornar_superusuario.py` (novo), `app/nucleo/tests/test_tornar_superusuario.py` (novo), `INFRA.md`, `README.md`, `CLAUDE.md`
 - **Status:** ativa
 
+### D-220 — Admin atribui o grupo Impresso e marca impressa (2026-11-05 18:10)
+- **Contexto:** o usuário quer que o perfil Admin dê o grupo Impresso. Pela D-211 o Impresso era só do superusuário, porque o Admin que gerencia um Impresso pode entrar como ele (senha, link de acesso, ou criar com senha conhecida e mover) e marcar impressa, anulando `ADMIN_MARCA_IMPRESSA = False`.
+- **Decisão:** `GRUPOS_DO_ADMIN` ganha Impresso; o Admin gerencia o Impresso por inteiro (grupo, senha, link, desativar, excluir sem rastro). `ADMIN_MARCA_IMPRESSA = True`, com a migração de dados 0019 (grupo Admin ganha `nucleo.marcar_impressa`); o menu "Impresso" aparece para o Admin. Grupo Admin e outros Admins seguem só com o superusuário. Escolha do usuário entre 3 opções.
+- **Motivo:** liberar o Impresso já dava ao Admin o poder de marcar impressa por contorno; dar a permissão às claras deixa o histórico com o nome de quem marcou de fato e não finge uma garantia que não existe.
+- **Descartadas:** liberar o Impresso mantendo `ADMIN_MARCA_IMPRESSA = False` (garantia só de fachada); manter como estava e delegar com `tornar_superusuario` (o usuário preferiu liberar); liberar só a atribuição sem gerenciar o Impresso depois (contornável criando o usuário com senha conhecida na Pedagógica e movendo).
+- **Arquivos afetados:** `app/nucleo/permissoes.py`, `app/nucleo/usuarios.py`, `app/nucleo/migrations/0019_admin_marca_impressa.py` (nova), `app/nucleo/tests/test_ui_usuarios.py`, `app/nucleo/tests/test_admin_cadastro.py`, `README.md`, `docs/regras-de-negocio.md`
+- **Status:** ativa. Substitui a parte da D-211 (e da D-168) que deixava o Impresso só com o superusuário.
+
 ## Perguntas em aberto
+- [x] (05/11: liberar e deixar o Admin marcar; D-220) Admin atribuir o grupo Impresso (pedido em 05/11): dá ao Admin, na prática, "marcar impressa" (cria um usuário com senha conhecida, move para o Impresso e entra como ele), contra D-211 e `ADMIN_MARCA_IMPRESSA = False` — depende de: usuário
 - [x] (05/11: só sem rastro; D-218) Excluir usuário pela tela (pedido em 05/11): contraria D-205 ("usuário não é excluído: é desativado"); o histórico perde o autor e versões de template, validações e fotos (PROTECT) impedem — depende de: usuário
 - [x] (05/11: manter a senha; D-216) Link de acesso na tela Usuários: o "Novo usuário" passa a nascer sem senha e mostrar o link (muda o fluxo atual, que pede senha)? — depende de: usuário
 - [x] Produção: `docker-compose.prod.yml` criado (D-214).
@@ -2256,3 +2265,4 @@ Enviar à Infra o texto do pedido com o link do repositório (main já tem `dock
 - UI de Usuários (D-217): ações em botões-ícone, "Mudar" só com mudança. Testes de usuários OK, E2E 2/2.
 - Excluir usuário sem rastro (D-218). E2E de Usuários agora exclui o usuário que cria (antes deixava um desativado por execução). Sobram 4 `e2e-midias-*` antigos no banco de dev.
 - 13 usuários conferidos/criados no banco de dev (12 da lista + fabiano.santana no Admin), sem senha: acesso pelo "Link de acesso". Comando `tornar_superusuario` (D-219).
+- D-220: Admin atribui Impresso e marca impressa; migração 0019 aplicada no banco de dev.
