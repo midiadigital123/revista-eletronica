@@ -1,6 +1,6 @@
 # Regras de negócio vigentes — revista-express
 
-Data: 2026-11-04. Branch de referência: `feat/telas-b-ux` (`20630c3`).
+Data: 2026-11-05. Branch de referência: `feat/telas-b-ux` (`2dc2825`).
 
 Este documento lista **só a regra que vale hoje** no sistema Django (`app/nucleo`) que gera as revistas de resultados (fascículos F1 e F2) por parceiro e ano. Não conta a história do projeto. Detalhes de tabelas, variáveis e telas ficam nos documentos linkados.
 
@@ -105,7 +105,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | Dados por ano; abrir um ano nunca altera o anterior. | D-046, learning "O banco guarda o histórico de cada ano" |
 | Coerência de ano é garantida pelo banco: FK composta impede corte de 2027 com etapa de 2026. | D-090, D-124, learning "Regras que o banco precisa garantir" |
 | Toda tabela de negócio tem histórico por registro (django-simple-history), exceto `TemplateVersao` (só inserção, já é o histórico) e `Bloqueio` (efêmero). | D-082, D-093, `app/nucleo/models/texto.py:49`, `app/nucleo/models/controle.py:15` |
-| Versões de template só aceitam INSERT: um trigger no banco recusa UPDATE e DELETE. | D-133, `app/nucleo/migrations/0006_template_versao_so_insert.py:24` |
+| Versões de template só aceitam INSERT: um trigger no banco recusa sempre o UPDATE e recusa o DELETE, exceto na exclusão de template sem uso e no apagar do ano (seção 9). | D-133, D-207, `app/nucleo/migrations/0006_template_versao_so_insert.py:24`, `app/nucleo/migrations/0017_versao_apagavel.py` |
 | Quase todas as FKs são PROTECT: apagar algo em uso é recusado pelo banco, não cascateia. | D-129, D-205 |
 
 ---
@@ -204,7 +204,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | Com n padrões, a revista usa as cores 1..n. Cor do ano em `CorPadrao` (5 por ano); `ProjetoCor` sobrescreve. | D-060, D-064, `app/nucleo/servicos/resolver.py:188` |
 | Cores de 2026: `#F72628`, `#FF8D43`, `#B3CCFF`, `#0ED3FF` e `#FFFFFF` (5º provisório). | D-064, D-141 |
 | Nome do padrão: `CorPadrao.nome` do ano ("Padrão 01" … "Padrão 05"); `pd01`..`pd05` do projeto sobrescrevem quando preenchidos. Pendência só se os dois estiverem vazios. | D-175, `app/nucleo/servicos/resolver.py:122`, `app/nucleo/servicos/resolver.py:229-240` |
-| Mudar cor ou nome do padrão do ano muda o hash das revistas que não sobrescrevem aquele padrão; se alguma perder o Validado, abre o modal. | D-177, D-194, D-202, `app/nucleo/paleta.py:18` |
+| Mudar cor ou nome do padrão do ano muda o hash das revistas que não sobrescrevem aquele padrão; se alguma perder o Validado, abre o modal. | D-177, D-194, D-202, `app/nucleo/paleta.py:19` |
 | Mesma cor com outra caixa (`#B3CCFF` × `#b3ccff`) não conta como mudança. | D-194, learning "Seletor de cor do navegador manda a cor em minúsculas" |
 | Tarefa vai para o padrão da **âncora maior**: `1 + nº de cortes < fim`. O topo é aberto: 390→446 com corte 400 é P03; 350→400 continua P02. Vale para corte em qualquer valor. | D-044, D-058, `app/nucleo/servicos/resolver.py:78` |
 | Linha vazia de um nível igual a um corte pertence ao padrão de cima. | D-151, `app/nucleo/servicos/resolver.py:83` |
@@ -251,7 +251,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 
 | Regra | Fonte |
 |---|---|
-| Lista fixa no código: 3 automáticas (`nome_parceiro`, `nome_projeto`, `ano`) + 25 manuais, uma coluna por variável em `Projeto`, até 200 caracteres. | D-100, D-172, D-173, `app/nucleo/variaveis.py:19` |
+| Lista fixa no código: 3 automáticas (`nome_parceiro`, `nome_projeto`, `ano`) + 24 manuais, uma coluna por variável em `Projeto`, até 200 caracteres. | D-100, D-172, D-173, `app/nucleo/variaveis.py:19` |
 | Lista completa, descrição e exemplos: [`docs/variaveis.md`](variaveis.md). | D-172 |
 | Valores só no projeto; renascem vazios a cada ano. | D-100, D-119 |
 | Variável usada sem valor: destaque vermelho no preview e pendência que bloqueia o Validado. Variável não usada não cobra. Valor só com espaços conta como vazio. | D-100, D-144, D-151, `app/nucleo/servicos/resolver.py:285-289` |
@@ -296,7 +296,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | O clique envia o hash da versão vista; se a revista mudou, o servidor recusa. | D-089, `app/nucleo/servicos/validacao.py:39` |
 | Revalidar a mesma versão não troca quem validou nem quando. | D-174, `app/nucleo/servicos/validacao.py:41` |
 | Validação em lote: a tela mostra cada revista e envia pares (revista, hash visto); o servidor recusa as que mudaram. | D-120, `app/nucleo/urls/painel.py:165` |
-| Quem valida: `validar_revista` (Admin, Pedagógica, Mídias Digitais). | D-074, `app/nucleo/permissoes.py:71` |
+| Quem valida: `validar_revista` (Admin, Pedagógica, Mídias Digitais). | D-074, `app/nucleo/permissoes.py:76` |
 
 **Pendências que bloqueiam o Validado** (`app/nucleo/servicos/resolver.py:335-383`):
 
@@ -341,7 +341,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | Mudança de formatação (negrito, itálico, listas) aparece no diff. | D-178 |
 | O impresso não baixa de novo para saber o que mudou; as planilhas (por revista) podem ser baixadas a qualquer momento. | D-072, D-078, D-177 |
 | Planilhas do impresso: células sempre texto (sem fórmula) e caracteres de controle removidos. | D-168, D-178 |
-| Quem marca: só o perfil Impresso. Admin **não** marca. | D-177, `app/nucleo/permissoes.py:17` |
+| Quem marca: só o perfil Impresso. Admin **não** marca. | D-177, `app/nucleo/permissoes.py:19` |
 
 ### 6.5 Entrega (zip)
 
@@ -389,28 +389,30 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 
 Fonte única: `app/nucleo/permissoes.py`. Grupos fixos criados por migração; mudar a tabela exige migração de dados nova (o teste `GruposNoBancoTest` falha sem ela) (D-136, learning "No admin só se exclui a sobrescrita do projeto").
 
-- **Admin** = Pedagógica + gerenciar usuários (D-083, `app/nucleo/permissoes.py:88`).
-- **Mídias Digitais** = exatamente a Pedagógica (D-073, `app/nucleo/permissoes.py:90`).
-- **Impresso** = ver tudo + marcar impressa (D-074, `app/nucleo/permissoes.py:91`).
-- Todos os perfis veem tudo (`ver_tudo`) (`app/nucleo/permissoes.py:42`).
+- **Admin** = Pedagógica + gerenciar usuários (D-083, `app/nucleo/permissoes.py:93`).
+- **Mídias Digitais** = exatamente a Pedagógica (D-073, `app/nucleo/permissoes.py:95`).
+- **Impresso** = ver tudo + marcar impressa (D-074, `app/nucleo/permissoes.py:96`).
+- Todos os perfis veem tudo (`ver_tudo`) (`app/nucleo/permissoes.py:44`).
 
 ### 8.1 Matriz perfil × ação
 
 | Ação | Admin | Pedagógica | Mídias | Impresso | Fonte |
 |---|:-:|:-:|:-:|:-:|---|
-| Ver tudo (telas, preview, planilhas, zip) | ✓ | ✓ | ✓ | ✓ | `permissoes.py:42` |
-| Abrir ano | ✓ | ✓ | ✓ | — | D-079, `permissoes.py:43` |
-| Criar/editar parceiro, etapa, componente, parceiro_ano (matriz do parceiro) | ✓ | ✓ | ✓ | — | `permissoes.py:44` |
-| Editar paleta do ano (cor e nome dos padrões) | ✓ | ✓ | ✓ | — | D-079, `permissoes.py:55` |
-| Criar/duplicar/reimportar/editar matriz, MEC, descritor, tarefa, item | ✓ | ✓ | ✓ | — | D-079, `permissoes.py:45-52` |
-| **Excluir** descritor e tarefa (confirmação forte) | ✓ | ✓ | ✓ | — | D-181, `permissoes.py:51` |
-| Preencher cortes (criar, editar, esvaziar) | ✓ | ✓ | ✓ | — | D-188, `permissoes.py:53` |
-| Criar/editar template (nova versão) | ✓ | ✓ | ✓ | — | D-102, `permissoes.py:54` |
-| Editar projeto (nome, variáveis), revista (SVG, capa, template, textos) | ✓ | ✓ | ✓ | — | `permissoes.py:60-70` |
-| **Excluir** sobrescrita de passo e de cor do projeto ("voltar ao do ano/matriz") | ✓ | ✓ | ✓ | — | D-166, `permissoes.py:64-65` |
-| Validar revista | ✓ | ✓ | ✓ | — | D-074, `permissoes.py:71` |
-| Marcar "Revista Impressa Atualizada" | — | — | — | ✓ | D-177, `permissoes.py:17` |
-| Criar/editar usuário (sem excluir) | ✓ | — | — | — | D-142, `permissoes.py:78` |
+| Ver tudo (telas, preview, planilhas, zip) | ✓ | ✓ | ✓ | ✓ | `permissoes.py:44` |
+| Abrir ano | ✓ | ✓ | ✓ | — | D-079, `permissoes.py:45` |
+| Criar/editar parceiro, etapa, componente, parceiro_ano (matriz do parceiro) | ✓ | ✓ | ✓ | — | `permissoes.py:49` |
+| Editar paleta do ano (cor e nome dos padrões) | ✓ | ✓ | ✓ | — | D-079, `permissoes.py:60` |
+| Criar/duplicar/reimportar/editar matriz, MEC, descritor, tarefa, item | ✓ | ✓ | ✓ | — | D-079, `permissoes.py:50-57` |
+| **Excluir** descritor e tarefa (confirmação forte) | ✓ | ✓ | ✓ | — | D-181, `permissoes.py:50-57` |
+| Preencher cortes (criar, editar, esvaziar) | ✓ | ✓ | ✓ | — | D-188, `permissoes.py:58` |
+| **Excluir** parceiro, etapa, componente, matriz ou template, só se nada os usa; desativar parceiro | ✓ | ✓ | ✓ | — | D-205, D-207, D-208, `permissoes.py:47` |
+| **Apagar o ano inteiro** | ✓ | — | — | — | D-206, `permissoes.py:48` |
+| Criar/editar template (nova versão) | ✓ | ✓ | ✓ | — | D-102, `permissoes.py:59` |
+| Editar projeto (nome, variáveis), revista (SVG, capa, template, textos) | ✓ | ✓ | ✓ | — | `permissoes.py:65-75` |
+| **Excluir** sobrescrita de passo e de cor do projeto ("voltar ao do ano/matriz") | ✓ | ✓ | ✓ | — | D-166, `permissoes.py:68-69` |
+| Validar revista | ✓ | ✓ | ✓ | — | D-074, `permissoes.py:76` |
+| Marcar "Revista Impressa Atualizada" | — | — | — | ✓ | D-177, `permissoes.py:19` |
+| Criar/editar usuário (sem excluir) | ✓ | — | — | — | D-142, `permissoes.py:83` |
 | Pôr alguém nos grupos Impresso ou Admin | só superusuário | — | — | — | D-168 |
 
 ### 8.2 Regras de usuários
@@ -462,19 +464,22 @@ Travas que continuam:
 
 ### 10.1 Decisão ou documento × código
 
-| # | Decisão / documento | Código (vale este) | Efeito |
+Situação em 05/11. **Resolvida** = o documento já diz o que o código faz. **Aberta** = precisa de mudança de código ou de resposta do usuário; nenhuma mudança de código foi feita aqui.
+
+| # | Decisão / documento | Código (vale este) | Situação |
 |---|---|---|---|
-| 1 | ~~D-205: excluir o que não está em uso.~~ | **Resolvida em 04/11** (E0–E5, D-206 a D-208): ver seção 9. | — |
-| 2 | `docs/modelo-er.md` (Regras da aplicação, Bloqueio): aquisição aceita `sessao_edicao = EXCLUDED.sessao_edicao`. | Aceita o **mesmo usuário**, em qualquer sessão (D-191, `app/nucleo/servicos/bloqueio.py:56`). | Documento desatualizado; corrigir o ER. |
-| 3 | `docs/modelo-er.md`: "a foto do impresso guarda só os textos (D-112)" e "foto em REPEATABLE READ". | A foto guarda o resolvido inteiro; o diff do impresso cobre escalas, cores e textos (`app/nucleo/servicos/resolver.py:299`, D-151, D-153). O clique do impresso roda em READ COMMITTED com savepoint (D-178, `app/nucleo/servicos/foto.py:7-31`). | Documento desatualizado. |
-| 4 | D-055: faixa 0–1000 no 2EF e 0–500 nas demais, limites aceitos. | Limite vem de `Etapa.escala_max` (cadastro editável) e o corte fica **estritamente** dentro (D-153, `app/nucleo/servicos/cascata.py:38`). Os números só existem na carga (`carregar_cadastros.py:6`). | Etapa nova pode ter outra escala sem mudar código. |
-| 5 | D-076, D-099, D-180: avisar "afeta N revistas" antes de salvar. | Telas B só abrem o modal quando alguma revista **perde o Validado** (D-202, `app/nucleo/servicos/impacto.py:23`); o admin ainda pede checkbox sempre que há revista afetada (`app/nucleo/matriz.py:146-147`). | Dois comportamentos para a mesma edição, conforme a tela. |
-| 6 | D-047: parceiro tem no máximo **um** projeto. | Restrição é um projeto **ativo** por parceiro_ano; arquivados se acumulam (D-068, `app/nucleo/models/projeto.py:102-105`). | Texto da D-047 precisa da palavra "ativo". |
-| 7 | D-107: "Copiar valores do ano anterior". | Copia só para variáveis **vazias**; não sobrescreve o que já foi digitado (`app/nucleo/planilha_variaveis.py:51-62`). | Regra mais estreita que a decisão; não registrada. |
-| 8 | `app/nucleo/permissoes.py:15`: "Pergunta em aberto: admin pode clicar Revista Impressa Atualizada?" | Fechada pela D-177 (não pode). | Comentário desatualizado. |
-| 9 | `app/nucleo/permissoes.py:12`: usuário não se apaga porque "histórico usa SET_NULL". | `Revista.validado_por`, `FotoRevista.criada_por` e `TemplateVersao.criada_por` são PROTECT (`app/nucleo/models/revista.py:37`, `:116`; `app/nucleo/models/texto.py:57`). | Motivo do comentário incompleto; a regra (desativar) continua. |
-| 10 | `app/nucleo/models/controle.py:18`: "apagar o alvo apaga a trava (CASCADE)". | CASCADE só no ORM; no banco a FK é NO ACTION (D-133). | DELETE direto no banco é recusado com trava existente. |
-| 11 | Regra "toda função do back na tela B" (D-189, D-190). | Ainda só no admin: usuários, criar template, planilha de grupos de corte, gabarito de ids, baixar item; primeira matriz só por comando (`docs/telas/telas-b.md`, seção 2). | S6–S9 do plano de lacunas pendentes. |
+| 1 | ~~D-205: excluir o que não está em uso.~~ | Ver seção 9. | **Resolvida** em 04/11 (E0–E5, D-206 a D-208). |
+| 2 | ~~`docs/modelo-er.md`: aquisição do bloqueio aceitava `sessao_edicao = EXCLUDED.sessao_edicao`.~~ | Aceita o **mesmo usuário**, em qualquer sessão (D-191, `app/nucleo/servicos/bloqueio.py:56`). | **Resolvida** em 05/11: o ER descreve o `ON CONFLICT` atual, o TTL de 30 s e a perda de renovação da sessão antiga. |
+| 3 | ~~`docs/modelo-er.md`: "a foto do impresso guarda só os textos (D-112)" e "foto em REPEATABLE READ".~~ | A foto guarda o resolvido inteiro; o diff do impresso cobre escalas, cores e textos (`app/nucleo/servicos/resolver.py:299`, D-151, D-153). A foto roda em READ COMMITTED, na transação do chamador, com savepoint no clique do impresso (D-178, `app/nucleo/servicos/foto.py:7-31`, `app/nucleo/servicos/validacao.py:72`). | **Resolvida** em 05/11: o ER foi corrigido. |
+| 4 | D-055: faixa 0–1000 no 2EF e 0–500 nas demais, limites aceitos. | O limite vem de `Etapa.escala_max`, campo editável da etapa (`app/nucleo/models/cadastro.py:60`, `app/nucleo/urls/ui_anos.py:90-98`), e o corte fica **estritamente** dentro de `(0, escala_max)` (D-153, `app/nucleo/servicos/cascata.py:38`). Os números 1000 e 500 só existem na carga inicial (`app/nucleo/management/commands/carregar_cadastros.py:6`). | **Aberta.** A D-153 já trocou "aceitos" por "estritamente"; falta decidir o resto. **Pergunta ao usuário:** o limite correto é o `escala_max` de cada etapa (como o código faz) ou os números fixos 1000 e 500? Se for o `escala_max`, a D-055 deve ser reescrita assim no `state.md`, e etapa nova pode ter outra escala sem mudar código. |
+| 5 | D-076, D-099, D-180: avisar "afeta N revistas" antes de salvar. | As telas B só abrem o modal quando alguma revista **perde o Validado** (D-202, `app/nucleo/servicos/impacto.py:23`). O admin continua pedindo o checkbox "Confirmo: afeta N revista(s)" sempre que há revista afetada (`app/nucleo/matriz.py:146-147`; o `ImpactoForm(modal=True)` das telas B desliga isso, `app/nucleo/matriz.py:130`). | **Aberta.** A D-202 manteve o admin como está de propósito, mas o `state.md` ainda lista a pergunta. **Pergunta ao usuário:** igualar o admin ao modal das telas B (avisar só quando perde o Validado) ou manter os dois comportamentos? |
+| 6 | D-047: parceiro tem no máximo **um** projeto. | A restrição é um projeto **ativo** por parceiro_ano; os arquivados se acumulam (D-068, `app/nucleo/models/projeto.py:102-105`). | **Resolvida nos documentos** (seção 3.2 aqui e o ER já dizem "ativo"). Falta só uma nota "ativo, ver D-068" na D-047 do `state.md`, que não foi tocado. |
+| 7 | D-107: "Copiar valores do ano anterior". | Copia só para variáveis **vazias**; não sobrescreve o que já foi digitado (`app/nucleo/planilha_variaveis.py:51-62`). | **Resolvida nos documentos** (seção 2.2 aqui). Falta só registrar a regra mais estreita na D-107 do `state.md`. |
+| 8 | `app/nucleo/permissoes.py:17`: "Pergunta em aberto: admin pode clicar Revista Impressa Atualizada?" | Fechada pela D-177 (não pode); `ADMIN_MARCA_IMPRESSA = False` (`app/nucleo/permissoes.py:19`). | **Aberta (só comentário no código).** **Pergunta ao usuário:** posso trocar o comentário por "Fechada: não (D-177)", numa mudança sem efeito no comportamento? |
+| 9 | `app/nucleo/permissoes.py:14`: usuário não se apaga porque "histórico usa SET_NULL". | `Revista.validado_por`, `FotoRevista.criada_por` e `TemplateVersao.criada_por` são PROTECT (`app/nucleo/models/revista.py:37`, `:116`; `app/nucleo/models/texto.py:57`). | **Aberta (só comentário no código).** A regra (desativar) continua valendo; o motivo no comentário está incompleto. Mesma pergunta da linha 8. |
+| 10 | `app/nucleo/models/controle.py:18`: "apagar o alvo apaga a trava (CASCADE)". | O CASCADE existe só no ORM; no banco a FK é NO ACTION, então um DELETE direto no banco é recusado se há trava (D-133). | **Aberta no comentário; resolvida no ER**, que agora diz isso na seção ON DELETE. Mesma pergunta da linha 8. |
+| 11 | Regra "toda função do back na tela B" (D-189, D-190). | Ainda só no admin: usuários, criar template, criar matriz (a primeira só por comando), planilha de grupos de corte, gabarito de ids, baixar item (`docs/telas/telas-b.md`, seção 2). | **Aberta:** S6–S9 do plano de lacunas estão em andamento. |
+| 12 | Este documento (seção 5.3) dizia "25 manuais". | `VARIAVEIS` tem 27 itens: 3 automáticas e **24** manuais (`app/nucleo/variaveis.py:21-50`, `docs/variaveis.md`). | **Resolvida** em 05/11: seção 5.3 corrigida. |
 
 ### 10.2 Perguntas em aberto do `state.md` que afetam regra de negócio
 
@@ -500,3 +505,4 @@ Perguntas ainda abertas no `state.md` que **já têm resposta** em decisão post
 | "Onde guardar o status 'aplicado no impresso'…" | D-077 (foto `impresso`) |
 | "Migrar `api/` para Django mantendo o React?" | D-121, D-183 (Django, telas B próprias) |
 | "Levar a opção 1 (D-032) para `revista/`?" | D-033, D-038 (portada; demo apagada) |
+| "`docs/modelo-er.md` está desatualizado em dois pontos (bloqueio e foto). Corrigir?" | Corrigido em 05/11 (seção 10.1, linhas 2 e 3) |
