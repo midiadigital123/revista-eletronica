@@ -1,5 +1,5 @@
 // Página do projeto com abas (U7b): Dados, Matriz, Cortes, Passos e cores, Revistas. Monta um parceiro
-// "E2E Projeto <sufixo>" com cortes de LP (a cascata cria projeto e revista); os dados ficam no banco.
+// "E2E Projeto <sufixo>" com cortes de LP (a cascata cria projeto e revista); o limpar.ts apaga no fim (D-224).
 // A matriz salva ao escolher (autosave, sem revista validada não há modal); a aba Cortes mostra só o
 // parceiro, um bloco por etapa; Passos e cores sobrescreve e volta ao herdado (cor do ano, passo da
 // matriz). Preparar como em painel.spec.ts (criar_demo --ano 2026 e o superusuário e2e).

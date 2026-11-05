@@ -3,7 +3,7 @@
 // confirmar grava.
 // Monta o próprio parceiro "E2E Impacto <sufixo>" no ano 2026 (cortes, matriz "Demonstração" e
 // templates "Padrão" do criar_demo, SVG do F2, capa e um fechamento com {{nome_parceiro}}) e valida
-// a revista; os dados ficam no banco.
+// a revista; o limpar.ts apaga no fim (D-224).
 // Preparar como em painel.spec.ts (criar_demo --ano 2026 e o superusuário e2e).
 import path from "node:path";
 import { expect, test } from "@playwright/test";

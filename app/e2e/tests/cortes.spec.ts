@@ -4,7 +4,7 @@
 //   DJANGO_SUPERUSER_PASSWORD=... docker compose run --rm -e DJANGO_SUPERUSER_PASSWORD app \
 //     python manage.py createsuperuser --noinput --username e2e --email e2e@exemplo.org
 //   E2E_BASE_URL=http://localhost:8011 E2E_ADMIN_USUARIO=e2e E2E_ADMIN_SENHA=... npx playwright test cortes
-// Os parceiros são criados pelo próprio teste, com nome único por execução, e ficam no banco:
+// Os parceiros são criados pelo próprio teste, com nome único por execução; o limpar.ts os apaga no fim (D-224):
 // rode só contra um banco descartável (o do seu worktree), nunca contra dados reais.
 import { expect, test, type Page } from "@playwright/test";
 import { alpinePronto, entrar, novoParceiro } from "./helpers";

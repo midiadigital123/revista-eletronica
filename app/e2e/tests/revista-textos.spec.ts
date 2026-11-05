@@ -90,7 +90,7 @@ test("revista: cópia por seção, aviso com diff e descartar", async ({ page })
 // U8b: página da revista em duas colunas. Monta um parceiro "E2E Revista <sufixo>" com cortes de LP
 // (a cascata cria projeto e revista sem template), matriz pelo lote e nome do projeto; na revista:
 // templates salvam ao escolher e liberam "Textos", o SVG vai pelo clique e a capa por soltar (miniatura
-// + "Salvo às"), a Situação chega a 6 de 6 e "Validar revista" valida. Os dados ficam no banco.
+// + "Salvo às"), a Situação chega a 6 de 6 e "Validar revista" valida. O limpar.ts apaga no fim (D-224).
 test("revista: templates, arquivos por soltar e validar pela coluna Situação", async ({ page }) => {
   const erros: string[] = [];
   page.on("pageerror", (e) => erros.push(e.message));
