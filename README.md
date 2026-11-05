@@ -58,9 +58,12 @@ Grupos fixos, criados por migração. Tabela única em `app/nucleo/permissoes.py
 |---|---|
 | **Pedagógica** | tudo do ano: cadastros, matriz, cortes, templates, padrões, projetos, variáveis, revistas, validar, excluir o que não está em uso |
 | **Mídias Digitais** | o mesmo que a Pedagógica |
-| **Admin** | o da Pedagógica + gerenciar usuários (só dá os grupos Pedagógica e Mídias Digitais) + apagar o ano inteiro |
+| **Admin** | o da Pedagógica + gerenciar usuários (só dá os grupos Pedagógica e Mídias Digitais; outro Admin e o Impresso só vê) + apagar o ano inteiro. Não marca "Revista Impressa Atualizada" |
 | **Impresso** | ver tudo + marcar "Revista Impressa Atualizada" |
-| superusuário | tudo; é o único que põe alguém em Admin ou Impresso, e o único que vê o botão "Admin" no cabeçalho |
+| superusuário | tudo, inclusive marcar impressa; é o único que põe alguém em Admin ou Impresso, altera outro Admin ou o Impresso, e vê o botão "Admin" no cabeçalho. Nenhuma tela cria superusuário: `createsuperuser` ou `tornar_superusuario` |
+
+Superusuário novo: `createsuperuser`; tornar superusuário quem já existe: `manage.py
+tornar_superusuario <usuario>...` (nenhuma tela faz isso, D-142).
 
 Revista nunca é apagada (é arquivada). Usuário sai desativado; só se exclui quem nunca registrou
 nada no sistema (tela Usuários, D-218). Para dar acesso sem
@@ -99,7 +102,7 @@ o que resta só nele está na seção 2 de [`docs/telas/telas-b.md`](docs/telas/
 | `app/sistema/` | projeto Django (settings, urls) |
 | `app/nucleo/models/`, `admin/`, `urls/`, `servicos/` | um arquivo por área; `urls/ui_*.py` são as telas B |
 | `app/nucleo/templates/ui/`, `app/nucleo/static/ui/` | HTML (HTMX + Alpine) e CSS/JS das telas B |
-| `app/nucleo/management/commands/` | `carregar_cadastros`, `importar_matriz`, `carregar_templates`, `abrir_ano`, `criar_usuarios`, `criar_demo` |
+| `app/nucleo/management/commands/` | `carregar_cadastros`, `importar_matriz`, `carregar_templates`, `abrir_ano`, `criar_usuarios`, `tornar_superusuario`, `criar_demo` |
 | `app/nucleo/static/revista/` | JS e CSS da revista (F1 escalas, F2 svg-tour) |
 | `app/templates_seed/<ano>/` | textos iniciais dos templates |
 | `app/e2e/` | Playwright |

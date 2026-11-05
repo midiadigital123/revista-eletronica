@@ -52,7 +52,7 @@ de importação: montar em `/pdfs` (`-v "<pasta>:/pdfs:ro"`); sem eles, 8 testes
   Digitais, Admin, Impresso). Mudou a tabela? Migração de dados nova que sincroniza os grupos.
 - `app/nucleo/variaveis.py`: lista fixa das variáveis `{{x}}` dos templates.
 - Comandos: `carregar_cadastros`, `importar_matriz`, `carregar_templates`, `abrir_ano`,
-  `criar_usuarios`, `criar_demo`.
+  `criar_usuarios`, `tornar_superusuario`, `criar_demo`.
 
 ### Regras que o código garante
 

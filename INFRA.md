@@ -80,6 +80,12 @@ docker exec -it <stack>-app-1 python manage.py createsuperuser
 
 Com ele, a equipe cadastra os demais usuários pela própria tela do sistema (login próprio, sem SSO e sem envio de e-mail).
 
+Para tornar superusuário alguém que já existe (nenhuma tela faz isso, de propósito):
+
+```bash
+docker exec -it <stack>-app-1 python manage.py tornar_superusuario <usuario> [<usuario>...]
+```
+
 ## 5. Verificar
 
 ```bash

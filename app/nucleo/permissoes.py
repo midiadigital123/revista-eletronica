@@ -11,7 +11,7 @@ linha = voltar ao passo da matriz / à paleta do ano; migração 0008) e `delete
 `delete_` de parceiro, etapa, componente, matriz e template, só do que não está em uso, pela
 página `ui_excluir` (D-205, D-207; migração 0016). `delete_ano` (apagar o ano inteiro, D-206) é
 só do Admin. Fora isso, nenhum `delete_*`: revista nunca é apagada (D-117, arquiva). Usuário se
-desativa, não se apaga (histórico usa SET_NULL).
+desativa; só sai quem não tem rastro, pela tela Usuários com `change_user` (D-218), nunca pelo admin.
 """
 
 # Pergunta em aberto: admin pode clicar "Revista Impressa Atualizada"?
