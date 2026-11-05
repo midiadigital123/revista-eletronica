@@ -8,7 +8,7 @@ Quebrado/pendente: S17 — falta a ação D (arquivar o svg-tour) e o preenchime
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Usuário decide o que fazer com `api/.env` e os restos do protótipo (pergunta aberta da D-213).
+Usuário decide a ação D do S17: arquivar o repositório svg-tour (`gh repo archive midiadigital123/svg-tour --yes`).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1758,7 +1758,7 @@ Usuário decide o que fazer com `api/.env` e os restos do protótipo (pergunta a
 - [ ] (regras de negócio 10.1, divergências 8–10) Corrigir 3 comentários de código desatualizados (`permissoes.py:14`, `permissoes.py:17`, `models/controle.py:18`), sem mudar comportamento? — depende de: usuário
 - [ ] `.env.example` da raiz ainda é do sistema antigo (`SESSION_SECRET`, `ADMIN_EMAIL`); o certo é `app/.env.example`. Apagar ou substituir? — depende de: usuário
 - [x] (D-211, fechado) (S9) O perfil Admin pode redefinir a senha de um usuário Impresso e entrar como ele, ganhando `marcar_impressa` (anula `ADMIN_MARCA_IMPRESSA = False`). Furo já existia no admin. Fechar com `pode_editar` em `nucleo/usuarios.py` exigindo alvo sem grupo fora dos permitidos? — depende de: usuário
-- [ ] (D-213) Apagar `api/.env` (único arquivo que sobrou de `api/`, fora do git, com variáveis do sistema antigo)? E `contrato/`, `escala.html`, `script.js`, `styles.css`, `descritores.json`, `saida/`, `.env.example` da raiz? — depende de: usuário
+- [x] (D-213; apagados em 05/11 a pedido do usuário) `api/.env`, `contrato/`, `escala.html`, `script.js`, `styles.css`, `descritores.json`, `saida/` e o `.env.example` da raiz
 - [x] (D-206) Ano aberto por engano: fica como histórico ou exceção no trigger para apagar o ano inteiro? — depende de: usuário
 - [x] (D-207) Template sem uso: arquivar basta ou excluir de fato (exceção à D-125)? — depende de: usuário
 - [x] (D-208: sim) Criar "desativar parceiro" para quem sai do programa (hoje ele aparece numa linha vazia na grade de Cortes de todo ano novo)? Usuário não entendeu; pergunta refeita em 04/11 — depende de: usuário
@@ -2188,3 +2188,5 @@ Usuário decide o que fazer com `api/.env` e os restos do protótipo (pergunta a
 - Revisão dos planos pedida pelo usuário: lacunas, UX (U0–U10), onda 5 e exclusão concluídos; Django S01–S16 concluídos; S17 parcial (faltam ações A, C, D e o preenchimento da equipe); S18 não começou.
 
 - Usuário autorizou as ações A e C do S17 e o push para `dev`. A: tag `legado-express` (`30b0de3`) publicada. C: `fa7b748` (201 arquivos; `revista/modelo` → `docs/fontes/2025`). Suíte com os PDFs: 793 OK, 0 pulados. `docker-compose.yml` da D-209 commitado antes da tag (`30b0de3`).
+- `api/.env` apagado a pedido do usuário (fora do git; a pasta `api/` sumiu do disco).
+- Restos apagados a pedido do usuário: `contrato/`, `escala.html`, `script.js`, `styles.css`, `descritores.json`, `saida/`, `.env.example` da raiz (todos na tag `legado-express`). README e CLAUDE.md atualizados.
