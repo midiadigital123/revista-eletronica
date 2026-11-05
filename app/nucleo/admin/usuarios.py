@@ -1,30 +1,15 @@
 """Admin de usuários (D-142): sem `is_superuser`, `is_staff` e `user_permissions` no
-formulário. Usuário novo nasce `is_staff` (todo perfil usa o admin). Ninguém exclui
-(desativa com `is_active`).
-
-Quem não é superusuário (o perfil Admin):
-- não vê superusuários (trocaria a senha de um e entraria como ele);
-- só dá os grupos Pedagógica e Mídias Digitais: Impresso daria `marcar_impressa`, o que
-  anularia ADMIN_MARCA_IMPRESSA = False, e Admin multiplicaria quem gerencia usuários;
-  esses dois ficam com o superusuário;
-- não muda os próprios grupos nem se desativa;
-- não altera outro usuário do grupo Admin (só vê);
-- não mexe nos grupos de quem já tem um grupo fora dos permitidos (ex.: Impresso).
+formulário. As regras de quem pode o quê ficam em `nucleo/usuarios.py`, comuns à tela B
+(`urls/ui_usuarios.py`). Ninguém exclui (desativa com `is_active`).
 """
 
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import User
 
-from nucleo.permissoes import PAPEIS
+from nucleo import usuarios as regra
 
 admin.site.unregister(User)
-
-GRUPOS_DO_ADMIN = ("Pedagógica", "Mídias Digitais")  # o que um não superusuário pode atribuir
-
-
-def grupos_permitidos(request):
-    return PAPEIS if request.user.is_superuser else GRUPOS_DO_ADMIN
 
 
 @admin.register(User)
@@ -41,37 +26,29 @@ class UsuarioAdmin(UserAdmin):
     actions = None
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        return qs if request.user.is_superuser else qs.filter(is_superuser=False)
+        return regra.visiveis(request.user, super().get_queryset(request))
 
     def get_readonly_fields(self, request, obj=None):
         campos = ("last_login", "date_joined")
-        if obj is None or request.user.is_superuser:
+        if obj is None:
             return campos
-        if obj == request.user:
-            return (*campos, "is_active", "groups")
-        if obj.groups.exclude(name__in=grupos_permitidos(request)).exists():
-            return (*campos, "groups")
-        return campos
+        ativo = () if regra.pode_mudar_ativo(request.user, obj) else ("is_active",)
+        grupos = () if regra.pode_mudar_grupos(request.user, obj) else ("groups",)
+        return (*campos, *ativo, *grupos)
 
     def has_change_permission(self, request, obj=None):
-        if (
-            obj is not None
-            and not request.user.is_superuser
-            and obj != request.user
-            and obj.groups.filter(name="Admin").exists()
-        ):
+        if obj is not None and not regra.pode_editar(request.user, obj):
             return False
         return super().has_change_permission(request, obj)
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "groups":
-            kwargs["queryset"] = Group.objects.filter(name__in=grupos_permitidos(request)).order_by("name")
+            kwargs["queryset"] = regra.grupos_atribuiveis(request.user)
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     def save_model(self, request, obj, form, change):
         if not change:
-            obj.is_staff = True
+            regra.preparar_novo(obj)
         super().save_model(request, obj, form, change)
 
     def has_delete_permission(self, request, obj=None):
