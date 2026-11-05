@@ -1765,7 +1765,16 @@ Enviar à Infra o texto do pedido com o link do repositório (main já tem `dock
 - **Arquivos afetados:** `app/nucleo/static/ui/favicon.png` (novo), `app/nucleo/templates/ui/base.html`, `app/nucleo/templates/ui/entrar.html`
 - **Status:** ativa
 
+### D-216 — "Link de acesso" na tela Usuários; a página de criar senha sai do admin (2026-11-05 15:40)
+- **Contexto:** o link para a pessoa definir a própria senha só saía pelo terminal (`criar_usuarios`); dar acesso pela tela exigia digitar e repassar uma senha. A página aberta pelo link usava os templates do admin ("Administração do Django"), contra a D-212.
+- **Decisão:** botão "Link de acesso" na linha do usuário (POST `/ui/usuarios/<pk>/link/`, `ui_usuarios_link`), com a regra de "Redefinir senha" (`pode_editar`) e só para ativo. Mostra o link + mensagem pronta para copiar. O endereço vem do cabeçalho `Origin` do POST (já validado pelo CSRF), com `build_absolute_uri` de reserva. Geração do link em `nucleo/usuarios.py::caminho_definir_senha`, usada também pelo `criar_usuarios`. Páginas `ui/senha_definir.html` e `ui/senha_pronto.html` no padrão do login. "Novo usuário" continua pedindo senha (decisão do usuário).
+- **Motivo:** ninguém precisa conhecer nem mandar senha; o link vale 3 dias, funciona uma vez e cai quando a senha muda. `build_absolute_uri` sozinho daria `http://` em produção (o proxy faz o HTTPS e não há `SECURE_PROXY_SSL_HEADER`, D-214).
+- **Descartadas:** "Novo usuário" nascer sem senha e cair no link (o usuário preferiu manter); link por GET (ficaria em histórico e logs); envio automático por e-mail (não há SMTP configurado); endereço do sistema em variável nova (o `Origin` já traz o certo).
+- **Arquivos afetados:** `app/nucleo/urls/ui_usuarios.py`, `app/nucleo/urls/conta.py`, `app/nucleo/usuarios.py`, `app/nucleo/management/commands/criar_usuarios.py`, `app/nucleo/templates/ui/usuarios/{lista,link}.html`, `app/nucleo/templates/ui/senha_{definir,pronto}.html`, `app/nucleo/static/ui/ui.css`, `app/nucleo/static/ui/telas/usuarios.css`, `app/nucleo/tests/test_ui_usuarios.py`, `app/e2e/tests/usuarios.spec.ts`, `docs/regras-de-negocio.md`, `README.md`
+- **Status:** ativa
+
 ## Perguntas em aberto
+- [x] (05/11: manter a senha; D-216) Link de acesso na tela Usuários: o "Novo usuário" passa a nascer sem senha e mostrar o link (muda o fluxo atual, que pede senha)? — depende de: usuário
 - [x] Produção: `docker-compose.prod.yml` criado (D-214).
 - [ ] Produção: `check --deploy` avisa HSTS e SSL redirect (W004, W008); decidir com a Infra se o proxy já faz o redirect e o HSTS — depende de: Infra
 - [x] (aplicadas em 04/11) Aplicar as migrações 0016–0018 (permissões, trigger da `TemplateVersao`, `Parceiro.desativado_em`) no banco de dev? Sem elas, as telas do dev quebram com o código novo — depende de: usuário (migração de schema)
@@ -2217,3 +2226,5 @@ Enviar à Infra o texto do pedido com o link do repositório (main já tem `dock
 
 ### 2026-11-05 14:15
 - Favicon da árvore amarela nas telas B (D-215).
+- Plano do "Link de acesso" na tela Usuários (gerar pela tela o link de definir senha que hoje só sai pelo `criar_usuarios`); regra extraída para `nucleo/usuarios.py::caminho_definir_senha` (sem commit).
+- "Link de acesso" na tela Usuários + páginas de criar senha fora do admin (D-216). Django 795 OK (8 pulados), makemigrations limpo, E2E usuarios 2/2 (o usuário `e2e` do dev estava desativado: reativado só para a execução e desativado de novo).
