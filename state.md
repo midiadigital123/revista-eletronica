@@ -4,11 +4,11 @@
 <!-- sobrescrever a cada atualização -->
 S6–S9 e Fechamento do blueprint de lacunas concluídos (D-210), integrados em `feat/telas-b-ux`.
 Funcionando: toda função do back tem tela B. Nova matriz (lista de Matrizes → Reimportar), Novo template (lista de Templates → editor na versão 1), downloads (planilha de grupos de corte, gabarito de ids, arquivo do item, planilhas F1/F2 na ficha da revista) e Usuários (link no cabeçalho, só com `auth.change_user`). `grep admin:` nas telas B: só o botão Admin (superusuário) e o logout. Docs atualizadas (modelo-er, regras de negócio, README, CLAUDE.md, fichas). Testes na stack isolada `lac-integ` (8030): Django 790 OK (8 pulados), makemigrations limpo, Playwright 159/160 + o que falhou passou 3/3 isolado (timeout de `page.goto` sob carga em `templates-editor`).
-Quebrado/pendente: nada aberto de S6–S9 nem da D-211. Dev do usuário com containers parados; stack `lac-integ` ainda de pé.
+Quebrado/pendente: login B (D-212) pronto e testado, sem commit.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Usuário responde as perguntas em aberto (D-055 escala_max × 1000/500 é a primeira).
+Usuário confere `http://localhost:8000/conta/sair/` → login B → entrar, e autoriza o commit da D-212.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1733,7 +1733,16 @@ Usuário responde as perguntas em aberto (D-055 escala_max × 1000/500 é a prim
 - **Arquivos afetados:** `app/nucleo/usuarios.py`, `nucleo/tests/test_ui_usuarios.py`, `nucleo/tests/test_admin_cadastro.py`, `docs/regras-de-negocio.md`
 - **Status:** ativa
 
+### D-212 — Login e logout próprios das telas B; o login do admin some (2026-11-05)
+- **Contexto:** o usuário viu o "Administração do Django" ao sair e ao trocar de perfil: o "Sair" ia ao logout do admin, todas as views mandavam o anônimo para `admin:login`, e o `next=/admin/` deixava a pessoa no índice do admin depois de entrar.
+- **Decisão:** `LoginView`/`LogoutView` do Django em `/conta/entrar/` (`entrar`, página `ui/entrar.html` no estilo B) e `/conta/sair/` (`sair`). Settings: `LOGIN_URL = "entrar"`, `LOGIN_REDIRECT_URL = "inicio"`, `LOGOUT_REDIRECT_URL = "entrar"`. As 58 views trocaram `login_url="admin:login"` pelo padrão. `/admin/login/` vira `RedirectView` para `entrar` com a query (o admin continua mandando o anônimo para lá, e o superusuário volta ao `/admin/` com o `next`). O logout do próprio admin também cai no `entrar`, pelo `LOGOUT_REDIRECT_URL`.
+- **Motivo:** pedido do usuário: o login do admin não deve aparecer. Um ponto de entrada só, sem tocar no admin.
+- **Descartadas:** sobrescrever o template `admin/login.html` (continuaria em `/admin/`, com o `next` levando ao índice do admin); `AdminSite.login` customizado (mais código para o mesmo efeito do redirect).
+- **Arquivos afetados:** `sistema/settings.py`, `sistema/urls.py`, `nucleo/urls/conta.py`, `templates/ui/entrar.html` (novo), `static/ui/ui.css`, `templates/ui/base.html`, 15 módulos `urls/*.py`, 14 testes, `e2e/tests/item.spec.ts`, docs de telas
+- **Status:** ativa
+
 ## Perguntas em aberto
+- [ ] Produção: falta `docker-compose.prod.yml` (Gunicorn no lugar do runserver, `STATIC_ROOT` + collectstatic, DEBUG=0, Postgres em container ou gerenciado) — depende de: resposta da Infra ao pedido de servidor (2026-11-05)
 - [x] (aplicadas em 04/11) Aplicar as migrações 0016–0018 (permissões, trigger da `TemplateVersao`, `Parceiro.desativado_em`) no banco de dev? Sem elas, as telas do dev quebram com o código novo — depende de: usuário (migração de schema)
 - [x] (05/11: usuário mandou corrigir; Agente D) (regras de negócio, seção 10.1) `docs/modelo-er.md` está desatualizado em dois pontos: o bloqueio é tomado pelo mesmo usuário, não pela mesma sessão (D-191); a foto guarda a revista resolvida inteira e roda em READ COMMITTED (D-151/D-153/D-178). Corrigir? — depende de: usuário
 - [ ] (regras de negócio) O admin ainda pede o checkbox "afeta N revistas" sempre que há revista afetada; as telas B só avisam quando alguma perde o Validado (D-202). Igualar? — depende de: usuário
@@ -2165,3 +2174,5 @@ Usuário responde as perguntas em aberto (D-055 escala_max × 1000/500 é a prim
 - Agente C (S9: `0ada222` regras de usuário em `nucleo/usuarios.py`, usadas pelo admin e pela B; `813b3a2` tela `/ui/usuarios/`) mergeado sem conflito. Permissão `auth.change_user` (criar: + `add_user`). Na B, um grupo por usuário; criar e redefinir senha em páginas próprias; superusuário sem restrição (como no admin). `usuarios.spec.ts` deixa um `e2e-midias-<sufixo>` desativado por execução.
 - Fechamento: Django 790 OK (8 pulados), makemigrations limpo, Playwright na stack `lac-integ` com `E2E_ADMIN_*` e `E2E_IMPRESSO_*`: 159/160; a falha (`templates-editor.spec.ts:12`, chromium, timeout do `page.goto`) passou 3/3 isolada. Docs de S6–S9 e blueprint marcado como concluído em `eefde3c`, com a learning l-da214a7e (worktree de agente nasce no main).
 - Usuário: "fecha o furo". D-211: `pode_editar` recusa alvo com grupo fora dos permitidos (Admin e Impresso); admin e tela B dão 403 em dados, senha, grupo e ativo do Impresso. Django 790 OK (8 pulados) na `lac-integ`. Commitado com a autorização do usuário.
+- Usuário: o login e o índice do admin aparecem ao sair/trocar de perfil. D-212: login e logout B em `/conta/entrar/` e `/conta/sair/`, `/admin/login/` redireciona. Django 793 OK (8 pulados) no dev; Playwright 160/160 na `lac-integ` (derrubada depois). Sem commit.
+- Redigido o pedido de servidor para a Infra (2 vCPU/4 GB/40 GB, Docker Compose, proxy com HTTPS, backup de `pg-dados` e `app/media`). Medido no dev: app ~146 MB e banco ~106 MB de RAM, banco 26 MB e mídia 47 MB em disco.
