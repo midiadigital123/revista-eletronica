@@ -4,11 +4,11 @@
 <!-- sobrescrever a cada atualização -->
 S6–S9 e Fechamento do blueprint de lacunas concluídos (D-210), integrados em `feat/telas-b-ux`.
 Funcionando: toda função do back tem tela B. Nova matriz (lista de Matrizes → Reimportar), Novo template (lista de Templates → editor na versão 1), downloads (planilha de grupos de corte, gabarito de ids, arquivo do item, planilhas F1/F2 na ficha da revista) e Usuários (link no cabeçalho, só com `auth.change_user`). `grep admin:` nas telas B: só o botão Admin (superusuário) e o logout. Docs atualizadas (modelo-er, regras de negócio, README, CLAUDE.md, fichas). Testes na stack isolada `lac-integ` (8030): Django 790 OK (8 pulados), makemigrations limpo, Playwright 159/160 + o que falhou passou 3/3 isolado (timeout de `page.goto` sob carga em `templates-editor`).
-Quebrado/pendente: dos planos, só falta o fim do S17 e o S18 (`plans/revista-express-django.md`). S17: tarefas 1–4 e 7 feitas, a ação B feita (D-187); a equipe ainda preenche (dev: 3 parceiros, 18 cortes, 6 revistas); faltam as ações destrutivas A (tag `legado-express`), C (apagar `api/`, `editor/`, `revista/`, `scripts/`) e D (arquivar o svg-tour), cada uma com confirmação do usuário. S18 (E2E da temporada numa jornada só) não começou; os 160 specs cobrem as partes separadas.
+Quebrado/pendente: S17 — falta a ação D (arquivar o svg-tour) e o preenchimento da equipe; S18 (E2E da temporada) não começou. Ações A e C feitas (D-213); `origin/dev` atualizada com esta branch (fast-forward).
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Usuário autoriza (ou não) a ação A do S17: criar a tag `legado-express` (roteiro em `docs/s17-carga-2026.md`, seção "A").
+Usuário decide o que fazer com `api/.env` e os restos do protótipo (pergunta aberta da D-213).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1741,6 +1741,14 @@ Usuário autoriza (ou não) a ação A do S17: criar a tag `legado-express` (rot
 - **Arquivos afetados:** `sistema/settings.py`, `sistema/urls.py`, `nucleo/urls/conta.py`, `templates/ui/entrar.html` (novo), `static/ui/ui.css`, `templates/ui/base.html`, 15 módulos `urls/*.py`, 14 testes, `e2e/tests/item.spec.ts`, docs de telas
 - **Status:** ativa
 
+### D-213 — S17 ações A e C: tag `legado-express` e o sistema antigo apagado (2026-11-05)
+- **Contexto:** o usuário autorizou as ações A e C do roteiro `docs/s17-carga-2026.md` e pediu o push da versão atual para a branch `dev`. O bloqueio de apagar o `editor/` (decisão React × Django) já tinha caído com a D-183/D-187.
+- **Decisão:** tag anotada `legado-express` em `30b0de3` (último commit com `api/`, `editor/`, `revista/`, `scripts/`), publicada no `origin`. `revista/modelo` movida para `docs/fontes/2025` (PDFs e planilhas SAEGO 2025) e as 4 pastas apagadas (`fa7b748`). No disco, os artefatos ignorados (`node_modules`, `dist`, `__pycache__`) também saíram. O `api/.env` ficou: pode ter segredos do sistema antigo, e só o usuário decide apagar. `contrato/` fica (fora da ação C).
+- **Motivo:** pedido do usuário; o código antigo continua recuperável pela tag.
+- **Descartadas:** editar a learning de 29/10 que cita os caminhos antigos — learning não se edita; o caminho novo está no README, no CLAUDE.md e no roteiro.
+- **Arquivos afetados:** `api/`, `editor/`, `revista/`, `scripts/` (apagados), `docs/fontes/2025/` (movido), `README.md`, `CLAUDE.md`, `docs/s17-carga-2026.md`, `docs/design-revista-impressa.md`, `app/nucleo/tests/test_importacao.py`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [ ] Produção: falta `docker-compose.prod.yml` (Gunicorn no lugar do runserver, `STATIC_ROOT` + collectstatic, DEBUG=0, Postgres em container ou gerenciado) — depende de: resposta da Infra ao pedido de servidor (2026-11-05)
 - [x] (aplicadas em 04/11) Aplicar as migrações 0016–0018 (permissões, trigger da `TemplateVersao`, `Parceiro.desativado_em`) no banco de dev? Sem elas, as telas do dev quebram com o código novo — depende de: usuário (migração de schema)
@@ -1750,6 +1758,7 @@ Usuário autoriza (ou não) a ação A do S17: criar a tag `legado-express` (rot
 - [ ] (regras de negócio 10.1, divergências 8–10) Corrigir 3 comentários de código desatualizados (`permissoes.py:14`, `permissoes.py:17`, `models/controle.py:18`), sem mudar comportamento? — depende de: usuário
 - [ ] `.env.example` da raiz ainda é do sistema antigo (`SESSION_SECRET`, `ADMIN_EMAIL`); o certo é `app/.env.example`. Apagar ou substituir? — depende de: usuário
 - [x] (D-211, fechado) (S9) O perfil Admin pode redefinir a senha de um usuário Impresso e entrar como ele, ganhando `marcar_impressa` (anula `ADMIN_MARCA_IMPRESSA = False`). Furo já existia no admin. Fechar com `pode_editar` em `nucleo/usuarios.py` exigindo alvo sem grupo fora dos permitidos? — depende de: usuário
+- [ ] (D-213) Apagar `api/.env` (único arquivo que sobrou de `api/`, fora do git, com variáveis do sistema antigo)? E `contrato/`, `escala.html`, `script.js`, `styles.css`, `descritores.json`, `saida/`, `.env.example` da raiz? — depende de: usuário
 - [x] (D-206) Ano aberto por engano: fica como histórico ou exceção no trigger para apagar o ano inteiro? — depende de: usuário
 - [x] (D-207) Template sem uso: arquivar basta ou excluir de fato (exceção à D-125)? — depende de: usuário
 - [x] (D-208: sim) Criar "desativar parceiro" para quem sai do programa (hoje ele aparece numa linha vazia na grade de Cortes de todo ano novo)? Usuário não entendeu; pergunta refeita em 04/11 — depende de: usuário
@@ -2177,3 +2186,5 @@ Usuário autoriza (ou não) a ação A do S17: criar a tag `legado-express` (rot
 - Usuário: o login e o índice do admin aparecem ao sair/trocar de perfil. D-212: login e logout B em `/conta/entrar/` e `/conta/sair/`, `/admin/login/` redireciona. Django 793 OK (8 pulados) no dev; Playwright 160/160 na `lac-integ` (derrubada depois). Commitado em `3843a76` com a autorização do usuário.
 - Redigido o pedido de servidor para a Infra (2 vCPU/4 GB/40 GB, Docker Compose, proxy com HTTPS, backup de `pg-dados` e `app/media`). Medido no dev: app ~146 MB e banco ~106 MB de RAM, banco 26 MB e mídia 47 MB em disco.
 - Revisão dos planos pedida pelo usuário: lacunas, UX (U0–U10), onda 5 e exclusão concluídos; Django S01–S16 concluídos; S17 parcial (faltam ações A, C, D e o preenchimento da equipe); S18 não começou.
+
+- Usuário autorizou as ações A e C do S17 e o push para `dev`. A: tag `legado-express` (`30b0de3`) publicada. C: `fa7b748` (201 arquivos; `revista/modelo` → `docs/fontes/2025`). Suíte com os PDFs: 793 OK, 0 pulados. `docker-compose.yml` da D-209 commitado antes da tag (`30b0de3`).
