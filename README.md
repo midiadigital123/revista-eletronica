@@ -31,8 +31,8 @@ Abra `http://localhost:8000/` (vai para o Painel do ano mais novo; sem ano, para
 - O compose sobe só `db` (PostgreSQL 17) e `app` (`docker-compose.yml`). Mongo, API e editor React
   saíram (D-187).
 - Variáveis: `app/.env.example`. O compose lê o `.env` da **raiz**. Todas têm default de
-  desenvolvimento. Produção: `docker-compose.prod.yml` com o `.env.prod.example`
-  (ver [`docs/docker.md`](docs/docker.md#produção)).
+  desenvolvimento. Produção: `docker-compose.prod.yml` com o `.env.prod.example`;
+  guia da Infra em [`INFRA.md`](INFRA.md).
 - Porta: `APP_PORT` (default 8000), só em `127.0.0.1`.
 - Cada worktree pode subir o próprio banco com `docker compose -p <nome> …`.
 - Dados de demonstração para ver o preview: `docker compose run --rm app python manage.py criar_demo`

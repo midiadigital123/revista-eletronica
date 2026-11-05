@@ -17,6 +17,8 @@ Produção usa outro compose: ver [Produção](#produção). Nunca faça commit 
 
 ## Produção
 
+Guia completo para a Infra (Portainer, proxy, backup, problemas comuns): [`INFRA.md`](../INFRA.md).
+
 `docker-compose.prod.yml` (D-214): Gunicorn (3 workers, timeout 120 s) no lugar do `runserver`, `DEBUG` desligado, código dentro da imagem, mídia no volume `media`, `restart: unless-stopped`. Ao subir, roda `migrate` e `collectstatic`.
 
 ```bash
