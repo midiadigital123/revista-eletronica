@@ -105,7 +105,7 @@ o que resta só nele está na seção 2 de [`docs/telas/telas-b.md`](docs/telas/
 | [`plans/`](plans/) | planos de trabalho (refatoração S01–S18, reforma de UX, exclusão, lacunas das telas B) |
 | [`state.md`](state.md) | decisões técnicas (D-001…), estado atual e perguntas em aberto |
 | [`docs/fontes/2025/`](docs/fontes/2025/) | PDFs e planilhas SAEGO 2025 (fonte da matriz e dos testes de importação) |
-| `contrato/` | resto do sistema antigo, sem uso. O resto (`api/`, `editor/`, `revista/`, `scripts/`) foi apagado (D-213) e está na tag `legado-express` |
+| tag `legado-express` | o sistema antigo (`api/`, `editor/`, `revista/`, `scripts/`, `contrato/`) e o protótipo estático (`escala.html`), apagados da branch (D-213) |
 
 ## 6. Operação
 

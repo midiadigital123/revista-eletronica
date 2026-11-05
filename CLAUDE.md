@@ -17,9 +17,8 @@ Impresso, HTMX + Alpine); toda função do back tem controle na tela B
 (D-189, D-210); o admin do Django é ferramenta do superusuário.
 
 O sistema antigo (Express + Mongo + React: `api/`, `editor/`, `revista/`, `scripts/`) foi apagado
-(D-213) e vive na tag `legado-express`; `contrato/` sobrou sem uso. As fontes SAEGO 2025 (PDFs e
-planilhas) ficam em `docs/fontes/2025/`. `escala.html`,
-`script.js` e `styles.css` na raiz são o protótipo estático original, sem uso.
+(D-213), junto com o protótipo estático (`escala.html`, `script.js`, `styles.css`) e `contrato/`;
+tudo vive na tag `legado-express`. As fontes SAEGO 2025 (PDFs e planilhas) ficam em `docs/fontes/2025/`.
 
 Leia antes de mudar algo: `state.md` (decisões D-xxx, append-only), `docs/regras-de-negocio.md`
 (regras vigentes e divergências), `docs/modelo-er.md`, `docs/telas/telas-b.md` e
