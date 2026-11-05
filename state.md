@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Exclusão segura (D-205 a D-208): E0–E5 mergeados e integrados em `feat/telas-b-ux`.
-Funcionando: cada entidade tem "Excluir" na tela B (ano só para o Admin, apagando tudo; parceiro com Desativar/Reativar; etapa e componente; matriz; template sem uso com as versões). Se a entidade está em uso, a página explica o impedimento e não apaga. O admin do Django leva à mesma página. Testes na raiz: Django 764 OK (8 pulados), makemigrations limpo, Playwright 146/146 (chromium + desktop-1440, 0 pulados). Migrações 0016–0018 aplicadas no dev. `docs/regras-de-negocio.md` §9 atualizada.
-Quebrado/pendente: nada aberto da exclusão. S6–S9 esperam a ordem do usuário.
+S6–S9 e Fechamento do blueprint de lacunas concluídos (D-210), integrados em `feat/telas-b-ux`.
+Funcionando: toda função do back tem tela B. Nova matriz (lista de Matrizes → Reimportar), Novo template (lista de Templates → editor na versão 1), downloads (planilha de grupos de corte, gabarito de ids, arquivo do item, planilhas F1/F2 na ficha da revista) e Usuários (link no cabeçalho, só com `auth.change_user`). `grep admin:` nas telas B: só o botão Admin (superusuário) e o logout. Docs atualizadas (modelo-er, regras de negócio, README, CLAUDE.md, fichas). Testes na stack isolada `lac-integ` (8030): Django 790 OK (8 pulados), makemigrations limpo, Playwright 159/160 + o que falhou passou 3/3 isolado (timeout de `page.goto` sob carga em `templates-editor`).
+Quebrado/pendente: furo herdado no S9 — o Admin pode redefinir a senha de um usuário Impresso e entrar como ele (ganha `marcar_impressa`); espera decisão. Dev do usuário com containers parados; stack `lac-integ` ainda de pé.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Esperar o usuário dizer quando começar S6–S9 (`plans/revista-express-telas-b-lacunas.md`). Não começar antes.
+Usuário decide: bloquear "redefinir senha" de quem tem grupo fora dos permitidos (Impresso) para o perfil Admin? (1 linha em `nucleo/usuarios.py`, vale para admin e tela B.)
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1709,10 +1709,30 @@ Esperar o usuário dizer quando começar S6–S9 (`plans/revista-express-telas-b
 - **Arquivos afetados:** `models/cadastro.py`, `migrations/0018_*`, `servicos/exclusao.py`, `urls/ui_excluir.py` (E0); `urls/cortes.py`, `cortes_grade.html` (E2)
 - **Status:** ativa
 
+### D-209 — Endereço de escuta do app configurável por `APP_BIND` (2026-11-05)
+- **Contexto:** o usuário quer acessar o app do dev por outros computadores da rede. A porta estava fixa em `127.0.0.1`, e o `ALLOWED_HOSTS` não tinha o IP da máquina.
+- **Decisão:** a porta publicada passa a ser `"${APP_BIND:-127.0.0.1}:${APP_PORT:-8000}:8000"`. Para abrir na rede: `APP_BIND=0.0.0.0 DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,<ip> docker compose up -d app`.
+- **Motivo:** sem a variável, o padrão continua fechado. Abrir para a rede é escolha explícita a cada subida.
+- **Descartadas:** fixar `0.0.0.0` (expõe o servidor de dev com DEBUG a toda a rede sempre); `docker-compose.override.yml` (no Compose, `ports` se soma em vez de substituir, e as duas ligações na 8000 conflitam).
+- **Arquivos afetados:** `docker-compose.yml`
+- **Status:** ativa
+
+### D-210 — S6–S9 em 3 worktrees paralelos, com o blueprint atualizado ao código pós-reforma (2026-11-05 09:45)
+- **Contexto:** o blueprint `plans/revista-express-telas-b-lacunas.md` é de 30/10, antes de U0–U10 e E0–E5. Sobram 7 `admin:` nas telas B (cortes, templates ×2, item da matriz ×2, gabarito) e o vazio da matriz manda rodar comando.
+- **Decisão:** Agente A faz S6 → S8 em série (`feat/s6-s8-matriz-downloads`, compose `lac-a`, 8021); Agente B faz S7 (`feat/s7-novo-template`, `lac-b`, 8022); Agente C faz S9 com o modelo mais forte (`feat/s9-usuarios`, `lac-c`, 8023). Integração e Fechamento em `feat/telas-b-ux`. Ajustes ao blueprint: planilhas F1/F2 só na ficha da revista (a lista de revistas saiu no U7); item 17 (botão Admin) já feito em `e4b65f7`; gabarito vira função comum em `servicos/arquivos.py`; download do item em rota GET própria, fora do `com_bloqueio`; Usuários entra como link no cabeçalho ao lado de "Sair", sem mudar o menu de 5 itens (D-199).
+- **Motivo:** padrão D-201 (worktrees paralelos); S6 e S8 tocam `urls/ui_matriz.py`, por isso em série. Tempo de parede ~4 h 45 contra ~9 h em série.
+- **Descartadas:** executar o blueprint como está (aponta para arquivos que não existem mais); Usuários no menu principal (quebraria a D-199).
+- **Arquivos afetados:** `urls/ui_matriz.py`, `urls/ui_templates.py`, `urls/ui_revista.py`, `urls/cortes.py`, `servicos/arquivos.py`, `admin/revista.py`, `admin/usuarios.py`, `nucleo/usuarios.py` (novo), `urls/ui_usuarios.py` (novo), templates em `ui/matriz/`, `ui/templates/lista.html`, `ui/revista/revista.html`, `ui/cortes.html`, `ui/base.html`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (aplicadas em 04/11) Aplicar as migrações 0016–0018 (permissões, trigger da `TemplateVersao`, `Parceiro.desativado_em`) no banco de dev? Sem elas, as telas do dev quebram com o código novo — depende de: usuário (migração de schema)
-- [ ] (regras de negócio, seção 10.1) `docs/modelo-er.md` está desatualizado em dois pontos: o bloqueio é tomado pelo mesmo usuário, não pela mesma sessão (D-191); a foto guarda a revista resolvida inteira e roda em READ COMMITTED (D-151/D-153/D-178). Corrigir? — depende de: usuário
+- [x] (05/11: usuário mandou corrigir; Agente D) (regras de negócio, seção 10.1) `docs/modelo-er.md` está desatualizado em dois pontos: o bloqueio é tomado pelo mesmo usuário, não pela mesma sessão (D-191); a foto guarda a revista resolvida inteira e roda em READ COMMITTED (D-151/D-153/D-178). Corrigir? — depende de: usuário
 - [ ] (regras de negócio) O admin ainda pede o checkbox "afeta N revistas" sempre que há revista afetada; as telas B só avisam quando alguma perde o Validado (D-202). Igualar? — depende de: usuário
+- [ ] (regras de negócio 10.1, divergência 4, D-055) O limite do corte é o `Etapa.escala_max` de cada etapa (código: `models/cadastro.py:60`, `servicos/cascata.py:38`) ou os valores fixos 1000/500 da D-055? Se for o `escala_max`, reescrever a D-055 — depende de: usuário
+- [ ] (regras de negócio 10.1, divergências 8–10) Corrigir 3 comentários de código desatualizados (`permissoes.py:14`, `permissoes.py:17`, `models/controle.py:18`), sem mudar comportamento? — depende de: usuário
+- [ ] `.env.example` da raiz ainda é do sistema antigo (`SESSION_SECRET`, `ADMIN_EMAIL`); o certo é `app/.env.example`. Apagar ou substituir? — depende de: usuário
+- [ ] (S9) O perfil Admin pode redefinir a senha de um usuário Impresso e entrar como ele, ganhando `marcar_impressa` (anula `ADMIN_MARCA_IMPRESSA = False`). Furo já existia no admin. Fechar com `pode_editar` em `nucleo/usuarios.py` exigindo alvo sem grupo fora dos permitidos? — depende de: usuário
 - [x] (D-206) Ano aberto por engano: fica como histórico ou exceção no trigger para apagar o ano inteiro? — depende de: usuário
 - [x] (D-207) Template sem uso: arquivar basta ou excluir de fato (exceção à D-125)? — depende de: usuário
 - [x] (D-208: sim) Criar "desativar parceiro" para quem sai do programa (hoje ele aparece numa linha vazia na grade de Cortes de todo ano novo)? Usuário não entendeu; pergunta refeita em 04/11 — depende de: usuário
@@ -2125,3 +2145,14 @@ Esperar o usuário dizer quando começar S6–S9 (`plans/revista-express-telas-b
 - Containers `db` e `app` do dev estavam parados depois do reinício da máquina; foram subidos de novo (`docker compose up -d db app`).
 - "Padrão (F1)" do dev ganhou a v9 com o texto da v1, sem os "Atualizado E2E…", com autor `otavio`, por `templates_texto.criar_versao`. Antes de gravar, o `perdem_validado` foi simulado: nenhuma revista perde o Validado, porque PAEBES, SAEGO e SAESE LP usam cópia própria da introdução.
 - Usuário: esperar a ordem dele para começar S6–S9.
+- App acessível pela rede sob demanda: `APP_BIND` no `docker-compose.yml` (D-209).
+- Plano de S6–S9 atualizado ao código pós-reforma e aprovado (D-210). Agentes A (S6→S8), B (S7) e C (S9) lançados em worktrees paralelos a partir de `2dc2825`.
+- Usuário autorizou (05/11): ao fim de cada onda de agentes, disparar a próxima sem perguntar, até terminar S6–S9.
+- Usuário pediu: atualizar `modelo-er.md` e as docs desatualizadas. Agente D lançado (`feat/docs-atualiza-modelo-er`, só docs, sem docker; não documenta S6–S9, que o integrador atualiza depois do merge).
+- Agente D mergeado (`cad2509`; commits `0a084a3`, `207c8a3`, só `.md`): `modelo-er.md` alinhado às migrações 0001–0018 (bloqueio por usuário D-191, foto inteira em READ COMMITTED); `regras-de-negocio.md` §10.1 com a situação de cada divergência (2, 3, 6, 7, 12 resolvidas; 4, 5, 8–10 abertas); README, CLAUDE.md, `docs/docker.md` e `docs/e2e.md` reescritos para o sistema Django; banners de histórico nos docs do sistema antigo.
+- Para o Fechamento (docs que ainda dizem "só admin" e mudam com S6–S9): `regras-de-negocio.md` linhas ~152 (primeira matriz por comando), ~233 (criar template), ~423 e §8.2 (usuários), divergência 11; `docs/telas/telas-b.md` §2; README §4 "Ainda só pelo admin"; CLAUDE.md "o admin cobre o que ainda não tem tela"; fichas `templates`, `matriz`, `cortes`, `revista`, `anos`.
+- Agente B (S7, `a878dc9`) mergeado sem conflito: rota `ui_templates_novo` (página `ui/templates/novo.html`), ano travado pela URL, componente do ano, fascículo da aba, texto inicial = esqueleto das seções fixas (`secoes_permitidas` + `form_para_corpo`), `IntegrityError` do nome repetido vira erro na tela. Worktree: Django 771 OK, Playwright 150/150. Integração (stack isolada `lac-integ`, dev parado): Django OK (8 pulados), makemigrations limpo. Pendente: o helper e2e `templates.ts` (`criarTemplate`) ainda cria pelo admin.
+- Agente A (S6 `d6c7e60`, S8 `69eb7cc`) mergeado sem conflito. S6: diálogo "Nova matriz" na lista (`ui_matriz_nova`), leva ao reimportar; `vazio.html` ganhou 2º botão opcional (`url2`/`rotulo2`). S8: `gabarito_ids_csv` em `servicos/arquivos.py` (admin e `ui_revista_gabarito` usam a mesma), `cortes_exportar`, `ui_matriz_item_baixar` (GET, fora do bloqueio, reusa `servir`/`TIPOS_ITEM` de `urls/preview.py`), "Baixar planilhas" na ficha da revista. `grep admin:` nas telas B: só Admin e logout em `base.html`. Integração: Django 777 OK (8 pulados), makemigrations limpo. Pendente menor: `nucleo/revista.py:278` (`aviso_ids`, só no admin) ainda cita o gabarito do admin.
+- Os 3 worktrees (A, B, D) nasceram em `34f3579` (main), não no HEAD de `feat/telas-b-ux`; os agentes refizeram a branch a partir de `2dc2825`. Em lançamentos futuros, o brief manda conferir o HEAD.
+- Agente C (S9: `0ada222` regras de usuário em `nucleo/usuarios.py`, usadas pelo admin e pela B; `813b3a2` tela `/ui/usuarios/`) mergeado sem conflito. Permissão `auth.change_user` (criar: + `add_user`). Na B, um grupo por usuário; criar e redefinir senha em páginas próprias; superusuário sem restrição (como no admin). `usuarios.spec.ts` deixa um `e2e-midias-<sufixo>` desativado por execução.
+- Fechamento: Django 790 OK (8 pulados), makemigrations limpo, Playwright na stack `lac-integ` com `E2E_ADMIN_*` e `E2E_IMPRESSO_*`: 159/160; a falha (`templates-editor.spec.ts:12`, chromium, timeout do `page.goto`) passou 3/3 isolada. Docs de S6–S9 e blueprint marcado como concluído em `eefde3c`, com a learning l-da214a7e (worktree de agente nasce no main).
