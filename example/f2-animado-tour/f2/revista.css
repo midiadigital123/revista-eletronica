@@ -1,0 +1,557 @@
+/* Origem: svg-tour/avaliacao-e-curriculo/revista.css (commit bcadc29) + o <style> de
+   revista-modais.html no fim (S08, D-103). Único ajuste: ids e classes do SVG com o prefixo
+   f2- do sanitizador (D-145): [id^="f2-btn-action-"] e .f2-st20. Revisão a11y do S08: foco dos
+   botões do SVG com outline, reflow com zoom/tela estreita e fontes do painel em rem (fim do arquivo). */
+/* Identidade da revista aplicada ao tour (referência: revista-express/revista/styles.css).
+   Não altera a lógica de common/svg-tour.js: usa as variáveis --svg-tour-* e sobrescreve com #revista (maior especificidade).
+   Tamanhos: tudo deriva de --u (≈ 1rem), que cresce com a menor dimensão da janela, então botões, textos e
+   painel ficam proporcionais da tela de celular deitado até monitores grandes. */
+:root {
+  --rv-primary: #ffeb00;
+  --rv-black: #000;
+  --rv-white: #fff;
+  --rv-gray-100: #f8f9fa;
+  --rv-gray-200: #ebebeb;
+  --rv-gray-300: #dee2e6;
+  --rv-font:
+    "Proxima Nova", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial,
+    sans-serif;
+  --rv-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body {
+  font-family: var(--rv-font);
+  background: var(--rv-white);
+  color: var(--rv-black);
+  line-height: 1.6;
+}
+
+/* Título visível já está no próprio SVG; o h1 fica só para leitores de tela */
+.rv-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+#revista {
+  /* 12px em janelas baixas (celular deitado) → 16px em ~800px de altura → 22px no teto (telas grandes) */
+  --u: clamp(12px, 1.11vmin + 7px, 22px);
+  --svg-tour-accent: var(--rv-primary);
+  --svg-tour-accent-fg: var(--rv-black);
+  --svg-tour-bg: var(--rv-gray-100);
+  --svg-tour-surface: var(--rv-white);
+  --svg-tour-text: var(--rv-black);
+  --svg-tour-muted: #4b5563;
+  --svg-tour-border: var(--rv-gray-200);
+  --svg-tour-radius: calc(var(--u) * 0.5);
+  font-family: var(--rv-font);
+  gap: calc(var(--u) * 0.75);
+  /* Sem rolagem de página: o tour ocupa exatamente a janela e os botões ficam sempre à vista */
+  height: calc(100vh - 24px);
+  height: calc(100dvh - 24px);
+}
+
+/* Tela de toque: alvos de pelo menos 44px (2,75 × 16px), mesmo em janela pequena */
+@media (pointer: coarse) {
+  #revista {
+    --u: clamp(16px, 1.11vmin + 7px, 22px);
+  }
+}
+
+/* Foco: contorno preto (amarelo sobre branco não chega a 3:1) */
+#revista:focus-visible .svg-tour__stage,
+#revista button:focus-visible {
+  outline: 2px solid var(--rv-black);
+  outline-offset: 2px;
+}
+
+/* Palco: ocupa o que sobra; retrato = painel embaixo, paisagem = painel ao lado */
+#revista .svg-tour__stage {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  aspect-ratio: auto !important;
+  border-color: var(--rv-gray-200);
+}
+
+/* Posição dos grupos de controle sobre o palco */
+#revista .svg-tour__tl {
+  top: calc(var(--u) * 0.625);
+  left: calc(var(--u) * 0.625);
+}
+#revista .svg-tour__tr {
+  top: calc(var(--u) * 0.625);
+  right: calc(var(--u) * 0.625);
+}
+#revista .svg-tour__br {
+  bottom: calc(var(--u) * 0.625);
+  right: calc(var(--u) * 0.625);
+}
+#revista .svg-tour__bl {
+  bottom: calc(var(--u) * 0.625);
+  left: calc(var(--u) * 0.625);
+}
+
+/* Botões redondos de ação (zoom, tela cheia, ajuda): círculo branco com sombra, como o "Ver item" */
+#revista .svg-tour__icon {
+  width: calc(var(--u) * 2.75);
+  height: calc(var(--u) * 2.75);
+  border: 0;
+  border-radius: 50%;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+  transition:
+    transform 0.3s var(--rv-ease),
+    box-shadow 0.3s var(--rv-ease),
+    background-color 0.2s;
+}
+#revista .svg-tour__icon:hover:not(:disabled) {
+  background: var(--rv-white);
+  transform: scale(1.08);
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.2);
+}
+#revista .svg-tour__icon:active:not(:disabled) {
+  transform: scale(0.96);
+}
+#revista svg.st-i {
+  width: calc(var(--u) * 1.25);
+  height: calc(var(--u) * 1.25);
+}
+#revista .svg-tour__zoomgroup {
+  gap: calc(var(--u) * 0.5);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+#revista .svg-tour__zoomgroup .svg-tour__icon {
+  border-radius: 50%;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+}
+#revista .svg-tour__zoomgroup .svg-tour__icon + .svg-tour__icon {
+  border-top: 0;
+}
+#revista .svg-tour__zoomlabel {
+  min-width: calc(var(--u) * 2.75);
+  padding: calc(var(--u) * 0.25) calc(var(--u) * 0.375);
+  border: 0;
+  border-radius: 999px;
+  font-family: var(--rv-font);
+  font-size: calc(var(--u) * 0.6875);
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+}
+
+/* Seletor de modo: abas da revista (cinza inativo, amarelo ativo em negrito) */
+#revista .svg-tour__modes {
+  padding: calc(var(--u) * 0.25);
+  gap: calc(var(--u) * 0.25);
+  border: 0;
+  border-radius: 999px;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+}
+#revista .svg-tour__mode {
+  height: calc(var(--u) * 2.25);
+  padding: 0 calc(var(--u) * 1);
+  gap: calc(var(--u) * 0.375);
+  border-radius: 999px;
+  background: transparent;
+  color: #4b5563;
+  font-size: calc(var(--u) * 0.875);
+  font-weight: 400;
+}
+#revista .svg-tour__mode:hover:not([aria-pressed="true"]) {
+  background: var(--rv-gray-200);
+  color: var(--rv-black);
+}
+#revista .svg-tour__mode[aria-pressed="true"] {
+  background: var(--rv-primary);
+  color: var(--rv-black);
+  font-weight: 700;
+}
+
+/* Minimapa: largura pela unidade, altura pela proporção do desenho (inline do JS sobrescrito) */
+#revista .svg-tour__minimap {
+  width: calc(var(--u) * 8) !important;
+  height: auto !important;
+  border: 0;
+  border-radius: calc(var(--u) * 0.5);
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+}
+#revista .svg-tour__viewport {
+  border-color: var(--rv-black);
+  background: rgba(255, 235, 0, 0.35);
+}
+
+/* Painel: card branco com borda cinza, como o card de descritores */
+#revista .svg-tour__panel {
+  flex: none;
+  /* altura estável entre passos: o palco não redimensiona (nem reenquadra) a cada texto */
+  min-height: calc(var(--u) * 18.5);
+  max-height: 50%;
+  overflow-y: auto;
+  padding: calc(var(--u) * 1.25);
+  gap: calc(var(--u) * 0.75);
+}
+#revista .svg-tour__meta {
+  font-size: calc(var(--u) * 0.875);
+  font-weight: 600;
+}
+#revista .svg-tour__title {
+  font-size: calc(var(--u) * 1.5);
+  font-weight: 700;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+#revista .svg-tour__text {
+  font-size: calc(var(--u) * 1.125);
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+#revista .svg-tour__note {
+  background: rgba(255, 235, 0, 0.25);
+  color: var(--rv-black);
+  font-size: calc(var(--u) * 0.8125);
+}
+
+/* Progresso: segmento atual amarelo, concluídos pretos, o resto cinza */
+#revista .svg-tour__seg {
+  height: calc(var(--u) * 0.5);
+  border-radius: 999px;
+  background: var(--rv-gray-300);
+}
+#revista .svg-tour__seg.is-done {
+  background: var(--rv-black);
+}
+#revista .svg-tour__seg[aria-current="step"] {
+  background: var(--rv-primary);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+/* Botões do painel: pílulas da revista (Anterior cinza, Próximo preto), presos ao rodapé do painel:
+   mesmo que o texto role, Anterior/Próximo nunca saem da tela */
+#revista .svg-tour__actions {
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  padding-block: calc(var(--u) * 0.75) calc(var(--u) * 0.5);
+  background: var(--rv-white);
+}
+#revista .svg-tour__btn {
+  gap: calc(var(--u) * 0.3);
+  min-height: calc(var(--u) * 2.75);
+  padding: 0 calc(var(--u) * 1.25);
+  border: 0;
+  border-radius: 3.25rem;
+  background: var(--rv-gray-200);
+  color: var(--rv-black);
+  font-size: calc(var(--u) * 1.125);
+  font-weight: 300;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+#revista .svg-tour__btn:hover {
+  background: var(--rv-gray-200);
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+#revista .svg-tour__btn--primary {
+  background: var(--rv-black);
+  color: var(--rv-white);
+  font-weight: 600;
+}
+#revista .svg-tour__btn--primary:hover {
+  background: var(--rv-black);
+  filter: none;
+}
+
+/* Janela baixa (celular deitado, notebook pequeno): painel mais compacto */
+@media (max-height: 520px) {
+  #revista .svg-tour__panel {
+    min-height: 0;
+    padding: calc(var(--u) * 0.75) calc(var(--u) * 1);
+    gap: calc(var(--u) * 0.5);
+  }
+  #revista .svg-tour__text {
+    line-height: 1.4;
+  }
+}
+
+/* Paisagem: painel ao lado do palco, com largura proporcional à unidade e à janela */
+@media (orientation: landscape) and (min-width: 700px) {
+  #revista {
+    flex-direction: row;
+  }
+  #revista .svg-tour__panel {
+    flex: 0 0 clamp(calc(var(--u) * 16), 28vw, calc(var(--u) * 30));
+    min-height: 0;
+    max-height: none;
+  }
+  #revista .svg-tour__actions {
+    flex-wrap: wrap;
+  }
+}
+
+/* Aviso e ajuda */
+/* Aviso: cartão escuro compacto no alto do palco (abaixo dos botões). Mesma linguagem dos
+   cartões da revista (sombra suave, cantos retos); o amarelo fica só no ícone, porque o
+   aviso não é clicável e o amarelo do desenho indica o que se clica. */
+#revista .svg-tour__toast {
+  top: calc(var(--u) * 4.5);
+  bottom: auto;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.625);
+  width: max-content;
+  max-width: min(calc(100% - var(--u) * 2), calc(var(--u) * 24));
+  padding: calc(var(--u) * 0.625) calc(var(--u) * 1) calc(var(--u) * 0.625)
+    calc(var(--u) * 0.75);
+  overflow: hidden; /* o fio de tempo fica dentro do cartão */
+  border: 0;
+  border-radius: 0; /* cantos retos (sobrescreve os 10px da lib) */
+  background: #1a1a1a;
+  color: rgba(255, 255, 255, 0.94);
+  /* duas camadas: contato curto + queda longa, ambas suaves */
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.14),
+    0 8px 24px rgba(0, 0, 0, 0.22);
+  font-family: var(--rv-font);
+  font-size: calc(var(--u) * 0.9375);
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: left;
+  text-wrap: pretty;
+  cursor: default;
+  /* saída: 140ms ease-in, só 2px e quase sem escala (sair é mais discreto que entrar) */
+  transform: translate(-50%, -2px) scale(0.995);
+  transition:
+    opacity 0.14s ease-in,
+    transform 0.14s ease-in;
+}
+#revista .svg-tour__toast.is-on {
+  transform: translate(-50%, 0);
+  /* entrada: 260ms, desce 6px e cresce de .985 a 1, desacelerando (curva da revista) */
+  animation: rv-toast-in 0.26s var(--rv-ease) both;
+  transition: none;
+}
+@keyframes rv-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -6px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+/* fio de tempo: esgota em linha reta durante o tempo de leitura; pausa com o mouse em cima */
+#revista .svg-tour__toast::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2px;
+  background: var(--rv-primary);
+  opacity: 0.85;
+  transform-origin: left;
+  transform: scaleX(0);
+}
+#revista .svg-tour__toast.is-run::after {
+  animation: rv-toast-clock var(--st-toast-ms, 4s) linear forwards;
+}
+#revista .svg-tour__toast.is-paused::after {
+  animation-play-state: paused;
+}
+@keyframes rv-toast-clock {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+#revista .svg-tour__toast::before {
+  /* ícone de informação de contorno, no mesmo desenho dos ícones da interface (viewBox 24, traço 2,
+     pontas redondas), em amarelo; sem texto: nada para o leitor de tela ler */
+  content: "";
+  flex: none;
+  width: calc(var(--u) * 1.4);
+  height: calc(var(--u) * 1.4);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffeb00' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 16v-4M12 8h.01'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+#revista .svg-tour__help {
+  background: rgba(0, 0, 0, 0.5);
+}
+#revista .svg-tour__helpcard {
+  max-width: calc(var(--u) * 26);
+  padding: calc(var(--u) * 1.25) calc(var(--u) * 1.4);
+  border-radius: 0.75rem;
+  box-shadow: 0 1.25rem 3rem rgba(0, 0, 0, 0.25);
+}
+#revista .svg-tour__helpcard h3 {
+  font-size: calc(var(--u) * 1.5);
+}
+#revista .svg-tour__helpcard h4 {
+  font-size: calc(var(--u) * 0.8125);
+}
+#revista .svg-tour__helpcard dl {
+  font-size: calc(var(--u) * 0.875);
+}
+#revista .svg-tour kbd {
+  min-width: calc(var(--u) * 1.4);
+  border-radius: 0.375rem;
+  font-family: var(--rv-font);
+  font-size: calc(var(--u) * 0.75);
+}
+#revista .svg-tour__helpclose {
+  box-shadow: none;
+  background: var(--rv-gray-100);
+}
+/* telas baixas (celular deitado): cartão compacto para o botão "Entendi" não ficar cortado */
+@media (max-height: 480px) {
+  #revista .svg-tour__help {
+    padding: calc(var(--u) * 0.5);
+  }
+  #revista .svg-tour__helpcard {
+    padding: calc(var(--u) * 0.75) calc(var(--u) * 1.25);
+  }
+  #revista .svg-tour__helpcard h3 {
+    margin-bottom: calc(var(--u) * 0.25);
+    font-size: calc(var(--u) * 1.25);
+  }
+  #revista .svg-tour__helpcard h4 {
+    margin: calc(var(--u) * 0.5) 0 calc(var(--u) * 0.25);
+  }
+  #revista .svg-tour__helpcard dl {
+    gap: calc(var(--u) * 0.25) calc(var(--u) * 0.75);
+  }
+  #revista .svg-tour__helpnote {
+    margin-bottom: 0;
+    font-size: calc(var(--u) * 0.875);
+  }
+  #revista .svg-tour__helpfoot {
+    margin-top: calc(var(--u) * 0.5);
+  }
+}
+
+/* Bolinhas amarelas do SVG: foco preto, sem a caixa retangular do navegador */
+#revista svg [id^="f2-btn-action-"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+#revista svg [id^="f2-btn-action-"]:hover .f2-st20 {
+  fill: #ff8d43;
+}
+
+#revista svg [id^="f2-btn-action-"]:focus,
+#revista svg [id^="f2-btn-action-"]:focus-visible {
+  outline: none;
+}
+/* 2.4.7 (revisão a11y do S08): contorno visível em vez do drop-shadow, fraco no zoom de tour */
+#revista svg [id^="f2-btn-action-"]:focus-visible {
+  outline: 3px solid #000;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #revista .svg-tour__icon,
+  #revista .svg-tour__btn {
+    transition: none;
+  }
+  /* aviso: sem deslize, escala nem fio de tempo; só aparece e some */
+  #revista .svg-tour__toast,
+  #revista .svg-tour__toast.is-on {
+    animation: none;
+    transform: translate(-50%, 0);
+  }
+  #revista .svg-tour__toast::after {
+    display: none;
+  }
+}
+
+/* --- Modais: <style> de svg-tour/avaliacao-e-curriculo/revista-modais.html --- */
+  dialog[id^="dlg-"] {
+    max-width: 560px;
+    width: calc(100% - 32px);
+    border: 0;
+    border-radius: 0.75rem;
+    padding: 0;
+    color: #000;
+    font-family: var(--rv-font, system-ui, sans-serif);
+    box-shadow: 0 1.25rem 3rem rgba(0, 0, 0, 0.25);
+  }
+  dialog[id^="dlg-"]::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+  }
+  dialog[id^="dlg-"] .modal-close-row {
+    display: flex;
+    justify-content: flex-end;
+    padding: 12px 12px 0;
+  }
+  dialog[id^="dlg-"] .modal-close-row button {
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: #f8f9fa;
+    color: #000;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  dialog[id^="dlg-"] .modal-close-row button:hover {
+    background: #ebebeb;
+  }
+  dialog[id^="dlg-"] .modal-close-row button:focus-visible {
+    outline: 2px solid #000;
+    outline-offset: 2px;
+  }
+  dialog[id^="dlg-"] .modal-body {
+    padding: 0 24px 24px;
+  }
+  dialog[id^="dlg-"] .modal-body h3 {
+    margin: 0 0 12px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  dialog[id^="dlg-"] .modal-body p {
+    margin: 0;
+    font-size: 1.125rem;
+    line-height: 1.6;
+    color: #000;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    dialog[id^="dlg-"] .modal-close-row button {
+      transition: none;
+    }
+  }
+
+/* --- Revisão a11y do S08 --- */
+/* 1.4.10: com zoom/tela estreita o tour deixa de ocupar a janela inteira e a página rola */
+@media (max-height: 520px), (max-width: 480px) {
+  #revista {
+    height: auto;
+  }
+  #revista .svg-tour__stage {
+    flex: none;
+    height: 20rem;
+  }
+  #revista .svg-tour__panel {
+    max-height: none;
+  }
+}
+/* Piso em rem: o texto do painel acompanha a fonte do navegador (o --u depende só da janela) */
+#revista .svg-tour__title {
+  font-size: max(1.25rem, calc(var(--u) * 1.5));
+}
+#revista .svg-tour__text {
+  font-size: max(1rem, calc(var(--u) * 1.125));
+}
+#revista .svg-tour__btn {
+  font-size: max(1rem, calc(var(--u) * 1.125));
+}

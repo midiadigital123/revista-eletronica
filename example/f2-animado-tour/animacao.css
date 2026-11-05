@@ -1,0 +1,23 @@
+/* Base da página da demo (na revista isso vem do f1/styles.css e do <style> do index.html). */
+* { box-sizing: border-box; }
+body { margin: 0; }
+.f2-section { max-width: 1366px; margin: 0 auto; padding: 16px; }
+.f2-section > h2 { margin: 0 0 16px; font-size: 1.75rem; font-weight: 700; line-height: 1.15; letter-spacing: -0.01em; }
+
+/* Escala do tour. O revista.css faz --u crescer com a janela até 22px (17px numa tela de 900px de
+   altura): título do painel maior que o da seção, texto de 19px e botões de 47px ao lado de um desenho
+   a 77%. Aqui --u fica entre 13 e 15px no desktop, e o toque mantém 16px (alvos de 44px). */
+#revista { --u: clamp(13px, 0.45vmin + 10px, 15px); }
+@media (pointer: coarse) { #revista { --u: 16px; } }
+dialog[id^="dlg-"] { margin: auto; }
+/* O revista.css dá ao tour a janela inteira; aqui o título da seção fica acima dele. */
+#revista { height: calc(100dvh - 90px); min-height: 420px; }
+
+/* Peças animadas: cada uma ganha um <g data-wrap> e escala em torno do próprio centro. */
+#revista [data-wrap] { transform-box: fill-box; transform-origin: center; }
+
+/* O svg-tour força `.svg-tour--dim .svg-tour-active * { opacity: 1 !important }`, o que anulava o
+   aparecer das peças dentro do passo ativo (sobrava só o deslize). Peça em animação leva --ab-o. */
+#revista.svg-tour--dim .svg-tour-active [style*="--ab-o"] { opacity: var(--ab-o) !important; }
+
+::selection { background: var(--rv-primary); color: var(--rv-black); }

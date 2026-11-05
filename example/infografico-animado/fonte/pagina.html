@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Avaliação e currículo: infográfico animado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<main>
+  <div class="stage">
+    <!-- Cole aqui o conteúdo de infografico.svg (a tag <svg> precisa ter id="info" e style="visibility:hidden") -->
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="play" type="button" aria-label="Pausar" title="Pausar (Espaço)">
+      <svg viewBox="0 0 14 14" aria-hidden="true"><path id="play-icon" fill="currentColor" d="M3 2h3v10H3zM8 2h3v10H8z"/></svg>
+    </button>
+    <button class="btn" id="restart" type="button" aria-label="Reiniciar" title="Reiniciar">
+      <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M11.6 7a4.6 4.6 0 1 1-1.4-3.3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M11.3 1.2v3.2H8.1" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="timeline">
+      <div class="segs" id="segs"></div>
+      <div class="step-name" id="step-name" aria-live="polite"></div>
+    </div>
+    <button class="btn" id="speed" type="button" title="Velocidade">1×</button>
+    <button class="btn" id="camera" type="button" aria-pressed="true" title="Câmera acompanha cada parte">
+      <svg class="check" viewBox="0 0 14 14" aria-hidden="true"><path d="M2.5 7.4l3 3 6-6.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="cam-label">Câmera</span>
+    </button>
+  </div>
+</main>
+
+<script src="animacao.js"></script>
+</body>
+</html>
