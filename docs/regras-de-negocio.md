@@ -149,7 +149,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | Projeto não edita conteúdo: todo ajuste de descritor ou tarefa é feito na matriz e vale para todos os parceiros que a usam. | D-048, D-051, D-099 |
 | Exceção nova (ex.: parceiro que mudou no ano): duplicar uma matriz, ajustar a cópia e apontar o parceiro para ela. | D-101, `app/nucleo/urls/ui_matriz.py:162` |
 | A cópia guarda a origem (`duplicada_de`, de qualquer ano) e mostra a tabela de diferenças; não herda nada. Apagar a origem só zera o vínculo. | D-113, D-124, `app/nucleo/models/matriz.py:17-24`, `app/nucleo/urls/ui_matriz.py:211` |
-| A primeira matriz do ano entra por importação (comando `importar_matriz`, PDF SAEGO ou XLSX). MEC nova só nasce por importação ou duplicação. | D-141, D-165, `app/nucleo/templates/ui/matriz/lista.html:48` |
+| Matriz nova nasce vazia pela tela B ("Nova matriz": ano + nome, exige `add_matriz`) e recebe o conteúdo pelo Reimportar (PDF SAEGO ou XLSX); também nasce por duplicação ou pelo comando `importar_matriz`. MEC nova só nasce por importação ou duplicação. | D-141, D-165, D-210, `app/nucleo/urls/ui_matriz.py` (`nova`) |
 | Reimportar substitui só as MECs presentes no arquivo: mantém a linha da MEC (id, histórico e trava), apaga e recria descritores e tarefas. Exige digitar o nome exato da matriz. | D-071, D-141, D-146, D-165, `app/nucleo/servicos/importar_matriz.py:41` |
 | Reimportar é recusado se alguém está editando uma das MECs, se a escala máxima do arquivo difere de `Etapa.escala_max` ou se o arquivo passa de 20 MB / não é PDF nem XLSX. | D-146, D-168, `app/nucleo/matriz.py:94-111` |
 | A importação descarta os cortes impressos no PDF: o padrão de cada tarefa vem dos cortes do parceiro. | D-059 |
@@ -230,7 +230,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | Antes de gravar, a tela de impacto lista as revistas que usam o template (e quantas têm cópia) e os SVGs que ficariam sem algum id exigido. | D-099, D-162, D-166, `app/nucleo/templates_texto.py:69` |
 | O "Confirmar" só grava se o texto e a versão-base forem os da tela de impacto (assinatura válida por 30 min). Duplo clique não duplica versão. | D-163, `app/nucleo/templates_texto.py:31` |
 | O editor de templates mantém o botão "Salvar" (não tem autosave). | D-196 |
-| Editar exige `change_template` + `add_templateversao`; template novo nasce com a versão 1 (hoje só pelo admin). | D-162, `docs/telas/telas-b.md` (seção 2) |
+| Editar exige `change_template` + `add_templateversao`; template novo nasce com a versão 1, na mesma transação (tela B "Novo template", exige `add_template` + `add_templateversao`; texto inicial com as seções fixas do fascículo). | D-162, `docs/telas/telas-b.md` (seção 2) |
 | Seed: `carregar_templates` cria o template "Padrão" a partir dos `.hbs` do repositório e nunca sobrescreve; depois disso a fonte é o banco. | D-098, D-139, D-176 |
 
 ### 5.2 Template na revista: ao vivo e cópia por seção
@@ -421,8 +421,8 @@ Fonte única: `app/nucleo/permissoes.py`. Grupos fixos criados por migração; m
 |---|---|
 | Usuário não é excluído: é desativado (`is_active`). | D-142, D-205, `app/nucleo/admin/usuarios.py:77` |
 | O formulário de usuário não tem `is_superuser`, `is_staff` nem permissões avulsas; usuário novo nasce `is_staff`. | D-142, `app/nucleo/admin/usuarios.py:34-75` |
-| O Admin (não superusuário) só atribui Pedagógica e Mídias Digitais; não vê superusuários; não muda os próprios grupos nem se desativa; não altera outro Admin. | D-168, `app/nucleo/admin/usuarios.py:1-13` |
-| Gerenciar usuários ainda é só pelo admin do Django (tela B prevista no S9). | D-190, `docs/telas/telas-b.md` (seção 2) |
+| O Admin (não superusuário) só atribui Pedagógica e Mídias Digitais; não vê superusuários; não muda os próprios grupos nem se desativa; não altera outro Admin. | D-168, `app/nucleo/usuarios.py` (módulo comum do admin e da tela B) |
+| Gerenciar usuários também pela tela B (`/ui/usuarios/`): listar, criar (nasce `is_staff`), trocar o grupo (um por usuário na B), ativar/desativar, redefinir a senha. Exige `auth.change_user` (criar: também `add_user`). O superusuário não tem restrição. | D-190, D-210, `app/nucleo/urls/ui_usuarios.py` |
 
 ### 8.3 Regras de tela
 
@@ -478,7 +478,7 @@ Situação em 05/11. **Resolvida** = o documento já diz o que o código faz. **
 | 8 | `app/nucleo/permissoes.py:17`: "Pergunta em aberto: admin pode clicar Revista Impressa Atualizada?" | Fechada pela D-177 (não pode); `ADMIN_MARCA_IMPRESSA = False` (`app/nucleo/permissoes.py:19`). | **Aberta (só comentário no código).** **Pergunta ao usuário:** posso trocar o comentário por "Fechada: não (D-177)", numa mudança sem efeito no comportamento? |
 | 9 | `app/nucleo/permissoes.py:14`: usuário não se apaga porque "histórico usa SET_NULL". | `Revista.validado_por`, `FotoRevista.criada_por` e `TemplateVersao.criada_por` são PROTECT (`app/nucleo/models/revista.py:37`, `:116`; `app/nucleo/models/texto.py:57`). | **Aberta (só comentário no código).** A regra (desativar) continua valendo; o motivo no comentário está incompleto. Mesma pergunta da linha 8. |
 | 10 | `app/nucleo/models/controle.py:18`: "apagar o alvo apaga a trava (CASCADE)". | O CASCADE existe só no ORM; no banco a FK é NO ACTION, então um DELETE direto no banco é recusado se há trava (D-133). | **Aberta no comentário; resolvida no ER**, que agora diz isso na seção ON DELETE. Mesma pergunta da linha 8. |
-| 11 | Regra "toda função do back na tela B" (D-189, D-190). | Ainda só no admin: usuários, criar template, criar matriz (a primeira só por comando), planilha de grupos de corte, gabarito de ids, baixar item (`docs/telas/telas-b.md`, seção 2). | **Aberta:** S6–S9 do plano de lacunas estão em andamento. |
+| 11 | Regra "toda função do back na tela B" (D-189, D-190). | Ainda só no admin: usuários, criar template, criar matriz (a primeira só por comando), planilha de grupos de corte, gabarito de ids, baixar item (`docs/telas/telas-b.md`, seção 2). | **Resolvida** por S6–S9 (D-210): sobram no admin só login, índice e histórico por registro. |
 | 12 | Este documento (seção 5.3) dizia "25 manuais". | `VARIAVEIS` tem 27 itens: 3 automáticas e **24** manuais (`app/nucleo/variaveis.py:21-50`, `docs/variaveis.md`). | **Resolvida** em 05/11: seção 5.3 corrigida. |
 
 ### 10.2 Perguntas em aberto do `state.md` que afetam regra de negócio

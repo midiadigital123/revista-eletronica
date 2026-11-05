@@ -2,6 +2,8 @@
 
 > Depois da aprovação, este arquivo é copiado para `plans/revista-express-telas-b-lacunas.md` (versionado) e cada passo vira uma linha no `state.md`.
 
+> **Situação (05/11):** S0–S9 e Fechamento concluídos. S6–S9 executados pelo plano atualizado da D-210, em worktrees paralelos e integrados em `feat/telas-b-ux`. O item 17 (botão Admin) já tinha sido feito em `e4b65f7`.
+
 ## Contexto
 A auditoria de 30/10 (D-189) achou 18 lacunas nas telas B (UI Django fora do admin). Em cada uma, o back permite a ação a um perfil, mas a tela não a oferece, manda para o admin ou mostra o que o perfil não pode usar. O usuário achou mais três:
 - **19.** Não dá para atribuir uma matriz pela ficha do projeto. No banco local, 0 de 2 `ParceiroAno` têm matriz, então nenhuma revista carrega matriz.

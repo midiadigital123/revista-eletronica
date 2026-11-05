@@ -50,6 +50,7 @@ Cuidar da matriz de referência do ano: ver quais matrizes existem, criar uma a 
 
 | Ação | Onde | Permissão | Resultado |
 |---|---|---|---|
+| Nova matriz | Lista (modal) | criar matriz | vai ao Reimportar da matriz nova, para subir o PDF ou a planilha |
 | Duplicar | Matriz (modal) | criar matriz | vai para a matriz nova; "Matriz X criada como cópia de Y." |
 | Renomear | Matriz (lápis no título) | alterar matriz | Enter ou sair do campo salva (autosave, com modal de impacto); Esc cancela |
 | Reimportar | página própria | alterar matriz | volta à matriz; "Importado em X: LP 5EF: 12 descritores, …" |
@@ -67,7 +68,7 @@ Cuidar da matriz de referência do ano: ver quais matrizes existem, criar uma a 
 
 ## Estados
 
-- **Vazio:** ano sem matriz → "Nenhuma matriz em 2027" com o caminho (duplicar de outro ano). Etapa × CC sem descritor → "Nenhum descritor" com "Novo descritor". Busca sem resultado → "Nenhum descritor com “<busca>” no código ou no texto." Sem ano aberto → aviso com o link "Abra um ano" (`/ui/anos/`, com `abrir_ano`).
+- **Vazio:** ano sem matriz → "Nenhuma matriz em 2027" com "Nova matriz" e, se houver matriz em outro ano, o caminho para duplicá-la. Etapa × CC sem descritor → "Nenhum descritor" com "Novo descritor". Busca sem resultado → "Nenhum descritor com “<busca>” no código ou no texto." Sem ano aberto → aviso com o link "Abra um ano" (`/ui/anos/`, com `abrir_ano`).
 - **Erro de validação:** a página/painel volta com os erros no campo e a mensagem "Nada foi gravado: corrija os erros marcados."
 - **Impacto:** a gravação que tira o "Validado" não grava: abre o modal "<Ação> tira o “Validado” de N revista(s)" com a lista. Confirmar grava; Cancelar ou Esc volta o valor anterior e o foco. No arquivo do item, a lista aparece dentro do próprio modal do item, e o botão vira "Enviar e tirar Validado".
 - **Só leitura (perfil):** "Só leitura: seu perfil vê a matriz, mas não altera. Para editar, peça a permissão de matriz a um administrador." Campos desabilitados, sem botões de gravar.
@@ -86,7 +87,7 @@ Cuidar da matriz de referência do ano: ver quais matrizes existem, criar uma a 
 ## Regras de permissão
 
 - Ver: `view_matriz` (matrizes) e `view_matrizetapacc` (etapa × CC).
-- Duplicar: `add_matriz`. Renomear e reimportar: `change_matriz`.
+- Nova matriz e Duplicar: `add_matriz`. Baixar o arquivo do item: ver a matriz (`ui_matriz_item_baixar`). Renomear e reimportar: `change_matriz`.
 - Editar etapa × CC, descritor e tarefas: as permissões de alterar/criar de etapa × CC, descritor e tarefa (o pacote "editar matriz" dos perfis).
 - Excluir: `delete_tarefa` / `delete_descritor`; a matriz, `delete_matriz` (sem ele, nem a zona de perigo aparece: o Impresso não a vê).
 - Gravar na etapa × CC (campos, tarefas, ordem, intervalo, item, novo descritor) exige o bloqueio dela (um editor por vez); POST sem permissão é 403; sem o bloqueio, 409 e a página vira só leitura.

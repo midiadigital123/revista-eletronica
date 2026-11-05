@@ -43,7 +43,7 @@ Lançar os cortes dos padrões de cada parceiro no ano, numa grade só: uma linh
 | Lápis "Renomear <nome>" | quem altera parceiro | troca o nome por um campo com foco. Enter ou sair do campo salva; Esc volta o nome |
 | Lixeira "Excluir <nome>…" (link, ao lado do lápis) | quem exclui parceiro (`delete_parceiro`) | abre `/ui/excluir/parceiro/<pk>/?voltar=<esta grade>` (rota `ui_excluir`, ficha da exclusão em `templates/ui/excluir.html`). Livre: digitar o nome exclui e volta para a grade. Em uso: lista o que impede e oferece "Desativar o parceiro" (ou "Reativar"), que volta para a grade |
 | "+ Adicionar parceiro" (logo abaixo da grade) | quem cria parceiro | abre uma linha com o foco no nome. Enter ou "Incluir parceiro" cria; Esc ou "Descartar" tira a linha |
-| Baixar planilha de grupos | todos | baixa `cortes-<ano>.xlsx` pelo admin (`/admin/nucleo/corte/exportar/?ano=<ano>`): uma aba por etapa × componente, parceiros agrupados pelos mesmos cortes |
+| Baixar planilha de grupos | todos | baixa `cortes-<ano>.xlsx` (`cortes_exportar`, `/cortes/<ano>/exportar/`): uma aba por etapa × componente, parceiros agrupados pelos mesmos cortes |
 | Abas Lista / Variáveis | todos | outra aba do hub Projetos |
 
 ## Estados

@@ -13,7 +13,8 @@ Use `trail ask "<task>" --source` (or `trail grep` / `trail callers`) before gre
 **F1** (escalas de proficiência por etapa: 2EF, 5EF, 9EF, 3EM; descritores D01… mapeados à BNCC,
 2 a 5 padrões de desempenho) e **F2** (infográfico svg-tour). Sistema **Django + PostgreSQL** em `app/`.
 O dia a dia roda em telas próprias ("telas B": menu Painel · Projetos · Matrizes · Templates ·
-Impresso, HTMX + Alpine); o admin do Django cobre o que ainda não tem tela.
+Impresso, HTMX + Alpine); toda função do back tem controle na tela B
+(D-189, D-210); o admin do Django é ferramenta do superusuário.
 
 O sistema antigo (Express + Mongo + React: `api/`, `editor/`, `contrato/`, `scripts/`) está
 aposentado e fora do compose (D-187); `editor/` só serve de referência visual. `escala.html`,

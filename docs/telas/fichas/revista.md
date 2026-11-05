@@ -23,7 +23,7 @@ Reunir numa página o que a equipe precisa para deixar uma revista pronta: o tem
 ## Página
 
 1. **Trilha:** "Projetos de <ano> › <projeto>" (volta à aba Revistas do projeto).
-2. **Cabeçalho:** "<projeto> · <componente>", Parceiro e Ano; selo "Arquivada" quando for o caso; link "Editar o nome do projeto" (o nome só se edita no Projeto). À direita: status do salvamento, "Abrir preview" (nova aba; arquivada: "Abrir versão arquivada"), "Baixar zip" e o link "Tela do impresso".
+2. **Cabeçalho:** "<projeto> · <componente>", Parceiro e Ano; selo "Arquivada" quando for o caso; link "Editar o nome do projeto" (o nome só se edita no Projeto). À direita: status do salvamento, "Abrir preview" (nova aba; arquivada: "Abrir versão arquivada"), "Baixar zip", "Baixar planilhas" (F1/F2, `impresso_planilhas`) e o link "Tela do impresso". "Baixar gabarito de ids" usa `ui_revista_gabarito` e só aparece quando há template do F2.
 3. **Coluna principal:**
    - **1 Templates:** um select por fascículo ("Template do F1", "Template do F2"), só com templates do mesmo ano, componente e fascículo. Salva ao escolher.
    - **2 Arquivos:** SVG do F2 (tamanho, quantos ids, os ids que o template do F2 pede, "Baixar gabarito de ids") e capa (miniatura). Cada um tem uma área de soltar ("Enviar o SVG" / "Substituir o SVG": solte aqui ou clique para escolher). Envia ao escolher, com barra de progresso.

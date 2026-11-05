@@ -10,7 +10,7 @@ e as planilhas.
 
 É uma aplicação **Django + PostgreSQL** em `app/`. O dia a dia roda em telas próprias (as "telas B",
 com menu Painel · Projetos · Matrizes · Templates · Impresso); o admin do Django continua para o
-que ainda não tem tela (seção 4).
+que não tem tela (seção 4).
 
 ---
 
@@ -85,9 +85,10 @@ Fichas de cada tela: [`docs/telas/telas-b.md`](docs/telas/telas-b.md).
 9. **Impresso** (`/ui/impresso/<ano>/`): "o que mudou" + planilhas + "Revista Impressa Atualizada".
 10. **Zip**: botão "Baixar zip" na linha de cada revista, na aba Lista de Projetos.
 
-Ainda só pelo admin (`/admin/`), até as telas B cobrirem: criar matriz e criar template, baixar o
-gabarito de ids do SVG, o arquivo do item e a planilha de grupos de corte, e gerenciar usuários.
-A lista atual está na seção 2 de [`docs/telas/telas-b.md`](docs/telas/telas-b.md).
+Desde S6–S9 (D-210), tudo o que o back faz tem tela B: criar matriz e template, baixar gabarito de
+ids, arquivo do item, planilha de grupos de corte e planilhas F1/F2, e gerenciar usuários (link
+"Usuários" no cabeçalho, só para o perfil Admin). O admin fica como ferramenta do superusuário;
+o que resta só nele está na seção 2 de [`docs/telas/telas-b.md`](docs/telas/telas-b.md).
 
 ## 5. Onde está cada coisa
 
