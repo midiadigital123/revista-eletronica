@@ -36,7 +36,7 @@ Anos, Abrir ano, etapas, componentes, Padrões do ano e parceiros (criar e renom
 |---|---|---|
 | Login, índice | T01, T02 | `/admin/login/`, `/admin/` (a navegação B tem "Admin", só para superusuário, e "Sair") |
 | Planilha de grupos de corte | T08b | `/admin/nucleo/corte/exportar/?ano=<ano>` (o botão "Baixar planilha de grupos" da aba Cortes leva para lá) |
-| Criar template | parte de T13 | `/admin/nucleo/template/add/` ("Novo template" da tela Templates leva para lá; tela B no S7) |
+| Criar template | parte de T13 | `/ui/templates/<ano>/novo/?aba=F1` (S7; o "Novo template" da lista leva para lá) |
 | Gabarito de ids do SVG (CSV) | T21b | `/admin/nucleo/revista/<pk>/gabarito-ids/` (link "Baixar gabarito de ids" na revista B) |
 | Baixar o arquivo do item | parte de T11 (D-180) | `/admin/nucleo/descritor/<pk>/tarefa/<tarefa>/item/` (selo PDF/PNG da tarefa e link do modal na MEC B; enviar, trocar e remover já são B) |
 | Usuários | T25 | `/admin/auth/user/` |

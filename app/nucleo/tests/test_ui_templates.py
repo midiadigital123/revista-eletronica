@@ -9,12 +9,12 @@ from django.urls import reverse
 
 from nucleo.admin.bloqueio import CAMPO_SESSAO
 from nucleo.management.commands.carregar_templates import AVISO
-from nucleo.models import Ano, Bloqueio, FotoRevista, RevistaFasciculo, RevistaSecao, Template, TemplateVersao
+from nucleo.models import Ano, Bloqueio, Componente, FotoRevista, RevistaFasciculo, RevistaSecao, Template, TemplateVersao
 from nucleo.models.revista import Motivo
 from nucleo.servicos.resolver import versao_atual
 from nucleo.templates_texto import form_para_corpo, proximo_passo, secoes_para_form
 from nucleo.tests.test_admin_templates import F2_NOVO, Base
-from nucleo.tests.test_resolver import usuario
+from nucleo.tests.test_resolver import F1 as F1_NOVO, usuario
 
 
 class UiBase(Base):
@@ -333,3 +333,71 @@ class ExcluirLinkTest(UiBase):
         self.assertRedirects(r, self.lista + "?aba=F2", fetch_redirect_response=False)
         self.assertFalse(Template.objects.filter(pk=livre.pk).exists())
         self.assertFalse(TemplateVersao.objects.filter(template_id=livre.pk).exists())
+
+
+class NovoTest(UiBase):
+    """S7: "Novo template" pela tela B (add_template + add_templateversao), sem passar pelo admin."""
+
+    def setUp(self):
+        super().setUp()
+        self.novo = reverse("ui_templates_novo", args=[2026])
+        self.lp = self.tpl.componente
+        self.imp = Client()
+        self.imp.force_login(usuario("imp", "Impresso"))
+
+    def dados(self, **troca):
+        return {"componente": self.lp.pk, "fasciculo": "F1", "nome": "Novo F1", "texto": F1_NOVO, **troca}
+
+    def test_pedagogica_cria_e_o_editor_mostra_a_versao_1(self):
+        r = self.ped.get(self.novo + "?aba=F1")
+        self.assertContains(r, 'value="F1" selected')
+        self.assertContains(r, "## introducao")  # esqueleto válido do fascículo da aba
+        r = self.ped.post(self.novo, self.dados())
+        tpl = Template.objects.get(nome="Novo F1")
+        self.assertRedirects(r, reverse("ui_templates_editar", args=[tpl.pk]), fetch_redirect_response=False)
+        self.assertEqual((tpl.ano.ano, tpl.fasciculo, tpl.componente), (2026, "F1", self.lp))
+        self.assertEqual(versao_atual(tpl.pk).numero, 1)
+        self.assertEqual(versao_atual(tpl.pk).criada_por.username, "ped")
+        self.assertContains(self.ped.get(r.url), "Versão atual: 1")
+
+    def test_esqueleto_da_aba_f2_cria_sem_editar(self):
+        esqueleto = self.ped.get(self.novo + "?aba=F2").context["form"]["texto"].value()
+        self.assertTrue(esqueleto.startswith("## abertura"))
+        r = self.ped.post(self.novo, self.dados(fasciculo="F2", nome="Do esqueleto", texto=esqueleto))
+        self.assertRedirects(
+            r, reverse("ui_templates_editar", args=[Template.objects.get(nome="Do esqueleto").pk]), fetch_redirect_response=False
+        )
+
+    def test_secao_fora_do_fasciculo_da_erro_de_campo_e_nao_grava(self):
+        antes = (Template.objects.count(), TemplateVersao.objects.count())
+        r = self.ped.post(self.novo, self.dados(texto=F1_NOVO + "\n## passo1\nT\n\nX.\n"))
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("passo1", str(r.context["form"].errors["texto"]))
+        self.assertContains(r, 'id="texto-erro"')
+        self.assertEqual((Template.objects.count(), TemplateVersao.objects.count()), antes)
+
+    def test_nome_repetido_da_erro_e_nao_500(self):
+        r = self.ped.post(self.novo, self.dados(fasciculo="F2", nome=self.tpl.nome, texto=F2_NOVO))
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "já existe")
+        self.assertEqual(Template.objects.filter(nome=self.tpl.nome, fasciculo="F2", componente=self.lp).count(), 1)
+
+    def test_componente_de_outro_ano_e_o_ano_do_post_sao_ignorados(self):
+        a27 = Ano.objects.create(ano=2027)
+        outro = Componente.objects.create(ano=a27, codigo="XX", nome="Outro")
+        r = self.ped.post(self.novo, self.dados(componente=outro.pk))
+        self.assertIn("componente", r.context["form"].errors)
+        self.assertEqual(Template.objects.filter(nome="Novo F1").count(), 0)
+        self.ped.post(self.novo, self.dados(ano=a27.pk))
+        self.assertEqual(Template.objects.get(nome="Novo F1").ano.ano, 2026)
+
+    def test_impresso_nao_ve_o_botao_e_recebe_403(self):
+        self.assertContains(self.ped.get(self.lista), f'href="{self.novo}?aba=F1"')
+        self.assertNotContains(self.imp.get(self.lista), "Novo template")
+        self.assertEqual(self.imp.get(self.novo).status_code, 403)
+        self.assertEqual(self.imp.post(self.novo, self.dados()).status_code, 403)
+        self.assertFalse(Template.objects.filter(nome="Novo F1").exists())
+
+    def test_anonimo_vai_ao_login_e_ano_inexistente_404(self):
+        self.assertEqual(Client().get(self.novo).status_code, 302)
+        self.assertEqual(self.ped.get(reverse("ui_templates_novo", args=[1999])).status_code, 404)

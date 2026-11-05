@@ -11,7 +11,7 @@
   </div>
   {% if ano and pode_criar %}
   <div class="acoes">
-    <a class="btn btn-outline" href="{% url 'admin:nucleo_template_add' %}">
+    <a class="btn btn-outline" href="{% url 'ui_templates_novo' ano.ano %}?aba={{ aba }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
       Novo template
     </a>
@@ -60,8 +60,8 @@
 </div>
 {% endwith %}
 {% else %}
-{% if pode_criar %}{% url 'admin:nucleo_template_add' as novo %}{% endif %}
-{% with titulo="Nenhum template "|add:aba|add:" neste ano" %}{% if pode_criar %}
+{% url 'ui_templates_novo' ano.ano as novo_base %}
+{% with titulo="Nenhum template "|add:aba|add:" neste ano" novo=novo_base|add:"?aba="|add:aba %}{% if pode_criar %}
 {% include "ui/_componentes/vazio.html" with texto="Os templates chegam com o ano (Abrir ano copia os do ano anterior) ou pela carga inicial. Para criar um à mão, use Novo template." url=novo rotulo="Novo template" mais=True %}
 {% else %}
 {% include "ui/_componentes/vazio.html" with texto="Os templates chegam com o ano (Abrir ano copia os do ano anterior) ou pela carga inicial." %}

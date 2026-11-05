@@ -19,6 +19,7 @@ import re
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.db import IntegrityError, transaction
 from django.db.models import Count
 from django.forms import modelform_factory
 from django.http import HttpResponse
@@ -29,7 +30,7 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 
 from nucleo.contexto import ano_da_sessao
 from nucleo.admin.templates import TemplateForm
-from nucleo.models import Ano, Template
+from nucleo.models import Ano, Componente, Template
 from nucleo.models.texto import Fasciculo
 from nucleo.servicos.resolver import versao_atual
 from nucleo.templates_texto import (
@@ -41,6 +42,7 @@ from nucleo.ui_bloqueio import com_bloqueio
 from nucleo.variaveis import VARIAVEIS
 
 FormTemplate = modelform_factory(Template, form=TemplateForm, fields=["nome"])  # ano/CC/fascículo não mudam (D-098)
+FormNovo = modelform_factory(Template, form=TemplateForm, fields=["ano", "componente", "fasciculo", "nome"])
 GRUPOS = {}  # "Inserir variável" por grupo, na ordem de VARIAVEIS
 for _v in VARIAVEIS:
     GRUPOS.setdefault(_v.grupo or "Automáticas (do cadastro)", []).append(_v)
@@ -53,6 +55,10 @@ def pode_ver(user):
 
 def pode_gravar(user):
     return user.has_perms(["nucleo.change_template", "nucleo.add_templateversao"])
+
+
+def pode_criar(user):  # criar grava o template e a versão 1 (D-115)
+    return user.has_perms(["nucleo.add_template", "nucleo.add_templateversao"])
 
 
 @require_GET
@@ -80,9 +86,44 @@ def lista(request, ano=None):
         "aba": aba,
         "abas": [(f, contagem.get(f, 0)) for f in Fasciculo.values],
         "templates": templates,
-        "pode_criar": request.user.has_perms(["nucleo.add_template", "nucleo.add_templateversao"]),
+        "pode_criar": pode_criar(request.user),
     }
     return TemplateResponse(request, "ui/templates/lista.html", contexto)
+
+
+def esqueleto(fasciculo):
+    """Texto inicial válido do fascículo: as seções fixas, cada uma com título e um corpo a trocar."""
+    return form_para_corpo([{"id": i, "titulo": rotulo(i), "corpo": "Escreva o texto desta seção."} for i in secoes_permitidas(fasciculo)["fixas"]])
+
+
+@require_http_methods(["GET", "POST"])
+@login_required(login_url="admin:login")
+def novo(request, ano):
+    """Novo template do ano (S7): mesmo form e validação do admin; grava o template e a versão 1 juntos."""
+    if not pode_criar(request.user):
+        raise PermissionDenied
+    ano = get_object_or_404(Ano, ano=ano)
+    aba = request.GET.get("aba") if request.GET.get("aba") in Fasciculo.values else Fasciculo.F1
+    form = FormNovo(
+        request.POST if request.method == "POST" else None,
+        initial={"ano": ano.pk, "fasciculo": aba, "texto": esqueleto(aba)},
+    )
+    form.fields["ano"].disabled = True  # vem da URL; o POST não troca
+    form.fields["componente"].queryset = Componente.objects.filter(ano=ano).order_by("codigo")
+    if request.method == "POST" and form.is_valid():
+        try:
+            with transaction.atomic():
+                tpl = form.save()
+                numero = criar_versao(tpl, form.cleaned_data["texto"], request.user)
+        except IntegrityError:  # outro "Novo template" com o mesmo nome entre a validação e o INSERT
+            form.add_error("nome", "Já existe um template com este nome para o componente e o fascículo.")
+        else:
+            messages.success(request, f"Template criado, com a versão {numero}. Agora refine o texto por seção.")
+            return redirect("ui_templates_editar", tpl.pk)
+    if form.errors:
+        messages.error(request, "Nada foi gravado: corrija os erros marcados.")
+    contexto = {"ano": ano, "secao": "templates", "aba": aba, "form": form, "componentes": form.fields["componente"].queryset}
+    return TemplateResponse(request, "ui/templates/novo.html", contexto)
 
 
 CAMPO_ID = re.compile(r"secao-(\d+)-id")
@@ -231,6 +272,7 @@ def previa_ao_vivo(request, pk):
 urlpatterns = [
     path("", lista, name="ui_templates_inicio"),
     path("<int:ano>/", lista, name="ui_templates"),
+    path("<int:ano>/novo/", novo, name="ui_templates_novo"),
     path("editar/<int:pk>/", editar, name="ui_templates_editar"),
     path("editar/<int:pk>/previa/", previa_ao_vivo, name="ui_templates_previa"),
 ]
