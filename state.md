@@ -2317,3 +2317,4 @@ Commitar e fazer push do passo 4 da D-225 (specs + `limpar_e2e` com matrizes).
 - D-225: helper `parceiroComProjeto` (e2e/tests/helpers.ts); o teste do diálogo (D-223) passou a gravar só no parceiro "E2E Saida …" que cria. 2/2 OK, limpos no fim.
 - D-225: `autosave` (4 testes da planilha) e `estados` passaram a gravar só em parceiro próprio (helper `regional` em helpers.ts); 10/10 OK, limpos no fim. `variaveis` já cumpria a regra (só o comentário mudou).
 - D-225 concluída: `painel`, `impresso`, `revista-textos`, `item` (revista própria) e `mec`, `linhas`, `autosave` descritor (matriz própria). `limpar_e2e` apaga matrizes "E2E …". Suíte E2E 164/164 na stack isolada `e2eiso` (porta 8040, desfeita no fim); 0 sobra.
+- Learning da stack isolada para a suíte E2E (COMPOSE_PROJECT_NAME + -p, E2E_COMPOSE_PROJECT) commitada.
