@@ -10,7 +10,7 @@ Projetos; `anos` não marca nenhum e destaca o seletor). O ano vem de `nucleo/co
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block titulo %}{% endblock %} · Revista Eletrônica</title>
-  <link rel="icon" href="data:,">
+  <link rel="icon" href="{% static 'ui/favicon.png' %}" type="image/png">
   <link rel="preload" href="{% static 'ui/fontes/inter-latin-wght-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{% static 'ui/ui.css' %}">
   <script src="{% static 'ui/htmx.min.js' %}" defer></script>
