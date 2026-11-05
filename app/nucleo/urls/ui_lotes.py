@@ -99,7 +99,7 @@ def matriz(request, ano):
     if resposta:
         return resposta
     parceiros = list(form.fields["alvos"].queryset)
-    editando = lotes.em_edicao([p for pa in parceiros for p in pa.ativos])
+    editando = lotes.em_edicao([p for pa in parceiros for p in pa.ativos], request.user)
     sel = marcados(form)
     linhas = [
         {"pa": pa, "marcado": str(pa.pk) in sel, "projeto": pa.ativos[0] if pa.ativos else None,
@@ -138,7 +138,7 @@ def template(request, ano):
     copias = RevistaSecao.objects.filter(revista_fasciculo=OuterRef("pk"))
     fasciculos = RevistaFasciculo.objects.select_related("template").annotate(tem_copias=Exists(copias))
     revistas = list(form.fields["alvos"].queryset.prefetch_related(Prefetch("revistafasciculo_set", fasciculos)))
-    editando = lotes.em_edicao([r.projeto for r in revistas])
+    editando = lotes.em_edicao([r.projeto for r in revistas], request.user)
     sel = marcados(form)
     linhas = []
     for r in revistas:

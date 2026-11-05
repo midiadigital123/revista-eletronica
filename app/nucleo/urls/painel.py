@@ -22,9 +22,10 @@ from django.utils.safestring import mark_safe
 from django.views.decorators.http import require_http_methods
 
 from nucleo.admin import lote
+from nucleo.lotes import em_edicao
 from nucleo.models import Ano, Componente, FotoRevista, Matriz, Parceiro, Revista, Template
 from nucleo.models.revista import Motivo
-from nucleo.servicos import bloqueio, resolver, validacao
+from nucleo.servicos import resolver, validacao
 
 # Coluna → códigos de `pendencias` que ela mostra (ordem das colunas da tela).
 COLUNAS = {
@@ -179,7 +180,7 @@ def validar_pares(request, ano, pedidos):
     return list(pares)
 
 
-def itens_validar(ano, ids):
+def itens_validar(ano, ids, usuario):
     """O que a validação mostra de cada revista ativa do ano em `ids` (admin e tela B)."""
     itens = []
     for revista in revistas_do_ano(ano).filter(pk__in=ids):
@@ -192,7 +193,7 @@ def itens_validar(ano, ids):
                 "pendencias": [p._replace(link=link(p.codigo, revista)) for p in resolver.pendencias(revista, resolvido)],
                 "desatualizadas": resolver.secoes_desatualizadas(revista),  # D-087: só avisa
                 "diff": diff(revista, resolvido),
-                "editando": bloqueio.quem_bloqueia(revista.projeto),  # o lote vai pular (D-121)
+                "editando": em_edicao([revista.projeto], usuario).get(revista.projeto_id, ""),  # o lote vai pular (D-121)
             }
         )
     return itens
@@ -208,7 +209,7 @@ def validar_lote(request, ano):
         return HttpResponseRedirect(reverse("painel", args=[ano.ano]))
     ids = [int(x) for x in request.GET.getlist("revista") if x.isdigit()]
     ctx = contexto(
-        request, f"Validar em lote ({ano.ano})", itens=itens_validar(ano, ids), url_painel=reverse("painel", args=[ano.ano])
+        request, f"Validar em lote ({ano.ano})", itens=itens_validar(ano, ids, request.user), url_painel=reverse("painel", args=[ano.ano])
     )
     return TemplateResponse(request, "nucleo/painel_validar.html", ctx)
 

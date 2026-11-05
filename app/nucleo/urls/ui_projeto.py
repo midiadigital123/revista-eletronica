@@ -77,7 +77,7 @@ def pode_massa(user):
     return user.has_perm("nucleo.change_parceiroano"), user.has_perm("nucleo.change_revistafasciculo")
 
 
-def _linhas(ano):
+def _linhas(ano, usuario):
     """Lista (U7a): uma linha por projeto (ativos primeiro), com uma sublinha por revista, mais uma por
     parceiro do ano sem projeto. A caixa de marcar (valor = ParceiroAno, o alvo dos lotes) vai na
     primeira linha de cada parceiro: o projeto ativo ou, sem ele, o mais recente."""
@@ -87,7 +87,7 @@ def _linhas(ano):
         .prefetch_related(Prefetch("revista_set", Revista.objects.select_related("componente", "projeto__ano", "projeto__parceiro_ano__parceiro").order_by("componente__codigo")))
         .order_by(F("arquivado_em").asc(nulls_first=True), "parceiro_ano__parceiro__nome", "-arquivado_em")
     )  # fmt: skip
-    editando = lotes.em_edicao([p for p in projetos if not p.arquivado_em])
+    editando = lotes.em_edicao([p for p in projetos if not p.arquivado_em], usuario)
     ativos = {p.parceiro_ano_id for p in projetos if not p.arquivado_em}
     linhas, vistos = [], set()
     for p in projetos:
@@ -115,7 +115,7 @@ def _linhas(ano):
 
 def _pagina_lista(request, ano, *, post=None, acao=None, perdem=()):
     """A Lista; depois de um envio em massa recusado (erro ou impacto), com a seleção e as escolhas do envio."""
-    linhas = _linhas(ano)
+    linhas = _linhas(ano, request.user)
     marcados = set(post.getlist("alvos")) if post else set()
     for l in linhas:
         l["marcado"] = str(l["pa"].pk) in marcados

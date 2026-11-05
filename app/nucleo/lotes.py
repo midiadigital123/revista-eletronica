@@ -90,10 +90,13 @@ def avisar_pulados(request, pulados):
         messages.warning(request, "Pulados: " + "; ".join(pulados) + ".")
 
 
-def em_edicao(projetos):
-    """{pk do projeto: quem edita} dos projetos com bloqueio válido: o lote vai pulá-los.
-    Uma consulta para a lista toda (`quem_bloqueia` faz uma por projeto)."""
-    travas = Bloqueio.objects.filter(projeto__in=projetos, expira_em__gte=Now()).select_related("usuario")
+def em_edicao(projetos, usuario):
+    """{pk do projeto: quem edita} dos projetos com bloqueio válido de OUTRO usuário: o lote vai pulá-los.
+    O do próprio `usuario` não conta: o lote o toma (D-191); e a página que ele acabou de deixar só
+    solta o bloqueio no `pagehide`, depois que esta já foi pedida. Uma consulta para a lista toda."""
+    travas = (
+        Bloqueio.objects.filter(projeto__in=projetos, expira_em__gte=Now()).exclude(usuario=usuario).select_related("usuario")
+    )
     return {b.projeto_id: b.usuario.get_full_name() or b.usuario.get_username() for b in travas}
 
 

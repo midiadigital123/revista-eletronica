@@ -6,6 +6,7 @@ from django.urls import reverse
 
 from nucleo.models import Revista
 from nucleo.models.revista import Motivo
+from nucleo.servicos import bloqueio
 from nucleo.servicos.foto import fotografar
 from nucleo.servicos.resolver import carregar
 from nucleo.tests.test_admin_projeto import Base, mensagens
@@ -99,6 +100,11 @@ class ValidarUiTest(Base):
         msgs = mensagens(self.enviar(self.pe["LP"]))
         self.assertIn(f"Pulados: {self.pe['LP']} (projeto em edição por outro).", msgs)
         self.assertEqual(self.validadas(), set())
+
+    def test_proprio_bloqueio_nao_marca_em_edicao(self):
+        completar(self.pe["LP"])
+        self.assertTrue(bloqueio.adquirir(self.projeto_pe, self.ped, "aba-anterior"))
+        self.assertNotContains(self.abrir(self.pe["LP"]), "será pulada")
 
     def test_validar_esta_pelo_htmx_devolve_so_o_cartao(self):
         aberta = self.abrir(self.lp, self.mt)

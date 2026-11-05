@@ -42,7 +42,7 @@ def validar(request, ano):
             messages.warning(request, NADA)
         feitos = validar_pares(request, ano, pares)
         if e_htmx(request):
-            itens = itens_validar(ano, feitos)
+            itens = itens_validar(ano, feitos, request.user)
             if not itens:  # saiu da lista (arquivada): recarrega e mostra o aviso
                 return HttpResponse(headers={"HX-Refresh": "true"})
             ctx = {"i": itens[0], "pode_validar": True, "ano": ano, "oob": True}
@@ -50,7 +50,7 @@ def validar(request, ano):
         consulta = urlencode({"revista": ids_de(request.POST.getlist("revista"))}, doseq=True)
         return redirect(reverse("ui_validar", args=[ano.ano]) + (f"?{consulta}" if consulta else ""))
     pedidos = set(ids_de(request.GET.getlist("revista")))
-    itens = itens_validar(ano, pedidos)
+    itens = itens_validar(ano, pedidos, request.user)
     painel = reverse("painel", args=[ano.ano])
     ctx = {
         "ano": ano, "secao": "painel", "itens": itens, "pode_validar": pode,

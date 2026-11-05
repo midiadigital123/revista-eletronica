@@ -13,7 +13,7 @@ Estado na borda esquerda: pronta (neutra), validada (verde), pendente (vermelha)
     {% if i.pendencias %}<span class="badge badge-erro">{{ i.pendencias|length }} pendência(s)</span>
     {% elif i.validada %}<span class="badge validar-badge-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Validada nesta versão</span>{% if r.validado_por %}<span class="mudo">por {{ r.validado_por.get_full_name|default:r.validado_por.username }} em {{ r.validado_em|date:"d/m/Y H:i" }}</span>{% endif %}
     {% else %}<span class="badge badge-secundario">Pronta para validar</span>{% endif %}
-    {% if i.editando %}<span class="badge badge-alerta">Em edição por {{ i.editando.usuario.get_full_name|default:i.editando.usuario.username }}: será pulada</span>{% endif %}
+    {% if i.editando %}<span class="badge badge-alerta">Em edição por {{ i.editando }}: será pulada</span>{% endif %}
     {% if pode_validar %}
     <button class="btn btn-outline btn-sm validar-esta" type="submit" name="so" value="{{ par }}"
       hx-post="{% url 'ui_validar' ano.ano %}" hx-target="#validar-{{ r.pk }}" hx-swap="outerHTML"

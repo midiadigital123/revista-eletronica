@@ -7,6 +7,7 @@ A Lista substitui a lista de Revistas e os Lotes; Cortes e Variáveis viram abas
 from django.urls import reverse
 
 from nucleo.models import Ano, Matriz, Parceiro, ParceiroAno, Projeto, RevistaFasciculo
+from nucleo.servicos import bloqueio
 from nucleo.tests import test_admin_projeto
 from nucleo.tests.test_admin_padrao import esta_validada, validar
 from nucleo.tests.test_admin_projeto import ARQUIVADO, Base, mensagens
@@ -119,6 +120,11 @@ class HubListaTest(Base):
     def test_em_edicao_sera_pulado(self):
         self.travar(self.projeto_go)
         self.assertContains(self.client.get(LISTA), "Em edição por outro: será pulado")
+
+    def test_proprio_bloqueio_nao_marca_em_edicao(self):
+        # Voltar de Cortes/Variáveis: a página deixada só solta o bloqueio no pagehide, depois deste GET.
+        self.assertTrue(bloqueio.adquirir(self.projeto_go, self.ped, "aba-anterior"))
+        self.assertNotContains(self.client.get(LISTA), "será pulado")
 
     def test_impresso_ve_sem_barra_e_post_403(self):
         self.client.force_login(self.imp)
