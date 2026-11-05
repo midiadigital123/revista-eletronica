@@ -4,11 +4,11 @@
 <!-- sobrescrever a cada atualização -->
 S6–S9 e Fechamento do blueprint de lacunas concluídos (D-210), integrados em `feat/telas-b-ux`.
 Funcionando: toda função do back tem tela B. Nova matriz (lista de Matrizes → Reimportar), Novo template (lista de Templates → editor na versão 1), downloads (planilha de grupos de corte, gabarito de ids, arquivo do item, planilhas F1/F2 na ficha da revista) e Usuários (link no cabeçalho, só com `auth.change_user`). `grep admin:` nas telas B: só o botão Admin (superusuário) e o logout. Docs atualizadas (modelo-er, regras de negócio, README, CLAUDE.md, fichas). Testes na stack isolada `lac-integ` (8030): Django 790 OK (8 pulados), makemigrations limpo, Playwright 159/160 + o que falhou passou 3/3 isolado (timeout de `page.goto` sob carga em `templates-editor`).
-Quebrado/pendente: login B (D-212) pronto e testado, sem commit.
+Quebrado/pendente: dos planos, só falta o fim do S17 e o S18 (`plans/revista-express-django.md`). S17: tarefas 1–4 e 7 feitas, a ação B feita (D-187); a equipe ainda preenche (dev: 3 parceiros, 18 cortes, 6 revistas); faltam as ações destrutivas A (tag `legado-express`), C (apagar `api/`, `editor/`, `revista/`, `scripts/`) e D (arquivar o svg-tour), cada uma com confirmação do usuário. S18 (E2E da temporada numa jornada só) não começou; os 160 specs cobrem as partes separadas.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Usuário confere `http://localhost:8000/conta/sair/` → login B → entrar, e autoriza o commit da D-212.
+Usuário autoriza (ou não) a ação A do S17: criar a tag `legado-express` (roteiro em `docs/s17-carga-2026.md`, seção "A").
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2174,5 +2174,6 @@ Usuário confere `http://localhost:8000/conta/sair/` → login B → entrar, e a
 - Agente C (S9: `0ada222` regras de usuário em `nucleo/usuarios.py`, usadas pelo admin e pela B; `813b3a2` tela `/ui/usuarios/`) mergeado sem conflito. Permissão `auth.change_user` (criar: + `add_user`). Na B, um grupo por usuário; criar e redefinir senha em páginas próprias; superusuário sem restrição (como no admin). `usuarios.spec.ts` deixa um `e2e-midias-<sufixo>` desativado por execução.
 - Fechamento: Django 790 OK (8 pulados), makemigrations limpo, Playwright na stack `lac-integ` com `E2E_ADMIN_*` e `E2E_IMPRESSO_*`: 159/160; a falha (`templates-editor.spec.ts:12`, chromium, timeout do `page.goto`) passou 3/3 isolada. Docs de S6–S9 e blueprint marcado como concluído em `eefde3c`, com a learning l-da214a7e (worktree de agente nasce no main).
 - Usuário: "fecha o furo". D-211: `pode_editar` recusa alvo com grupo fora dos permitidos (Admin e Impresso); admin e tela B dão 403 em dados, senha, grupo e ativo do Impresso. Django 790 OK (8 pulados) na `lac-integ`. Commitado com a autorização do usuário.
-- Usuário: o login e o índice do admin aparecem ao sair/trocar de perfil. D-212: login e logout B em `/conta/entrar/` e `/conta/sair/`, `/admin/login/` redireciona. Django 793 OK (8 pulados) no dev; Playwright 160/160 na `lac-integ` (derrubada depois). Sem commit.
+- Usuário: o login e o índice do admin aparecem ao sair/trocar de perfil. D-212: login e logout B em `/conta/entrar/` e `/conta/sair/`, `/admin/login/` redireciona. Django 793 OK (8 pulados) no dev; Playwright 160/160 na `lac-integ` (derrubada depois). Commitado em `3843a76` com a autorização do usuário.
 - Redigido o pedido de servidor para a Infra (2 vCPU/4 GB/40 GB, Docker Compose, proxy com HTTPS, backup de `pg-dados` e `app/media`). Medido no dev: app ~146 MB e banco ~106 MB de RAM, banco 26 MB e mídia 47 MB em disco.
+- Revisão dos planos pedida pelo usuário: lacunas, UX (U0–U10), onda 5 e exclusão concluídos; Django S01–S16 concluídos; S17 parcial (faltam ações A, C, D e o preenchimento da equipe); S18 não começou.
