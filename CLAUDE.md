@@ -52,7 +52,7 @@ de importação: montar em `/pdfs` (`-v "<pasta>:/pdfs:ro"`); sem eles, 8 testes
   Digitais, Admin, Impresso). Mudou a tabela? Migração de dados nova que sincroniza os grupos.
 - `app/nucleo/variaveis.py`: lista fixa das variáveis `{{x}}` dos templates.
 - Comandos: `carregar_cadastros`, `importar_matriz`, `carregar_templates`, `abrir_ano`,
-  `criar_usuarios`, `tornar_superusuario`, `criar_demo`.
+  `criar_usuarios`, `tornar_superusuario`, `criar_demo`, `limpar_e2e` (o Playwright o roda no fim).
 
 ### Regras que o código garante
 
@@ -82,6 +82,11 @@ bncc: {practices, knowledge, skills[]}, scale: {padrao-1..N: [{level, fim, conte
 - Textos, nomes e mensagens em português (PT-BR).
 - `state.md` é atualizado no mesmo turno de cada decisão (regras no CLAUDE.md global).
 - Atalho deliberado com teto conhecido leva comentário `ponytail:`.
+- **Testes E2E nunca editam revista que o próprio teste não criou. Nunca.** Isso vale também para o que
+  alimenta a revista: projeto, variáveis, cortes, textos, arquivos e template escolhido. O spec cria o
+  próprio parceiro "E2E …" (a cascata gera o projeto e a revista) e edita só ele. O `limpar_e2e` apaga
+  tudo no fim (D-224). Sem exceção para "volto o valor original no fim": se o teste falhar no meio, o
+  dado real fica alterado.
 
 ### Who is you?
 
