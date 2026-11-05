@@ -1,5 +1,6 @@
 """Usuários na tela B (S9; D-142, D-205): listar, criar, mudar o grupo, ativar ou desativar e
-redefinir a senha, com as mesmas regras do admin (`nucleo/usuarios.py`).
+redefinir a senha, com as mesmas regras do admin (`nucleo/usuarios.py`). "Link de acesso" mostra o link
+para a pessoa definir a própria senha (o mesmo do `criar_usuarios`), para enviar sem mandar senha.
 
 Ver e alterar exigem `auth.change_user`; criar exige também `auth.add_user` (403). O alvo vem do
 `pk` da URL, filtrado por `visiveis` (superusuário fora da lista de quem não é superusuário: 404)
@@ -10,6 +11,7 @@ do Django). Ninguém se exclui: desativa.
 """
 
 from django import forms
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required, permission_required
@@ -20,7 +22,7 @@ from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
-from django.urls import path
+from django.urls import path, reverse
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from nucleo import usuarios as regra
@@ -156,10 +158,26 @@ def senha(request, pk):
     return TemplateResponse(request, "ui/usuarios/form.html", contexto)
 
 
+@require_POST
+@login_required
+@permission_required(GERENCIAR, raise_exception=True)
+def link(request, pk):
+    alvo = _alvo(request, pk)
+    if not regra.pode_editar(request.user, alvo) or not alvo.is_active:
+        raise PermissionDenied
+    # O Origin do POST já passou pelo CsrfViewMiddleware e traz o https que o proxy tira do request.
+    origem = request.headers.get("Origin") or request.build_absolute_uri("/")
+    origem = origem.rstrip("/")
+    contexto = {"alvo": alvo, "link": origem + regra.caminho_definir_senha(alvo), "entrar": origem + reverse("entrar"),
+                "dias": settings.PASSWORD_RESET_TIMEOUT // 86400, "secao": "usuarios"}  # fmt: skip
+    return TemplateResponse(request, "ui/usuarios/link.html", contexto)
+
+
 urlpatterns = [
     path("", lista, name="ui_usuarios"),
     path("novo/", novo, name="ui_usuarios_novo"),
     path("<int:pk>/grupo/", grupo, name="ui_usuarios_grupo"),
     path("<int:pk>/ativo/", ativo, name="ui_usuarios_ativo"),
     path("<int:pk>/senha/", senha, name="ui_usuarios_senha"),
+    path("<int:pk>/link/", link, name="ui_usuarios_link"),
 ]

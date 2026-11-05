@@ -1,0 +1,39 @@
+{% extends "ui/base.html" %}{% load static %}
+{% comment %}Link de acesso (rota `ui_usuarios_link`, POST, nucleo/urls/ui_usuarios.py): o link do Django para a pessoa
+definir a própria senha, para enviar sem mandar senha. Só aparece na resposta do POST: não fica em URL nem no histórico.{% endcomment %}
+{% block titulo %}Link de acesso de {{ alvo.username }}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/usuarios.css' %}">{% endblock %}
+
+{% block conteudo %}
+<a class="mudo voltar" href="{% url 'ui_usuarios' %}">‹ Usuários</a>
+<header class="pagina-cab">
+  <div>
+    <h1>Link de acesso de {{ alvo.username }}</h1>
+    <p class="mudo">Envie só para {{ alvo.get_full_name|default:alvo.username }}, por e-mail ou mensagem direta. Quem abrir o link primeiro define a senha.</p>
+  </div>
+</header>
+
+<div class="card card-estreito usuarios-link">
+  <p class="aviso">O link vale {{ dias }} dia{{ dias|pluralize }} e funciona uma vez.{% if alvo.has_usable_password %} A senha atual de {{ alvo.username }} continua valendo até a nova ser definida.{% endif %} Venceu? Gere outro aqui.</p>
+
+  <div class="usuarios-copiar">
+    <label for="link-acesso">Link</label>
+    <input class="input" id="link-acesso" type="text" value="{{ link }}" readonly>
+    <div class="acoes"><button type="button" class="btn btn-sm" data-copiar="#link-acesso"><span aria-live="polite">Copiar link</span></button></div>
+  </div>
+
+  <div class="usuarios-copiar">
+    <label for="mensagem-acesso">Mensagem pronta</label>
+    <textarea class="textarea" id="mensagem-acesso" readonly rows="9">Olá{% if alvo.first_name %}, {{ alvo.first_name }}{% endif %}.
+
+Seu acesso ao sistema da Revista Eletrônica está pronto.
+Usuário: {{ alvo.username }}
+
+Crie sua senha neste link (vale por {{ dias }} dia{{ dias|pluralize }} e só funciona uma vez):
+{{ link }}
+
+Depois, entre por {{ entrar }}</textarea>
+    <div class="acoes"><button type="button" class="btn btn-outline btn-sm" data-copiar="#mensagem-acesso"><span aria-live="polite">Copiar mensagem</span></button></div>
+  </div>
+</div>
+{% endblock %}

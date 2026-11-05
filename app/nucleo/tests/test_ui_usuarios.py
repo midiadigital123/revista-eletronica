@@ -2,7 +2,7 @@
 (o admin também tem os testes de `test_admin_cadastro.PerfisTest`)."""
 
 from django.contrib.auth.models import Group, User
-from django.test import Client
+from django.test import Client, override_settings
 from django.urls import reverse
 
 from nucleo.tests.test_admin_cadastro import Base
@@ -69,7 +69,7 @@ class UsuariosUiTest(Base):
 
     def test_superusuario_fora_da_lista(self):
         self.assertNotContains(self.client.get(LISTA), ">root<")
-        for nome in ("ui_usuarios_grupo", "ui_usuarios_ativo", "ui_usuarios_senha"):
+        for nome in ("ui_usuarios_grupo", "ui_usuarios_ativo", "ui_usuarios_senha", "ui_usuarios_link"):
             self.assertEqual(self.client.post(reverse(nome, args=[self.root.pk]), {"acao": "desativar"}).status_code, 404, nome)
         self.assertEqual(self.client.get(reverse("ui_usuarios_senha", args=[self.root.pk])).status_code, 404)
         self.root.refresh_from_db()
@@ -98,13 +98,14 @@ class UsuariosUiTest(Base):
         imp = usuario("imp", "Impresso")
         resp = self.client.get(LISTA)
         self.assertNotContains(resp, f'id="grupo-{imp.pk}"')
-        for rotulo in ("Desativar imp", "Redefinir senha de imp"):
+        for rotulo in ("Desativar imp", "Redefinir senha de imp", "Link de acesso de imp"):
             self.assertNotContains(resp, f'aria-label="{rotulo}"')
         senha = reverse("ui_usuarios_senha", args=[imp.pk])
         self.assertEqual(self.mudar_grupo(imp, "Pedagógica").status_code, 403)
         self.assertEqual(self.ativo(imp, "desativar").status_code, 403)
         self.assertEqual(self.client.get(senha).status_code, 403)
         self.assertEqual(self.client.post(senha, {"new_password1": SENHA_BOA, "new_password2": SENHA_BOA}).status_code, 403)
+        self.assertEqual(self.client.post(reverse("ui_usuarios_link", args=[imp.pk])).status_code, 403)
         imp.refresh_from_db()
         self.assertEqual(grupos_de(imp), ["Impresso"])
         self.assertTrue(imp.is_active)
@@ -117,7 +118,7 @@ class UsuariosUiTest(Base):
         outro = usuario("outro-admin", "Admin")
         resp = self.client.get(LISTA)
         self.assertContains(resp, ">outro-admin<")  # só vê
-        for rotulo in ("Desativar outro-admin", "Redefinir senha de outro-admin"):
+        for rotulo in ("Desativar outro-admin", "Redefinir senha de outro-admin", "Link de acesso de outro-admin"):
             self.assertNotContains(resp, f'aria-label="{rotulo}"')
         self.assertNotContains(resp, f'id="grupo-{outro.pk}"')
         self.assertContains(resp, "Só o superusuário altera")
@@ -126,6 +127,7 @@ class UsuariosUiTest(Base):
         self.assertEqual(self.ativo(outro, "desativar").status_code, 403)
         self.assertEqual(self.client.get(senha).status_code, 403)
         self.assertEqual(self.client.post(senha, {"new_password1": SENHA_BOA, "new_password2": SENHA_BOA}).status_code, 403)
+        self.assertEqual(self.client.post(reverse("ui_usuarios_link", args=[outro.pk])).status_code, 403)
         outro.refresh_from_db()
         self.assertTrue(outro.is_active)
         self.assertTrue(outro.check_password("x"))
@@ -199,6 +201,49 @@ class UsuariosUiTest(Base):
         self.assertRedirects(self.client.post(meu, {"new_password1": SENHA_BOA, "new_password2": SENHA_BOA}), LISTA)
         self.assertEqual(self.client.get(LISTA).status_code, 200)
 
+    def test_link_de_acesso_define_a_senha_fora_do_admin(self):
+        url = reverse("ui_usuarios_link", args=[self.ped.pk])
+        self.assertContains(self.client.get(LISTA), 'aria-label="Link de acesso de ped"')
+        self.assertEqual(self.client.get(url).status_code, 405)  # o link só sai na resposta do POST
+        resp = self.client.post(url)
+        self.assertContains(resp, "vale 3 dias e funciona uma vez")
+        self.assertContains(resp, "A senha atual de ped continua valendo")  # `usuario()` cria com senha
+        self.assertContains(resp, "Depois, entre por http://testserver/conta/entrar/")
+        link = resp.context["link"]
+        self.assertTrue(link.startswith("http://testserver/conta/senha/"), link)
+
+        anonimo = Client()
+        r = anonimo.get(link, follow=True)  # o Django troca o token por um da sessão
+        self.assertContains(r, "Criar senha")
+        self.assertNotContains(r, "Administração do Django")
+        r = anonimo.post(r.redirect_chain[-1][0], {"new_password1": SENHA_BOA, "new_password2": SENHA_BOA}, follow=True)
+        self.assertContains(r, "Senha criada")
+        self.assertNotContains(r, "Administração do Django")
+        self.ped.refresh_from_db()
+        self.assertTrue(self.ped.check_password(SENHA_BOA))
+        r = Client().get(link, follow=True)
+        self.assertContains(r, "Este link venceu ou já foi usado")
+        self.assertNotContains(r, "Administração do Django")
+
+        self.ativo(self.ped, "desativar")  # inativo: o link não serviria
+        self.assertNotContains(self.client.get(LISTA), 'aria-label="Link de acesso de ped"')
+        self.assertEqual(self.client.post(url).status_code, 403)
+
+    @override_settings(CSRF_TRUSTED_ORIGINS=["https://revista.exemplo.org"], ALLOWED_HOSTS=["revista.exemplo.org"])
+    def test_link_usa_a_origem_https_atras_do_proxy(self):
+        """O proxy entrega http ao app; o Origin do navegador traz o https verdadeiro."""
+        c = Client(enforce_csrf_checks=True)
+        c.force_login(self.eu)
+        token = c.get(LISTA, HTTP_HOST="revista.exemplo.org").cookies["csrftoken"].value
+        resp = c.post(reverse("ui_usuarios_link", args=[self.ped.pk]), {"csrfmiddlewaretoken": token},
+                      HTTP_HOST="revista.exemplo.org", HTTP_ORIGIN="https://revista.exemplo.org")  # fmt: skip
+        self.assertTrue(resp.context["link"].startswith("https://revista.exemplo.org/conta/senha/"), resp.context["link"])
+        self.assertContains(resp, "https://revista.exemplo.org/conta/entrar/")
+        # Origin forjado não passa do CSRF
+        resp = c.post(reverse("ui_usuarios_link", args=[self.ped.pk]), {"csrfmiddlewaretoken": token},
+                      HTTP_HOST="revista.exemplo.org", HTTP_ORIGIN="https://golpe.exemplo.com")  # fmt: skip
+        self.assertEqual(resp.status_code, 403)
+
     def test_superusuario_atribui_impresso_e_admin(self):
         self.client.force_login(self.root)
         resp = self.client.get(LISTA)
@@ -217,7 +262,7 @@ class UsuariosUiTest(Base):
     def test_sem_gerenciar_usuarios_recebe_403(self):
         alvo = self.ped
         rotas = [("get", LISTA), ("get", NOVO), ("post", NOVO), ("get", reverse("ui_usuarios_senha", args=[alvo.pk]))]
-        rotas += [("post", reverse(n, args=[alvo.pk])) for n in ("ui_usuarios_grupo", "ui_usuarios_ativo", "ui_usuarios_senha")]
+        rotas += [("post", reverse(n, args=[alvo.pk])) for n in ("ui_usuarios_grupo", "ui_usuarios_ativo", "ui_usuarios_senha", "ui_usuarios_link")]
         for papel in ("Pedagógica", "Mídias Digitais", "Impresso"):
             self.client.force_login(usuario(f"x-{papel}", papel))
             self.assertNotContains(self.client.get(reverse("ui_anos")), f'href="{LISTA}"')
@@ -237,6 +282,7 @@ class UsuariosUiTest(Base):
         c.force_login(self.eu)
         self.assertEqual(c.post(reverse("ui_usuarios_ativo", args=[self.ped.pk]), {"acao": "desativar"}).status_code, 403)
         self.assertEqual(c.post(NOVO, self.dados_novo("sem-csrf")).status_code, 403)
+        self.assertEqual(c.post(reverse("ui_usuarios_link", args=[self.ped.pk])).status_code, 403)
         self.ped.refresh_from_db()
         self.assertTrue(self.ped.is_active)
         self.assertFalse(User.objects.filter(username="sem-csrf").exists())

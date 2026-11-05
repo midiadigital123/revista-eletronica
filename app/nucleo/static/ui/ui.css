@@ -620,3 +620,4 @@ button.alca { /* button: vence o `.lista button` */
 .entrar-cab h1 { margin: 0; }
 .entrar-form { display: flex; flex-direction: column; gap: 1rem; }
 .entrar-form .btn { width: 100%; }
+.entrar .ajuda ul { margin: 0; padding-left: 1.25rem; }

@@ -1,0 +1,40 @@
+{% load static %}<!doctype html>
+{% comment %}Definir a senha pelo link de acesso (`PasswordResetConfirmView`, nucleo/urls/conta.py). Gerado na tela Usuários
+("Link de acesso") ou pelo `criar_usuarios`. Página solta como o login (D-212): sem menu, sem o admin.{% endcomment %}
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Criar senha · Revista Eletrônica</title>
+  <link rel="icon" href="{% static 'ui/favicon.png' %}" type="image/png">
+  <link rel="preload" href="{% static 'ui/fontes/inter-latin-wght-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{% static 'ui/ui.css' %}">
+</head>
+<body class="entrar">
+  <main class="card entrar-card">
+    <header class="entrar-cab">
+      <p class="marca">Revista Eletrônica</p>
+      <h1 class="secao-titulo">Criar senha</h1>
+    </header>
+    {% if validlink %}
+    <form method="post" class="entrar-form" novalidate>
+      {% csrf_token %}
+      <input type="text" name="username" value="{{ form.user.get_username }}" autocomplete="username" hidden>
+      <p class="mudo">Usuário: <strong>{{ form.user.get_username }}</strong></p>
+      {% for f in form %}
+      <div class="campo">
+        <label for="{{ f.id_for_label }}">{{ f.label }}</label>
+        <input class="input" type="password" name="{{ f.html_name }}" id="{{ f.id_for_label }}" autocomplete="new-password" required{% if forloop.first %} autofocus{% endif %}{% if f.errors %} aria-invalid="true" aria-describedby="{{ f.auto_id }}_erro"{% endif %}>
+        {% if f.help_text %}<div class="ajuda">{{ f.help_text }}</div>{% endif %}
+        {% for e in f.errors %}<p class="erro" id="{{ f.auto_id }}_erro">{{ e }}</p>{% endfor %}
+      </div>
+      {% endfor %}
+      <input class="btn" type="submit" value="Criar senha">
+    </form>
+    {% else %}
+    <p class="aviso aviso-erro" role="alert">Este link venceu ou já foi usado. Peça um novo a quem gerencia os usuários.</p>
+    <a class="btn btn-outline" href="{% url 'entrar' %}">Ir para o login</a>
+    {% endif %}
+  </main>
+</body>
+</html>

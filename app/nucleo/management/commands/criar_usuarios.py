@@ -10,14 +10,11 @@ import csv
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.contrib.auth.tokens import default_token_generator
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
-from django.urls import reverse
-from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_encode
 
 from nucleo.permissoes import PAPEIS
+from nucleo.usuarios import caminho_definir_senha
 
 
 class Command(BaseCommand):
@@ -45,9 +42,6 @@ class Command(BaseCommand):
             elif user.has_usable_password():
                 self.stdout.write(f"já existe, mantido: {usuario}")
                 continue
-            caminho = reverse(
-                "password_reset_confirm",
-                args=[urlsafe_base64_encode(force_bytes(user.pk)), default_token_generator.make_token(user)],
-            )
+            caminho = caminho_definir_senha(user)
             estado = f"criado ({grupo})" if novo else "sem senha ainda (grupos não alterados)"
             self.stdout.write(f"{estado}: {usuario} {url.rstrip('/')}{caminho}")

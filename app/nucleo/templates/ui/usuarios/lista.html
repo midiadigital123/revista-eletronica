@@ -46,6 +46,11 @@ Não há excluir: desativa (D-205).{% endcomment %}
             </form>
             {% endif %}
             {% if linha.editar %}<a class="btn btn-ghost btn-sm" href="{% url 'ui_usuarios_senha' u.pk %}" aria-label="Redefinir senha de {{ u.username }}">Redefinir senha</a>{% endif %}
+            {% if linha.editar and u.is_active %}
+            <form method="post" action="{% url 'ui_usuarios_link' u.pk %}">{% csrf_token %}
+              <button class="btn btn-ghost btn-sm" type="submit" aria-label="Link de acesso de {{ u.username }}">Link de acesso</button>
+            </form>
+            {% endif %}
           </div>
           {% else %}<span class="mudo">Só o superusuário altera</span>{% endif %}
         </td>

@@ -62,9 +62,10 @@ Grupos fixos, criados por migração. Tabela única em `app/nucleo/permissoes.py
 | **Impresso** | ver tudo + marcar "Revista Impressa Atualizada" |
 | superusuário | tudo; é o único que põe alguém em Admin ou Impresso, e o único que vê o botão "Admin" no cabeçalho |
 
-Revista nunca é apagada (é arquivada) e usuário não é excluído (é desativado). Usuários em lote:
-`manage.py criar_usuarios <csv usuario,grupo> --url <endereço>` cria sem senha e imprime o link
-do Django para cada um definir a sua.
+Revista nunca é apagada (é arquivada) e usuário não é excluído (é desativado). Para dar acesso sem
+mandar senha: tela Usuários → "Link de acesso" (link para a pessoa criar a própria senha, com
+mensagem pronta). Usuários em lote: `manage.py criar_usuarios <csv usuario,grupo> --url <endereço>`
+cria sem senha e imprime o mesmo link para cada um.
 
 ## 4. Jornada da temporada e onde cada passo acontece
 

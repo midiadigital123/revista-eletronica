@@ -1,4 +1,4 @@
-// Usuários na tela B (S9): o administrador cria um usuário Mídias Digitais e o desativa.
+// Usuários na tela B (S9): o administrador cria um usuário Mídias Digitais, gera o link de acesso e o desativa.
 // Não há exclusão (D-205): cada execução deixa um usuário "e2e-midias-<sufixo>" inativo no banco.
 // Rode só contra um banco descartável (E2E_ADMIN_*: o superusuário `e2e`, como nos outros specs). As regras do
 // perfil Admin (não superusuário) estão nos testes Django (nucleo/tests/test_ui_usuarios.py).
@@ -24,6 +24,13 @@ test("administrador cria um usuário Mídias Digitais e o desativa", async ({ pa
   const linha = page.getByRole("row").filter({ has: page.getByRole("rowheader", { name: nome }) });
   await expect(linha.getByRole("combobox", { name: `Grupo de ${nome}` }).locator("option:checked")).toHaveText("Mídias Digitais");
   await expect(linha.getByText("Ativo")).toBeVisible();
+
+  // Link de acesso: a página mostra o link de definir senha e a mensagem pronta para enviar.
+  await linha.getByRole("button", { name: `Link de acesso de ${nome}` }).click();
+  await expect(page.getByRole("heading", { level: 1, name: `Link de acesso de ${nome}` })).toBeVisible();
+  await expect(page.getByLabel("Link", { exact: true })).toHaveValue(/\/conta\/senha\/[^/]+\/[^/]+\/$/);
+  await expect(page.getByLabel("Mensagem pronta")).toHaveValue(new RegExp(`Usuário: ${nome}`));
+  await page.getByRole("link", { name: "‹ Usuários" }).click();
 
   await linha.getByRole("button", { name: `Desativar ${nome}` }).click();
   await expect(page.getByText(`${nome} desativado: não entra mais.`)).toBeVisible();

@@ -6,3 +6,9 @@
 
 /* Lista de regras de senha que o Django põe na ajuda (Novo usuário, Redefinir senha). */
 .ajuda ul { margin: 0; padding-left: 1.25rem; }
+
+/* Link de acesso (templates/ui/usuarios/link.html): link e mensagem prontos para copiar. */
+.usuarios-link { display: flex; flex-direction: column; gap: 1.25rem; }
+.usuarios-copiar { display: flex; flex-direction: column; gap: 0.375rem; }
+.usuarios-copiar label { font-size: 0.875rem; font-weight: 500; }
+.usuarios-copiar .textarea { field-sizing: content; line-height: 1.5; }

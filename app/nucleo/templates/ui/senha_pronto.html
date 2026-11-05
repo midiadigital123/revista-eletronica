@@ -1,0 +1,22 @@
+{% load static %}<!doctype html>
+{% comment %}Senha criada pelo link de acesso (`PasswordResetCompleteView`, nucleo/urls/conta.py). Página solta (D-212).{% endcomment %}
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Senha criada · Revista Eletrônica</title>
+  <link rel="icon" href="{% static 'ui/favicon.png' %}" type="image/png">
+  <link rel="preload" href="{% static 'ui/fontes/inter-latin-wght-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{% static 'ui/ui.css' %}">
+</head>
+<body class="entrar">
+  <main class="card entrar-card">
+    <header class="entrar-cab">
+      <p class="marca">Revista Eletrônica</p>
+      <h1 class="secao-titulo">Senha criada</h1>
+    </header>
+    <p>Pronto. Entre com seu usuário e a senha nova.</p>
+    <a class="btn" href="{% url 'entrar' %}">Entrar</a>
+  </main>
+</body>
+</html>

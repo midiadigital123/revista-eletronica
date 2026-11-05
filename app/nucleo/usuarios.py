@@ -16,6 +16,10 @@ Usuário novo nasce `is_staff` (todo perfil usa o admin). Ninguém exclui: desat
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.contrib.auth.tokens import default_token_generator
+from django.urls import reverse
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 
 from nucleo.permissoes import PAPEIS
 
@@ -56,3 +60,10 @@ def preparar_novo(usuario):
     """Antes do primeiro save: todo perfil entra pelo login do admin."""
     usuario.is_staff = True
     return usuario
+
+
+def caminho_definir_senha(usuario):
+    """Caminho do link do Django para a pessoa definir a própria senha (primeiro acesso ou senha esquecida).
+    Vale `PASSWORD_RESET_TIMEOUT` e deixa de valer quando a senha muda ou a pessoa entra."""
+    uid = urlsafe_base64_encode(force_bytes(usuario.pk))
+    return reverse("password_reset_confirm", args=[uid, default_token_generator.make_token(usuario)])
