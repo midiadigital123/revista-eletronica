@@ -13,7 +13,22 @@ docker compose up -d app
 
 O `app` abre em `http://localhost:8000/` (leva ao Painel do ano mais novo; sem ano, a `/ui/anos/`). O `CMD` da imagem já roda `migrate` antes do servidor (`app/Dockerfile`).
 
-Em produção, preencha no `.env`: `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=0`, `DJANGO_ALLOWED_HOSTS` e `POSTGRES_PASSWORD`. Nunca faça commit do `.env`.
+Produção usa outro compose: ver [Produção](#produção). Nunca faça commit do `.env`.
+
+## Produção
+
+`docker-compose.prod.yml` (D-214): Gunicorn (3 workers, timeout 120 s) no lugar do `runserver`, `DEBUG` desligado, código dentro da imagem, mídia no volume `media`, `restart: unless-stopped`. Ao subir, roda `migrate` e `collectstatic`.
+
+```bash
+cp .env.prod.example .env      # preencher: POSTGRES_PASSWORD, DJANGO_SECRET_KEY, DJANGO_ALLOWED_HOSTS, DJANGO_CSRF_TRUSTED_ORIGINS
+docker compose -f docker-compose.prod.yml up --build -d
+docker compose -f docker-compose.prod.yml exec app python manage.py createsuperuser
+```
+
+- O app escuta só em `127.0.0.1:${APP_PORT:-8000}`; o proxy reverso do servidor (Nginx/Traefik) faz o HTTPS e repassa para lá, com limite de upload de 50 MB.
+- Os estáticos saem do próprio Django (`sistema/urls.py`, só sem DEBUG); a mídia sai pelas views com permissão, nunca direto do proxy.
+- Backup: volume `pg-dados` (use o `pg_dump` abaixo, com `-f docker-compose.prod.yml`) e volume `media`.
+- Testar no próprio PC sem mexer no dev: `docker compose -p revista-prod-teste --env-file <arquivo> -f docker-compose.prod.yml up --build -d` com `APP_PORT` livre; `down -v` no fim.
 
 ## Dia a dia
 
