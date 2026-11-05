@@ -24,6 +24,8 @@ document.addEventListener("alpine:init", () => {
   const falhas = new Map(); // campo -> texto do status ("Não salvo: …")
   const salvos = new WeakMap(); // campo -> último valor gravado (sem isso: o valor da carga da página)
   let salvoEm = "";
+  let saidaLiberada = false; // o diálogo de saída (sairSemSalvar) já resolveu: o beforeunload não avisa
+  let segurado = null; // campo sujo enquanto o diálogo de saída está aberto: o blur do showModal não salva
 
   const valor = (c) => (c.type === "checkbox" ? (c.checked ? "on" : "") : c.value);
   const daCarga = (c) => {
@@ -105,7 +107,7 @@ document.addEventListener("alpine:init", () => {
       );
     },
     mudou(c) {
-      if (this.automatico(c)) this.enfileirar(c, false);
+      if (c !== segurado && this.automatico(c)) this.enfileirar(c, false);
     },
     // Enter num campo de texto salva o campo (não envia a página nem o botão da linha nova).
     aoTeclar(e) {
@@ -479,7 +481,7 @@ document.addEventListener("alpine:init", () => {
     init() {
       window.addEventListener("autosave:estado", (e) => Object.assign(this, e.detail));
       window.addEventListener("beforeunload", (e) => {
-        if (enviando.size || falhas.size || sujoEmFoco()) e.preventDefault();
+        if (!saidaLiberada && (enviando.size || falhas.size || sujoEmFoco())) e.preventDefault();
       });
     },
     get ocioso() {
@@ -496,6 +498,105 @@ document.addEventListener("alpine:init", () => {
     },
     tentar() {
       window.dispatchEvent(new CustomEvent("autosave:tentar"));
+    },
+  }));
+
+  // <dialog x-data="sairSemSalvar"> (_componentes/status_salvo.html), D-223: clicar num link, num gatilho
+  // do HTMX ou num botão que envia outro form com alteração pendente abre este diálogo em vez de sair:
+  // Salvar e sair, Descartar e sair, Continuar editando. Voltar/Avançar, fechar e recarregar a aba não
+  // passam por clique: seguem com o aviso nativo do beforeunload (o navegador não deixa trocá-lo).
+  const SAIDA = "a[href], [hx-get], [hx-post], button[type=submit], button:not([type])";
+  const saiDaqui = (el) => {
+    if (!el || el.closest("dialog, [data-status-salvo]")) return false;
+    if (el.matches("[hx-get], [hx-post]")) return true;
+    if (el.matches("button")) return !!el.form && !el.form.matches("[x-data=campoAuto]"); // ex.: Sair
+    const href = el.getAttribute("href");
+    return !el.target && !el.hasAttribute("download") && !href.startsWith("#") && !href.startsWith("javascript:");
+  };
+  const pendente = () => enviando.size || falhas.size || sujoEmFoco();
+
+  Alpine.data("sairSemSalvar", () => ({
+    nome: "",
+    init() {
+      this.alvo = null; // o que o usuário clicou; clicado de novo quando a saída é liberada
+      this.campo = null; // o campo sujo em foco no clique
+      this.esperando = false; // "Salvar e sair": esperando o autosave terminar
+      // mousedown tiraria o foco do campo e dispararia o change (o autosave sairia antes da escolha).
+      document.addEventListener("mousedown", (e) => {
+        if (!saidaLiberada && sujoEmFoco() && saiDaqui(e.target.closest(SAIDA))) e.preventDefault();
+      }, true);
+      document.addEventListener("click", (e) => this.aoClicar(e), true);
+      for (const fim of ["autosave:salvo", "autosave:falhou", "autosave:cancelado"]) {
+        document.addEventListener(fim, (e) => this.aoTerminar(e.type));
+      }
+    },
+    aoClicar(e) {
+      const el = e.target.closest(SAIDA);
+      if (saidaLiberada || !saiDaqui(el) || !pendente()) return;
+      e.preventDefault();
+      e.stopImmediatePropagation(); // o HTMX também ouve o clique
+      this.alvo = el;
+      if (!sujoEmFoco() && !falhas.size) {
+        this.esperando = true; // só um envio em andamento: sai quando ele terminar
+        return;
+      }
+      this.campo = sujoEmFoco() ? document.activeElement : null;
+      const rotulo = this.campo?.labels?.[0]?.textContent.trim() || this.campo?.getAttribute("aria-label");
+      this.nome = rotulo ? `O campo “${rotulo}”` : falhas.size ? "Um campo não salvo" : "Um campo";
+      segurado = this.campo;
+      this.$root.showModal();
+    },
+    continuar() {
+      segurado = null;
+      this.$root.close();
+      this.alvo = null;
+      const c = this.campo;
+      if (!c) return;
+      c.focus();
+      // O change do blur já foi gasto (e ignorado) ao abrir o diálogo: a próxima saída do campo salva.
+      c.addEventListener("blur", () => {
+        if (valor(c) !== gravado(c)) c.dispatchEvent(new Event("change", { bubbles: true }));
+      }, { once: true });
+    },
+    descartar() {
+      segurado = null;
+      if (this.campo) definir(this.campo, gravado(this.campo));
+      for (const c of falhas.keys()) if (c instanceof HTMLElement && "value" in c) definir(c, gravado(c));
+      falhas.clear();
+      avisar();
+      this.$root.close();
+      this.sair();
+    },
+    salvarESair() {
+      segurado = null;
+      this.$root.close();
+      this.esperando = true;
+      if (this.campo) this.campo.dispatchEvent(new Event("change", { bubbles: true }));
+      else window.dispatchEvent(new CustomEvent("autosave:tentar"));
+    },
+    aoTerminar(tipo) {
+      if (!this.esperando) return;
+      if (tipo !== "autosave:salvo") {
+        // Erro ou impacto cancelado: fica na página, com o status mostrando o motivo.
+        this.esperando = false;
+        this.alvo = null;
+        return;
+      }
+      if (!enviando.size && !falhas.size) setTimeout(() => this.sair()); // depois do `trocar` da resposta
+    },
+    sair() {
+      this.esperando = false;
+      let alvo = this.alvo;
+      this.alvo = null;
+      if (!alvo) return;
+      // A resposta pode ter trocado o pedaço onde o alvo estava (lista de seções da revista).
+      if (!alvo.isConnected && alvo.getAttribute("href")) {
+        alvo = document.querySelector(`a[href="${CSS.escape(alvo.getAttribute("href"))}"]`) || alvo;
+      }
+      saidaLiberada = true;
+      alvo.click();
+      // HTMX troca um pedaço sem sair da página: a guarda volta a valer.
+      if (alvo.matches("[hx-get], [hx-post]")) saidaLiberada = false;
     },
   }));
 });

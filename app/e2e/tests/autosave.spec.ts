@@ -24,6 +24,50 @@ async function sairESalvar(page: Page) {
   await expect(status.getByText(/Salvo às \d\d:\d\d/)).toBeVisible();
 }
 
+// D-223: clicar num link com o campo sujo (sem sair dele) abre o diálogo do sistema, e não o nativo.
+test("sair por link com campo sujo: Continuar, Descartar e Salvar e sair", async ({ page }) => {
+  await entrar(page, "/ui/projeto/ano/2026/variaveis/");
+  await pronto(page);
+  // Última linha: a 1ª costuma estar aberta por quem usa o banco de dev (409 de linha travada).
+  const celula = (p: Page) => p.locator('tbody[id^="projeto-"]').last().locator('input.input[name$="-nome_regional"]');
+  const url = page.url();
+  const original = await celula(page).inputValue();
+  const painel = page.getByRole("navigation", { name: "Principal" }).getByRole("link", { name: "Painel" });
+  const dialogo = page.getByRole("dialog", { name: "Alterações não salvas" });
+  const reabrir = async () => {
+    await expect(page).toHaveURL(/\/painel\//);
+    await page.goto(url);
+    await pronto(page);
+  };
+
+  // Continuar editando: fica na página, com o foco e o texto no campo.
+  await celula(page).fill(`${original} E2E`);
+  await painel.click();
+  await expect(dialogo).toBeVisible();
+  await dialogo.getByRole("button", { name: "Continuar editando" }).click();
+  await expect(dialogo).toBeHidden();
+  await expect(page).toHaveURL(url);
+  await expect(celula(page)).toBeFocused();
+  await expect(celula(page)).toHaveValue(`${original} E2E`);
+
+  // Descartar e sair: vai ao Painel sem gravar.
+  await painel.click();
+  await dialogo.getByRole("button", { name: "Descartar e sair" }).click();
+  await reabrir();
+  await expect(celula(page)).toHaveValue(original);
+
+  // Salvar e sair: grava e vai ao Painel.
+  const novo = `E2E Regional ${Date.now().toString(36)}`;
+  await celula(page).fill(novo);
+  await painel.click();
+  await dialogo.getByRole("button", { name: "Salvar e sair" }).click();
+  await reabrir();
+  await expect(celula(page)).toHaveValue(novo);
+
+  await celula(page).fill(original);
+  await sairESalvar(page);
+});
+
 test("variável salva ao sair do campo e recarregar não pede confirmação", async ({ page }) => {
   const erros: string[] = [];
   page.on("pageerror", (e) => erros.push(e.message));

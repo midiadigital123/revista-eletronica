@@ -607,7 +607,8 @@ class MecHierarquiaTest(BaseMundo):
 
     def test_cabecalho_lista_e_zona_de_perigo(self):
         html = self.client.get(self.url).content.decode()
-        cab = html[html.index('<header class="pagina-cab">') : html.index("</header>", html.index('<header class="pagina-cab">'))]
+        ini = html.index('<header class="pagina-cab">')
+        cab = html[ini : html.index("\n</header>", ini)]  # o da página (coluna 0), não o do diálogo de saída
         self.assertIn('popovertarget="mec-config"', cab)
         self.assertIn("Configurações", cab)
         self.assertIn("data-status-salvo", cab)
