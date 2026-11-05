@@ -1757,6 +1757,14 @@ Enviar à Infra o texto do pedido com o link do repositório (main já tem `dock
 - **Arquivos afetados:** `docker-compose.prod.yml` (novo), `.env.prod.example` (novo), `app/requirements.txt`, `app/sistema/settings.py`, `app/sistema/urls.py`, `docs/docker.md`, `README.md`, `.gitignore`
 - **Status:** ativa
 
+### D-215 — Favicon das telas B: a árvore amarela (2026-11-05 14:15)
+- **Contexto:** a aba do navegador mostrava o globo genérico (`<link rel="icon" href="data:,">`).
+- **Decisão:** `app/nucleo/static/ui/favicon.png` (240×240, fundo transparente: o branco da imagem original virou alfa, centralizada num quadrado) ligado em `ui/base.html` e `ui/entrar.html`.
+- **Motivo:** as duas são as únicas cascas com `<head>` das telas B; PNG serve em todo navegador atual, sem `.ico`.
+- **Descartadas:** manter o fundo branco (quadrado branco na aba escura); favicon na página da revista (`revista/index.html`), que é o produto entregue no zip, não o sistema; admin do Django (ferramenta do superusuário).
+- **Arquivos afetados:** `app/nucleo/static/ui/favicon.png` (novo), `app/nucleo/templates/ui/base.html`, `app/nucleo/templates/ui/entrar.html`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] Produção: `docker-compose.prod.yml` criado (D-214).
 - [ ] Produção: `check --deploy` avisa HSTS e SSL redirect (W004, W008); decidir com a Infra se o proxy já faz o redirect e o HSTS — depende de: Infra
@@ -2206,3 +2214,6 @@ Enviar à Infra o texto do pedido com o link do repositório (main já tem `dock
 - `INFRA.md` na raiz: guia da Infra (variáveis, stack no Portainer com `docker-compose.prod.yml`, Nginx com `Host`/50 MB/120 s, primeiro admin, backup com `pg_dump -Fc` + tar do volume `media`, restore, problemas comuns). Backup/restore testados num banco temporário do dev (7 usuários restaurados).
 - `INFRA.md` seção 3 reduzida a pedido do usuário: só "proxy com HTTPS necessário" + particularidades (Host, 50 MB, 120 s, proxy em container). Push de `feat/telas-b-ux` para `main`.
 - Learning salva: documento para a Infra diz o que o sistema exige, não como configurar o servidor.
+
+### 2026-11-05 14:15
+- Favicon da árvore amarela nas telas B (D-215).
