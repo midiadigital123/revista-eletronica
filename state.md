@@ -2,13 +2,12 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-S6–S9 e Fechamento do blueprint de lacunas concluídos (D-210), integrados em `feat/telas-b-ux`.
-Funcionando: toda função do back tem tela B. Nova matriz (lista de Matrizes → Reimportar), Novo template (lista de Templates → editor na versão 1), downloads (planilha de grupos de corte, gabarito de ids, arquivo do item, planilhas F1/F2 na ficha da revista) e Usuários (link no cabeçalho, só com `auth.change_user`). `grep admin:` nas telas B: só o botão Admin (superusuário) e o logout. Docs atualizadas (modelo-er, regras de negócio, README, CLAUDE.md, fichas). Testes na stack isolada `lac-integ` (8030): Django 790 OK (8 pulados), makemigrations limpo, Playwright 159/160 + o que falhou passou 3/3 isolado (timeout de `page.goto` sob carga em `templates-editor`).
-Quebrado/pendente: S17 — falta a ação D (arquivar o svg-tour) e o preenchimento da equipe; S18 (E2E da temporada) não começou. Ações A e C feitas (D-213); `origin/dev` atualizada com esta branch (fast-forward).
+D-221 a D-225 em `origin/main`. Funcionando: etiqueta "será pulado" sem o próprio bloqueio; voltar/avançar recarrega com bloqueio novo; diálogo "Alterações não salvas" ao sair por clique; Playwright apaga no fim os "E2E …" que cria (`limpar_e2e`).
+Quebrado/pendente: specs que gravam em dados que não criaram (D-225, ver Perguntas em aberto); S17 — falta a ação D (arquivar o svg-tour) e o preenchimento da equipe; S18 não começou.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Enviar à Infra o texto do pedido com o link do repositório (main já tem `docker-compose.prod.yml`, `.env.prod.example` e `INFRA.md`).
+Trocar o teste "sair por link" do `autosave.spec.ts` para um parceiro "E2E …" criado pelo próprio teste (`novoParceiro`).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1829,7 +1828,25 @@ Enviar à Infra o texto do pedido com o link do repositório (main já tem `dock
 - **Arquivos afetados:** `app/nucleo/static/ui/componentes/autosave.js`, `app/nucleo/templates/ui/_componentes/status_salvo.html`, `docs/telas/design-system.md`, `app/e2e/tests/autosave.spec.ts`, `app/nucleo/tests/test_ui_matriz.py` (o recorte do cabeçalho parava no `</header>` do diálogo).
 - **Status:** ativa
 
+### D-224 — Playwright apaga no fim o que os specs criam no banco de dev (2026-11-05 20:40)
+- **Contexto:** cada execução dos specs de Cortes, Projeto, Autosave, Impacto e Revista deixa parceiros "E2E …" (com parceiro-ano, cortes, projeto e revista da cascata), e um spec que para no meio deixa o template "E2E textos …". O usuário pediu que os specs apaguem o que criam.
+- **Decisão:** comando `limpar_e2e` (só com DEBUG). Ele apaga os parceiros e templates "E2E …" cujo registro de criação no histórico é do usuário de teste. Parceiro: na ordem do `apagar_ano`. Template: pelo `exclusao.excluir` (regra da tela, D-207); se estiver em uso, fica e o comando avisa. O `globalTeardown` do Playwright (`app/e2e/limpar.ts`) o roda via `docker compose exec` no fim de toda execução; `E2E_COMPOSE_PROJECT` para stack de worktree; falha só avisa.
+- **Motivo:** limpar dentro de cada spec não roda quando o spec falha no meio (foi assim que o template de hoje ficou). E o parceiro com projeto não sai pela tela (o parceiro-ano o protege).
+- **Descartadas:** `afterAll` em cada spec — não cobre falha no meio e repete a limpeza em 5 arquivos; rota HTTP só com DEBUG — superfície nova no app; apagar por nome sem olhar o autor — apagaria um "E2E …" que uma pessoa criou.
+- **Arquivos afetados:** `app/nucleo/management/commands/limpar_e2e.py`, `app/nucleo/tests/test_limpar_e2e.py`, `app/e2e/limpar.ts`, `app/e2e/playwright.config.ts`, comentários em `cortes`, `projeto`, `impacto` e `revista-textos.spec.ts`, `CLAUDE.md`.
+- **Status:** ativa
+
+### D-225 — Teste E2E nunca edita revista que não criou (2026-11-05 20:55)
+- **Contexto:** specs E2E gravavam em dados reais do banco de dev (variáveis do 1º/último projeto da planilha, revista DEMONSTRAÇÃO) e "voltavam o original no fim". Uma rodada que falhou hoje deixou a regional do SAESE como "E2E".
+- **Decisão:** regra do usuário, no `CLAUDE.md` (Conventions): teste E2E nunca edita revista que o próprio teste não criou, nem o que a alimenta (projeto, variáveis, cortes, textos, arquivos, template escolhido). O spec cria o próprio parceiro "E2E …" e edita só ele; o `limpar_e2e` apaga no fim (D-224).
+- **Motivo:** "volto o valor no fim" não roda quando o teste falha no meio.
+- **Descartadas:** restaurar o valor original no fim do teste — falha no meio deixa o dado real alterado.
+- **Arquivos afetados:** `CLAUDE.md`. Specs a corrigir: ver Perguntas em aberto.
+- **Status:** ativa
+
 ## Perguntas em aberto
+- [ ] (D-225) Ajustar os specs que gravam em dados que não criaram: `autosave.spec` (planilha de Variáveis na 1ª/última linha, incluindo o teste do diálogo D-223), `estados.spec` ("E2E Ocupado") e os que usam a revista DEMONSTRAÇÃO (`painel`, `impresso`, `item`, `revista-textos`, `mec`). Corrigir? — depende de: Otavio
+- [ ] Versões 2 a 8 do template "Padrão (F1)" LP 2026 (texto "Atualizado E2E…", de 03 e 04/11) continuam no banco de dev. A v9 já tem o texto limpo; a v8 é a base das cópias da introdução de SAESE LP e SAEGO LP. Versão só sai com o template (D-207). Apagar as v2–v7 por fora da tela, ou deixar como histórico? — depende de: Otavio
 - [ ] Editor de templates (`editor-secoes.js`, Salvar explícito) ainda usa o aviso nativo ao sair com alteração; levar o diálogo do D-223 para ele? — depende de: Otavio
 - [x] (05/11: liberar e deixar o Admin marcar; D-220) Admin atribuir o grupo Impresso (pedido em 05/11): dá ao Admin, na prática, "marcar impressa" (cria um usuário com senha conhecida, move para o Impresso e entra como ele), contra D-211 e `ADMIN_MARCA_IMPRESSA = False` — depende de: usuário
 - [x] (05/11: só sem rastro; D-218) Excluir usuário pela tela (pedido em 05/11): contraria D-205 ("usuário não é excluído: é desativado"); o histórico perde o autor e versões de template, validações e fotos (PROTECT) impedem — depende de: usuário
@@ -2296,3 +2313,4 @@ Enviar à Infra o texto do pedido com o link do repositório (main já tem `dock
 - D-221: a etiqueta "Em edição por … será pulado" deixa de contar o bloqueio do próprio usuário (Lista, Lotes, Validar). Testes: 90 OK nos módulos afetados.
 - D-222: voltar/avançar numa página com bloqueio recarrega em vez de mostrar "perdeu o bloqueio". `bfcache.spec` passa com a correção e falha sem ela.
 - D-223: diálogo "Alterações não salvas" (Salvar e sair / Descartar e sair / Continuar editando) ao sair por clique com campo sujo. Django completo OK (8 pulados); E2E autosave/bfcache 8 OK. Apagados os 7 parceiros "E2E …" que os specs criaram hoje no banco de dev; regional do SAESE devolvida ao vazio.
+- D-224: `limpar_e2e` + `globalTeardown` do Playwright; comprovado numa execução real (apagou "E2E Autosave …" no fim). Template "E2E textos MW3X7F87" (de uma rodada que falhou) excluído pela regra da tela.
