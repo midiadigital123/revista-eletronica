@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.core.management import CommandError, call_command
 from django.test import TestCase, override_settings
 
-from nucleo.models import Parceiro, Projeto, Revista, Template, TemplateVersao
+from nucleo.models import Matriz, Parceiro, Projeto, Revista, Template, TemplateVersao
 from nucleo.tests.test_resolver import Mundo
 
 
@@ -29,6 +29,8 @@ class LimparE2ETest(TestCase):
         cls.tpl = Template.objects.create(ano=cls.ano, componente=cls.lp, fasciculo="F1", nome="E2E textos X1")
         TemplateVersao.objects.create(template=cls.tpl, numero=1, texto="## a\nA\n\nx\n")
         criado_por(cls.tpl, cls.e2e)
+        cls.mat = Matriz.objects.create(ano=cls.ano, nome="E2E MEC X1")
+        criado_por(cls.mat, cls.e2e)
 
     def rodar(self, *args):
         saida = StringIO()
@@ -41,7 +43,8 @@ class LimparE2ETest(TestCase):
         self.assertIn("E2E Lixo X1", self.rodar("--simular"))
         self.assertTrue(Parceiro.objects.filter(pk=self.lixo.pk).exists())  # simular não apaga
 
-        self.assertIn("Apagados: E2E Lixo X1, E2E textos X1", self.rodar())
+        self.assertIn("Apagados: E2E Lixo X1, E2E MEC X1, E2E textos X1", self.rodar())
+        self.assertFalse(Matriz.objects.filter(pk=self.mat.pk).exists())
         self.assertFalse(Parceiro.objects.filter(pk=self.lixo.pk).exists())
         self.assertFalse(Template.objects.filter(pk=self.tpl.pk).exists())
         self.assertFalse(TemplateVersao.objects.filter(template_id=self.tpl.pk).exists())

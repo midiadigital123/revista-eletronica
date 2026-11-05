@@ -1,4 +1,4 @@
-// Arquivo do item na matriz (D-180): abrir o descritor da matriz Demonstração, abrir o modal
+// Arquivo do item na matriz (D-180): abrir o descritor de uma cópia própria da Demonstração, abrir o modal
 // "Arquivo do item", subir um PNG com texto alternativo, ver o item no preview e remover.
 // Com o app no ar. Preparar (idempotente), na raiz do repositório:
 //   APP_PORT=8031 docker compose up -d db app
@@ -8,9 +8,9 @@
 //     python manage.py createsuperuser --noinput --username e2e --email e2e@exemplo.invalid
 //   cd app/e2e && E2E_BASE_URL=http://localhost:8031 E2E_ADMIN_USUARIO=e2e E2E_ADMIN_SENHA=<senha> \
 //     npx playwright test item
-// Grava de verdade, mas termina como começou: a tarefa D01 100-150 do 5EF fica sem arquivo.
+// Grava só na matriz e na revista que o teste cria (D-225); o limpar.ts apaga as duas no fim (D-224).
 import { expect, test, type Page } from "@playwright/test";
-import { revistaDemo } from "./helpers";
+import { matrizPropria, revistaPropria } from "./helpers";
 
 // PNG 1×1
 const PNG = Buffer.from(
@@ -24,8 +24,10 @@ const PDF = Buffer.from(
 );
 const TAREFA = "D01 100-150";
 
-async function abrirDescritor(page: Page) {
-  await page.goto(`/admin/nucleo/descritor/?q=${encodeURIComponent("Descritor 1 de demonstração (5EF)")}`);
+/** O D01 do 5EF na matriz `matriz` (pk): a cópia própria tem o mesmo texto da Demonstração. */
+async function abrirDescritor(page: Page, matriz: string) {
+  const q = encodeURIComponent("Descritor 1 de demonstração (5EF)");
+  await page.goto(`/admin/nucleo/descritor/?matriz_etapa_cc__matriz__id__exact=${matriz}&q=${q}`);
   await page.locator("#result_list").getByRole("link", { name: "D01" }).click();
   await expect(page.locator("#bloqueio-sessao")).toBeAttached(); // editável: o modal só existe com o bloqueio
 }
@@ -52,9 +54,12 @@ test("item: sobe um PNG com texto alternativo, vê no preview e remove", async (
   await page.fill("#id_password", senha!);
   await page.click("input[type=submit]");
   await expect(page).toHaveURL(/\/admin\/$/);
+  // Matriz e revista próprias (D-225): a cópia da Demonstração e um parceiro "E2E Item …" que a usa.
+  const matriz = await matrizPropria(page, "Item");
+  const { revista } = await revistaPropria(page, "Item", matriz.nome);
 
   // 1. Modal: Cancelar fecha sem enviar; depois sobe o PNG.
-  await abrirDescritor(page);
+  await abrirDescritor(page, matriz.pk);
   let modal = await abrirModal(page);
   await modal.getByRole("button", { name: "Cancelar" }).click();
   await expect(modal).toBeHidden();
@@ -65,8 +70,7 @@ test("item: sobe um PNG com texto alternativo, vê no preview e remove", async (
   await expect(page.locator(".messagelist")).toContainText(`Arquivo do item enviado para a tarefa ${TAREFA}.`);
   await expect(page.locator("#tarefa_set-group")).toContainText("PNG");
 
-  // 2. Preview da revista DEMONSTRAÇÃO: o "Ver item" abre a imagem com o texto alternativo.
-  const revista = await revistaDemo(page);
+  // 2. Preview da revista própria: o "Ver item" abre a imagem com o texto alternativo.
   await page.goto(`/preview/${revista}/`);
   await expect(page.locator("body.app-initialized")).toBeAttached();
   await page.locator(".ver-item-btn").first().click();
@@ -76,7 +80,7 @@ test("item: sobe um PNG com texto alternativo, vê no preview e remove", async (
   await expect.poll(() => imagem.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
 
   // 3. Troca por um PDF: o iframe do "Ver item" carrega (200, sem X-Frame-Options DENY).
-  await abrirDescritor(page);
+  await abrirDescritor(page, matriz.pk);
   modal = await abrirModal(page);
   await modal.getByLabel(/^Arquivo:?$/).setInputFiles({ name: "item.pdf", mimeType: "application/pdf", buffer: PDF });
   await modal.getByRole("button", { name: "Enviar" }).click();
@@ -96,7 +100,7 @@ test("item: sobe um PNG com texto alternativo, vê no preview e remove", async (
   expect(frame!.url()).not.toContain("chrome-error");
 
   // 4. Remove o arquivo: a tarefa volta a ficar sem item.
-  await abrirDescritor(page);
+  await abrirDescritor(page, matriz.pk);
   modal = await abrirModal(page);
   await expect(modal.getByRole("link", { name: /\.pdf$/ })).toBeVisible();
   await modal.getByRole("button", { name: "Remover arquivo" }).click();

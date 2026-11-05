@@ -1,8 +1,8 @@
 // Linha nova por botão, ordem automática e reordenar (U4). Preparo de painel.spec.ts (criar_demo
-// --ano 2026 e o superusuário e2e). Grava: o componente criado é excluído no fim (D-205);
-// a ordem das tarefas e dos descritores da MEC volta à original no fim de cada teste.
+// --ano 2026 e o superusuário e2e). Grava: o componente criado é excluído no fim (D-205); a ordem das
+// tarefas e dos descritores muda só na própria cópia da matriz (matrizPropria, D-225).
 import { expect, test, type Page } from "@playwright/test";
-import { alpinePronto, entrar, liberarBloqueio } from "./helpers";
+import { alpinePronto, entrar, liberarBloqueio, matrizPropria } from "./helpers";
 
 const ETAPA = /^\s*(\d+)\s*(EF|EM)\s*$/i;
 const escolar = (a: string, b: string) => {
@@ -90,7 +90,7 @@ test("cortes: + Adicionar parceiro abaixo da grade abre a linha; Esc descarta", 
 
 test("MEC: arrastar e a alça com ↑/↓ trocam a ordem das tarefas e dos descritores; + Adicionar tarefa", async ({ page }) => {
   await entrar(page, "/ui/matriz/2026/");
-  await page.getByRole("link", { name: "Demonstração" }).first().click();
+  await matrizPropria(page, "Linhas"); // edita só a própria cópia da Demonstração (D-225)
   await page.locator('a[href*="/ui/matriz/mec/"]').first().click();
   await alpinePronto(page);
   const ordem = (sel: string) => page.locator(`${sel} > [data-id]`).evaluateAll((l) => l.map((e) => (e as HTMLElement).dataset.id));

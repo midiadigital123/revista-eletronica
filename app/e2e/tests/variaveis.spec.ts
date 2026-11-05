@@ -1,8 +1,8 @@
 // Planilha de Variáveis (U10d): o projeto aberto por outra pessoa trava só a linha dele, e duas abas
 // não se sobrescrevem em silêncio (409 com `atual`, como a grade de Cortes). Preparo de painel.spec.ts
 // (criar_demo --ano 2026 e o superusuário e2e). Cria um parceiro com corte (vira projeto) e, na 1ª vez,
-// o usuário "e2e-outra" (Pedagógica), cuja senha é trocada a cada execução; as variáveis voltam ao
-// valor original no fim.
+// o usuário "e2e-outra" (Pedagógica), cuja senha é trocada a cada execução. Grava só nos projetos que
+// cria (D-225); o limpar.ts apaga no fim (D-224).
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { alpinePronto, entrar, liberarBloqueio, novoParceiro } from "./helpers";
 

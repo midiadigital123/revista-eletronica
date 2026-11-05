@@ -1,7 +1,7 @@
 """Apaga do banco de dev o que os specs do Playwright criam e não desfazem (D-224).
 
-Parceiros "E2E …" (com parceiro-ano, cortes, projetos e revistas que a cascata criou) e templates
-"E2E …", e só os que o usuário de teste criou (o registro de criação no histórico é dele). O
+Parceiros "E2E …" (com parceiro-ano, cortes, projetos e revistas que a cascata criou), matrizes e
+templates "E2E …", e só os que o usuário de teste criou (o registro de criação no histórico é dele). O
 `globalTeardown` do Playwright (app/e2e/limpar.ts) roda este comando no fim de toda execução: spec
 que falha no meio também deixa de acumular lixo. Só com DEBUG.
 
@@ -13,7 +13,7 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from nucleo.models import Corte, FotoRevista, Parceiro, ParceiroAno, Projeto, ProjetoCor, ProjetoPasso, Revista, Template
+from nucleo.models import Corte, FotoRevista, Matriz, Parceiro, ParceiroAno, Projeto, ProjetoCor, ProjetoPasso, Revista, Template
 from nucleo.servicos.exclusao import EmUso, _apagar, excluir
 
 PREFIXO = "E2E "
@@ -36,7 +36,7 @@ def dependentes(parceiros):
 
 
 class Command(BaseCommand):
-    help = 'Apaga parceiros e templates "E2E …" que o usuário de teste criou (só com DEBUG).'
+    help = 'Apaga parceiros, matrizes e templates "E2E …" que o usuário de teste criou (só com DEBUG).'
 
     def add_arguments(self, parser):
         parser.add_argument("--usuario", default="e2e", help="login do E2E (padrão: e2e)")
@@ -49,21 +49,21 @@ class Command(BaseCommand):
         if u is None:
             raise CommandError(f"Usuário {usuario!r} não existe.")
         parceiros = list(criados_por(Parceiro, u))
-        templates = list(criados_por(Template, u))
+        livres = [*criados_por(Matriz, u), *criados_por(Template, u)]  # depois dos parceiros que os usam
         if simular:
-            self.stdout.write(f"Sairiam: {', '.join(map(str, parceiros + templates)) or '-'}")
+            self.stdout.write(f"Sairiam: {', '.join(map(str, parceiros + livres)) or '-'}")
             return
         with transaction.atomic():
             for modelo, filtro in dependentes(parceiros):
                 _apagar(modelo.objects.filter(**filtro), u)
             _apagar(Parceiro.objects.filter(pk__in=[p.pk for p in parceiros]), u)
         apagados, ficaram = [p.nome for p in parceiros], []
-        for t in templates:  # pela regra da tela (D-207): sai com as versões, se nenhuma revista o usa
+        for obj in livres:  # pela regra da tela (D-205, D-207): sai com as partes, se nada o usa
             try:
-                excluir(t, u)
-                apagados.append(t.nome)
+                excluir(obj, u)
+                apagados.append(obj.nome)
             except EmUso:  # ex.: spec que parou com o template ainda escolhido numa revista real
-                ficaram.append(t.nome)
+                ficaram.append(obj.nome)
         self.stdout.write(f"Apagados: {', '.join(apagados) or '-'}")
         if ficaram:
-            self.stderr.write(f"Em uso, ficaram: {', '.join(ficaram)}. Troque o template da revista e rode de novo.")
+            self.stderr.write(f"Em uso, ficaram: {', '.join(ficaram)}. Tire o uso (template da revista, matriz do parceiro) e rode de novo.")

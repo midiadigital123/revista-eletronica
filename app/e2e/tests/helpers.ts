@@ -1,3 +1,4 @@
+import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 
 /** Entra no admin e cai em `proxima`. Sem E2E_ADMIN_USUARIO e E2E_ADMIN_SENHA, pula o teste. */
@@ -30,6 +31,74 @@ export async function novoParceiro(page: Page, nome: string) {
   await page.keyboard.press("Enter");
   await expect(page.locator(`tr[data-parceiro="${nome}"]`)).toHaveCount(1);
 }
+
+/** Parceiro "E2E …" com projeto e revista LP de 2026 (a cascata nasce do corte de 5EF LP). Para os specs que
+ * gravam em projeto ou revista: nunca num dado que o teste não criou (D-225); o limpar.ts apaga no fim. */
+export async function parceiroComProjeto(page: Page, prefixo: string, colunas = ["5EF LP"]) {
+  const nome = `E2E ${prefixo} ${Date.now().toString(36).toUpperCase()}`;
+  await page.goto("/ui/projeto/ano/2026/cortes/");
+  await novoParceiro(page, nome);
+  for (const coluna of colunas) {
+    const salvou = page.waitForResponse((r) => r.url().includes("/celula/") && r.status() === 200);
+    await page.getByLabel(`${nome} ${coluna}`, { exact: true }).fill("150, 200, 250, 300");
+    await page.keyboard.press("Tab");
+    await salvou;
+  }
+  return nome;
+}
+
+/** Cópia "E2E …" da matriz Demonstração em 2026 (botão Duplicar): para os specs que editam matriz (D-225).
+ * Devolve o nome, a URL e o pk da matriz; o limpar.ts a apaga no fim. */
+export async function matrizPropria(page: Page, prefixo: string) {
+  const nome = `E2E ${prefixo} ${Date.now().toString(36).toUpperCase()}`;
+  await page.goto("/ui/matriz/2026/");
+  await page.getByRole("link", { name: "Demonstração" }).first().click();
+  await page.getByRole("button", { name: "Duplicar" }).click();
+  const dialogo = page.locator("#dlg-duplicar");
+  await dialogo.getByLabel("Ano da cópia").selectOption({ label: "2026" });
+  await dialogo.getByLabel("Nome").fill(nome);
+  await dialogo.getByRole("button", { name: "Duplicar" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: nome })).toBeVisible();
+  return { nome, url: page.url(), pk: /\/m\/(\d+)\//.exec(page.url())![1] };
+}
+
+const SVG_F2 = path.join(__dirname, "../../nucleo/tests/fixtures/f2-lp.svg");
+const CAPA = { name: "capa.png", mimeType: "image/png", buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mP4/5oBAATXAesdPD2pAAAAAElFTkSuQmCC", "base64") };
+
+/** Revista LP 2026 própria e pronta para validar (6 de 6): parceiro "E2E …" com cortes de 5EF e 9EF LP,
+ * `matriz` pelo lote, nome do projeto, templates Padrão, SVG e capa. Para os specs que gravam em revista
+ * (D-225), no lugar da DEMONSTRAÇÃO. Devolve o nome do parceiro e o id da revista. */
+export async function revistaPropria(page: Page, prefixo: string, matriz = "Demonstração") {
+  const nome = await parceiroComProjeto(page, prefixo, ["5EF LP", "9EF LP"]);
+  await atribuirEmMassa(page, nome, { matriz });
+  await expect(page.locator("#mensagens")).toContainText("escolhida para 1 parceiro(s)");
+  const revista = await revistaDaLista(page, nome, "LP");
+  const salvo = page.locator("[data-status-salvo]").getByText(/Salvo às \d/);
+  await page.getByRole("link", { name: nome }).first().click();
+  await alpinePronto(page);
+  await page.fill("#id_nome", `${nome} projeto`);
+  await page.press("#id_nome", "Tab");
+  await expect(salvo).toBeVisible();
+  await liberarBloqueio(page);
+
+  await page.goto(`/ui/revista/2026/${revista}/`);
+  await alpinePronto(page);
+  await page.selectOption("#template-F1", { label: "Padrão (F1)" });
+  await expect(salvo).toBeVisible();
+  await page.selectOption("#template-F2", { label: "Padrão (F2)" });
+  await expect(page.locator("#textos textarea")).toBeVisible();
+  await page.setInputFiles("#arquivo-svg", SVG_F2);
+  await expect(page.locator("#arquivos")).toContainText("SVG enviado");
+  await page.setInputFiles("#arquivo-capa", CAPA);
+  await expect(page.locator("#arquivos img.revista-capa")).toBeVisible();
+  await expect(page.locator("#situacao")).toContainText("6 de 6 prontos");
+  await liberarBloqueio(page);
+  return { nome, revista };
+}
+
+/** Nome da regional do projeto `nome` na planilha de Variáveis (projeto novo: nome provisório "<parceiro> - NOME DO PROJETO"). */
+export const regional = (page: Page, nome: string) =>
+  page.getByLabel(`${nome} - NOME DO PROJETO Nome da regional`, { exact: true });
 
 /** Painel B: roda `acao` e espera o HTMX trocar o corpo (o form velho é marcado e some na troca;
  * sem isso a próxima ação pode cair no corpo que está saindo). */

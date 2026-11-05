@@ -5,10 +5,10 @@
 //     password='<senha>', is_staff=True); u.groups.add(Group.objects.get(name='Impresso'))"
 //   cd app/e2e && E2E_BASE_URL=http://localhost:8014 E2E_ADMIN_USUARIO=e2e E2E_ADMIN_SENHA=<senha> \
 //     E2E_IMPRESSO_USUARIO=imp-e2e E2E_IMPRESSO_SENHA=<senha> npx playwright test impresso
-// Grava de verdade: cópia do fechamento do F1 com uma marca nova, "Validado", foto do impresso; no fim
-// descarta a cópia (a revista volta ao texto do template, sem "Validado").
+// Grava só na revista que o teste monta (revistaPropria: parceiro "E2E Impresso …", D-225): cópia do
+// fechamento do F1, "Validado", foto do impresso e descarte. O limpar.ts apaga tudo no fim (D-224).
 import { expect, test, type Browser, type Page } from "@playwright/test";
-import { alpinePronto, filtrarPainel } from "./helpers";
+import { filtrarPainel, revistaPropria } from "./helpers";
 
 const FECHAMENTO = "#id_secao__F1__fechamento";
 
@@ -39,19 +39,12 @@ test("impresso: valida, vê o diff e marca impressa", async ({ browser }) => {
 
   // 1. Pedagógica: muda o fechamento (hash novo) e valida.
   const ped = await entrar(browser, adm!, admSenha!, "/painel/2026/");
-  await filtrarPainel(ped, "#filtro-parceiro", { label: "DEMONSTRAÇÃO" });
+  const { nome } = await revistaPropria(ped, "Impresso");
+  await ped.goto("/painel/2026/");
+  await filtrarPainel(ped, "#filtro-parceiro", { label: nome });
   await expect(ped).toHaveURL(/parceiro=/);
   const linha = ped.locator("#painel-corpo tbody tr[data-revista]").first();
-  const variaveis = linha.locator("td.coluna-variaveis a", { hasText: "falta" });
   const urlPainel = ped.url();
-  if (await variaveis.count()) {
-    await variaveis.click();  // ficha B do projeto
-    await alpinePronto(ped);
-    await ped.fill("#id_nome", "DEMONSTRAÇÃO E2E");
-    await ped.press("#id_nome", "Tab"); // U3: o campo salva sozinho ao sair dele
-    await expect(ped.locator("[data-status-salvo]").getByText(/Salvo às \d/)).toBeVisible(); // o texto oculto (x-show) já existe: espera o visível
-    await ped.goto(urlPainel);
-  }
   // O nome leva à revista B; o roteiro edita no admin (mesma revista).
   await ped.goto(`/admin/nucleo/revista/${await linha.getAttribute("data-revista")}/change/`);
   const urlRevista = ped.url();

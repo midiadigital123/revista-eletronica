@@ -1,4 +1,4 @@
-// Painel da temporada e "Validado" (S12): abrir o painel, filtrar, validar a revista DEMONSTRAÇÃO.
+// Painel da temporada e "Validado" (S12): abrir o painel, filtrar, validar uma revista própria (D-225).
 // Com o app no ar. Preparar (idempotente), na raiz do repositório:
 //   APP_PORT=8014 docker compose up -d db app
 //   docker compose run --rm app python manage.py migrate
@@ -7,11 +7,10 @@
 //     python manage.py createsuperuser --noinput --username e2e --email e2e@exemplo.invalid
 //   cd app/e2e && E2E_BASE_URL=http://localhost:8014 E2E_ADMIN_USUARIO=e2e E2E_ADMIN_SENHA=<senha> \
 //     npx playwright test painel
-// Grava de verdade: troca o nome padrão do projeto DEMONSTRAÇÃO (se ainda for o padrão), cria uma
-// cópia do fechamento do F1 com uma marca nova (para o hash mudar a cada execução), valida e
-// descarta a cópia no fim (a revista volta ao texto do template, sem "Validado").
+// Grava só na revista que o teste monta (revistaPropria: parceiro "E2E Painel …", D-225): cópia do
+// fechamento do F1, valida e descarta a cópia. O limpar.ts apaga tudo no fim (D-224).
 import { expect, test, type Page } from "@playwright/test";
-import { alpinePronto, entrar, filtrarFalta, filtrarPainel } from "./helpers";
+import { entrar, filtrarFalta, filtrarPainel, revistaPropria } from "./helpers";
 
 const FECHAMENTO = "#id_secao__F1__fechamento";
 
@@ -40,10 +39,12 @@ test("painel: filtrar e validar uma revista", async ({ page }) => {
   await page.fill("#id_password", senha!);
   await page.click("input[type=submit]");
   await expect(page.locator("#painel-corpo table")).toBeVisible();
+  const { nome } = await revistaPropria(page, "Painel");
+  await page.goto("/painel/2026/");
 
-  // 1. Filtros: parceiro DEMONSTRAÇÃO e o contador "Validado" (o fim da execução anterior deixa sem).
+  // 1. Filtros: o parceiro próprio e o contador "Validado" (a revista nasce sem).
   // Painel B: o select e o contador trocam o corpo pelo HTMX e empurram a URL.
-  await filtrarPainel(page, "#filtro-parceiro", { label: "DEMONSTRAÇÃO" });
+  await filtrarPainel(page, "#filtro-parceiro", { label: nome });
   await filtrarFalta(page, "Validado");
   await expect(page).toHaveURL(/falta=validado/);
   await expect(page.locator(".painel-contadores button[aria-pressed=true]")).toContainText("Validado");
@@ -51,22 +52,9 @@ test("painel: filtrar e validar uma revista", async ({ page }) => {
   const linhas = page.locator("#painel-corpo tbody tr[data-revista]");
   await expect(linhas).toHaveCount(1);
   const linha = linhas.first();
-  await expect(linha).toContainText("DEMONSTRAÇÃO");
+  await expect(linha).toContainText(nome);
   await expect(linha.locator("td.coluna-validado .status-falta")).toBeVisible();
   const urlPainel = page.url();
-
-  // 2. Nome padrão do projeto é pendência (Variáveis): o "falta" leva à ficha B do projeto.
-  const variaveis = linha.locator("td.coluna-variaveis a", { hasText: "falta" });
-  if (await variaveis.count()) {
-    await variaveis.click();
-    await expect(page).toHaveURL(/\/ui\/projeto\/\d+\/$/);
-    await alpinePronto(page);
-    await page.fill("#id_nome", "DEMONSTRAÇÃO E2E");
-    await page.press("#id_nome", "Tab"); // U3: o campo salva sozinho ao sair dele
-    await expect(page.locator("[data-status-salvo]").getByText(/Salvo às \d/)).toBeVisible(); // o texto oculto (x-show) já existe: espera o visível
-    await page.goto(urlPainel);
-    await expect(linha.locator("td.coluna-variaveis .status-ok")).toBeVisible();
-  }
 
   // 3. Revista: muda um texto (hash novo), salva e clica em "Validado".
   // O nome leva à revista B; o roteiro edita no admin (mesma revista).

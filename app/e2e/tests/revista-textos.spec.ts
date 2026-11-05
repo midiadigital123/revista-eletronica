@@ -8,12 +8,12 @@
 //     python manage.py createsuperuser --noinput --username e2e --email e2e@exemplo.invalid
 //   cd app/e2e && E2E_BASE_URL=http://localhost:8014 E2E_ADMIN_USUARIO=e2e E2E_ADMIN_SENHA=<senha> \
 //     npx playwright test revista-textos
-// Grava de verdade: o 1º teste põe no F1 da revista DEMONSTRAÇÃO um template próprio ("E2E textos
-// <sufixo>"), cria nele a versão nova e, no fim, volta o "Padrão", descarta a cópia e exclui o próprio
+// Grava só no que o teste cria (D-225): o 1º teste monta a própria revista (revistaPropria) e põe no
+// F1 dela um template próprio ("E2E textos <sufixo>"), cria nele a versão nova e, no fim, volta o "Padrão", descarta a cópia e exclui o próprio
 // (E4, D-207): nenhum spec grava em template que não criou. Use num banco descartável.
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { alpinePronto, atribuirEmMassa, entrar, liberarBloqueio, novoParceiro, revistaDaLista, revistaDemo } from "./helpers";
+import { alpinePronto, atribuirEmMassa, entrar, liberarBloqueio, novoParceiro, revistaDaLista, revistaPropria } from "./helpers";
 import { criarTemplate, excluirTemplate } from "./templates";
 
 const INTRO = "#id_secao__F1__introducao";
@@ -29,8 +29,9 @@ test("revista: cópia por seção, aviso com diff e descartar", async ({ page })
   const nome = `E2E textos ${Date.now().toString(36).toUpperCase()}`;
 
   await entrar(page);
+  const { revista } = await revistaPropria(page, "Textos");
   const proprio = await criarTemplate(page, nome, "F1", F1);
-  await page.goto(`/admin/nucleo/revista/${await revistaDemo(page)}/change/`);
+  await page.goto(`/admin/nucleo/revista/${revista}/change/`);
   const urlRevista = page.url();
 
   // 0. O F1 da revista passa ao template próprio (sem cópia, troca sem confirmação).
@@ -179,7 +180,7 @@ test("revista: o texto da seção salva sozinho e não se perde ao sair", async 
   const salvo = status.getByText(/Salvo às \d/);
 
   await entrar(page);
-  const pk = await revistaDemo(page);
+  const { revista: pk } = await revistaPropria(page, "Autosave textos");
   const url = `/ui/revista/2026/${pk}/`;
   await page.goto(url);
   await alpinePronto(page);

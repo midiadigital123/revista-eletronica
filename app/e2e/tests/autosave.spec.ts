@@ -1,16 +1,13 @@
 // Autosave por campo (U3): a célula da planilha de variáveis salva ao sair dela, o status mostra
 // "Salvo às HH:MM" e recarregar não pede confirmação. Com a rede caída, o status mostra
 // "Não salvo: sem conexão · Tentar de novo" e só então sair da página pede confirmação.
-// Preparar como em painel.spec.ts (criar_demo --ano 2026 e o superusuário e2e). Grava de verdade
-// numa variável do 1º projeto do ano e devolve o valor original no fim.
+// Preparar como em painel.spec.ts (criar_demo --ano 2026 e o superusuário e2e). A planilha grava só no
+// projeto que cada teste cria (parceiroComProjeto, D-225); o limpar.ts apaga no fim (D-224).
 import { expect, test, type Page } from "@playwright/test";
-import { alpinePronto as pronto, entrar, liberarBloqueio, novoParceiro } from "./helpers";
+import { alpinePronto as pronto, entrar, liberarBloqueio, novoParceiro, matrizPropria, parceiroComProjeto, regional } from "./helpers";
 
 const ROTA = "**/ui/projeto/*/campo/";
 
-/** Variável de texto livre do 1º projeto da planilha (a regional raramente entra nos templates). */
-
-const celula = (page: Page) => page.locator('tbody[id^="projeto-"]').first().locator('input.input[name$="-nome_regional"]');
 
 /** Sai do campo e espera a resposta do autosave (o "Salvo às" de antes já estaria visível). */
 async function sairESalvar(page: Page) {
@@ -25,13 +22,14 @@ async function sairESalvar(page: Page) {
 }
 
 // D-223: clicar num link com o campo sujo (sem sair dele) abre o diálogo do sistema, e não o nativo.
+// Grava só no projeto que o próprio teste cria (D-225).
 test("sair por link com campo sujo: Continuar, Descartar e Salvar e sair", async ({ page }) => {
-  await entrar(page, "/ui/projeto/ano/2026/variaveis/");
+  await entrar(page, "/ui/projeto/ano/2026/cortes/");
+  const nome = await parceiroComProjeto(page, "Saida");
+  await page.goto("/ui/projeto/ano/2026/variaveis/");
   await pronto(page);
-  // Última linha: a 1ª costuma estar aberta por quem usa o banco de dev (409 de linha travada).
-  const celula = (p: Page) => p.locator('tbody[id^="projeto-"]').last().locator('input.input[name$="-nome_regional"]');
   const url = page.url();
-  const original = await celula(page).inputValue();
+  const celula = (p: Page) => regional(p, nome);
   const painel = page.getByRole("navigation", { name: "Principal" }).getByRole("link", { name: "Painel" });
   const dialogo = page.getByRole("dialog", { name: "Alterações não salvas" });
   const reabrir = async () => {
@@ -39,44 +37,42 @@ test("sair por link com campo sujo: Continuar, Descartar e Salvar e sair", async
     await page.goto(url);
     await pronto(page);
   };
+  await expect(celula(page)).toHaveValue("");
 
   // Continuar editando: fica na página, com o foco e o texto no campo.
-  await celula(page).fill(`${original} E2E`);
+  await celula(page).fill("Regional E2E");
   await painel.click();
   await expect(dialogo).toBeVisible();
   await dialogo.getByRole("button", { name: "Continuar editando" }).click();
   await expect(dialogo).toBeHidden();
   await expect(page).toHaveURL(url);
   await expect(celula(page)).toBeFocused();
-  await expect(celula(page)).toHaveValue(`${original} E2E`);
+  await expect(celula(page)).toHaveValue("Regional E2E");
 
   // Descartar e sair: vai ao Painel sem gravar.
   await painel.click();
   await dialogo.getByRole("button", { name: "Descartar e sair" }).click();
   await reabrir();
-  await expect(celula(page)).toHaveValue(original);
+  await expect(celula(page)).toHaveValue("");
 
   // Salvar e sair: grava e vai ao Painel.
-  const novo = `E2E Regional ${Date.now().toString(36)}`;
-  await celula(page).fill(novo);
+  await celula(page).fill("Regional E2E");
   await painel.click();
   await dialogo.getByRole("button", { name: "Salvar e sair" }).click();
   await reabrir();
-  await expect(celula(page)).toHaveValue(novo);
-
-  await celula(page).fill(original);
-  await sairESalvar(page);
+  await expect(celula(page)).toHaveValue("Regional E2E");
 });
 
 test("variável salva ao sair do campo e recarregar não pede confirmação", async ({ page }) => {
   const erros: string[] = [];
   page.on("pageerror", (e) => erros.push(e.message));
-  await entrar(page, "/ui/projeto/ano/2026/variaveis/");
+  await entrar(page, "/ui/projeto/ano/2026/cortes/");
+  const nome = await parceiroComProjeto(page, "Variavel");
+  await page.goto("/ui/projeto/ano/2026/variaveis/");
   await pronto(page);
   await expect(page.locator("[data-status-salvo]").getByText("Cada campo salva sozinho")).toBeVisible();
-  const campo = celula(page);
-  const original = await campo.inputValue();
-  const novo = `E2E Regional ${Date.now().toString(36)}`;
+  const campo = regional(page, nome);
+  const novo = "Regional E2E";
 
   await campo.fill(novo);
   await sairESalvar(page);
@@ -84,24 +80,21 @@ test("variável salva ao sair do campo e recarregar não pede confirmação", as
   const dialogos: string[] = [];
   page.on("dialog", (d) => { dialogos.push(d.type()); void d.dismiss(); });
   await page.reload();
-  await expect(celula(page)).toHaveValue(novo);
+  await expect(regional(page, nome)).toHaveValue(novo);
   expect(dialogos).toEqual([]);
-  await pronto(page);
-
-  await celula(page).fill(original);
-  await sairESalvar(page);
   expect(erros).toEqual([]);
 });
 
 test("rede caída: Não salvo · Tentar de novo e aviso ao sair só nesse caso", async ({ page }) => {
-  await entrar(page, "/ui/projeto/ano/2026/variaveis/");
+  await entrar(page, "/ui/projeto/ano/2026/cortes/");
+  const nome = await parceiroComProjeto(page, "Rede");
+  await page.goto("/ui/projeto/ano/2026/variaveis/");
   await pronto(page);
-  const campo = celula(page);
-  const original = await campo.inputValue();
+  const campo = regional(page, nome);
   const status = page.locator("[data-status-salvo]");
 
   await page.route(ROTA, (r) => r.abort("internetdisconnected"));
-  await campo.fill(`E2E Sem rede ${Date.now().toString(36)}`);
+  await campo.fill("Regional sem rede");
   await page.keyboard.press("Tab");
   await expect(status.getByText("Não salvo: sem conexão")).toBeVisible();
   await expect(status.getByText(/Salvo às/)).toBeHidden(); // o campo não aparece como salvo
@@ -119,8 +112,6 @@ test("rede caída: Não salvo · Tentar de novo e aviso ao sair só nesse caso",
   await page.unroute(ROTA);
   await status.getByRole("button", { name: "Tentar de novo" }).click();
   await expect(status.getByText(/Salvo às \d\d:\d\d/)).toBeVisible();
-  await campo.fill(original);
-  await sairESalvar(page);
   const dialogos: string[] = [];
   page.on("dialog", (x) => { dialogos.push(x.type()); void x.dismiss(); });
   await page.reload();
@@ -171,7 +162,7 @@ test("cortes: a célula salva sozinha; a outra aba com o valor antigo recebe con
 
 test("descritor: salva sozinho; com o bloqueio perdido, nada aparece como salvo e a tela fica só leitura", async ({ page, context }) => {
   await entrar(page, "/ui/matriz/2026/");
-  await page.getByRole("link", { name: "Demonstração" }).first().click();
+  await matrizPropria(page, "Descritor"); // edita só a própria cópia da Demonstração (D-225)
   await page.locator('a[href*="/ui/matriz/mec/"]').first().click();
   await pronto(page);
   const descricao = page.locator("#form-descritor [name=descricao]");
@@ -201,9 +192,11 @@ test("descritor: salva sozinho; com o bloqueio perdido, nada aparece como salvo 
 // O cliente diante da resposta de impacto (o servidor real é coberto em test_ui_autosave): a rota
 // responde com o modal do U2; Esc volta o valor gravado e o foco; confirmar reenvia com a confirmação.
 test("impacto no autosave: Esc volta o valor e o foco; confirmar reenvia confirmado", async ({ page }) => {
-  await entrar(page, "/ui/projeto/ano/2026/variaveis/");
+  await entrar(page, "/ui/projeto/ano/2026/cortes/");
+  const nome = await parceiroComProjeto(page, "Impacto auto");
+  await page.goto("/ui/projeto/ano/2026/variaveis/");
   await pronto(page);
-  const campo = celula(page);
+  const campo = regional(page, nome);
   const original = await campo.inputValue();
   const html = `<dialog class="dialogo impacto" x-data="impacto" data-abrir-ao-carregar data-form="variaveis-form" data-campo="confirmar_impacto" aria-labelledby="t-e2e" @cancel.prevent="cancelar">
     <h2 id="t-e2e">Salvar tira o “Validado” de 1 revista(s)</h2><ul class="impacto-lista"><li>E2E Revista</li></ul>

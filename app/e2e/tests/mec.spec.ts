@@ -1,14 +1,14 @@
 // Hierarquia do editor de matriz (U9): Configurações (popover com o intervalo mínimo, autosave),
 // "+ Novo descritor" no topo da lista e "Excluir descritor" na zona de perigo do fim do painel.
-// Preparo de painel.spec.ts (criar_demo --ano 2026 e o superusuário e2e). O intervalo volta ao valor
-// original no fim. Só sai a cópia "E2E Excluir …" da Demonstração que o próprio teste cria (E3, D-205);
+// Preparo de painel.spec.ts (criar_demo --ano 2026 e o superusuário e2e). Edita só cópias da Demonstração
+// que o próprio teste cria (matrizPropria, D-225; a "E2E Excluir …" sai pela tela, E3, D-205);
 // o Impresso (E2E_IMPRESSO_*) só confere que não vê o botão.
 import { expect, test } from "@playwright/test";
-import { alpinePronto, entrar, liberarBloqueio } from "./helpers";
+import { alpinePronto, entrar, liberarBloqueio, matrizPropria } from "./helpers";
 
 test("MEC: Configurações salva o intervalo sozinho; Novo descritor na lista; excluir pede o código", async ({ page }) => {
   await entrar(page, "/ui/matriz/2026/");
-  await page.getByRole("link", { name: "Demonstração" }).first().click();
+  await matrizPropria(page, "MEC"); // edita só a própria cópia da Demonstração (D-225)
   await page.locator('a[href*="/ui/matriz/mec/"]').first().click();
   await alpinePronto(page);
   // Lista: só a alça (≤ 1rem), encostada à esquerda da lista e colada no código; nenhum botão ↑↓.
