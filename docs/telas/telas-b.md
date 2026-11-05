@@ -22,6 +22,7 @@ Revisão = resultado da supervisão por tela. "Correções integradas" = a branc
 | Impresso (+ planilhas) | T26, T27 | `/ui/impresso/<ano>/` | `ui_impresso` | [`fichas/impresso.md`](fichas/impresso.md) | não aprovada (5 achados); correções integradas (`feat/ui-b-impresso-fix`) |
 | Anos e Abrir ano | T03 | `/ui/anos/` ("Abrir novo ano" no seletor de ano) | `ui_anos` | [`fichas/anos.md`](fichas/anos.md) | sem revisão de tela (S3 de D-190) |
 | Configurar o ano: etapas, componentes, Padrões do ano | T05, T06, T07 | `/ui/anos/<ano>/` ("Configurar <ano>" no seletor; padrões em `#padroes`) | `ui_ano` | [`fichas/anos.md`](fichas/anos.md) | sem revisão de tela (S4 e S5 de D-190) |
+| Excluir e desativar (D-205 a D-208) | — | `/ui/excluir/<modelo>/<pk>/`, `/ui/excluir/parceiro/<pk>/ativo/` | `ui_excluir`, `ui_parceiro_ativo` | [`fichas/anos.md`](fichas/anos.md), [`fichas/cortes.md`](fichas/cortes.md), [`fichas/matriz.md`](fichas/matriz.md), [`fichas/templates.md`](fichas/templates.md) | sem revisão de tela (E0–E5) |
 
 Endereços antigos que redirecionam (302) para a aba equivalente de Projetos: `/cortes/<ano>/`, `/ui/variaveis/<ano>/`, `/ui/revista/<ano>/` (a lista de revistas virou a aba Lista) e `/ui/lotes/<ano>/matriz/` e `.../template/` (os lotes viraram "Atribuir matriz…" e "Atribuir template…" na barra da Lista). O POST antigo de Variáveis e Lotes continua gravando.
 
@@ -46,5 +47,4 @@ Preview (T22) não é admin nem tela B: é a página da revista em `/preview/<id
 ## 3. Pendências
 
 - As revisões não aprovadas (painel, variáveis, projeto, matriz, impresso) tiveram as correções integradas, mas não passaram por uma segunda revisão.
-- A página antiga de Lotes (`templates/ui/lotes/template.html`), que só aparece depois de um POST antigo, ainda manda ao admin para cadastrar componentes (`admin:nucleo_componente_changelist`). A Lista de Projetos já aponta para `ui_ano`.
 - Os links "falta" do painel, do validar e da coluna Situação da revista já levam só a telas B (`urls/painel.py: link`).

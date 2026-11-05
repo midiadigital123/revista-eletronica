@@ -1,6 +1,6 @@
 # Design system das telas B (referência obrigatória do time)
 
-Telas do dia a dia como páginas próprias no Django, com o visual do editor React (D-183), HTMX servido localmente (D-186). Base: branch `feat/ui-b` (as 10 telas já integradas; lista e status em `docs/telas/telas-b.md`). Protótipo de referência: grade de cortes (`app/nucleo/cortes.py`, `urls/cortes.py`, `templates/ui/cortes.html`, `tests/test_ui_cortes.py`).
+Telas do dia a dia como páginas próprias no Django, com o visual do editor React (D-183), HTMX servido localmente (D-186). Branch de referência: `feat/telas-b-ux` (telas integradas, reforma de UX U0–U10 e exclusão E0–E5; lista e status em `docs/telas/telas-b.md`). Protótipo de referência: grade de cortes (`app/nucleo/cortes.py`, `urls/cortes.py`, `templates/ui/cortes.html`, `tests/test_ui_cortes.py`).
 
 Caminhos abaixo relativos a `app/nucleo/`, salvo `editor/` (só leitura).
 
@@ -21,22 +21,24 @@ Telas e rotas (nomes `ui_<tela>`; ações `ui_<tela>_<acao>`):
 |---|---|---|---|
 | Painel (T23) | `ui_painel` | `/painel/<ano>/` | `painel` |
 | Validar (T24, Validado de T21) | `ui_validar` | `/ui/validar/<ano>/` | `ui_validar` |
-| Variáveis (T17) | `ui_variaveis` | `/ui/variaveis/<ano>/` | `ui_variaveis` |
+| Variáveis (T17), aba de Projetos | `ui_variaveis` (só redireciona) e `ui_projeto` (a aba) | `/ui/projeto/ano/<ano>/variaveis/` | `ui_variaveis` |
 | Projeto (T15/T16) | `ui_projeto` | `/ui/projeto/ano/<ano>/` (lista), `/ui/projeto/<pk>/` | `ui_projeto_lista`, `ui_projeto` |
 | Templates (T12–T14) | `ui_templates` | `/ui/templates/<ano>/` | `ui_templates` |
 | Matrizes (T09–T11) | `ui_matriz` | `/ui/matriz/<ano>/` | `ui_matriz` |
-| Revistas (T20/T21) | `ui_revista` | `/ui/revista/<ano>/` | `ui_revista` |
+| Revista (T21) | `ui_revista` | `/ui/revista/<ano>/<pk>/` (a lista `/ui/revista/<ano>/` só redireciona à aba Lista de Projetos) | `ui_revista_editar` |
 | Impresso (T26/T27) | `ui_impresso` | `/ui/impresso/<ano>/` | `ui_impresso` |
-| Lotes (T18/T19) | `ui_lotes` | `/ui/lotes/<ano>/matriz/`, `.../template/` | `ui_lotes_matriz`, `ui_lotes_template` |
+| Lotes (T18/T19), hoje "Atribuir matriz…" e "Atribuir template…" da aba Lista | `ui_lotes` e `ui_projeto` (`ui_projeto_massa`) | `/ui/lotes/<ano>/matriz/`, `.../template/` (só redirecionam; o POST antigo ainda grava) | `ui_lotes_matriz`, `ui_lotes_template` |
+| Anos e Abrir ano (T03), Configurar o ano (T05–T07) | `ui_anos` | `/ui/anos/`, `/ui/anos/<ano>/` | `ui_anos`, `ui_ano` |
+| Excluir e desativar (D-205) | `ui_excluir` | `/ui/excluir/<modelo>/<pk>/` | `ui_excluir`, `ui_parceiro_ativo` |
 
-- Cortes já é B e fica em `/cortes/<ano>/` (rota `cortes`).
+- Cortes é a aba Cortes do hub Projetos: `/ui/projeto/ano/<ano>/cortes/` (rota `cortes`, montada em `urls/ui_projeto.py`). `/cortes/<ano>/` (`cortes_antiga`) só redireciona; as rotas de gravação da grade ficam em `urls/cortes.py` (`cortes_celula`, `cortes_novo_parceiro`, `cortes_renomear_parceiro`).
 - O Painel B ocupa `/painel/<ano>/` (rota `painel`; `urls/ui_painel.py` é incluído em `painel/` antes de `urls/painel.py`). O painel no estilo do admin saiu; `/painel/<ano>/validar/` (`painel_validar`) continua para quem chega pelo admin. O lote do painel B vai a `ui_validar`.
 - A rota principal recebe o ano (`<int:ano>/`) quando a tela é por ano. A navegação usa `{% if ano %}{% url "ui_<tela>" ano.ano %}{% else %}{% url "ui_<tela>_inicio" %}{% endif %}`; a rota `_inicio` redireciona ao ano mais recente. Nenhum link de navegação cai no admin.
 
 ## 2. Casca e contexto
 
 - `{% extends "ui/base.html" %}`, blocos `titulo`, `cabeca`, `conteudo`.
-- Menu de 5 itens (U6): Painel, Projetos, Matrizes, Templates, Impresso. `secao` marca o item: Validar marca Painel; `cortes`, `variaveis`, `revistas` e `lotes` marcam Projetos; `anos` não marca nenhum e destaca o seletor.
+- Menu de até 5 itens (U6): Painel, Projetos, Matrizes, Templates e Impresso. O item Impresso só aparece para quem tem `marcar_impressa` (perfil Impresso); os outros perfis chegam à tela pelo Painel ou pelo link "Tela do impresso" da revista (`templates/ui/base.html:39`). O botão "Admin" do cabeçalho só aparece para superusuário (`base.html:44`); os wireframes das fichas mostram o cabeçalho de um perfil comum. `secao` marca o item: Validar marca Painel; `cortes`, `variaveis`, `revistas` e `lotes` marcam Projetos; `anos` não marca nenhum e destaca o seletor.
 - Ano: o context processor `nucleo/contexto.py:ano_atual` dá `ano_ctx` (kwarg `ano`, objeto da página, sessão ou o mais recente) e `trocas_ano` (mesma rota e query no outro ano; em detalhe, o equivalente do mesmo parceiro ou a lista do ano). Grava `request.session["ano"]`; as rotas `_inicio` usam `ano_da_sessao`.
 - Cabeçalho de página: `<header class="pagina-cab"><div><h1>…</h1><p class="mudo">…</p></div><div class="acoes">…</div></header>` (`editor/src/projetos/ListaProjetos.tsx:31-34`).
 - Página de detalhe (um item de uma lista): o caminho de volta é `<a class="mudo voltar" href="…">‹ Lista</a>` logo acima do cabeçalho, não um botão nas ações (matriz, MEC, revista, projeto, editor de template).
@@ -149,7 +151,7 @@ Campo sem impacto salva sozinho; com impacto, o modal do U2 abre antes de gravar
 ### Linha nova e ordem (U4)
 
 - Tabela editável não termina em linha vazia (formset com `extra=0`). `linhaNova` (`static/ui/componentes.js`): `<div x-data="linhaNova" data-total="id_<prefixo>-TOTAL_FORMS">` com `<template data-molde>` (o `empty_form`, com `__prefix__`), o alvo `[data-linhas]` e o botão `[data-abrir-linha]` "+ Adicionar <coisa>". A linha nasce no fim com o foco no 1º campo; o botão "Incluir <coisa>" da linha (ou Enter) grava pelo POST da página; Esc ou "Descartar" tira a linha e devolve o foco ao botão. Sem `data-total` (Cortes), o molde é um form próprio.
-- Ordem não se digita. Linha nova vai para o fim: `proxima_ordem(qs)` (`ui_autosave.py`). Etapa segue a lógica escolar (`ordem_escolar` em `urls/ui_anos.py`: todo EF antes do EM; no mesmo ensino, pela série) e não se arrasta; componente segue o código.
+- Ordem não se digita. Linha nova vai para o fim: `proxima_ordem(qs)` (`ui_autosave.py`). Etapa segue a lógica escolar (`ordem_escolar` em `models/cadastro.py`, mantida por `Etapa.save` e `Etapa.delete`: todo EF antes do EM; no mesmo ensino, pela série) e não se arrasta; componente segue o código.
 - Reordenar (descritores da MEC, tarefas): `ordenavel` (`static/ui/componentes/autosave.js`) em `<ul|ol x-data="ordenavel" id="…" data-ordem-url="…/reordenar/">` com filhos `[data-id]` e `_componentes/ordem.html` (alça `.alca` do SortableJS + "Mover para cima/baixo" para o teclado). Servidor: `reordenar(request, qs, revistas=…, titulo=…)` grava 1…N pelo protocolo do autosave (impacto, 409 do bloqueio); 422 se `ids` não for exatamente o conjunto atual. Erro ou Cancelar no modal voltam a ordem gravada.
 
 ### Configurações e zona de perigo (U9)

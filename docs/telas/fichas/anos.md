@@ -106,7 +106,7 @@ Cabeçalho "Ano <ano>", link "Anos" acima e a frase "Etapas e componentes valem 
 ## Wireframe (1440 px)
 
 ```
-┌ Revista Eletrônica  [2026 ▾]  Painel Projetos Matrizes Templates Impresso                  Ana  Admin  Sair ┐
+┌ Revista Eletrônica  [2026 ▾]  Painel Projetos Matrizes Templates Impresso                  Ana         Sair ┐
 │                     ┌────────────────────┐                                                               │
 │                     │ 2026  ←            │                                                               │
 │                     │ 2025               │                                                               │

@@ -101,7 +101,7 @@ Manter os textos-modelo das revistas (fascículos F1 e F2) de cada ano. Desde o 
 
 Lista (1440):
 ```
-Revista Eletrônica  [2026 ▾]  Painel Projetos Matrizes [Templates] Impresso                 Ana  Admin  Sair
+Revista Eletrônica  [2026 ▾]  Painel Projetos Matrizes [Templates] Impresso                 Ana         Sair
 ──────────────────────────────────────────────────────────────────────────────────────────────────────
 Templates                                                                            [+ Novo template]
 Textos-modelo das revistas, por fascículo. Editar um texto cria uma versão nova; ...

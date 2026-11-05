@@ -76,7 +76,7 @@ Nenhum. O painel só lê. "Validar selecionadas" leva à tela de validação em 
 ## Wireframe (1440 px)
 
 ```
-┌ Revista Eletrônica  [2026 ▾]  [Painel] Projetos Matrizes Templates Impresso             Ana  Admin  Sair ┐
+┌ Revista Eletrônica  [2026 ▾]  [Painel] Projetos Matrizes Templates Impresso             Ana         Sair ┐
 Painel da temporada 2026
 As revistas ativas, por parceiro: o que falta para cada uma sair completa, e onde resolver.
 Parceiro [Todos ▾]  Componente [Todos ▾]  Template [Todos ▾]  Matriz [Todas ▾]  Situação [Todas ▾]  Limpar filtros

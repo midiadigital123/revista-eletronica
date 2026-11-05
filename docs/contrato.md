@@ -1,3 +1,5 @@
+> **Sistema antigo, aposentado.** Este contrato descreve a API Express/Mongo e o editor React (tag `legado-express`; fora do compose desde a D-187). O sistema atual é o Django em `app/`: as rotas vigentes estão em [`telas/telas-b.md`](telas/telas-b.md) e as regras em [`regras-de-negocio.md`](regras-de-negocio.md).
+
 # Contrato — API ↔ Editor ↔ Revista
 
 Fonte da verdade em código: `contrato/schemas.ts`, `contrato/campos-pagina.ts`, `contrato/revista.ts`.

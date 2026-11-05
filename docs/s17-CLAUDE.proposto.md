@@ -1,3 +1,5 @@
+> **Superado em 05/11/2026.** Esta era a proposta de `CLAUDE.md` do S17. O `CLAUDE.md` da raiz foi atualizado a partir dela (visão geral, comandos e arquitetura das telas B); use o da raiz.
+
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.

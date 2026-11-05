@@ -108,7 +108,7 @@ Deixar cada projeto do ano pronto para gerar as revistas: o nome que sai na capa
 ### Wireframe (1440 px)
 
 ```
-┌ Revista Eletrônica  [2026 ▾]  Painel [Projetos] Matrizes Templates Impresso             Ana  Admin  Sair ┐
+┌ Revista Eletrônica  [2026 ▾]  Painel [Projetos] Matrizes Templates Impresso             Ana         Sair ┐
 │ Projetos de 2026                                                                                      │
 │ Projeto GO                                                                       ✓ Salvo às 10:15     │
 │ Parceiro GO   Ano 2026   Matriz Comunitária   Revistas LP, MT   Situação Ativo                        │

@@ -1,6 +1,8 @@
 # Rascunho de UI: telas e ajustes que faltam (revista-express, Django admin)
 
-Base: `inventario-telas.md` (mesma pasta) + código em `app/nucleo/` (branch `refatoracao-django`, 2026-10-30). Só planejamento: nada foi editado no repositório.
+> **Rascunho histórico de 30/10/2026**, escrito para o admin. A reforma de UX (U0–U10) e as telas B já o superaram: o estado atual está em [`telas-b.md`](telas-b.md) e em [`design-system.md`](design-system.md).
+
+Base: `inventario.md` (mesma pasta) + código em `app/nucleo/` (branch `refatoracao-django`, 2026-10-30). Só planejamento: nada foi editado no repositório.
 
 **Estilo:** tudo segue a seção 6 do inventário (tema padrão do Django admin; `breadcrumbs` "Início › …"; `module`; `submit-row`; `object-tools-items`; `messages`; `errornote`; `impacto-alerta`). Nenhum tema, fonte, CSS ou framework novo. Onde precisar de CSS, ele vai no `template_editor.css` que já existe.
 

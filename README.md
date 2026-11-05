@@ -1,278 +1,124 @@
 # Revista Express
 
-Editor web para montar as **revistas eletrônicas de resultados de avaliação** da Fundação CAEd.
+Sistema para montar as **revistas eletrônicas de resultados de avaliação** da Fundação CAEd.
 
-A equipe pedagógica digita, descritor por descritor, o que cada faixa da escala de proficiência significa. O sistema transforma esses dados numa revista HTML pronta: você vê o resultado no **preview** e baixa um **pacote `.zip`** que funciona offline.
+Cada ano, a equipe cadastra a matriz (descritores e tarefas), os cortes de cada parceiro e
+os textos. O sistema monta uma revista por **projeto × componente** (LP, MT), com dois
+fascículos: **F1** (escalas de proficiência) e **F2** (infográfico em SVG). A revista é vista no
+**preview**, validada e baixada como **zip** que abre offline. O impresso recebe "o que mudou"
+e as planilhas.
 
-```
-  Equipe pedagógica                 Editor + API                    Entrega
- ┌──────────────────┐       ┌──────────────────────────┐      ┌─────────────────┐
- │ digita descritor,│ ───▶  │ valida, salva no Mongo,  │ ───▶ │ preview no      │
- │ escala, BNCC...  │       │ renderiza a revista      │      │ navegador + .zip│
- └──────────────────┘       └──────────────────────────┘      └─────────────────┘
-```
-
----
-
-## Sumário
-
-1. [Conceitos do domínio](#1-conceitos-do-domínio)
-2. [Arquitetura](#2-arquitetura)
-3. [Como rodar com Docker](#3-como-rodar-com-docker-recomendado)
-4. [Como desenvolver sem Docker](#4-como-desenvolver-sem-docker)
-5. [Fluxo de uso](#5-fluxo-de-uso-no-editor)
-6. [O contrato compartilhado](#6-o-contrato-compartilhado)
-7. [Extração de descritores de PDF](#7-extração-de-descritores-de-pdf)
-8. [Testes e qualidade](#8-testes-e-qualidade)
-9. [Operação](#9-operação)
-10. [Documentos relacionados](#10-documentos-relacionados)
+É uma aplicação **Django + PostgreSQL** em `app/`. O dia a dia roda em telas próprias (as "telas B",
+com menu Painel · Projetos · Matrizes · Templates · Impresso); o admin do Django continua para o
+que ainda não tem tela (seção 4).
 
 ---
 
-## 1. Conceitos do domínio
-
-Antes de mexer no código, vale entender o vocabulário. Ele aparece igual nas telas, na API e nos nomes de arquivos.
-
-```
-Projeto (ex.: "SAEGO 2025")
-├── Página ............ título, introdução, imagem do topo (compartilhada por todos os cadernos)
-└── Cadernos .......... um por disciplina
-    ├── lingua-portuguesa
-    │   └── Anos ...... 2ef, 5ef, 9ef, 3em...
-    │       ├── Faixa da escala (mínimo e máximo, ex.: 0 a 500)
-    │       ├── 3 cortes  ──▶ dividem a faixa em 4 padrões
-    │       └── Descritores (D01, D02, ...)
-    │           ├── tópico, descrição, pré-requisitos
-    │           ├── BNCC (práticas, conhecimentos, habilidades)
-    │           └── Escala: linhas (nível + texto) em cada padrão
-    └── matematica
-        └── ...
-```
-
-| Termo | O que significa |
-|---|---|
-| **Projeto** | Uma revista inteira (por exemplo, a de um estado num ano). Tem nome e *slug* (o identificador na URL). |
-| **Página** | Os textos e imagens que envolvem a escala: título, introdução, imagem do topo. |
-| **Caderno / disciplina** | Uma parte da revista. Ids fixos: `lingua-portuguesa` e `matematica`. Ao criar o projeto, você marca as disciplinas; cada uma gera um caderno. O PDF de Alfabetização (LP + MT juntos) pode ser enviado nos dois campos. |
-| **Ano (etapa)** | A série avaliada, no formato `<n>ef` ou `<n>em`: `2ef` = 2º ano do Ensino Fundamental, `3em` = 3ª série do Ensino Médio. |
-| **Escala de proficiência** | Uma régua numérica (ex.: 0 a 500) onde a nota do aluno é posicionada. |
-| **Cortes e padrões** | Três valores de corte dividem a régua em **4 padrões de desempenho** contíguos: o Padrão 01 vai do mínimo até o corte 1, o Padrão 02 começa logo depois, e assim por diante. Cores fixas: 01 `#f72628`, 02 `#ff8d43`, 03 `#b3ccff`, 04 `#0ed3ff`. |
-| **Descritor** | Uma habilidade avaliada (D01, D02...). Cada um tem linhas ancoradas em níveis da escala. |
-| **BNCC** | Base Nacional Comum Curricular. Cada descritor indica práticas, conhecimentos e códigos de habilidade (ex.: `EF05LP01`). |
-
-**Leitura cumulativa da escala:** uma habilidade ancorada no nível 250 é dominada por todo aluno com nota **maior ou igual** a 250. Por isso a revista mostra a escala como uma régua que se lê de baixo para cima.
-
----
-
-## 2. Arquitetura
-
-```
- Navegador
-    │  http://<host>:8080
-    ▼
- ┌─────────────────────────────┐
- │ editor  (nginx)             │  serve o app React e aplica a CSP
- │  /      → SPA React         │
- │  /api/* → proxy para a API  │
- └──────────────┬──────────────┘
-                ▼
- ┌─────────────────────────────┐        ┌───────────────────────────────┐
- │ api  (Express, porta 3000)  │ ─────▶ │ mongo  (replica set rs0)      │
- │  • valida com o contrato    │        │  projetos, usuários, sessões, │
- │  • renderiza revista/*.hbs  │        │  imagens (GridFS)             │
- │  • chama o extrator de PDF  │        └───────────────────────────────┘
- └─────────────────────────────┘
-```
-
-Os três serviços são definidos em `docker-compose.yml`. Só o editor expõe porta (`8080`); API e Mongo ficam na rede interna.
-
-### Pastas
-
-| Pasta / arquivo | O que tem | Tecnologias |
-|---|---|---|
-| `editor/` | A interface de edição (SPA). | React 19, Vite, Tailwind 4, shadcn/ui, TanStack Query, react-hook-form + zod, MSW (mocks) |
-| `api/` | Rotas REST, regras de domínio, autenticação, geração da revista e do zip. | Express 5, Mongoose, express-session + connect-mongo, Handlebars, archiver, pino |
-| `contrato/` | **Fonte da verdade** dos tipos e schemas Zod usados por API e editor. | TypeScript + Zod |
-| `revista/` | O template da revista publicada: `escala.hbs`, `script.js`, `styles.css`, `assets/`. | Handlebars, JS puro, CSS |
-| `scripts/` | `extrair_descritores.py` (lê o PDF da revista) e `sync-contrato.mjs` (copia o contrato). | Python (só stdlib) + `pdftotext`, Node |
-| `docs/` | `contrato.md` (todas as rotas), `docker.md`, `e2e.md`, `fixtures/revista.json`. | — |
-| `descritores.json`, `saida/` | Dados reais de exemplo (`saida/` = resultado do extrator). | — |
-| `escala.html`, `script.js`, `styles.css` (raiz) | Protótipo original da revista, anterior ao editor. A versão em uso fica em `revista/`. | — |
-
----
-
-## 3. Como rodar com Docker (recomendado)
+## 1. Como subir
 
 Pré-requisito: Docker com o plugin `compose`.
 
-1. Crie o arquivo de ambiente:
-   ```bash
-   cp .env.example .env
-   ```
-2. Gere um segredo de sessão e cole em `SESSION_SECRET` no `.env`:
-   ```bash
-   openssl rand -hex 32
-   ```
-3. Troque `ADMIN_EMAIL` e `ADMIN_SENHA` no `.env`.
-   A API **se recusa a subir** se `SESSION_SECRET` ou `ADMIN_SENHA` ainda começarem com `troque` (valores do exemplo).
-4. Suba tudo:
-   ```bash
-   docker compose up --build
-   ```
-5. Abra **http://localhost:8080** e entre com o admin do `.env`.
-   O admin é criado na primeira subida (seed idempotente: rodar de novo não duplica).
-
-Outras máquinas da mesma rede acessam por `http://<ip-da-máquina>:8080`.
-
-| Quero... | Comando |
-|---|---|
-| ver os logs | `docker compose logs -f` |
-| parar | `docker compose down` |
-| parar e **apagar o banco** | `docker compose down -v` |
-
----
-
-## 4. Como desenvolver sem Docker
-
-Pré-requisito: Node 22.
-
-### Opção A — só o editor, com dados falsos (mais rápido)
-
-Não precisa de API nem de banco. O [MSW](https://mswjs.io/) intercepta as chamadas `/api` no navegador.
-
 ```bash
-cd editor
-npm ci
-npm run dev:mock
+docker compose up -d --wait db
+docker compose run --rm app python manage.py migrate
+docker compose run --rm app python manage.py createsuperuser
+docker compose up -d app
 ```
 
-Abra http://localhost:5173.
+Abra `http://localhost:8000/` (vai para o Painel do ano mais novo; sem ano, para `/ui/anos/`) ou
+`http://localhost:8000/admin/`.
 
-### Opção B — editor + API reais
+- O compose sobe só `db` (PostgreSQL 17) e `app` (`docker-compose.yml`). Mongo, API e editor React
+  saíram (D-187).
+- Variáveis: `app/.env.example`. O compose lê o `.env` da **raiz**. Todas têm default de
+  desenvolvimento; em produção, preencha `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=0`,
+  `DJANGO_ALLOWED_HOSTS` e `POSTGRES_PASSWORD`.
+- Porta: `APP_PORT` (default 8000), só em `127.0.0.1`.
+- Cada worktree pode subir o próprio banco com `docker compose -p <nome> …`.
+- Dados de demonstração para ver o preview: `docker compose run --rm app python manage.py criar_demo`
+  (só com DEBUG; imprime a URL e a senha do usuário `demo-preview`).
+- Detalhes de Docker, backup e restore: [`docs/docker.md`](docs/docker.md).
 
-1. Tenha um MongoDB **em replica set** (a API usa transações). Um jeito simples:
-   ```bash
-   docker run -d --name mongo-dev -p 27017:27017 mongo:7 --replSet rs0
-   docker exec mongo-dev mongosh --quiet --eval "rs.initiate()"
-   ```
-2. Configure e suba a API (porta 3000):
-   ```bash
-   cd api
-   cp .env.example .env   # ajuste MONGO_URL para mongodb://localhost:27017/revista?replicaSet=rs0
-   npm ci
-   npm run dev
-   ```
-3. Em outro terminal, suba o editor (porta 5173). O Vite repassa `/api` para `localhost:3000`:
-   ```bash
-   cd editor
-   npm ci
-   npm run dev
-   ```
-
-Para usar **Importar PDF** fora do Docker, instale `python3` e `poppler-utils` (fornece o `pdftotext`).
-
----
-
-## 5. Fluxo de uso no editor
-
-1. **Entrar.** Login com e-mail e senha. Perfis: `admin` (também cadastra usuários) e `editor`.
-2. **Criar projeto.** Em *Projetos > Novo projeto*, informe nome, slug e marque as disciplinas. Escolha a origem:
-   - **Vazio** — anos sem descritores, escala de 0 a 500.
-   - **Copiar projeto** — duplica página, imagens e as disciplinas marcadas de outro projeto.
-   - **Importar PDF** — lê os descritores do PDF da revista e preenche os anos antes de criar.
-3. **Editar a Página.** Aba *Página*: título, parágrafos da introdução, imagem do topo.
-4. **Editar um caderno.** Cada disciplina tem sua aba. Dentro dela, escolha o ano (ou crie com **+ Ano**) e ajuste:
-   - faixa da escala e os 3 cortes;
-   - descritores: código, tópico, descrição, pré-requisitos, BNCC;
-   - linhas da escala de cada padrão (nível + texto).
-5. **Salvar.** Não há botão salvar: cada campo **salva sozinho ao sair dele**. O cabeçalho mostra o estado do salvamento.
-6. **Conferir.** **Preview** abre a revista do caderno da aba atual.
-7. **Entregar.** **Gerar pacote** baixa o `.zip` (uma pasta por caderno + um índice). **Exportar JSON** baixa os dados brutos.
-
-### Uma pessoa edita por vez
-
-Para ninguém sobrescrever o texto de outra pessoa, o projeto tem **bloqueio de edição**:
-
-- quem abre primeiro fica com o bloqueio (renovado a cada 30 s; expira em 2 min sem renovação);
-- quem chega depois vê o projeto em **somente leitura**, com o nome de quem está editando e um botão **Tentar editar**;
-- o bloqueio é liberado ao fechar a aba ou após 15 min sem interação.
-
-Detalhes do protocolo em [`docs/contrato.md`](docs/contrato.md#bloqueio-de-edição-).
-
----
-
-## 6. O contrato compartilhado
-
-API e editor precisam concordar sobre o formato dos dados. Em vez de manter dois conjuntos de tipos, existe **um só**, em `contrato/`:
-
-```
-contrato/schemas.ts ─┬─▶ api/src/contrato/schemas.ts     (cópia gerada)
-contrato/revista.ts  │
-campos-pagina.ts     └─▶ editor/src/contrato/schemas.ts  (cópia gerada)
-```
-
-Regra de ouro: **edite só em `contrato/`**, depois rode:
-
-```bash
-node scripts/sync-contrato.mjs
-```
-
-As cópias levam o cabeçalho `// GERADO por scripts/sync-contrato.mjs`. O `npm test` de `api/` e de `editor/` roda `sync-contrato.mjs --check` antes e **falha se alguma cópia divergir**. O mesmo vale para a fixture `docs/fixtures/revista.json`.
-
-Todas as rotas, corpos, respostas e códigos de erro estão em [`docs/contrato.md`](docs/contrato.md).
-
----
-
-## 7. Extração de descritores de PDF
-
-`scripts/extrair_descritores.py` lê a seção *"Interpretação pedagógica da escala"* do PDF da revista e gera os dados no formato do editor. Usa só a biblioteca padrão do Python e o `pdftotext`.
-
-```bash
-# grava um JSON por disciplina (ex.: saida/lingua-portuguesa.json)
-python3 scripts/extrair_descritores.py "<revista.pdf>" saida
-
-# imprime tudo em uma linha, sem gravar arquivos (é assim que a API chama)
-python3 scripts/extrair_descritores.py "<revista.pdf>" --stdout
-```
-
-**Como funciona:** o script lê cada palavra com suas coordenadas (`pdftotext -bbox`). A posição na página resolve o que texto corrido não resolve: pré-requisitos em duas colunas, rótulos da BNCC centralizados e qual texto pertence a qual faixa da régua.
-
-**Limitação conhecida:** nas páginas do 5º ano o PDF não imprime os números de corte. O script usa a tabela `CORTES_SEM_NUMERO` (valores do Saeb). Se a revista usar outros cortes, atualize essa tabela.
-
-No editor, o mesmo script roda pela rota `POST /api/extracao` (PDF de até 50 MB).
-
----
-
-## 8. Testes e qualidade
+## 2. Como testar
 
 | O que | Comando | Observação |
 |---|---|---|
-| API | `cd api && npm test` | Vitest + supertest com Mongo em memória (`mongodb-memory-server`). Não precisa de banco. |
-| Editor | `cd editor && npm test` | Vitest + Testing Library (jsdom), API simulada pelo MSW. |
-| Régua da revista | `node revista/regua.test.mjs` | Testa a montagem das faixas da escala. |
-| Extrator de PDF | `python3 scripts/test_extrair_descritores.py` | Usa o PDF real; sem ele, o teste é pulado. Outro PDF: `REVISTA_PDF=<pdf> python3 ...` |
-| Tipos | `npm run typecheck` | Em `api/` e em `editor/`. |
-| Lint / formatação | `npm run lint` · `npm run format` | ESLint + Prettier, em cada pacote. |
+| Suíte Django | `docker compose run --rm app python manage.py test` | O esperado é OK; 8 testes dependem dos PDFs SAEGO e ficam pulados sem eles. |
+| Com os PDFs | `docker compose run --rm -v "$PWD/<pasta dos PDFs>:/pdfs:ro" app python manage.py test` | Pasta: `revista/modelo/PDFs Matriz Comunitária/`. 0 pulados. |
+| Migrações | `docker compose run --rm app python manage.py makemigrations --check` | Tem que dizer `No changes detected`. |
+| Régua do F1 (JS) | `node app/nucleo/static/revista/f1/regua.test.mjs` | Sem dependências. |
+| Navegador (Playwright) | `docker compose up -d app && cd app/e2e && npm ci && E2E_ADMIN_USUARIO=… E2E_ADMIN_SENHA=… npx playwright test` | baseURL `http://localhost:8000`; roda em chromium 1280 e 1440. Sem as `E2E_*`, os specs pulam em silêncio. |
 
-Há também um roteiro **E2E manual** (login, edição, persistência, preview, zip, bloqueio, exclusão) em [`docs/e2e.md`](docs/e2e.md).
+## 3. Perfis
 
----
+Grupos fixos, criados por migração. Tabela única em `app/nucleo/permissoes.py`; versão por ação em
+[`docs/regras-de-negocio.md`](docs/regras-de-negocio.md#8-perfis-e-permissões).
 
-## 9. Operação
+| Grupo | Pode |
+|---|---|
+| **Pedagógica** | tudo do ano: cadastros, matriz, cortes, templates, padrões, projetos, variáveis, revistas, validar, excluir o que não está em uso |
+| **Mídias Digitais** | o mesmo que a Pedagógica |
+| **Admin** | o da Pedagógica + gerenciar usuários (só dá os grupos Pedagógica e Mídias Digitais) + apagar o ano inteiro |
+| **Impresso** | ver tudo + marcar "Revista Impressa Atualizada" |
+| superusuário | tudo; é o único que põe alguém em Admin ou Impresso, e o único que vê o botão "Admin" no cabeçalho |
 
-- **Backup e restore do Mongo, troubleshooting:** [`docs/docker.md`](docs/docker.md).
-- **Limites de upload:** imagem 5 MB, PDF 50 MB.
-- **Segurança:** o nginx do editor aplica Content-Security-Policy; a API usa helmet, limite de tentativas de login e cookie de sessão `httpOnly`. Nunca faça commit do `.env`.
+Revista nunca é apagada (é arquivada) e usuário não é excluído (é desativado). Usuários em lote:
+`manage.py criar_usuarios <csv usuario,grupo> --url <endereço>` cria sem senha e imprime o link
+do Django para cada um definir a sua.
 
----
+## 4. Jornada da temporada e onde cada passo acontece
 
-## 10. Documentos relacionados
+Fichas de cada tela: [`docs/telas/telas-b.md`](docs/telas/telas-b.md).
+
+1. **Abrir o ano** (`/ui/anos/`, "Abrir novo ano" no seletor de ano): copia etapas, componentes,
+   padrões (cor e nome), matrizes e templates do ano anterior. Cortes, parceiros e escolhas começam
+   em branco. O primeiro ano (2026) foi carregado por comandos: [`docs/s17-carga-2026.md`](docs/s17-carga-2026.md).
+2. **Conferir o ano** (`/ui/anos/<ano>/`, "Configurar <ano>"): etapas, componentes e padrões do ano.
+3. **Matrizes** (`/ui/matriz/<ano>/`): editar, duplicar, reimportar de PDF ou planilha.
+4. **Cortes** (hub **Projetos**, aba Cortes): digitar os cortes de cada parceiro cria o projeto e as
+   revistas dele.
+5. **Em massa** (hub Projetos, aba Lista): "Atribuir matriz…" e "Atribuir template…".
+6. **Templates** (Markdown com `{{variável}}`, lista em [`docs/variaveis.md`](docs/variaveis.md)) e
+   **variáveis** de cada projeto (aba Variáveis, ou a ficha do projeto).
+7. **Revista**: SVG do F2, capa, textos por seção; **preview**.
+8. **Painel** (`/painel/<ano>/`): o que falta em cada revista; **Validado** um a um ou em lote.
+9. **Impresso** (`/ui/impresso/<ano>/`): "o que mudou" + planilhas + "Revista Impressa Atualizada".
+10. **Zip**: botão "Baixar zip" na linha de cada revista, na aba Lista de Projetos.
+
+Ainda só pelo admin (`/admin/`), até as telas B cobrirem: criar matriz e criar template, baixar o
+gabarito de ids do SVG, o arquivo do item e a planilha de grupos de corte, e gerenciar usuários.
+A lista atual está na seção 2 de [`docs/telas/telas-b.md`](docs/telas/telas-b.md).
+
+## 5. Onde está cada coisa
+
+| Caminho | O quê |
+|---|---|
+| `app/sistema/` | projeto Django (settings, urls) |
+| `app/nucleo/models/`, `admin/`, `urls/`, `servicos/` | um arquivo por área; `urls/ui_*.py` são as telas B |
+| `app/nucleo/templates/ui/`, `app/nucleo/static/ui/` | HTML (HTMX + Alpine) e CSS/JS das telas B |
+| `app/nucleo/management/commands/` | `carregar_cadastros`, `importar_matriz`, `carregar_templates`, `abrir_ano`, `criar_usuarios`, `criar_demo` |
+| `app/nucleo/static/revista/` | JS e CSS da revista (F1 escalas, F2 svg-tour) |
+| `app/templates_seed/<ano>/` | textos iniciais dos templates |
+| `app/e2e/` | Playwright |
+| [`docs/`](docs/) | modelo ER, regras de negócio, variáveis, telas, roteiro do S17 |
+| [`plans/`](plans/) | planos de trabalho (refatoração S01–S18, reforma de UX, exclusão, lacunas das telas B) |
+| [`state.md`](state.md) | decisões técnicas (D-001…), estado atual e perguntas em aberto |
+| `api/`, `editor/`, `contrato/`, `scripts/` | sistema antigo (Express + Mongo + React), aposentado; o compose não o sobe. Fica como referência de visual (`editor/`) e de extração de PDF. Está também na tag `legado-express` |
+
+## 6. Operação
+
+- **Backup:** `docker compose exec db pg_dump -U revista revista > backup-$(date +%F).sql`.
+- **Restore:** `docker compose exec -T db psql -U revista revista < backup-AAAA-MM-DD.sql` (banco vazio).
+- Nunca faça commit do `.env`.
+
+## 7. Documentos relacionados
 
 | Arquivo | Para quê |
 |---|---|
-| [`PRODUCT.md`](PRODUCT.md) | Quem usa, propósito, princípios do produto. |
-| [`DESIGN.md`](DESIGN.md) | Sistema visual do editor (cores, tipografia, componentes). |
-| [`docs/contrato.md`](docs/contrato.md) | Referência completa da API. |
-| [`docs/docker.md`](docs/docker.md) | Docker, backup e troubleshooting. |
-| [`docs/e2e.md`](docs/e2e.md) | Roteiro de teste ponta a ponta. |
-| [`state.md`](state.md) | Registro das decisões técnicas (D-001, D-002...) e do estado atual. |
+| [`docs/regras-de-negocio.md`](docs/regras-de-negocio.md) | Regras vigentes, com a fonte de cada uma, e divergências abertas. |
+| [`docs/modelo-er.md`](docs/modelo-er.md) | Tabelas, FKs compostas, restrições, trigger e permissões do banco. |
+| [`docs/telas/telas-b.md`](docs/telas/telas-b.md) | Telas fora do admin, rotas e o que ainda é só admin. |
+| [`docs/telas/design-system.md`](docs/telas/design-system.md) | Convenções visuais e de código das telas B. |
+| [`docs/variaveis.md`](docs/variaveis.md) | Variáveis dos templates. |
+| [`docs/docker.md`](docs/docker.md) | Docker, backup e restore. |
+| [`state.md`](state.md) | Registro das decisões técnicas e do estado atual. |

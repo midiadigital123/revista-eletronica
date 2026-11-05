@@ -90,7 +90,7 @@ A página do projeto tem a aba Cortes (`/ui/projeto/<pk>/?aba=cortes`) com a lin
 ## Wireframe (1440 px)
 
 ```
-┌ Revista Eletrônica  [2026 ▾]  Painel [Projetos] Matrizes Templates Impresso          Ana  Admin  Sair ┐
+┌ Revista Eletrônica  [2026 ▾]  Painel [Projetos] Matrizes Templates Impresso          Ana         Sair ┐
 │ Projetos                                                                                           │
 │ Um projeto por parceiro no ano. Nasce quando os cortes do parceiro são lançados.                    │
 │  Lista   Cortes   Variáveis                                                                         │
