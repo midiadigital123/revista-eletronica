@@ -2205,3 +2205,4 @@ Enviar à Infra o texto do pedido com o link do repositório (main já tem `dock
 - Learning salva: CSRF atrás do proxy com HTTPS (origem https nas confiáveis; curl com cookie Secure dá 403 falso).
 - `INFRA.md` na raiz: guia da Infra (variáveis, stack no Portainer com `docker-compose.prod.yml`, Nginx com `Host`/50 MB/120 s, primeiro admin, backup com `pg_dump -Fc` + tar do volume `media`, restore, problemas comuns). Backup/restore testados num banco temporário do dev (7 usuários restaurados).
 - `INFRA.md` seção 3 reduzida a pedido do usuário: só "proxy com HTTPS necessário" + particularidades (Host, 50 MB, 120 s, proxy em container). Push de `feat/telas-b-ux` para `main`.
+- Learning salva: documento para a Infra diz o que o sistema exige, não como configurar o servidor.
