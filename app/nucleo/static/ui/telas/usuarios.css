@@ -1,0 +1,8 @@
+/* Usuários (templates/ui/usuarios/lista.html e form.html). Só o que a base (ui.css) não tem. */
+
+/* Grupo + "Mudar" na mesma linha da tabela. */
+.usuarios-grupo { flex-wrap: nowrap; align-items: center; }
+.usuarios-grupo .select { width: auto; min-width: 11rem; }
+
+/* Lista de regras de senha que o Django põe na ajuda (Novo usuário, Redefinir senha). */
+.ajuda ul { margin: 0; padding-left: 1.25rem; }

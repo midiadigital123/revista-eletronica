@@ -1,0 +1,28 @@
+{% extends "ui/base.html" %}{% load static %}
+{% comment %}Novo usuário (`UserCreationForm` + nome, e-mail e grupo) e Redefinir senha (`SetPasswordForm`), rotas
+`ui_usuarios_novo` e `ui_usuarios_senha` (nucleo/urls/ui_usuarios.py). Os campos são os do form: nenhum de privilégio.{% endcomment %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/usuarios.css' %}">{% endblock %}
+
+{% block conteudo %}
+<a class="mudo voltar" href="{% url 'ui_usuarios' %}">‹ Usuários</a>
+<header class="pagina-cab">
+  <div>
+    <h1>{{ titulo }}</h1>
+    <p class="mudo">{{ texto }}</p>
+  </div>
+</header>
+
+<form method="post" class="card card-estreito" novalidate>{% csrf_token %}
+  {% if form.non_field_errors %}<div class="caixa-erro" role="alert"><ul>{% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+  {% for f in form %}
+  <div class="campo">
+    <label for="{{ f.id_for_label }}">{{ f.label }}</label>
+    {{ f }}
+    {% if f.help_text %}<div class="ajuda" id="{{ f.auto_id }}_helptext">{{ f.help_text }}</div>{% endif %}
+    {% for e in f.errors %}<p class="erro">{{ e }}</p>{% endfor %}
+  </div>
+  {% endfor %}
+  <div class="acoes"><button class="btn" type="submit">{{ botao }}</button><a class="btn btn-ghost" href="{% url 'ui_usuarios' %}">Cancelar</a></div>
+</form>
+{% endblock %}
