@@ -1,0 +1,57 @@
+{% extends "ui/base.html" %}{% load static %}
+{% comment %}Usuários (S9). View em nucleo/urls/ui_usuarios.py; regras em nucleo/usuarios.py (as mesmas do admin).
+Cada controle sai só quando a regra deixa (`linha.editar`, `mudar_ativo`, `mudar_grupo`); a view confere de novo (403).
+Não há excluir: desativa (D-205).{% endcomment %}
+{% block titulo %}Usuários{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/usuarios.css' %}">{% endblock %}
+
+{% block conteudo %}
+<header class="pagina-cab">
+  <div>
+    <h1>Usuários</h1>
+    <p class="mudo">Quem entra no sistema e em qual grupo. O grupo decide o que a pessoa pode fazer. Ninguém é apagado: quem sai é desativado.</p>
+  </div>
+  {% if perms.auth.add_user %}<div class="acoes"><a class="btn" href="{% url 'ui_usuarios_novo' %}">Novo usuário</a></div>{% endif %}
+</header>
+
+<div class="tabela-caixa">
+  <table class="tabela">
+    <thead><tr><th scope="col">Usuário</th><th scope="col">Nome</th><th scope="col">Grupo</th><th scope="col">Situação</th><th scope="col">Último acesso</th><th scope="col">Ações</th></tr></thead>
+    <tbody>
+    {% for linha in linhas %}{% with u=linha.u %}
+      <tr>
+        <th scope="row">{{ u.username }}{% if u == request.user %} <span class="badge badge-contorno">você</span>{% endif %}</th>
+        <td>{{ u.get_full_name|default:"—" }}</td>
+        <td>
+          {% if linha.mudar_grupo %}
+          <form method="post" action="{% url 'ui_usuarios_grupo' u.pk %}" class="acoes usuarios-grupo">{% csrf_token %}
+            <label class="sr-only" for="grupo-{{ u.pk }}">Grupo de {{ u.username }}</label>
+            <select class="select" id="grupo-{{ u.pk }}" name="grupo" required>
+              {% if not linha.grupo_atual %}<option value="">Sem grupo</option>{% endif %}
+              {% for g in grupos %}<option value="{{ g.pk }}"{% if g == linha.grupo_atual %} selected{% endif %}>{{ g.name }}</option>{% endfor %}
+            </select>
+            <button class="btn btn-outline btn-sm" type="submit" aria-label="Mudar grupo de {{ u.username }}">Mudar</button>
+          </form>
+          {% else %}{{ linha.grupos|default:"Sem grupo" }}{% endif %}
+        </td>
+        <td>{% if u.is_active %}<span class="badge badge-secundario">Ativo</span>{% else %}<span class="badge badge-alerta">Desativado</span>{% endif %}</td>
+        <td>{% if u.last_login %}{{ u.last_login|date:"d/m/Y H:i" }}{% else %}<span class="mudo">Nunca entrou</span>{% endif %}</td>
+        <td>
+          {% if linha.editar or linha.mudar_ativo %}
+          <div class="acoes">
+            {% if linha.mudar_ativo %}
+            <form method="post" action="{% url 'ui_usuarios_ativo' u.pk %}">{% csrf_token %}
+              {% if u.is_active %}<button class="btn btn-outline btn-sm" type="submit" name="acao" value="desativar" aria-label="Desativar {{ u.username }}">Desativar</button>
+              {% else %}<button class="btn btn-outline btn-sm" type="submit" name="acao" value="ativar" aria-label="Ativar {{ u.username }}">Ativar</button>{% endif %}
+            </form>
+            {% endif %}
+            {% if linha.editar %}<a class="btn btn-ghost btn-sm" href="{% url 'ui_usuarios_senha' u.pk %}" aria-label="Redefinir senha de {{ u.username }}">Redefinir senha</a>{% endif %}
+          </div>
+          {% else %}<span class="mudo">Só o superusuário altera</span>{% endif %}
+        </td>
+      </tr>
+    {% endwith %}{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

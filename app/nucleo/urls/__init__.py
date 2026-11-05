@@ -31,4 +31,5 @@ urlpatterns = [
     path("ui/lotes/", include("nucleo.urls.ui_lotes")),
     path("ui/anos/", include("nucleo.urls.ui_anos")),
     path("ui/excluir/", include("nucleo.urls.ui_excluir")),  # D-205: uma página para toda entidade
+    path("ui/usuarios/", include("nucleo.urls.ui_usuarios")),  # S9: as regras do admin em nucleo/usuarios.py
 ]
