@@ -100,7 +100,10 @@ class AnoVazioTest(Perfis, TestCase):
     def test_matrizes_mostra_abrir_origem_so_para_quem_duplica(self):
         origem = Matriz.objects.create(ano=Ano.objects.create(ano=2026), nome="SAEGO")
         url = reverse("ui_matriz", args=[2025])
-        self.assertBotao(self.vazio(self.ped, url), "Abrir SAEGO", reverse("ui_matriz_detalhe", args=[origem.pk]))
+        bloco = self.vazio(self.ped, url)
+        self.assertBotao(bloco, "Abrir SAEGO", reverse("ui_matriz_detalhe", args=[origem.pk]))
+        self.assertBotao(bloco, "Nova matriz")  # S6
+        self.assertNotIn("importar_matriz", bloco)
         bloco = self.vazio(self.imp, url)
         self.assertIn("Nenhuma matriz em 2025", bloco)
         self.assertSemBotao(bloco)

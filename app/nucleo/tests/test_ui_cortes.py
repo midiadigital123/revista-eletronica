@@ -33,10 +33,26 @@ class GradeUiTest(Base):
         self.assertEqual(resp.status_code, 200)
         self.assertTemplateUsed(resp, "ui/base.html")
         self.assertContains(resp, f'data-url="{self.url_celula}"')
-        self.assertContains(resp, reverse("admin:nucleo_corte_exportar") + "?ano=2026")
+        self.assertContains(resp, reverse("cortes_exportar", args=[2026]))
+        self.assertNotContains(resp, "/admin/nucleo/corte/")
         self.assertContains(resp, reverse("painel", args=[2026]))
         self.assertNotContains(resp, "readonly")
         self.assertRedirects(self.client.get(reverse("cortes_inicio")), self.url)
+
+    def test_planilha_de_grupos_baixa_pela_tela_b(self):
+        """S8: a rota B devolve a mesma planilha do admin; ver a aba basta, sem permissão é 403."""
+        url = reverse("cortes_exportar", args=[2026])
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp["Content-Type"], "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        self.assertEqual(resp["Content-Disposition"], 'attachment; filename="cortes-2026.xlsx"')
+        self.assertEqual(resp.content[:2], b"PK")
+        self.assertEqual(self.client.get(reverse("cortes_exportar", args=[1999])).status_code, 404)
+        self.assertEqual(self.client.post(url).status_code, 405)
+        self.client.force_login(usuario("nada"))
+        self.assertEqual(self.client.get(url).status_code, 403)
+        self.client.logout()
+        self.assertRedirects(self.client.get(url), f"{reverse('admin:login')}?next={url}", fetch_redirect_response=False)
 
     def test_todos_os_grupos_menos_impresso_gravam(self):
         Parceiro.objects.create(nome="GO")

@@ -14,6 +14,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import PermissionDenied
 from django.forms import modelform_factory
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import path
@@ -37,6 +38,18 @@ def cortes(request, ano):
     ano = get_object_or_404(Ano, ano=ano)
     contexto, _ = grade(request, ano, ler_post=False)
     return TemplateResponse(request, "ui/cortes.html", {**contexto, "ano": ano, "secao": "projetos", "aba": "cortes"})
+
+
+@require_GET
+@login_required(login_url="admin:login")
+def exportar(request, ano):
+    """Planilha de grupos do ano (a "Exportar" do admin, mesma `planilha`); ver = ver a aba."""
+    if not pode_ver(request.user):
+        raise PermissionDenied
+    ano = get_object_or_404(Ano, ano=ano)
+    resposta = HttpResponse(regra.planilha(ano), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    resposta["Content-Disposition"] = f'attachment; filename="cortes-{ano.ano}.xlsx"'
+    return resposta
 
 
 @require_GET
@@ -149,6 +162,7 @@ def _excecao(parceiro, atual):
 urlpatterns = [
     path("", antiga, name="cortes_inicio"),
     path("<int:ano>/", antiga, name="cortes_antiga"),  # a rota `cortes` é a aba de Projetos (ui_projeto.py)
+    path("<int:ano>/exportar/", exportar, name="cortes_exportar"),
     path("<int:ano>/parceiro/", novo_parceiro, name="cortes_novo_parceiro"),
     path("<int:ano>/celula/", celula, name="cortes_celula"),
     path("<int:ano>/parceiro/<int:pk>/renomear/", renomear_parceiro, name="cortes_renomear_parceiro"),

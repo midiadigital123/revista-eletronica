@@ -48,6 +48,33 @@ class MatrizUiTest(BaseCadastro):
         cadastrar(2027)
         self.assertContains(self.client.get(reverse("ui_matriz", args=[2027])), "Nenhuma matriz em 2027")
 
+    def test_nova_matriz_leva_ao_reimportar_e_nome_repetido_nao_grava(self):
+        """S6: Pedagógica cria a matriz vazia do ano e cai no Reimportar (sem MEC, sem pedir confirmação)."""
+        self.client.force_login(usuario("ped", "Pedagógica"))
+        lista = reverse("ui_matriz", args=[2026])
+        self.assertContains(self.client.get(lista), 'data-abrir="dlg-nova"')
+        url = reverse("ui_matriz_nova", args=[2026])
+        self.assertContains(self.client.get(url), 'name="nome"')
+        resp = self.client.post(url, {"ano": self.a26.pk, "nome": "Municipal"})
+        nova = Matriz.objects.get(ano=self.a26, nome="Municipal")
+        self.assertRedirects(resp, reverse("ui_matriz_reimportar", args=[nova.pk]))
+        self.assertContains(resp := self.client.get(reverse("ui_matriz_reimportar", args=[nova.pk])), "Reimportar Municipal")
+        self.assertNotContains(resp, "Digite Municipal para confirmar")
+        resp = self.client.post(url, {"ano": self.a26.pk, "nome": "Municipal"}, **HX)
+        self.assertTemplateUsed(resp, "ui/parciais/matriz_form.html")
+        self.assertContains(resp, "Já existe uma matriz com este nome neste ano.")
+        self.assertEqual(Matriz.objects.filter(ano=self.a26, nome="Municipal").count(), 1)
+
+    def test_nova_matriz_so_para_quem_cria(self):
+        self.client.force_login(usuario("imp", "Impresso"))
+        lista = self.client.get(reverse("ui_matriz", args=[2026]))
+        self.assertNotContains(lista, "dlg-nova")
+        self.assertNotContains(lista, "Nova matriz")
+        url = reverse("ui_matriz_nova", args=[2026])
+        self.assertEqual(self.client.get(url).status_code, 403)
+        self.assertEqual(self.client.post(url, {"ano": self.a26.pk, "nome": "X"}).status_code, 403)
+        self.assertFalse(Matriz.objects.filter(nome="X").exists())
+
     def test_duplicar_leva_a_copia_e_nome_repetido_mostra_erro(self):
         a27 = cadastrar(2027)
         url = reverse("ui_matriz_duplicar", args=[self.matriz.pk])
@@ -248,6 +275,32 @@ class MecUiTest(BaseMundo):
         self.tarefa.refresh_from_db()
         self.assertIsNone(self.tarefa.arquivo)
         self.assertFalse(default_storage.exists(caminho))
+
+    def test_arquivo_do_item_baixa_pela_tela_b(self):
+        """S8: o link do item e o download são da tela B (nada de admin:), só leitura e fora do bloqueio."""
+        sessao = self.abrir()
+        envio = {CAMPO_SESSAO: sessao, "arquivo": SimpleUploadedFile("a.png", PNG, "image/png")}
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(reverse("ui_matriz_item", args=[self.mec.pk, self.d.pk, self.tarefa.pk]), envio, **HX)
+        self.tarefa.refresh_from_db()
+        url = reverse("ui_matriz_item_baixar", args=[self.mec.pk, self.d.pk, self.tarefa.pk])
+        pagina = self.client.get(self.url)
+        self.assertContains(pagina, f'href="{url}"')
+        self.assertNotContains(pagina, "/admin/nucleo/descritor/")
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp["Content-Type"], "image/png")
+        self.assertTrue(resp["Content-Disposition"].startswith("attachment"))
+        self.assertEqual(b"".join(resp.streaming_content), PNG)
+        self.assertEqual(self.client.post(url).status_code, 405)  # só GET
+        default_storage.delete(self.tarefa.arquivo)
+        self.assertEqual(self.client.get(url).status_code, 404)  # sumiu do storage
+        Tarefa.objects.filter(pk=self.tarefa.pk).update(arquivo=None)
+        self.assertEqual(self.client.get(url).status_code, 404)  # sem arquivo
+        Tarefa.objects.filter(pk=self.tarefa.pk).update(arquivo="itens/x.exe")
+        self.assertEqual(self.client.get(url).status_code, 404)  # tipo desconhecido
+        self.client.force_login(usuario("nada"))
+        self.assertEqual(self.client.get(url).status_code, 403)
 
     def test_excluir_tarefa_pede_o_codigo(self):
         url = reverse("ui_matriz_excluir_tarefa", args=[self.mec.pk, self.d.pk, self.tarefa.pk])

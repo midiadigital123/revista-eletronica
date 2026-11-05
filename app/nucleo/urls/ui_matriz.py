@@ -7,6 +7,7 @@ bloqueio dela (`ui_bloqueio.com_bloqueio`, alvo = MEC, D-081). Ficha: docs/telas
 """
 
 import re
+from pathlib import PurePosixPath
 
 from django import forms
 from django.contrib import messages
@@ -14,7 +15,8 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Q
 from django.forms import inlineformset_factory, modelform_factory
-from django.http import HttpResponse
+from django.core.files.storage import default_storage
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
@@ -45,6 +47,7 @@ from nucleo.servicos.matriz import (
 from nucleo.servicos.impacto import avisar_perdidos
 from nucleo.ui_autosave import erros, form_de_um_campo, proxima_ordem, quer_json, reordenar, responder_campo
 from nucleo.ui_bloqueio import com_bloqueio, e_htmx
+from nucleo.urls.preview import TIPOS_ITEM, servir
 
 ERROS = "Nada foi gravado: corrija os erros marcados."
 EDITAR = (
@@ -113,9 +116,11 @@ def matrizes(request, ano):
         .order_by("nome")
     )  # fmt: skip
     outras = Matriz.objects.exclude(ano=ano).select_related("ano").order_by("-ano__ano", "nome")
+    nova = _estilo(NovaMatrizForm(initial={"ano": ano.pk})) if request.user.has_perm("nucleo.add_matriz") else None
     return TemplateResponse(request, "ui/matriz/lista.html", {
         **_contexto_ano(ano), "matrizes": lista, "outras": outras, "vazio_titulo": f"Nenhuma matriz em {ano.ano}",
-    })
+        "nova": nova,
+    })  # fmt: skip
 
 
 def _matriz(request, pk, permissao=None):
@@ -125,6 +130,7 @@ def _matriz(request, pk, permissao=None):
 
 
 RenomearForm = modelform_factory(Matriz, form=MatrizForm, fields=["nome"], labels={"nome": "Nome"})
+NovaMatrizForm = modelform_factory(Matriz, form=MatrizForm, fields=["ano", "nome"], labels={"ano": "Ano", "nome": "Nome"})
 
 
 def _forms_matriz(m, duplicar=None):
@@ -149,9 +155,9 @@ def matriz(request, pk):
     })  # fmt: skip
 
 
-def _form_em_dialogo(request, m, chave, form, titulo, url):
-    """Erro: HTMX devolve o form para dentro do modal; sem JS, a página do form."""
-    contexto = {**_contexto_ano(m.ano), "matriz": m, "form": _estilo(form), "titulo": titulo, "url": url, "chave": chave}
+def _form_em_dialogo(request, m, chave, form, titulo, url, ano=None):
+    """Erro: HTMX devolve o form para dentro do modal; sem JS, a página do form. `ano` quando ainda não há matriz."""
+    contexto = {**_contexto_ano(ano or m.ano), "matriz": m, "form": _estilo(form), "titulo": titulo, "url": url, "chave": chave}
     if e_htmx(request):
         return TemplateResponse(request, "ui/parciais/matriz_form.html", contexto)
     return TemplateResponse(request, "ui/matriz/form.html", contexto)
@@ -171,6 +177,21 @@ def duplicar(request, pk):
             messages.success(request, f"Matriz {nova} criada como cópia de {origem}.")
             return _redirecionar(request, reverse("ui_matriz_detalhe", args=[nova.pk]))
     return _form_em_dialogo(request, origem, "duplicar", form, f"Duplicar {origem}", reverse("ui_matriz_duplicar", args=[pk]))
+
+
+@require_http_methods(["GET", "POST"])
+@login_required(login_url="admin:login")
+def nova(request, ano):
+    """S6: matriz vazia no ano da lista; o arquivo do SAEGO entra no Reimportar (a matriz nasce sem MEC)."""
+    if not (pode_ver(request.user) and request.user.has_perm("nucleo.add_matriz")):
+        raise PermissionDenied
+    ano = get_object_or_404(Ano, ano=ano)
+    form = NovaMatrizForm(request.POST or None, initial={"ano": ano.pk})
+    if request.method == "POST" and form.is_valid():
+        criada = form.save()
+        messages.success(request, f"Matriz {criada} criada. Importe o arquivo do SAEGO para trazer os descritores.")
+        return _redirecionar(request, reverse("ui_matriz_reimportar", args=[criada.pk]))
+    return _form_em_dialogo(request, None, "nova", form, "Nova matriz", reverse("ui_matriz_nova", args=[ano.ano]), ano=ano)
 
 
 @require_POST
@@ -435,11 +456,27 @@ def novo_descritor(request, pk):
     return _form_em_dialogo(request, m.matriz, "novo", form, f"Novo descritor em {m.etapa.codigo} {m.componente.codigo}", url)
 
 
+@require_GET
+@login_required(login_url="admin:login")
+def item_baixar(request, pk, dpk, tpk):
+    """Download do arquivo do item (D-180, a mesma regra do GET do admin): sem arquivo, tipo
+    desconhecido ou arquivo sumido do storage, 404. Só leitura: não passa pelo bloqueio da MEC."""
+    m = _mec(request, pk)
+    tarefa = get_object_or_404(Tarefa, pk=tpk, descritor__pk=dpk, descritor__matriz_etapa_cc=m)
+    tipo = TIPOS_ITEM.get(PurePosixPath(tarefa.arquivo or "").suffix)
+    if tipo is None:
+        raise Http404
+    try:
+        return servir(default_storage.open(tarefa.arquivo), tipo, as_attachment=True)
+    except FileNotFoundError:
+        raise Http404 from None
+
+
 @require_http_methods(["POST"])
 @login_required(login_url="admin:login")
 @com_bloqueio(_mec, pode_editar)
 def item(request, pk, dpk, tpk):
-    """Arquivo do item da tarefa (D-180): envia, troca ou remove. O download é o do admin."""
+    """Arquivo do item da tarefa (D-180): envia, troca ou remove. O download é `item_baixar`."""
     m = _mec(request, pk)
     d = get_object_or_404(Descritor, pk=dpk, matriz_etapa_cc=m)
     tarefa = get_object_or_404(Tarefa, pk=tpk, descritor=d)
@@ -555,6 +592,7 @@ def excluir_tarefa(request, pk, dpk, tpk):
 urlpatterns = [
     path("", inicio, name="ui_matriz_inicio"),
     path("<int:ano>/", matrizes, name="ui_matriz"),
+    path("<int:ano>/nova/", nova, name="ui_matriz_nova"),
     path("m/<int:pk>/", matriz, name="ui_matriz_detalhe"),
     path("m/<int:pk>/duplicar/", duplicar, name="ui_matriz_duplicar"),
     path("m/<int:pk>/renomear/", renomear, name="ui_matriz_renomear"),
@@ -569,5 +607,6 @@ urlpatterns = [
     path("mec/<int:pk>/d/<int:dpk>/campo/", campo, name="ui_matriz_campo"),
     path("mec/<int:pk>/d/<int:dpk>/excluir/", excluir_descritor, name="ui_matriz_excluir_descritor"),
     path("mec/<int:pk>/d/<int:dpk>/tarefa/<int:tpk>/item/", item, name="ui_matriz_item"),
+    path("mec/<int:pk>/d/<int:dpk>/tarefa/<int:tpk>/item/baixar/", item_baixar, name="ui_matriz_item_baixar"),
     path("mec/<int:pk>/d/<int:dpk>/tarefa/<int:tpk>/excluir/", excluir_tarefa, name="ui_matriz_excluir_tarefa"),
 ]

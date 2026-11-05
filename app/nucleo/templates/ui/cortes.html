@@ -7,7 +7,7 @@
 <div class="acoes aba-acoes">
   <p class="mudo">Cortes dos padrões de cada parceiro, por etapa e componente.</p>
   {% if pode_gravar or perms.nucleo.change_parceiro %}{% include "ui/_componentes/status_salvo.html" %}{% endif %}
-  <a class="btn btn-outline" href="{% url 'admin:nucleo_corte_exportar' %}?ano={{ ano.ano }}">
+  <a class="btn btn-outline" href="{% url 'cortes_exportar' ano.ano %}">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>
     Baixar planilha de grupos
   </a>

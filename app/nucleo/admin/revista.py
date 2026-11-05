@@ -21,8 +21,6 @@ Upload com ids faltando GRAVA e avisa (decisão do S11c): o template pode ganhar
 seções depois, e a pendência `ids_svg` do resolver já bloqueia o "Validado".
 """
 
-import csv
-import io
 import logging
 
 from django.contrib import admin, messages
@@ -102,11 +100,6 @@ def editor_secao(s):
     widget = EditorSecao(attrs={"rows": 6, "spellcheck": "true"})
     widget.cabecalho = f"## {s.id}\n{s.titulo}\n\n"
     return widget
-
-
-def celula(valor):
-    """Célula de CSV que o Excel não executa como fórmula (=, +, -, @, tab, CR no início)."""
-    return "'" + valor if valor[:1] in ("=", "+", "-", "@", "\t", "\r") else valor
 
 
 @admin.register(Revista)
@@ -280,14 +273,7 @@ class RevistaAdmin(BloqueioAdminMixin, admin.ModelAdmin):
         revista = get_object_or_404(Revista, pk=pk)
         if not self.has_view_permission(request, revista):
             raise PermissionDenied
-        f2 = RevistaFasciculo.objects.filter(revista=revista, fasciculo="F2").first()
-        saida = io.StringIO()
-        escritor = csv.writer(saida)
-        escritor.writerow(["id_no_svg", "secao_do_template"])
-        for secao, *_ in resolver.secoes_efetivas(f2) or []:
-            for id_ in arquivos.ids_esperados([secao]):
-                escritor.writerow([celula(id_), celula(secao)])
-        resposta = HttpResponse(saida.getvalue(), content_type="text/csv; charset=utf-8")
+        resposta = HttpResponse(arquivos.gabarito_ids_csv(revista), content_type="text/csv; charset=utf-8")
         resposta["Content-Disposition"] = f'attachment; filename="gabarito-ids-revista-{revista.pk}.csv"'
         return resposta
 
