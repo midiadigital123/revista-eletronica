@@ -86,10 +86,10 @@
   window.addEventListener("pagehide", () => {
     if (!enviando) navigator.sendBeacon(urlLiberar, dados());
   });
-  // Volta pelo bfcache: o envio anterior acabou; a renovação dirá se o bloqueio ainda é nosso.
+  // Volta/avança pelo bfcache: o pagehide já liberou o bloqueio desta sessão, e a página pode
+  // estar velha. Recarrega: o GET novo adquire outro bloqueio (o mesmo usuário assume, D-191).
   window.addEventListener("pageshow", (e) => {
-    enviando = false;
-    if (e.persisted) void renovar();
+    if (e.persisted) location.reload();
   });
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") void renovar();
