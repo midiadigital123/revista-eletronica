@@ -10,8 +10,8 @@ Manter os textos-modelo das revistas (fascículos F1 e F2) de cada ano. Desde o 
 
 | Perfil | O que pode |
 |---|---|
-| Pedagógica, Mídias Digitais, Admin | ver e editar (nome e texto); excluir o template que nenhuma revista usa (D-207) |
-| Impresso | só ver (lista, texto e pré-visualização); não vê "Excluir template…" |
+| Pedagógica, Mídias Digitais, Admin | ver e editar (nome e texto); criar template (S7); excluir o template que nenhuma revista usa (D-207) |
+| Impresso | só ver (lista, texto e pré-visualização); não vê "Novo template" nem "Excluir template…" |
 | Sem permissão de templates | nada: a página responde "acesso negado" |
 | Sem login | vai para o login e volta para a página |
 
@@ -42,7 +42,7 @@ Manter os textos-modelo das revistas (fascículos F1 e F2) de cada ano. Desde o 
 |---|---|---|
 | Trocar ano / aba | lista | recarrega a lista (a aba fica na URL) |
 | Abrir template | lista | editor |
-| Novo template | lista (com permissão de criar) | formulário do admin (`/admin/nucleo/template/add/`; tela B no S7) |
+| Novo template | lista e aba vazia (com `add_template` + `add_templateversao`) | formulário `/ui/templates/<ano>/novo/?aba=F1` (S7): componente do ano, fascículo (o da aba), nome e texto inicial já com as seções do fascículo. Texto inválido, componente de outro ano ou nome repetido: erro no campo, nada gravado. Salvar cria o template e a versão 1 juntos e abre o editor por seção; sem as permissões, 403 |
 | Escolher seção no índice | editor | mostra só aquela seção e a prévia dela |
 | N / I / lista / { } Variável | mini-barra da seção | aplica o formato ou insere a variável no campo com o cursor e atualiza a pré-visualização |
 | + Adicionar passo / + Adicionar diálogo / Remover seção | editor (só F2) | muda a estrutura na tela; nada grava até o Salvar (recarregar desfaz) |

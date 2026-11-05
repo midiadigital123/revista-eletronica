@@ -1,0 +1,52 @@
+{% extends "ui/base.html" %}{% load static %}
+{% comment %}S7 Novo template. View: nucleo/urls/ui_templates.py (novo). Grava o template e a versão 1; depois cai no editor por seção.
+Ficha: docs/telas/fichas/templates.md.{% endcomment %}
+{% block titulo %}Novo template {{ ano.ano }}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/templates.css' %}">{% endblock %}
+
+{% block conteudo %}
+<a class="mudo voltar" href="{% url 'ui_templates' ano.ano %}?aba={{ aba }}">‹ Templates {{ aba }}</a>
+<header class="pagina-cab">
+  <div>
+    <h1>Novo template</h1>
+    <p class="mudo">Ano {{ ano.ano }}. Grava o template com a versão 1 e abre o editor por seção para você refinar o texto.</p>
+  </div>
+</header>
+
+<form method="post" class="card tpl-novo" novalidate>{% csrf_token %}
+  <div class="campo">
+    <label for="id_componente">Componente</label>
+    <select class="select" id="id_componente" name="componente" required{% if form.componente.errors %} aria-invalid="true" aria-describedby="componente-erro"{% endif %}>
+      <option value="">Escolha o componente</option>
+      {% for c in componentes %}<option value="{{ c.pk }}"{% if form.componente.value|stringformat:"s" == c.pk|stringformat:"s" %} selected{% endif %}>{{ c.codigo }} {{ c.nome }}</option>{% endfor %}
+    </select>
+    {% if form.componente.errors %}<p class="erro" id="componente-erro">{{ form.componente.errors.0 }}</p>{% endif %}
+  </div>
+
+  <div class="campo">
+    <label for="id_fasciculo">Fascículo</label>
+    <select class="select" id="id_fasciculo" name="fasciculo" required{% if form.fasciculo.errors %} aria-invalid="true" aria-describedby="fasciculo-erro"{% endif %}>
+      {% for valor, rotulo in form.fields.fasciculo.choices %}{% if valor %}<option value="{{ valor }}"{% if form.fasciculo.value == valor %} selected{% endif %}>{{ valor }}</option>{% endif %}{% endfor %}
+    </select>
+    {% if form.fasciculo.errors %}<p class="erro" id="fasciculo-erro">{{ form.fasciculo.errors.0 }}</p>{% endif %}
+  </div>
+
+  <div class="campo">
+    <label for="id_nome">Nome</label>
+    <input class="input" id="id_nome" name="nome" value="{{ form.nome.value|default:'' }}" maxlength="200" autocomplete="off" required{% if form.nome.errors or form.non_field_errors %} aria-invalid="true" aria-describedby="nome-erro"{% endif %}>
+    <div id="nome-erro">{% for e in form.nome.errors %}<p class="erro">{{ e }}</p>{% endfor %}{% for e in form.non_field_errors %}<p class="erro">{{ e }}</p>{% endfor %}</div>
+  </div>
+
+  <div class="campo">
+    <label for="id_texto">Texto inicial</label>
+    <textarea class="textarea tpl-novo-texto" id="id_texto" name="texto" rows="12" spellcheck="true" aria-describedby="texto-dica{% if form.texto.errors %} texto-erro{% endif %}"{% if form.texto.errors %} aria-invalid="true"{% endif %}>{{ form.texto.value|default:'' }}</textarea>
+    <p class="ajuda" id="texto-dica">Cada seção começa com <code>## id</code>, tem título na linha seguinte e depois o texto. F1: <code>introducao</code> e <code>fechamento</code>. F2: <code>abertura</code> e <code>passo1</code>, mais passos e diálogos no editor. Se trocar o fascículo, ajuste as seções.</p>
+    {% if form.texto.errors %}<ul class="erro" id="texto-erro">{% for e in form.texto.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+  </div>
+
+  <div class="acoes">
+    <button class="btn" type="submit">Criar template</button>
+    <a class="btn btn-outline" href="{% url 'ui_templates' ano.ano %}?aba={{ aba }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

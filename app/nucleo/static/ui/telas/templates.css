@@ -292,3 +292,11 @@
 td.tpl-acoes { padding-block: 0.375rem; vertical-align: middle; }
 .tpl-excluir:hover { color: var(--destructive); }
 .tpl-perigo { margin-top: 2rem; }
+
+/* --- novo template (S7) --- */
+.tpl-novo {
+  max-width: 48rem;
+}
+.tpl-novo-texto {
+  font-family: var(--font-mono);
+}

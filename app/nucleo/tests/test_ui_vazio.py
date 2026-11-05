@@ -108,12 +108,13 @@ class AnoVazioTest(Perfis, TestCase):
 
     def test_templates_mostra_novo_template_so_para_quem_cria(self):
         url = reverse("ui_templates", args=[2025])
-        self.assertBotao(self.vazio(self.ped, url), "Novo template", reverse("admin:nucleo_template_add"))
+        novo = reverse("ui_templates_novo", args=[2025])
+        self.assertBotao(self.vazio(self.ped, url), "Novo template", novo + "?aba=F1")
         bloco = self.vazio(self.imp, url)
         self.assertIn("Nenhum template F1 neste ano", bloco)
         self.assertSemBotao(bloco)
         self.assertNotIn("use Novo template", bloco)
-        self.assert403(reverse("admin:nucleo_template_add"), {"nome": "X"})
+        self.assert403(novo, {"nome": "X"})
 
 
 class SemAnoTest(Perfis, TestCase):
