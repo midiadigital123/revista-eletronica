@@ -1789,6 +1789,14 @@ Enviar à Infra o texto do pedido com o link do repositório (main já tem `dock
 - **Arquivos afetados:** `app/nucleo/usuarios.py`, `app/nucleo/urls/ui_usuarios.py`, `app/nucleo/templates/ui/usuarios/lista.html`, `app/nucleo/tests/test_ui_usuarios.py`, `app/e2e/tests/usuarios.spec.ts`, `app/nucleo/urls/ui_excluir.py` (docstring), `app/nucleo/permissoes.py` (comentário), `docs/regras-de-negocio.md`
 - **Status:** ativa. Modifica a D-205 só para usuário.
 
+### D-219 — Comando `tornar_superusuario` (2026-11-05 17:40)
+- **Contexto:** o usuário procurou no admin o botão de superusuário para promover alguém; o form de usuário não tem `is_superuser` de propósito (D-142), e o caminho era um `shell -c` à mão.
+- **Decisão:** comando `manage.py tornar_superusuario <usuario>...`: liga `is_superuser` e `is_staff` dos usuários informados, numa transação; se um nome não existir, nada muda. Avisa quem já era e quem está desativado.
+- **Motivo:** promover a superusuário continua só para quem tem acesso ao servidor (nenhuma tela), mas sem digitar código Python.
+- **Descartadas:** campo de superusuário no admin ou na tela Usuários (um Admin poderia se promover, contra a D-142); opção de rebaixar (ninguém pediu; o `shell` resolve até lá).
+- **Arquivos afetados:** `app/nucleo/management/commands/tornar_superusuario.py` (novo), `app/nucleo/tests/test_tornar_superusuario.py` (novo), `INFRA.md`, `README.md`, `CLAUDE.md`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (05/11: só sem rastro; D-218) Excluir usuário pela tela (pedido em 05/11): contraria D-205 ("usuário não é excluído: é desativado"); o histórico perde o autor e versões de template, validações e fotos (PROTECT) impedem — depende de: usuário
 - [x] (05/11: manter a senha; D-216) Link de acesso na tela Usuários: o "Novo usuário" passa a nascer sem senha e mostrar o link (muda o fluxo atual, que pede senha)? — depende de: usuário
@@ -2247,3 +2255,4 @@ Enviar à Infra o texto do pedido com o link do repositório (main já tem `dock
 - "Link de acesso" na tela Usuários + páginas de criar senha fora do admin (D-216). Django 795 OK (8 pulados), makemigrations limpo, E2E usuarios 2/2 (o usuário `e2e` do dev estava desativado: reativado só para a execução e desativado de novo).
 - UI de Usuários (D-217): ações em botões-ícone, "Mudar" só com mudança. Testes de usuários OK, E2E 2/2.
 - Excluir usuário sem rastro (D-218). E2E de Usuários agora exclui o usuário que cria (antes deixava um desativado por execução). Sobram 4 `e2e-midias-*` antigos no banco de dev.
+- 13 usuários conferidos/criados no banco de dev (12 da lista + fabiano.santana no Admin), sem senha: acesso pelo "Link de acesso". Comando `tornar_superusuario` (D-219).
