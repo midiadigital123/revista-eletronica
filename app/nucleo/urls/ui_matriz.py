@@ -7,6 +7,7 @@ bloqueio dela (`ui_bloqueio.com_bloqueio`, alvo = MEC, D-081). Ficha: docs/telas
 """
 
 import re
+from pathlib import PurePosixPath
 
 from django import forms
 from django.contrib import messages
@@ -14,7 +15,8 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Q
 from django.forms import inlineformset_factory, modelform_factory
-from django.http import HttpResponse
+from django.core.files.storage import default_storage
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
@@ -45,6 +47,7 @@ from nucleo.servicos.matriz import (
 from nucleo.servicos.impacto import avisar_perdidos
 from nucleo.ui_autosave import erros, form_de_um_campo, proxima_ordem, quer_json, reordenar, responder_campo
 from nucleo.ui_bloqueio import com_bloqueio, e_htmx
+from nucleo.urls.preview import TIPOS_ITEM, servir
 
 ERROS = "Nada foi gravado: corrija os erros marcados."
 EDITAR = (
@@ -453,11 +456,27 @@ def novo_descritor(request, pk):
     return _form_em_dialogo(request, m.matriz, "novo", form, f"Novo descritor em {m.etapa.codigo} {m.componente.codigo}", url)
 
 
+@require_GET
+@login_required(login_url="admin:login")
+def item_baixar(request, pk, dpk, tpk):
+    """Download do arquivo do item (D-180, a mesma regra do GET do admin): sem arquivo, tipo
+    desconhecido ou arquivo sumido do storage, 404. Só leitura: não passa pelo bloqueio da MEC."""
+    m = _mec(request, pk)
+    tarefa = get_object_or_404(Tarefa, pk=tpk, descritor__pk=dpk, descritor__matriz_etapa_cc=m)
+    tipo = TIPOS_ITEM.get(PurePosixPath(tarefa.arquivo or "").suffix)
+    if tipo is None:
+        raise Http404
+    try:
+        return servir(default_storage.open(tarefa.arquivo), tipo, as_attachment=True)
+    except FileNotFoundError:
+        raise Http404 from None
+
+
 @require_http_methods(["POST"])
 @login_required(login_url="admin:login")
 @com_bloqueio(_mec, pode_editar)
 def item(request, pk, dpk, tpk):
-    """Arquivo do item da tarefa (D-180): envia, troca ou remove. O download é o do admin."""
+    """Arquivo do item da tarefa (D-180): envia, troca ou remove. O download é `item_baixar`."""
     m = _mec(request, pk)
     d = get_object_or_404(Descritor, pk=dpk, matriz_etapa_cc=m)
     tarefa = get_object_or_404(Tarefa, pk=tpk, descritor=d)
@@ -588,5 +607,6 @@ urlpatterns = [
     path("mec/<int:pk>/d/<int:dpk>/campo/", campo, name="ui_matriz_campo"),
     path("mec/<int:pk>/d/<int:dpk>/excluir/", excluir_descritor, name="ui_matriz_excluir_descritor"),
     path("mec/<int:pk>/d/<int:dpk>/tarefa/<int:tpk>/item/", item, name="ui_matriz_item"),
+    path("mec/<int:pk>/d/<int:dpk>/tarefa/<int:tpk>/item/baixar/", item_baixar, name="ui_matriz_item_baixar"),
     path("mec/<int:pk>/d/<int:dpk>/tarefa/<int:tpk>/excluir/", excluir_tarefa, name="ui_matriz_excluir_tarefa"),
 ]

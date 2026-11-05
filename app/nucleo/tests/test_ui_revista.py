@@ -330,7 +330,7 @@ class RevistaUiTest(Base):
         self.assertTrue(corpo["ok"], corpo)
         self.assertEqual(set(corpo["trocar"]), {"arquivos", "situacao"})
         self.assertIn("Ids que faltam no SVG: btn-action-p2.", corpo["trocar"]["situacao"])  # a pendência, só lá
-        self.assertIn(reverse("admin:nucleo_revista_gabarito_ids", args=[self.rev.pk]), corpo["trocar"]["arquivos"])
+        self.assertIn(reverse("ui_revista_gabarito", args=[2026, self.rev.pk]), corpo["trocar"]["arquivos"])
         self.assertEqual(Revista.objects.get(pk=self.rev.pk).svg_ids, ["fundo", "passo1", "passo2", "outro"])
 
     def test_capa_grava_e_mostra_a_miniatura(self):
@@ -438,6 +438,35 @@ class RevistaUiTest(Base):
         self.client.logout()
         for url in (self.url, reverse("ui_revista", args=[2026])):
             self.assertRedirects(self.client.get(url), f"{reverse('admin:login')}?next={url}", fetch_redirect_response=False)
+
+    def test_gabarito_de_ids_e_planilhas_pela_tela_b(self):
+        """S8: o gabarito sai da mesma função do admin (servicos/arquivos); as planilhas, pela rota do impresso."""
+        url = reverse("ui_revista_gabarito", args=[2026, self.rev.pk])
+        pagina = self.client.get(self.url)
+        self.assertContains(pagina, f'href="{url}"')
+        self.assertContains(pagina, reverse("impresso_planilhas", args=[self.rev.pk]))
+        self.assertNotContains(pagina, "/admin/nucleo/revista/")
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp["Content-Type"], "text/csv; charset=utf-8")
+        self.assertEqual(resp["Content-Disposition"], f'attachment; filename="gabarito-ids-revista-{self.rev.pk}.csv"')
+        self.assertEqual(resp.content.decode().splitlines(), ["id_no_svg,secao_do_template", "passo1,passo1", "btn-action-p2,dlg-p2"])
+        admin = self.client.get(reverse("admin:nucleo_revista_gabarito_ids", args=[self.rev.pk]))
+        self.assertEqual(admin.content, resp.content)  # o admin segue igual
+        plan = self.client.get(reverse("impresso_planilhas", args=[self.rev.pk]))
+        self.assertEqual((plan.status_code, plan["Content-Type"]), (200, "application/zip"))
+        self.assertTrue(plan["Content-Disposition"].startswith("attachment"))
+        RevistaFasciculo.objects.filter(revista=self.rev, fasciculo="F2").update(template=None)
+        self.assertNotContains(self.client.get(self.url), url)  # sem template do F2 não há gabarito a baixar
+        self.assertEqual(self.client.get(reverse("ui_revista_gabarito", args=[2026, 999999])).status_code, 404)
+        self.client.force_login(usuario("nada"))
+        self.assertEqual(self.client.get(url).status_code, 403)
+
+    def test_impresso_ve_os_downloads(self):
+        self.client.force_login(usuario("imp-dl", "Impresso"))
+        pagina = self.client.get(self.url)
+        self.assertContains(pagina, reverse("impresso_planilhas", args=[self.rev.pk]))
+        self.assertEqual(self.client.get(reverse("ui_revista_gabarito", args=[2026, self.rev.pk])).status_code, 200)
 
     def test_zip_com_pendencias_volta_com_a_mensagem(self):
         r = self.client.get(reverse("ui_revista_zip", args=[2026, self.rev.pk]) + "?voltar=lista", follow=True)

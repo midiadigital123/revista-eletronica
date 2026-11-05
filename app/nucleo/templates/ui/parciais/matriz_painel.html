@@ -74,7 +74,7 @@ Impacto (U2): form.precisa_confirmar abre o modal de impacto; o modal do item li
       {% if request.bloqueio %}<input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">{% endif %}
       <header>
         <h2 id="item-{{ t.pk }}-titulo">Arquivo do item da tarefa {{ t.codigo }}</h2>
-        <p class="mudo">O arquivo é da matriz: aparece em toda revista que usa esta etapa × componente.{% if t.arquivo %} Enviar outro troca o atual (<a class="link" href="{% url 'admin:nucleo_descritor_item' descritor.pk t.pk %}">baixar {{ t.arquivo|slice:"-3:"|upper }}</a>).{% endif %}</p>
+        <p class="mudo">O arquivo é da matriz: aparece em toda revista que usa esta etapa × componente.{% if t.arquivo %} Enviar outro troca o atual (<a class="link" href="{% url 'ui_matriz_item_baixar' mec.pk descritor.pk t.pk %}">baixar {{ t.arquivo|slice:"-3:"|upper }}</a>).{% endif %}</p>
       </header>
       {% if item_perdem %}
       <p class="aviso aviso-alerta">Enviar ou remover tira o “Validado” de {{ item_perdem|length }} revista(s):</p>

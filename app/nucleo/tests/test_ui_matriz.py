@@ -276,6 +276,32 @@ class MecUiTest(BaseMundo):
         self.assertIsNone(self.tarefa.arquivo)
         self.assertFalse(default_storage.exists(caminho))
 
+    def test_arquivo_do_item_baixa_pela_tela_b(self):
+        """S8: o link do item e o download são da tela B (nada de admin:), só leitura e fora do bloqueio."""
+        sessao = self.abrir()
+        envio = {CAMPO_SESSAO: sessao, "arquivo": SimpleUploadedFile("a.png", PNG, "image/png")}
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(reverse("ui_matriz_item", args=[self.mec.pk, self.d.pk, self.tarefa.pk]), envio, **HX)
+        self.tarefa.refresh_from_db()
+        url = reverse("ui_matriz_item_baixar", args=[self.mec.pk, self.d.pk, self.tarefa.pk])
+        pagina = self.client.get(self.url)
+        self.assertContains(pagina, f'href="{url}"')
+        self.assertNotContains(pagina, "/admin/nucleo/descritor/")
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp["Content-Type"], "image/png")
+        self.assertTrue(resp["Content-Disposition"].startswith("attachment"))
+        self.assertEqual(b"".join(resp.streaming_content), PNG)
+        self.assertEqual(self.client.post(url).status_code, 405)  # só GET
+        default_storage.delete(self.tarefa.arquivo)
+        self.assertEqual(self.client.get(url).status_code, 404)  # sumiu do storage
+        Tarefa.objects.filter(pk=self.tarefa.pk).update(arquivo=None)
+        self.assertEqual(self.client.get(url).status_code, 404)  # sem arquivo
+        Tarefa.objects.filter(pk=self.tarefa.pk).update(arquivo="itens/x.exe")
+        self.assertEqual(self.client.get(url).status_code, 404)  # tipo desconhecido
+        self.client.force_login(usuario("nada"))
+        self.assertEqual(self.client.get(url).status_code, 403)
+
     def test_excluir_tarefa_pede_o_codigo(self):
         url = reverse("ui_matriz_excluir_tarefa", args=[self.mec.pk, self.d.pk, self.tarefa.pk])
         resp = self.client.get(url)

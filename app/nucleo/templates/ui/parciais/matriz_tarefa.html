@@ -26,7 +26,7 @@ empty_form ou devolvida com erro): data-manual, entra pelo "Incluir tarefa" (POS
     {% if excluir_tarefa %}<a class="btn btn-ghost btn-icone matriz-excluir" href="{% url 'ui_matriz_excluir_tarefa' mec.pk descritor.pk t.pk %}" aria-label="Excluir tarefa {{ t.codigo }}" title="Excluir tarefa">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></a>{% endif %}
   </div>
-  {% if t.arquivo %}<p class="matriz-tarefa-extra"><a class="badge badge-contorno" href="{% url 'admin:nucleo_descritor_item' descritor.pk t.pk %}" title="Baixar o arquivo do item">{{ t.arquivo|slice:"-3:"|upper }}</a>{% if t.texto_alternativo %} <span class="mudo matriz-alt">{{ t.texto_alternativo|truncatechars:60 }}</span>{% endif %}</p>{% endif %}
+  {% if t.arquivo %}<p class="matriz-tarefa-extra"><a class="badge badge-contorno" href="{% url 'ui_matriz_item_baixar' mec.pk descritor.pk t.pk %}" title="Baixar o arquivo do item">{{ t.arquivo|slice:"-3:"|upper }}</a>{% if t.texto_alternativo %} <span class="mudo matriz-alt">{{ t.texto_alternativo|truncatechars:60 }}</span>{% endif %}</p>{% endif %}
   {% for e in f.non_field_errors %}<p class="erro matriz-tarefa-extra" role="alert">{{ e }}</p>{% endfor %}
   {% else %}
   <div class="matriz-tarefa-acoes">

@@ -7,7 +7,9 @@ atributos, ids e classes com prefixo `f2-` (no atributo, no `<style>`, em
 Todo processamento é linear (arquivo de 3 MB não pode virar horas de CPU).
 """
 
+import csv
 import hashlib
+import io
 import re
 import uuid
 import xml.etree.ElementTree as ET
@@ -21,7 +23,7 @@ from django.db import transaction
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 
-from nucleo.models import Tarefa
+from nucleo.models import RevistaFasciculo, Tarefa
 
 MB = 1024 * 1024
 SVG_MAX = 3 * MB
@@ -377,6 +379,26 @@ def ids_esperados(secoes):
         elif s.startswith("dlg-") and len(s) > 4:
             ids.append("btn-action-" + s[4:])
     return ids
+
+
+def gabarito_ids_csv(revista):
+    """CSV com os ids que o design deve pôr no SVG do F2 (sem o prefixo f2-, que o upload põe).
+    Comum ao admin e à tela B."""
+    from nucleo.servicos import resolver  # resolver importa este módulo (ids_faltando)
+
+    f2 = RevistaFasciculo.objects.filter(revista=revista, fasciculo="F2").first()
+    saida = io.StringIO()
+    escritor = csv.writer(saida)
+    escritor.writerow(["id_no_svg", "secao_do_template"])
+    for secao, *_ in resolver.secoes_efetivas(f2) or []:
+        for id_ in ids_esperados([secao]):
+            escritor.writerow([_celula(id_), _celula(secao)])
+    return saida.getvalue()
+
+
+def _celula(valor):
+    """Célula de CSV que o Excel não executa como fórmula (=, +, -, @, tab, CR no início)."""
+    return "'" + valor if valor[:1] in ("=", "+", "-", "@", "\t", "\r") else valor
 
 
 def ids_faltando(revista, secoes):

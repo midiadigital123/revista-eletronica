@@ -33,7 +33,7 @@ e a #situacao. Contexto: urls/ui_revista._contexto. Só o que falta vai para a S
       <p class="erro" role="alert" x-show="erro" x-text="erro" x-cloak></p>
     </div>
     {% elif not revista.svg_f2 %}<p class="mudo">Sem SVG do F2.</p>{% endif %}
-    <a class="link revista-gabarito" href="{% url 'admin:nucleo_revista_gabarito_ids' revista.pk %}">Baixar gabarito de ids</a>
+    {% if tem_f2 %}<a class="link revista-gabarito" href="{% url 'ui_revista_gabarito' revista.ano.ano revista.pk %}">Baixar gabarito de ids</a>{% endif %}
   </div>
 
   <div class="revista-arquivo">

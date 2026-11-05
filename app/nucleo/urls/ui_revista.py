@@ -209,6 +209,7 @@ def _contexto(request, revista, chave=None, form=None):
         "svg_max": arquivos.SVG_MAX, "capa_max": arquivos.CAPA_MAX,
         # U5: o nome do projeto se edita só no Projeto; aqui fica o link "Editar no projeto".
         "pode_nome": request.pode_gravar and request.user.has_perm("nucleo.change_projeto"),
+        "tem_f2": RevistaFasciculo.objects.filter(revista=revista, fasciculo="F2", template__isnull=False).exists(),
         "sem_template": RevistaFasciculo.objects.filter(revista=revista, template__isnull=True).exists(),
     }  # fmt: skip
     if so_foto:
@@ -376,9 +377,22 @@ def zip_(request, ano, pk):
     return resposta
 
 
+@require_GET
+@login_required(login_url="admin:login")
+def gabarito(request, ano, pk):
+    """CSV dos ids que o design põe no SVG do F2 (o "Baixar gabarito de ids" do admin, mesma função)."""
+    if not pode_ver(request.user):
+        raise PermissionDenied
+    revista = _revista(ano, pk)
+    resposta = HttpResponse(arquivos.gabarito_ids_csv(revista), content_type="text/csv; charset=utf-8")
+    resposta["Content-Disposition"] = f'attachment; filename="gabarito-ids-revista-{revista.pk}.csv"'
+    return resposta
+
+
 urlpatterns = [
     path("", lista, name="ui_revista_inicio"),
     path("<int:ano>/", lista, name="ui_revista"),
     path("<int:ano>/<int:pk>/", revista, name="ui_revista_editar"),
     path("<int:ano>/<int:pk>/zip/", zip_, name="ui_revista_zip"),
+    path("<int:ano>/<int:pk>/gabarito-ids/", gabarito, name="ui_revista_gabarito"),
 ]
