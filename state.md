@@ -2,13 +2,11 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-D-221 a D-225 feitas, commitadas e enviadas (passo 4 da D-225 em `70754f0`). Funcionando: nenhum spec E2E grava em dado que não criou; suíte E2E 164/164 numa stack isolada com `criar_demo`.
-Em análise (retomar em 06/11): (1) F1 e F2 vão ficar separados, deixando de estar na mesma página (afeta `revista/index.html`, D-156, e o zip, D-159); (2) F2 animado: demo aprovada pelo usuário e commitada em `example/f2-animado-tour/` (animação dentro de cada passo do svg-tour; passo visto aparece pronto; bloco não visitado fica escondido; escala do tour e teto de zoom ajustados; nada em `app/` mudou); aguarda o design confirmar que o SVG de MT e de outros parceiros mantém a mesma ordem de camadas; (3) textos dos passos 2 e 3 do tour não batem com o desenho (Pedagógica). Detalhes nas Perguntas em aberto.
-Quebrado/pendente: S17 — falta a ação D (arquivar o svg-tour) e o preenchimento da equipe; S18 não começou.
+Fase 0 do F2 gerado (D-227) entregue na branch `feat/f2-fase0` (worktree `/home/otavio.peres/dev/revista-express-f2`): `example/f2-gerado/` (gerador Python stdlib + `verificar.cjs` Playwright), 17/17 verificações OK no Chromium, 5 critérios do plano passaram (zoom/pan com `foreignObject`, minimapa, texto longo com clamp, passo desligado com reflow, acessibilidade mínima). Funcionando: mapeamento do F2 e protótipo em `integ/f2-interface`, à espera do merge na `main` pelo usuário. Quebrado/pendente: S17 (ação D e preenchimento da equipe) e S18; F1/F2 separados sem decisão; veredito da fase 0 (D-228) é do usuário.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Usuário mergeia `integ/f2-interface` na `main`; depois decidir se a fase 0 (protótipo de 1 dia do F2 gerado) é disparada agora.
+Abrir `example/f2-gerado/index.html` (worktree `revista-express-f2`) no Chrome e, se possível, no Safari/Firefox; conferir passo 2 (bloco alto, pede arrasto), minimapa e modal; responder "serve" ou "plano B" para registrar a D-228.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1950,6 +1948,8 @@ Usuário mergeia `integ/f2-interface` na `main`; depois decidir se a fase 0 (pro
 ### 2026-11-06 14:30
 - Agente de mapeamento disparado: F2 preenchido todo na interface sobre um template único de passos fixos, com passos desligáveis por projeto (tempo e tecnologia). Saída em `docs/superpowers/specs/2026-11-06-f2-na-interface-mapeamento.md`.
 - D-227: usuário aprovou a direção do mapeamento.
+- Fase 0 disparada: plano escrito em modo de plano e aprovado (protótipo estático em `example/f2-gerado/`, sem Django; tour reaproveitado de `example/f2-animado-tour/f2/` por caminho relativo; Playwright do checkout principal via `NODE_PATH`; 5 critérios de "serve": zoom/pan, minimapa, texto longo, passo desligado, acessibilidade mínima). Branch `feat/f2-fase0`.
+- Fase 0 entregue (subagente + verificação minha): `example/f2-gerado/` com `dados.json`, `gerar.py` (`--check`, `--desligar`), `verificar.cjs` (17/17 OK), `LEIA-ME.md` com veredito proposto "SVG gerado serve". Ajustes que o protótipo revelou: o minimapa remove `class` do `<svg>` clonado (`svg-tour.js:559`), então o CSS interno não pode depender de classe na raiz; o stage do svg-tour tem `user-select:none`, e `user-select:text` nos divs do `foreignObject` libera a seleção sem atrapalhar o arrasto. Pendente de olho humano: bloco de habilidades mais alto que o stage em `minScale` 1,6 (ancora e pede arrasto); minimapa pequeno; Safari/Firefox. Título do modal de habilidades corrigido (o seed trazia "Progressão…").
 - Mapeamento concluído e commitado em `docs/f2-mapeamento`; pergunta em aberto do F2 reescrita com o resultado; branch mergeada em `integ/f2-interface` (merge na `main` é do usuário).
 - Regra nova do usuário (D-226): toda modificação em worktree própria com branch própria; merge em `integ/<tema>` só depois de testado; o merge na `main` é do usuário. Worktree desta sessão: `/home/otavio.peres/dev/revista-express-f2` (`docs/f2-mapeamento` ← `integ/f2-interface` ← `main`).
 ### 2026-10-07
