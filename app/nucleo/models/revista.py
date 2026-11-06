@@ -7,7 +7,6 @@ from simple_history.models import HistoricalRecords
 from nucleo.db import max_len, sha256
 
 from .cadastro import Ano, Componente
-from .matriz import Tarefa
 from .projeto import Projeto
 from .texto import Fasciculo, Template, TemplateVersao, check_fasciculo
 
@@ -113,18 +112,18 @@ PASSOS_DESLIGAVEIS = ("habilidades", "progressao", "tarefas")  # D-227: abertura
 class EtapaReferencial(models.TextChoices):  # D-233
     """Lista fixa: o referencial cobre os 12 anos; a tabela Etapa do ano só tem as avaliadas."""
 
-    EF1 = "1EF"
-    EF2 = "2EF"
-    EF3 = "3EF"
-    EF4 = "4EF"
-    EF5 = "5EF"
-    EF6 = "6EF"
-    EF7 = "7EF"
-    EF8 = "8EF"
-    EF9 = "9EF"
-    EM1 = "1EM"
-    EM2 = "2EM"
-    EM3 = "3EM"
+    EF1 = "1EF", "1º ano do Ensino Fundamental"
+    EF2 = "2EF", "2º ano do Ensino Fundamental"
+    EF3 = "3EF", "3º ano do Ensino Fundamental"
+    EF4 = "4EF", "4º ano do Ensino Fundamental"
+    EF5 = "5EF", "5º ano do Ensino Fundamental"
+    EF6 = "6EF", "6º ano do Ensino Fundamental"
+    EF7 = "7EF", "7º ano do Ensino Fundamental"
+    EF8 = "8EF", "8º ano do Ensino Fundamental"
+    EF9 = "9EF", "9º ano do Ensino Fundamental"
+    EM1 = "1EM", "1ª série do Ensino Médio"
+    EM2 = "2EM", "2ª série do Ensino Médio"
+    EM3 = "3EM", "3ª série do Ensino Médio"
 
 
 class Marca(models.TextChoices):  # legenda do docx
@@ -194,12 +193,16 @@ class RevistaInfograficoEtapa(models.Model):
 
 
 class RevistaInfograficoItem(models.Model):
-    """Um dos 4 itens do infográfico; a tarefa da matriz do parceiro é regra do formulário."""
+    """Um dos 4 itens do infográfico (D-235): descritor, etapa, imagem e análise próprios, sem tarefa da matriz."""
 
     infografico = models.ForeignKey(RevistaInfografico, on_delete=models.CASCADE)
     ano = models.ForeignKey(Ano, on_delete=models.PROTECT)  # só para FK composta
     posicao = models.SmallIntegerField()  # 1 a 4
-    tarefa = models.ForeignKey(Tarefa, on_delete=models.PROTECT, null=True, blank=True)
+    etapa = models.TextField(choices=EtapaReferencial.choices, blank=True, default="")  # vazio = ainda não escolhida
+    descritor = models.TextField(blank=True, default="")  # código na matriz de referência, ex.: D05 (texto livre)
+    imagem = models.TextField(null=True, blank=True)  # caminho no storage; item + suporte numa imagem só (D-232)
+    imagem_sha256 = models.TextField(null=True, blank=True)
+    texto_alternativo = models.TextField("Texto alternativo", blank=True, default="")  # D-180
     analise = models.TextField(blank=True, default="")
     history = HistoricalRecords()
 
@@ -210,6 +213,14 @@ class RevistaInfograficoItem(models.Model):
             models.CheckConstraint(
                 condition=Q(posicao__gte=1, posicao__lte=4), name="revista_infografico_item_posicao_1a4"
             ),
+            models.CheckConstraint(
+                condition=Q(etapa__in=["", *EtapaReferencial.values]), name="revista_infografico_item_etapa"
+            ),
+            juntos("revista_infografico_item", "imagem", "imagem_sha256"),
+            sha256("revista_infografico_item", "imagem_sha256"),
+            max_len("revista_infografico_item", "imagem", 500),
+            max_len("revista_infografico_item", "descritor", 20),
+            max_len("revista_infografico_item", "texto_alternativo", 1000),
         ]
 
 

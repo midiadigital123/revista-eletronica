@@ -71,6 +71,11 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigIntegerField(auto_created=True, blank=True, db_index=True, verbose_name='ID')),
                 ('posicao', models.SmallIntegerField()),
+                ('etapa', models.TextField(blank=True, choices=[('1EF', '1º ano do Ensino Fundamental'), ('2EF', '2º ano do Ensino Fundamental'), ('3EF', '3º ano do Ensino Fundamental'), ('4EF', '4º ano do Ensino Fundamental'), ('5EF', '5º ano do Ensino Fundamental'), ('6EF', '6º ano do Ensino Fundamental'), ('7EF', '7º ano do Ensino Fundamental'), ('8EF', '8º ano do Ensino Fundamental'), ('9EF', '9º ano do Ensino Fundamental'), ('1EM', '1ª série do Ensino Médio'), ('2EM', '2ª série do Ensino Médio'), ('3EM', '3ª série do Ensino Médio')], default='')),
+                ('descritor', models.TextField(blank=True, default='')),
+                ('imagem', models.TextField(blank=True, null=True)),
+                ('imagem_sha256', models.TextField(blank=True, null=True)),
+                ('texto_alternativo', models.TextField(blank=True, default='', verbose_name='Texto alternativo')),
                 ('analise', models.TextField(blank=True, default='')),
                 ('history_id', models.AutoField(primary_key=True, serialize=False)),
                 ('history_date', models.DateTimeField(db_index=True)),
@@ -78,7 +83,6 @@ class Migration(migrations.Migration):
                 ('history_type', models.CharField(choices=[('+', 'Created'), ('~', 'Changed'), ('-', 'Deleted')], max_length=1)),
                 ('ano', models.ForeignKey(blank=True, db_constraint=False, null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_name='+', to='nucleo.ano')),
                 ('history_user', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL)),
-                ('tarefa', models.ForeignKey(blank=True, db_constraint=False, null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_name='+', to='nucleo.tarefa')),
                 ('infografico', models.ForeignKey(blank=True, db_constraint=False, null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_name='+', to='nucleo.revistainfografico')),
             ],
             options={
@@ -93,7 +97,7 @@ class Migration(migrations.Migration):
             name='HistoricalRevistaInfograficoEtapa',
             fields=[
                 ('id', models.BigIntegerField(auto_created=True, blank=True, db_index=True, verbose_name='ID')),
-                ('etapa', models.TextField(choices=[('1EF', 'Ef1'), ('2EF', 'Ef2'), ('3EF', 'Ef3'), ('4EF', 'Ef4'), ('5EF', 'Ef5'), ('6EF', 'Ef6'), ('7EF', 'Ef7'), ('8EF', 'Ef8'), ('9EF', 'Ef9'), ('1EM', 'Em1'), ('2EM', 'Em2'), ('3EM', 'Em3')])),
+                ('etapa', models.TextField(choices=[('1EF', '1º ano do Ensino Fundamental'), ('2EF', '2º ano do Ensino Fundamental'), ('3EF', '3º ano do Ensino Fundamental'), ('4EF', '4º ano do Ensino Fundamental'), ('5EF', '5º ano do Ensino Fundamental'), ('6EF', '6º ano do Ensino Fundamental'), ('7EF', '7º ano do Ensino Fundamental'), ('8EF', '8º ano do Ensino Fundamental'), ('9EF', '9º ano do Ensino Fundamental'), ('1EM', '1ª série do Ensino Médio'), ('2EM', '2ª série do Ensino Médio'), ('3EM', '3ª série do Ensino Médio')])),
                 ('marca', models.TextField(blank=True, choices=[('I', 'Introduzir'), ('A', 'Aprofundar'), ('C', 'Consolidar'), ('R', 'Retomar')], default='')),
                 ('codigo', models.TextField(blank=True, default='')),
                 ('texto', models.TextField(blank=True, default='')),
@@ -117,7 +121,7 @@ class Migration(migrations.Migration):
             name='RevistaInfograficoEtapa',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('etapa', models.TextField(choices=[('1EF', 'Ef1'), ('2EF', 'Ef2'), ('3EF', 'Ef3'), ('4EF', 'Ef4'), ('5EF', 'Ef5'), ('6EF', 'Ef6'), ('7EF', 'Ef7'), ('8EF', 'Ef8'), ('9EF', 'Ef9'), ('1EM', 'Em1'), ('2EM', 'Em2'), ('3EM', 'Em3')])),
+                ('etapa', models.TextField(choices=[('1EF', '1º ano do Ensino Fundamental'), ('2EF', '2º ano do Ensino Fundamental'), ('3EF', '3º ano do Ensino Fundamental'), ('4EF', '4º ano do Ensino Fundamental'), ('5EF', '5º ano do Ensino Fundamental'), ('6EF', '6º ano do Ensino Fundamental'), ('7EF', '7º ano do Ensino Fundamental'), ('8EF', '8º ano do Ensino Fundamental'), ('9EF', '9º ano do Ensino Fundamental'), ('1EM', '1ª série do Ensino Médio'), ('2EM', '2ª série do Ensino Médio'), ('3EM', '3ª série do Ensino Médio')])),
                 ('marca', models.TextField(blank=True, choices=[('I', 'Introduzir'), ('A', 'Aprofundar'), ('C', 'Consolidar'), ('R', 'Retomar')], default='')),
                 ('codigo', models.TextField(blank=True, default='')),
                 ('texto', models.TextField(blank=True, default='')),
@@ -133,10 +137,14 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('posicao', models.SmallIntegerField()),
+                ('etapa', models.TextField(blank=True, choices=[('1EF', '1º ano do Ensino Fundamental'), ('2EF', '2º ano do Ensino Fundamental'), ('3EF', '3º ano do Ensino Fundamental'), ('4EF', '4º ano do Ensino Fundamental'), ('5EF', '5º ano do Ensino Fundamental'), ('6EF', '6º ano do Ensino Fundamental'), ('7EF', '7º ano do Ensino Fundamental'), ('8EF', '8º ano do Ensino Fundamental'), ('9EF', '9º ano do Ensino Fundamental'), ('1EM', '1ª série do Ensino Médio'), ('2EM', '2ª série do Ensino Médio'), ('3EM', '3ª série do Ensino Médio')], default='')),
+                ('descritor', models.TextField(blank=True, default='')),
+                ('imagem', models.TextField(blank=True, null=True)),
+                ('imagem_sha256', models.TextField(blank=True, null=True)),
+                ('texto_alternativo', models.TextField(blank=True, default='', verbose_name='Texto alternativo')),
                 ('analise', models.TextField(blank=True, default='')),
                 ('ano', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='nucleo.ano')),
                 ('infografico', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='nucleo.revistainfografico')),
-                ('tarefa', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, to='nucleo.tarefa')),
             ],
             options={
                 'db_table': 'revista_infografico_item',
@@ -185,6 +193,30 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name='revistainfograficoitem',
             constraint=models.CheckConstraint(condition=models.Q(('posicao__gte', 1), ('posicao__lte', 4)), name='revista_infografico_item_posicao_1a4'),
+        ),
+        migrations.AddConstraint(
+            model_name='revistainfograficoitem',
+            constraint=models.CheckConstraint(condition=models.Q(('etapa__in', ['', '1EF', '2EF', '3EF', '4EF', '5EF', '6EF', '7EF', '8EF', '9EF', '1EM', '2EM', '3EM'])), name='revista_infografico_item_etapa'),
+        ),
+        migrations.AddConstraint(
+            model_name='revistainfograficoitem',
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('imagem__isnull', True), ('imagem_sha256__isnull', True)), models.Q(('imagem__isnull', False), ('imagem_sha256__isnull', False)), _connector='OR'), name='revista_infografico_item_imagem_com_hash'),
+        ),
+        migrations.AddConstraint(
+            model_name='revistainfograficoitem',
+            constraint=models.CheckConstraint(condition=models.Q(('imagem_sha256__regex', '^[0-9a-f]{64}$')), name='revista_infografico_item_imagem_sha256_sha256'),
+        ),
+        migrations.AddConstraint(
+            model_name='revistainfograficoitem',
+            constraint=models.CheckConstraint(condition=django.db.models.lookups.LessThanOrEqual(django.db.models.functions.text.Length('imagem'), 500), name='revista_infografico_item_imagem_tamanho'),
+        ),
+        migrations.AddConstraint(
+            model_name='revistainfograficoitem',
+            constraint=models.CheckConstraint(condition=django.db.models.lookups.LessThanOrEqual(django.db.models.functions.text.Length('descritor'), 20), name='revista_infografico_item_descritor_tamanho'),
+        ),
+        migrations.AddConstraint(
+            model_name='revistainfograficoitem',
+            constraint=models.CheckConstraint(condition=django.db.models.lookups.LessThanOrEqual(django.db.models.functions.text.Length('texto_alternativo'), 1000), name='revista_infografico_item_texto_alternativo_tamanho'),
         ),
         # FKs compostas (D-233): o ORM não as declara. Toda coluna é NOT NULL.
         fk_composta(

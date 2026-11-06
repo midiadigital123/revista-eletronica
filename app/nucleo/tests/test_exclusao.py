@@ -239,8 +239,8 @@ class ApagarAnoTest(Base):
         info.save()
         RevistaInfograficoEtapa.objects.create(infografico=info, ano=a27, etapa="5EF", marca="I", codigo="EF15LP18")
         RevistaInfograficoItem.objects.create(
-            infografico=info, ano=a27, posicao=1,
-            tarefa=Tarefa.objects.filter(descritor__matriz_etapa_cc__ano=a27).first(),
+            infografico=info, ano=a27, posicao=1, etapa="2EF", descritor="D05",
+            imagem="x/item.png", imagem_sha256="a" * 64,
         )
         cls.a27 = a27
 

@@ -28,7 +28,7 @@ from django.utils import timezone
 from nucleo.models import (
     Ano, Bloqueio, Componente, CorPadrao, Corte, Descritor, Etapa, FotoRevista, Matriz, MatrizEtapaCC, Parceiro,
     ParceiroAno, Projeto, ProjetoCor, ProjetoPasso, Revista, RevistaFasciculo, RevistaInfografico,
-    RevistaInfograficoEtapa, RevistaInfograficoItem, RevistaSecao, Tarefa, Template, TemplateVersao,
+    RevistaSecao, Tarefa, Template, TemplateVersao,
 )  # fmt: skip
 
 PARTES = {Parceiro: ["parceiroano_set"], Matriz: ["matrizetapacc_set"], Template: ["templateversao_set"]}
@@ -57,8 +57,6 @@ GRUPO = {
     RevistaFasciculo: ("revistas", Revista, "revista_id"),
     RevistaSecao: ("revistas", Revista, "revista_fasciculo__revista_id"),
     RevistaInfografico: ("revistas", Revista, "revista_id"),
-    RevistaInfograficoEtapa: ("revistas", Revista, "infografico__revista_id"),
-    RevistaInfograficoItem: ("revistas", Revista, "infografico__revista_id"),
     ParceiroAno: ("parceiros que usam a matriz", ParceiroAno, "pk"),
     MatrizEtapaCC: ("etapas × componente de matriz", MatrizEtapaCC, "pk"),
     Template: ("templates", Template, "pk"),

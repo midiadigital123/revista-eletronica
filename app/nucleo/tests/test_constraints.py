@@ -104,7 +104,13 @@ CHECKS = {
     "revista_infografico_etapa_codigo_tamanho",
     "revista_infografico_etapa_etapa",
     "revista_infografico_etapa_marca",
+    "revista_infografico_item_descritor_tamanho",
+    "revista_infografico_item_etapa",
+    "revista_infografico_item_imagem_com_hash",
+    "revista_infografico_item_imagem_sha256_sha256",
+    "revista_infografico_item_imagem_tamanho",
     "revista_infografico_item_posicao_1a4",
+    "revista_infografico_item_texto_alternativo_tamanho",
     "revista_secao_secao_tamanho",
     "revista_svg_f2_com_hash",
     "revista_svg_f2_tamanho",
@@ -306,8 +312,11 @@ class RecusaInfograficoTest(TestCase):
     def test_infografico_etapa_e_item_validos(self):
         RevistaInfograficoEtapa.objects.create(infografico=self.info, ano=self.a26, etapa="2EF", marca="")
         RevistaInfograficoEtapa.objects.create(infografico=self.info, ano=self.a26, etapa="3EM", marca="I")
-        RevistaInfograficoItem.objects.create(infografico=self.info, ano=self.a26, posicao=1, tarefa=None)
-        RevistaInfograficoItem.objects.create(infografico=self.info, ano=self.a26, posicao=4)
+        RevistaInfograficoItem.objects.create(infografico=self.info, ano=self.a26, posicao=1)  # vazio: etapa "", sem imagem
+        RevistaInfograficoItem.objects.create(
+            infografico=self.info, ano=self.a26, posicao=4, etapa="2EF", descritor="D05",
+            imagem="x/item.png", imagem_sha256="a" * 64, texto_alternativo="Item 4,1",
+        )
 
     def test_tipo_invalido(self):
         self.recusa(lambda: self.infografico("beta"))
@@ -358,6 +367,24 @@ class RecusaInfograficoTest(TestCase):
     def test_posicao_repetida_no_infografico(self):
         RevistaInfograficoItem.objects.create(infografico=self.info, ano=self.a26, posicao=2)
         self.recusa(lambda: RevistaInfograficoItem.objects.create(infografico=self.info, ano=self.a26, posicao=2))
+
+    def test_item_com_etapa_invalida(self):
+        self.recusa(lambda: RevistaInfograficoItem.objects.create(
+            infografico=self.info, ano=self.a26, posicao=1, etapa="10EF"
+        ))
+
+    def test_item_com_imagem_sem_hash_ou_hash_fora_do_formato(self):
+        for campos in ({"imagem": "x.png"}, {"imagem_sha256": "a" * 64}, {"imagem": "x.png", "imagem_sha256": "A" * 64}):
+            with self.subTest(campos=campos):
+                self.recusa(lambda: RevistaInfograficoItem.objects.create(
+                    infografico=self.info, ano=self.a26, posicao=1, **campos
+                ))
+
+    def test_item_com_descritor_acima_do_tamanho(self):
+        RevistaInfograficoItem.objects.create(infografico=self.info, ano=self.a26, posicao=1, descritor="x" * 20)
+        self.recusa(lambda: RevistaInfograficoItem.objects.create(
+            infografico=self.info, ano=self.a26, posicao=2, descritor="x" * 21
+        ))
 
     def test_item_com_ano_diferente_do_infografico(self):
         self.recusa(lambda: RevistaInfograficoItem.objects.create(infografico=self.info, ano=self.a27, posicao=1))
