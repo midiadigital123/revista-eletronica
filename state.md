@@ -2,11 +2,11 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-F2 gerado: fase 1 de 5 (dados e cascata) concluída na branch `feat/f2-f1` (worktree `/home/otavio.peres/dev/revista-express-f2-f1`, saída de `integ/f2-gerado` = `main` 1601c93), revisada por tarefa e no fim pelo `ecc:django-reviewer`. Funcionando: as 3 tabelas dos infográficos (`revista_infografico`, `_etapa`, `_item`, migração 0020), permissões dos grupos (0021), a cascata que cria, arquiva e desarquiva Alfa e Outras Etapas pelos cortes, e a 0022 que cria os das revistas existentes. Suíte 833 OK, 8 pulados; `makemigrations --check` limpo. Na cópia do banco de dev, 0020–0022 aplicaram e o hash de nenhuma revista mudou. Quebrado/pendente: merge em `integ/f2-gerado` (aguarda o usuário); fases 2 a 5; S17/S18.
+F2 gerado: fase 1 de 5 (dados e cascata) concluída na branch `feat/f2-f1` (worktree `/home/otavio.peres/dev/revista-express-f2-f1`, saída de `integ/f2-gerado` = `main` 1601c93), revisada por tarefa e no fim pelo `ecc:django-reviewer`. Funcionando: as 3 tabelas dos infográficos (`revista_infografico`, `_etapa`, `_item`, migração 0020), permissões dos grupos (0021), a cascata que cria, arquiva e desarquiva Alfa e Outras Etapas pelos cortes, e a 0022 que cria os das revistas existentes. Suíte 833 OK, 8 pulados; `makemigrations --check` limpo. Na cópia do banco de dev, 0020–0022 aplicaram e o hash de nenhuma revista mudou. Merge (fast-forward) de `feat/f2-f1` em `integ/f2-gerado` feito em 06/11 com o "1" do usuário. Quebrado/pendente: merge de `integ/f2-gerado` na `main` (só com o ok do usuário, D-231); fases 2 a 5; S17/S18.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Usuário escolhe o destino da `feat/f2-f1`: merge local em `integ/f2-gerado` (recomendado), PR, ou manter como está.
+Usuário diz se a `integ/f2-gerado` (fase 1) entra na `main` agora ou só junto com a fase 2 (que muda o hash de toda revista).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2017,6 +2017,7 @@ Usuário escolhe o destino da `feat/f2-f1`: merge local em `integ/f2-gerado` (re
 - Revisão final da fase 1 (`ecc:django-reviewer`): 0 críticos; correções aplicadas numa leva (teste do hash agora prova algo, teste da revista arquivada que volta, `2EF` sem diferenciar maiúsculas, comentários) e re-revisadas.
 - Verificação final: 833 OK, 8 pulados; régua ok. Cópia do banco de dev migrada até a 0022 na stack `f2-f1`: cada revista ativa ganhou os infográficos que os cortes pedem; nenhum hash mudou (SAESE LP e SAEGO LP já estavam fora do "Validado" antes).
 - Commits da leva: 23d00d0, 660c806 (esquema, permissões), bf27df1 (cascata + 0022), 79a4e19 (item, D-235), f942878 (correções da revisão), bd41a90 (learning), e este `state.md`.
+- Usuário escolheu o merge local: `feat/f2-f1` → `integ/f2-gerado` por fast-forward; suíte rodada de novo na `integ/f2-gerado`.
 ### 2026-11-06 14:30
 - Agente de mapeamento disparado: F2 preenchido todo na interface sobre um template único de passos fixos, com passos desligáveis por projeto (tempo e tecnologia). Saída em `docs/superpowers/specs/2026-11-06-f2-na-interface-mapeamento.md`.
 - D-227: usuário aprovou a direção do mapeamento.
