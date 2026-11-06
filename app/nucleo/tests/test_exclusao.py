@@ -10,8 +10,8 @@ from django.urls import reverse
 
 from nucleo.models import (
     Ano, Bloqueio, Componente, CorPadrao, Corte, Descritor, Etapa, FotoRevista, Matriz, MatrizEtapaCC, Parceiro,
-    ParceiroAno, Projeto, ProjetoCor, ProjetoPasso, Revista, RevistaFasciculo, RevistaSecao, Tarefa, Template,
-    TemplateVersao,
+    ParceiroAno, Projeto, ProjetoCor, ProjetoPasso, Revista, RevistaFasciculo, RevistaInfografico,
+    RevistaInfograficoEtapa, RevistaInfograficoItem, RevistaSecao, Tarefa, Template, TemplateVersao,
 )  # fmt: skip
 from nucleo.models.revista import Motivo
 from nucleo.servicos import bloqueio, exclusao
@@ -27,6 +27,8 @@ NAO_PROTECT = {
     "Bloqueio.matriz_etapa_cc", "Bloqueio.projeto", "Bloqueio.template", "Bloqueio.usuario",
     "Descritor.matriz_etapa_cc", "Tarefa.descritor", "RevistaFasciculo.revista", "RevistaSecao.revista_fasciculo",
     "Matriz.duplicada_de",
+    # Infográficos do F2 saem com a revista (só o apagar_ano apaga revista); o item guarda a tarefa em PROTECT.
+    "RevistaInfografico.revista", "RevistaInfograficoEtapa.infografico", "RevistaInfograficoItem.infografico",
 }  # fmt: skip
 
 
@@ -232,6 +234,14 @@ class ApagarAnoTest(Base):
         )  # fmt: skip
         fotografar(revista, Motivo.IMPRESSO, cls.usuario)
         bloqueio.adquirir(projeto, cls.ped, "aba")
+        info = RevistaInfografico.objects.create(
+            revista=revista, componente=cc["LP"], ano=a27, tipo="outras", habilidade="Lê com fluência."
+        )
+        RevistaInfograficoEtapa.objects.create(infografico=info, ano=a27, etapa="5EF", marca="I", codigo="EF15LP18")
+        RevistaInfograficoItem.objects.create(
+            infografico=info, ano=a27, posicao=1,
+            tarefa=Tarefa.objects.filter(descritor__matriz_etapa_cc__ano=a27).first(),
+        )
         cls.a27 = a27
 
     def contagens(self, ano):
@@ -254,6 +264,8 @@ class ApagarAnoTest(Base):
         self.assertFalse(FotoRevista.objects.filter(revista__ano_id=self.a27.pk).exists())
         self.assertFalse(TemplateVersao.objects.filter(template__ano_id=self.a27.pk).exists())
         self.assertFalse(Bloqueio.objects.exists())
+        for modelo in (RevistaInfografico, RevistaInfograficoEtapa, RevistaInfograficoItem):
+            self.assertFalse(modelo.objects.filter(ano_id=self.a27.pk).exists(), modelo.__name__)
         self.assertEqual(self.contagens(2026), antes)
         self.assertEqual(TemplateVersao.objects.filter(template__ano__ano=2026).count(), versoes_26)
         self.assertTrue(Parceiro.objects.filter(nome="GO").exists())

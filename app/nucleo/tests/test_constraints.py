@@ -3,7 +3,10 @@ from django.core.management import call_command
 from django.db import IntegrityError, connection, transaction
 from django.test import TestCase, TransactionTestCase
 
-from nucleo.models import Ano, Componente, CorPadrao, Etapa, Matriz, MatrizEtapaCC, Parceiro, ParceiroAno, Projeto
+from nucleo.models import (
+    Ano, Componente, CorPadrao, Etapa, Matriz, MatrizEtapaCC, Parceiro, ParceiroAno, Projeto, Revista,
+    RevistaInfografico, RevistaInfograficoEtapa, RevistaInfograficoItem,
+)  # fmt: skip
 
 # Atualize junto com cada migração que criar FK composta, CHECK ou UNIQUE (D-124).
 FKS_COMPOSTAS = {
@@ -29,6 +32,12 @@ FKS_COMPOSTAS = {
     "REFERENCES revista_fasciculo(id, template_id)",
     "fk_revista_secao_versao_template": "FOREIGN KEY (template_versao_id, template_id) "
     "REFERENCES template_versao(id, template_id)",
+    "fk_revista_infografico_revista_ano": "FOREIGN KEY (revista_id, ano_id, componente_id) "
+    "REFERENCES revista(id, ano_id, componente_id)",
+    "fk_revista_infografico_etapa_infografico_ano": "FOREIGN KEY (infografico_id, ano_id) "
+    "REFERENCES revista_infografico(id, ano_id)",
+    "fk_revista_infografico_item_infografico_ano": "FOREIGN KEY (infografico_id, ano_id) "
+    "REFERENCES revista_infografico(id, ano_id)",
 }
 # Colunas de FK composta que podem ser nulas (MATCH SIMPLE desliga a checagem).
 ANULAVEIS = {("parceiro_ano", "matriz_id"), ("revista_fasciculo", "template_id")}
@@ -89,6 +98,13 @@ CHECKS = {
     "revista_capa_tamanho",
     "revista_fasciculo_fasciculo_f1_f2",
     "revista_hash_validado_sha256",
+    "revista_infografico_habilidade_tamanho",
+    "revista_infografico_passos",
+    "revista_infografico_tipo",
+    "revista_infografico_etapa_codigo_tamanho",
+    "revista_infografico_etapa_etapa",
+    "revista_infografico_etapa_marca",
+    "revista_infografico_item_posicao_1a4",
     "revista_secao_secao_tamanho",
     "revista_svg_f2_com_hash",
     "revista_svg_f2_tamanho",
@@ -116,6 +132,10 @@ UNIQUES = {
     "revista_alvo_uniq",
     "revista_fasciculo_alvo_uniq",
     "revista_fasciculo_uniq",
+    "revista_infografico_alvo_uniq",
+    "revista_infografico_etapa_uniq",
+    "revista_infografico_item_uniq",
+    "revista_infografico_uniq",
     "revista_secao_uniq",
     "revista_uniq",
     "template_alvo_uniq",
@@ -258,6 +278,89 @@ class RecusaTest(TestCase):
         projeto = Projeto.objects.create(parceiro_ano=pa, ano=self.a26, nome="Projeto GO")
         Projeto.objects.filter(pk=projeto.pk).update(sigla_secretaria="x" * 200)
         self.recusa(lambda: Projeto.objects.filter(pk=projeto.pk).update(sigla_secretaria="x" * 201))
+
+
+class RecusaInfograficoTest(TestCase):
+    """Infográficos do F2: CHECKs, UNIQUEs e a FK composta de ano (D-233)."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.a26 = Ano.objects.create(ano=2026)
+        cls.a27 = Ano.objects.create(ano=2027)
+        cls.lp = Componente.objects.create(ano=cls.a26, codigo="LP", nome="Língua Portuguesa")
+        pa = ParceiroAno.objects.create(parceiro=Parceiro.objects.create(nome="GO"), ano=cls.a26)
+        projeto = Projeto.objects.create(parceiro_ano=pa, ano=cls.a26, nome="Projeto GO")
+        cls.revista = Revista.objects.create(projeto=projeto, componente=cls.lp, ano=cls.a26)
+        cls.info = cls.infografico("alfa")
+
+    @classmethod
+    def infografico(cls, tipo, **campos):
+        return RevistaInfografico.objects.create(
+            revista=cls.revista, componente=cls.lp, ano=cls.a26, tipo=tipo, **campos
+        )
+
+    def recusa(self, criar):
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            criar()
+
+    def test_infografico_etapa_e_item_validos(self):
+        RevistaInfograficoEtapa.objects.create(infografico=self.info, ano=self.a26, etapa="2EF", marca="")
+        RevistaInfograficoEtapa.objects.create(infografico=self.info, ano=self.a26, etapa="3EM", marca="I")
+        RevistaInfograficoItem.objects.create(infografico=self.info, ano=self.a26, posicao=1, tarefa=None)
+        RevistaInfograficoItem.objects.create(infografico=self.info, ano=self.a26, posicao=4)
+
+    def test_tipo_invalido(self):
+        self.recusa(lambda: self.infografico("beta"))
+
+    def test_passo_desligado_fora_da_lista(self):
+        self.infografico("outras", passos_desligados=["habilidades", "tarefas"])
+        self.recusa(lambda: RevistaInfografico.objects.filter(pk=self.info.pk).update(passos_desligados=["abertura"]))
+
+    def test_habilidade_acima_do_tamanho(self):
+        RevistaInfografico.objects.filter(pk=self.info.pk).update(habilidade="x" * 500)
+        self.recusa(lambda: RevistaInfografico.objects.filter(pk=self.info.pk).update(habilidade="x" * 501))
+
+    def test_segundo_infografico_do_mesmo_tipo(self):
+        self.recusa(lambda: self.infografico("alfa"))
+
+    def test_infografico_com_ano_diferente_da_revista(self):
+        self.recusa(lambda: RevistaInfografico.objects.create(
+            revista=self.revista, componente=self.lp, ano=self.a27, tipo="outras"
+        ))
+
+    def test_etapa_invalida(self):
+        self.recusa(lambda: RevistaInfograficoEtapa.objects.create(infografico=self.info, ano=self.a26, etapa="10EF"))
+
+    def test_marca_invalida(self):
+        self.recusa(lambda: RevistaInfograficoEtapa.objects.create(
+            infografico=self.info, ano=self.a26, etapa="2EF", marca="X"
+        ))
+
+    def test_codigo_acima_do_tamanho(self):
+        self.recusa(lambda: RevistaInfograficoEtapa.objects.create(
+            infografico=self.info, ano=self.a26, etapa="2EF", codigo="x" * 51
+        ))
+
+    def test_etapa_repetida_no_infografico(self):
+        RevistaInfograficoEtapa.objects.create(infografico=self.info, ano=self.a26, etapa="2EF")
+        self.recusa(lambda: RevistaInfograficoEtapa.objects.create(infografico=self.info, ano=self.a26, etapa="2EF"))
+
+    def test_etapa_com_ano_diferente_do_infografico(self):
+        self.recusa(lambda: RevistaInfograficoEtapa.objects.create(infografico=self.info, ano=self.a27, etapa="2EF"))
+
+    def test_posicao_fora_de_1a4(self):
+        for posicao in (0, 5):
+            with self.subTest(posicao=posicao):
+                self.recusa(lambda: RevistaInfograficoItem.objects.create(
+                    infografico=self.info, ano=self.a26, posicao=posicao
+                ))
+
+    def test_posicao_repetida_no_infografico(self):
+        RevistaInfograficoItem.objects.create(infografico=self.info, ano=self.a26, posicao=2)
+        self.recusa(lambda: RevistaInfograficoItem.objects.create(infografico=self.info, ano=self.a26, posicao=2))
+
+    def test_item_com_ano_diferente_do_infografico(self):
+        self.recusa(lambda: RevistaInfograficoItem.objects.create(infografico=self.info, ano=self.a27, posicao=1))
 
 
 def triggers():

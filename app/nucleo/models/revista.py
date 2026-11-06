@@ -7,6 +7,7 @@ from simple_history.models import HistoricalRecords
 from nucleo.db import max_len, sha256
 
 from .cadastro import Ano, Componente
+from .matriz import Tarefa
 from .projeto import Projeto
 from .texto import Fasciculo, Template, TemplateVersao, check_fasciculo
 
@@ -98,6 +99,117 @@ class RevistaSecao(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["revista_fasciculo", "secao"], name="revista_secao_uniq"),
             max_len("revista_secao", "secao", 100),
+        ]
+
+
+class TipoInfografico(models.TextChoices):  # D-230
+    ALFA = "alfa", "Avaliação e Currículo – Alfa"
+    OUTRAS = "outras", "Avaliação e Currículo – Outras Etapas"
+
+
+PASSOS_DESLIGAVEIS = ("habilidades", "progressao", "tarefas")  # D-227: abertura e descritor são fixos
+
+
+class EtapaReferencial(models.TextChoices):  # D-233
+    """Lista fixa: o referencial cobre os 12 anos; a tabela Etapa do ano só tem as avaliadas."""
+
+    EF1 = "1EF"
+    EF2 = "2EF"
+    EF3 = "3EF"
+    EF4 = "4EF"
+    EF5 = "5EF"
+    EF6 = "6EF"
+    EF7 = "7EF"
+    EF8 = "8EF"
+    EF9 = "9EF"
+    EM1 = "1EM"
+    EM2 = "2EM"
+    EM3 = "3EM"
+
+
+class Marca(models.TextChoices):  # legenda do docx
+    INTRODUZIR = "I", "Introduzir"
+    APROFUNDAR = "A", "Aprofundar"
+    CONSOLIDAR = "C", "Consolidar"
+    RETOMAR = "R", "Retomar"
+
+
+class RevistaInfografico(models.Model):
+    """Infográfico do F2 (D-230): `alfa` existe com cortes no 2EF; `outras`, com cortes em outra etapa."""
+
+    revista = models.ForeignKey(Revista, on_delete=models.CASCADE)
+    componente = models.ForeignKey(Componente, on_delete=models.PROTECT)  # só para FK composta
+    ano = models.ForeignKey(Ano, on_delete=models.PROTECT)  # só para FK composta
+    tipo = models.TextField(choices=TipoInfografico.choices)
+    arquivado_em = models.DateTimeField(null=True, blank=True)  # nulo = ativo (D-117)
+    passos_desligados = ArrayField(models.TextField(), default=list, blank=True)
+    habilidade = models.TextField(blank=True, default="")  # habilidade destacada (redação canônica)
+    # Textos dos cliques ❶ ❷ ❸.
+    texto_descritor = models.TextField(blank=True, default="")
+    texto_progressao = models.TextField(blank=True, default="")
+    texto_habilidades = models.TextField(blank=True, default="")
+    history = HistoricalRecords()
+
+    class Meta:
+        db_table = "revista_infografico"
+        constraints = [
+            models.UniqueConstraint(fields=["revista", "tipo"], name="revista_infografico_uniq"),
+            # Alvo das FKs compostas das filhas (coerência de ano).
+            models.UniqueConstraint(fields=["id", "ano"], name="revista_infografico_alvo_uniq"),
+            models.CheckConstraint(condition=Q(tipo__in=TipoInfografico.values), name="revista_infografico_tipo"),
+            models.CheckConstraint(
+                condition=Q(passos_desligados__contained_by=list(PASSOS_DESLIGAVEIS)),
+                name="revista_infografico_passos",
+            ),
+            max_len("revista_infografico", "habilidade", 500),
+        ]
+
+    def __str__(self):
+        return f"{self.revista} {self.tipo}"
+
+
+class RevistaInfograficoEtapa(models.Model):
+    """Linha da tabela do referencial, uma por etapa. Código e texto vazios = célula mesclada (fase 2)."""
+
+    infografico = models.ForeignKey(RevistaInfografico, on_delete=models.CASCADE)
+    ano = models.ForeignKey(Ano, on_delete=models.PROTECT)  # só para FK composta
+    etapa = models.TextField(choices=EtapaReferencial.choices)
+    marca = models.TextField(choices=Marca.choices, blank=True, default="")  # vazio = sem marca
+    codigo = models.TextField(blank=True, default="")  # código BNCC, ex.: EF15LP18
+    texto = models.TextField(blank=True, default="")
+    history = HistoricalRecords()
+
+    class Meta:
+        db_table = "revista_infografico_etapa"
+        constraints = [
+            models.UniqueConstraint(fields=["infografico", "etapa"], name="revista_infografico_etapa_uniq"),
+            models.CheckConstraint(
+                condition=Q(etapa__in=EtapaReferencial.values), name="revista_infografico_etapa_etapa"
+            ),
+            models.CheckConstraint(
+                condition=Q(marca__in=["", *Marca.values]), name="revista_infografico_etapa_marca"
+            ),
+            max_len("revista_infografico_etapa", "codigo", 50),
+        ]
+
+
+class RevistaInfograficoItem(models.Model):
+    """Um dos 4 itens do infográfico; a tarefa da matriz do parceiro é regra do formulário."""
+
+    infografico = models.ForeignKey(RevistaInfografico, on_delete=models.CASCADE)
+    ano = models.ForeignKey(Ano, on_delete=models.PROTECT)  # só para FK composta
+    posicao = models.SmallIntegerField()  # 1 a 4
+    tarefa = models.ForeignKey(Tarefa, on_delete=models.PROTECT, null=True, blank=True)
+    analise = models.TextField(blank=True, default="")
+    history = HistoricalRecords()
+
+    class Meta:
+        db_table = "revista_infografico_item"
+        constraints = [
+            models.UniqueConstraint(fields=["infografico", "posicao"], name="revista_infografico_item_uniq"),
+            models.CheckConstraint(
+                condition=Q(posicao__gte=1, posicao__lte=4), name="revista_infografico_item_posicao_1a4"
+            ),
         ]
 
 
