@@ -123,7 +123,7 @@ def _forms_fasciculo(request, revista, dados=None):
 # Coluna Situação (U8b): cada passo junta as pendências do resolver pelo código; cada uma aparece uma
 # vez só, como link para o lugar que resolve. Código novo cai em "Outras pendências".
 PASSOS = (
-    ("Matriz e cortes", ("matriz", "corte_sem_matriz", "corte_invalido")),
+    ("Matriz e cortes", ("matriz", "corte_sem_matriz", "corte_invalido", "base", "etapa_em_dobro")),
     ("Template do F1", ("template_f1",)),
     ("Template do F2", ("template_f2",)),
     ("SVG do F2", ("svg", "ids_svg")),
@@ -137,6 +137,7 @@ def _situacao(revista, pendencias):
     links = {
         "matriz": f"{projeto}?aba=matriz", "corte_sem_matriz": link_pendencia("corte_sem_matriz", revista),  # U7b; a etapa que falta: a matriz
         "corte_invalido": f"{projeto}?aba=cortes",
+        "base": f"{projeto}?aba=matriz", "etapa_em_dobro": f"{projeto}?aba=matriz",  # etapa do projeto (D-227)
         "template_f1": "#templates", "template_f2": "#templates",
         "svg": "#arquivos", "ids_svg": "#arquivos", "capa": "#arquivos",
         "variaveis": f"{projeto}#variaveis", "nome_projeto": f"{projeto}#nome",

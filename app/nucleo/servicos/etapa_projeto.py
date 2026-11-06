@@ -6,6 +6,7 @@ guardada em `base_foto` ao clonar para saber depois o que a base mudou desde ent
 from typing import NamedTuple
 
 from django.db import IntegrityError, transaction
+from django.db.models import Q
 
 from nucleo.models import Descritor, Matriz, MatrizEtapaCC, Tarefa
 from nucleo.servicos.abrir_ano import clonar
@@ -142,3 +143,32 @@ def criar(projeto, etapa, componente, usuario, base=None):
             )
             clonar(Tarefa.objects.filter(descritor__in=list(mapa)), usuario, motivo, descritor_id=mapa)
     return mec
+
+
+def derivadas(*mecs):
+    """MECs de projeto ativo clonadas de uma destas (etapas de matriz)."""
+    return MatrizEtapaCC.objects.filter(base__in=mecs, projeto__arquivado_em__isnull=True)
+
+
+def mecs_por_etapa(projeto, componente_id, etapa_ids):
+    """{etapa_id: (MEC da matriz do parceiro, MEC do projeto)}, None onde não há."""
+    dono = Q(projeto=projeto)
+    if projeto.parceiro_ano.matriz_id is not None:  # matriz_id=None casaria toda MEC de projeto
+        dono |= Q(matriz_id=projeto.parceiro_ano.matriz_id)
+    saida = {}
+    for m in MatrizEtapaCC.objects.filter(dono, componente_id=componente_id, etapa_id__in=list(etapa_ids)):
+        par = saida.setdefault(m.etapa_id, [None, None])
+        par[m.projeto_id is not None] = m
+    return {e: tuple(par) for e, par in saida.items()}
+
+
+def vigente(da_matriz, do_projeto):
+    """A MEC que a revista usa: a única que existe; as duas, a do projeto até escolher a da
+    matriz (D-228, D-231)."""
+    if do_projeto is None or (da_matriz is not None and do_projeto.preferida == "matriz"):
+        return da_matriz
+    return do_projeto
+
+
+def mec_vigente(projeto, etapa_id, componente_id):
+    return vigente(*mecs_por_etapa(projeto, componente_id, [etapa_id]).get(etapa_id, (None, None)))

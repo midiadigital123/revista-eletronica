@@ -4,12 +4,13 @@ import unittest
 
 from django.test import SimpleTestCase, TestCase
 
-from nucleo.models import Descritor, Etapa, MatrizEtapaCC, Projeto, Revista, Tarefa
+from nucleo.models import Descritor, Etapa, Matriz, MatrizEtapaCC, Projeto, Revista, Tarefa
 from nucleo.servicos.cascata import gravar_cortes
-from nucleo.servicos.etapa_projeto import CriacaoRecusada, Item, classificar, criar, foto, hash_foto
-from nucleo.servicos.matriz import CAMPOS_DESCRITOR
-from nucleo.servicos.resolver import pendencias
-from nucleo.tests.test_resolver import Mundo
+from nucleo.servicos.etapa_projeto import CriacaoRecusada, Item, classificar, criar, derivadas, foto, hash_foto
+from nucleo.servicos.matriz import CAMPOS_DESCRITOR, impacto
+from nucleo.servicos.resolver import hash_validado, pendencias, resolver
+from nucleo.servicos.validacao import validada, validar
+from nucleo.tests.test_resolver import Mundo, recarregar
 
 
 class Base(TestCase):
@@ -110,7 +111,10 @@ class CriarTest(Base):
         with self.assertRaisesMessage(CriacaoRecusada, "projeto arquivado"):
             criar(self.projeto, self.e4, self.lp, self.usuario)
 
-    @unittest.skip("depende da tarefa 4: resolver lê a MEC do projeto")
+    @unittest.skip(
+        "premissa a decidir: corte_invalido só olha os cortes (problema_dos_cortes espelha o JS, D-131); "
+        "tarefa fora da escala_max não vira pendência hoje"
+    )
     def test_clone_fora_da_escala_vira_corte_invalido(self):
         e7 = Etapa.objects.create(ano=self.ano, codigo="7EF", escala_max=400, ordem=6)
         Tarefa.objects.filter(descritor__matriz_etapa_cc=self.mec9, inicio=300).update(inicio=450, fim=480)
@@ -127,6 +131,100 @@ class CriarTest(Base):
         criar(self.projeto, e7, self.lp, self.usuario, base=self.mec9)
         revista = Revista.objects.get(projeto=self.projeto, componente=self.lp)
         self.assertIn("corte_invalido", [p.codigo for p in pendencias(revista)])
+
+
+class RevistaTest(Base):
+    """A revista com a etapa do projeto (GO LP 4EF): resolver, pendências e impacto."""
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.mec5 = MatrizEtapaCC.objects.get(matriz=cls.matriz, etapa=cls.e5, componente=cls.lp)
+        cls.lp_go = cls.go["LP"]
+
+    def _outra_base(self):
+        """Base 4EF LP de uma matriz que o GO não usa: mexer nela só muda a revista pela derivada."""
+        outra = Matriz.objects.create(ano=self.ano, nome="Outra")
+        base = MatrizEtapaCC.objects.create(matriz=outra, etapa=self.e4, componente=self.lp, ano=self.ano, passo=25)
+        d = Descritor.objects.create(matriz_etapa_cc=base, codigo="D05", descricao="Da outra", ordem=1)
+        Tarefa.objects.create(descritor=d, inicio=100, fim=150, texto="Compara.", ordem=1)
+        return base
+
+    def _pronta(self):
+        Revista.objects.filter(pk=self.lp_go.pk).update(
+            svg_f2="f2/x.svg", svg_sha256="a" * 64, svg_ids=["passo1", "btn-action-p2"],
+            capa="capas/x.png", capa_sha256="c" * 64,
+        )  # fmt: skip
+        return recarregar(self.lp_go)
+
+    def test_revista_usa_a_etapa_do_projeto(self):
+        self.assertNotIn("D01", resolver(recarregar(self.lp_go))["f1"]["dados"]["4ef"])  # ainda sem MEC
+        criar(self.projeto, self.e4, self.lp, self.usuario, base=self.mec5)
+        r = resolver(recarregar(self.lp_go))
+        self.assertEqual(r["f1"]["etapas"], ["4ef", "5ef", "9ef"])
+        self.assertEqual(r["f1"]["dados"]["4ef"]["D01"], r["f1"]["dados"]["5ef"]["D01"])
+        self.assertEqual(r["f1"]["dados"]["4ef"]["D01"]["description"], "Descritor 1 LP")
+        self.assertEqual([lc for lc in r["lacunas"] if lc["tipo"] in ("base", "etapa_em_dobro")], [])
+
+    def test_corte_sem_matriz_some_com_a_etapa_do_projeto(self):
+        p = [x for x in pendencias(recarregar(self.lp_go)) if x.codigo == "corte_sem_matriz"]
+        self.assertEqual(p[0].mensagem, "A matriz não tem a etapa: 4EF.")
+        criar(self.projeto, self.e4, self.lp, self.usuario, base=self.mec5)
+        self.assertNotIn("corte_sem_matriz", [x.codigo for x in pendencias(recarregar(self.lp_go))])
+
+    def test_editar_a_base_abre_lacuna_e_tira_o_validado(self):
+        base = self._outra_base()
+        criar(self.projeto, self.e4, self.lp, self.usuario, base=base)
+        lp = self._pronta()
+        self.assertEqual(pendencias(lp), [])
+        self.assertIsNone(validar(lp.pk, hash_validado(lp), self.usuario))
+        lp = recarregar(lp)
+        antes = resolver(lp)
+        self.assertTrue(validada(lp, hash_validado(lp)))
+
+        Descritor.objects.filter(matriz_etapa_cc=base, codigo="D05").update(descricao="Da outra, revista")
+        depois = resolver(lp)
+        self.assertEqual(depois["f1"], antes["f1"])  # a cópia do projeto não muda sozinha
+        self.assertIn({"tipo": "base", "etapa": "4ef"}, depois["lacunas"])
+        self.assertFalse(validada(lp, hash_validado(lp)))
+        self.assertIn(
+            ("base", "A etapa 4EF tem mudanças da base para revisar."),
+            [(p.codigo, p.mensagem) for p in pendencias(lp)],
+        )
+
+    def test_sem_base_nao_ha_lacuna(self):
+        mec = criar(self.projeto, self.e4, self.lp, self.usuario, base=self.mec5)
+        MatrizEtapaCC.objects.filter(pk=mec.pk).update(base=None)
+        Descritor.objects.filter(matriz_etapa_cc=self.mec5, codigo="D01").update(descricao="Mudou na matriz")
+        lp = recarregar(self.lp_go)
+        self.assertNotIn("base", [lc["tipo"] for lc in resolver(lp)["lacunas"]])
+        self.assertNotIn("base", [p.codigo for p in pendencias(lp)])
+
+    def test_matriz_ganha_a_etapa_vira_pendencia_de_escolha(self):
+        mec = criar(self.projeto, self.e4, self.lp, self.usuario, base=self.mec5)
+        da_matriz = MatrizEtapaCC.objects.create(matriz=self.matriz, etapa=self.e4, componente=self.lp, ano=self.ano, passo=25)
+        Descritor.objects.create(matriz_etapa_cc=da_matriz, codigo="D09", descricao="Da matriz", ordem=1)
+        lp = recarregar(self.lp_go)
+        r = resolver(lp)
+        self.assertIn({"tipo": "etapa_em_dobro", "etapa": "4ef"}, r["lacunas"])
+        self.assertIn("D01", r["f1"]["dados"]["4ef"])  # até escolher, vale a do projeto
+        self.assertIn(
+            ("etapa_em_dobro", "A matriz agora tem 4EF: escolha qual usar."),
+            [(p.codigo, p.mensagem) for p in pendencias(lp)],
+        )
+
+        MatrizEtapaCC.objects.filter(pk=mec.pk).update(preferida="matriz")
+        r = resolver(lp)
+        self.assertEqual([k for k in r["f1"]["dados"]["4ef"] if k.startswith("D")], ["D09"])
+        self.assertNotIn("etapa_em_dobro", [lc["tipo"] for lc in r["lacunas"]])
+        self.assertNotIn("etapa_em_dobro", [p.codigo for p in pendencias(lp)])
+
+    def test_afetadas_inclui_a_revista_derivada(self):
+        base = self._outra_base()
+        self.assertEqual(impacto(base), [])
+        mec = criar(self.projeto, self.e4, self.lp, self.usuario, base=base)
+        self.assertEqual(list(derivadas(base)), [mec])
+        self.assertEqual([r for r, _ in impacto(base)], [self.lp_go])  # só o LP: o MT não tem a etapa
 
 
 def _tarefa(texto="t", arquivo=None, alt="", ordem=1):

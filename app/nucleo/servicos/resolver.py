@@ -33,7 +33,7 @@ import json
 from pathlib import PurePosixPath
 from typing import NamedTuple
 
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 
 from nucleo import texto
 from nucleo.models import (
@@ -134,16 +134,10 @@ def _f1_escalas(revista, projeto, variaveis):
         .select_related("etapa")
         .order_by("etapa__ordem", "etapa__codigo")
     )
-    mecs = {}
-    if pa.matriz_id is not None and cortes:
-        mecs = {
-            m.etapa_id: m
-            for m in MatrizEtapaCC.objects.filter(
-                matriz_id=pa.matriz_id,
-                componente_id=revista.componente_id,
-                etapa_id__in=[c.etapa_id for c in cortes],
-            )
-        }
+    from nucleo.servicos import etapa_projeto  # importa este módulo: no topo seria circular
+
+    pares = etapa_projeto.mecs_por_etapa(projeto, revista.componente_id, [c.etapa_id for c in cortes]) if cortes else {}
+    mecs = {e: etapa_projeto.vigente(*par) for e, par in pares.items()}
     # D-053, D-091: existir a linha é "sobrescrevi"; passo nulo nela é "sem linhas vazias".
     passos = {
         p.etapa_id: p.passo
@@ -157,7 +151,7 @@ def _f1_escalas(revista, projeto, variaveis):
     ):
         descritores.setdefault(d.matriz_etapa_cc_id, []).append(d)
 
-    etapas, dados = [], {}
+    etapas, dados, lacunas = [], {}, []
     for corte in cortes:
         etapa, valores = corte.etapa, corte.valores
         mec = mecs.get(etapa.pk)
@@ -165,6 +159,14 @@ def _f1_escalas(revista, projeto, variaveis):
         n = len(valores) + 1
         chave = etapa.codigo.lower()
         etapas.append(chave)
+        da_matriz, do_projeto = pares.get(etapa.pk, (None, None))
+        if da_matriz and do_projeto and do_projeto.preferida is None:
+            lacunas.append({"tipo": "etapa_em_dobro", "etapa": chave})
+        # ponytail: uma foto da base por etapa do projeto a cada resolver; cache se a página ficar lenta.
+        if mec and mec.projeto_id and mec.base_id and (
+            etapa_projeto.hash_foto(etapa_projeto.foto(mec.base)) != etapa_projeto.hash_foto(mec.base_foto)
+        ):
+            lacunas.append({"tipo": "base", "etapa": chave})
         dados[chave] = {
             "scaleRange": {"min": 0, "max": etapa.escala_max},
             "cortes": {f"padrao-{i}": v for i, v in enumerate(valores, 1)},
@@ -182,7 +184,7 @@ def _f1_escalas(revista, projeto, variaveis):
                 },
                 "scale": escala(tarefas, valores, 0, etapa.escala_max, passo),
             }
-    return etapas, dados
+    return etapas, dados, lacunas
 
 
 def cores_efetivas(revista, projeto, padroes):
@@ -276,7 +278,8 @@ def resolver(revista):
             )
         return {"secoes": secoes}
 
-    etapas, dados = _f1_escalas(revista, projeto, valores)
+    etapas, dados, lacunas_f1 = _f1_escalas(revista, projeto, valores)
+    lacunas += lacunas_f1  # base e etapa_em_dobro (etapa do projeto)
     padroes = max((len(d["padroes"]) for d in dados.values()), default=0)
     usadas.update(f"pd{k:02d}" for k in range(1, padroes + 1))  # rótulos da escala: só os padrões que a revista tem
     f1 = {"etapas": etapas, "dados": dados, "cores": cores_efetivas(revista, projeto, padroes), **textos("F1")}
@@ -343,8 +346,8 @@ def pendencias(revista, resolvido=None):
     if pa.matriz_id is None:
         saida.append(Pendencia("matriz", "Falta escolher a matriz do parceiro no ano."))
     else:
-        com_mec = set(
-            MatrizEtapaCC.objects.filter(matriz_id=pa.matriz_id, componente_id=revista.componente_id)
+        com_mec = set(  # a etapa do projeto também conta (D-227)
+            MatrizEtapaCC.objects.filter(Q(matriz_id=pa.matriz_id) | Q(projeto=projeto), componente_id=revista.componente_id)
             .values_list("etapa_id", flat=True)
         )
         sem_mec = [
@@ -367,6 +370,10 @@ def pendencias(revista, resolvido=None):
             saida.append(
                 Pendencia(f"template_{lacuna['fasciculo'].lower()}", f"Falta escolher o template do {lacuna['fasciculo']}.")
             )
+        elif lacuna["tipo"] == "base":
+            saida.append(Pendencia("base", f"A etapa {lacuna['etapa'].upper()} tem mudanças da base para revisar."))
+        elif lacuna["tipo"] == "etapa_em_dobro":
+            saida.append(Pendencia("etapa_em_dobro", f"A matriz agora tem {lacuna['etapa'].upper()}: escolha qual usar."))
     if not revista.svg_f2:
         saida.append(Pendencia("svg", "Falta o SVG do F2."))
     elif resolvido["f2"]["secoes"] is not None:
