@@ -4,7 +4,7 @@ import unittest
 
 from django.test import SimpleTestCase, TestCase
 
-from nucleo.models import Descritor, Etapa, Matriz, MatrizEtapaCC, Projeto, Revista, Tarefa
+from nucleo.models import Ano, Componente, Descritor, Etapa, Matriz, MatrizEtapaCC, Projeto, Revista, Tarefa
 from nucleo.servicos.cascata import gravar_cortes
 from nucleo.servicos.etapa_projeto import CriacaoRecusada, Item, classificar, criar, derivadas, foto, hash_foto
 from nucleo.servicos.matriz import CAMPOS_DESCRITOR, impacto
@@ -225,6 +225,31 @@ class RevistaTest(Base):
         mec = criar(self.projeto, self.e4, self.lp, self.usuario, base=base)
         self.assertEqual(list(derivadas(base)), [mec])
         self.assertEqual([r for r, _ in impacto(base)], [self.lp_go])  # só o LP: o MT não tem a etapa
+
+    def test_afetadas_inclui_derivada_de_base_de_outro_ano(self):
+        # Componente e etapa são por ano: a derivada (2026) não tem o componente_id da base (2025).
+        ano = Ano.objects.create(ano=2025)
+        lp = Componente.objects.create(ano=ano, codigo="LP", nome="Língua Portuguesa")
+        e5 = Etapa.objects.create(ano=ano, codigo="5EF", escala_max=500, ordem=2)
+        base = MatrizEtapaCC.objects.create(
+            matriz=Matriz.objects.create(ano=ano, nome="Comunitária 2025"), etapa=e5, componente=lp, ano=ano, passo=25
+        )
+        Descritor.objects.create(matriz_etapa_cc=base, codigo="D01", descricao="De 2025", ordem=1)
+        criar(self.projeto, self.e4, self.lp, self.usuario, base=base)
+        afetadas = [r for r, _ in impacto(base)]
+        self.assertIn(self.lp_go, afetadas)
+        self.assertNotIn(self.go["MT"], afetadas)
+
+    def test_preferida_projeto_mantem_a_do_projeto_e_tira_a_lacuna(self):
+        mec = criar(self.projeto, self.e4, self.lp, self.usuario, base=self.mec5)
+        da_matriz = MatrizEtapaCC.objects.create(matriz=self.matriz, etapa=self.e4, componente=self.lp, ano=self.ano, passo=25)
+        Descritor.objects.create(matriz_etapa_cc=da_matriz, codigo="D09", descricao="Da matriz", ordem=1)
+        MatrizEtapaCC.objects.filter(pk=mec.pk).update(preferida="projeto")
+        lp = recarregar(self.lp_go)
+        r = resolver(lp)
+        self.assertEqual([k for k in r["f1"]["dados"]["4ef"] if k.startswith("D")], ["D01", "D02"])
+        self.assertNotIn("etapa_em_dobro", [lc["tipo"] for lc in r["lacunas"]])
+        self.assertNotIn("etapa_em_dobro", [p.codigo for p in pendencias(lp)])
 
 
 def _tarefa(texto="t", arquivo=None, alt="", ordem=1):

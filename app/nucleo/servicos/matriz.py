@@ -1,7 +1,7 @@
 """Duplicar matriz, diferenças contra a origem e impacto de uma edição (D-076, D-101, D-113, D-124)."""
 
 from django.db import IntegrityError, transaction
-from django.db.models import Q
+from django.db.models import F, Q
 
 from nucleo.models import Componente, Descritor, Etapa, Matriz, MatrizEtapaCC, Revista, Tarefa
 from nucleo.servicos.abrir_ano import clonar
@@ -155,10 +155,10 @@ def _afetadas(mecs):
             projeto__parceiro_ano__corte__etapa_id=m.etapa_id,
             projeto__parceiro_ano__corte__componente_id=m.componente_id,
         )
-        # Revistas dos projetos com etapa clonada desta (a lacuna "base" muda o hash).
+        # Revistas dos projetos com etapa clonada desta (a lacuna "base" muda o hash), no componente
+        # da derivada: a base pode ser de outro ano, com outro componente_id (casa só pelo código).
         q |= Q(
-            componente_id=m.componente_id,
             projeto__matrizetapacc__base_id=m.pk,
-            projeto__matrizetapacc__componente_id=m.componente_id,
+            componente_id=F("projeto__matrizetapacc__componente_id"),
         )
     return Revista.objects.filter(q, arquivada_em__isnull=True).distinct()
