@@ -51,8 +51,23 @@ Os cliques ❶ (4º parágrafo), ❷, ❸ e ❹ e a habilidade destacada são **
 
 ## 5. Perguntas (de quem depende)
 
-1. "AF_EM" no nome do arquivo: existe outro documento para anos iniciais? Se sim, são dois infográficos por componente, ou o mesmo com itens diferentes? — Pedagógica
+1. ~~"AF_EM" no nome do arquivo~~ Respondida em 06/11 (D-230): ver §6. Restam: a estrutura do Alfa é a mesma (progressão 1EF–3EM, itens só do 2EF?); o docx recebido traz um item do 2EF, é o "Outras Etapas"? — Pedagógica
 2. Os 4 parágrafos da abertura aparecem na web antes do infográfico (texto corrido) ou só no impresso? — Otavio
 3. Clique ❹: um modal por item (e a abertura/fechamento comuns vão onde?) ou um modal único com os 4 itens? — Otavio + Pedagógica
 4. Suporte do item (`_SUP`): segundo arquivo da tarefa ou uma imagem única montada pelo design? — design
 5. "Acesse aqui o template do infográfico": que arquivo é, quem fornece e vale por ano ou por componente? — Pedagógica
+
+## 6. Infográficos por revista (D-230, 06/11)
+
+Cada revista (projeto × componente) tem até **2 infográficos** no F2, derivados dos cortes pela cascata
+(`app/nucleo/servicos/cascata.py`, `gravar_cortes`), nunca escolhidos à mão:
+
+| Infográfico | Existe quando | Etapas que cobre |
+| --- | --- | --- |
+| Avaliação e Currículo – Alfa | o parceiro tem cortes para o **2EF** naquele componente | 2EF |
+| Avaliação e Currículo – Outras Etapas | há cortes para **alguma etapa ≠ 2EF** | todas as outras, aglutinadas num só |
+
+Até 4 por projeto (2 LP + 2 MT). Consequências para a fase 1: todos os campos da §2 marcados "revista" passam a ser
+**por infográfico** (revista × tipo), inclusive os passos desligados (D-229 refinada); o template F2 provavelmente
+vira um por tipo × componente; a navegação do F2 (página e zip), a planilha do impresso e o "Validado" precisam
+contar com 0, 1 ou 2 infográficos por revista.
