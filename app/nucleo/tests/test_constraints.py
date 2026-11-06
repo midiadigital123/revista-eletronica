@@ -296,6 +296,11 @@ class RecusaTest(TestCase):
         derivada = self.mec(projeto=self.projeto(), base=base, base_foto={})
         self.recusa(lambda: MatrizEtapaCC.objects.filter(pk=derivada.pk).update(base=outra))
 
+    def test_religar_orfa_e_recusado(self):
+        base = self.mec(matriz=self.matriz)
+        orfa = self.mec(projeto=self.projeto())
+        self.recusa(lambda: MatrizEtapaCC.objects.filter(pk=orfa.pk).update(base_id=base.pk, base_foto={}))
+
     def test_base_apagada_vira_nulo(self):
         base = self.mec(matriz=self.matriz)
         derivada = self.mec(projeto=self.projeto(), base=base, base_foto={"descritores": []})

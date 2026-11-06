@@ -88,7 +88,8 @@ class Migration(migrations.Migration):
             "FOREIGN KEY (base_id) REFERENCES matriz_etapa_cc (id) ON DELETE SET NULL",
             reverse_sql="ALTER TABLE matriz_etapa_cc DROP CONSTRAINT fk_matriz_etapa_cc_base",
         ),
-        # A base é sempre etapa de matriz, e não se troca: só volta a nulo (o SET NULL acima).
+        # A base é sempre etapa de matriz e só se define no INSERT: em UPDATE só volta a nulo (o SET NULL
+        # acima). Religar uma órfã manteria a base_foto de outra base.
         # Base inexistente passa aqui e a FK recusa. ERRCODE 23001 chega ao Django como IntegrityError.
         migrations.RunSQL(
             sql=[
@@ -102,9 +103,9 @@ class Migration(migrations.Migration):
                         RAISE EXCEPTION 'matriz_etapa_cc_base_de_matriz: base % não é etapa de matriz', NEW.base_id
                             USING ERRCODE = 'restrict_violation';
                     END IF;
-                    IF TG_OP = 'UPDATE' AND OLD.base_id IS NOT NULL AND NEW.base_id IS NOT NULL
-                       AND NEW.base_id <> OLD.base_id THEN
-                        RAISE EXCEPTION 'matriz_etapa_cc_base_de_matriz: trocar a base (% para %) é proibido',
+                    IF TG_OP = 'UPDATE' AND NEW.base_id IS NOT NULL
+                       AND NEW.base_id IS DISTINCT FROM OLD.base_id THEN
+                        RAISE EXCEPTION 'matriz_etapa_cc_base_de_matriz: base só se define ao criar a etapa (% para %)',
                             OLD.base_id, NEW.base_id
                             USING ERRCODE = 'restrict_violation';
                     END IF;
