@@ -18,7 +18,7 @@ from pathlib import Path, PurePosixPath
 from django.core.files.storage import default_storage
 from django.template.loader import render_to_string
 
-from nucleo.models import Tarefa
+from nucleo.servicos.etapa_projeto import tarefas_da_revista
 from nucleo.servicos.html import contexto_pagina
 from nucleo.servicos.resolver import Pendencia, pendencias, resolver
 
@@ -61,10 +61,7 @@ def _itens(revista, resolvido, erros):
     """{nome no zip: caminho no storage} só dos itens que o HTML usa."""
     nomes, itens, vistos = _nomes_dos_itens(resolvido), {}, set()
     tarefas = (
-        Tarefa.objects.filter(
-            descritor__matriz_etapa_cc__matriz_id=revista.projeto.parceiro_ano.matriz_id,
-            descritor__matriz_etapa_cc__componente_id=revista.componente_id,
-        )
+        tarefas_da_revista(revista)
         .exclude(arquivo=None)
         .exclude(arquivo="")
         .order_by("pk")

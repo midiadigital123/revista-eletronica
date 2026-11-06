@@ -241,7 +241,7 @@ def _mec(request, pk, **kwargs):
     """Alvo do `com_bloqueio`: confere a permissão de ver antes, para não travar a MEC à toa."""
     if not (request.user.has_perm("nucleo.view_matrizetapacc") or request.user.has_perm("nucleo.change_matrizetapacc")):
         raise PermissionDenied
-    return get_object_or_404(MatrizEtapaCC.objects.select_related("matriz__ano", "etapa", "componente"), pk=pk)
+    return get_object_or_404(MatrizEtapaCC.objects.select_related("ano", "matriz__ano", "etapa", "componente"), pk=pk)
 
 
 class IntervaloForm(ImpactoForm):

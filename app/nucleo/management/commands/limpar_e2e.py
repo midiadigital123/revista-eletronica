@@ -13,7 +13,9 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from nucleo.models import Corte, FotoRevista, Matriz, Parceiro, ParceiroAno, Projeto, ProjetoCor, ProjetoPasso, Revista, Template
+from nucleo.models import (
+    Corte, FotoRevista, Matriz, MatrizEtapaCC, Parceiro, ParceiroAno, Projeto, ProjetoCor, ProjetoPasso, Revista, Template,
+)  # fmt: skip
 from nucleo.servicos.exclusao import EmUso, _apagar, excluir
 
 PREFIXO = "E2E "
@@ -31,6 +33,7 @@ def dependentes(parceiros):
     return [
         (FotoRevista, {"revista__projeto__parceiro_ano__in": pas}), (Revista, {"projeto__parceiro_ano__in": pas}),
         (ProjetoPasso, {"projeto__parceiro_ano__in": pas}), (ProjetoCor, {"projeto__parceiro_ano__in": pas}),
+        (MatrizEtapaCC, {"projeto__parceiro_ano__in": pas}),  # etapa do projeto (D-230): PROTECT no projeto
         (Projeto, {"parceiro_ano__in": pas}), (Corte, {"parceiro_ano__in": pas}), (ParceiroAno, {"pk__in": pas}),
     ]  # fmt: skip
 

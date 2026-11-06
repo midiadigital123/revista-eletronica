@@ -6,7 +6,8 @@ from django.contrib.auth import get_user_model
 from django.core.management import CommandError, call_command
 from django.test import TestCase, override_settings
 
-from nucleo.models import Matriz, Parceiro, Projeto, Revista, Template, TemplateVersao
+from nucleo.models import Etapa, Matriz, MatrizEtapaCC, Parceiro, Projeto, Revista, Template, TemplateVersao
+from nucleo.servicos.etapa_projeto import criar
 from nucleo.tests.test_resolver import Mundo
 
 
@@ -50,6 +51,15 @@ class LimparE2ETest(TestCase):
         self.assertFalse(TemplateVersao.objects.filter(template_id=self.tpl.pk).exists())
         self.assertTrue(Parceiro.objects.filter(pk=self.alheio.pk).exists())  # "E2E" de outra pessoa fica
         self.assertTrue(Parceiro.objects.filter(nome="GO").exists())
+
+    def test_apaga_etapa_do_projeto_do_parceiro_e2e(self):
+        e4 = Etapa.objects.create(ano=self.ano, codigo="4EF", escala_max=500, ordem=4)
+        base = MatrizEtapaCC.objects.get(matriz=self.matriz, etapa=self.e9, componente=self.lp)
+        mec = criar(Projeto.objects.get(parceiro_ano__parceiro=self.lixo), e4, self.lp, self.e2e, base=base)
+        self.assertIn("Apagados: E2E Lixo X1", self.rodar())
+        self.assertFalse(MatrizEtapaCC.objects.filter(pk=mec.pk).exists())
+        self.assertFalse(Parceiro.objects.filter(pk=self.lixo.pk).exists())
+        self.assertTrue(MatrizEtapaCC.objects.filter(pk=base.pk).exists())  # a base é da matriz real
 
     @override_settings(DEBUG=False)
     def test_recusa_sem_debug(self):

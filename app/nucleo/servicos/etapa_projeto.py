@@ -150,16 +150,27 @@ def derivadas(*mecs):
     return MatrizEtapaCC.objects.filter(base__in=mecs, projeto__arquivado_em__isnull=True)
 
 
-def mecs_por_etapa(projeto, componente_id, etapa_ids):
-    """{etapa_id: (MEC da matriz do parceiro, MEC do projeto)}, None onde não há."""
+def _dono(projeto):
+    """As MECs que as revistas do projeto podem usar: as da matriz do parceiro e as do projeto."""
     dono = Q(projeto=projeto)
     if projeto.parceiro_ano.matriz_id is not None:  # matriz_id=None casaria toda MEC de projeto
         dono |= Q(matriz_id=projeto.parceiro_ano.matriz_id)
+    return dono
+
+
+def mecs_por_etapa(projeto, componente_id, etapa_ids):
+    """{etapa_id: (MEC da matriz do parceiro, MEC do projeto)}, None onde não há."""
     saida = {}
-    for m in MatrizEtapaCC.objects.filter(dono, componente_id=componente_id, etapa_id__in=list(etapa_ids)):
+    for m in MatrizEtapaCC.objects.filter(_dono(projeto), componente_id=componente_id, etapa_id__in=list(etapa_ids)):
         par = saida.setdefault(m.etapa_id, [None, None])
         par[m.projeto_id is not None] = m
     return {e: tuple(par) for e, par in saida.items()}
+
+
+def tarefas_da_revista(revista):
+    """Tarefas das MECs que a revista pode usar: onde o zip e o preview acham o arquivo do item."""
+    mecs = MatrizEtapaCC.objects.filter(_dono(revista.projeto), componente_id=revista.componente_id)
+    return Tarefa.objects.filter(descritor__matriz_etapa_cc__in=mecs)
 
 
 def vigente(da_matriz, do_projeto):

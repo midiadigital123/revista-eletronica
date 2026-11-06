@@ -30,6 +30,7 @@ from nucleo.models import (
     ParceiroAno, Projeto, ProjetoCor, ProjetoPasso, Revista, RevistaFasciculo, RevistaSecao, Tarefa, Template,
     TemplateVersao,
 )  # fmt: skip
+from nucleo.servicos.etapa_projeto import derivadas
 
 PARTES = {Parceiro: ["parceiroano_set"], Matriz: ["matrizetapacc_set"], Template: ["templateversao_set"]}
 LINKS = 5
@@ -109,12 +110,21 @@ def _agrupar(objs):
         rotulo, alvo, caminho = GRUPO[modelo]
         destino = ids if caminho == "pk" else modelo.objects.filter(pk__in=ids).values_list(caminho, flat=True)
         grupos[rotulo, alvo] |= set(destino)
-    saida = []
-    for (rotulo, alvo), ids in grupos.items():
-        relacionados, texto, url = MOSTRAR[alvo]
-        primeiros = alvo.objects.filter(pk__in=ids).select_related(*relacionados).order_by("pk")[:LINKS]
-        saida.append(Impedimento(rotulo, len(ids), [(texto(o), url(o)) for o in primeiros]))
-    return saida + outros
+    return [_impedimento(rotulo, alvo, ids) for (rotulo, alvo), ids in grupos.items()] + outros
+
+
+def _impedimento(rotulo, alvo, ids):
+    relacionados, texto, url = MOSTRAR[alvo]
+    primeiros = alvo.objects.filter(pk__in=ids).select_related(*relacionados).order_by("pk")[:LINKS]
+    return Impedimento(rotulo, len(ids), [(texto(o), url(o)) for o in primeiros])
+
+
+def _derivadas(obj):
+    """Base com etapa de projeto derivada ativa não sai pela tela (D-230, regra 6). O `base` é SET_NULL:
+    o Collector não a acusa."""
+    mecs = obj.matrizetapacc_set.all() if isinstance(obj, Matriz) else [obj] if isinstance(obj, MatrizEtapaCC) else []
+    ids = set(derivadas(*mecs).values_list("projeto_id", flat=True))  # sem mecs: base__in vazio, sem SELECT
+    return [_impedimento("projetos com etapa derivada", Projeto, ids)] if ids else []
 
 
 def _em_edicao(obj, usuario):
@@ -140,7 +150,7 @@ def impedimentos(obj, usuario=None):
     achados = [o for o in _protegidos([obj]) if type(o) not in modelos_partes]
     for parte in PARTES.get(type(obj), ()):
         achados += _protegidos(list(getattr(obj, parte).all()))
-    return _agrupar(achados) + _em_edicao(obj, usuario)
+    return _agrupar(achados) + _derivadas(obj) + _em_edicao(obj, usuario)
 
 
 def _apagar(qs, usuario):
@@ -197,10 +207,10 @@ def excluir(obj, usuario):
 # --- Ano inteiro (D-206) -----------------------------------------------------------------------
 
 # Ordem das dependências (folhas primeiro). Fascículos e seções saem com a revista; descritores e tarefas com
-# a MEC; bloqueios com o alvo (CASCADE).
+# a MEC; bloqueios com o alvo (CASCADE). A etapa do projeto (D-230) sai antes do projeto (PROTECT).
 ORDEM_ANO = (
     (FotoRevista, "revista__ano"), (Revista, "ano"),
-    (ProjetoPasso, "ano"), (ProjetoCor, "projeto__ano"), (Projeto, "ano"),
+    (ProjetoPasso, "ano"), (ProjetoCor, "projeto__ano"), (MatrizEtapaCC, "projeto__ano"), (Projeto, "ano"),
     (Corte, "ano"), (ParceiroAno, "ano"),
     (MatrizEtapaCC, "ano"), (Matriz, "ano"),
     (TemplateVersao, "template__ano"), (Template, "ano"),

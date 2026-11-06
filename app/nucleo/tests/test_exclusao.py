@@ -7,6 +7,7 @@ from django.apps import apps
 from django.db import IntegrityError, connection, models, transaction
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from nucleo.models import (
     Ano, Bloqueio, Componente, CorPadrao, Corte, Descritor, Etapa, FotoRevista, Matriz, MatrizEtapaCC, Parceiro,
@@ -17,7 +18,8 @@ from nucleo.models.revista import Motivo
 from nucleo.servicos import bloqueio, exclusao
 from nucleo.servicos.abrir_ano import abrir_ano
 from nucleo.servicos.cascata import gravar_cortes
-from nucleo.servicos.exclusao import EmUso, apagar_ano, excluir, impedimentos, resumo_ano
+from nucleo.servicos.etapa_projeto import criar
+from nucleo.servicos.exclusao import EmUso, Impedimento, apagar_ano, excluir, impedimentos, resumo_ano
 from nucleo.servicos.foto import fotografar
 from nucleo.tests.test_resolver import Mundo, usuario
 
@@ -137,6 +139,24 @@ class ImpedimentosTest(Base):
             excluir(m, self.ped)
         excluir(m, self.mid)
         self.assertFalse(Bloqueio.objects.exists())
+
+    def test_base_com_derivada_nao_e_excluida(self):  # regra 6 (D-227): a tela lista os projetos derivados
+        base = Matriz.objects.create(ano=self.ano, nome="Base")
+        mec = MatrizEtapaCC.objects.create(matriz=base, etapa=self.e9, componente=self.lp, ano=self.ano)
+        e4 = Etapa.objects.create(ano=self.ano, codigo="4EF", escala_max=500, ordem=4)
+        projeto = self.go["LP"].projeto
+        derivada = criar(projeto, e4, self.lp, self.ped, base=mec)
+        esperado = [Impedimento("projetos com etapa derivada", 1, [("Projeto GO (2026)", reverse("ui_projeto", args=[projeto.pk]))])]
+        self.assertEqual(impedimentos(base), esperado)
+        self.assertEqual(impedimentos(mec), esperado)
+        with self.assertRaises(EmUso):
+            excluir(base, self.ped)
+        self.assertTrue(MatrizEtapaCC.objects.filter(pk=mec.pk).exists())
+        # Projeto arquivado não segura a base: ela sai e a etapa vira cópia solta (base nula).
+        Projeto.objects.filter(pk=projeto.pk).update(arquivado_em=timezone.now())
+        self.assertEqual(impedimentos(base), [])
+        excluir(base, self.ped)
+        self.assertEqual(MatrizEtapaCC.objects.values_list("base_id", flat=True).get(pk=derivada.pk), None)
 
     def test_template_em_uso_lista_as_revistas(self):
         t = self.templates["LP", "F1"]
@@ -264,6 +284,16 @@ class ApagarAnoTest(Base):
         v = TemplateVersao.objects.create(template=livre, numero=1, texto="x")
         with self.assertRaises(IntegrityError), transaction.atomic():
             TemplateVersao.objects.filter(pk=v.pk).delete()
+
+    def test_apagar_ano_com_etapa_do_projeto(self):
+        lp = Componente.objects.get(ano=self.a27, codigo="LP")
+        e4 = Etapa.objects.create(ano=self.a27, codigo="4EF", escala_max=500, ordem=4)
+        base = MatrizEtapaCC.objects.get(ano=self.a27, etapa__codigo="9EF", componente=lp)
+        mec = criar(Projeto.objects.get(ano=self.a27), e4, lp, self.ped, base=base)
+        self.assertEqual(self.contagens(2027)["descritores"], 8 + 2)  # a etapa do projeto sai junto
+        apagar_ano(self.a27, self.adm)
+        self.assertFalse(Ano.objects.filter(ano=2027).exists())
+        self.assertFalse(MatrizEtapaCC.objects.filter(pk=mec.pk).exists())
 
 
 class ParceiroAtivoTest(Base):

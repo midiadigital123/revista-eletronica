@@ -2,15 +2,24 @@
 
 import unittest
 
+from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from django.test import SimpleTestCase, TestCase
+from django.urls import reverse
 
-from nucleo.models import Ano, Componente, Descritor, Etapa, Matriz, MatrizEtapaCC, Projeto, Revista, Tarefa
+from nucleo.management.commands.criar_demo import PNG
+from nucleo.models import (
+    Ano, Componente, Descritor, Etapa, Matriz, MatrizEtapaCC, Parceiro, ParceiroAno, Projeto, Revista, Tarefa,
+)  # fmt: skip
 from nucleo.servicos.cascata import gravar_cortes
+from nucleo.servicos.empacotar import _itens
 from nucleo.servicos.etapa_projeto import CriacaoRecusada, Item, classificar, criar, derivadas, foto, hash_foto
 from nucleo.servicos.matriz import CAMPOS_DESCRITOR, impacto
-from nucleo.servicos.resolver import hash_validado, pendencias, resolver
+from nucleo.servicos.planilhas import passos
+from nucleo.servicos.resolver import carregar, hash_validado, pendencias, resolver
 from nucleo.servicos.validacao import validada, validar
-from nucleo.tests.test_resolver import Mundo, recarregar
+from nucleo.tests.test_resolver import MediaTemporaria, Mundo, recarregar, usuario
 
 
 class Base(TestCase):
@@ -250,6 +259,50 @@ class RevistaTest(Base):
         self.assertEqual([k for k in r["f1"]["dados"]["4ef"] if k.startswith("D")], ["D01", "D02"])
         self.assertNotIn("etapa_em_dobro", [lc["tipo"] for lc in r["lacunas"]])
         self.assertNotIn("etapa_em_dobro", [p.codigo for p in pendencias(lp)])
+
+
+class RestoDoSistemaTest(MediaTemporaria, Base):
+    """Fluxos antigos com a etapa do projeto (GO LP 4EF) e um parceiro sem matriz com corte 4EF LP:
+    `filter(matriz_id=None)` casaria a etapa do projeto do GO."""
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.mec = criar(cls.projeto, cls.e4, cls.lp, cls.usuario, base=cls.mec9)
+        pa = ParceiroAno.objects.create(parceiro=Parceiro.objects.create(nome="SEM"), ano=cls.ano)
+        gravar_cortes(pa, [(cls.e4, cls.lp, [100, 200, 250, 300])], cls.usuario)
+        cls.sem = Revista.objects.get(projeto__parceiro_ano=pa)
+        cls.lp_go = cls.go["LP"]
+
+    def test_admin_lista_descritores_da_etapa_do_projeto(self):
+        self.client.force_login(get_user_model().objects.create_superuser("su", password="x"))
+        self.assertContains(self.client.get(reverse("admin:nucleo_descritor_changelist")), "Projeto GO · 4EF LP")
+
+    def test_item_da_etapa_do_projeto_no_zip_e_no_preview(self):
+        caminho = default_storage.save("itens/do-projeto.png", ContentFile(PNG))
+        Tarefa.objects.filter(descritor__matriz_etapa_cc=self.mec, inicio=100).update(arquivo=caminho)
+        rev, erros = carregar(self.lp_go.pk), []
+        self.assertEqual(_itens(rev, resolver(rev), erros), {"do-projeto.png": caminho})
+        self.assertEqual(erros, [])
+        self.client.force_login(usuario("ped", "Pedagógica"))
+        self.assertEqual(self.client.get(reverse("preview_item", args=[rev.pk, "do-projeto.png"])).status_code, 200)
+        self.assertEqual(self.client.get(reverse("preview_item", args=[self.sem.pk, "do-projeto.png"])).status_code, 404)
+
+    def test_passo_da_planilha_vem_da_etapa_do_projeto(self):
+        MatrizEtapaCC.objects.filter(pk=self.mec.pk).update(passo=10)
+        self.assertEqual(passos(self.lp_go)["4ef"], 10)
+        self.assertEqual(passos(self.sem), {})
+
+    def test_projeto_sem_matriz_nao_mostra_passo_de_etapa_de_outro_projeto(self):
+        self.client.force_login(usuario("ped", "Pedagógica"))
+        resp = self.client.get(reverse("ui_projeto", args=[self.sem.projeto_id]) + "?aba=passos")
+        self.assertEqual(list(resp.context["passos_matriz"]), [])
+        (bloco,) = [b for b in resp.context["etapas_passo"] if b["etapa"] == self.e4]
+        (celula,) = [c for c in bloco["celulas"] if c["componente"] == self.lp]
+        self.assertEqual(celula["da_matriz"], "fora da matriz")
+
+    def test_impacto_da_etapa_do_projeto_e_so_a_revista_do_projeto(self):
+        self.assertEqual([r for r, _ in impacto(self.mec)], [self.lp_go])
 
 
 def _tarefa(texto="t", arquivo=None, alt="", ordem=1):

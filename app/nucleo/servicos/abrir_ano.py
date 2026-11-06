@@ -1,9 +1,9 @@
 """Abre o ano seguinte ao maior existente, copiando os cadastros dele (D-054, D-086, D-119).
 
 Copia etapas, componentes, cores, matrizes (MEC, descritores e tarefas) e templates
-(a última versão vira a versão 1). Não copia parceiro_ano, cortes, projetos nem escolhas
-de matriz/template: o ano nasce em branco e os projetos vêm da cascata dos cortes novos
-(D-106, D-119). Tudo numa transação (D-125): falhou, nada fica.
+(a última versão vira a versão 1). Não copia parceiro_ano, cortes, projetos, etapas do
+projeto (D-230) nem escolhas de matriz/template: o ano nasce em branco e os projetos vêm
+da cascata dos cortes novos (D-106, D-119). Tudo numa transação (D-125): falhou, nada fica.
 """
 from django.db import IntegrityError, connection, transaction
 from django.db.models import Max
@@ -76,9 +76,10 @@ def abrir_ano(ano, usuario=None):
             raise AnoRecusado(f"{ano} já está aberto") from None
 
         def copiar(modelo, **trocas):
+            # Pelo ano da matriz: a etapa do projeto (sem matriz) não passa de ano (D-230).
             filtro = {
-                MatrizEtapaCC: "ano", Descritor: "matriz_etapa_cc__ano",
-                Tarefa: "descritor__matriz_etapa_cc__ano",
+                MatrizEtapaCC: "matriz__ano", Descritor: "matriz_etapa_cc__matriz__ano",
+                Tarefa: "descritor__matriz_etapa_cc__matriz__ano",
             }.get(modelo, "ano")  # fmt: skip
             return clonar(modelo.objects.filter(**{filtro: origem}), usuario, motivo, **trocas)
 

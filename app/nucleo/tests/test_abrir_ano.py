@@ -12,6 +12,7 @@ from nucleo.models import (
     ParceiroAno, Projeto, Tarefa, Template, TemplateVersao,
 )
 from nucleo.servicos.abrir_ano import AnoRecusado, abrir_ano
+from nucleo.servicos.etapa_projeto import criar
 
 COPIADOS = [Etapa, Componente, CorPadrao, Matriz, MatrizEtapaCC, Descritor, Tarefa, Template]
 NAO_COPIADOS = [ParceiroAno, Corte, Projeto]
@@ -183,6 +184,20 @@ class AbrirAnoTest(TestCase):
             with self.assertRaisesMessage(AnoRecusado, "o próximo ano que pode ser aberto é 2027"):
                 abrir_ano(ano)
             self.assertFalse(Ano.objects.filter(ano=ano).exists())
+
+    def test_etapa_do_projeto_nao_passa_de_ano(self):  # o ano nasce sem escolhas (D-106, spec §2)
+        a26 = Ano.objects.get(ano=2026)
+        base = MatrizEtapaCC.objects.get(
+            ano=a26, matriz__nome="Comunitária", etapa__codigo="5EF", componente__codigo="LP"
+        )
+        do_projeto = criar(
+            Projeto.objects.get(ano=a26), Etapa.objects.get(ano=a26, codigo="9EF"), base.componente,
+            self.usuario, base=base,
+        )  # fmt: skip
+        abrir_ano(2027)
+        self.assertEqual(mecs(2027), mecs(2026) - {(None, "9EF", "LP", 25)})
+        self.assertEqual((do_ano(Descritor, 2027).count(), do_ano(Tarefa, 2027).count()), (8, 16))
+        self.assertTrue(MatrizEtapaCC.objects.filter(pk=do_projeto.pk, ano=a26).exists())
 
     def test_encadeia_anos(self):
         abrir_ano(2027)

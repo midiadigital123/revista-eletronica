@@ -257,7 +257,9 @@ class TarefaInline(admin.TabularInline):
 class DescritorAdmin(MatrizEditAdmin):
     list_display = ("codigo", "matriz_etapa_cc_rotulo", "ordem")
     list_filter = ("matriz_etapa_cc__matriz", "matriz_etapa_cc__etapa__codigo", "matriz_etapa_cc__componente__codigo")
-    list_select_related = ("matriz_etapa_cc__matriz", "matriz_etapa_cc__etapa", "matriz_etapa_cc__componente")
+    list_select_related = (
+        "matriz_etapa_cc__matriz", "matriz_etapa_cc__projeto", "matriz_etapa_cc__etapa", "matriz_etapa_cc__componente",
+    )  # fmt: skip
     search_fields = ("codigo", "descricao")
     fields = (
         "matriz_etapa_cc", "codigo", "descricao", "prerequisitos", "praticas", "conhecimento",
@@ -278,7 +280,7 @@ class DescritorAdmin(MatrizEditAdmin):
     @admin.display(description="Etapa × CC")
     def matriz_etapa_cc_rotulo(self, obj):
         m = obj.matriz_etapa_cc
-        return f"{m.matriz.nome} · {m.etapa.codigo} {m.componente.codigo}"
+        return f"{(m.matriz or m.projeto).nome} · {m.etapa.codigo} {m.componente.codigo}"  # projeto: D-230
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         if db_field.name == "prerequisitos":

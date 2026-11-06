@@ -19,8 +19,9 @@ from django.urls import path, reverse
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_GET
 
-from nucleo.models import Revista, Tarefa
+from nucleo.models import Revista
 from nucleo.servicos import resolver
+from nucleo.servicos.etapa_projeto import tarefas_da_revista
 from nucleo.servicos.html import contexto_pagina
 
 # Extensões que receber_capa grava (tipo pela assinatura mágica, D-137).
@@ -76,11 +77,8 @@ def item(request, revista_id, nome):
     revista = get_object_or_404(Revista.objects.select_related("projeto__parceiro_ano"), pk=revista_id)
     tipo = TIPOS_ITEM.get(PurePosixPath(nome).suffix)
     caminho = (
-        Tarefa.objects.filter(
-            descritor__matriz_etapa_cc__matriz_id=revista.projeto.parceiro_ano.matriz_id,
-            descritor__matriz_etapa_cc__componente_id=revista.componente_id,
-            arquivo__endswith=f"/{nome}",
-        )
+        tarefas_da_revista(revista)
+        .filter(arquivo__endswith=f"/{nome}")
         .values_list("arquivo", flat=True)
         .first()
     )

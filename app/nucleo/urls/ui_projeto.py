@@ -221,7 +221,8 @@ def projeto(request, pk):
         "revistas_ativas": _revistas(projeto).select_related("componente").order_by("componente__codigo"),
         "matrizes": Matriz.objects.filter(ano_id=projeto.ano_id).order_by("nome")
         if request.bloqueio and pode_matriz(request.user) else None,
-        "passos_matriz": MatrizEtapaCC.objects.filter(matriz_id=projeto.parceiro_ano.matriz_id)
+        # matriz__isnull: sem matriz no parceiro, matriz_id=None casaria toda etapa de projeto (D-230).
+        "passos_matriz": MatrizEtapaCC.objects.filter(matriz_id=projeto.parceiro_ano.matriz_id, matriz__isnull=False)
         .select_related("etapa", "componente").order_by("etapa__ordem", "componente__codigo"),
         "ano": projeto.ano,
         "secao": "projetos",
@@ -244,7 +245,7 @@ def _passos(projeto):
     herda; linha com passo nulo = sem linhas vazias, de propósito."""
     matriz = {
         (m.etapa_id, m.componente_id): m.passo
-        for m in MatrizEtapaCC.objects.filter(matriz_id=projeto.parceiro_ano.matriz_id)
+        for m in MatrizEtapaCC.objects.filter(matriz_id=projeto.parceiro_ano.matriz_id, matriz__isnull=False)
     }
     proprios = {(p.etapa_id, p.componente_id): p.passo for p in ProjetoPasso.objects.filter(projeto=projeto)}
     componentes = list(Componente.objects.filter(ano_id=projeto.ano_id).order_by("codigo"))

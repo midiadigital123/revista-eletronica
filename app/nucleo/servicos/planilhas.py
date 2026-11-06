@@ -16,8 +16,9 @@ from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
 from nucleo import texto
-from nucleo.models import MatrizEtapaCC, ProjetoPasso
+from nucleo.models import Etapa, ProjetoPasso
 from nucleo.servicos.empacotar import nome_zip
+from nucleo.servicos.etapa_projeto import mecs_por_etapa, vigente
 from nucleo.servicos.resolver import VAZIO, resolver
 
 # Colunas fixas por componente, copiadas dos modelos do núcleo de impressão (layout.ts).
@@ -158,10 +159,12 @@ def planilha_f2(secoes):
 
 
 def passos(revista):
-    """{etapa: passo} como no resolver (D-053, D-091): a linha de ProjetoPasso sobrescreve a MEC."""
-    pa, filtro = revista.projeto.parceiro_ano, {"componente_id": revista.componente_id}
-    saida = dict(MatrizEtapaCC.objects.filter(matriz_id=pa.matriz_id, **filtro).values_list("etapa__codigo", "passo"))
-    saida.update(ProjetoPasso.objects.filter(projeto=revista.projeto, **filtro).values_list("etapa__codigo", "passo"))
+    """{etapa: passo} como no resolver (D-053, D-091): a linha de ProjetoPasso sobrescreve a MEC que a
+    revista usa, da matriz ou do projeto (D-230)."""
+    projeto, filtro = revista.projeto, {"componente_id": revista.componente_id}
+    codigos = dict(Etapa.objects.filter(ano_id=projeto.ano_id).values_list("pk", "codigo"))
+    saida = {codigos[e]: vigente(*par).passo for e, par in mecs_por_etapa(projeto, revista.componente_id, codigos).items()}
+    saida.update(ProjetoPasso.objects.filter(projeto=projeto, **filtro).values_list("etapa__codigo", "passo"))
     return {etapa.lower(): passo for etapa, passo in saida.items()}
 
 
