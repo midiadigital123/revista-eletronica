@@ -2,11 +2,11 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Fase 0 do F2 gerado (D-227) entregue na branch `feat/f2-fase0` (worktree `/home/otavio.peres/dev/revista-express-f2`): `example/f2-gerado/` (gerador Python stdlib + `verificar.cjs` Playwright), 17/17 verificações OK no Chromium, 5 critérios do plano passaram (zoom/pan com `foreignObject`, minimapa, texto longo com clamp, passo desligado com reflow, acessibilidade mínima). Funcionando: mapeamento do F2 e protótipo em `integ/f2-interface`, à espera do merge na `main` pelo usuário. Quebrado/pendente: S17 (ação D e preenchimento da equipe) e S18; F1/F2 separados sem decisão; veredito da fase 0 (D-228) é do usuário.
+Fase 0 do F2 gerado aprovada (D-228) na branch `feat/f2-fase0` → `integ/f2-interface` (worktree `/home/otavio.peres/dev/revista-express-f2`). Funcionando: protótipo `example/f2-gerado/` (17/17 no Chromium); mapeamento das fases 1 a 5 em `docs/superpowers/specs/2026-11-06-f2-na-interface-mapeamento.md`. Quebrado/pendente: fases 1 a 5 não começaram; dependem da Pedagógica (planilha do referencial 1EF–3EM, textos canônicos), do design (layout por bloco, webfont) e de 2 decisões do usuário (desligar por projeto ou por revista; F1/F2 em páginas separadas antes ou depois). S17/S18 continuam pendentes.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Abrir `example/f2-gerado/index.html` (worktree `revista-express-f2`) no Chrome e, se possível, no Safari/Firefox; conferir passo 2 (bloco alto, pede arrasto), minimapa e modal; responder "serve" ou "plano B" para registrar a D-228.
+Usuário mergeia `integ/f2-interface` na `main`; depois responder: desligar passos por projeto (LP e MT juntos) ou por revista? Com isso a fase 2 (render em `app/`) pode começar com dados sintéticos enquanto a Pedagógica não manda a planilha do referencial.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1859,6 +1859,14 @@ Abrir `example/f2-gerado/index.html` (worktree `revista-express-f2`) no Chrome e
 - **Arquivos afetados:** futuro: `servicos/f2.py`, `templates/revista/f2.svg`, modelos `DescritorProgressao`/`RevistaF2Descritor`, coluna `Projeto.f2_passos_desligados`; remoção do upload/sanitizador de SVG.
 - **Status:** ativa (fase 0 ainda não disparada)
 
+### D-228 — Fase 0 aprovada: F2 em SVG gerado pelo servidor, svg-tour intocado (2026-11-06 17:10)
+- **Contexto:** protótipo `example/f2-gerado/` (fase 0 da D-227) com os 5 critérios do plano passando no Chromium; o usuário abriu e disse que a navegação funciona e que só falta caprichar nos estilos.
+- **Decisão:** as fases 1 a 5 do mapeamento seguem com SVG gerado pelo servidor (template com `<text>` e `<foreignObject>`, posições calculadas em Python), `svg-tour.js` sem alteração. O visual do protótipo não é referência: o estilo final vem do design (fase 2, com referência de layout por bloco ligado/desligado).
+- **Motivo:** zoom/pan, minimapa, texto longo com clamp, passo desligado com reflow e acessibilidade mínima funcionam sem mexer no tour nem adicionar dependência.
+- **Descartadas:** plano B (HTML por blocos com tour leve) — não foi preciso; perderia minimapa, zoom e a animação por passo já aprovada em demo.
+- **Arquivos afetados:** `example/f2-gerado/` (referência de implementação para `servicos/f2.py` e `templates/revista/f2.svg`).
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [ ] F2 animado (pasta `example/infografico-animado`, analisado em 05/11): viável sem mudar banco nem SVG. Escolher a integração: (A) abertura animada que termina no estado do svg-tour atual, ou (B) substituir o svg-tour pelo player do exemplo (perde minimapa, zoom e modais prontos). Risco: o roteiro acha as peças pela ordem dos filhos no SVG; só existe 1 SVG real (os 80 em `media/f2` são cópias do fixture) — depende de: Otavio + design (o SVG de MT e de outros parceiros mantém a mesma árvore?)
 - [ ] Textos do tour do F2 (SAEGO LP, template "Padrão") trocados em relação ao desenho: o passo 3 do tour se chama "Progressão da habilidade", mas enquadra o bloco "Descrição das habilidades no referencial curricular"; o botão + desse bloco (`btn-action-p3`) abre o modal "Progressão…". O passo 2 ("Itens por ano/série", "percentual de acerto") enquadra a linha de progressão. Visto na demo de 05/11; vale também no sistema hoje — depende de: Pedagógica (corrigir o template ou os ids do SVG?)
@@ -1950,6 +1958,7 @@ Abrir `example/f2-gerado/index.html` (worktree `revista-express-f2`) no Chrome e
 - D-227: usuário aprovou a direção do mapeamento.
 - Fase 0 disparada: plano escrito em modo de plano e aprovado (protótipo estático em `example/f2-gerado/`, sem Django; tour reaproveitado de `example/f2-animado-tour/f2/` por caminho relativo; Playwright do checkout principal via `NODE_PATH`; 5 critérios de "serve": zoom/pan, minimapa, texto longo, passo desligado, acessibilidade mínima). Branch `feat/f2-fase0`.
 - Fase 0 entregue (subagente + verificação minha): `example/f2-gerado/` com `dados.json`, `gerar.py` (`--check`, `--desligar`), `verificar.cjs` (17/17 OK), `LEIA-ME.md` com veredito proposto "SVG gerado serve". Ajustes que o protótipo revelou: o minimapa remove `class` do `<svg>` clonado (`svg-tour.js:559`), então o CSS interno não pode depender de classe na raiz; o stage do svg-tour tem `user-select:none`, e `user-select:text` nos divs do `foreignObject` libera a seleção sem atrapalhar o arrasto. Pendente de olho humano: bloco de habilidades mais alto que o stage em `minScale` 1,6 (ancora e pede arrasto); minimapa pequeno; Safari/Firefox. Título do modal de habilidades corrigido (o seed trazia "Progressão…").
+- D-228: usuário aprovou a fase 0 ("a navegação em si está funcionando"; estilos a caprichar depois, com o design).
 - Mapeamento concluído e commitado em `docs/f2-mapeamento`; pergunta em aberto do F2 reescrita com o resultado; branch mergeada em `integ/f2-interface` (merge na `main` é do usuário).
 - Regra nova do usuário (D-226): toda modificação em worktree própria com branch própria; merge em `integ/<tema>` só depois de testado; o merge na `main` é do usuário. Worktree desta sessão: `/home/otavio.peres/dev/revista-express-f2` (`docs/f2-mapeamento` ← `integ/f2-interface` ← `main`).
 ### 2026-10-07
