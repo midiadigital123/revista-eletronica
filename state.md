@@ -6,7 +6,7 @@ Fase 0 do F2 gerado aprovada (D-228) na branch `feat/f2-fase0` → `integ/f2-int
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Usuário mergeia `integ/f2-interface` na `main` e responde as perguntas 2 e 3 de `docs/superpowers/specs/2026-11-06-f2-campos-do-docx.md` §5 (abertura na web; modal das tarefas); com isso a fase 1 (modelo de dados do F2, agora com `revista_f2_infografico`) pode ser desenhada.
+Responder as perguntas 2 e 3 de `docs/superpowers/specs/2026-11-06-f2-campos-do-docx.md` §5 (abertura na web; modal das tarefas); com isso a fase 1 (modelo de dados do F2, com `revista_f2_infografico`) pode ser desenhada.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1883,6 +1883,14 @@ Usuário mergeia `integ/f2-interface` na `main` e responde as perguntas 2 e 3 de
 - **Arquivos afetados:** futuro: `servicos/cascata.py`, modelo novo (`revista_f2_infografico` com `tipo` CHECK alfa/outras e os passos desligados), `resolver.py`, `html.py`/`empacotar.py` (navegação do F2 com até 2 infográficos), `planilhas.py`, `validacao.py`, seeds do template F2 (um por tipo × componente?).
 - **Status:** ativa
 
+### D-231 — Merge na main feito por mim, só depois do "ok" explícito do usuário (2026-11-06 18:20)
+- **Contexto:** a D-226 deixava o merge de `integ/<tema>` na `main` exclusivamente com o usuário.
+- **Decisão:** posso fazer o merge de `integ/<tema>` na `main` (fast-forward quando possível), mas só depois de confirmar com o usuário e receber o "ok" dele naquela leva; sem "ok", o merge fica com ele. O resto da D-226 continua: trabalho em worktree própria, merge na intermediária só com testes verdes, nada editado direto na `main`.
+- **Motivo:** pedido do usuário em 06/11 ("Você tem autorização pra fazer o merge na main. É só confirmar comigo e esperar meu ok").
+- **Descartadas:** merge automático ao fim de cada leva — o usuário quer dar o ok a cada vez.
+- **Arquivos afetados:** nenhum código; fluxo de trabalho (ajusta a D-226).
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [ ] F2 animado (pasta `example/infografico-animado`, analisado em 05/11): viável sem mudar banco nem SVG. Escolher a integração: (A) abertura animada que termina no estado do svg-tour atual, ou (B) substituir o svg-tour pelo player do exemplo (perde minimapa, zoom e modais prontos). Risco: o roteiro acha as peças pela ordem dos filhos no SVG; só existe 1 SVG real (os 80 em `media/f2` são cópias do fixture) — depende de: Otavio + design (o SVG de MT e de outros parceiros mantém a mesma árvore?)
 - [ ] Textos do tour do F2 (SAEGO LP, template "Padrão") trocados em relação ao desenho: o passo 3 do tour se chama "Progressão da habilidade", mas enquadra o bloco "Descrição das habilidades no referencial curricular"; o botão + desse bloco (`btn-action-p3`) abre o modal "Progressão…". O passo 2 ("Itens por ano/série", "percentual de acerto") enquadra a linha de progressão. Visto na demo de 05/11; vale também no sistema hoje — depende de: Pedagógica (corrigir o template ou os ids do SVG?)
@@ -1978,6 +1986,7 @@ Usuário mergeia `integ/f2-interface` na `main` e responde as perguntas 2 e 3 de
 - D-229: desligar passos do F2 é por revista. Recebido o docx "AVALIAÇÃO E CURRÍCULO_LP_2026_AF_EM" que a Pedagógica manda ao impresso; convertido com anydoc para levantar os campos que o F2 precisa.
 - Levantamento dos campos do docx em `docs/superpowers/specs/2026-11-06-f2-campos-do-docx.md` (13 campos; 6 diferenças em relação ao mapeamento: o descritor tem modal, abertura de 4 parágrafos, marca vem da tabela ❷, habilidade destacada não é um Descritor do banco, tarefas com 2 arquivos e análise por item, fechamento com link para o template do infográfico); fonte convertida em `docs/fontes/2026/`. Ponto estrutural: no F2 o conteúdo específico é da revista, não do template.
 - D-230: até 2 infográficos F2 por revista (Alfa ⇔ cortes no 2EF; Outras Etapas ⇔ cortes em outra etapa), derivados pela cascata; passos desligados passam a ser por infográfico.
+- D-231: usuário autorizou o merge na `main` por mim, mediante "ok" explícito a cada leva; primeiro ok dado às 18:20 e `integ/f2-interface` mergeada.
 - Mapeamento concluído e commitado em `docs/f2-mapeamento`; pergunta em aberto do F2 reescrita com o resultado; branch mergeada em `integ/f2-interface` (merge na `main` é do usuário).
 - Regra nova do usuário (D-226): toda modificação em worktree própria com branch própria; merge em `integ/<tema>` só depois de testado; o merge na `main` é do usuário. Worktree desta sessão: `/home/otavio.peres/dev/revista-express-f2` (`docs/f2-mapeamento` ← `integ/f2-interface` ← `main`).
 ### 2026-10-07
