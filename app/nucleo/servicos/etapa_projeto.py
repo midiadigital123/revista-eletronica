@@ -69,7 +69,7 @@ def _celula(chave, campo, antes, base, local):
     return [Item(chave, campo, antes, base, local, "entra" if local == antes else "conflito")]
 
 
-def _natural(chave):  # "100-150#2" -> (100, 150, 2): "100-150#2" vem antes de "1000-1100#1"
+def _natural(chave):  # "100-150#10" -> (100, 150, 10): "2-3#1" vem antes de "10-20#1", "#2" antes de "#10"
     faixa, n = chave.split("#")
     inicio, fim = faixa.split("-")
     return int(inicio), int(fim), int(n)

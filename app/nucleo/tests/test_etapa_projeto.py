@@ -213,25 +213,43 @@ class ClassificarTest(SimpleTestCase):
             classificar(a, b, a),
             [Item("D01/100-150#1", "existe", None, _tarefa(), None, "entra")],
         )
-
     def test_ordem_de_saida(self):
-        def f(sufixo, ordens):
+        # Ordem natural das tarefas: "2-3#1" < "10-20#1" < "100-150#2" < "100-150#10"
+        # (a lexicográfica daria "10-20#1", "100-150#10", "100-150#2", "2-3#1").
+        chaves = ["100-150#10", "2-3#1", "100-150#2", "10-20#1"]
+
+        def f(sufixo, ordens, passo):
             return _f({
-                cod: _desc(
-                    "x" + sufixo,
-                    ordem,
-                    {"1000-1100#1": _tarefa("t" + sufixo), "100-150#2": _tarefa("t" + sufixo)},
-                )
+                cod: _desc("x" + sufixo, ordem, {c: _tarefa("t" + sufixo) for c in chaves})
                 for cod, ordem in ordens.items()
-            }, 1 if sufixo else 2)
+            }, passo)
 
         ordens = {"D01": 2, "D02": 1}
-        a, b = f("", ordens), f("!", ordens)
+        a, b = f("", ordens, 2), f("!", ordens, 1)
+        # D08 e D07 só existem em antes/local (a base apagou): vêm depois dos da base, na ordem de local.
+        a["descritores"] = {"D08": _desc("a8", 8), "D07": _desc("a7", 7), **a["descritores"]}
+        l = f("", ordens, 2)
+        l["descritores"] = {"D07": _desc("l7", 7), "D08": _desc("l8", 8), **l["descritores"]}
+        tarefas = ["2-3#1", "10-20#1", "100-150#2", "100-150#10"]
         self.assertEqual(
-            [(i.chave, i.campo) for i in classificar(a, b, a)],
+            [(i.chave, i.campo) for i in classificar(a, b, l)],
+            [("passo", "passo")]
+            + [item for cod in ("D02", "D01")
+               for item in [(cod, "descricao")] + [(f"{cod}/{c}", "texto") for c in tarefas]]
+            + [("D07", "existe"), ("D08", "existe")],
+        )
+
+    def test_fotos_vazias_e_passo_nulo_dao_lista_vazia(self):
+        vazia = {"passo": None, "descritores": {}}
+        self.assertEqual(classificar(vazia, vazia, vazia), [])
+
+    def test_prerequisitos_e_ordem_do_descritor_tambem_entram(self):
+        a = _f({"D01": {**_desc(ordem=1), "prerequisitos": ["p1"]}})
+        b = _f({"D01": {**_desc(ordem=3), "prerequisitos": ["p1", "p2"]}})
+        self.assertEqual(
+            classificar(a, b, a),
             [
-                ("passo", "passo"),
-                ("D02", "descricao"), ("D02/100-150#2", "texto"), ("D02/1000-1100#1", "texto"),
-                ("D01", "descricao"), ("D01/100-150#2", "texto"), ("D01/1000-1100#1", "texto"),
+                Item("D01", "prerequisitos", ["p1"], ["p1", "p2"], ["p1"], "entra"),
+                Item("D01", "ordem", 1, 3, 1, "entra"),
             ],
         )
