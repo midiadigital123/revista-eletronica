@@ -22,11 +22,12 @@ from nucleo.servicos.foto import fotografar
 from nucleo.tests.test_resolver import Mundo, usuario
 
 # FKs de nucleo que não são PROTECT, de propósito (D-205): trava efêmera, partes da matriz e da revista, e a
-# origem só de consulta da matriz duplicada (D-113).
+# origem só de consulta da matriz duplicada (D-113) e a base da etapa do projeto, que sobrevive à base apagada
+# porque guarda a foto (D-227).
 NAO_PROTECT = {
     "Bloqueio.matriz_etapa_cc", "Bloqueio.projeto", "Bloqueio.template", "Bloqueio.usuario",
     "Descritor.matriz_etapa_cc", "Tarefa.descritor", "RevistaFasciculo.revista", "RevistaSecao.revista_fasciculo",
-    "Matriz.duplicada_de",
+    "Matriz.duplicada_de", "MatrizEtapaCC.base",
 }  # fmt: skip
 
 

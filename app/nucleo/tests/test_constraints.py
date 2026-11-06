@@ -29,13 +29,21 @@ FKS_COMPOSTAS = {
     "REFERENCES revista_fasciculo(id, template_id)",
     "fk_revista_secao_versao_template": "FOREIGN KEY (template_versao_id, template_id) "
     "REFERENCES template_versao(id, template_id)",
+    "fk_matriz_etapa_cc_projeto_ano": "FOREIGN KEY (projeto_id, ano_id) REFERENCES projeto(id, ano_id)",
 }
 # Colunas de FK composta que podem ser nulas (MATCH SIMPLE desliga a checagem).
-ANULAVEIS = {("parceiro_ano", "matriz_id"), ("revista_fasciculo", "template_id")}
+ANULAVEIS = {
+    ("parceiro_ano", "matriz_id"),
+    ("revista_fasciculo", "template_id"),
+    # Etapa de matriz ou de projeto: o CHECK matriz_etapa_cc_um_dono exige exatamente uma (D-227).
+    ("matriz_etapa_cc", "matriz_id"),
+    ("matriz_etapa_cc", "projeto_id"),
+}
 # Toda FK que o Django não cria: compostas e as com ação de banco (D-124).
 FKS_MANUAIS = {
     **FKS_COMPOSTAS,
     "fk_matriz_duplicada_de": "FOREIGN KEY (duplicada_de_id) REFERENCES matriz(id) ON DELETE SET NULL",
+    "fk_matriz_etapa_cc_base": "FOREIGN KEY (base_id) REFERENCES matriz_etapa_cc(id) ON DELETE SET NULL",
 }
 CHECKS = {
     "componente_codigo_tamanho",
@@ -46,6 +54,10 @@ CHECKS = {
     "descritor_codigo_tamanho",
     "etapa_codigo_tamanho",
     "matriz_duplicada_de_outra",
+    "matriz_etapa_cc_base_outra",
+    "matriz_etapa_cc_base_tem_foto",
+    "matriz_etapa_cc_preferida",
+    "matriz_etapa_cc_um_dono",
     "matriz_nome_tamanho",
     "parceiro_nome_tamanho",
     "tarefa_arquivo_tamanho",
@@ -129,6 +141,7 @@ UNIQUES_PARCIAIS = {
     "bloqueio_matriz_etapa_cc_uniq",
     "bloqueio_projeto_uniq",
     "bloqueio_template_uniq",
+    "matriz_etapa_cc_projeto_uniq",
 }
 
 
@@ -253,6 +266,45 @@ class RecusaTest(TestCase):
             cursor.execute("SELECT duplicada_de_id FROM matriz WHERE id = %s", [copia.pk])
             self.assertIsNone(cursor.fetchone()[0])
 
+    def projeto(self):
+        pa = ParceiroAno.objects.create(parceiro=Parceiro.objects.create(nome="GO"), ano=self.a26)
+        return Projeto.objects.create(parceiro_ano=pa, ano=self.a26, nome="Projeto GO")
+
+    def mec(self, **dono):
+        return MatrizEtapaCC.objects.create(etapa=self.e5, componente=self.lp, ano=self.a26, **dono)
+
+    def test_mec_sem_dono_ou_com_dois_donos_e_recusada(self):
+        projeto = self.projeto()
+        for dono in ({}, {"matriz": self.matriz, "projeto": projeto}):
+            with self.subTest(dono=list(dono)):
+                self.recusa(lambda: self.mec(**dono))
+
+    def test_base_so_pode_ser_mec_de_matriz(self):
+        do_projeto = self.mec(projeto=self.projeto())
+        mt = Componente.objects.create(ano=self.a26, codigo="MT", nome="Matemática")
+        self.recusa(lambda: MatrizEtapaCC.objects.create(
+            projeto=do_projeto.projeto, etapa=self.e5, componente=mt, ano=self.a26,
+            base=do_projeto, base_foto={},
+        ))
+
+    def test_trocar_a_base_e_recusado(self):
+        base = self.mec(matriz=self.matriz)
+        outra = MatrizEtapaCC.objects.create(
+            matriz=Matriz.objects.create(ano=self.a26, nome="Outra"), etapa=self.e5, componente=self.lp,
+            ano=self.a26,
+        )
+        derivada = self.mec(projeto=self.projeto(), base=base, base_foto={})
+        self.recusa(lambda: MatrizEtapaCC.objects.filter(pk=derivada.pk).update(base=outra))
+
+    def test_base_apagada_vira_nulo(self):
+        base = self.mec(matriz=self.matriz)
+        derivada = self.mec(projeto=self.projeto(), base=base, base_foto={"descritores": []})
+        with connection.cursor() as cursor:  # SQL direto: a ação é do banco, não do ORM
+            cursor.execute("DELETE FROM matriz_etapa_cc WHERE id = %s", [base.pk])
+        derivada.refresh_from_db()
+        self.assertIsNone(derivada.base_id)
+        self.assertEqual(derivada.base_foto, {"descritores": []})
+
     def test_variavel_nova_acima_do_tamanho(self):
         pa = ParceiroAno.objects.create(parceiro=Parceiro.objects.create(nome="GO"), ano=self.a26)
         projeto = Projeto.objects.create(parceiro_ano=pa, ano=self.a26, nome="Projeto GO")
@@ -266,7 +318,7 @@ def triggers():
         return {r[0] for r in cursor.fetchall()}
 
 
-TRIGGERS = {"template_versao_so_insert"}
+TRIGGERS = {"template_versao_so_insert", "matriz_etapa_cc_base_de_matriz"}
 
 
 class ReverseSqlTest(TransactionTestCase):

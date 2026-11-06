@@ -40,8 +40,24 @@ class Matriz(models.Model):
 
 
 class MatrizEtapaCC(models.Model):
-    # Mesmo ano em matriz, etapa e componente: FKs compostas na migração 0002 (D-090).
-    matriz = models.ForeignKey(Matriz, on_delete=models.PROTECT)
+    # Mesmo ano em matriz/projeto, etapa e componente: FKs compostas nas migrações 0002 e 0020 (D-090).
+    # Dono é a matriz OU o projeto (etapa do projeto, D-227): CHECK matriz_etapa_cc_um_dono.
+    matriz = models.ForeignKey(Matriz, on_delete=models.PROTECT, null=True, blank=True)
+    projeto = models.ForeignKey("nucleo.Projeto", on_delete=models.PROTECT, null=True, blank=True)
+    # Etapa de matriz de onde a do projeto foi clonada, e a foto dela no clone. A FK do banco
+    # (ON DELETE SET NULL) e o trigger matriz_etapa_cc_base_de_matriz vêm da migração 0020,
+    # como a duplicada_de de Matriz.
+    base = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        db_constraint=False,
+        null=True,
+        blank=True,
+        related_name="derivadas",
+    )
+    base_foto = models.JSONField(null=True, blank=True)
+    # "projeto" | "matriz"; nulo = ainda não escolheu (D-228).
+    preferida = models.TextField(null=True, blank=True)
     etapa = models.ForeignKey(Etapa, on_delete=models.PROTECT)
     componente = models.ForeignKey(Componente, on_delete=models.PROTECT)
     ano = models.ForeignKey(Ano, on_delete=models.PROTECT)
@@ -54,10 +70,24 @@ class MatrizEtapaCC(models.Model):
             models.UniqueConstraint(
                 fields=["matriz", "etapa", "componente"], name="matriz_etapa_cc_uniq"
             ),
+            models.UniqueConstraint(
+                fields=["projeto", "etapa", "componente"],
+                condition=Q(projeto__isnull=False),
+                name="matriz_etapa_cc_projeto_uniq",
+            ),
+            models.CheckConstraint(condition=~Q(base=F("id")), name="matriz_etapa_cc_base_outra"),
+            models.CheckConstraint(
+                condition=Q(base__isnull=True) | Q(base_foto__isnull=False),
+                name="matriz_etapa_cc_base_tem_foto",
+            ),
+            models.CheckConstraint(
+                condition=Q(preferida__in=["projeto", "matriz"]), name="matriz_etapa_cc_preferida"
+            ),
+            # matriz_etapa_cc_um_dono vem por RunSQL na 0020: num_nonnulls não é lookup do ORM.
         ]
 
     def __str__(self):
-        return f"{self.matriz} · {self.etapa.codigo} {self.componente.codigo}"
+        return f"{self.matriz or self.projeto} · {self.etapa.codigo} {self.componente.codigo}"
 
 
 class Descritor(models.Model):

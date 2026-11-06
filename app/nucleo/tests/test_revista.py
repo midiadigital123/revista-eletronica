@@ -154,6 +154,7 @@ class RecusaRevistaTest(TestCase):
             "fk_matriz_etapa_cc_matriz_ano": [mec(matriz=self.matriz27)],
             "fk_matriz_etapa_cc_etapa_ano": [mec(etapa=e5_27)],
             "fk_matriz_etapa_cc_componente_ano": [mec(componente=lp27)],
+            "fk_matriz_etapa_cc_projeto_ano": [mec(matriz=None, projeto=self.projeto27)],
             "fk_parceiro_ano_matriz_ano": [
                 lambda: ParceiroAno.objects.create(parceiro=self.sc, ano=a26, matriz=self.matriz27)
             ],
