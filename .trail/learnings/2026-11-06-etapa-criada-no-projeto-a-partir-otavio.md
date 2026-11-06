@@ -26,4 +26,4 @@ O dono é o projeto (escolha do usuário em 06/11, contra a recomendação de us
 ## Watch out
 Isso substitui em parte a D-051 ("projeto não tem conteúdo próprio"). A foto da base precisa usar o código (Dxx, faixa da tarefa), não o id. Reimportação com mudança só de espaços gera pendência enorme se o texto não for normalizado.
 
-In the code: decisões D-226 e D-227 no state.md. Pontos de encaixe: `servicos/matriz.py::_afetadas`, `_conteudo` e `diferencas`; `servicos/impacto.py::perdem_validado`; `servicos/resolver.py` (`_f1_escalas`, lacunas, `pendencias`); `models/matriz.py::MatrizEtapaCC`.
+In the code: decisões D-229 e D-230 no state.md. Pontos de encaixe: `servicos/matriz.py::_afetadas`, `_conteudo` e `diferencas`; `servicos/impacto.py::perdem_validado`; `servicos/resolver.py` (`_f1_escalas`, lacunas, `pendencias`); `models/matriz.py::MatrizEtapaCC`.

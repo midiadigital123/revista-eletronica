@@ -25,4 +25,4 @@ Quando a cascata arquiva o projeto e cria outro para o mesmo parceiro no ano, o 
 ## Watch out
 Só existe 1 projeto ativo por parceiro no ano (unique parcial), então "dono = projeto" quase equivale a parceiro_ano. A regra "só para etapa que a matriz não tem" não cabe em CHECK, porque a matriz fica no parceiro_ano: vale na criação, e o caso posterior vira a pendência.
 
-In the code: D-228 no state.md; docs/superpowers/specs/2026-11-06-etapa-do-projeto-design.md, seção 10; servicos/cascata.py::gravar_cortes (arquiva e cria o projeto).
+In the code: D-231 no state.md; docs/superpowers/specs/2026-11-06-etapa-do-projeto-design.md, seção 10; servicos/cascata.py::gravar_cortes (arquiva e cria o projeto).

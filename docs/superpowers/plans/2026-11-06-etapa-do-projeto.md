@@ -8,7 +8,7 @@
 
 **Tech Stack:** Django 6 + PostgreSQL (jsonb, CHECK, trigger, FK composta via `nucleo/db.py::fk_composta`), django-simple-history, telas B (HTMX + Alpine, `ui_autosave.responder_campo`, `ui_bloqueio.com_bloqueio`), testes `manage.py test`, Playwright em `app/e2e`.
 
-**Spec:** `docs/superpowers/specs/2026-11-06-etapa-do-projeto-design.md` (D-226, D-227, D-228 em `state.md`).
+**Spec:** `docs/superpowers/specs/2026-11-06-etapa-do-projeto-design.md` (D-229, D-230, D-231 em `state.md`).
 
 ## Global Constraints
 
@@ -60,7 +60,7 @@
 - Test: `app/nucleo/tests/test_constraints.py`
 
 **Interfaces:**
-- Produces, em `MatrizEtapaCC`: `matriz` (null=True), `projeto = FK(Projeto, PROTECT, null=True)`, `base = FK("self", SET_NULL, db_constraint=False, null=True, related_name="derivadas")`, `base_foto = JSONField(null=True)`, `preferida = TextField(null=True)` com valores `"projeto"` | `"matriz"` (nulo = ainda não escolheu; só faz sentido quando a matriz do parceiro também tem a etapa, D-228).
+- Produces, em `MatrizEtapaCC`: `matriz` (null=True), `projeto = FK(Projeto, PROTECT, null=True)`, `base = FK("self", SET_NULL, db_constraint=False, null=True, related_name="derivadas")`, `base_foto = JSONField(null=True)`, `preferida = TextField(null=True)` com valores `"projeto"` | `"matriz"` (nulo = ainda não escolheu; só faz sentido quando a matriz do parceiro também tem a etapa, D-231).
 - Nomes no banco (o teste de catálogo confere): `fk_matriz_etapa_cc_projeto_ano` (`(projeto_id, ano_id) → projeto(id, ano_id)`), `fk_matriz_etapa_cc_base` (`base_id → matriz_etapa_cc(id) ON DELETE SET NULL`), CHECKs `matriz_etapa_cc_um_dono` (`num_nonnulls(matriz_id, projeto_id) = 1`), `matriz_etapa_cc_base_outra` (`base_id <> id`), `matriz_etapa_cc_base_tem_foto` (`base_id IS NULL OR base_foto IS NOT NULL`), `matriz_etapa_cc_preferida` (`preferida IN ('projeto','matriz')`), unique parcial `matriz_etapa_cc_projeto_uniq` em `(projeto_id, etapa_id, componente_id) WHERE projeto_id IS NOT NULL`, trigger `matriz_etapa_cc_base_de_matriz` (recusa `base_id` apontando para MEC com `matriz_id IS NULL`; recusa UPDATE de `base_id` para valor não nulo diferente do atual).
 
 - [ ] **Step 1: Escrever os testes que falham** em `test_constraints.py`: acrescentar as entradas acima em `FKS_COMPOSTAS`/`FKS_MANUAIS`/`CHECKS`, `("matriz_etapa_cc", "matriz_id")` e `("matriz_etapa_cc", "projeto_id")` em `ANULAVEIS`, e três testes na classe que já testa recusas do banco:
@@ -74,7 +74,7 @@ def test_base_apagada_vira_nulo(self):  # apagar a base por SQL → derivada.bas
 - [ ] **Step 2: Rodar e ver falhar**: `… test nucleo.tests.test_constraints -v 2` → FAIL (constraints ausentes).
 - [ ] **Step 3: Modelo e migração.** Campos no modelo; migração com `AlterField` (matriz null), `AddField` ×4, `AddConstraint` para os CHECKs e o unique parcial, `fk_composta("matriz_etapa_cc", "projeto")`, `RunSQL` da FK SET NULL (copiar a 0003) e do trigger (copiar a forma da 0006). `makemigrations --check` tem que ficar limpo.
 - [ ] **Step 4: Rodar e ver passar**: `test_constraints` e `makemigrations --check`.
-- [ ] **Step 5: Commit** `feat(matriz): etapa do projeto no modelo e no banco (D-227)`.
+- [ ] **Step 5: Commit** `feat(matriz): etapa do projeto no modelo e no banco (D-230)`.
 
 ---
 
@@ -144,7 +144,7 @@ def test_arquivo_da_tarefa_entra_na_comparacao(self)
 - Test: `app/nucleo/tests/test_resolver.py`, `test_etapa_projeto.py`
 
 **Interfaces:**
-- `mec_vigente(projeto, etapa_id, componente_id) -> MatrizEtapaCC | None`: a MEC que a revista usa para a célula: se só a matriz tem, a da matriz; se só o projeto tem, a do projeto; se as duas têm, `preferida == "matriz"` → a da matriz, senão a do projeto (D-228: até escolher, vale a do projeto).
+- `mec_vigente(projeto, etapa_id, componente_id) -> MatrizEtapaCC | None`: a MEC que a revista usa para a célula: se só a matriz tem, a da matriz; se só o projeto tem, a do projeto; se as duas têm, `preferida == "matriz"` → a da matriz, senão a do projeto (D-231: até escolher, vale a do projeto).
 - `derivadas(*mecs) -> QuerySet[MatrizEtapaCC]`: MECs de projeto ativo com `base__in=mecs`.
 - Resolver: `_f1_escalas` monta `mecs` por `mec_vigente`; `resolver()` acrescenta à `lacunas` `{"tipo": "base", "etapa": "4ef"}` para cada MEC de projeto usada cujo `base_id` não é nulo e `hash_foto(foto(base)) != hash_foto(base_foto)`, e `{"tipo": "etapa_em_dobro", "etapa": "4ef"}` quando as duas existem e `preferida is None`.
 - `pendencias()`: `Pendencia("base", "A etapa 4EF tem mudanças da base para revisar.")` e `Pendencia("etapa_em_dobro", "A matriz agora tem 4EF: escolha qual usar.")`; `corte_sem_matriz` passa a considerar a MEC do projeto como "tem".
@@ -205,7 +205,7 @@ def test_apaga_etapa_do_projeto_do_parceiro_e2e(self)
 **Interfaces:**
 - `Escolha = Literal["base", "local"]`; `escolhas: dict[tuple[chave, campo], Escolha | str]` — `str` = texto editado à mão (botão "Editar…", só para campos de texto).
 - `concluir(mec, escolhas, hash_base_visto: str, usuario) -> int` (nº de células aplicadas). Em `transaction.atomic()` com `select_for_update` na MEC do projeto e `no_key=True` na matriz da base: recalcula `itens = classificar(mec.base_foto, foto(base), foto(mec))`; se `hash_foto(foto(base)) != hash_base_visto` → `raise Conflito(MUDOU, …)` (mesma classe de `ui_autosave`); se algum conflito sem escolha → `RevisaoIncompleta(ValueError)`; aplica: `"entra"` sem escolha ou escolha `"base"` → grava o valor da base no local (criar/apagar descritor ou tarefa, trocar campo; `arquivo` passa por `servicos.arquivos` para o órfão); `"local"` → nada; texto → grava o texto. Por fim `mec.base_foto = foto(base)`; `save()` com `_change_reason = f"revisão da base: aplicou {n}, manteve {m}"`.
-- `escolher(mec, preferida: Escolha, usuario)` grava `preferida` (D-228, botões "Manter a do projeto" / "Usar a da matriz").
+- `escolher(mec, preferida: Escolha, usuario)` grava `preferida` (D-231, botões "Manter a do projeto" / "Usar a da matriz").
 
 - [ ] **Step 1: Testes que falham**
 
@@ -304,7 +304,7 @@ def test_reimportar_avisa_projetos_derivados(self)
 
 ---
 
-### Task 10: Cascata — projeto recriado herda a etapa (D-228)
+### Task 10: Cascata — projeto recriado herda a etapa (D-231)
 
 **Files:**
 - Modify: `app/nucleo/servicos/cascata.py:44-98`
@@ -315,7 +315,7 @@ def test_reimportar_avisa_projetos_derivados(self)
 
 - [ ] **Step 1: Teste que falha** `test_projeto_recriado_herda_a_etapa_do_projeto(self)` (arquiva tirando todos os cortes; volta cortes; a MEC aponta para o projeto novo; revista nova usa "4ef").
 - [ ] **Step 2: Ver falhar.** **Step 3: Implementar.** **Step 4: Ver passar** `test_cascata`.
-- [ ] **Step 5: Commit** `feat(cascata): projeto recriado herda as etapas do projeto (D-228)`.
+- [ ] **Step 5: Commit** `feat(cascata): projeto recriado herda as etapas do projeto (D-231)`.
 
 ---
 
@@ -334,7 +334,7 @@ def test_reimportar_avisa_projetos_derivados(self)
 ### Task 12: Documentação e decisão
 
 **Files:**
-- Modify: `docs/regras-de-negocio.md` (seção 3.4: etapa do projeto, as 10 regras da spec §5 + D-228), `docs/modelo-er.md` (colunas novas de `matriz_etapa_cc`), `docs/telas/telas-b.md` (aba Matriz, tela de revisão), `CLAUDE.md` (lista de `servicos/`: `etapa_projeto`), `state.md`
+- Modify: `docs/regras-de-negocio.md` (seção 3.4: etapa do projeto, as 10 regras da spec §5 + D-231), `docs/modelo-er.md` (colunas novas de `matriz_etapa_cc`), `docs/telas/telas-b.md` (aba Matriz, tela de revisão), `CLAUDE.md` (lista de `servicos/`: `etapa_projeto`), `state.md`
 
 - [ ] **Step 1: Atualizar os docs** e registrar em `state.md` a decisão "D-2xx — Etapa do projeto implementada; substitui em parte a D-051" (contexto, decisão, motivo, descartadas, arquivos).
 - [ ] **Step 2: `trail check`** limpo (ou justificar no commit).

@@ -1,6 +1,6 @@
 # Etapa do projeto (clone com vínculo à base) — desenho
 
-Data: 2026-11-06 · Decisões: D-226, D-227, D-228 (`state.md`) · Status: aprovado pelo usuário em 06/11
+Data: 2026-11-06 · Decisões: D-229, D-230, D-231 (`state.md`) · Status: aprovado pelo usuário em 06/11
 
 ## 1. Intenção e porquê
 
@@ -34,9 +34,9 @@ modal de impacto de quem edita a base.
 | Item | Por quê |
 |---|---|
 | Juntar dois textos dentro de um mesmo campo | Escolhe-se o campo inteiro, como nos templates (D-115) |
-| Clone de clone | A base é sempre etapa de **matriz** (D-227) |
-| Etapa do projeto para uma etapa que a matriz já tem | Evita versões paralelas da Comunitária (D-227) |
-| Desvincular da base | Seria a cópia solta que a D-226 descartou |
+| Clone de clone | A base é sempre etapa de **matriz** (D-230) |
+| Etapa do projeto para uma etapa que a matriz já tem | Evita versões paralelas da Comunitária (D-230) |
+| Desvincular da base | Seria a cópia solta que a D-229 descartou |
 | Levar a etapa sozinha para o ano novo | O ano nasce sem escolhas (D-106). "Trazer do ano anterior" fica para a v2 |
 | E-mail ao abrir a pendência | É outro bloco do brainstorming (eventos e e-mail ao validar) |
 
