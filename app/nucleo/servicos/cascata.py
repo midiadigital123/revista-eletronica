@@ -12,8 +12,9 @@ from nucleo.models import (
     Projeto,
     Revista,
     RevistaFasciculo,
+    RevistaInfografico,
 )
-from nucleo.models.revista import Motivo
+from nucleo.models.revista import Motivo, TipoInfografico
 from nucleo.servicos.foto import fotografar
 
 
@@ -96,6 +97,37 @@ def gravar_cortes(parceiro_ano, linhas, usuario):
             elif revista.arquivada_em is not None:  # D-117: volta a mesma linha
                 revista.arquivada_em = None
                 _salvar(revista, usuario, update_fields=["arquivada_em"])
+        _sincronizar_infograficos(projeto, linhas, usuario, agora)
+
+
+def _sincronizar_infograficos(projeto, linhas, usuario, agora):
+    """D-230: `alfa` <=> corte no 2EF; `outras` <=> corte em etapa != 2EF, por revista ativa.
+
+    Arquiva (nunca apaga) o que deixou de valer e desarquiva a mesma linha; só grava o que mudou.
+    Revista arquivada não entra: a foto de arquivamento responde por ela.
+    """
+    etapas = {}
+    for etapa, componente, _ in linhas:
+        etapas.setdefault(componente.pk, set()).add(etapa.codigo)
+    for revista in Revista.objects.filter(projeto=projeto, arquivada_em__isnull=True):
+        codigos = etapas.get(revista.componente_id, set())
+        devem_existir = {
+            TipoInfografico.ALFA: "2EF" in codigos,
+            TipoInfografico.OUTRAS: bool(codigos - {"2EF"}),
+        }
+        atuais = {i.tipo: i for i in RevistaInfografico.objects.filter(revista=revista)}
+        for tipo, deve in devem_existir.items():
+            inf = atuais.get(tipo)
+            if inf is None:
+                if deve:
+                    _salvar(
+                        RevistaInfografico(revista=revista, componente_id=revista.componente_id,
+                                           ano_id=revista.ano_id, tipo=tipo),
+                        usuario,
+                    )
+            elif deve != (inf.arquivado_em is None):
+                inf.arquivado_em = None if deve else agora
+                _salvar(inf, usuario, update_fields=["arquivado_em"])
 
 
 def _salvar(obj, usuario, **kwargs):

@@ -234,9 +234,9 @@ class ApagarAnoTest(Base):
         )  # fmt: skip
         fotografar(revista, Motivo.IMPRESSO, cls.usuario)
         bloqueio.adquirir(projeto, cls.ped, "aba")
-        info = RevistaInfografico.objects.create(
-            revista=revista, componente=cc["LP"], ano=a27, tipo="outras", habilidade="Lê com fluência."
-        )
+        info = RevistaInfografico.objects.get(revista=revista, tipo="outras")  # nasce na cascata (D-230)
+        info.habilidade = "Lê com fluência."
+        info.save()
         RevistaInfograficoEtapa.objects.create(infografico=info, ano=a27, etapa="5EF", marca="I", codigo="EF15LP18")
         RevistaInfograficoItem.objects.create(
             infografico=info, ano=a27, posicao=1,
