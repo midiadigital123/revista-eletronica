@@ -140,7 +140,8 @@ class RevistaInfografico(models.Model):
     componente = models.ForeignKey(Componente, on_delete=models.PROTECT)  # só para FK composta
     ano = models.ForeignKey(Ano, on_delete=models.PROTECT)  # só para FK composta
     tipo = models.TextField(choices=TipoInfografico.choices)
-    arquivado_em = models.DateTimeField(null=True, blank=True)  # nulo = ativo (D-117)
+    # nulo = ativo (D-117), E revista ativa: a arquivada guarda os seus como estavam (D-230).
+    arquivado_em = models.DateTimeField(null=True, blank=True)
     passos_desligados = ArrayField(models.TextField(), default=list, blank=True)
     habilidade = models.TextField(blank=True, default="")  # habilidade destacada (redação canônica)
     # Textos dos cliques ❶ ❷ ❸.

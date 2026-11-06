@@ -302,6 +302,18 @@ class CascataTest(TransactionTestCase):
         self.assertEqual(self.infograficos(self.mt), {"outras": False})
         self.assertEqual(self.infograficos(self.lp), {"alfa": False})
 
+    def test_revista_arquivada_que_volta_com_outros_cortes_sincroniza_depois_de_voltar(self):
+        self.gravar((self.e2, self.lp, [200, 300]), (self.e5, self.mt, [200, 300]))
+        self.gravar((self.e2, self.lp, [200, 300]))  # MT arquivada
+        self.gravar((self.e2, self.lp, [200, 300]), (self.e2, self.mt, [200, 300]))  # MT volta só com 2EF
+        self.assertIsNone(Revista.objects.get(componente=self.mt).arquivada_em)
+        self.assertEqual(self.infograficos(self.mt), {"alfa": False, "outras": True})
+
+    def test_codigo_da_etapa_nao_diferencia_maiusculas(self):
+        e2 = Etapa.objects.create(ano=self.pa.ano, codigo="2ef", escala_max=500, ordem=4)
+        self.gravar((e2, self.lp, [200, 300]))
+        self.assertEqual(self.infograficos(self.lp), {"alfa": False})
+
     # Migração de dados 0022: revistas que já existiam ganham os infográficos.
 
     def migrar(self):
@@ -312,14 +324,16 @@ class CascataTest(TransactionTestCase):
         self.gravar(
             (self.e2, self.lp, [200, 300]), (self.e5, self.lp, [200, 300]), (self.e9, self.mt, [200, 300])
         )
-        antes = {r.pk: resolver(r) for r in Revista.objects.all()}
         RevistaInfografico.objects.all().delete()
+        antes = {r.pk: resolver(r) for r in Revista.objects.all()}
+        revistas = list(Revista.objects.values_list("pk", "hash_validado", "validado_em"))
         self.migrar()
         self.assertEqual(self.infograficos(self.lp), {"alfa": False, "outras": False})
         self.assertEqual(self.infograficos(self.mt), {"outras": False})
         self.migrar()  # idempotente
         self.assertEqual(RevistaInfografico.objects.count(), 3)
         self.assertEqual({r.pk: resolver(r) for r in Revista.objects.all()}, antes)
+        self.assertEqual(list(Revista.objects.values_list("pk", "hash_validado", "validado_em")), revistas)
 
     def test_migracao_ignora_revista_arquivada(self):
         self.gravar((self.e2, self.lp, [200, 300]), (self.e5, self.mt, [200, 300]))

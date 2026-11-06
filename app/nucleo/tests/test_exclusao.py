@@ -27,7 +27,7 @@ NAO_PROTECT = {
     "Bloqueio.matriz_etapa_cc", "Bloqueio.projeto", "Bloqueio.template", "Bloqueio.usuario",
     "Descritor.matriz_etapa_cc", "Tarefa.descritor", "RevistaFasciculo.revista", "RevistaSecao.revista_fasciculo",
     "Matriz.duplicada_de",
-    # Infográficos do F2 saem com a revista (só o apagar_ano apaga revista); o item guarda a tarefa em PROTECT.
+    # Infográficos do F2 saem com a revista (só o apagar_ano apaga revista).
     "RevistaInfografico.revista", "RevistaInfograficoEtapa.infografico", "RevistaInfograficoItem.infografico",
 }  # fmt: skip
 

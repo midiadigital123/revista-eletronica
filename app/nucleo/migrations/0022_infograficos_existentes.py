@@ -9,11 +9,12 @@ def criar(apps, schema_editor):
     Corte = apps.get_model("nucleo", "Corte")
     RevistaInfografico = apps.get_model("nucleo", "RevistaInfografico")
     for revista in Revista.objects.filter(arquivada_em__isnull=True).select_related("projeto"):
-        codigos = set(
-            Corte.objects.filter(
+        codigos = {
+            c.strip().upper()
+            for c in Corte.objects.filter(
                 parceiro_ano_id=revista.projeto.parceiro_ano_id, componente_id=revista.componente_id
             ).values_list("etapa__codigo", flat=True)
-        )
+        }
         tipos = []
         if "2EF" in codigos:
             tipos.append("alfa")

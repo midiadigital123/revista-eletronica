@@ -108,7 +108,7 @@ def _sincronizar_infograficos(projeto, linhas, usuario, agora):
     """
     etapas = {}
     for etapa, componente, _ in linhas:
-        etapas.setdefault(componente.pk, set()).add(etapa.codigo)
+        etapas.setdefault(componente.pk, set()).add(etapa.codigo.strip().upper())
     for revista in Revista.objects.filter(projeto=projeto, arquivada_em__isnull=True):
         codigos = etapas.get(revista.componente_id, set())
         devem_existir = {
