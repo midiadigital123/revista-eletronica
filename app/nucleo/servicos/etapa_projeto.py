@@ -3,6 +3,8 @@
 A foto é o conteúdo canônico de uma etapa de matriz (por código de descritor, não por id),
 guardada em `base_foto` ao clonar para saber depois o que a base mudou desde então.
 """
+from typing import NamedTuple
+
 from django.db import IntegrityError, transaction
 
 from nucleo.models import Descritor, Matriz, MatrizEtapaCC, Tarefa
@@ -46,6 +48,60 @@ def foto(mec):
 
 def hash_foto(f):
     return sha256(f)
+
+
+class Item(NamedTuple):
+    """Uma célula que a base mudou. `campo` é "existe" quando o descritor/tarefa inteiro foi
+    criado ou apagado (então antes/base/local são o dict inteiro, ou None se ausente)."""
+
+    chave: str  # "passo", "D01" ou "D01/100-150#1"
+    campo: str
+    antes: object
+    base: object
+    local: object
+    situacao: str  # "entra" (só a base mudou) ou "conflito" (os dois mudaram)
+
+
+def _celula(chave, campo, antes, base, local):
+    """Regra de 3 vias de uma célula; `[]` ou um `Item`."""
+    if base == antes or local == base:
+        return []
+    return [Item(chave, campo, antes, base, local, "entra" if local == antes else "conflito")]
+
+
+def _natural(chave):  # "100-150#2" -> (100, 150, 2): "100-150#2" vem antes de "1000-1100#1"
+    faixa, n = chave.split("#")
+    inicio, fim = faixa.split("-")
+    return int(inicio), int(fim), int(n)
+
+
+def _ordem_descritores(antes, base, local):
+    # Os da base pela ordem dela; os que só existem em local/antes vêm depois, na ordem de local.
+    da_base = sorted(base, key=lambda c: (base[c]["ordem"], c))
+    return da_base + [c for c in dict.fromkeys((*local, *antes)) if c not in base]
+
+
+def classificar(antes, base, local):
+    """Compara 3 fotos (`foto()`): `antes` = a base quando clonou, `base` = a base agora,
+    `local` = o conteúdo do projeto. Devolve os `Item` que a base mudou, "entra" ou "conflito".
+    Ausente conta como None. Função pura: sem banco."""
+    itens = _celula("passo", "passo", antes["passo"], base["passo"], local["passo"])
+    for codigo in _ordem_descritores(antes["descritores"], base["descritores"], local["descritores"]):
+        a, b, l = (f["descritores"].get(codigo) for f in (antes, base, local))
+        if None in (a, b, l):
+            itens += _celula(codigo, "existe", a, b, l)
+            continue
+        for campo in (*CAMPOS_DESCRITOR, "ordem"):
+            itens += _celula(codigo, campo, a[campo], b[campo], l[campo])
+        for chave in sorted({*a["tarefas"], *b["tarefas"], *l["tarefas"]}, key=_natural):
+            ta, tb, tl = (x["tarefas"].get(chave) for x in (a, b, l))
+            onde = f"{codigo}/{chave}"
+            if None in (ta, tb, tl):
+                itens += _celula(onde, "existe", ta, tb, tl)
+                continue
+            for campo in ("texto", "arquivo", "texto_alternativo", "ordem"):
+                itens += _celula(onde, campo, ta[campo], tb[campo], tl[campo])
+    return itens
 
 
 def criar(projeto, etapa, componente, usuario, base=None):

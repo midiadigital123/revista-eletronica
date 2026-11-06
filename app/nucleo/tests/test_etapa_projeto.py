@@ -2,11 +2,12 @@
 
 import unittest
 
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 
 from nucleo.models import Descritor, Etapa, MatrizEtapaCC, Projeto, Revista, Tarefa
 from nucleo.servicos.cascata import gravar_cortes
-from nucleo.servicos.etapa_projeto import CriacaoRecusada, criar, foto, hash_foto
+from nucleo.servicos.etapa_projeto import CriacaoRecusada, Item, classificar, criar, foto, hash_foto
+from nucleo.servicos.matriz import CAMPOS_DESCRITOR
 from nucleo.servicos.resolver import pendencias
 from nucleo.tests.test_resolver import Mundo
 
@@ -126,3 +127,111 @@ class CriarTest(Base):
         criar(self.projeto, e7, self.lp, self.usuario, base=self.mec9)
         revista = Revista.objects.get(projeto=self.projeto, componente=self.lp)
         self.assertIn("corte_invalido", [p.codigo for p in pendencias(revista)])
+
+
+def _tarefa(texto="t", arquivo=None, alt="", ordem=1):
+    return {"texto": texto, "arquivo": arquivo, "texto_alternativo": alt, "ordem": ordem}
+
+
+def _desc(descricao="x", ordem=1, tarefas=None):
+    campos = {c: None for c in CAMPOS_DESCRITOR}
+    return {**campos, "ordem": ordem, "descricao": descricao, "tarefas": tarefas or {}}
+
+
+def _f(descritores, passo=None):
+    return {"passo": passo, "descritores": descritores}
+
+
+class ClassificarTest(SimpleTestCase):
+    def test_so_base_mudou_entra(self):
+        a, b, l = (_f({"D01": _desc(x)}) for x in ("x", "y", "x"))
+        self.assertEqual(classificar(a, b, l), [Item("D01", "descricao", "x", "y", "x", "entra")])
+
+    def test_so_local_mudou_nao_aparece(self):
+        a, b, l = (_f({"D01": _desc(x)}) for x in ("x", "x", "z"))
+        self.assertEqual(classificar(a, b, l), [])
+
+    def test_os_dois_iguais_nao_aparece(self):
+        a, b, l = (_f({"D01": _desc(x)}) for x in ("x", "y", "y"))
+        self.assertEqual(classificar(a, b, l), [])
+
+    def test_os_dois_diferentes_e_conflito(self):
+        a, b, l = (_f({"D01": _desc(x)}) for x in ("x", "y", "z"))
+        self.assertEqual(classificar(a, b, l), [Item("D01", "descricao", "x", "y", "z", "conflito")])
+
+    def test_base_apagou_e_local_editou_e_conflito(self):
+        a = _f({"D01": _desc(), "D02": _desc("x", 2)})
+        b = _f({"D01": _desc()})
+        l = _f({"D01": _desc(), "D02": _desc("editado", 2)})
+        self.assertEqual(
+            classificar(a, b, l),
+            [Item("D02", "existe", _desc("x", 2), None, _desc("editado", 2), "conflito")],
+        )
+
+    def test_base_apagou_e_local_nao_mexeu_entra(self):
+        a = _f({"D01": _desc(), "D02": _desc("x", 2)})
+        b = _f({"D01": _desc()})
+        self.assertEqual(
+            classificar(a, b, a),
+            [Item("D02", "existe", _desc("x", 2), None, _desc("x", 2), "entra")],
+        )
+
+    def test_base_acrescentou_descritor_entra(self):
+        a = _f({"D01": _desc()})
+        b = _f({"D01": _desc(), "D02": _desc("novo", 2)})
+        self.assertEqual(
+            classificar(a, b, a),
+            [Item("D02", "existe", None, _desc("novo", 2), None, "entra")],
+        )
+
+    def test_dois_acrescentaram_o_mesmo_descritor_com_conteudo_diferente_e_conflito(self):
+        a = _f({})
+        b = _f({"D01": _desc("y")})
+        l = _f({"D01": _desc("z")})
+        self.assertEqual(
+            classificar(a, b, l),
+            [Item("D01", "existe", None, _desc("y"), _desc("z"), "conflito")],
+        )
+
+    def test_passo(self):
+        a, b, l = _f({}, 1), _f({}, 2), _f({}, 1)
+        self.assertEqual(classificar(a, b, l), [Item("passo", "passo", 1, 2, 1, "entra")])
+
+    def test_arquivo_da_tarefa_entra_na_comparacao(self):
+        def com(arquivo):
+            return _f({"D01": _desc(tarefas={"100-150#1": _tarefa(arquivo=arquivo)})})
+
+        self.assertEqual(
+            classificar(com(None), com("novo.png"), com(None)),
+            [Item("D01/100-150#1", "arquivo", None, "novo.png", None, "entra")],
+        )
+
+    def test_tarefa_nova_na_base_entra(self):
+        a = _f({"D01": _desc()})
+        b = _f({"D01": _desc(tarefas={"100-150#1": _tarefa()})})
+        self.assertEqual(
+            classificar(a, b, a),
+            [Item("D01/100-150#1", "existe", None, _tarefa(), None, "entra")],
+        )
+
+    def test_ordem_de_saida(self):
+        def f(sufixo, ordens):
+            return _f({
+                cod: _desc(
+                    "x" + sufixo,
+                    ordem,
+                    {"1000-1100#1": _tarefa("t" + sufixo), "100-150#2": _tarefa("t" + sufixo)},
+                )
+                for cod, ordem in ordens.items()
+            }, 1 if sufixo else 2)
+
+        ordens = {"D01": 2, "D02": 1}
+        a, b = f("", ordens), f("!", ordens)
+        self.assertEqual(
+            [(i.chave, i.campo) for i in classificar(a, b, a)],
+            [
+                ("passo", "passo"),
+                ("D02", "descricao"), ("D02/100-150#2", "texto"), ("D02/1000-1100#1", "texto"),
+                ("D01", "descricao"), ("D01/100-150#2", "texto"), ("D01/1000-1100#1", "texto"),
+            ],
+        )
