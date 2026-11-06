@@ -2,11 +2,11 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-F2 gerado: fase 1 de 5 (dados e cascata) concluída na branch `feat/f2-f1` (worktree `/home/otavio.peres/dev/revista-express-f2-f1`, saída de `integ/f2-gerado` = `main` 1601c93), revisada por tarefa e no fim pelo `ecc:django-reviewer`. Funcionando: as 3 tabelas dos infográficos (`revista_infografico`, `_etapa`, `_item`, migração 0020), permissões dos grupos (0021), a cascata que cria, arquiva e desarquiva Alfa e Outras Etapas pelos cortes, e a 0022 que cria os das revistas existentes. Suíte 833 OK, 8 pulados; `makemigrations --check` limpo. Na cópia do banco de dev, 0020–0022 aplicaram e o hash de nenhuma revista mudou. Merge (fast-forward) de `feat/f2-f1` em `integ/f2-gerado` feito em 06/11 com o "1" do usuário. Quebrado/pendente: merge de `integ/f2-gerado` na `main` (só com o ok do usuário, D-231); fases 2 a 5; S17/S18.
+F2 gerado: fase 1 de 5 (dados e cascata) concluída na branch `feat/f2-f1` (worktree `/home/otavio.peres/dev/revista-express-f2-f1`, saída de `integ/f2-gerado` = `main` 1601c93), revisada por tarefa e no fim pelo `ecc:django-reviewer`. Funcionando: as 3 tabelas dos infográficos (`revista_infografico`, `_etapa`, `_item`, migração 0020), permissões dos grupos (0021), a cascata que cria, arquiva e desarquiva Alfa e Outras Etapas pelos cortes, e a 0022 que cria os das revistas existentes. Suíte 833 OK, 8 pulados; `makemigrations --check` limpo. Na cópia do banco de dev, 0020–0022 aplicaram e o hash de nenhuma revista mudou. Merge (fast-forward) de `feat/f2-f1` em `integ/f2-gerado` feito em 06/11 com o "1" do usuário. Quebrado/pendente: fases 2 a 5 (a `integ/f2-gerado` só entra na `main` junto com a fase 2, D-236); S17/S18.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Usuário diz se a `integ/f2-gerado` (fase 1) entra na `main` agora ou só junto com a fase 2 (que muda o hash de toda revista).
+Abrir a fase 2: worktree `/home/otavio.peres/dev/revista-express-f2-f2` (branch `feat/f2-f2`) a partir de `integ/f2-gerado`, com stack `-p f2-f2`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1923,6 +1923,14 @@ Usuário diz se a `integ/f2-gerado` (fase 1) entra na `main` agora ou só junto 
 - **Arquivos afetados:** `models/revista.py`, `migrations/0020_infograficos.py`, `servicos/exclusao.py` (GRUPO), testes de constraints e exclusão.
 - **Status:** ativa
 
+### D-236 — A fase 1 do F2 entra na main só junto com a fase 2 (2026-11-06 21:00)
+- **Contexto:** fase 1 (dados e cascata dos infográficos) pronta e mergeada em `integ/f2-gerado` (`70989fc`, 833 OK); pela D-231 o merge na `main` espera o ok do usuário.
+- **Decisão:** `integ/f2-gerado` só entra na `main` junto com a fase 2 (render e páginas separadas). As fases seguintes continuam saindo de `integ/f2-gerado`.
+- **Motivo:** decisão do usuário em 06/11; a fase 1 sozinha não muda nada visível, e a fase 2 derruba o "Validado" de toda revista uma vez — melhor um deploy só, combinado com a validação da carga 2026.
+- **Descartadas:** merge na `main` agora — duas entregas sem ganho visível na primeira.
+- **Arquivos afetados:** nenhum código; fluxo de trabalho.
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [ ] No banco de dev, SAESE LP (revista 3) e SAEGO LP (revista 13) estão com o "Validado" desatualizado: o hash gravado não bate com a revista resolvida, já com o código da `main` (visto em 06/11 ao testar a fase 1; não é efeito dela). Revalidar ou investigar o que mudou — depende de: Otavio
 - [ ] F2 animado (pasta `example/infografico-animado`, analisado em 05/11): viável sem mudar banco nem SVG. Escolher a integração: (A) abertura animada que termina no estado do svg-tour atual, ou (B) substituir o svg-tour pelo player do exemplo (perde minimapa, zoom e modais prontos). Risco: o roteiro acha as peças pela ordem dos filhos no SVG; só existe 1 SVG real (os 80 em `media/f2` são cópias do fixture) — depende de: Otavio + design (o SVG de MT e de outros parceiros mantém a mesma árvore?)
@@ -2018,6 +2026,7 @@ Usuário diz se a `integ/f2-gerado` (fase 1) entra na `main` agora ou só junto 
 - Verificação final: 833 OK, 8 pulados; régua ok. Cópia do banco de dev migrada até a 0022 na stack `f2-f1`: cada revista ativa ganhou os infográficos que os cortes pedem; nenhum hash mudou (SAESE LP e SAEGO LP já estavam fora do "Validado" antes).
 - Commits da leva: 23d00d0, 660c806 (esquema, permissões), bf27df1 (cascata + 0022), 79a4e19 (item, D-235), f942878 (correções da revisão), bd41a90 (learning), e este `state.md`.
 - Usuário escolheu o merge local: `feat/f2-f1` → `integ/f2-gerado` por fast-forward; suíte rodada de novo na `integ/f2-gerado`.
+- D-236: a fase 1 entra na `main` só junto com a fase 2 (decisão do usuário).
 ### 2026-11-06 14:30
 - Agente de mapeamento disparado: F2 preenchido todo na interface sobre um template único de passos fixos, com passos desligáveis por projeto (tempo e tecnologia). Saída em `docs/superpowers/specs/2026-11-06-f2-na-interface-mapeamento.md`.
 - D-227: usuário aprovou a direção do mapeamento.
