@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Duas frentes em 06/11. (1) F2 na interface: direção aprovada (D-227); fase 0 (protótipo de 1 dia) ainda não disparada. (2) Etapa do projeto (D-229 a D-231): execução por subagentes na branch `feat/etapa-do-projeto` (worktree `/home/otavio.peres/dev/revista-express-etapa`, intermediária `integ/etapa-do-projeto`); tarefas 1 e 2 de 12 concluídas e revisadas (migração e modelo; foto canônica e criar), tarefa 3 (motor de 3 vias) a despachar.
+Duas frentes em 06/11. (1) F2 na interface: direção aprovada (D-227); fase 0 (protótipo de 1 dia) ainda não disparada. (2) Etapa do projeto (D-229 a D-231): PAUSADA a pedido do usuário. Branch `feat/etapa-do-projeto` (worktree `/home/otavio.peres/dev/revista-express-etapa`), sem merge na `main` nem na `integ/etapa-do-projeto`. Tarefas 1 a 4 de 12 concluídas e revisadas; tarefa 5 interrompida no meio (commit WIP, sem revisão).
 Funcionando: tudo da `main` 4e91d33. Na branch: `MatrizEtapaCC` com dono projeto, vínculo à base e foto no banco; `servicos/etapa_projeto.py` com `foto`, `hash_foto`, `criar`.
 Quebrado/pendente: S17 (ação D e preenchimento) e S18 como antes; F1 e F2 separados (mesmo zip ou dois) sem decisão; decisão sobre restringir o dev aos 3 IPs.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Despachar a tarefa 3 (motor de 3 vias) na worktree `revista-express-etapa`; ao fim das 12, mergear `feat/etapa-do-projeto` em `integ/etapa-do-projeto` com a suíte verde (merge na `main` é do usuário). F2: decidir se a fase 0 é disparada.
+Etapa do projeto: ao retomar, abrir o commit WIP da tarefa 5 em `feat/etapa-do-projeto`, rodar a suíte inteira na stack `etapa-projeto` e terminar a tarefa 5 pelo plano. F2: decidir se a fase 0 é disparada.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2401,3 +2401,5 @@ Despachar a tarefa 3 (motor de 3 vias) na worktree `revista-express-etapa`; ao f
 - Documento da etapa do projeto aprovado pelo usuário; próximo: plano de implementação (writing-plans).
 - Plano de implementação escrito: docs/superpowers/plans/2026-11-06-etapa-do-projeto.md (12 tarefas, TDD, commit por tarefa). Aguarda escolha do modo de execução.
 - Merge da `main` (4e91d33, F2) nesta branch: D-226/227/228 desta frente renumeradas para D-229/230/231 (a main já usava D-226 para o fluxo git e D-227 para o F2). Branch intermediária `integ/etapa-do-projeto` criada. Tarefa 2 de 12 (foto e criar, commit be332fa) aprovada na revisão.
+- Tarefas 3 e 4 de 12 concluídas e revisadas (motor de 3 vias; resolver, pendências e impacto, com correção para base de outro ano). Decisão na tarefa 4: tarefa fora da escala da etapa nova só recebe marca no editor (a pendência `corte_invalido` não confere tarefas); a spec §4.1 será corrigida na tarefa 12.
+- Execução interrompida a pedido do usuário durante a tarefa 5: trabalho parcial commitado como WIP em `feat/etapa-do-projeto`; nada mergeado na `main`.
