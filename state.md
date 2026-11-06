@@ -8,7 +8,7 @@ Quebrado/pendente: S17 — falta a ação D (arquivar o svg-tour) e o preenchime
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Na conversa de 06/11, decidir: F1 e F2 em duas páginas no mesmo zip ou em dois zips (isso define a página e o empacotador; o F2 animado vem depois).
+Usuário mergeia `integ/f2-interface` na `main`; depois decidir se a fase 0 (protótipo de 1 dia do F2 gerado) é disparada agora.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1853,6 +1853,14 @@ Na conversa de 06/11, decidir: F1 e F2 em duas páginas no mesmo zip ou em dois 
 - **Arquivos afetados:** nenhum código; fluxo de trabalho.
 - **Status:** ativa
 
+### D-227 — F2 preenchido todo na interface: direção aprovada (2026-11-06 15:20)
+- **Contexto:** mapeamento de 06/11 (`docs/superpowers/specs/2026-11-06-f2-na-interface-mapeamento.md`); o usuário respondeu "Concordo".
+- **Decisão:** o F2 passa a ser montado pelo sistema sobre um template único de passos canônicos (`abertura`, `descritor` fixos; `habilidades`, `progressao`, `tarefas` desligáveis por projeto); render recomendado = SVG gerado pelo servidor com o svg-tour intocado, confirmado por um protótipo de 1 dia (fase 0) antes das fases 1 a 5. Estimativa aceita: 8 a 12 dias úteis.
+- **Motivo:** texto real (acessível, no hash e no "o que mudou"), fim do SVG nomeado à mão no Illustrator e do risco de ordem de camadas da animação.
+- **Descartadas:** HTML por blocos com tour próprio — fica como plano B se o protótipo falhar no zoom/minimapa; manter o SVG do design só preenchendo textos — não resolve passos desligáveis nem layout.
+- **Arquivos afetados:** futuro: `servicos/f2.py`, `templates/revista/f2.svg`, modelos `DescritorProgressao`/`RevistaF2Descritor`, coluna `Projeto.f2_passos_desligados`; remoção do upload/sanitizador de SVG.
+- **Status:** ativa (fase 0 ainda não disparada)
+
 ## Perguntas em aberto
 - [ ] F2 animado (pasta `example/infografico-animado`, analisado em 05/11): viável sem mudar banco nem SVG. Escolher a integração: (A) abertura animada que termina no estado do svg-tour atual, ou (B) substituir o svg-tour pelo player do exemplo (perde minimapa, zoom e modais prontos). Risco: o roteiro acha as peças pela ordem dos filhos no SVG; só existe 1 SVG real (os 80 em `media/f2` são cópias do fixture) — depende de: Otavio + design (o SVG de MT e de outros parceiros mantém a mesma árvore?)
 - [ ] Textos do tour do F2 (SAEGO LP, template "Padrão") trocados em relação ao desenho: o passo 3 do tour se chama "Progressão da habilidade", mas enquadra o bloco "Descrição das habilidades no referencial curricular"; o botão + desse bloco (`btn-action-p3`) abre o modal "Progressão…". O passo 2 ("Itens por ano/série", "percentual de acerto") enquadra a linha de progressão. Visto na demo de 05/11; vale também no sistema hoje — depende de: Pedagógica (corrigir o template ou os ids do SVG?)
@@ -1941,6 +1949,7 @@ Na conversa de 06/11, decidir: F1 e F2 em duas páginas no mesmo zip ou em dois 
 ## Sessões
 ### 2026-11-06 14:30
 - Agente de mapeamento disparado: F2 preenchido todo na interface sobre um template único de passos fixos, com passos desligáveis por projeto (tempo e tecnologia). Saída em `docs/superpowers/specs/2026-11-06-f2-na-interface-mapeamento.md`.
+- D-227: usuário aprovou a direção do mapeamento.
 - Mapeamento concluído e commitado em `docs/f2-mapeamento`; pergunta em aberto do F2 reescrita com o resultado; branch mergeada em `integ/f2-interface` (merge na `main` é do usuário).
 - Regra nova do usuário (D-226): toda modificação em worktree própria com branch própria; merge em `integ/<tema>` só depois de testado; o merge na `main` é do usuário. Worktree desta sessão: `/home/otavio.peres/dev/revista-express-f2` (`docs/f2-mapeamento` ← `integ/f2-interface` ← `main`).
 ### 2026-10-07
