@@ -8,7 +8,7 @@ Quebrado/pendente: S17 — falta a ação D (arquivar o svg-tour) e o preenchime
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Na conversa de 06/11, decidir: F1 e F2 em duas páginas no mesmo zip ou em dois zips (isso define a página e o empacotador; o F2 animado vem depois).
+Ler `docs/superpowers/plans/2026-11-06-etapa-do-projeto.md` (12 tarefas) e escolher a execução: por subagentes (um por tarefa, com revisor) ou nativa (nesta sessão). Ainda pendente de antes: F1 e F2 no mesmo zip ou em dois.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1845,7 +1845,33 @@ Na conversa de 06/11, decidir: F1 e F2 em duas páginas no mesmo zip ou em dois 
 - **Arquivos afetados:** `CLAUDE.md`. Specs a corrigir: ver Perguntas em aberto.
 - **Status:** ativa
 
+### D-226 — Etapa clonada mantém vínculo vivo com a etapa base (2026-11-06)
+- **Contexto:** brainstorming de 06/11. Parceiros avaliam etapas fora do comum (4EF, 6EF, 8EF); a Pedagógica costuma partir de uma etapa vizinha (3EF → 4EF) e acrescentar itens. As notas do usuário diziam ao mesmo tempo "clonar e editar o clone" e "se o 3EF mudar, a revista muda".
+- **Decisão:** a etapa criada no projeto (em branco ou clone de qualquer etapa de qualquer matriz) guarda a base de onde veio. Mudança na base vira **pendência** no projeto derivado, com comparação antes × depois no estilo git. A pendência é obrigatória, não um aviso. Quem edita a base vê, no modal de impacto, que a ação tira o Validado e também abre pendência nos projetos derivados.
+- **Motivo:** cópia solta perde as correções da base em silêncio; herança automática sobrescreveria o que o projeto acrescentou.
+- **Descartadas:** cópia solta, sem vínculo — correção no 3EF não chega ao 4EF; herança viva sem revisão — apaga edições locais sem ninguém ver.
+- **Arquivos afetados:** nenhum ainda (fase de desenho). Em aberto: o que a pendência bloqueia e se o projeto pode recusar uma mudança da base.
+- **Status:** ativa (desenho em andamento)
+
+### D-227 — Etapa do projeto: 3 vias com foto da base, dono = projeto (2026-11-06)
+- **Contexto:** como a mudança da base chega à etapa clonada (D-226). 3 agentes analisaram (dados, produto, versionamento); a soma com descarte de duplicatas proposta pelo usuário foi descartada pelos 3.
+- **Decisão:** (1) comparação em 3 vias: foto da base (jsonb, por código do descritor e faixa da tarefa) × base atual × local; (2) a etapa pertence ao **projeto** (escolha do usuário, contra a recomendação de parceiro_ano dos agentes 1 e 3); (3) item que o projeto não tocou vem pré-marcado "aplicar" e só grava ao "Concluir revisão"; (4) clone de clone proibido na 1ª versão: a base é sempre etapa de matriz; (5) só etapa que a matriz do parceiro não tem (4EF, 6EF, 8EF), sem sobrepor etapa da matriz; (6) a pendência entra no hash e bloqueia o Validado; recusa item a item; sem fusão dentro do texto (D-115); base apagada = cópia solta (SET NULL); a virada de ano não leva a etapa sozinha.
+- **Motivo:** só o ancestral comum separa "a base mudou" de "o projeto mudou"; nada muda no conteúdo do projeto sem uma pessoa ver; sem cadeia e sem sobrepor, não surgem versões paralelas da Comunitária.
+- **Descartadas:** soma + dedup — não propaga remoção nem correção; ancestral pelo simple-history — a reimportação recria ids; camada de sobrescrita — editor novo e propagação sem revisão; versões imutáveis da matriz — reescreve editor e reimportação; aplicar sozinho ao gravar a base — escreve no conteúdo de outro projeto sem revisão; dono parceiro_ano — escolha do usuário.
+- **Arquivos afetados:** nenhum ainda. Substitui em parte a D-051 (projeto passa a ter conteúdo próprio, só nesse caso).
+- **Status:** ativa (desenho em andamento)
+
+### D-228 — Etapa do projeto: projeto recriado herda; matriz que ganha a etapa vira pendência (2026-11-06)
+- **Contexto:** revisão do documento `docs/superpowers/specs/2026-11-06-etapa-do-projeto-design.md`. Só há 1 projeto ativo por parceiro_ano, e a cascata arquiva o projeto e cria outro (D-068).
+- **Decisão:** (1) o projeto novo da cascata herda as etapas do projeto arquivado (com foto e base); (2) se a matriz do parceiro passar a ter a etapa, abre-se uma pendência de escolha que bloqueia o Validado, com "manter a do projeto" ou "usar a da matriz"; até a escolha, vale a do projeto. Decisões do Claude no documento: a base tem o mesmo componente da revista; a imagem da tarefa entra na revisão em 3 vias; o Validado volta sozinho se o conteúdo voltar ao validado (D-094).
+- **Motivo:** nunca perder o que foi digitado; pendência não é enfeite.
+- **Descartadas:** projeto novo começa sem a etapa — o texto fica preso no arquivado; botão "trazer" — depende de alguém lembrar; a etapa do projeto vale sem aviso — versão paralela sem decisão; a da matriz passa a valer sozinha — muda a revista sem ninguém ver.
+- **Arquivos afetados:** documento de desenho (seções 5 e 10).
+- **Status:** ativa
+
 ## Perguntas em aberto
+- [ ] (D-226) Análise dos 3 agentes (06/11), consenso: comparação em 3 vias com foto da base em jsonb chaveada por código (o simple-history não serve: a reimportação recria ids); a soma foi descartada pelos 3; a pendência entra nas lacunas/hash e bloqueia o Validado; o modal de impacto lista os derivados via `_afetadas`; recusa item a item; sem fusão dentro do texto (D-115); base apagada vira cópia solta (SET NULL); a virada de ano não leva a etapa sozinha. Divergências para o Otavio: (1) dono = parceiro_ano × projeto; (2) o não tocado entra sozinho × pré-marcado e gravado só ao concluir; (3) clone de clone proibido × permitido; (4) só etapa que a matriz não tem × também sobrescrever etapa da matriz. Custo v1: 6 a 11 dias. Contraria em parte a D-051 (projeto não tem conteúdo próprio): exige decisão nova.
+- [ ] (D-226) Como a mudança da base entra no clone: proposta do usuário em 06/11 = somar base nova + local e descartar duplicatas. Limite visto: soma não propaga remoção nem correção de texto (a versão velha fica ao lado da nova). Alternativa em discussão: comparação em 3 vias (base antiga × base nova × local); o que o local não tocou entra sozinho, só o que os dois mexeram vira pendência — depende de: Otavio
 - [ ] F2 animado (pasta `example/infografico-animado`, analisado em 05/11): viável sem mudar banco nem SVG. Escolher a integração: (A) abertura animada que termina no estado do svg-tour atual, ou (B) substituir o svg-tour pelo player do exemplo (perde minimapa, zoom e modais prontos). Risco: o roteiro acha as peças pela ordem dos filhos no SVG; só existe 1 SVG real (os 80 em `media/f2` são cópias do fixture) — depende de: Otavio + design (o SVG de MT e de outros parceiros mantém a mesma árvore?)
 - [ ] Textos do tour do F2 (SAEGO LP, template "Padrão") trocados em relação ao desenho: o passo 3 do tour se chama "Progressão da habilidade", mas enquadra o bloco "Descrição das habilidades no referencial curricular"; o botão + desse bloco (`btn-action-p3`) abre o modal "Progressão…". O passo 2 ("Itens por ano/série", "percentual de acerto") enquadra a linha de progressão. Visto na demo de 05/11; vale também no sistema hoje — depende de: Pedagógica (corrigir o template ou os ids do SVG?)
 - [x] F2 animado, ideia corrigida em 05/11: a animação não é só abertura; cada passo do svg-tour toca a animação do seu bloco (a câmera é a do tour, e o conector "viaja" do descritor até o bloco durante o movimento). A demo `example/f2-animado-tour/` ainda é a versão "só abertura". Sem mudar o `svg-tour.js`: basta o evento `svgtour:change`. Decidido em 05/11: (a) passo já visto aparece pronto, sem tocar de novo; ~~(b) antes da visita o bloco fica esmaecido, e a visão geral mostra o desenho inteiro~~ (substituída em 05/11: o usuário viu o bloco esmaecido sumir e reaparecer ao entrar no passo, e o passo 3 esmaecido acima do passo 2; agora (b) o bloco não visitado fica escondido e a visão geral mostra só fundo e título).
@@ -2338,3 +2364,18 @@ Na conversa de 06/11, decidir: F1 e F2 em duas páginas no mesmo zip ou em dois 
 - Decisão (b) revista: bloco não visitado fica escondido, não esmaecido. Demo ajustada (sem o estado "fantasma"); conferido no navegador: na visão geral os 4 blocos estão escondidos; no passo 2, o bloco do passo 3 continua escondido.
 - Bug de enquadramento na demo do F2 corrigido: com os blocos escondidos desde o início, os passos 2 e 3 enquadravam o título e o descritor (219%). Causa: o tour mede a caixa do alvo (`getBBox`) ao trocar de passo, e as peças escondidas com escala 0 contavam como um ponto perto da origem, esticando a caixa até o canto superior esquerdo. Correção: em repouso a peça fica escondida só por opacidade; o deslocamento e a escala entram no 1º quadro da animação. Conferido: enquadramento dos 4 passos igual ao da versão sem animação.
 - Usuário aprovou a demo ("ficou bom pra caramba"). Commit e push da pasta `example/` (exemplo original + demo) e de 2 aprendizados do trail (opacity !important do tour; esconder só por opacidade por causa do enquadramento).
+
+### 2026-11-06
+- Retomada das pendências: decisão aberta sobre F1 e F2 separados (mesmo zip ou dois zips).
+- Acesso ao app de dev (192.168.5.39:8000) para 3 máquinas da 192.168.4.x (.163, .166, .172): o Django não filtra por IP de quem acessa; o filtro é o firewall. Porta publicada pelo Docker passa por fora do ufw, então a regra vai na cadeia `DOCKER-USER` (libera os 3 IPs, descarta o resto que chega pela `eno1`), e só depois `APP_BIND=0.0.0.0` no `.env`. Pendente: o usuário rodar os comandos com sudo e testar de uma das máquinas.
+- Acesso pelos 3 IPs revertido a pedido do usuário: as 3 regras de ACCEPT na `DOCKER-USER` saem com `iptables -F DOCKER-USER` (a cadeia só tinha elas; o DROP nunca foi aplicado). Com `APP_BIND=0.0.0.0` no `.env` e sem DROP, a rede inteira alcança o dev com DEBUG: recomendado comentar o `APP_BIND` de novo.
+- Usuário confirmou acesso funcionando ("Agora sim!") com `DOCKER-USER` vazia e `APP_BIND=0.0.0.0` (conferido: 302 em 127.0.0.1 e em 192.168.5.39). Estado: o dev com DEBUG está aberto à rede inteira, não só aos 3 IPs. Pendente: decidir entre restringir aos 3 (DROP + ACCEPT na `DOCKER-USER`) ou manter aberto.
+- Brainstorming das anotações do usuário (texto + 4 páginas do caderno): fascículos variáveis por parceiro, etapa clonada no projeto, F2 editável, usabilidade por perfil, regras de negócio em texto, e-mail ao validar. Agrupadas em 5 blocos; aguardando prioridade.
+- D-226: etapa clonada mantém vínculo com a base; mudança na base vira pendência obrigatória com comparação estilo git.
+- 3 agentes disparados para analisar a etapa clonada (dados Django/PostgreSQL, produto e regras de negócio, versionamento de conteúdo); cada um propõe arquitetura e regras, só leitura.
+- 3 agentes concluíram: consenso em 3 vias + foto da base; 4 divergências levadas ao usuário.
+- D-227: usuário escolheu dono = projeto, não tocado pré-marcado, sem cadeia, só etapa que a matriz não tem.
+- Documento do bloco 2 escrito em docs/superpowers/specs/2026-11-06-etapa-do-projeto-design.md; revisor (builder check) rodando. Correção: só existe 1 projeto ativo por parceiro_ano (UNIQUE projeto_um_ativo_por_parceiro_ano), então dono=projeto quase equivale a parceiro_ano; a diferença aparece quando a cascata arquiva e recria o projeto.
+- D-228: projeto recriado herda a etapa; matriz que ganha a etapa vira pendência de escolha. Documento pronto para aprovação.
+- Documento da etapa do projeto aprovado pelo usuário; próximo: plano de implementação (writing-plans).
+- Plano de implementação escrito: docs/superpowers/plans/2026-11-06-etapa-do-projeto.md (12 tarefas, TDD, commit por tarefa). Aguarda escolha do modo de execução.
