@@ -52,10 +52,10 @@ Os cliques ❶ (4º parágrafo), ❷, ❸ e ❹ e a habilidade destacada são **
 ## 5. Perguntas (de quem depende)
 
 1. ~~"AF_EM" no nome do arquivo~~ Respondida em 06/11 (D-230): ver §6. Restam: a estrutura do Alfa é a mesma (progressão 1EF–3EM, itens só do 2EF?); o docx recebido traz um item do 2EF, é o "Outras Etapas"? — Pedagógica
-2. Os 4 parágrafos da abertura aparecem na web antes do infográfico (texto corrido) ou só no impresso? — Otavio
-3. Clique ❹: um modal por item (e a abertura/fechamento comuns vão onde?) ou um modal único com os 4 itens? — Otavio + Pedagógica
-4. Suporte do item (`_SUP`): segundo arquivo da tarefa ou uma imagem única montada pelo design? — design
-5. "Acesse aqui o template do infográfico": que arquivo é, quem fornece e vale por ano ou por componente? — Pedagógica
+2. ~~Abertura na web?~~ Sim (D-232): os 4 parágrafos aparecem na web, como texto corrido antes do infográfico.
+3. ~~Clique ❹~~ Um item em cada modal: 4 itens, 4 modais (D-232). Pendente: a abertura (1 parágrafo) e o fechamento (2) comuns ficam fora dos modais; proposta: abertura no texto do passo `tarefas` do painel do tour, fechamento só no impresso — Otavio
+4. ~~Suporte do item~~ Imagem única montada pelo design (D-232): `Tarefa.arquivo` continua com um arquivo só.
+5. ~~Template do infográfico~~ Por enquanto só texto (D-232): seção `fechamento` com os 2 parágrafos, sem link nem campo de arquivo.
 
 ## 6. Infográficos por revista (D-230, 06/11)
 
