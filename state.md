@@ -1845,6 +1845,14 @@ Na conversa de 06/11, decidir: F1 e F2 em duas páginas no mesmo zip ou em dois 
 - **Arquivos afetados:** `CLAUDE.md`. Specs a corrigir: ver Perguntas em aberto.
 - **Status:** ativa
 
+### D-226 — Fluxo git: worktree própria → branch intermediária → usuário mergeia na main (2026-11-06 14:40)
+- **Contexto:** o usuário pediu que nada seja modificado direto na worktree da `main`.
+- **Decisão:** cada trabalho roda numa worktree irmã (`/home/otavio.peres/dev/revista-express-<tema>`) com branch própria (`feat/…`, `docs/…`), criada a partir de uma branch intermediária `integ/<tema>` (saída da `main`). Merge na intermediária só com testes verdes; o merge de `integ/<tema>` na `main` é do usuário. O `state.md` é editado na worktree, nunca na `main`.
+- **Motivo:** o usuário revisa e decide o que entra na `main`; o padrão (`integ/ui-b`, worktrees de agentes) já foi usado com sucesso.
+- **Descartadas:** commitar direto na `main` — contraria o pedido; PR por branch direto na `main` sem intermediária — perde o ponto único de teste integrado.
+- **Arquivos afetados:** nenhum código; fluxo de trabalho.
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [ ] F2 animado (pasta `example/infografico-animado`, analisado em 05/11): viável sem mudar banco nem SVG. Escolher a integração: (A) abertura animada que termina no estado do svg-tour atual, ou (B) substituir o svg-tour pelo player do exemplo (perde minimapa, zoom e modais prontos). Risco: o roteiro acha as peças pela ordem dos filhos no SVG; só existe 1 SVG real (os 80 em `media/f2` são cópias do fixture) — depende de: Otavio + design (o SVG de MT e de outros parceiros mantém a mesma árvore?)
 - [ ] Textos do tour do F2 (SAEGO LP, template "Padrão") trocados em relação ao desenho: o passo 3 do tour se chama "Progressão da habilidade", mas enquadra o bloco "Descrição das habilidades no referencial curricular"; o botão + desse bloco (`btn-action-p3`) abre o modal "Progressão…". O passo 2 ("Itens por ano/série", "percentual de acerto") enquadra a linha de progressão. Visto na demo de 05/11; vale também no sistema hoje — depende de: Pedagógica (corrigir o template ou os ids do SVG?)
@@ -1931,6 +1939,9 @@ Na conversa de 06/11, decidir: F1 e F2 em duas páginas no mesmo zip ou em dois 
 - [ ] Migrar `api/` (Express + Mongo) para Django + PostgreSQL, mantendo o React de `editor/`? Motivos do usuário (2026-10-26): herança entre projetos, templates de escala por parceiro (com parentesco entre si), auth/perfis mais fortes (uso amplo todo ano), auditoria de mudanças de texto para avisar a equipe do impresso; equipe já sabe Django. Proposta de modelo apresentada, sem decisão — herança viva decidida (D-045); depende de: usuário confirmar a regra de conflito (sobrescrita local do filho vence ou o pai vence?)
 
 ## Sessões
+### 2026-11-06 14:30
+- Agente de mapeamento disparado: F2 preenchido todo na interface sobre um template único de passos fixos, com passos desligáveis por projeto (tempo e tecnologia). Saída em `docs/superpowers/specs/2026-11-06-f2-na-interface-mapeamento.md`.
+- Regra nova do usuário (D-226): toda modificação em worktree própria com branch própria; merge em `integ/<tema>` só depois de testado; o merge na `main` é do usuário. Worktree desta sessão: `/home/otavio.peres/dev/revista-express-f2` (`docs/f2-mapeamento` ← `integ/f2-interface` ← `main`).
 ### 2026-10-07
 - PDF base trocado para SAEGO_2025_RE_Alfa_2EF_5EF Web.pdf; plano aprovado.
 - Script reescrito em Python; 84 descritores extraídos; 4 testes OK.
