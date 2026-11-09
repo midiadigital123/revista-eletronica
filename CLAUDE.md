@@ -36,7 +36,10 @@ node app/nucleo/static/revista/f1/regua.test.mjs
 cd app/e2e && npx playwright test             # com o app de pé e E2E_ADMIN_USUARIO/E2E_ADMIN_SENHA
 ```
 
-Worktrees: use `docker compose -p <nome>` (banco e volume próprios). PDFs SAEGO para os testes
+Suíte E2E inteira (precisa da demonstração): stack isolada, ver `docs/e2e.md`.
+
+Worktrees: use `docker compose -p <nome>` (banco e volume próprios), com `COMPOSE_PROJECT_NAME=<nome>`
+no ambiente se o `.env` fixar o nome. PDFs SAEGO para os testes
 de importação: montar em `/pdfs` (`-v "<pasta>:/pdfs:ro"`); sem eles, 8 testes são pulados.
 
 ## Architecture
@@ -44,8 +47,8 @@ de importação: montar em `/pdfs` (`-v "<pasta>:/pdfs:ro"`); sem eles, 8 testes
 - `app/sistema/`: settings (`DATABASE_URL`, `pt-br`, `USE_TZ`) e urls.
 - `app/nucleo/`: app único. Um arquivo por área em `models/`, `admin/`, `urls/` (um `include`
   por módulo; `urls/ui_*.py` são as telas B) e `servicos/` (regra de negócio fora do admin:
-  `cascata`, `resolver`, `validacao`, `foto`, `empacotar`, `planilhas`, `importar_matriz`,
-  `abrir_ano`, `bloqueio`, `arquivos`, `impacto`, `exclusao`).
+  `cascata`, `resolver`, `validacao`, `foto`, `html`, `empacotar`, `planilhas`, `importar_matriz`,
+  `matriz`, `abrir_ano`, `bloqueio`, `arquivos`, `impacto`, `exclusao`).
 - Telas B: `templates/ui/` e `static/ui/`. A regra fica em módulo comum (`cortes.py`, `matriz.py`,
   `lotes.py`, `planilha_variaveis.py`…) ou em `servicos/`, e o admin importa dele: nunca duplique a regra.
 - `app/nucleo/permissoes.py`: tabela papel × ação, fonte única (4 grupos: Pedagógica, Mídias
@@ -74,6 +77,11 @@ Uma página só, `app/nucleo/templates/revista/index.html`, serve o preview e o 
 para 2 a 5 padrões (cores em `--color-padrao-k`, sobrescritas por projeto); `static/revista/f2/`
 é o svg-tour copiado sem alteração.
 
+F2 hoje: o SVG enviado na revista, mostrado pelo svg-tour. Aprovado e não implementado: F2 gerado
+pelo servidor como SVG, preenchido na interface, até dois infográficos por revista (Alfa e Outras
+Etapas). Plano em `docs/superpowers/specs/2026-11-06-*.md` (D-227 a D-232). `example/` guarda
+protótipos estáticos fora do sistema (`f2-gerado/` é a fase 0, D-228), cada um com `LEIA-ME.md`.
+
 Formato do F1 por etapa: `{scaleRange, cortes, Dxx: {topic, description, prerequisites[],
 bncc: {practices, knowledge, skills[]}, scale: {padrao-1..N: [{level, fim, content}]}}}`.
 
@@ -82,6 +90,9 @@ bncc: {practices, knowledge, skills[]}, scale: {padrao-1..N: [{level, fim, conte
 - Textos, nomes e mensagens em português (PT-BR).
 - `state.md` é atualizado no mesmo turno de cada decisão (regras no CLAUDE.md global).
 - Atalho deliberado com teto conhecido leva comentário `ponytail:`.
+- Fluxo git (D-226, D-231): nada é editado na worktree da `main`. Cada trabalho roda numa worktree
+  irmã (`../revista-express-<tema>`) com branch própria, saída de `integ/<tema>` (que sai da `main`).
+  Merge na `integ/<tema>` só com testes verdes; merge na `main` só depois do "ok" explícito do usuário.
 - **Testes E2E nunca editam revista que o próprio teste não criou. Nunca.** Isso vale também para o que
   alimenta a revista: projeto, variáveis, cortes, textos, arquivos e template escolhido. O spec cria o
   próprio parceiro "E2E …" (a cascata gera o projeto e a revista) e edita só ele. O `limpar_e2e` apaga
