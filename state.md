@@ -2,11 +2,11 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Docs alinhados ao código da `main` de 06/11 (D-233), sem commit, na worktree `/home/otavio.peres/dev/revista-express-docs` (branch `docs/atualizacao-2026-11-09` ← `integ/docs-atualizacao`). Funcionando: 18 arquivos revisados; ficha nova `docs/telas/fichas/usuarios.md`; F2 gerado registrado como planejado (regras §6.6, README, CLAUDE.md). Pendente: commit e merge (esperam o ok do usuário); 5 perguntas novas em aberto (D-233). F2 fases 1 a 5, S17 e S18 continuam pendentes.
+Docs alinhados ao código (D-233, commitados em `integ/docs-atualizacao`) e respostas da D-234 aplicadas sem commit na worktree `/home/otavio.peres/dev/revista-express-docs`. Funcionando: comentários de código, `app/.env.example` e `CLAUDE.md` corrigidos; só comentário e texto, sem mudança de comportamento. Pendente: commit da D-234; merge na `main` (espera o ok); `entrar()` do E2E não detecta login falho. F2 fases 1 a 5, S17 e S18 continuam pendentes.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Usuário dá o ok para commitar a atualização dos docs e mergear em `integ/docs-atualizacao` e na `main`.
+Usuário diz "ok, commit" para a D-234 e "ok, main" para o merge de `integ/docs-atualizacao` na `main`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1907,12 +1907,21 @@ Usuário dá o ok para commitar a atualização dos docs e mergear em `integ/doc
 - **Arquivos afetados:** `CLAUDE.md`, `README.md`, `INFRA.md`, `DESIGN.md`, `docs/docker.md`, `docs/e2e.md`, `docs/telas/**`, `docs/regras-de-negocio.md`, `docs/modelo-er.md`, `docs/variaveis.md`
 - **Status:** ativa
 
+### D-234 — Respostas às 5 perguntas da D-233: `workers: 1` fica, `.env.example` completo, comentários corrigidos (2026-11-09 11:00)
+- **Contexto:** 5 perguntas abertas na revisão dos docs (D-233).
+- **Decisão:** (1) `workers: 1` fica, com o motivo atual no `playwright.config.ts`: mesmo usuário em todos os specs (D-191) e o `anos.spec` abre e apaga 2027, o ano mais recente que as rotas `_inicio` e `/` mostrariam a outro spec no meio. (2) `app/.env.example` ganha `APP_PORT`, `APP_BIND` e `COMPOSE_PROJECT_NAME`. (3) Sai do `CLAUDE.md` a seção "Who is you?" (texto da skill frontend-design colado). (4) Comentários do login do admin (`usuarios.py`, `helpers.ts::entrar`) e do `limpar_e2e` (`playwright.config.ts`) atualizados. (5) Comentário do `Bloqueio` diz CASCADE do Django e NO ACTION no banco.
+- **Motivo:** respostas do usuário (2 a 5); a 1 foi recomendação minha, pedida por ele.
+- **Descartadas:** `workers: 2` — o ano 2027 do `anos.spec` vaza para os outros specs e a suíte fica instável sem ganho medido.
+- **Arquivos afetados:** `CLAUDE.md`, `app/.env.example`, `app/e2e/playwright.config.ts`, `app/e2e/tests/helpers.ts`, `app/nucleo/usuarios.py`, `app/nucleo/models/controle.py`, `docs/e2e.md`, `docs/regras-de-negocio.md`
+- **Status:** ativa. Achado à parte: `entrar()` confere o sucesso com `not.toHaveURL(/\/admin\/login\//)`, mas depois da D-212 o login falho fica em `/conta/entrar/`, então a conferência sempre passa.
+
 ## Perguntas em aberto
-- [ ] (D-233, 09/11) Comentários de código ainda falam do login do admin depois da D-212: `nucleo/usuarios.py` ("todo perfil entra pelo login do admin") e `e2e/tests/helpers.ts::entrar` ("Entra no admin", passa por `/admin/login/`, que redireciona). Corrigir? — depende de: Otavio
-- [ ] (D-233, 09/11) Playwright: `workers: 1` ainda é preciso? O motivo escrito (D-191: painel, impresso e revista gravam a mesma revista DEMONSTRAÇÃO) caiu com a D-225, em que cada spec grava na própria revista — depende de: Otavio (medir a suíte com 2 workers?)
-- [ ] (D-233, 09/11) `app/.env.example` não lista `APP_BIND`, `APP_PORT` nem `COMPOSE_PROJECT_NAME`. Acrescentar? — depende de: Otavio
-- [ ] (D-233, 09/11) O `CLAUDE.md` do projeto termina com "### Who is you?" (texto da skill frontend-design colado). Fica ou sai? — depende de: Otavio
-- [ ] (D-233, 09/11) A D-224 e o comentário de `playwright.config.ts` dizem que o `limpar_e2e` apaga parceiros e templates; ele apaga também matrizes "E2E …" (D-225). `docs/e2e.md` já segue o código; corrigir o comentário? — depende de: Otavio
+- [ ] (D-234) `entrar()` em `e2e/tests/helpers.ts` não detecta login falho (confere `/admin/login/`, mas o login falho fica em `/conta/entrar/`). Trocar para ir direto a `/conta/entrar/` e conferir que saiu dela? Muda teste: rodar a suíte E2E — depende de: Otavio
+- [x] (D-234: sim) (D-233, 09/11) Comentários de código ainda falam do login do admin depois da D-212: `nucleo/usuarios.py` ("todo perfil entra pelo login do admin") e `e2e/tests/helpers.ts::entrar` ("Entra no admin", passa por `/admin/login/`, que redireciona). Corrigir? — depende de: Otavio
+- [x] (D-234: fica 1, motivo novo no comentário) (D-233, 09/11) Playwright: `workers: 1` ainda é preciso? O motivo escrito (D-191: painel, impresso e revista gravam a mesma revista DEMONSTRAÇÃO) caiu com a D-225, em que cada spec grava na própria revista — depende de: Otavio (medir a suíte com 2 workers?)
+- [x] (D-234: sim) (D-233, 09/11) `app/.env.example` não lista `APP_BIND`, `APP_PORT` nem `COMPOSE_PROJECT_NAME`. Acrescentar? — depende de: Otavio
+- [x] (D-234: sai) (D-233, 09/11) O `CLAUDE.md` do projeto termina com "### Who is you?" (texto da skill frontend-design colado). Fica ou sai? — depende de: Otavio
+- [x] (D-234: sim) (D-233, 09/11) A D-224 e o comentário de `playwright.config.ts` dizem que o `limpar_e2e` apaga parceiros e templates; ele apaga também matrizes "E2E …" (D-225). `docs/e2e.md` já segue o código; corrigir o comentário? — depende de: Otavio
 - [ ] F2 animado (pasta `example/infografico-animado`, analisado em 05/11): viável sem mudar banco nem SVG. Escolher a integração: (A) abertura animada que termina no estado do svg-tour atual, ou (B) substituir o svg-tour pelo player do exemplo (perde minimapa, zoom e modais prontos). Risco: o roteiro acha as peças pela ordem dos filhos no SVG; só existe 1 SVG real (os 80 em `media/f2` são cópias do fixture) — depende de: Otavio + design (o SVG de MT e de outros parceiros mantém a mesma árvore?)
 - [ ] Textos do tour do F2 (SAEGO LP, template "Padrão") trocados em relação ao desenho: o passo 3 do tour se chama "Progressão da habilidade", mas enquadra o bloco "Descrição das habilidades no referencial curricular"; o botão + desse bloco (`btn-action-p3`) abre o modal "Progressão…". O passo 2 ("Itens por ano/série", "percentual de acerto") enquadra a linha de progressão. Visto na demo de 05/11; vale também no sistema hoje — depende de: Pedagógica (corrigir o template ou os ids do SVG?)
 - [x] F2 animado, ideia corrigida em 05/11: a animação não é só abertura; cada passo do svg-tour toca a animação do seu bloco (a câmera é a do tour, e o conector "viaja" do descritor até o bloco durante o movimento). A demo `example/f2-animado-tour/` ainda é a versão "só abertura". Sem mudar o `svg-tour.js`: basta o evento `svgtour:change`. Decidido em 05/11: (a) passo já visto aparece pronto, sem tocar de novo; ~~(b) antes da visita o bloco fica esmaecido, e a visão geral mostra o desenho inteiro~~ (substituída em 05/11: o usuário viu o bloco esmaecido sumir e reaparecer ao entrar no passo, e o passo 3 esmaecido acima do passo 2; agora (b) o bloco não visitado fica escondido e a visão geral mostra só fundo e título).
@@ -1930,7 +1939,7 @@ Usuário dá o ok para commitar a atualização dos docs e mergear em `integ/doc
 - [x] (05/11: usuário mandou corrigir; Agente D) (regras de negócio, seção 10.1) `docs/modelo-er.md` está desatualizado em dois pontos: o bloqueio é tomado pelo mesmo usuário, não pela mesma sessão (D-191); a foto guarda a revista resolvida inteira e roda em READ COMMITTED (D-151/D-153/D-178). Corrigir? — depende de: usuário
 - [ ] (regras de negócio) O admin ainda pede o checkbox "afeta N revistas" sempre que há revista afetada; as telas B só avisam quando alguma perde o Validado (D-202). Igualar? — depende de: usuário
 - [ ] (regras de negócio 10.1, divergência 4, D-055) O limite do corte é o `Etapa.escala_max` de cada etapa (código: `models/cadastro.py:60`, `servicos/cascata.py:38`) ou os valores fixos 1000/500 da D-055? Se for o `escala_max`, reescrever a D-055 — depende de: usuário
-- [ ] (regras de negócio 10.1, divergência 10) Corrigir o comentário de `models/controle.py:18` ("CASCADE"; no banco a FK é NO ACTION), sem mudar comportamento? Os 2 de `permissoes.py` já foram trocados na D-218/D-220 (conferido em 09/11) — depende de: usuário
+- [x] (D-234: sim) (regras de negócio 10.1, divergência 10) Corrigir o comentário de `models/controle.py:18` ("CASCADE"; no banco a FK é NO ACTION), sem mudar comportamento? Os 2 de `permissoes.py` já foram trocados na D-218/D-220 (conferido em 09/11) — depende de: usuário
 - [ ] `.env.example` da raiz ainda é do sistema antigo (`SESSION_SECRET`, `ADMIN_EMAIL`); o certo é `app/.env.example`. Apagar ou substituir? — depende de: usuário
 - [x] (D-211, fechado) (S9) O perfil Admin pode redefinir a senha de um usuário Impresso e entrar como ele, ganhando `marcar_impressa` (anula `ADMIN_MARCA_IMPRESSA = False`). Furo já existia no admin. Fechar com `pode_editar` em `nucleo/usuarios.py` exigindo alvo sem grupo fora dos permitidos? — depende de: usuário
 - [x] (D-213; apagados em 05/11 a pedido do usuário) `api/.env`, `contrato/`, `escala.html`, `script.js`, `styles.css`, `descritores.json`, `saida/` e o `.env.example` da raiz
@@ -1999,6 +2008,7 @@ Usuário dá o ok para commitar a atualização dos docs e mergear em `integ/doc
 
 ## Sessões
 ### 2026-11-09 10:00
+- D-234: respostas às 5 perguntas aplicadas (comentários, `.env.example`, `CLAUDE.md`); achado: `entrar()` do E2E não detecta login falho.
 - D-233: atualização dos docs em `../revista-express-docs` (branch `docs/atualizacao-2026-11-09`, intermediária `integ/docs-atualizacao`); 3 subagentes em paralelo; `DESIGN.md` marcado como do editor antigo.
 
 ### 2026-11-06 14:30
