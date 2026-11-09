@@ -2,11 +2,11 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Docs alinhados ao código (D-233 e D-234), commitados em `integ/docs-atualizacao` e no PR #6 para a `main` (https://github.com/midiadigital123/revista-eletronica/pull/6). Funcionando: comentários de código, `app/.env.example`, `CLAUDE.md` e fichas das telas B corrigidos; só comentário e texto, sem mudança de comportamento. `trail check` aponta 19 conflitos, todos falsos positivos (justificados no PR). Pendente: merge do PR #6 (espera o ok); `entrar()` do E2E não detecta login falho. F2 fases 1 a 5, S17 e S18 continuam pendentes.
+Docs alinhados ao código (D-233 e D-234) na `main` pelo PR #6 (merge `0622996`, 09/11). Ficaram fora do merge 3 commits posteriores de `integ/docs-atualizacao`: anotações de colisão (D-xxx e migração 0020) e a learning de numeração. `feat/f2-f1` já está no remoto (`origin/feat/f2-f1` = `eec2a2c`). Pendente: levar os 3 commits à `main`; `entrar()` do E2E não detecta login falho. F2 fases 2 a 5, etapa do projeto (tarefa 5 de 12), S17 e S18 continuam pendentes.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Usuário revisa e mergeia o PR #6 na `main`.
+Usuário diz se abro o PR dos 3 commits restantes de `integ/docs-atualizacao` para a `main`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2439,3 +2439,4 @@ Usuário revisa e mergeia o PR #6 na `main`.
 - Diagnóstico do travamento da máquina às 11:05: sem OOM nem carga; suspeita sem prova no driver NVIDIA; SysRq sugerido para o próximo travamento.
 - PR #6 aberto: `integ/docs-atualizacao` → `main`; conflitos do `trail check` justificados como falsos positivos.
 - Inventário de branches: além da `main`, só 3 frentes vivas (`integ/docs-atualizacao`, `feat/f2-f1` só local, `feat/etapa-do-projeto` com WIP); colisão de numeração D-xxx registrada nas Perguntas em aberto.
+- PR #6 mergeado na `main` (`0622996`) sem os 3 últimos commits da branch; `feat/f2-f1` confirmada no remoto.
