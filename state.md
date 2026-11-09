@@ -1916,6 +1916,7 @@ Usuário revisa e mergeia o PR #6 na `main`.
 - **Status:** ativa. Achado à parte: `entrar()` confere o sucesso com `not.toHaveURL(/\/admin\/login\//)`, mas depois da D-212 o login falho fica em `/conta/entrar/`, então a conferência sempre passa.
 
 ## Perguntas em aberto
+- [ ] Numeração de decisões colide entre branches: D-233 é "Docs alinhados" nesta branch (PR #6) e "Uma página por fascículo" em `feat/f2-f1`; D-229 a D-231 de `feat/etapa-do-projeto` são outras decisões na `main`. Renumerar na branch que entrar depois na `main` — depende de: ordem dos merges (usuário).
 - [ ] (D-234) `entrar()` em `e2e/tests/helpers.ts` não detecta login falho (confere `/admin/login/`, mas o login falho fica em `/conta/entrar/`). Trocar para ir direto a `/conta/entrar/` e conferir que saiu dela? Muda teste: rodar a suíte E2E — depende de: Otavio
 - [x] (D-234: sim) (D-233, 09/11) Comentários de código ainda falam do login do admin depois da D-212: `nucleo/usuarios.py` ("todo perfil entra pelo login do admin") e `e2e/tests/helpers.ts::entrar` ("Entra no admin", passa por `/admin/login/`, que redireciona). Corrigir? — depende de: Otavio
 - [x] (D-234: fica 1, motivo novo no comentário) (D-233, 09/11) Playwright: `workers: 1` ainda é preciso? O motivo escrito (D-191: painel, impresso e revista gravam a mesma revista DEMONSTRAÇÃO) caiu com a D-225, em que cada spec grava na própria revista — depende de: Otavio (medir a suíte com 2 workers?)
@@ -2436,3 +2437,4 @@ Usuário revisa e mergeia o PR #6 na `main`.
 - Fora do repositório: agente `minimalista`, agente `conselheiro` e skill `/conselho` criados em `~/.claude` (mantidos como estão, sem comandante via Workflow).
 - Diagnóstico do travamento da máquina às 11:05: sem OOM nem carga; suspeita sem prova no driver NVIDIA; SysRq sugerido para o próximo travamento.
 - PR #6 aberto: `integ/docs-atualizacao` → `main`; conflitos do `trail check` justificados como falsos positivos.
+- Inventário de branches: além da `main`, só 3 frentes vivas (`integ/docs-atualizacao`, `feat/f2-f1` só local, `feat/etapa-do-projeto` com WIP); colisão de numeração D-xxx registrada nas Perguntas em aberto.
