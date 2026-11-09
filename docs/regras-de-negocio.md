@@ -1,6 +1,6 @@
 # Regras de negócio vigentes — revista-express
 
-Data: 2026-11-05. Branch de referência: `feat/telas-b-ux` (`2dc2825`).
+Data: 2026-11-09. Branch de referência: `main` (`1601c93`).
 
 Este documento lista **só a regra que vale hoje** no sistema Django (`app/nucleo`) que gera as revistas de resultados (fascículos F1 e F2) por parceiro e ano. Não conta a história do projeto. Detalhes de tabelas, variáveis e telas ficam nos documentos linkados.
 
@@ -341,7 +341,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | Mudança de formatação (negrito, itálico, listas) aparece no diff. | D-178 |
 | O impresso não baixa de novo para saber o que mudou; as planilhas (por revista) podem ser baixadas a qualquer momento. | D-072, D-078, D-177 |
 | Planilhas do impresso: células sempre texto (sem fórmula) e caracteres de controle removidos. | D-168, D-178 |
-| Quem marca: só o perfil Impresso. Admin **não** marca. | D-177, `app/nucleo/permissoes.py:19` |
+| Quem marca: o perfil Impresso e o Admin. | D-220, `app/nucleo/permissoes.py:20` |
 
 ### 6.5 Entrega (zip)
 
@@ -351,6 +351,18 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | Revista com pendência não gera zip (lista as pendências). | D-159, `app/nucleo/servicos/empacotar.py:31` |
 | Leva só os itens que o HTML usa; zip reprodutível (mesmo conteúdo, mesmos bytes). | D-160 |
 | "Baixar zip" fica na lista de revistas (não no Painel). | D-179 |
+
+### 6.6 F2 montado pelo sistema **[não implementado]**
+
+Direção aprovada em 06/11. Hoje vale a seção 6.2 (SVG enviado pelo design). Do plano, só existe a fase 0: o protótipo estático `example/f2-gerado/`. Detalhes: [`docs/superpowers/specs/2026-11-06-f2-na-interface-mapeamento.md`](superpowers/specs/2026-11-06-f2-na-interface-mapeamento.md) e [`docs/superpowers/specs/2026-11-06-f2-campos-do-docx.md`](superpowers/specs/2026-11-06-f2-campos-do-docx.md).
+
+| Decidido | Fonte |
+|---|---|
+| O F2 é todo preenchido na interface, sobre passos canônicos (`abertura` e `descritor` fixos; `habilidades`, `progressao` e `tarefas` desligáveis). | D-227 |
+| O servidor gera o SVG (texto real, no hash e no "o que mudou"); o `svg-tour.js` fica intocado. Some o upload do SVG nomeado à mão. | D-227, D-228 |
+| Até 2 infográficos por revista, derivados dos cortes pela cascata: "Alfa" se há corte no 2EF; "Outras Etapas" se há corte em outra etapa. | D-230 |
+| Passos desligados por infográfico (revista × tipo), gravados com o modal de impacto. | D-229, D-230 |
+| Abertura (4 parágrafos) também na web; um modal por item de tarefa (`dlg-tarefa-1..4`); item e suporte numa imagem só (`Tarefa.arquivo`); fechamento só texto. | D-232 |
 
 ---
 
@@ -367,8 +379,10 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | Relógio é sempre o `now()` do banco. | D-140, `app/nucleo/servicos/bloqueio.py:1-12` |
 | A mesma pessoa em outra aba ou recarga assume o bloqueio; a aba antiga perde a escrita e mostra "Você perdeu o bloqueio". Outra pessoa continua barrada. | D-191, `app/nucleo/servicos/bloqueio.py:44-60` |
 | Renovar nunca readquire: bloqueio perdido = formulário possivelmente velho; o texto digitado continua copiável. | D-140, D-143 |
+| Página restaurada do bfcache (Voltar/Avançar) recarrega: o GET novo adquire outro bloqueio, em vez de mostrar "Você perdeu o bloqueio". Vale para telas B e admin. | D-222, `app/nucleo/static/nucleo/bloqueio.js:91` |
 | Toda escrita confere o bloqueio dentro da transação (`FOR SHARE`); excluir também é negado com bloqueio de outra pessoa. | D-143, `app/nucleo/servicos/bloqueio.py:83`, `app/nucleo/admin/bloqueio.py:65-70` |
 | Lotes (matriz, template, planilha de variáveis, impresso) adquirem o bloqueio de cada projeto só durante a escrita; projeto aberto por outra pessoa é pulado e listado. | D-121, D-164, `app/nucleo/lotes.py:39` |
+| "Em edição por … será pulado" (Lista, Lotes, Validar) ignora o bloqueio do próprio usuário: o lote o toma. | D-221, `app/nucleo/lotes.py:93` |
 | Reimportar matriz é recusado se uma MEC substituída está em edição. | D-146 |
 
 ### 7.2 Autosave e conflito otimista
@@ -376,6 +390,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | Regra | Fonte |
 |---|---|
 | Campo salva ao sair dele (telas B); o editor de templates mantém "Salvar". | D-196 |
+| Clique que sai da página com campo não salvo abre o diálogo do sistema: Salvar e sair, Descartar e sair, Continuar editando. Voltar, fechar e recarregar mantêm o aviso nativo do navegador. | D-223, `app/nucleo/static/ui/componentes/autosave.js:518` |
 | Protocolo único: 200 gravou; 200 com `impacto` = não gravou, abrir modal; 422 erro de validação; 409 conflito; 403 sem permissão. | `app/nucleo/ui_autosave.py:1-14` |
 | 409 por conflito: o cliente manda o valor `original`; se o banco tem outro valor, nada grava e a resposta traz o `atual`. O próximo envio grava por cima, de propósito. | D-168, D-204, `app/nucleo/urls/ui_projeto.py:383-399` |
 | Grade de Cortes e planilha de Variáveis não têm bloqueio de página: usam esse conflito otimista por célula. | D-165, D-204, learning "Telas B usam Alpine…" |
@@ -411,9 +426,10 @@ Fonte única: `app/nucleo/permissoes.py`. Grupos fixos criados por migração; m
 | Editar projeto (nome, variáveis), revista (SVG, capa, template, textos) | ✓ | ✓ | ✓ | — | `permissoes.py:65-75` |
 | **Excluir** sobrescrita de passo e de cor do projeto ("voltar ao do ano/matriz") | ✓ | ✓ | ✓ | — | D-166, `permissoes.py:68-69` |
 | Validar revista | ✓ | ✓ | ✓ | — | D-074, `permissoes.py:76` |
-| Marcar "Revista Impressa Atualizada" | — | — | — | ✓ | D-177, `permissoes.py:19` |
-| Criar/editar usuário (sem excluir) | ✓ | — | — | — | D-142, `permissoes.py:83` |
-| Pôr alguém nos grupos Impresso ou Admin | só superusuário | — | — | — | D-168 |
+| Marcar "Revista Impressa Atualizada" | ✓ | — | — | ✓ | D-177, D-220, `permissoes.py:20` |
+| Criar/editar/desativar usuário; excluir só quem não tem rastro | ✓ | — | — | — | D-142, D-218, `permissoes.py:83` |
+| Pôr alguém no grupo Impresso | ✓ | — | — | — | D-220 |
+| Pôr alguém no grupo Admin | só superusuário | — | — | — | D-168, D-220 |
 
 ### 8.2 Regras de usuários
 
@@ -422,8 +438,8 @@ Fonte única: `app/nucleo/permissoes.py`. Grupos fixos criados por migração; m
 | Usuário sai desativado (`is_active`). Excluir só pela tela Usuários e só quem não tem rastro: nenhuma edição no histórico (`history_user`), versão de template, validação, foto de revista nem ação no admin. Com rastro, a página lista o que impede e manda desativar. Mesma regra de quem pode desativar; o admin do Django não exclui (sem `auth.delete_user`). | D-142, D-205, D-218, `app/nucleo/usuarios.py::rastros` |
 | O formulário de usuário não tem `is_superuser`, `is_staff` nem permissões avulsas; usuário novo nasce `is_staff`. | D-142, `app/nucleo/admin/usuarios.py:34-75` |
 | Superusuário só por comando, com acesso ao servidor: `createsuperuser` (novo) ou `tornar_superusuario <usuario>...` (quem já existe; nome inexistente não muda nada). Ele tem tudo; o que o Admin não tem é pôr alguém no grupo Admin e alterar outro Admin. | D-142, D-219, D-220, `app/nucleo/management/commands/tornar_superusuario.py` |
-| O Admin (não superusuário) atribui Pedagógica, Mídias Digitais e Impresso; não vê superusuários; não muda os próprios grupos nem se desativa; não altera (dados, senha, grupo, ativo) outro Admin, só vê. O Impresso ele gerencia por inteiro e ele mesmo marca impressa (D-220, substitui a parte da D-211 que deixava o Impresso só com o superusuário). | D-168, D-220, `app/nucleo/usuarios.py` (módulo comum do admin e da tela B) |
-| Gerenciar usuários também pela tela B (`/ui/usuarios/`): listar, criar (nasce `is_staff`), trocar o grupo (um por usuário na B), ativar/desativar, redefinir a senha. Exige `auth.change_user` (criar: também `add_user`). O superusuário não tem restrição. | D-190, D-210, `app/nucleo/urls/ui_usuarios.py` |
+| O Admin (não superusuário) atribui Pedagógica, Mídias Digitais e Impresso; não vê superusuários; não muda os próprios grupos nem se desativa; não altera (dados, senha, grupo, ativo) outro Admin, só vê (D-211). O Impresso ele gerencia por inteiro e ele mesmo marca impressa (D-220, substitui a parte da D-211 que deixava o Impresso só com o superusuário). | D-168, D-211, D-220, `app/nucleo/usuarios.py` (módulo comum do admin e da tela B) |
+| Gerenciar usuários também pela tela B (`/ui/usuarios/`): listar, criar (nasce `is_staff`), trocar o grupo (um por usuário na B), ativar/desativar, redefinir a senha. Exige `auth.change_user` (criar: também `add_user`). O superusuário não tem restrição. Ações da linha em botões-ícone; "Mudar" só aparece quando o grupo escolhido muda. | D-190, D-210, D-217, `app/nucleo/urls/ui_usuarios.py` |
 | "Link de acesso" (tela Usuários, só POST): link para a pessoa definir a própria senha, o mesmo do `criar_usuarios`, com mensagem pronta para enviar. Mesma regra de "Redefinir senha" (`pode_editar`) e só para ativo. Vale `PASSWORD_RESET_TIMEOUT` (3 dias) e cai quando a senha muda ou a pessoa entra. O endereço vem do `Origin` do POST (https atrás do proxy). A página aberta pelo link é tela B, não o admin (D-212). | D-216, `app/nucleo/usuarios.py::caminho_definir_senha`, `app/nucleo/urls/conta.py` |
 
 ### 8.3 Regras de tela
@@ -433,6 +449,7 @@ Fonte única: `app/nucleo/permissoes.py`. Grupos fixos criados por migração; m
 | Toda função que o perfil pode usar precisa de controle na tela B; link para o admin não conta. O que o perfil não pode usar não aparece. | D-189, D-190, learning "Toda função do back precisa de botão na tela nova" |
 | Cada controle confere a permissão no template e a view repete a conferência (403). | learning "Toda função do back precisa de botão na tela nova" |
 | `hash_validado`, `validado_*` e `arquivada_em` só são escritos pelos serviços, nunca por formulário. | D-142 |
+| Login e logout próprios das telas B (`/conta/entrar/`, `/conta/sair/`); `/admin/login/` redireciona para eles. Ninguém vê o login do admin. | D-212, `app/nucleo/urls/conta.py`, `app/sistema/urls.py:9` |
 
 ---
 
@@ -452,7 +469,7 @@ Regra geral (D-205): uma entidade pode ser excluída quando nada depende dela. Q
 | Descritor, Tarefa | Regra própria, com impacto no Validado | — | Pedagógica, Mídias, Admin | Tela da MEC | D-181 |
 | Sobrescrita, cópia de seção, arquivo do item | Nunca | Voltar ao valor herdado / descartar cópia / remover arquivo | Editores | Ficha do projeto, revista, MEC | D-166, D-170, D-150 |
 | Projeto, Revista | Sempre (a revista existe enquanto houver corte) | Arquivam pela cascata ao limpar os cortes | — | — | D-065, D-117 |
-| Usuário | Sempre que tem autoria | Desativar | Admin | Admin do Django | D-142, D-205 |
+| Usuário | Tem rastro: histórico, versão de template, validação, foto ou ação no admin | Desativar | Admin (Pedagógica, Mídias e Impresso), superusuário | Tela Usuários (ícone "Excluir") | D-142, D-218 |
 | Foto | — | Nunca se apaga: é o histórico (exceto ao apagar o ano inteiro) | — | — | D-206 |
 
 Travas que continuam:
@@ -466,7 +483,7 @@ Travas que continuam:
 
 ### 10.1 Decisão ou documento × código
 
-Situação em 05/11. **Resolvida** = o documento já diz o que o código faz. **Aberta** = precisa de mudança de código ou de resposta do usuário; nenhuma mudança de código foi feita aqui.
+Situação em 09/11. **Resolvida** = o documento já diz o que o código faz. **Aberta** = precisa de mudança de código ou de resposta do usuário; nenhuma mudança de código foi feita aqui.
 
 | # | Decisão / documento | Código (vale este) | Situação |
 |---|---|---|---|
@@ -477,10 +494,10 @@ Situação em 05/11. **Resolvida** = o documento já diz o que o código faz. **
 | 5 | D-076, D-099, D-180: avisar "afeta N revistas" antes de salvar. | As telas B só abrem o modal quando alguma revista **perde o Validado** (D-202, `app/nucleo/servicos/impacto.py:23`). O admin continua pedindo o checkbox "Confirmo: afeta N revista(s)" sempre que há revista afetada (`app/nucleo/matriz.py:146-147`; o `ImpactoForm(modal=True)` das telas B desliga isso, `app/nucleo/matriz.py:130`). | **Aberta.** A D-202 manteve o admin como está de propósito, mas o `state.md` ainda lista a pergunta. **Pergunta ao usuário:** igualar o admin ao modal das telas B (avisar só quando perde o Validado) ou manter os dois comportamentos? |
 | 6 | D-047: parceiro tem no máximo **um** projeto. | A restrição é um projeto **ativo** por parceiro_ano; os arquivados se acumulam (D-068, `app/nucleo/models/projeto.py:102-105`). | **Resolvida nos documentos** (seção 3.2 aqui e o ER já dizem "ativo"). Falta só uma nota "ativo, ver D-068" na D-047 do `state.md`, que não foi tocado. |
 | 7 | D-107: "Copiar valores do ano anterior". | Copia só para variáveis **vazias**; não sobrescreve o que já foi digitado (`app/nucleo/planilha_variaveis.py:51-62`). | **Resolvida nos documentos** (seção 2.2 aqui). Falta só registrar a regra mais estreita na D-107 do `state.md`. |
-| 8 | `app/nucleo/permissoes.py:17`: "Pergunta em aberto: admin pode clicar Revista Impressa Atualizada?" | Fechada pela D-177 (não pode); `ADMIN_MARCA_IMPRESSA = False` (`app/nucleo/permissoes.py:19`). | **Aberta (só comentário no código).** **Pergunta ao usuário:** posso trocar o comentário por "Fechada: não (D-177)", numa mudança sem efeito no comportamento? |
-| 9 | `app/nucleo/permissoes.py:14`: usuário não se apaga porque "histórico usa SET_NULL". | `Revista.validado_por`, `FotoRevista.criada_por` e `TemplateVersao.criada_por` são PROTECT (`app/nucleo/models/revista.py:37`, `:116`; `app/nucleo/models/texto.py:57`). | **Aberta (só comentário no código).** A regra (desativar) continua valendo; o motivo no comentário está incompleto. Mesma pergunta da linha 8. |
-| 10 | `app/nucleo/models/controle.py:18`: "apagar o alvo apaga a trava (CASCADE)". | O CASCADE existe só no ORM; no banco a FK é NO ACTION, então um DELETE direto no banco é recusado se há trava (D-133). | **Aberta no comentário; resolvida no ER**, que agora diz isso na seção ON DELETE. Mesma pergunta da linha 8. |
-| 11 | Regra "toda função do back na tela B" (D-189, D-190). | Ainda só no admin: usuários, criar template, criar matriz (a primeira só por comando), planilha de grupos de corte, gabarito de ids, baixar item (`docs/telas/telas-b.md`, seção 2). | **Resolvida** por S6–S9 (D-210): sobram no admin só login, índice e histórico por registro. |
+| 8 | `app/nucleo/permissoes.py:17`: "Pergunta em aberto: admin pode clicar Revista Impressa Atualizada?" | A D-220 trocou a resposta: o Admin marca (`ADMIN_MARCA_IMPRESSA = True`, `app/nucleo/permissoes.py:20`); o comentário agora explica a D-220. | **Resolvida** em 05/11 (D-220). |
+| 9 | `app/nucleo/permissoes.py:14`: usuário não se apaga porque "histórico usa SET_NULL". | `Revista.validado_por`, `FotoRevista.criada_por` e `TemplateVersao.criada_por` são PROTECT (`app/nucleo/models/revista.py:37`, `:116`; `app/nucleo/models/texto.py:57`). | **Resolvida** em 05/11: o comentário (`app/nucleo/permissoes.py:13-14`) agora diz "desativa; só sai quem não tem rastro, pela tela Usuários" (D-218). |
+| 10 | `app/nucleo/models/controle.py:18`: "apagar o alvo apaga a trava (CASCADE)". | O CASCADE existe só no ORM; no banco a FK é NO ACTION, então um DELETE direto no banco é recusado se há trava (D-133). | **Aberta no comentário; resolvida no ER**, que agora diz isso na seção ON DELETE. **Pergunta ao usuário:** posso corrigir o comentário, numa mudança sem efeito no comportamento? |
+| 11 | Regra "toda função do back na tela B" (D-189, D-190). | Ainda só no admin: usuários, criar template, criar matriz (a primeira só por comando), planilha de grupos de corte, gabarito de ids, baixar item (`docs/telas/telas-b.md`, seção 2). | **Resolvida** por S6–S9 (D-210) e pelo login próprio (D-212): sobram no admin só o índice e o histórico por registro. |
 | 12 | Este documento (seção 5.3) dizia "25 manuais". | `VARIAVEIS` tem 27 itens: 3 automáticas e **24** manuais (`app/nucleo/variaveis.py:21-50`, `docs/variaveis.md`). | **Resolvida** em 05/11: seção 5.3 corrigida. |
 
 ### 10.2 Perguntas em aberto do `state.md` que afetam regra de negócio
@@ -496,13 +513,16 @@ Só as não marcadas `[x]`.
 | Intervalo mínimo e cor sobrescritos não têm `versao_base`: mudança no valor da matriz/ano não avisa o projeto que sobrescreveu. Precisa? | usuário | — |
 | `skills[]` → "relacionadas" × "correspondente" na planilha: a heurística pelo "(" serve ao impresso? | equipe de impressão | Mesma heurística no importador (D-141). |
 | Alternativa de exibição da escala (régua proporcional ou lista por padrão). | Pedagógica | Recomendação vigente: manter a régua. |
-| O template "Padrão (F1)" do dev está na versão 8, com texto de teste E2E. Gravar versão nova com o texto da v1 muda o hash das revistas que o usam. | usuário | Dado do ambiente de dev, não regra; afeta o Validado dessas revistas. |
+| Versões 2 a 8 do template "Padrão (F1)" LP 2026 (texto de teste E2E) continuam no banco de dev; a v9 já tem o texto limpo, mas a v8 é a base de cópias de seção. | usuário | Dado do ambiente de dev, não regra. Versão só sai com o template (D-207). |
+| Editor de templates ainda usa o aviso nativo ao sair com alteração; levar o diálogo da D-223 para ele? | usuário | — |
+| F1 e F2 deixam de ficar na mesma página (aviso de 05/11, ainda sem decisão D-xxx). | usuário | Afeta a página única (D-156) e o zip (seção 6.5, D-159). |
+| F2 montado pelo sistema (seção 6.6): fases 1 a 5 ainda não disparadas. | usuário | D-227 a D-232. |
 
 Perguntas ainda abertas no `state.md` que **já têm resposta** em decisão posterior (fechar no `state.md`):
 
 | Pergunta aberta | Respondida por |
 |---|---|
-| "Admin pode clicar Revista Impressa Atualizada?" | D-177 (não) |
+| "Admin pode clicar Revista Impressa Atualizada?" | D-177 (não), depois D-220 (sim) |
 | "Lista real de perfis e matriz papel × ação" | D-073, D-136, D-142, D-166, D-181 (seção 8) |
 | "Onde guardar o status 'aplicado no impresso'…" | D-077 (foto `impresso`) |
 | "Migrar `api/` para Django mantendo o React?" | D-121, D-183 (Django, telas B próprias) |
