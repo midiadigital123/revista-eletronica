@@ -107,6 +107,8 @@ components:
     padding: "6px 12px"
 ---
 
+> **Contexto do editor React antigo.** Este arquivo descreve o editor (`editor/src`) que o Django substituiu e que foi apagado na D-213 (tag `legado-express`). O design das telas de hoje está em `docs/telas/design-system.md`; o da revista impressa, em `docs/design-revista-impressa.md`.
+
 # Design System: Editor da Revista Eletrônica
 
 Escopo: o editor em `editor/src`. A revista pública (`revista/`, `escala.html`, `styles.css`) é outra identidade e não segue este sistema; a única coisa que os dois compartilham são as cores dos Padrões 01–04, que vêm de cada projeto (padrão: `#f72628`, `#ff8d43`, `#b3ccff`, `#0ed3ff`).

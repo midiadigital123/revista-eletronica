@@ -8,7 +8,7 @@ O superusuário pode tudo. Quem não é superusuário (o perfil Admin, `gerencia
 - não muda os próprios grupos nem se desativa;
 - não altera (dados, senha, grupo, ativo) quem tem grupo fora dos permitidos, ou seja, outro
   Admin: só vê.
-Usuário novo nasce `is_staff` (todo perfil usa o admin). Sai desativado (`is_active`); excluir só
+Usuário novo nasce `is_staff` (o admin do Django exige; o login é o das telas B, D-212). Sai desativado (`is_active`); excluir só
 quem não tem rastro (D-218).
 """
 
@@ -55,7 +55,7 @@ def pode_mudar_grupos(ator, alvo):
 
 
 def preparar_novo(usuario):
-    """Antes do primeiro save: todo perfil entra pelo login do admin."""
+    """Antes do primeiro save: `is_staff`, que o admin do Django exige."""
     usuario.is_staff = True
     return usuario
 

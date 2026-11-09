@@ -1,6 +1,6 @@
 # Telas B: o que já está fora do admin
 
-Telas do dia a dia como páginas próprias no Django, com o visual do editor React (D-183) e HTMX local (D-186). Branch `feat/ui-b`. Convenções e componentes: [`design-system.md`](design-system.md). Requisitos de origem: [`inventario.md`](inventario.md) (ids T01–T28).
+Telas do dia a dia como páginas próprias no Django, com o visual do editor React (D-183) e HTMX local (D-186). Tudo na `main` desde 05/11; as branches citadas na coluna "Revisão" são históricas. Convenções e componentes: [`design-system.md`](design-system.md). Requisitos de origem: [`inventario.md`](inventario.md) (ids T01–T28).
 
 Todas: login obrigatório (anônimo vai ao login das telas B (`/conta/entrar/`)), mesmas permissões do admin equivalente, só leitura sem permissão de escrita (POST → 403), bloqueio de edição onde o admin usa `BloqueioAdminMixin` (`nucleo/ui_bloqueio.py`) e mensagens no padrão causa + correção. O admin continua funcionando para tudo.
 
@@ -23,6 +23,8 @@ Revisão = resultado da supervisão por tela. "Correções integradas" = a branc
 | Anos e Abrir ano | T03 | `/ui/anos/` ("Abrir novo ano" no seletor de ano) | `ui_anos` | [`fichas/anos.md`](fichas/anos.md) | sem revisão de tela (S3 de D-190) |
 | Configurar o ano: etapas, componentes, Padrões do ano | T05, T06, T07 | `/ui/anos/<ano>/` ("Configurar <ano>" no seletor; padrões em `#padroes`) | `ui_ano` | [`fichas/anos.md`](fichas/anos.md) | sem revisão de tela (S4 e S5 de D-190) |
 | Excluir e desativar (D-205 a D-208) | — | `/ui/excluir/<modelo>/<pk>/`, `/ui/excluir/parceiro/<pk>/ativo/` | `ui_excluir`, `ui_parceiro_ativo` | [`fichas/anos.md`](fichas/anos.md), [`fichas/cortes.md`](fichas/cortes.md), [`fichas/matriz.md`](fichas/matriz.md), [`fichas/templates.md`](fichas/templates.md) | sem revisão de tela (E0–E5) |
+| Usuários (lista, novo, grupo, link de acesso, senha, ativar, excluir) | — | `/ui/usuarios/` (link "Usuários" no cabeçalho, com `auth.change_user`) | `ui_usuarios`, `ui_usuarios_novo`, `ui_usuarios_grupo`, `ui_usuarios_link`, `ui_usuarios_senha`, `ui_usuarios_ativo`, `ui_usuarios_excluir` | [`fichas/usuarios.md`](fichas/usuarios.md) | sem revisão de tela (S9, D-216 a D-218, D-220) |
+| Entrar, sair e criar senha pelo link | — | `/conta/entrar/`, `/conta/sair/`, `/conta/senha/<uid>/<token>/`, `/conta/senha/pronto/` | `entrar`, `sair`, `password_reset_confirm`, `password_reset_complete` | [`fichas/usuarios.md`](fichas/usuarios.md) | sem revisão de tela (D-212, D-216) |
 
 Endereços antigos que redirecionam (302) para a aba equivalente de Projetos: `/cortes/<ano>/`, `/ui/variaveis/<ano>/`, `/ui/revista/<ano>/` (a lista de revistas virou a aba Lista) e `/ui/lotes/<ano>/matriz/` e `.../template/` (os lotes viraram "Atribuir matriz…" e "Atribuir template…" na barra da Lista). O POST antigo de Variáveis e Lotes continua gravando.
 
@@ -30,12 +32,14 @@ O painel no estilo do admin saiu: `/painel/<ano>/` é a tela B (filtros parceiro
 
 ## 2. O que ainda é só admin
 
-Anos, Abrir ano, etapas, componentes, Padrões do ano e parceiros (criar e renomear) saíram desta lista: ver a tabela 1. Também saíram, com S6–S9 (D-210): criar matriz (`/ui/matriz/<ano>/nova/`, `ui_matriz_nova`), criar template (`/ui/templates/<ano>/novo/`, `ui_templates_novo`), planilha de grupos de corte (`cortes_exportar`), gabarito de ids do SVG (`ui_revista_gabarito`), baixar o arquivo do item (`ui_matriz_item_baixar`), planilhas F1/F2 na ficha da revista (`impresso_planilhas`) e usuários (`/ui/usuarios/`, `ui_usuarios`, link "Usuários" no cabeçalho com `auth.change_user`). Os links que saem das telas B para o admin são os da coluna "Onde fica" (`grep "admin:" app/nucleo/templates/ui`).
+Anos, Abrir ano, etapas, componentes, Padrões do ano e parceiros (criar e renomear) saíram desta lista: ver a tabela 1. Também saíram, com S6–S9 (D-210): criar matriz (`/ui/matriz/<ano>/nova/`, `ui_matriz_nova`), criar template (`/ui/templates/<ano>/novo/`, `ui_templates_novo`), planilha de grupos de corte (`cortes_exportar`), gabarito de ids do SVG (`ui_revista_gabarito`), baixar o arquivo do item (`ui_matriz_item_baixar`), planilhas F1/F2 na ficha da revista (`impresso_planilhas`) e usuários (`/ui/usuarios/`, ver a tabela 1). Depois, a página de criar senha também saiu do admin (D-216) e a exclusão de usuário passou a existir só na tela B (D-218). Os links que saem das telas B para o admin são os da coluna "Onde fica" (`grep "admin:" app/nucleo/templates/ui`).
 
 | O quê | Inventário | Onde fica |
 |---|---|---|
 | Índice | T02 | `/admin/` (a navegação B tem "Admin", só para superusuário). O login e o "Sair" são das telas B (`/conta/entrar/`, `/conta/sair/`, D-212); `/admin/login/` redireciona para o login B com o `next` |
 | Histórico por registro | T28 | não existe (falta também no admin) |
+| Grupos e permissões | — | `/admin/auth/group/` (o perfil Admin só vê). A fonte é `nucleo/permissoes.py`, sincronizada por migração de dados: não se edita à mão |
+| Promover a superusuário | — | nenhuma tela: só o comando `tornar_superusuario` (D-219) |
 
 Preview (T22) não é admin nem tela B: é a página da revista em `/preview/<id>/`.
 

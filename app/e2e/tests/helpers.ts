@@ -1,7 +1,7 @@
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 
-/** Entra no admin e cai em `proxima`. Sem E2E_ADMIN_USUARIO e E2E_ADMIN_SENHA, pula o teste. */
+/** Entra pelo login das telas B e cai em `proxima` (`/admin/login/` redireciona para `/conta/entrar/`, D-212). Sem E2E_ADMIN_USUARIO e E2E_ADMIN_SENHA, pula o teste. */
 export async function entrar(page: Page, proxima = "/admin/") {
   const usuario = process.env.E2E_ADMIN_USUARIO;
   const senha = process.env.E2E_ADMIN_SENHA;

@@ -10,8 +10,8 @@ Mostrar à equipe do impresso, revista por revista, o que mudou no texto desde a
 
 | Perfil | O que faz aqui |
 |---|---|
-| Impresso | Vê, copia, baixa planilhas e marca "Revista Impressa Atualizada". É o único que marca. |
-| Pedagógica, Mídias Digitais, Admin | Veem o que mudou e baixam planilhas; não marcam (só leitura). |
+| Impresso, Admin | Veem, copiam, baixam planilhas e marcam "Revista Impressa Atualizada" (o Admin marca desde a D-220). |
+| Pedagógica, Mídias Digitais | Veem o que mudou e baixam planilhas; não marcam (só leitura). |
 | Sem permissão de ver revistas | Recebe "acesso negado". |
 | Sem login | Vai para o login das telas B (`/conta/entrar/`) e volta depois de entrar. |
 
@@ -43,7 +43,7 @@ Só um: a foto "impresso" da revista (o registro da "Revista Impressa Atualizada
 | Copiar texto novo | todos | copia o texto do item; sem área de transferência, seleciona o texto para Ctrl+C |
 | Baixar planilhas | todos | baixa o zip com as planilhas do F1 (etapa × componente) e do F2 |
 | Abrir preview | todos | abre a revista como ela sai, em outra aba |
-| Revista Impressa Atualizada | Impresso, com a revista validada nesta versão | grava a foto e volta à mesma revista, agora "Em dia" |
+| Revista Impressa Atualizada | Impresso e Admin, com a revista validada nesta versão | grava a foto e volta à mesma revista, agora "Em dia" |
 | Ver no painel | todos | abre o painel do ano filtrado por "falta Impresso" |
 
 ## Estados
@@ -75,7 +75,7 @@ Só um: a foto "impresso" da revista (o registro da "Revista Impressa Atualizada
 ## Permissões
 
 - Ver: login + permissão de ver revistas (mesma da página antiga do impresso).
-- Marcar: permissão "marcar impressa" (só o perfil Impresso; o Admin não tem). Sem ela, o envio é recusado com "acesso negado".
+- Marcar: permissão "marcar impressa" (perfis Impresso e Admin, D-220; `ADMIN_MARCA_IMPRESSA` em `nucleo/permissoes.py`). Sem ela, o envio é recusado com "acesso negado".
 - O clique leva a versão que a tela mostrou; o servidor só grava se a revista está validada exatamente nela e se ninguém está com o projeto aberto para edição.
 
 ## HTMX
@@ -116,7 +116,7 @@ Só um: a foto "impresso" da revista (o registro da "Revista Impressa Atualizada
 1. Com permissão de ver, `GET /ui/impresso/2026/` responde 200 com a casca B, a lista das revistas ativas e o detalhe da revista pedida (ou da primeira "Para atualizar").
 2. `GET` com `HX-Request` devolve só o detalhe; revista inexistente ou de outro ano dá 404.
 3. Pedagógica vê a tela com o aviso de só leitura e sem botão; o POST de marcar dá 403. Usuário sem ver revistas recebe 403.
-4. Impresso, com a revista validada, vê o botão; o clique grava a foto "impresso" com ele como autor, volta à mesma revista com a mensagem de sucesso e a revista aparece "Impresso em dia".
+4. Impresso (ou Admin, D-220), com a revista validada, vê o botão; o clique grava a foto "impresso" com ele como autor, volta à mesma revista com a mensagem de sucesso e a revista aparece "Impresso em dia".
 5. Versão mudou depois que a página abriu: recusa com a mensagem exata e nada é gravado.
 6. Projeto aberto por outra pessoa: recusa "projeto em edição por …" e nada é gravado.
 7. Anônimo vai ao login das telas B (`/conta/entrar/`) (GET e POST).
@@ -128,5 +128,5 @@ Só um: a foto "impresso" da revista (o registro da "Revista Impressa Atualizada
 
 - Regra: `app/nucleo/urls/impresso.py` (`situacao`, `estado`, `gravar`, `pode_marcar`; extraídos da view antiga, que passou a usá-los), `servicos/validacao.py` (`marcar_impressa`), `nucleo/lotes.py` (`escrever_travado`; o `admin/lote.py` reexporta), `servicos/planilhas.py` (`zip_planilhas`, servido pela rota antiga `impresso_planilhas`).
 - Tela B: `app/nucleo/urls/ui_impresso.py`, `templates/ui/impresso/impresso.html`, `templates/ui/parciais/impresso_detalhe.html`, `templates/ui/_componentes/impresso_situacao.html`, `static/ui/telas/impresso.css`, `tests/test_ui_impresso.py`.
-- Decisões: D-072, D-074, D-077, D-089, D-094, D-118 (impresso só textos e escalas), D-121 (bloqueio no lote), D-178, D-183, D-186.
+- Decisões: D-072, D-074, D-077, D-089, D-094, D-118 (impresso só textos e escalas), D-121 (bloqueio no lote), D-178, D-183, D-186, D-220 (o Admin marca).
 - Bloqueio: esta tela não usa o bloqueio de edição de página (`com_bloqueio`), como a página antiga: ler não trava o projeto; o clique adquire e libera o bloqueio dentro da transação (`escrever_travado`).
