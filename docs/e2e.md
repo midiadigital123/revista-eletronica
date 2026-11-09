@@ -12,7 +12,7 @@ E2E_ADMIN_USUARIO=<superusuário> E2E_ADMIN_SENHA=<senha> npx playwright test
 ```
 
 - `baseURL`: `http://localhost:8000` (mude com `E2E_BASE_URL`) (`app/e2e/playwright.config.ts:8`).
-- Todo spec roda em dois projetos, `chromium` (1280×720) e `desktop-1440` (1440×900), com `workers: 1`: painel, impresso e revista gravam a mesma revista com o mesmo usuário (D-191).
+- Todo spec roda em dois projetos, `chromium` (1280×720) e `desktop-1440` (1440×900), com `workers: 1`: todos entram com o mesmo usuário, que toma o bloqueio da própria outra aba (D-191), e o `anos.spec` abre e apaga 2027, o ano mais recente que outro spec veria no meio (D-234).
 - Sem `E2E_ADMIN_USUARIO` e `E2E_ADMIN_SENHA`, os specs **pulam em silêncio**. A regra é 0 pulados.
 - Os specs gravam no banco apontado. Rode contra o banco de desenvolvimento ou uma [stack isolada](#stack-isolada), nunca contra dados reais.
 - Convenções de espera (`alpinePronto`, "Salvo às…") em [`telas/design-system.md`](telas/design-system.md), seção 8.
