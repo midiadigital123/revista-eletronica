@@ -16,6 +16,8 @@ CAIXA = {
 COLUNAS = {"esquerda": (["descritor", "tarefas"], 103), "direita": (["habilidades", "progressao"], 40)}
 # I, A, C, R: os azuis da legenda do desenho (do mais claro ao mais escuro).
 CORES_MARCA = {"I": "#e6f6fb", "A": "#a9ffff", "C": "#08b4d7", "R": "#006991"}
+# Marca vazia: o cinza do desenho (f2-st41).
+COR_SEM_MARCA = "#dadada"
 
 # Tabela do referencial (bloco habilidades, coordenadas locais): y da 1ª linha e a altura de cada
 # etapa, 1EF a 3EM. ponytail: alturas do desenho de LP; texto mais longo é cortado pelo line-clamp.

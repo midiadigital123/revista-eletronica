@@ -3,18 +3,22 @@ Infográfico do F2: o desenho de tests/fixtures/f2-lp.svg com os textos trocados
 Cada bloco é um <g id="f2-<bloco>" transform="translate(x,y)"> em coordenadas locais; o reflow do
 passo desligado só muda o translate. Geometria em servicos/f2.py.
 
-Contexto (os números em coordenadas do viewBox; os de tabela, celulas e pontos são locais ao bloco):
+Contexto (os números em coordenadas do viewBox; os de tabela, celulas e pontos são locais ao bloco;
+os floats de posição chegam arredondados a 1 casa):
   componente  str. Sai em caixa alta no cabeçalho.
   habilidade  str. Texto do cartão "Descritor:" (até 5 linhas, o resto cortado).
   pos         {bloco: {"x", "y"}}. cabecalho e descritor sempre; habilidades, progressao e tarefas
               só quando o passo está ligado (bloco ausente = passo desligado).
   linhas      [{"pontos": "x y x y …", "fim": {"x", "y"}}]: conector do descritor até um bloco;
               "fim" é a ponta no cartão, onde sai o quadradinho preto.
-  tabela      [{"etapa", "marca", "cor", "y", "altura", "meio"}]: uma linha por etapa do referencial
-              (bloco habilidades); "meio" = altura / 2.
+  tabela      [{"etapa", "marca", "cor", "y", "altura", "meio"}]: sempre as 12 linhas, 1EF a 3EM
+              (bloco habilidades; o fio final em y 427.6 e a legenda em y 450.6 são fixos);
+              "meio" = altura / 2.
   celulas     [{"codigo", "texto", "y", "altura", "clamp"}]: célula de código e texto, que pode
               cobrir várias linhas da tabela (rowspan); "clamp" = linhas de texto que cabem.
   pontos      [{"etapa", "marca", "cor", "x"}]: uma coluna da progressão por etapa.
+              "cor" (em tabela e pontos) é obrigatória: f2.CORES_MARCA[marca], ou f2.COR_SEM_MARCA
+              quando a marca está vazia.
   itens       [{"posicao", "descritor", "rotulo"}]: os 4 itens, do mais fácil ao mais difícil; a cor
               do cabeçalho da miniatura e a linha vêm da ordem.
 
@@ -43,7 +47,7 @@ CSS dentro do <svg> (é o que chega ao minimapa): sem seletor pela classe da rai
 .f2-st41{fill:#dadada}
 .f2-st43{fill:#a9ffff}
 .f2-st46{fill:#ffed00}
-.f2-mais-claro{fill:#fff}
+.f2-laranja{fill:#ff8d43}
 .f2-tx{font-family:"Proxima Nova",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;fill:#000}
 .f2-tx-h1{font-size:25px;font-weight:700}
 .f2-tx-sub{font-size:13.5px}
@@ -100,7 +104,7 @@ CSS dentro do <svg> (é o que chega ao minimapa): sem seletor pela classe da rai
 <text class="f2-tx f2-tx-desc" x="82.4" y="55.6" text-anchor="middle">Descritor:</text>
 <foreignObject x="10.4" y="65" width="144" height="72"><div xmlns="http://www.w3.org/1999/xhtml" class="f2-hab">{{ habilidade }}</div></foreignObject>
 <rect class="f2-st11" x=".4" width="163.7" height="163.7"/>
-<g id="f2-btn-action-descritor" transform="translate(149.6,149.6)"><circle class="f2-st20 f2-mais-claro" r="7.8"/><path d="M-.3,3.4h.6v-3.1h3.1v-.6h-3.1v-3.1h-.6v3.1h-3.1v.6h3.1z"/></g>
+<g id="f2-btn-action-descritor" transform="translate(149.6,149.6)"><circle class="f2-st20 f2-laranja" r="7.8"/><path d="M-.3,3.4h.6v-3.1h3.1v-.6h-3.1v-3.1h-.6v3.1h-3.1v.6h3.1z"/></g>
 </g>
 {% if pos.habilidades %}<g id="f2-habilidades" transform="translate({{ pos.habilidades.x }},{{ pos.habilidades.y }})">
 <rect class="f2-st46" x="-.2" y="2.4" width="6" height="6"/>
