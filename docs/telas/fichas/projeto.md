@@ -23,11 +23,11 @@ Deixar cada projeto do ano pronto para gerar as revistas: o nome que sai na capa
 ## Hub Projetos, aba Lista (T15; substitui a lista de Revistas e os Lotes)
 
 - **Cabeçalho:** "Projetos" e as abas Lista · Cortes · Variáveis (a aba é a URL; o seletor de ano mantém a aba).
-- **Mostra:** um grupo por projeto (ativos primeiro, por parceiro), com o nome do projeto (link), o parceiro em cinza e a matriz (pílula azul, ou "sem matriz" em âmbar). Selos: "Arquivado em dd/mm/aaaa", "Em edição por <nome>: será pulado", "Sem projeto ativo". Abaixo, uma linha por revista: o componente (LP/MT), o balão de pendências ("N pendências" ou ✓), o link para a revista, a Situação ("Em preparo", "Pronta para validar", "Validada", "Impressa" ou "Arquivada") e os botões-ícone "Abrir preview" (nova aba) e "Baixar zip". Parceiro do ano sem projeto aparece com "sem projeto".
+- **Mostra:** um grupo por projeto (ativos primeiro, por parceiro), com o nome do projeto (link), o parceiro em cinza e a matriz (pílula azul, ou "sem matriz" em âmbar). Selos: "Arquivado em dd/mm/aaaa", "Em edição por <nome>: será pulado" (o bloqueio do próprio usuário não conta: o lote o toma, D-191/D-221), "Sem projeto ativo". Abaixo, uma linha por revista: o componente (LP/MT), o balão de pendências ("N pendências" ou ✓), o link para a revista, a Situação ("Em preparo", "Pronta para validar", "Validada", "Impressa" ou "Arquivada") e os botões-ícone "Abrir preview" (nova aba) e "Baixar zip". Parceiro do ano sem projeto aparece com "sem projeto".
 - **Ações em massa** (só quem pode): caixa de marcar por parceiro e "Marcar todos os parceiros" no cabeçalho. A barra fixa embaixo mostra "N selecionado(s)", "Atribuir matriz…" e "Atribuir template…"; sem nada marcado, os dois ficam desligados ("Marque ao menos um parceiro").
   - **Atribuir matriz…** abre um modal com o select "Matriz" (só as do ano).
   - **Atribuir template…** abre um modal com "Componente" e "Template F1" / "Template F2" ("Não mudar" deixa como está). Fascículo com texto próprio na revista é pulado e listado.
-  - Projeto em edição por outra sessão é pulado e listado ("Pulados: …"). Se alguma revista validada mudar, o modal de impacto lista as revistas antes de gravar. Ao gravar, volta à Lista com "Matriz <nome> escolhida para N parceiro(s)." / "Template escolhido em N revista(s)."
+  - Projeto em edição por outra pessoa é pulado e listado ("Pulados: …"). Se alguma revista validada mudar, o modal de impacto lista as revistas antes de gravar. Ao gravar, volta à Lista com "Matriz <nome> escolhida para N parceiro(s)." / "Template escolhido em N revista(s)."
 - **Vazio:** "Nenhum projeto neste ano" · "O projeto do parceiro nasce quando os cortes dele são lançados." · botão "Lançar cortes". Sem ano aberto: "Nenhum ano aberto" com "Abrir anos" (só com `abrir_ano`).
 - Não há incluir nem excluir: o projeto nasce e é arquivado pelos cortes.
 
@@ -73,7 +73,7 @@ Deixar cada projeto do ano pronto para gerar as revistas: o nome que sai na capa
 - **Só leitura (outra pessoa editando):** aviso de quem está editando e até quando; campos desligados.
 - **Arquivado:** aviso no topo, selo "Arquivado", campos desligados; não trava ninguém. POST: 403.
 - **Perdeu o bloqueio durante a edição (409):** o formulário vira só leitura na hora, com aviso para copiar o que precisar e recarregar.
-- **Sem conexão:** "Não salvo: sem conexão · Tentar de novo"; só aí (ou com envio pendente) o navegador avisa ao sair.
+- **Sem conexão:** "Não salvo: sem conexão · Tentar de novo"; só aí (ou com envio pendente) o navegador avisa ao fechar, recarregar ou voltar. Clicar num link ou botão que sai da página com campo alterado em foco, falha ou envio pendente abre o diálogo "Alterações não salvas" (Salvar e sair, Descartar e sair, Continuar editando; D-223, [`design-system.md`](../design-system.md) §5).
 
 ### Mensagens exatas
 
@@ -158,4 +158,4 @@ Em 390 px: uma coluna; abas quebram em linha; a tabela da Lista rola dentro da c
 - View: `app/nucleo/urls/ui_projeto.py` (rotas `ui_projeto_inicio`, `ui_projeto_lista`, `ui_projeto_massa`, `ui_projeto`, `ui_projeto_campo`, `ui_projeto_matriz`; também monta as rotas `cortes` e `ui_variaveis`).
 - Templates: `templates/ui/projeto/{lista,projeto}.html`, `_componentes/projetos_abas.html`, `_componentes/selo_sobrescrita.html`; JS `static/ui/componentes/sobrescrita.js`, `static/ui/telas/lotes.js`; CSS `static/ui/telas/projeto.css`.
 - Testes: `app/nucleo/tests/test_ui_projeto.py`, `test_ui_projeto_abas.py`, `test_ui_projetos.py`; `app/e2e/tests/projeto.spec.ts`.
-- Decisões: D-053, D-060, D-081, D-091, D-093, D-100, D-102, D-121, D-166, D-167, D-172, D-173, D-175, D-183, D-186 e as do plano de UX (D-195 em diante).
+- Decisões: D-053, D-060, D-081, D-091, D-093, D-100, D-102, D-121, D-166, D-167, D-172, D-173, D-175, D-183, D-186, as do plano de UX (D-195 em diante) e D-221.

@@ -21,7 +21,7 @@ Dar o "Validado" a várias revistas de uma vez, depois de conferir o que mudou e
 ## Dados mostrados (por revista)
 
 - Nome da revista (projeto · componente).
-- Estado: **Pronta para validar**, **Validada nesta versão** (com quem e quando), **N pendência(s)** e, à parte, **Em edição por <nome>** (será pulada).
+- Estado: **Pronta para validar**, **Validada nesta versão** (com quem e quando), **N pendência(s)** e, à parte, **Em edição por <nome>** (será pulada; o bloqueio do próprio usuário não conta: o lote o toma, D-191/D-221).
 - Pendências que impedem o "Validado", cada uma com o link para onde se resolve.
 - Seções desatualizadas em relação ao template (só aviso; não impede).
 - Mudanças desde a última versão impressa (diff "Última impressa" × "Agora", só os trechos alterados), recolhidas por padrão. Sem foto do impresso: "Primeira impressão: não há versão impressa para comparar." Sem diferença: "Sem mudanças desde a última impressa."
@@ -63,7 +63,7 @@ Pré-marcadas: só as prontas (sem pendência e ainda não validadas). Com pend�
 - Login obrigatório (anônimo → login das telas B (`/conta/entrar/`)).
 - Ver: permissão de ver revista. Sem ela: 403.
 - Validar: permissão de validar revista. Sem ela: só leitura, e o envio dá 403.
-- Bloqueio: a tela não trava projetos ao abrir (é um lote). Ao gravar, cada revista trava o seu projeto só durante a gravação; projeto aberto por outra sessão é pulado e listado.
+- Bloqueio: a tela não trava projetos ao abrir (é um lote). Ao gravar, cada revista trava o seu projeto só durante a gravação; projeto aberto por outra pessoa é pulado e listado (o do próprio usuário, não: D-191/D-221).
 
 ## HTMX
 
@@ -114,4 +114,4 @@ Componentes do design system: cabeçalho de página, card, badge (`badge-secunda
 
 - Regra: `app/nucleo/urls/painel.py` (`itens_validar`, `validar_pares`, extraídas da view do admin `validar_lote`), `servicos/validacao.py`, `nucleo/lotes.py` (`aplicar`, `escrever_travado`, `quem_edita`; o `admin/lote.py` reexporta).
 - Tela B: `app/nucleo/urls/ui_validar.py`, `templates/ui/validar/pagina.html`, `templates/ui/parciais/validar_cartao.html`, `static/ui/telas/validar.css`, `tests/test_ui_validar.py`.
-- Decisões: D-074, D-078, D-087, D-089, D-094, D-120, D-121, D-174, D-183, D-186.
+- Decisões: D-074, D-078, D-087, D-089, D-094, D-120, D-121, D-174, D-183, D-186, D-221.
