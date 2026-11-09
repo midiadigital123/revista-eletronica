@@ -28,15 +28,13 @@ View: nucleo/urls/ui_templates.py (editar, POST). Ficha: docs/telas/fichas/templ
         <th scope="col">Revista</th>
         <th scope="col">Seções com cópia (não mudam)</th>
         <th scope="col">Impresso</th>
-        <th scope="col">Ids que faltariam no SVG</th>
       </tr></thead>
       <tbody>
       {% for r in revistas %}
-        <tr{% if r.impresso or r.ids_faltando %} class="tpl-atencao"{% endif %}>
+        <tr{% if r.impresso %} class="tpl-atencao"{% endif %}>
           <th scope="row">{{ r.revista.projeto }} <span class="mudo">{{ r.revista.componente.codigo }}</span></th>
           <td class="quebra">{% if r.copias %}{% for c in r.copias %}<code class="variavel">{{ c }}</code>{% if not forloop.last %} {% endif %}{% endfor %}{% else %}<span class="mudo">nenhuma</span>{% endif %}</td>
           <td>{% if r.impresso %}<span class="badge badge-alerta">Já tem foto do impresso</span>{% else %}<span class="mudo">não</span>{% endif %}</td>
-          <td class="quebra">{% if r.ids_faltando %}<span class="badge badge-erro">SVG incompleto: {{ r.ids_faltando|join:", " }}</span>{% else %}<span class="mudo">nenhum</span>{% endif %}</td>
         </tr>
       {% endfor %}
       </tbody>

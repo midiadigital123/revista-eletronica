@@ -85,7 +85,7 @@ class Mundo:
     """Ano 2026, LP e MT, 5EF e 9EF, Comunitária com passo 25, templates e GO + PE com 4 cortes."""
 
     @classmethod
-    def montar(cls, alvo):
+    def montar(cls, alvo, f2_lp=F2_LP):
         alvo.usuario = get_user_model().objects.create(username="admin")
         ano = alvo.ano = Ano.objects.create(ano=2026)
         alvo.lp = Componente.objects.create(ano=ano, codigo="LP", nome="Língua Portuguesa")
@@ -116,7 +116,7 @@ class Mundo:
                 if alvo.tarefa is None:
                     alvo.tarefa = t  # LP 5EF D01
         alvo.templates = {}
-        for comp, f2 in ((alvo.lp, F2_LP), (alvo.mt, F2_MT)):
+        for comp, f2 in ((alvo.lp, f2_lp), (alvo.mt, F2_MT)):
             for fasc, txt in (("F1", F1), ("F2", f2)):
                 t = Template.objects.create(ano=ano, componente=comp, fasciculo=fasc, nome="Padrão")
                 TemplateVersao.objects.create(template=t, numero=1, texto=txt)

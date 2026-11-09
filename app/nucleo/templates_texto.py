@@ -23,7 +23,6 @@ from nucleo import texto
 from nucleo.models import FotoRevista, RevistaFasciculo, Template, TemplateVersao
 from nucleo.models.revista import Motivo
 from nucleo.models.texto import Fasciculo
-from nucleo.servicos.arquivos import ids_faltando
 from nucleo.servicos.resolver import versao_atual
 
 ASSINATURA = "_impacto"  # hidden da tela de impacto
@@ -68,7 +67,6 @@ def com_uso(qs):
 
 def impacto(template, novo):
     """Revistas ativas que usam o template, com o que muda para cada uma (D-099, D-118)."""
-    novas = list(texto.secoes(novo))
     fascs = (
         RevistaFasciculo.objects.filter(template=template, revista__arquivada_em__isnull=True)
         .select_related("revista__projeto", "revista__componente")
@@ -79,11 +77,7 @@ def impacto(template, novo):
     saida = []
     for rf in fascs:
         copias = sorted(c.secao for c in rf.revistasecao_set.all())
-        faltando = []
-        if template.fasciculo == "F2" and rf.revista.svg_f2:
-            # Seções efetivas com o texto novo: as do template + as cópias (órfãs continuam).
-            faltando = ids_faltando(rf.revista, novas + [c for c in copias if c not in novas])
-        saida.append({"revista": rf.revista, "copias": copias, "impresso": rf.impresso, "ids_faltando": faltando})
+        saida.append({"revista": rf.revista, "copias": copias, "impresso": rf.impresso})
     return saida
 
 
@@ -128,25 +122,25 @@ def previa(corpo, fasciculo=None, so_corpo=False):
 # --- U9b: editor por seção na tela B. O formato gravado continua o mesmo markdown `## id`. ---
 
 def secoes_permitidas(fasciculo):
-    """Estrutura do fascículo: seções fixas (sempre presentes) e repetíveis (só F2)."""
-    if fasciculo == "F1":
-        return {"fixas": list(texto.SECOES_F1), "repetiveis": {}}
-    return {"fixas": ["abertura", "passo1"], "repetiveis": {"passo": "passoN", "dlg": "dlg-pN"}}
+    """Estrutura do fascículo: as seções fixas (sempre presentes). Nenhuma é repetível desde o D-238."""
+    return {"fixas": list(texto.SECOES[fasciculo]), "repetiveis": {}}
 
 
 def id_permitido(id_, fasciculo):
-    return id_ in texto.SECOES_F1 if fasciculo == "F1" else bool(texto.ID_F2.fullmatch(id_))
+    return id_ in texto.SECOES[fasciculo]
+
+
+ROTULOS = {
+    "abertura": "Abertura", "introducao": "Introdução", "fechamento": "Fechamento",
+    "passo-descritor": "Passo: descritor", "passo-habilidades": "Passo: habilidades",
+    "passo-progressao": "Passo: progressão", "passo-tarefas": "Passo: tarefas",
+    "dlg-descritor": "Diálogo do descritor", "tarefas-fechamento": "Fechamento das tarefas",
+}  # fmt: skip
 
 
 def rotulo(id_):
-    """Nome legível do id da seção: "Passo 1", "Diálogo do passo 4, item 1"."""
-    if m := re.fullmatch(r"passo(\d+)", id_):
-        return f"Passo {m[1]}"
-    if m := re.fullmatch(r"dlg-p(\d+)(?:-i(\d+))?", id_):
-        return f"Diálogo do passo {m[1]}" + (f", item {m[2]}" if m[2] else "")
-    if id_.startswith("dlg-"):
-        return f"Diálogo {id_[4:]}"
-    return {"abertura": "Abertura", "introducao": "Introdução", "fechamento": "Fechamento"}.get(id_, id_)
+    """Nome legível do id da seção: "Passo: tarefas", "Diálogo do descritor"."""
+    return ROTULOS.get(id_, id_)
 
 
 def proximo_passo(ids):

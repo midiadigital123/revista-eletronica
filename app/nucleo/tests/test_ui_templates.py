@@ -13,7 +13,7 @@ from nucleo.models import Ano, Bloqueio, Componente, FotoRevista, RevistaFascicu
 from nucleo.models.revista import Motivo
 from nucleo.servicos.resolver import versao_atual
 from nucleo.templates_texto import form_para_corpo, proximo_passo, secoes_para_form
-from nucleo.tests.test_admin_templates import F2_NOVO, Base
+from nucleo.tests.test_admin_templates import F2_8, F2_NOVO, Base
 from nucleo.tests.test_resolver import F1 as F1_NOVO, usuario
 
 
@@ -88,9 +88,9 @@ class EditarTest(UiBase):
 
     def test_previa_htmx_mostra_erros(self):
         url = reverse("ui_templates_previa", args=[self.tpl.pk])
-        r = self.ped.post(url, {"texto": "## passo1\nOi\n\nPara {{ano}}.\n"}, HTTP_HX_REQUEST="true")
+        r = self.ped.post(url, {"texto": "## abertura\nOi\n\nPara {{ano}}.\n"}, HTTP_HX_REQUEST="true")
         self.assertContains(r, '<span class="variavel-vazia">{{ano}}</span>')
-        self.assertContains(r, "Seções obrigatórias faltando: abertura.")
+        self.assertContains(r, "Seções obrigatórias faltando: passo-descritor,")
         self.assertNotContains(r, "<html")  # fragmento
 
     def test_impresso_so_le(self):
@@ -107,15 +107,12 @@ class EditarTest(UiBase):
         self.assertEqual(self.versoes(), 1)
 
     def test_impacto_e_confirmar_cria_versao(self):
-        go = self.go["LP"]
-        go.svg_f2, go.svg_sha256, go.svg_ids = "f2/go.svg", "a" * 64, ["passo1", "btn-action-p2"]
-        go.save()
         FotoRevista.objects.create(revista=self.pe["LP"], motivo=Motivo.IMPRESSO, conteudo={}, hash="b" * 64, criada_por=self.usuario)
         sessao = self.sessao()
         r = self.post(sessao, F2_NOVO)
         self.assertTemplateUsed(r, "ui/templates/impacto.html")
         self.assertContains(r, "Confirmar e criar versão 2")
-        self.assertContains(r, "SVG incompleto: passo2")
+        self.assertNotContains(r, "SVG incompleto")
         self.assertContains(r, "Já tem foto do impresso")
         self.assertContains(r, f'value="{sessao}"')
         self.assertEqual(self.versoes(), 1)  # nada gravado
@@ -128,7 +125,7 @@ class EditarTest(UiBase):
 
     def test_assinatura_que_nao_bate_reabre_o_impacto(self):
         impacto = self.post(self.sessao(), F2_NOVO)
-        for troca in ({"_impacto": "adulterada"}, {"texto": F2_NOVO + "\n## passo3\nT\n\nM.\n"}):
+        for troca in ({"_impacto": "adulterada"}, {"texto": F2_NOVO.replace("Novo", "Outro")}):
             with self.subTest(troca):
                 r = self.confirmar(impacto, **troca)
                 self.assertTemplateUsed(r, "ui/templates/impacto.html")
@@ -143,7 +140,7 @@ class EditarTest(UiBase):
         self.assertEqual(self.versoes(), 1)
 
     def test_texto_invalido_mostra_erro(self):
-        r = self.post(self.sessao(), F2_NOVO + "\n## passo3\nT\n\nOi {{x}}.\n")
+        r = self.post(self.sessao(), F2_8.replace("Fim.", "Oi {{x}}."))
         self.assertEqual(r.status_code, 200)
         self.assertTemplateUsed(r, "ui/templates/editar.html")
         self.assertContains(r, "Nada foi gravado: corrija os erros marcados.")
@@ -180,8 +177,7 @@ def form_secoes(secoes, **extra):
     return dados
 
 
-F2_SECOES = [("abertura", "Abertura", "Bem-vindo."), ("passo1", "Passo um", "Para os {{adjetivo_patrio_plural_masculino}}."),
-             ("dlg-p2", "Itens", "Detalhe.")]  # fmt: skip  (= F2_LP)
+F2_SECOES = [(x["id"], x["titulo"], x["corpo"]) for x in secoes_para_form(F2_8)]
 
 
 def erros_da_secao(html, id_):
@@ -202,7 +198,7 @@ class EditorSecoesTest(UiBase):
     def test_id_fora_do_permitido_422(self):
         sessao = self.sessao()
         previa = reverse("ui_templates_previa", args=[self.tpl.pk])
-        for ruim in ("## passo1", "introducao", "passo0", "x y"):
+        for ruim in ("## passo1", "passo1", "dlg-p2", "introducao", "x y"):
             with self.subTest(ruim):
                 secoes = [*F2_SECOES[:2], (ruim, "T", "C.")]
                 self.assertEqual(self.ped.post(self.editar, form_secoes(secoes, **{CAMPO_SESSAO: sessao})).status_code, 422)
@@ -216,24 +212,20 @@ class EditorSecoesTest(UiBase):
         editaveis = re.findall(r"<textarea[^>]*>(.*?)</textarea>", html, re.S)
         editaveis += re.findall(r'<input(?![^>]*type="hidden")[^>]*value="([^"]*)"', html)
         self.assertTrue(editaveis)
-        self.assertFalse([v for v in editaveis if "## " in v or v.strip() in ("abertura", "passo1", "dlg-p2")])
+        self.assertFalse([v for v in editaveis if "## " in v or v.strip() in ("abertura", "passo-descritor", "dlg-descritor")])
         self.assertInHTML('<input type="hidden" name="secao-0-id" value="abertura" data-campo="id">', html)
-        self.assertContains(r, "Diálogo do passo 2")
+        self.assertContains(r, "Diálogo do descritor")
         self.assertContains(r, 'name="secao-1-titulo"')
-        self.assertNotContains(r, "## passo1")  # nem na prévia
+        self.assertNotContains(r, "## passo-descritor")  # nem na prévia
 
-    def test_adicionar_passo_numera_sequencial(self):
-        self.assertEqual(proximo_passo(["abertura", "passo1", "dlg-p2"]), 2)
-        self.assertEqual(proximo_passo(["abertura", "passo1", "passo4", "dlg-p4-i1"]), 5)
-        self.assertEqual(proximo_passo([]), 1)
-        self.assertContains(self.ped.get(self.editar), 'data-proximo="2"')
-        # o passo novo entra depois do último passo e segue o fluxo de impacto e versão
-        secoes = [*F2_SECOES[:2], ("passo2", "Passo dois", "Novo {{ano}}."), F2_SECOES[2]]
+    def test_f2_nao_tem_secao_repetivel(self):
+        r = self.ped.get(self.editar)
+        self.assertNotContains(r, "Adicionar passo")
+        self.assertEqual(r.context["permitidas"]["repetiveis"], {})
+        secoes = [*F2_SECOES, ("passo2", "Passo dois", "Novo.")]
         r = self.ped.post(self.editar, form_secoes(secoes, **{CAMPO_SESSAO: self.sessao()}))
-        self.assertTemplateUsed(r, "ui/templates/impacto.html")
-        self.assertIn("Para os {{adjetivo_patrio_plural_masculino}}.\n\n## passo2\nPasso dois\n\nNovo {{ano}}.\n\n## dlg-p2\n", r.context["texto"])
-        self.assertRedirects(self.confirmar(r), self.editar, fetch_redirect_response=False)
-        self.assertEqual(versao_atual(self.tpl.pk).numero, 2)
+        self.assertEqual(r.status_code, 422)
+        self.assertEqual(self.versoes(), 1)
 
     def test_texto_igual_pelas_secoes_salva_so_o_nome(self):
         r = self.ped.post(self.editar, form_secoes(F2_SECOES, nome="Outro", **{CAMPO_SESSAO: self.sessao()}))
@@ -241,7 +233,7 @@ class EditorSecoesTest(UiBase):
         self.assertEqual(self.versoes(), 1)
 
     def test_erro_de_validacao_aparece_na_secao_certa(self):
-        secoes = [("abertura", "", "Bem-vindo."), ("passo1", "Passo um", ""), ("dlg-p2", "Itens", "Oi {{x}}.")]
+        secoes = [("abertura", "", "Bem-vindo."), ("passo-descritor", "Descritor", ""), ("dlg-descritor", "Descritor", "Oi {{x}}.")]
         r = self.ped.post(self.editar, form_secoes(secoes, **{CAMPO_SESSAO: self.sessao()}))
         self.assertEqual(r.status_code, 200)
         self.assertTemplateUsed(r, "ui/templates/editar.html")
@@ -249,21 +241,21 @@ class EditorSecoesTest(UiBase):
         html = r.content.decode()
         self.assertIn("falta o título", erros_da_secao(html, "abertura"))
         self.assertNotIn("corpo vazio", erros_da_secao(html, "abertura"))  # o corpo não subiu para o título
-        self.assertIn("corpo vazio", erros_da_secao(html, "passo1"))
-        self.assertIn("{{x}}", erros_da_secao(html, "dlg-p2"))
-        self.assertNotIn("{{x}}", erros_da_secao(html, "passo1"))
+        self.assertIn("corpo vazio", erros_da_secao(html, "passo-descritor"))
+        self.assertIn("{{x}}", erros_da_secao(html, "dlg-descritor"))
+        self.assertNotIn("{{x}}", erros_da_secao(html, "passo-descritor"))
         self.assertRegex(html, r'<input[^>]*id="titulo-abertura"[^>]*aria-invalid="true"')
-        self.assertRegex(html, r'<textarea[^>]*id="corpo-passo1"[^>]*aria-invalid="true"')
+        self.assertRegex(html, r'<textarea[^>]*id="corpo-passo-descritor"[^>]*aria-invalid="true"')
         self.assertNotRegex(html, r'<textarea[^>]*id="corpo-abertura"[^>]*aria-invalid')
         self.assertRegex(html, r'<textarea[^>]*id="corpo-abertura"[^>]*>\s*Bem-vindo.</textarea>')
-        self.assertRegex(html, r'(?s)href="#secao-passo1".*?1 erro')  # índice lateral
+        self.assertRegex(html, r'(?s)href="#secao-passo-descritor".*?1 erro')  # índice lateral
         self.assertEqual(self.versoes(), 1)
 
     def test_linha_de_secao_no_texto_nao_parte_a_secao(self):
-        secoes = [F2_SECOES[0], ("passo1", "Passo um", "Oi.\n## passo9\nT\n\nC."), F2_SECOES[2]]
+        secoes = [F2_SECOES[0], ("passo-descritor", "Descritor", "Oi.\n## passo9\nT\n\nC."), *F2_SECOES[2:]]
         r = self.ped.post(self.editar, form_secoes(secoes, **{CAMPO_SESSAO: self.sessao()}))
         self.assertTemplateUsed(r, "ui/templates/editar.html")
-        self.assertIn("partiria a seção", erros_da_secao(r.content.decode(), "passo1"))
+        self.assertIn("partiria a seção", erros_da_secao(r.content.decode(), "passo-descritor"))
         self.assertEqual(self.versoes(), 1)
 
     def test_uma_secao_ativa_por_vez(self):
@@ -271,28 +263,28 @@ class EditorSecoesTest(UiBase):
         r = self.ped.get(self.editar)
         html = r.content.decode()
         self.assertRegex(html, r'<section class="tpl-secao" id="secao-abertura"(?![^>]*hidden)[^>]*>')
-        for n, id_ in ((1, "passo1"), (2, "dlg-p2")):
+        for n, id_ in ((1, "passo-descritor"), (5, "dlg-descritor")):
             self.assertRegex(html, rf'<section class="tpl-secao" id="secao-{id_}"[^>]*hidden')
             self.assertContains(r, f'name="secao-{n}-corpo"')
         self.assertRegex(html, r'<a href="#secao-abertura"[^>]*aria-current="true"')
-        self.assertNotRegex(html, r'<a href="#secao-passo1"[^>]*aria-current')
+        self.assertNotRegex(html, r'<a href="#secao-passo-descritor"[^>]*aria-current')
         self.assertRegex(html, r'<section class="secao" data-previa="abertura">')  # a prévia filtra pela ativa
 
     def test_erro_abre_a_primeira_secao_com_erro(self):
-        secoes = [F2_SECOES[0], ("passo1", "Passo um", ""), ("dlg-p2", "Itens", "Oi {{x}}.")]
+        secoes = [F2_SECOES[0], ("passo-descritor", "Descritor", ""), ("dlg-descritor", "Descritor", "Oi {{x}}.")]
         r = self.ped.post(self.editar, form_secoes(secoes, **{CAMPO_SESSAO: self.sessao()}))
         html = r.content.decode()
-        self.assertRegex(html, r'<section class="tpl-secao" id="secao-passo1"(?![^>]*hidden)[^>]*>')
+        self.assertRegex(html, r'<section class="tpl-secao" id="secao-passo-descritor"(?![^>]*hidden)[^>]*>')
         self.assertRegex(html, r'<section class="tpl-secao" id="secao-abertura"[^>]*hidden')
-        self.assertRegex(html, r'<section class="tpl-secao" id="secao-dlg-p2"[^>]*hidden')
-        self.assertRegex(html, r'(?s)<a href="#secao-passo1"[^>]*aria-current="true".*?1 erro')  # o índice segue com o status
-        self.assertRegex(html, r'(?s)<a href="#secao-dlg-p2"[^>]*>.*?1 erro')
+        self.assertRegex(html, r'<section class="tpl-secao" id="secao-dlg-descritor"[^>]*hidden')
+        self.assertRegex(html, r'(?s)<a href="#secao-passo-descritor"[^>]*aria-current="true".*?1 erro')  # o índice segue com o status
+        self.assertRegex(html, r'(?s)<a href="#secao-dlg-descritor"[^>]*>.*?1 erro')
 
     def test_previa_por_secoes_tem_indice_e_erros_oob(self):
         url = reverse("ui_templates_previa", args=[self.tpl.pk])
-        r = self.ped.post(url, form_secoes([F2_SECOES[0], ("passo1", "Passo um", "")]), HTTP_HX_REQUEST="true")
+        r = self.ped.post(url, form_secoes([F2_SECOES[0], ("passo-descritor", "Descritor", "")]), HTTP_HX_REQUEST="true")
         self.assertContains(r, 'id="tpl-indice" hx-swap-oob="true"')
-        self.assertContains(r, 'id="erros-passo1" hx-swap-oob="true"')
+        self.assertContains(r, 'id="erros-passo-descritor" hx-swap-oob="true"')
         self.assertContains(r, "corpo vazio")
         self.assertNotContains(r, "## ")
 
