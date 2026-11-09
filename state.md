@@ -2,11 +2,11 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Docs alinhados ao código (D-233, commitados em `integ/docs-atualizacao`) e respostas da D-234 aplicadas sem commit na worktree `/home/otavio.peres/dev/revista-express-docs`. Funcionando: comentários de código, `app/.env.example` e `CLAUDE.md` corrigidos; só comentário e texto, sem mudança de comportamento. Pendente: commit da D-234; merge na `main` (espera o ok); `entrar()` do E2E não detecta login falho. F2 fases 1 a 5, S17 e S18 continuam pendentes.
+Docs alinhados ao código (D-233 e D-234), commitados em `integ/docs-atualizacao` e no PR #6 para a `main` (https://github.com/midiadigital123/revista-eletronica/pull/6). Funcionando: comentários de código, `app/.env.example`, `CLAUDE.md` e fichas das telas B corrigidos; só comentário e texto, sem mudança de comportamento. `trail check` aponta 19 conflitos, todos falsos positivos (justificados no PR). Pendente: merge do PR #6 (espera o ok); `entrar()` do E2E não detecta login falho. F2 fases 1 a 5, S17 e S18 continuam pendentes.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Usuário diz "ok, commit" para a D-234 e "ok, main" para o merge de `integ/docs-atualizacao` na `main`.
+Usuário revisa e mergeia o PR #6 na `main`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2431,3 +2431,8 @@ Usuário diz "ok, commit" para a D-234 e "ok, main" para o merge de `integ/docs-
 - Decisão (b) revista: bloco não visitado fica escondido, não esmaecido. Demo ajustada (sem o estado "fantasma"); conferido no navegador: na visão geral os 4 blocos estão escondidos; no passo 2, o bloco do passo 3 continua escondido.
 - Bug de enquadramento na demo do F2 corrigido: com os blocos escondidos desde o início, os passos 2 e 3 enquadravam o título e o descritor (219%). Causa: o tour mede a caixa do alvo (`getBBox`) ao trocar de passo, e as peças escondidas com escala 0 contavam como um ponto perto da origem, esticando a caixa até o canto superior esquerdo. Correção: em repouso a peça fica escondida só por opacidade; o deslocamento e a escala entram no 1º quadro da animação. Conferido: enquadramento dos 4 passos igual ao da versão sem animação.
 - Usuário aprovou a demo ("ficou bom pra caramba"). Commit e push da pasta `example/` (exemplo original + demo) e de 2 aprendizados do trail (opacity !important do tour; esconder só por opacidade por causa do enquadramento).
+
+### 2026-11-09 19:20
+- Fora do repositório: agente `minimalista`, agente `conselheiro` e skill `/conselho` criados em `~/.claude` (mantidos como estão, sem comandante via Workflow).
+- Diagnóstico do travamento da máquina às 11:05: sem OOM nem carga; suspeita sem prova no driver NVIDIA; SysRq sugerido para o próximo travamento.
+- PR #6 aberto: `integ/docs-atualizacao` → `main`; conflitos do `trail check` justificados como falsos positivos.
