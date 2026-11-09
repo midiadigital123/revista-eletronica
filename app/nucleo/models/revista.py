@@ -88,7 +88,7 @@ class RevistaSecao(models.Model):
 
     revista_fasciculo = models.ForeignKey(RevistaFasciculo, on_delete=models.CASCADE)
     template = models.ForeignKey(Template, on_delete=models.PROTECT)  # só para FK composta
-    secao = models.TextField()  # introducao, fechamento, passo1, dlg-p2
+    secao = models.TextField()  # id de nucleo.texto.SECOES (F1: introducao, fechamento; F2: abertura, passo-*, dlg-descritor...)
     texto = models.TextField()
     template_versao = models.ForeignKey(TemplateVersao, on_delete=models.PROTECT)
     history = HistoricalRecords()

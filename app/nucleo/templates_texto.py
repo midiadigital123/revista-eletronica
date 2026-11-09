@@ -28,6 +28,12 @@ from nucleo.servicos.resolver import versao_atual
 ASSINATURA = "_impacto"  # hidden da tela de impacto
 SAL = "nucleo.admin.templates.impacto"
 VALIDADE = 30 * 60  # segundos; a tela fica aberta sob o bloqueio, que se renova
+ROTULOS = {
+    "abertura": "Abertura", "introducao": "Introdução", "fechamento": "Fechamento",
+    "passo-descritor": "Passo: descritor", "passo-habilidades": "Passo: habilidades",
+    "passo-progressao": "Passo: progressão", "passo-tarefas": "Passo: tarefas",
+    "dlg-descritor": "Diálogo do descritor", "tarefas-fechamento": "Fechamento das tarefas",
+}  # fmt: skip
 
 
 def assinatura(novo, atual):
@@ -130,22 +136,9 @@ def id_permitido(id_, fasciculo):
     return id_ in texto.SECOES[fasciculo]
 
 
-ROTULOS = {
-    "abertura": "Abertura", "introducao": "Introdução", "fechamento": "Fechamento",
-    "passo-descritor": "Passo: descritor", "passo-habilidades": "Passo: habilidades",
-    "passo-progressao": "Passo: progressão", "passo-tarefas": "Passo: tarefas",
-    "dlg-descritor": "Diálogo do descritor", "tarefas-fechamento": "Fechamento das tarefas",
-}  # fmt: skip
-
-
 def rotulo(id_):
     """Nome legível do id da seção: "Passo: tarefas", "Diálogo do descritor"."""
     return ROTULOS.get(id_, id_)
-
-
-def proximo_passo(ids):
-    """Número do passo novo: o maior passo + 1 (nunca reaproveita um id removido no meio)."""
-    return max((int(m[1]) for i in ids if (m := re.fullmatch(r"passo(\d+)", i))), default=0) + 1
 
 
 def secoes_para_form(corpo):

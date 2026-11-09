@@ -35,7 +35,7 @@ from nucleo.models.texto import Fasciculo
 from nucleo.servicos.resolver import versao_atual
 from nucleo.templates_texto import (
     assinar, assinatura, com_uso, criar_versao, form_para_corpo, id_permitido, impacto, ler_assinatura,
-    previa_secoes, proximo_passo, rotulo, secoes_para_form, secoes_permitidas,
+    previa_secoes, rotulo, secoes_para_form, secoes_permitidas,
 )  # fmt: skip
 from nucleo.texto import TEXTO_MAX
 from nucleo.ui_bloqueio import com_bloqueio
@@ -182,15 +182,11 @@ def _editor(request, tpl, form, secoes=None, status=200):
         "grupos": GRUPOS,
         "pode_gravar": request.pode_gravar,
         "sem_permissao": not pode_gravar(request.user),
-        "permitidas": secoes_permitidas(tpl.fasciculo),
         **_contexto_secoes(tpl, secoes),
     }
     ids = [s["id"] for s in contexto["secoes"]]
     # Uma seção por vez: abre a 1ª com erro (ou a 1ª). editor-secoes.js troca pelo índice.
     contexto["ativa"] = next((s["id"] for s in contexto["secoes"] if s["erros"]), ids[0] if ids else None)
-    contexto["proximo"] = proximo_passo(ids)
-    contexto["passos"] = [(i, rotulo(i)) for i in ids if i.startswith("passo")]
-    contexto["modelo"] = {"id": "__ID__", "rotulo": "__ROTULO__", "titulo": "", "corpo": "", "removivel": True, "erros": []}
     return TemplateResponse(request, "ui/templates/editar.html", contexto, status=status)
 
 

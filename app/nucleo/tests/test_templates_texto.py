@@ -3,13 +3,17 @@
 import importlib
 
 from django.apps import apps
+from django.conf import settings
 from django.test import SimpleTestCase, TestCase
 
 from nucleo import texto
+from nucleo.management.commands.carregar_templates import AVISO
 from nucleo.models import RevistaFasciculo, RevistaInfografico, RevistaSecao, Template, TemplateVersao
 from nucleo.servicos.resolver import versao_atual
 from nucleo.templates_texto import impacto, rotulo, secoes_permitidas
 from nucleo.tests.test_resolver import F2_LP, Mundo
+
+SEED = settings.BASE_DIR / "templates_seed" / "2026"
 
 
 class SecoesF2Test(SimpleTestCase):
@@ -64,35 +68,48 @@ class Migracao0023Test(TestCase):
 
     def test_f1_e_outro_componente_ficam(self):
         outro = Template.objects.create(ano=self.ano, componente=self.mt, fasciculo="F2", nome="Outro")
-        TemplateVersao.objects.create(template=outro, numero=1, texto=F2_LP)
+        v1_outro = TemplateVersao.objects.create(template=outro, numero=1, texto=F2_LP)
+        rf_outro = RevistaFasciculo.objects.get(revista=self.pe["MT"], fasciculo="F2")
+        rf_outro.template = outro
+        rf_outro.save()
+        for secao in ("passo2", "dlg-p3"):
+            RevistaSecao.objects.create(
+                revista_fasciculo=rf_outro, template=outro, secao=secao, texto="Cópia.", template_versao=v1_outro
+            )
         self.mt.codigo = "XX"
         self.mt.save()
         self.migrar()
         self.assertEqual(TemplateVersao.objects.filter(template=outro).count(), 1)
         self.assertEqual(TemplateVersao.objects.filter(template=self.templates["LP", "F1"]).count(), 1)
+        copias = RevistaSecao.objects.filter(revista_fasciculo=rf_outro, template=outro)
+        self.assertEqual(set(copias.values_list("secao", flat=True)), {"passo2", "dlg-p3"})
+        info = RevistaInfografico.objects.filter(revista=self.pe["MT"]).first()
+        self.assertEqual((info.texto_progressao, info.texto_habilidades), ("", ""))
 
     def test_copias_dlg_p2_e_p3_viram_textos_do_infografico_outras(self):
         self.migrar()
         info = RevistaInfografico.objects.get(revista=self.rev, tipo="outras")
         self.assertEqual((info.texto_progressao, info.texto_habilidades), ("Progressão", "Habilidades"))
 
-    def test_so_preenche_campo_vazio_e_cai_no_alfa_se_nao_ha_outras(self):
+    def test_so_preenche_campo_vazio(self):
         RevistaInfografico.objects.filter(revista=self.rev, tipo="outras").update(texto_habilidades="Já escrito")
         self.migrar()
         info = RevistaInfografico.objects.get(revista=self.rev, tipo="outras")
         self.assertEqual((info.texto_progressao, info.texto_habilidades), ("Progressão", "Já escrito"))
 
-        RevistaInfografico.objects.filter(revista=self.rev, tipo="outras").update(texto_progressao="", texto_habilidades="")
-        RevistaSecao.objects.create(
-            revista_fasciculo=self.rf, template=self.tpl, secao="dlg-p3", texto="Habilidades", template_versao=self.v1
-        )
+    def test_revista_so_com_alfa_recebe_no_alfa(self):
         RevistaInfografico.objects.filter(revista=self.rev, tipo="outras").delete()
-        alfa = RevistaInfografico.objects.create(
-            revista=self.rev, tipo="alfa", componente=self.lp, ano=self.ano
-        )
+        alfa = RevistaInfografico.objects.create(revista=self.rev, tipo="alfa", componente=self.lp, ano=self.ano)
         self.migrar()
         alfa.refresh_from_db()
-        self.assertEqual(alfa.texto_habilidades, "Habilidades")
+        self.assertEqual((alfa.texto_progressao, alfa.texto_habilidades), ("Progressão", "Habilidades"))
+
+    def test_texto_congelado_e_o_do_seed(self):
+        seed = AVISO.sub("", (SEED / "f2-lp.hbs").read_text(encoding="utf-8-sig"))
+        self.assertEqual(
+            self.mod.TEXTO_F2, seed,
+            "A migração 0023 é histórica: não a altere. Se o seed do F2 mudou de propósito, ajuste este teste.",
+        )
 
     def test_apaga_as_copias_fora_das_8_secoes_e_mantem_a_abertura(self):
         self.migrar()

@@ -1,6 +1,5 @@
 {% comment %}Uma seção do editor de template (U9b). O id é estrutura: vai num hidden e no chip, nunca num
-campo editável. Também é o modelo (<template>) das seções novas, com __ID__/__ROTULO__/__N__ que o
-editor-secoes.js troca. Contexto: s (id, rotulo, titulo, corpo, removivel, erros, erro_*), n, pode_gravar, grupos, ativa (só ela
+campo editável. Contexto: s (id, rotulo, titulo, corpo, removivel, erros, erro_*), n, pode_gravar, grupos, ativa (só ela
 aparece; as outras ficam hidden no form).{% endcomment %}
 <section class="tpl-secao" id="secao-{{ s.id }}" data-secao="{{ s.id }}" aria-labelledby="rotulo-{{ s.id }}"{% if s.id != ativa %} hidden{% endif %}>
   <header class="tpl-secao-cab">

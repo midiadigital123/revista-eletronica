@@ -12,7 +12,7 @@ from nucleo.management.commands.carregar_templates import AVISO
 from nucleo.models import Ano, Bloqueio, Componente, FotoRevista, RevistaFasciculo, RevistaSecao, Template, TemplateVersao
 from nucleo.models.revista import Motivo
 from nucleo.servicos.resolver import versao_atual
-from nucleo.templates_texto import form_para_corpo, proximo_passo, secoes_para_form
+from nucleo.templates_texto import form_para_corpo, secoes_para_form
 from nucleo.tests.test_admin_templates import F2_8, F2_NOVO, Base
 from nucleo.tests.test_resolver import F1 as F1_NOVO, usuario
 
@@ -221,7 +221,6 @@ class EditorSecoesTest(UiBase):
     def test_f2_nao_tem_secao_repetivel(self):
         r = self.ped.get(self.editar)
         self.assertNotContains(r, "Adicionar passo")
-        self.assertEqual(r.context["permitidas"]["repetiveis"], {})
         secoes = [*F2_SECOES, ("passo2", "Passo dois", "Novo.")]
         r = self.ped.post(self.editar, form_secoes(secoes, **{CAMPO_SESSAO: self.sessao()}))
         self.assertEqual(r.status_code, 422)
