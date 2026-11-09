@@ -2,11 +2,11 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Fase 0 do F2 gerado aprovada (D-228) na branch `feat/f2-fase0` → `integ/f2-interface` (worktree `/home/otavio.peres/dev/revista-express-f2`). Funcionando: protótipo `example/f2-gerado/` (17/17 no Chromium); mapeamento das fases 1 a 5 em `docs/superpowers/specs/2026-11-06-f2-na-interface-mapeamento.md`. Quebrado/pendente: fases 1 a 5 não começaram; dependem da Pedagógica (planilha do referencial 1EF–3EM, textos canônicos), do design (layout por bloco, webfont) e de 2 decisões do usuário (desligar por projeto ou por revista; F1/F2 em páginas separadas antes ou depois). S17/S18 continuam pendentes.
+Docs alinhados ao código da `main` de 06/11 (D-233), sem commit, na worktree `/home/otavio.peres/dev/revista-express-docs` (branch `docs/atualizacao-2026-11-09` ← `integ/docs-atualizacao`). Funcionando: 18 arquivos revisados; ficha nova `docs/telas/fichas/usuarios.md`; F2 gerado registrado como planejado (regras §6.6, README, CLAUDE.md). Pendente: commit e merge (esperam o ok do usuário); 5 perguntas novas em aberto (D-233). F2 fases 1 a 5, S17 e S18 continuam pendentes.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Usuário dá o ok para o merge de `integ/f2-interface` na `main` e decide se a fase 1 (modelo de dados do F2: `revista_f2_infografico`, tabela por etapa, itens por etapa, textos) começa pelo desenho em modo de plano.
+Usuário dá o ok para commitar a atualização dos docs e mergear em `integ/docs-atualizacao` e na `main`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1729,7 +1729,7 @@ Usuário dá o ok para o merge de `integ/f2-interface` na `main` e decide se a f
 - **Motivo:** decisão do usuário ("fecha o furo"). Uma regra num lugar só fecha as duas telas.
 - **Descartadas:** bloquear só a senha — dados e "Desativar" continuariam abertos a um perfil que não pode dar o grupo Impresso; manter (o furo anula a regra do Impresso).
 - **Arquivos afetados:** `app/nucleo/usuarios.py`, `nucleo/tests/test_ui_usuarios.py`, `nucleo/tests/test_admin_cadastro.py`, `docs/regras-de-negocio.md`
-- **Status:** ativa
+- **Status:** ativa em parte: ~~Admin não atribui o Impresso nem marca impressa~~ substituído pela D-220 (o título não vale mais; hoje o Admin altera Pedagógica, Mídias e Impresso e só vê outro Admin)
 
 ### D-212 — Login e logout próprios das telas B; o login do admin some (2026-11-05)
 - **Contexto:** o usuário viu o "Administração do Django" ao sair e ao trocar de perfil: o "Sair" ia ao logout do admin, todas as views mandavam o anônimo para `admin:login`, e o `next=/admin/` deixava a pessoa no índice do admin depois de entrar.
@@ -1899,7 +1899,20 @@ Usuário dá o ok para o merge de `integ/f2-interface` na `main` e decide se a f
 - **Arquivos afetados:** futuro: seeds do template F2 (`abertura` com os 4 parágrafos, `fechamento`, `dlg-tarefa-N`), `servicos/f2.py`, página do F2.
 - **Status:** ativa. Pendência pequena: a abertura (1 parágrafo) e o fechamento (2 parágrafos) comuns do bloco ❹ ficam fora dos modais; proposta: abertura vai no texto do passo `tarefas` do painel do tour, fechamento só no impresso.
 
+### D-233 — Docs alinhados ao código de 06/11, F2 novo registrado como planejado (2026-11-09 10:00)
+- **Contexto:** pedido do usuário: atualizar toda a documentação para a versão atual. Os docs foram alinhados em 05/11 11:30; depois entraram S6–S9 das telas B e D-209 a D-232, várias sem menção em doc nenhum.
+- **Decisão:** worktree `revista-express-docs`, branch `docs/atualizacao-2026-11-09` a partir de `integ/docs-atualizacao`; 3 subagentes com arquivos separados (raiz + docker/e2e; telas e fichas; regras, ER e variáveis). O F2 gerado (D-227 a D-232) entra nos docs só como "decidido, não implementado", com link para as specs. `DESIGN.md` ganha o aviso de "editor antigo", como o `PRODUCT.md`. `inventario.md`, `rascunho-ui.md`, `contrato.md` e `s17-*.proposto.md` ficam como estão: já são marcados como históricos.
+- **Motivo:** o código é a fonte da verdade; descrever como vigente o F2 novo enganaria quem lê.
+- **Descartadas:** reescrever os docs históricos — perde o retrato da época; apagar `DESIGN.md` — a skill impeccable o lê, e o aviso basta.
+- **Arquivos afetados:** `CLAUDE.md`, `README.md`, `INFRA.md`, `DESIGN.md`, `docs/docker.md`, `docs/e2e.md`, `docs/telas/**`, `docs/regras-de-negocio.md`, `docs/modelo-er.md`, `docs/variaveis.md`
+- **Status:** ativa
+
 ## Perguntas em aberto
+- [ ] (D-233, 09/11) Comentários de código ainda falam do login do admin depois da D-212: `nucleo/usuarios.py` ("todo perfil entra pelo login do admin") e `e2e/tests/helpers.ts::entrar` ("Entra no admin", passa por `/admin/login/`, que redireciona). Corrigir? — depende de: Otavio
+- [ ] (D-233, 09/11) Playwright: `workers: 1` ainda é preciso? O motivo escrito (D-191: painel, impresso e revista gravam a mesma revista DEMONSTRAÇÃO) caiu com a D-225, em que cada spec grava na própria revista — depende de: Otavio (medir a suíte com 2 workers?)
+- [ ] (D-233, 09/11) `app/.env.example` não lista `APP_BIND`, `APP_PORT` nem `COMPOSE_PROJECT_NAME`. Acrescentar? — depende de: Otavio
+- [ ] (D-233, 09/11) O `CLAUDE.md` do projeto termina com "### Who is you?" (texto da skill frontend-design colado). Fica ou sai? — depende de: Otavio
+- [ ] (D-233, 09/11) A D-224 e o comentário de `playwright.config.ts` dizem que o `limpar_e2e` apaga parceiros e templates; ele apaga também matrizes "E2E …" (D-225). `docs/e2e.md` já segue o código; corrigir o comentário? — depende de: Otavio
 - [ ] F2 animado (pasta `example/infografico-animado`, analisado em 05/11): viável sem mudar banco nem SVG. Escolher a integração: (A) abertura animada que termina no estado do svg-tour atual, ou (B) substituir o svg-tour pelo player do exemplo (perde minimapa, zoom e modais prontos). Risco: o roteiro acha as peças pela ordem dos filhos no SVG; só existe 1 SVG real (os 80 em `media/f2` são cópias do fixture) — depende de: Otavio + design (o SVG de MT e de outros parceiros mantém a mesma árvore?)
 - [ ] Textos do tour do F2 (SAEGO LP, template "Padrão") trocados em relação ao desenho: o passo 3 do tour se chama "Progressão da habilidade", mas enquadra o bloco "Descrição das habilidades no referencial curricular"; o botão + desse bloco (`btn-action-p3`) abre o modal "Progressão…". O passo 2 ("Itens por ano/série", "percentual de acerto") enquadra a linha de progressão. Visto na demo de 05/11; vale também no sistema hoje — depende de: Pedagógica (corrigir o template ou os ids do SVG?)
 - [x] F2 animado, ideia corrigida em 05/11: a animação não é só abertura; cada passo do svg-tour toca a animação do seu bloco (a câmera é a do tour, e o conector "viaja" do descritor até o bloco durante o movimento). A demo `example/f2-animado-tour/` ainda é a versão "só abertura". Sem mudar o `svg-tour.js`: basta o evento `svgtour:change`. Decidido em 05/11: (a) passo já visto aparece pronto, sem tocar de novo; ~~(b) antes da visita o bloco fica esmaecido, e a visão geral mostra o desenho inteiro~~ (substituída em 05/11: o usuário viu o bloco esmaecido sumir e reaparecer ao entrar no passo, e o passo 3 esmaecido acima do passo 2; agora (b) o bloco não visitado fica escondido e a visão geral mostra só fundo e título).
@@ -1917,7 +1930,7 @@ Usuário dá o ok para o merge de `integ/f2-interface` na `main` e decide se a f
 - [x] (05/11: usuário mandou corrigir; Agente D) (regras de negócio, seção 10.1) `docs/modelo-er.md` está desatualizado em dois pontos: o bloqueio é tomado pelo mesmo usuário, não pela mesma sessão (D-191); a foto guarda a revista resolvida inteira e roda em READ COMMITTED (D-151/D-153/D-178). Corrigir? — depende de: usuário
 - [ ] (regras de negócio) O admin ainda pede o checkbox "afeta N revistas" sempre que há revista afetada; as telas B só avisam quando alguma perde o Validado (D-202). Igualar? — depende de: usuário
 - [ ] (regras de negócio 10.1, divergência 4, D-055) O limite do corte é o `Etapa.escala_max` de cada etapa (código: `models/cadastro.py:60`, `servicos/cascata.py:38`) ou os valores fixos 1000/500 da D-055? Se for o `escala_max`, reescrever a D-055 — depende de: usuário
-- [ ] (regras de negócio 10.1, divergências 8–10) Corrigir 3 comentários de código desatualizados (`permissoes.py:14`, `permissoes.py:17`, `models/controle.py:18`), sem mudar comportamento? — depende de: usuário
+- [ ] (regras de negócio 10.1, divergência 10) Corrigir o comentário de `models/controle.py:18` ("CASCADE"; no banco a FK é NO ACTION), sem mudar comportamento? Os 2 de `permissoes.py` já foram trocados na D-218/D-220 (conferido em 09/11) — depende de: usuário
 - [ ] `.env.example` da raiz ainda é do sistema antigo (`SESSION_SECRET`, `ADMIN_EMAIL`); o certo é `app/.env.example`. Apagar ou substituir? — depende de: usuário
 - [x] (D-211, fechado) (S9) O perfil Admin pode redefinir a senha de um usuário Impresso e entrar como ele, ganhando `marcar_impressa` (anula `ADMIN_MARCA_IMPRESSA = False`). Furo já existia no admin. Fechar com `pode_editar` em `nucleo/usuarios.py` exigindo alvo sem grupo fora dos permitidos? — depende de: usuário
 - [x] (D-213; apagados em 05/11 a pedido do usuário) `api/.env`, `contrato/`, `escala.html`, `script.js`, `styles.css`, `descritores.json`, `saida/` e o `.env.example` da raiz
@@ -1972,7 +1985,7 @@ Usuário dá o ok para o merge de `integ/f2-interface` na `main` e decide se a f
 - [x] (D-088 a D-094) Revisão do ER, negócio: valor revertido faz o "Validado" voltar sozinho (hash) — aceitável?; projeto readicionado (D-068) herda a última foto do arquivado?; reimportar matriz (D-071) recria ids e perde auditoria por registro — depende de: usuário
 - [x] (D-088 a D-094) Escolha de matriz/texto-modelo mora no Projeto (D-084), mas projetos não são clonados (D-085): em 2027 o CE renasceria sem a matriz CE. Onde guardar a escolha por parceiro × ano para sobreviver ao clone? — depende de: sessão de modelagem (é o desafio do PDF v2)
 - [ ] Intervalo mínimo e cor sobrescritos não têm `versao_base`: mudança no padrão não avisa o projeto que sobrescreveu. Precisa? — depende de: usuário
-- [ ] Admin pode clicar "Revista Impressa Atualizada"? (D-083 dá ao admin as permissões da Pedagógica, não as do Impresso) — depende de: usuário
+- [x] (D-220: sim) Admin pode clicar "Revista Impressa Atualizada"? (D-083 dá ao admin as permissões da Pedagógica, não as do Impresso) — depende de: usuário
 - [x] (D-062) Textos da revista: modelo comum + edição por projeto com "diff tipo git". Proposta do Claude: sobrescrita por bloco, guardando a versão do modelo usada; se o modelo mudar, avisar e mostrar o diff, sem fusão automática — depende de: usuário
 - [x] Propostas 1, 2, 5, 6 da revisão `make-interfaces-feel-better` aplicadas (D-040). Pendentes: 3 (`:active` do botão), 4 (feedback de toque), 7–10 — depende de: usuário
 - [ ] Alternativa de exibição (régua proporcional ou lista por padrão) — só se a equipe pedagógica quiser; recomendação foi manter a régua.
@@ -1985,6 +1998,9 @@ Usuário dá o ok para o merge de `integ/f2-interface` na `main` e decide se a f
 - [ ] Migrar `api/` (Express + Mongo) para Django + PostgreSQL, mantendo o React de `editor/`? Motivos do usuário (2026-10-26): herança entre projetos, templates de escala por parceiro (com parentesco entre si), auth/perfis mais fortes (uso amplo todo ano), auditoria de mudanças de texto para avisar a equipe do impresso; equipe já sabe Django. Proposta de modelo apresentada, sem decisão — herança viva decidida (D-045); depende de: usuário confirmar a regra de conflito (sobrescrita local do filho vence ou o pai vence?)
 
 ## Sessões
+### 2026-11-09 10:00
+- D-233: atualização dos docs em `../revista-express-docs` (branch `docs/atualizacao-2026-11-09`, intermediária `integ/docs-atualizacao`); 3 subagentes em paralelo; `DESIGN.md` marcado como do editor antigo.
+
 ### 2026-11-06 14:30
 - Agente de mapeamento disparado: F2 preenchido todo na interface sobre um template único de passos fixos, com passos desligáveis por projeto (tempo e tecnologia). Saída em `docs/superpowers/specs/2026-11-06-f2-na-interface-mapeamento.md`.
 - D-227: usuário aprovou a direção do mapeamento.
