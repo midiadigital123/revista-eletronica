@@ -11,14 +11,12 @@
 // Grava só no que o teste cria (D-225): o 1º teste monta a própria revista (revistaPropria) e põe no
 // F1 dela um template próprio ("E2E textos <sufixo>"), cria nele a versão nova e, no fim, volta o "Padrão", descarta a cópia e exclui o próprio
 // (E4, D-207): nenhum spec grava em template que não criou. Use num banco descartável.
-import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { alpinePronto, atribuirEmMassa, entrar, liberarBloqueio, novoParceiro, revistaDaLista, revistaPropria } from "./helpers";
+import { alpinePronto, atribuirEmMassa, entrar, infograficoMinimo, liberarBloqueio, novoParceiro, revistaDaLista, revistaPropria } from "./helpers";
 import { criarTemplate, excluirTemplate } from "./templates";
 
 const INTRO = "#id_secao__F1__introducao";
 const F1 = "## introducao\nIntrodução\n\nTexto E2E da introdução.\n\n## fechamento\nFechamento\n\nTexto E2E do fechamento.\n";
-const SVG = path.join(__dirname, "../../nucleo/tests/fixtures/f2-lp.svg");
 const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mP4/5oBAATXAesdPD2pAAAAAElFTkSuQmCC", "base64");
 
 test("revista: cópia por seção, aviso com diff e descartar", async ({ page }) => {
@@ -90,8 +88,8 @@ test("revista: cópia por seção, aviso com diff e descartar", async ({ page })
 
 // U8b: página da revista em duas colunas. Monta um parceiro "E2E Revista <sufixo>" com cortes de LP
 // (a cascata cria projeto e revista sem template), matriz pelo lote e nome do projeto; na revista:
-// templates salvam ao escolher e liberam "Textos", o SVG vai pelo clique e a capa por soltar (miniatura
-// + "Salvo às"), a Situação chega a 6 de 6 e "Validar revista" valida. O limpar.ts apaga no fim (D-224).
+// templates salvam ao escolher e liberam "Textos", o infográfico fica no mínimo e a capa vai por soltar
+// (miniatura + "Salvo às"), a Situação chega a 6 de 6 e "Validar revista" valida. O limpar.ts apaga no fim (D-224).
 test("revista: templates, arquivos por soltar e validar pela coluna Situação", async ({ page }) => {
   const erros: string[] = [];
   page.on("pageerror", (e) => erros.push(e.message));
@@ -149,9 +147,8 @@ test("revista: templates, arquivos por soltar e validar pela coluna Situação",
   await page.selectOption("#template-F1", padrao);
   await expect(page.locator("#textos textarea")).toBeVisible();
 
-  // 2. SVG pelo clique (input do rótulo) e capa por soltar: envia ao escolher e troca a parte de arquivos.
-  await page.setInputFiles("#arquivo-svg", SVG);
-  await expect(page.locator("#arquivos")).toContainText("SVG enviado");
+  // 2. Infográfico no mínimo (passos desligados e habilidade) e capa por soltar: troca a parte de arquivos.
+  await infograficoMinimo(page, page.locator(".inf-card"));
   const transfer = await page.evaluateHandle((b64) => {
     const dt = new DataTransfer();
     const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
