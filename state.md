@@ -2,11 +2,11 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-F2 gerado: fase 2 de 5 concluída e mergeada (fast-forward) na `integ/f2-gerado` (`da8ac04`, sem push; worktree `/home/otavio.peres/dev/revista-express-f2-f2`, branch `feat/f2-f2`). Funcionando: template F2 com 9 seções; F2 gerado por `servicos/f2.py` a partir dos infográficos (D-242); resolvido com infográficos, pendência `infografico` e passo desligado fora do hash (D-243); revista em páginas — sumário, F1 e um F2 por infográfico — no preview e no zip (D-244); imagens dos itens no preview e no zip, zip sem SVG (D-245); specs E2E por página (D-247); gabaritos com os dados do docx real (D-248). Suíte 884 OK, 8 pulados; Playwright 155+ OK. Quebrado/pendente: specs E2E `impacto`, `impresso`, `painel` e `revista-textos` vermelhos até a fase 3 (travam no "Validado" pela pendência `infografico`); UI do SVG antigo, `criar_demo` com SVG e `quote()` do `src` da imagem ficam para a fase 3; remoção do SVG e docs restantes na fase 4; a `integ/f2-gerado` só entra na `main` com as fases 1 a 3 (D-237). À parte: `integ/abrir-ano` (D-246) no remoto, aguardando PR para a `main`.
+F2 gerado: fase 2 de 5 concluída e mergeada (fast-forward) na `integ/f2-gerado` (`da8ac04`, sem push; worktree `/home/otavio.peres/dev/revista-express-f2-f2`, branch `feat/f2-f2`). Funcionando: template F2 com 9 seções; F2 gerado por `servicos/f2.py` a partir dos infográficos (D-242); resolvido com infográficos, pendência `infografico` e passo desligado fora do hash (D-243); revista em páginas — sumário, F1 e um F2 por infográfico — no preview e no zip (D-244); imagens dos itens no preview e no zip, zip sem SVG (D-245); specs E2E por página (D-247); gabaritos com os dados do docx real (D-248). Suíte 884 OK, 8 pulados; Playwright 155+ OK. Quebrado/pendente: specs E2E `impacto`, `impresso`, `painel` e `revista-textos` vermelhos até a fase 3 (travam no "Validado" pela pendência `infografico`); UI do SVG antigo, `criar_demo` com SVG e `quote()` do `src` da imagem ficam para a fase 3; remoção do SVG e docs restantes na fase 4; a `integ/f2-gerado` só entra na `main` com as fases 1 a 4 (D-249). À parte: `integ/abrir-ano` (D-246) no remoto, aguardando PR para a `main`.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Planejar a fase 3 do F2 gerado (tela de edição dos infográficos e upload das imagens dos itens) a partir de `docs/superpowers/plans/` (plano do F2 gerado).
+Decidir onde entram os itens "fazer agora" da auditoria e criar a worktree `feat/f2-f3` a partir da `integ/f2-gerado` para a T1 da fase 3.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1937,7 +1937,7 @@ Planejar a fase 3 do F2 gerado (tela de edição dos infográficos e upload das 
 - **Motivo:** com só a fase 2 em produção, nenhuma revista poderia ser validada nem baixada. Opção A escolhida pelo usuário em 09/11; não pede código e mantém um único dia em que o "Validado" cai.
 - **Descartadas:** (B) a fase 2 sem pendências novas, que entrariam na fase 3 — revistas com infográfico vazio poderiam ser validadas.
 - **Arquivos afetados:** nenhum código; fluxo de trabalho.
-- **Status:** ativa
+- **Status:** ~~ativa~~ substituída por D-249 no escopo do merge (deploy das fases 1 a 4 juntas); as citações "D-237" no código continuam marcando a entrada do infográfico no resolvido e no hash.
 
 ### D-238 — Troca dos ids do template F2 sai da fase 3 e entra na fase 2 (2026-11-09 10:40)
 - **Contexto:** o render da fase 2 precisa saber qual seção alimenta cada passo; o template tinha ids antigos (`passo1..4`, `dlg-p2`, `dlg-p3`, `dlg-p4-iN`, com títulos trocados), e o plano deixava a troca para a fase 3.
@@ -2020,8 +2020,34 @@ Planejar a fase 3 do F2 gerado (tela de edição dos infográficos e upload das 
 - **Arquivos afetados:** `app/nucleo/tests/dados/infografico-docx.json`, `app/nucleo/tests/test_preview.py`, `app/e2e/tests/pagina.spec.ts`, `zip.spec.ts`, `app/e2e/fixtures/pagina/*.html`, `revista.zip`.
 - **Status:** ativa. Limite: todo texto real cabe na caixa, então o gabarito não prova o corte com reticências do `foreignObject` (falta um caso de texto maior que a caixa).
 
+### D-249 — `integ/f2-gerado` entra na main só com as fases 1 a 4 (2026-11-10 21:00)
+- **Contexto:** a D-237 levava as fases 1 a 3 juntas para a `main`, mas a planilha e o "o que mudou" do impresso só ganham os infográficos na fase 4; sem ela, o time do impresso não vê o conteúdo novo do F2.
+- **Decisão:** a `integ/f2-gerado` só entra na `main` depois da fase 4 (fases 1 a 4 juntas). Substitui a D-237 só no escopo do merge: as citações "D-237" no código (`resolver.py`, `html.py`, `admin/revista.py`, `regras-de-negocio.md`) continuam marcando a entrada do infográfico no resolvido e no hash, no lugar do SVG.
+- **Motivo:** escolha do usuário em 10/11 (pergunta do planejamento da fase 3).
+- **Descartadas:** puxar a parte do impresso da fase 4 para a 3 (fase 3 maior, deploy mais cedo).
+- **Arquivos afetados:** `state.md`, `docs/superpowers/plans/2026-11-09-f2-fase-2.md`.
+- **Status:** ativa
+
+### D-250 — Conselho da fase 2: pendência do texto do clique e registro do deploy (2026-11-10 21:10)
+- **Contexto:** conselho de 5 analistas (Mínimo, Justificativa, Alternativas, Falha, Futuro leitor) sobre as decisões D-237 a D-248, pedido pelo usuário.
+- **Decisão:** veredito O4, unânime na rodada final (5×0; 3×2 O4×O5 na 1ª): registrar a D-249; nova falta da pendência `infografico` "o passo Habilidades/Progressão está ligado e falta o texto do clique" (`resolver.pendencias`), porque o `+` abriria um modal só com o título e passaria no "Validado" (o plano mestre pede "passo ligado sem dado" e a D-233 conta os textos ❶ a ❸ como dado); registrar a D-251.
+- **Motivo:** o modal vazio sai na web e no zip no deploy; a 0023 deixa ❷ e ❸ vazios nas revistas sem cópia dlg-p2/dlg-p3.
+- **Descartadas:** O5 (tirar já o parágrafo 156 de `tarefas-fechamento` e apagar as redundâncias `empacotar.py` `zip_pagina` e `f2.py:110/:118`) — só pesam no impresso (fase 4) ou são limpeza; ficaram como pergunta e pendência. O7 (preview com as URLs do zip) — recomendação para a fase 3.
+- **Arquivos afetados:** `servicos/resolver.py`, `tests/test_resolver.py` (`test_passo_ligado_sem_texto_do_clique`; `preencher_infograficos` com os textos), `docs/regras-de-negocio.md`.
+- **Status:** ativa
+
+### D-251 — Revista arquivada com foto antiga sai sem F2 no preview e no zip (2026-11-10 21:15)
+- **Contexto:** a foto de arquivamento de antes da D-237 não tem `infograficos`; a regra antiga (D-117) dizia que a arquivada "congela, mantendo SVG, capa, cópias e fotos". Levantado pela lente Falha do conselho da fase 2.
+- **Decisão:** essa revista sai só com sumário e F1 no preview e no zip, sem página F2 (`html.paginas`, `empacotar._imagens` com `.get("infograficos", [])`). Decisão registrada do que a fase 2 já fazia (plano da fase 2, linha 51).
+- **Motivo:** a foto não guarda o infográfico, e montar o F2 da foto antiga exigiria manter o render do SVG enviado, que sai na fase 4.
+- **Descartadas:** manter o SVG antigo até a fase 4 para essas revistas (dois renders do F2 em paralelo).
+- **Arquivos afetados:** `servicos/html.py`, `servicos/empacotar.py`.
+- **Status:** ativa
+
 ## Perguntas em aberto
-- [ ] (09/11, plano da fase 2) A planilha e o "o que mudou" do impresso só ganham os infográficos na fase 4. Se as fases 1 a 3 forem para a `main` sem a 4, o impresso não vê o conteúdo novo do F2. Puxar a parte do impresso da fase 4 para a 3, ou deployar 1 a 4 juntas? Decidir antes da fase 3 — depende de: Otavio
+- [ ] (10/11, auditoria do código) Quais itens do "fazer agora" entram e onde: `planilhas.py:97` falha explícita para componente sem layout; enum no lugar de "2EF" em `cascata.py` e assert nas 12 etapas de `f2.py`; constante `ANO_DEMO` no E2E (138 ocorrências de 2026); separar `pendencias_f1`/`pendencias_f2`; helper `pode(user, modelo, acao)` (48 checagens fora de `permissoes.py`). Depois: hash do resolvido persistido (o resolver roda por revista no painel, impacto, matriz, paleta e impresso; teto ~50 revistas) e painel paginado com poda de fotos — depende de: Otavio
+- [ ] (10/11, conselho da fase 2) O 1º parágrafo de `tarefas-fechamento` (seed `f2-lp.hbs`/`f2-mt.hbs` e migração 0023) fala dos itens do D05 de LP (tirinha, charge), contra o motivo da D-240. Tirar do seed e da 0023 antes da fase 4 (quando o impresso lê a seção)? — depende de: Otavio
+- [x] (D-249: deploy das fases 1 a 4 juntas) (09/11, plano da fase 2) A planilha e o "o que mudou" do impresso só ganham os infográficos na fase 4. Se as fases 1 a 3 forem para a `main` sem a 4, o impresso não vê o conteúdo novo do F2. Puxar a parte do impresso da fase 4 para a 3, ou deployar 1 a 4 juntas? Decidir antes da fase 3 — depende de: Otavio
 - [x] (D-237: opção A) (09/11, contra a D-236) Fase 2 sozinha na `main` trava o "Validado" e o zip de toda revista: as pendências novas do infográfico (habilidade vazia, passo ligado sem dado, item sem imagem) só se resolvem na tela da fase 3. Opções: (A) `integ/f2-gerado` entra na `main` só com as fases 1 a 3; (B) a fase 2 não cria pendência nova, e elas entram na fase 3 — depende de: Otavio
 - [ ] No banco de dev, SAESE LP (revista 3) e SAEGO LP (revista 13) estão com o "Validado" desatualizado: o hash gravado não bate com a revista resolvida, já com o código da `main` (visto em 06/11 ao testar a fase 1; não é efeito dela). Revalidar ou investigar o que mudou — depende de: Otavio
 - [ ] F2 animado (pasta `example/infografico-animado`, analisado em 05/11): viável sem mudar banco nem SVG. Escolher a integração: (A) abertura animada que termina no estado do svg-tour atual, ou (B) substituir o svg-tour pelo player do exemplo (perde minimapa, zoom e modais prontos). Risco: o roteiro acha as peças pela ordem dos filhos no SVG; só existe 1 SVG real (os 80 em `media/f2` são cópias do fixture) — depende de: Otavio + design (o SVG de MT e de outros parceiros mantém a mesma árvore?)
@@ -2559,3 +2585,4 @@ Planejar a fase 3 do F2 gerado (tela de edição dos infográficos e upload das 
 - Tarefa 7: Playwright inteiro na stack isolada `e2e-f2`: 155 OK; vermelhos esperados até a fase 3 (travam no "Validado" pela pendência `infografico`): `impacto.spec.ts`, `impresso.spec.ts`, `painel.spec.ts`, `revista-textos.spec.ts` (nos 2 projetos); `templates-admin` e `templates-editor` corrigidos para o F2 de 9 seções (8598596); `ano.spec.ts` instável no chromium (3/3 OK ao repetir). Gabaritos com os dados do docx real (D-248, 12b0b72). Conferência à mão no Firefox (zoom, minimapa, textos do `foreignObject`, tabela cheia): OK pelo usuário; Safari não conferido (sem Mac).
 - Revisão da fase 2: Aprovado com ressalvas (2 Important, 7 Minor); correção em andamento. Usuário aprovou ("ok"): migração 0023 fica como está (apaga as cópias fora das 9 seções também em arquivada; só ganha comentário no cabeçalho); stack `e2e-f2` fica de pé até rodar de novo os specs com app depois da correção.
 - Fase 2 do F2 gerado concluída: correção da revisão da fase (c33ae68: hash sem código/texto de etapa com Habilidades desligado, docs da main, código morto, teste da página F2 de arquivada); 0023 comentada (da8ac04); merge fast-forward de `feat/f2-f2` na `integ/f2-gerado` com o ok do usuário; stack `e2e-f2` derrubada com o volume.
+- Conselho da fase 2 (5 analistas): O4 unânime — D-249 (deploy 1 a 4), D-250 (pendência do texto do clique), D-251 (arquivada antiga sem F2); T0 da fase 3 aplicada e mergeada (fast-forward) na `integ/f2-gerado`; suíte 885 OK. Auditoria do código (só leitura): 11 achados, riscos de escala no resolver por revista e no painel; itens "fazer agora" aguardam decisão.
