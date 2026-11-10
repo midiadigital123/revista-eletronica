@@ -1,6 +1,8 @@
 # Kanban — revista-express
 
 ## Backlog
+- **K-034** Etapa do projeto (`feat/etapa-do-projeto`): 14 commits fora da `main`, tarefa 5 em WIP · pausada
+  nota: parada por decisão do usuário em 10/11; branch e worktree `revista-express-etapa` ficam como estão
 - **K-028** Fase 3 do F2: tela dos infográficos (resolve a pendência `infografico`), a partir da T1
   nota: os specs E2E `impacto`, `impresso`, `painel` e `revista-textos` voltam ao verde aqui
 - **K-029** Fase 4 do F2: remover o SVG enviado, impresso com os infográficos, docs
@@ -12,7 +14,6 @@
 ## Doing
 
 ## Review
-- **K-034** Destino da `feat/etapa-do-projeto`: 14 commits fora da `main`, tarefa 5 parada em WIP (06/11)
 
 ## Done
 - **K-027** Skill `kanban`: quadro substitui o "Plano" do `state.md` · 2026-11-10 · D-253
