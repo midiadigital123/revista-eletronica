@@ -5,6 +5,8 @@
 #   2. as cópias dlg-p2 e dlg-p3 das revistas viram texto_progressao e texto_habilidades do infográfico "outras"
 #      (ou do "alfa", se a revista só tem esse), só em campo vazio;
 #   3. as cópias do F2 cujo id não está nas 9 seções são apagadas.
+#      Também em revista arquivada, de propósito (ao contrário da 0022): essas seções não valem mais e voltariam
+#      como lixo inválido se a revista voltar (D-117); o texto arquivado fica na foto de arquivamento.
 # Linhas criadas ou apagadas aqui não têm registro do simple-history (o modelo histórico das migrações não
 # dispara o sinal): é aceito, como na 0022. Sem volta: o texto antigo fica na versão anterior, e as cópias
 # apagadas não voltam.
