@@ -1,3 +1,4 @@
+import io
 import json
 import os
 import re
@@ -27,14 +28,14 @@ from nucleo.models import (
 from nucleo.servicos.arquivos import receber_capa
 from nucleo.servicos.cascata import gravar_cortes
 from nucleo.servicos.html import contexto_pagina, css_das_cores, link_zip, paginas, template
+from nucleo.servicos.pendencias import pendencias
 from nucleo.models.revista import Motivo
 from nucleo.servicos.resolver import resolver
 from nucleo.tests.test_resolver import MediaTemporaria, Mundo
 
 # Páginas que o Playwright pagina.spec.ts abre (gabarito). Regerar: REGERAR_FIXTURES=1.
 GABARITO = Path(__file__).resolve().parents[2] / "e2e" / "fixtures" / "pagina"
-# Infográfico de LP 2026 tirado do docx (D-248): só os campos que o modelo guarda.
-DOCX = json.loads((Path(__file__).parent / "dados" / "infografico-docx.json").read_text(encoding="utf-8"))
+DOCX = criar_demo.DOCX
 PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 32
 F2 = (
     "## abertura\nAvaliação & Currículo\n\nSiga o tour.\n\nSegundo parágrafo.\n\n"
@@ -63,21 +64,10 @@ def dois_infograficos(revista):
     RevistaInfografico.objects.get_or_create(
         revista=revista, tipo="alfa", defaults={"componente_id": revista.componente_id, "ano_id": revista.ano_id}
     )
-    for inf in RevistaInfografico.objects.filter(revista=revista, arquivado_em__isnull=True):
-        habilidade = DOCX["habilidade"] + (" (alfa)" if inf.tipo == "alfa" else "")
-        RevistaInfografico.objects.filter(pk=inf.pk).update(
-            habilidade=habilidade, **{c: DOCX[c] for c in ("texto_descritor", "texto_habilidades", "texto_progressao")}
-        )
-        for e in DOCX["etapas"]:
-            RevistaInfograficoEtapa.objects.update_or_create(
-                infografico=inf, etapa=e["etapa"], defaults={"ano_id": inf.ano_id, **e}
-            )
-        for p, item in enumerate(DOCX["itens"], 1):
-            RevistaInfograficoItem.objects.update_or_create(
-                infografico=inf, posicao=p,
-                defaults={"ano_id": inf.ano_id, "imagem": f"infograficos/{inf.tipo}-{p}.png", "imagem_sha256": "a" * 64,
-                          **item},
-            )  # fmt: skip
+    criar_demo.preencher_infograficos(revista, "infograficos/{tipo}-{p}.png")
+    RevistaInfografico.objects.filter(revista=revista, tipo="alfa", arquivado_em__isnull=True).update(
+        habilidade=DOCX["habilidade"] + " (alfa)"
+    )
     gravar_imagens(revista)
 
 
@@ -403,7 +393,7 @@ class HtmlTest(TestCase):
             css_das_cores({"padrao-١": "#FFFFFF"})  # dígito árabe: \d aceitaria
 
 
-class CriarDemoTest(TestCase):
+class CriarDemoTest(MediaTemporaria, TestCase):
     def test_recusa_sem_debug(self):
         with self.assertRaisesMessage(CommandError, "DEBUG"):
             call_command("criar_demo")
@@ -414,3 +404,21 @@ class CriarDemoTest(TestCase):
         with self.assertRaisesMessage(CommandError, "não foi criado por este comando"):
             call_command("criar_demo")
         self.assertEqual(get_user_model().objects.get(username="demo-preview").password, "x")
+
+    @override_settings(DEBUG=True)
+    def test_infograficos_da_demo_sem_pendencia_e_idempotente(self):
+        call_command("criar_demo", stdout=io.StringIO())
+        revista = Revista.objects.get(projeto__parceiro_ano__parceiro__nome=criar_demo.PARCEIRO)
+        self.assertEqual([p for p in pendencias(revista) if p.codigo == "infografico"], [])
+
+        def contar():
+            return (
+                RevistaInfograficoEtapa.objects.filter(infografico__revista=revista).count(),
+                RevistaInfograficoItem.objects.filter(infografico__revista=revista).count(),
+                len(default_storage.listdir("infograficos")[1]),
+            )
+
+        antes = contar()
+        self.assertEqual(antes[1:], (4, 4))  # só Outras: a demo não tem 2EF
+        call_command("criar_demo", stdout=io.StringIO())
+        self.assertEqual(contar(), antes)
