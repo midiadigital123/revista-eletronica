@@ -6,7 +6,7 @@ Docs alinhados ao código (D-233 e D-234), commitados em `integ/docs-atualizacao
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Dar o ok para o merge de `fix/abrir-ano-vazio` (worktree `/home/otavio.peres/dev/revista-express-ano-vazio`) numa `integ/<tema>`.
+Usuário revisa e mergeia `integ/abrir-ano` (D-246, primeiro ano vazio) na `main`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2445,3 +2445,4 @@ Dar o ok para o merge de `fix/abrir-ano-vazio` (worktree `/home/otavio.peres/dev
 - Diagnóstico do travamento da máquina às 11:05: sem OOM nem carga; suspeita sem prova no driver NVIDIA; SysRq sugerido para o próximo travamento.
 - PR #6 aberto: `integ/docs-atualizacao` → `main`; conflitos do `trail check` justificados como falsos positivos.
 - D-246: banco sem ano — "Abrir ano" cria o 1º ano vazio (tela, admin e comando), na `fix/abrir-ano-vazio` a partir da `main`.
+- `fix/abrir-ano-vazio` mergeada (fast-forward) na `integ/abrir-ano`, criada a partir da `main`; suíte 806 OK, 8 pulados.
