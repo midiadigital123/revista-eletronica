@@ -1,6 +1,6 @@
 # Modelo ER (Django + PostgreSQL 17)
 
-Alinhado ao código em 2026-11-05: `app/nucleo/models/`, migrações `0001` a `0018` e decisões vigentes do `state.md` (até a D-208). Quando o texto e o código divergem, vale o código. As regras de negócio (o que a aplicação exige além do banco) estão em [`regras-de-negocio.md`](regras-de-negocio.md).
+Alinhado ao código em 2026-11-09: `app/nucleo/models/`, migrações `0001` a `0019` e decisões vigentes do `state.md` (até a D-220; as decisões do F2, D-227 a D-232, ainda não mudaram o modelo). Quando o texto e o código divergem, vale o código. As regras de negócio (o que a aplicação exige além do banco) estão em [`regras-de-negocio.md`](regras-de-negocio.md).
 
 Convenções aplicadas em todas as tabelas:
 - **Chave:** `id bigint` identity (`BigAutoField`). Sem `serial` e sem UUID: o volume é pequeno e nada é distribuído.
@@ -298,6 +298,7 @@ Fonte única: `app/nucleo/permissoes.py`. Os quatro grupos (Admin, Pedagógica, 
 | `0008_excluir_passo_cor` | Admin, Pedagógica e Mídias: `delete_projetopasso` e `delete_projetocor` (voltar ao passo da matriz / à paleta do ano) | D-166 |
 | `0014_excluir_tarefa_descritor` | Os mesmos três: `delete_tarefa` e `delete_descritor`, só pela confirmação forte | D-181 |
 | `0016_excluir_sem_uso` | Os mesmos três: `delete_parceiro`, `delete_etapa`, `delete_componente`, `delete_matriz` e `delete_template`. Só o Admin recebe também `delete_ano` | D-205, D-206, D-207 |
+| `0019_admin_marca_impressa` | Admin: `marcar_impressa` (`ADMIN_MARCA_IMPRESSA = True`) | D-220 |
 
 O Impresso nunca recebe `delete_*`. A tabela papel × ação completa está em [`regras-de-negocio.md`](regras-de-negocio.md#8-perfis-e-permissões).
 

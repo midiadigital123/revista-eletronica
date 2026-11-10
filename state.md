@@ -2,36 +2,15 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-F2 gerado: fase 2 de 5 concluída e mergeada (fast-forward) na `integ/f2-gerado` (`da8ac04`, sem push; worktree `/home/otavio.peres/dev/revista-express-f2-f2`, branch `feat/f2-f2`). Funcionando: template F2 com 9 seções; F2 gerado por `servicos/f2.py` a partir dos infográficos (D-242); resolvido com infográficos, pendência `infografico` e passo desligado fora do hash (D-243); revista em páginas — sumário, F1 e um F2 por infográfico — no preview e no zip (D-244); imagens dos itens no preview e no zip, zip sem SVG (D-245); specs E2E por página (D-247); gabaritos com os dados do docx real (D-248). Suíte 884 OK, 8 pulados; Playwright 155+ OK. Quebrado/pendente: specs E2E `impacto`, `impresso`, `painel` e `revista-textos` vermelhos até a fase 3 (travam no "Validado" pela pendência `infografico`); UI do SVG antigo, `criar_demo` com SVG e `quote()` do `src` da imagem ficam para a fase 3; remoção do SVG e docs restantes na fase 4; a `integ/f2-gerado` só entra na `main` com as fases 1 a 4 (D-249). À parte: `integ/abrir-ano` (D-246) no remoto, aguardando PR para a `main`.
+Fase 3 do F2 (K-028) aberta: worktree `/home/otavio.peres/dev/revista-express-f2-f3`, branch `feat/f2-f3` saída da `integ/f2-gerado` (`93c28f5`), com a `main` mergeada (PRs #8 a #11: abrir ano D-246, docs D-233/D-234 da main, kanban D-253). Funcionando: tudo da fase 2 (F2 gerado, páginas separadas, zip) + primeiro ano vazio + kanban. Quebrado/pendente: specs E2E `impacto`, `impresso`, `painel` e `revista-textos` vermelhos até a fase 3 (pendência `infografico`); fases 4 e 5; S17/S18. Tarefas no `kanban.md`.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Decidir onde entram os itens "fazer agora" da auditoria e criar a worktree `feat/f2-f3` a partir da `integ/f2-gerado` para a T1 da fase 3.
+Rodar a suíte Django na stack `-p f2-f3` para provar o merge da `main`; depois, planejar a T1 da fase 3 (D-252).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
-1. [x] S01 — Esqueleto Django + PostgreSQL + Playwright
-2. [x] S02 — Modelos de cadastro e matriz + FK composta
-3. [x] S03 — Parceiro_ano, corte, projeto, revista, texto, controle
-4. [x] S03b — Revista JS/CSS para 2 a 5 padrões
-5. [x] S04 — Cadastros iniciais + importador de matriz
-6. [x] S05 — Templates: formato, validação, seed
-7. [x] S06 — Cascata dos cortes
-8. [x] S09 — Serviço de SVG e capa
-9. [x] S10 — Bloqueio
-10. [x] S14 — Perfis e permissões
-11. [x] S07 — Resolver, foto, hash, pendências
-12. [x] S08 — Página única F1 + F2
-13. [x] S15 — Zip por revista
-14. [x] S11a — Admin: cadastros, cortes, matriz
-15. [x] S11b1 — Admin: templates
-16. [x] S11b2 — Admin: cópia por seção
-17. [x] S11c — Admin: projeto, variáveis, arquivos, lote
-18. [x] S12 — Painel + Validado
-19. [x] S13 — Impresso + planilhas
-20. [x] S16 — Abrir ano
-21. [ ] S17 — Carga 2026 + desligar o antigo  ← agora
-22. [ ] S18 — E2E da temporada
+Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 10/11, D-253).
 
 ## Decisões
 
@@ -1223,7 +1202,7 @@ Decidir onde entram os itens "fazer agora" da auditoria e criar a worktree `feat
 - **Motivo:** a virada é sempre a partir do ano anterior; o diff da D-113 mostra o que mudou desde o ano passado.
 - **Descartadas:** `--de` opcional (sem caso de uso); conferir permissão no serviço (o comando de ops não tem usuário); `TransactionTestCase` (não há teste de concorrência).
 - **Arquivos afetados:** `app/nucleo/servicos/abrir_ano.py`, `app/nucleo/management/commands/abrir_ano.py`, `app/nucleo/tests/test_abrir_ano.py`, `app/nucleo/models/texto.py` (só comentário)
-- **Status:** ativa. Verificado por mim: 162 testes OK (8 de PDF pulados), `makemigrations --check` limpo. Revisão (django-reviewer) em andamento. Limite `ponytail:`: leitura da origem sem trava (edição concorrente pode entrar pela metade). A confirmar com o usuário: `Tarefa.arquivo` compartilhado entre anos.
+- **Status:** ativa; ~~sem ano anterior, `AnoRecusado`~~ substituída por D-246 (banco vazio: o 1º ano nasce vazio). Verificado por mim: 162 testes OK (8 de PDF pulados), `makemigrations --check` limpo. Revisão (django-reviewer) em andamento. Limite `ponytail:`: leitura da origem sem trava (edição concorrente pode entrar pela metade). A confirmar com o usuário: `Tarefa.arquivo` compartilhado entre anos.
 
 ### D-149 — Correções da revisão do S16 (2026-10-29 19:35)
 - **Contexto:** revisão (django-reviewer) do S16: 0 críticos, 3 importantes. Uma substituição de matriz concorrente recria descritores e tarefas com ids novos, e a cópia em READ COMMITTED quebrava com `KeyError` (500). Um ano digitado errado (`20277`) criava milhares de linhas que nada apaga (FKs PROTECT). Nenhum teste provava que uma falha no meio desfaz tudo.
@@ -1729,7 +1708,7 @@ Decidir onde entram os itens "fazer agora" da auditoria e criar a worktree `feat
 - **Motivo:** decisão do usuário ("fecha o furo"). Uma regra num lugar só fecha as duas telas.
 - **Descartadas:** bloquear só a senha — dados e "Desativar" continuariam abertos a um perfil que não pode dar o grupo Impresso; manter (o furo anula a regra do Impresso).
 - **Arquivos afetados:** `app/nucleo/usuarios.py`, `nucleo/tests/test_ui_usuarios.py`, `nucleo/tests/test_admin_cadastro.py`, `docs/regras-de-negocio.md`
-- **Status:** ativa
+- **Status:** ativa em parte: ~~Admin não atribui o Impresso nem marca impressa~~ substituído pela D-220 (o título não vale mais; hoje o Admin altera Pedagógica, Mídias e Impresso e só vê outro Admin)
 
 ### D-212 — Login e logout próprios das telas B; o login do admin some (2026-11-05)
 - **Contexto:** o usuário viu o "Administração do Django" ao sair e ao trocar de perfil: o "Sair" ia ao logout do admin, todas as views mandavam o anônimo para `admin:login`, e o `next=/admin/` deixava a pessoa no índice do admin depois de entrar.
@@ -2050,6 +2029,36 @@ Decidir onde entram os itens "fazer agora" da auditoria e criar a worktree `feat
 - **Motivo:** recomendação aceita pelo usuário em 10/11 ("Gostei da sua recomendação"); a fase 3 vai mexer nas pendências, e os itens rápidos custam ~1 h.
 - **Descartadas:** fazer tudo do "fazer agora" antes da fase 3 (~8 h fora do caminho da fase).
 - **Arquivos afetados:** plano da fase 3; na T1, `servicos/resolver.py`, `servicos/pendencias.py` (novo), `planilhas.py`, `cascata.py`, `f2.py`, `empacotar.py`, `cortes.py`, `sistema/settings.py`.
+### D-233 — Docs alinhados ao código de 06/11, F2 novo registrado como planejado (2026-11-09 10:00)
+- **Contexto:** pedido do usuário: atualizar toda a documentação para a versão atual. Os docs foram alinhados em 05/11 11:30; depois entraram S6–S9 das telas B e D-209 a D-232, várias sem menção em doc nenhum.
+- **Decisão:** worktree `revista-express-docs`, branch `docs/atualizacao-2026-11-09` a partir de `integ/docs-atualizacao`; 3 subagentes com arquivos separados (raiz + docker/e2e; telas e fichas; regras, ER e variáveis). O F2 gerado (D-227 a D-232) entra nos docs só como "decidido, não implementado", com link para as specs. `DESIGN.md` ganha o aviso de "editor antigo", como o `PRODUCT.md`. `inventario.md`, `rascunho-ui.md`, `contrato.md` e `s17-*.proposto.md` ficam como estão: já são marcados como históricos.
+- **Motivo:** o código é a fonte da verdade; descrever como vigente o F2 novo enganaria quem lê.
+- **Descartadas:** reescrever os docs históricos — perde o retrato da época; apagar `DESIGN.md` — a skill impeccable o lê, e o aviso basta.
+- **Arquivos afetados:** `CLAUDE.md`, `README.md`, `INFRA.md`, `DESIGN.md`, `docs/docker.md`, `docs/e2e.md`, `docs/telas/**`, `docs/regras-de-negocio.md`, `docs/modelo-er.md`, `docs/variaveis.md`
+- **Status:** ativa
+
+### D-234 — Respostas às 5 perguntas da D-233: `workers: 1` fica, `.env.example` completo, comentários corrigidos (2026-11-09 11:00)
+- **Contexto:** 5 perguntas abertas na revisão dos docs (D-233).
+- **Decisão:** (1) `workers: 1` fica, com o motivo atual no `playwright.config.ts`: mesmo usuário em todos os specs (D-191) e o `anos.spec` abre e apaga 2027, o ano mais recente que as rotas `_inicio` e `/` mostrariam a outro spec no meio. (2) `app/.env.example` ganha `APP_PORT`, `APP_BIND` e `COMPOSE_PROJECT_NAME`. (3) Sai do `CLAUDE.md` a seção "Who is you?" (texto da skill frontend-design colado). (4) Comentários do login do admin (`usuarios.py`, `helpers.ts::entrar`) e do `limpar_e2e` (`playwright.config.ts`) atualizados. (5) Comentário do `Bloqueio` diz CASCADE do Django e NO ACTION no banco.
+- **Motivo:** respostas do usuário (2 a 5); a 1 foi recomendação minha, pedida por ele.
+- **Descartadas:** `workers: 2` — o ano 2027 do `anos.spec` vaza para os outros specs e a suíte fica instável sem ganho medido.
+- **Arquivos afetados:** `CLAUDE.md`, `app/.env.example`, `app/e2e/playwright.config.ts`, `app/e2e/tests/helpers.ts`, `app/nucleo/usuarios.py`, `app/nucleo/models/controle.py`, `docs/e2e.md`, `docs/regras-de-negocio.md`
+- **Status:** ativa. Achado à parte: `entrar()` confere o sucesso com `not.toHaveURL(/\/admin\/login\//)`, mas depois da D-212 o login falho fica em `/conta/entrar/`, então a conferência sempre passa.
+
+### D-246 — Banco sem ano: "Abrir ano" cria o primeiro ano vazio (2026-11-10 17:00)
+- **Contexto:** com o banco vazio, `abrir_ano` recusava ("nenhum ano anterior a X para copiar"), e a tela de anos nem mostrava o formulário; o 1º ano só nascia pela linha de comando (`carregar_cadastros`). O usuário apontou que não dá para abrir o primeiro ano.
+- **Decisão:** sem ano nenhum, `abrir_ano(ano)` cria só a linha do ano, sem cópia, e devolve `(novo, None)`; qualquer número de ano é aceito (não há "seguinte" sem anterior). A tela de anos mostra o formulário também sem ano; mensagem comum `VAZIO` ("Ano X aberto vazio: cadastre etapas, componentes e cores.") na tela, no admin e no comando. O ano seguinte copia desse normalmente. `carregar_cadastros` continua valendo. Substitui, em parte, D-148.
+- **Motivo:** escolha do usuário em 10/11 ("Vazio").
+- **Descartadas:** nascer com os cadastros padrão do `carregar_cadastros` (4 etapas, LP/MT, 5 cores; recomendada, recusada pelo usuário); manter a recusa (o 1º ano só pela linha de comando).
+- **Arquivos afetados:** `servicos/abrir_ano.py`, `urls/ui_anos.py`, `admin/cadastro.py`, `management/commands/abrir_ano.py`, `templates/ui/anos/anos.html`, `tests/test_abrir_ano.py`, `tests/test_ui_anos.py`, `docs/regras-de-negocio.md`.
+- **Status:** ativa. Limite: a tela B só edita cores existentes (`ui_anos.py`, paleta); as 5 cores do 1º ano vazio só se criam pelo admin ou pelo `carregar_cadastros`. Ano digitado errado no 1º ano (ex.: 20266) sai pela exclusão de ano.
+
+### D-253 — Tarefas num kanban.md, fora do state.md (2026-11-10 15:30)
+- **Contexto:** o usuário pediu uma skill que mantenha, em toda conversa, um quadro Backlog · Doing · Review · Done de todas as tarefas. O "Plano" do `state.md` duplicaria a lista e estava parado em S17 "← agora", sem as fases do F2.
+- **Decisão:** `kanban.md` na raiz é a lista única; o "Plano" do `state.md` só aponta para ele. Skill global `~/.claude/skills/kanban` (regras) + `kanban.py` (stdlib) que gera o `kanban.html` (fora do git) + hooks globais `SessionStart` (põe o quadro no contexto) e `PostToolUse` Write/Edit (regera o HTML). Doing com no máximo 1 card; Review = espera o usuário; Done = aprovado ou mergeado. Número D-253 porque D-247 a D-252 já estão em uso na `integ/f2-gerado`.
+- **Motivo:** escolhas do usuário (markdown + HTML, todos os projetos, kanban vira a lista). Skill sozinha não roda em toda sessão; o hook garante. Vai para a `main` por PR próprio, saído da `main`, para não carregar o F2 (D-249).
+- **Descartadas:** Artifact no claude.ai com banco (fora do repositório, depende do claude.ai); manter Plano e kanban juntos (as duas listas divergiriam); arrastar cards no HTML (exigiria servidor gravando o `.md`).
+- **Arquivos afetados:** `kanban.md`, `.gitignore`, `state.md`; fora do repo: `~/.claude/skills/kanban/`, `~/.claude/settings.json`, `~/.claude/CLAUDE.md`.
 - **Status:** ativa
 
 ## Perguntas em aberto
@@ -2058,6 +2067,15 @@ Decidir onde entram os itens "fazer agora" da auditoria e criar a worktree `feat
 - [x] (D-249: deploy das fases 1 a 4 juntas) (09/11, plano da fase 2) A planilha e o "o que mudou" do impresso só ganham os infográficos na fase 4. Se as fases 1 a 3 forem para a `main` sem a 4, o impresso não vê o conteúdo novo do F2. Puxar a parte do impresso da fase 4 para a 3, ou deployar 1 a 4 juntas? Decidir antes da fase 3 — depende de: Otavio
 - [x] (D-237: opção A) (09/11, contra a D-236) Fase 2 sozinha na `main` trava o "Validado" e o zip de toda revista: as pendências novas do infográfico (habilidade vazia, passo ligado sem dado, item sem imagem) só se resolvem na tela da fase 3. Opções: (A) `integ/f2-gerado` entra na `main` só com as fases 1 a 3; (B) a fase 2 não cria pendência nova, e elas entram na fase 3 — depende de: Otavio
 - [ ] No banco de dev, SAESE LP (revista 3) e SAEGO LP (revista 13) estão com o "Validado" desatualizado: o hash gravado não bate com a revista resolvida, já com o código da `main` (visto em 06/11 ao testar a fase 1; não é efeito dela). Revalidar ou investigar o que mudou — depende de: Otavio
+- [x] (09/11: D-236 mantida; PR #7 fechado sem merge — fase 1 só vai à `main` com a fase 2, testadas juntas) PR #7 (`feat/f2-f1` → `main`) em conflito só no `state.md`: Estado atual, Próxima ação, D-233/D-234 (números usados nas duas branches), Perguntas em aberto e Sessões. Resolver na worktree `revista-express-f2-f1`, renumerando D-233/D-234 da F2 para D-237/D-238 (o código cita D-233 em 4 arquivos). E a D-236 diz que a fase 1 só entra na `main` junto com a fase 2: o PR #7 a substitui? — depende de: Otavio.
+- [ ] Migração 0020 existe nas duas frentes: `0020_infograficos` (`feat/f2-f1`, seguida de 0021 e 0022) e `0020_etapa_do_projeto` (`feat/etapa-do-projeto`). A frente que entrar na `main` depois renumera a sua e refaz a dependência — depende de: ordem dos merges (usuário).
+- [ ] Numeração de decisões colide entre branches: D-233 é "Docs alinhados" nesta branch (PR #6) e "Uma página por fascículo" em `feat/f2-f1`; D-229 a D-231 de `feat/etapa-do-projeto` são outras decisões na `main`. Renumerar na branch que entrar depois na `main` — depende de: ordem dos merges (usuário).
+- [ ] (D-234) `entrar()` em `e2e/tests/helpers.ts` não detecta login falho (confere `/admin/login/`, mas o login falho fica em `/conta/entrar/`). Trocar para ir direto a `/conta/entrar/` e conferir que saiu dela? Muda teste: rodar a suíte E2E — depende de: Otavio
+- [x] (D-234: sim) (D-233, 09/11) Comentários de código ainda falam do login do admin depois da D-212: `nucleo/usuarios.py` ("todo perfil entra pelo login do admin") e `e2e/tests/helpers.ts::entrar` ("Entra no admin", passa por `/admin/login/`, que redireciona). Corrigir? — depende de: Otavio
+- [x] (D-234: fica 1, motivo novo no comentário) (D-233, 09/11) Playwright: `workers: 1` ainda é preciso? O motivo escrito (D-191: painel, impresso e revista gravam a mesma revista DEMONSTRAÇÃO) caiu com a D-225, em que cada spec grava na própria revista — depende de: Otavio (medir a suíte com 2 workers?)
+- [x] (D-234: sim) (D-233, 09/11) `app/.env.example` não lista `APP_BIND`, `APP_PORT` nem `COMPOSE_PROJECT_NAME`. Acrescentar? — depende de: Otavio
+- [x] (D-234: sai) (D-233, 09/11) O `CLAUDE.md` do projeto termina com "### Who is you?" (texto da skill frontend-design colado). Fica ou sai? — depende de: Otavio
+- [x] (D-234: sim) (D-233, 09/11) A D-224 e o comentário de `playwright.config.ts` dizem que o `limpar_e2e` apaga parceiros e templates; ele apaga também matrizes "E2E …" (D-225). `docs/e2e.md` já segue o código; corrigir o comentário? — depende de: Otavio
 - [ ] F2 animado (pasta `example/infografico-animado`, analisado em 05/11): viável sem mudar banco nem SVG. Escolher a integração: (A) abertura animada que termina no estado do svg-tour atual, ou (B) substituir o svg-tour pelo player do exemplo (perde minimapa, zoom e modais prontos). Risco: o roteiro acha as peças pela ordem dos filhos no SVG; só existe 1 SVG real (os 80 em `media/f2` são cópias do fixture) — depende de: Otavio + design (o SVG de MT e de outros parceiros mantém a mesma árvore?)
 - [ ] Textos do tour do F2 (SAEGO LP, template "Padrão") trocados em relação ao desenho: o passo 3 do tour se chama "Progressão da habilidade", mas enquadra o bloco "Descrição das habilidades no referencial curricular"; o botão + desse bloco (`btn-action-p3`) abre o modal "Progressão…". O passo 2 ("Itens por ano/série", "percentual de acerto") enquadra a linha de progressão. Visto na demo de 05/11; vale também no sistema hoje — depende de: Pedagógica (corrigir o template ou os ids do SVG?)
 - [x] F2 animado, ideia corrigida em 05/11: a animação não é só abertura; cada passo do svg-tour toca a animação do seu bloco (a câmera é a do tour, e o conector "viaja" do descritor até o bloco durante o movimento). A demo `example/f2-animado-tour/` ainda é a versão "só abertura". Sem mudar o `svg-tour.js`: basta o evento `svgtour:change`. Decidido em 05/11: (a) passo já visto aparece pronto, sem tocar de novo; ~~(b) antes da visita o bloco fica esmaecido, e a visão geral mostra o desenho inteiro~~ (substituída em 05/11: o usuário viu o bloco esmaecido sumir e reaparecer ao entrar no passo, e o passo 3 esmaecido acima do passo 2; agora (b) o bloco não visitado fica escondido e a visão geral mostra só fundo e título).
@@ -2075,7 +2093,7 @@ Decidir onde entram os itens "fazer agora" da auditoria e criar a worktree `feat
 - [x] (05/11: usuário mandou corrigir; Agente D) (regras de negócio, seção 10.1) `docs/modelo-er.md` está desatualizado em dois pontos: o bloqueio é tomado pelo mesmo usuário, não pela mesma sessão (D-191); a foto guarda a revista resolvida inteira e roda em READ COMMITTED (D-151/D-153/D-178). Corrigir? — depende de: usuário
 - [ ] (regras de negócio) O admin ainda pede o checkbox "afeta N revistas" sempre que há revista afetada; as telas B só avisam quando alguma perde o Validado (D-202). Igualar? — depende de: usuário
 - [ ] (regras de negócio 10.1, divergência 4, D-055) O limite do corte é o `Etapa.escala_max` de cada etapa (código: `models/cadastro.py:60`, `servicos/cascata.py:38`) ou os valores fixos 1000/500 da D-055? Se for o `escala_max`, reescrever a D-055 — depende de: usuário
-- [ ] (regras de negócio 10.1, divergências 8–10) Corrigir 3 comentários de código desatualizados (`permissoes.py:14`, `permissoes.py:17`, `models/controle.py:18`), sem mudar comportamento? — depende de: usuário
+- [x] (D-234: sim) (regras de negócio 10.1, divergência 10) Corrigir o comentário de `models/controle.py:18` ("CASCADE"; no banco a FK é NO ACTION), sem mudar comportamento? Os 2 de `permissoes.py` já foram trocados na D-218/D-220 (conferido em 09/11) — depende de: usuário
 - [ ] `.env.example` da raiz ainda é do sistema antigo (`SESSION_SECRET`, `ADMIN_EMAIL`); o certo é `app/.env.example`. Apagar ou substituir? — depende de: usuário
 - [x] (D-211, fechado) (S9) O perfil Admin pode redefinir a senha de um usuário Impresso e entrar como ele, ganhando `marcar_impressa` (anula `ADMIN_MARCA_IMPRESSA = False`). Furo já existia no admin. Fechar com `pode_editar` em `nucleo/usuarios.py` exigindo alvo sem grupo fora dos permitidos? — depende de: usuário
 - [x] (D-213; apagados em 05/11 a pedido do usuário) `api/.env`, `contrato/`, `escala.html`, `script.js`, `styles.css`, `descritores.json`, `saida/` e o `.env.example` da raiz
@@ -2130,7 +2148,7 @@ Decidir onde entram os itens "fazer agora" da auditoria e criar a worktree `feat
 - [x] (D-088 a D-094) Revisão do ER, negócio: valor revertido faz o "Validado" voltar sozinho (hash) — aceitável?; projeto readicionado (D-068) herda a última foto do arquivado?; reimportar matriz (D-071) recria ids e perde auditoria por registro — depende de: usuário
 - [x] (D-088 a D-094) Escolha de matriz/texto-modelo mora no Projeto (D-084), mas projetos não são clonados (D-085): em 2027 o CE renasceria sem a matriz CE. Onde guardar a escolha por parceiro × ano para sobreviver ao clone? — depende de: sessão de modelagem (é o desafio do PDF v2)
 - [ ] Intervalo mínimo e cor sobrescritos não têm `versao_base`: mudança no padrão não avisa o projeto que sobrescreveu. Precisa? — depende de: usuário
-- [ ] Admin pode clicar "Revista Impressa Atualizada"? (D-083 dá ao admin as permissões da Pedagógica, não as do Impresso) — depende de: usuário
+- [x] (D-220: sim) Admin pode clicar "Revista Impressa Atualizada"? (D-083 dá ao admin as permissões da Pedagógica, não as do Impresso) — depende de: usuário
 - [x] (D-062) Textos da revista: modelo comum + edição por projeto com "diff tipo git". Proposta do Claude: sobrescrita por bloco, guardando a versão do modelo usada; se o modelo mudar, avisar e mostrar o diff, sem fusão automática — depende de: usuário
 - [x] Propostas 1, 2, 5, 6 da revisão `make-interfaces-feel-better` aplicadas (D-040). Pendentes: 3 (`:active` do botão), 4 (feedback de toque), 7–10 — depende de: usuário
 - [ ] Alternativa de exibição (régua proporcional ou lista por padrão) — só se a equipe pedagógica quiser; recomendação foi manter a régua.
@@ -2169,6 +2187,10 @@ Decidir onde entram os itens "fazer agora" da auditoria e criar a worktree `feat
 - Commits da leva: 23d00d0, 660c806 (esquema, permissões), bf27df1 (cascata + 0022), 79a4e19 (item, D-235), f942878 (correções da revisão), bd41a90 (learning), e este `state.md`.
 - Usuário escolheu o merge local: `feat/f2-f1` → `integ/f2-gerado` por fast-forward; suíte rodada de novo na `integ/f2-gerado`.
 - D-236: a fase 1 entra na `main` só junto com a fase 2 (decisão do usuário).
+### 2026-11-09 10:00
+- D-234: respostas às 5 perguntas aplicadas (comentários, `.env.example`, `CLAUDE.md`); achado: `entrar()` do E2E não detecta login falho.
+- D-233: atualização dos docs em `../revista-express-docs` (branch `docs/atualizacao-2026-11-09`, intermediária `integ/docs-atualizacao`); 3 subagentes em paralelo; `DESIGN.md` marcado como do editor antigo.
+
 ### 2026-11-06 14:30
 - Agente de mapeamento disparado: F2 preenchido todo na interface sobre um template único de passos fixos, com passos desligáveis por projeto (tempo e tecnologia). Saída em `docs/superpowers/specs/2026-11-06-f2-na-interface-mapeamento.md`.
 - D-227: usuário aprovou a direção do mapeamento.
@@ -2595,3 +2617,23 @@ Decidir onde entram os itens "fazer agora" da auditoria e criar a worktree `feat
 - Fase 2 do F2 gerado concluída: correção da revisão da fase (c33ae68: hash sem código/texto de etapa com Habilidades desligado, docs da main, código morto, teste da página F2 de arquivada); 0023 comentada (da8ac04); merge fast-forward de `feat/f2-f2` na `integ/f2-gerado` com o ok do usuário; stack `e2e-f2` derrubada com o volume.
 - Conselho da fase 2 (5 analistas): O4 unânime — D-249 (deploy 1 a 4), D-250 (pendência do texto do clique), D-251 (arquivada antiga sem F2); T0 da fase 3 aplicada e mergeada (fast-forward) na `integ/f2-gerado`; suíte 885 OK. Auditoria do código (só leitura): 11 achados, riscos de escala no resolver por revista e no painel; itens "fazer agora" aguardam decisão.
 - D-252 commitada na `integ/f2-gerado` (fast-forward da `feat/f2-f2`). Fora desta branch, já na `main` (PRs #8 a #11): kanban (D-253), limpeza de worktrees e Docker; a worktree `f2-f1` foi apagada.
+
+### 2026-11-09 19:20
+- Fora do repositório: agente `minimalista`, agente `conselheiro` e skill `/conselho` criados em `~/.claude` (mantidos como estão, sem comandante via Workflow).
+- Diagnóstico do travamento da máquina às 11:05: sem OOM nem carga; suspeita sem prova no driver NVIDIA; SysRq sugerido para o próximo travamento.
+- PR #6 aberto: `integ/docs-atualizacao` → `main`; conflitos do `trail check` justificados como falsos positivos.
+- Inventário de branches: além da `main`, só 3 frentes vivas (`integ/docs-atualizacao`, `feat/f2-f1` só local, `feat/etapa-do-projeto` com WIP); colisão de numeração D-xxx registrada nas Perguntas em aberto.
+- PR #6 mergeado na `main` (`0622996`) sem os 3 últimos commits da branch; `feat/f2-f1` confirmada no remoto.
+- PR #7 (fase 1 do F2) fechado sem merge: D-236 mantida pelo usuário (fase 1 e 2 testadas juntas antes da `main`).
+- D-246: banco sem ano — "Abrir ano" cria o 1º ano vazio (tela, admin e comando), na `fix/abrir-ano-vazio` a partir da `main`.
+- `fix/abrir-ano-vazio` mergeada (fast-forward) na `integ/abrir-ano`, criada a partir da `main`; suíte 806 OK, 8 pulados.
+
+### 2026-11-10 15:30
+- D-253: skill `kanban` (global) e `kanban.md`; "Plano" migrado para cards. Branch `chore/kanban` saída da `main` para o PR não levar o F2.
+- Raio-x das worktrees (87): 78 mergeadas e limpas apagadas (44 com arquivos do root, apagadas por container); `.env` do Express antigo guardados fora do repo; checkout da `main` mantido. Sobram 9: `main`, `f2-f1`, `f2-f2`, `ano-vazio`, `docs`, `etapa` (14 commits fora de tudo), `s7` (só `graft/` solto), `revista-eletronica` (`django`, 07/10) e um destacado do S07.
+- PRs mergeados na `main` com o ok do usuário: #8 (`integ/abrir-ano`, D-246) e #9 (`integ/docs-atualizacao`, conflito do `state.md` resolvido mantendo as duas sessões). Em seguida, o PR da `chore/kanban`.
+- `feat/etapa-do-projeto` fica parada por decisão do usuário (K-034 volta ao Backlog como pausada); branch e worktree `revista-express-etapa` intocadas.
+- Pastas sobressalentes apagadas: `revista-express-ano-vazio`, `revista-express-docs` e as 2 últimas worktrees de agente (s7; S07 solto, guardado na branch local `arquivo/s07-agente`). Ficam 5 worktrees: `revista-eletronica` (tem o `.git`), `main`, `etapa` (pausada), `f2-f1`, `f2-f2`. Stacks Docker das worktrees apagadas continuam de pé (ano-vazio rodando; agent-*, uibchk, revista-e2e paradas).
+- Docker: 15 stacks das worktrees apagadas derrubadas (agent-*, ano-vazio, uibchk, revista-e2e) com 20 volumes de banco; ficam as stacks/volumes de `revista-eletronica` (dev), `f2-f1`, `f2-f2`, `revista-express-f2-*` e `etapa-projeto`. 94 volumes anônimos soltos (sem dono identificável) não foram tocados.
+- PR com a pausa da etapa do projeto (K-034), a limpeza de worktrees e Docker e o learning "branch que vai sozinha para a main sai da main".
+- Learning: limpeza de worktree com arquivos do root termina por container; stacks Docker saem à parte (PR #11).

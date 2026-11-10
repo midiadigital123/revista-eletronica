@@ -25,7 +25,7 @@ Atribuir, de uma vez, a mesma matriz a vários parceiros do ano, ou o mesmo temp
 
 - Uma caixa de marcar por parceiro, na primeira linha dele (o alvo é o parceiro do ano); "Marcar todos os parceiros" no cabeçalho.
 - Matriz atual de cada parceiro (ou "sem matriz"). Ao escolher a matriz no modal, as linhas marcadas mostram a nova ao lado da atual.
-- Selos: "Em edição por <nome>: será pulado" e "Sem projeto ativo" (a matriz grava assim mesmo).
+- Selos: "Em edição por <nome>: será pulado" (o bloqueio do próprio usuário não conta: o lote o toma, D-191/D-221) e "Sem projeto ativo" (a matriz grava assim mesmo).
 - Barra fixa: "N selecionado(s)", "Atribuir matriz…" e "Atribuir template…".
 
 ## Dados gravados
@@ -49,7 +49,7 @@ Atribuir, de uma vez, a mesma matriz a vários parceiros do ano, ou o mesmo temp
 - **Erro de formulário:** nada gravado; a Lista volta com a seleção e as escolhas e as mensagens: "Marque ao menos um parceiro." · "Escolha a matriz." · "Escolha o template do F1, do F2 ou dos dois." · "Nada foi gravado: Escolha o componente." · opção fora da lista: "Escolha uma opção da lista; a lista mudou desde que a página abriu."
 - **Ano sem matriz:** o modal mostra "Nenhuma matriz em <ano>: cadastre em Matrizes." **Ano sem componente:** "Nenhum componente em <ano>: cadastre os componentes do ano." (link para `ui_ano`, com a permissão).
 - **Impacto:** o modal "Atribuir matriz tira o “Validado” de N revista(s)" (ou "Atribuir template…") lista as revistas; Cancelar não grava.
-- **Bloqueio:** a Lista não trava nada ao abrir. Projeto aberto por outra sessão, ou arquivado entre a abertura e o clique, é pulado: "Pulados: GO (projeto em edição por Ana); PE (projeto arquivado)."
+- **Bloqueio:** a Lista não trava nada ao abrir. Projeto aberto por outra pessoa, ou arquivado entre a abertura e o clique, é pulado: "Pulados: GO (projeto em edição por Ana); PE (projeto arquivado)."
 - **Sucesso:** "Matriz <nome> escolhida para N parceiro(s)." / "Template escolhido em N revista(s)." Com revistas que perderam o "Validado", o aviso com o link para revalidar no Painel.
 
 ## Permissões
@@ -80,5 +80,5 @@ Atribuir, de uma vez, a mesma matriz a vários parceiros do ano, ou o mesmo temp
 - Regra: `app/nucleo/lotes.py` (`MatrizLoteForm`, `TemplateLoteForm`, `gravar_matriz`, `gravar_template`, `perdem_matriz`, `perdem_template`, `escrever_travado`, `em_edicao`), usada pelo admin (`admin/lote.py`), pela Lista (`urls/ui_projeto.py`: `massa`) e pelas rotas antigas (`urls/ui_lotes.py`: `aplicar`, `para_a_lista`).
 - Templates: `templates/ui/projeto/lista.html` (barra e modais), `_componentes/impacto.html`. As páginas antigas `templates/ui/lotes/*` só aparecem depois de um POST antigo.
 - Testes: `app/nucleo/tests/test_ui_projetos.py`, `test_ui_lotes.py`.
-- Decisões: D-102 (atribuição em lote), D-104 (troca de template com cópias), D-121 (pular travados), D-164/D-167 (lotes no admin, arquivados), D-183/D-186 (telas B) e as do plano de UX (D-195 em diante).
+- Decisões: D-102 (atribuição em lote), D-104 (troca de template com cópias), D-121 (pular travados), D-164/D-167 (lotes no admin, arquivados), D-183/D-186 (telas B), as do plano de UX (D-195 em diante) e D-221 (selo ignora o próprio usuário).
 - Inventário: T18, T19.

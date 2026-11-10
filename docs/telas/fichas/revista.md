@@ -67,6 +67,8 @@ Reunir numa página o que a equipe precisa para deixar uma revista pronta: o tem
 - **Só leitura por perfil:** aviso "Só leitura: seu perfil vê a revista, mas não altera. Para editar, peça a permissão de revista a um administrador." Sem selects, sem áreas de soltar, texto `readonly`.
 - **Só leitura por bloqueio:** aviso "Somente leitura: <pessoa> está editando…" (o mesmo do admin).
 - **Bloqueio perdido no meio (409):** a página vira só leitura, como no bloqueio.js.
+- **Voltar e Avançar (bfcache):** a página restaurada recarrega e adquire bloqueio novo, em vez de mostrar "Você perdeu o bloqueio" (D-222).
+- **Sair com texto não salvo:** clicar num link ou botão que sai da página abre o diálogo "Alterações não salvas" (Salvar e sair, Descartar e sair, Continuar editando; D-223). Fechar, recarregar ou Voltar: aviso do navegador.
 - **Arquivada:** aviso "Só leitura: revista arquivada. O texto mostrado é a foto do arquivamento." Sem bloqueio, sem formulários.
 - **Sucesso:** o status "Salvo às HH:MM" (autosave); "Revista validada." no "Validar revista".
 
