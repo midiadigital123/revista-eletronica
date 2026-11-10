@@ -6,7 +6,7 @@ Docs alinhados ao código (D-233 e D-234), commitados em `integ/docs-atualizacao
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Usuário revisa e mergeia o PR #6 na `main`.
+Usuário revisa e mergeia `integ/abrir-ano` (D-246, primeiro ano vazio) na `main`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1223,7 +1223,7 @@ Usuário revisa e mergeia o PR #6 na `main`.
 - **Motivo:** a virada é sempre a partir do ano anterior; o diff da D-113 mostra o que mudou desde o ano passado.
 - **Descartadas:** `--de` opcional (sem caso de uso); conferir permissão no serviço (o comando de ops não tem usuário); `TransactionTestCase` (não há teste de concorrência).
 - **Arquivos afetados:** `app/nucleo/servicos/abrir_ano.py`, `app/nucleo/management/commands/abrir_ano.py`, `app/nucleo/tests/test_abrir_ano.py`, `app/nucleo/models/texto.py` (só comentário)
-- **Status:** ativa. Verificado por mim: 162 testes OK (8 de PDF pulados), `makemigrations --check` limpo. Revisão (django-reviewer) em andamento. Limite `ponytail:`: leitura da origem sem trava (edição concorrente pode entrar pela metade). A confirmar com o usuário: `Tarefa.arquivo` compartilhado entre anos.
+- **Status:** ativa; ~~sem ano anterior, `AnoRecusado`~~ substituída por D-246 (banco vazio: o 1º ano nasce vazio). Verificado por mim: 162 testes OK (8 de PDF pulados), `makemigrations --check` limpo. Revisão (django-reviewer) em andamento. Limite `ponytail:`: leitura da origem sem trava (edição concorrente pode entrar pela metade). A confirmar com o usuário: `Tarefa.arquivo` compartilhado entre anos.
 
 ### D-149 — Correções da revisão do S16 (2026-10-29 19:35)
 - **Contexto:** revisão (django-reviewer) do S16: 0 críticos, 3 importantes. Uma substituição de matriz concorrente recria descritores e tarefas com ids novos, e a cópia em READ COMMITTED quebrava com `KeyError` (500). Um ano digitado errado (`20277`) criava milhares de linhas que nada apaga (FKs PROTECT). Nenhum teste provava que uma falha no meio desfaz tudo.
@@ -1915,6 +1915,14 @@ Usuário revisa e mergeia o PR #6 na `main`.
 - **Arquivos afetados:** `CLAUDE.md`, `app/.env.example`, `app/e2e/playwright.config.ts`, `app/e2e/tests/helpers.ts`, `app/nucleo/usuarios.py`, `app/nucleo/models/controle.py`, `docs/e2e.md`, `docs/regras-de-negocio.md`
 - **Status:** ativa. Achado à parte: `entrar()` confere o sucesso com `not.toHaveURL(/\/admin\/login\//)`, mas depois da D-212 o login falho fica em `/conta/entrar/`, então a conferência sempre passa.
 
+### D-246 — Banco sem ano: "Abrir ano" cria o primeiro ano vazio (2026-11-10 17:00)
+- **Contexto:** com o banco vazio, `abrir_ano` recusava ("nenhum ano anterior a X para copiar"), e a tela de anos nem mostrava o formulário; o 1º ano só nascia pela linha de comando (`carregar_cadastros`). O usuário apontou que não dá para abrir o primeiro ano.
+- **Decisão:** sem ano nenhum, `abrir_ano(ano)` cria só a linha do ano, sem cópia, e devolve `(novo, None)`; qualquer número de ano é aceito (não há "seguinte" sem anterior). A tela de anos mostra o formulário também sem ano; mensagem comum `VAZIO` ("Ano X aberto vazio: cadastre etapas, componentes e cores.") na tela, no admin e no comando. O ano seguinte copia desse normalmente. `carregar_cadastros` continua valendo. Substitui, em parte, D-148.
+- **Motivo:** escolha do usuário em 10/11 ("Vazio").
+- **Descartadas:** nascer com os cadastros padrão do `carregar_cadastros` (4 etapas, LP/MT, 5 cores; recomendada, recusada pelo usuário); manter a recusa (o 1º ano só pela linha de comando).
+- **Arquivos afetados:** `servicos/abrir_ano.py`, `urls/ui_anos.py`, `admin/cadastro.py`, `management/commands/abrir_ano.py`, `templates/ui/anos/anos.html`, `tests/test_abrir_ano.py`, `tests/test_ui_anos.py`, `docs/regras-de-negocio.md`.
+- **Status:** ativa. Limite: a tela B só edita cores existentes (`ui_anos.py`, paleta); as 5 cores do 1º ano vazio só se criam pelo admin ou pelo `carregar_cadastros`. Ano digitado errado no 1º ano (ex.: 20266) sai pela exclusão de ano.
+
 ## Perguntas em aberto
 - [ ] (D-234) `entrar()` em `e2e/tests/helpers.ts` não detecta login falho (confere `/admin/login/`, mas o login falho fica em `/conta/entrar/`). Trocar para ir direto a `/conta/entrar/` e conferir que saiu dela? Muda teste: rodar a suíte E2E — depende de: Otavio
 - [x] (D-234: sim) (D-233, 09/11) Comentários de código ainda falam do login do admin depois da D-212: `nucleo/usuarios.py` ("todo perfil entra pelo login do admin") e `e2e/tests/helpers.ts::entrar` ("Entra no admin", passa por `/admin/login/`, que redireciona). Corrigir? — depende de: Otavio
@@ -2436,3 +2444,5 @@ Usuário revisa e mergeia o PR #6 na `main`.
 - Fora do repositório: agente `minimalista`, agente `conselheiro` e skill `/conselho` criados em `~/.claude` (mantidos como estão, sem comandante via Workflow).
 - Diagnóstico do travamento da máquina às 11:05: sem OOM nem carga; suspeita sem prova no driver NVIDIA; SysRq sugerido para o próximo travamento.
 - PR #6 aberto: `integ/docs-atualizacao` → `main`; conflitos do `trail check` justificados como falsos positivos.
+- D-246: banco sem ano — "Abrir ano" cria o 1º ano vazio (tela, admin e comando), na `fix/abrir-ano-vazio` a partir da `main`.
+- `fix/abrir-ano-vazio` mergeada (fast-forward) na `integ/abrir-ano`, criada a partir da `main`; suíte 806 OK, 8 pulados.
