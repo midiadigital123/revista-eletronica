@@ -22,6 +22,7 @@ Cada infográfico (o que `servicos/f2.gerar` consome):
      "textos": {"descritor", "progressao", "habilidades"},  # passo desligado: ""
      "etapas": [{"etapa", "rotulo", "marca", "codigo", "texto"}],     # ordem do referencial, só as gravadas
      "itens": [{"posicao", "etapa", "rotulo", "descritor", "imagem", "imagem_sha256", "texto_alternativo", "analise"}]}
+                                          # passo tarefas desligado: [] (D-243)
 
 Só `textos.*` e `itens[].analise` são HTML (`texto.renderizar`, variáveis contadas em `usadas`); o resto
 é texto cru (o f2.svg faz o autoescape). `imagem`/`imagem_sha256` nulos saem "" (o hash não varia
@@ -289,7 +290,7 @@ def _infograficos(revista, renderizado):
                     "texto_alternativo": i.texto_alternativo, "analise": renderizado(i.analise),
                 }
                 for i in inf.revistainfograficoitem_set.all()
-            ],
+            ] if "tarefas" not in inf.passos_desligados else [],  # invisível: fora do hash e do zip (D-243)
         })  # fmt: skip
     return saida
 

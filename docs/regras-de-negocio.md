@@ -306,7 +306,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | `corte_sem_matriz` | etapa com corte que a matriz escolhida não tem | D-093 |
 | `corte_invalido` | cortes fora de ordem ou da escala (defensivo) | D-154 |
 | `template_f1`, `template_f2` | fascículo sem template | D-112 |
-| `svg`, `ids_svg` | falta SVG, ou falta id exigido pelas seções efetivas do F2 | D-112, D-125 |
+| `infografico` | habilidade vazia; passo ligado sem dado (Habilidades: código ou texto; Progressão: 2 marcas; Tarefas: 4 imagens); passo desligado não gera pendência | D-237, D-243 |
 | `capa` | falta capa | D-112 |
 | `variaveis` | variável usada nos textos efetivos sem valor | D-100 |
 | `nome_projeto` | nome ainda termina em " - NOME DO PROJETO" | D-093 |

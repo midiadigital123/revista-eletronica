@@ -489,6 +489,19 @@ class ResolverTest(TestCase):
         self.assertEqual(r["f2"]["infograficos"][0]["textos"]["progressao"], "")
         self.assertNotIn("variaveis", [p.codigo for p in pendencias(lp)])
 
+    def test_tarefas_desligado_tira_os_itens(self):  # conselho da T4 (D-243): item invisível sai do resolvido
+        lp = self.go["LP"]
+        preencher_infograficos(lp)
+        inf = RevistaInfografico.objects.filter(revista=lp).first()
+        self.assertEqual(inf.revistainfograficoitem_set.update(analise="{{nome_secretaria}}"), 4)
+        RevistaInfografico.objects.filter(pk=inf.pk).update(passos_desligados=["tarefas"])
+        Projeto.objects.filter(pk=lp.projeto_id).update(nome_secretaria="")
+        lp = recarregar(lp)
+        r = resolver(lp)
+        self.assertEqual(r["f2"]["infograficos"][0]["itens"], [])
+        self.assertNotIn({"tipo": "variavel", "nome": "nome_secretaria"}, r["lacunas"])
+        self.assertNotIn("variaveis", [p.codigo for p in pendencias(lp)])
+
     def test_infografico_arquivado_fica_de_fora(self):
         lp = self.go["LP"]
         RevistaInfografico.objects.create(revista=lp, componente=self.lp, ano=self.ano, tipo="alfa", arquivado_em="2026-10-29T12:00:00Z")

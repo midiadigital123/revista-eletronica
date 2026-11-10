@@ -324,7 +324,7 @@ O Impresso nunca recebe `delete_*`. A tabela papel × ação completa está em [
 - **Texto efetivo de uma seção:** `revista_secao.texto` se houver cópia; senão, a seção da última `template_versao` do template escolhido.
 - **Template mudou numa seção com cópia:** a cópia aponta para uma versão menor que a atual e o texto daquela seção mudou. Aparece um aviso e a tela "seu texto | template novo com diff", com edição à mão ou "descartar cópia". Não bloqueia o "Validado" (D-087, D-115).
 - **Hash:** calculado em Python sobre JSON canônico (`json.dumps(..., sort_keys=True, separators=(",", ":"), ensure_ascii=False)`), nunca sobre o `jsonb` guardado, que reordena chaves.
-  - O hash do "Validado" cobre a revista resolvida mais `svg_sha256` e `capa_sha256` (D-118).
+  - O hash do "Validado" cobre a revista resolvida (com o `imagem_sha256` dos itens dos infográficos) mais `capa_sha256` (D-118, D-237). Passo desligado não entra no hash (D-243).
   - A foto guarda a revista resolvida inteira (`conteudo` jsonb, com o hash dela), e o diff do impresso lê só a parte `impresso_de(resolvido)`: escalas, cores e textos do F1 e textos do F2, sem SVG nem capa (`app/nucleo/servicos/resolver.py:299`; D-151, D-153, D-178).
   - Mudar uma variável derruba só a revista cujo texto a usa (D-125).
 - **Clique com versão:** "Validado" e "Revista Impressa Atualizada" enviam o hash visto, e o servidor recusa se o atual for outro (D-089). Em lote, vale a mesma regra por revista: o lote envia pares (revista, hash) (D-120).
