@@ -126,8 +126,8 @@ def preencher_infograficos(revista, caminho="infograficos/demo-{tipo}-{p}.png"):
             )
         for p, item in enumerate(DOCX["itens"], 1):
             imagem = caminho.format(tipo=inf.tipo, p=p)
-            # ponytail: grava direto no storage, sem a validação do upload (trocar por
-            # arquivos.receber_imagem_item quando existir); nome fixo: rodar de novo não cria cópia.
+            # Direto no storage, não por arquivos.receber_imagem_item: ela grava com nome uuid e cada
+            # execução deixaria uma cópia; com nome fixo, rodar de novo não cria arquivo.
             if not default_storage.exists(imagem):
                 default_storage.save(imagem, ContentFile(PNG))
             RevistaInfograficoItem.objects.update_or_create(
