@@ -39,7 +39,7 @@ class PainelUiTest(Base):
         completar(self.go["LP"])
         r = self.client.get(self.url)
         mt = self.go["MT"]
-        link = reverse("ui_revista_editar", args=[2026, mt.pk])
+        link = reverse("ui_revista_editar", args=[2026, mt.pk]) + "#infograficos"  # fase 3 do F2: o passo da ficha
         self.assertContains(r, f'<a class="status status-falta" href="{link}" title="{DICA_INFOGRAFICO}">')
         # Cabeçalho: quantas faltam por coluna (Infográficos: GO MT, PE LP, PE MT).
         svg = next(c for c in r.context["colunas"] if c["chave"] == "infograficos")

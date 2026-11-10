@@ -55,7 +55,9 @@ def link(codigo, revista):
         return reverse("cortes", args=[ano])
     if codigo == "impresso":
         return reverse("ui_impresso", args=[ano]) + "?" + urlencode({"revista": revista.pk})
-    return reverse("ui_revista_editar", args=[ano, revista.pk])  # templates, infográficos, capa, Validado
+    if codigo == "infografico":
+        return reverse("ui_revista_editar", args=[ano, revista.pk]) + "#infograficos"
+    return reverse("ui_revista_editar", args=[ano, revista.pk])  # templates, capa, Validado
 
 
 def ultima_impressa(revista):
