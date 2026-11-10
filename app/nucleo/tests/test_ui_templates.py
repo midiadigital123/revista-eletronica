@@ -13,7 +13,7 @@ from nucleo.models import Ano, Bloqueio, Componente, FotoRevista, RevistaFascicu
 from nucleo.models.revista import Motivo
 from nucleo.servicos.resolver import versao_atual
 from nucleo.templates_texto import form_para_corpo, secoes_para_form
-from nucleo.tests.test_admin_templates import F2_8, F2_NOVO, Base
+from nucleo.tests.test_admin_templates import F2_9, F2_NOVO, Base
 from nucleo.tests.test_resolver import F1 as F1_NOVO, usuario
 
 
@@ -140,7 +140,7 @@ class EditarTest(UiBase):
         self.assertEqual(self.versoes(), 1)
 
     def test_texto_invalido_mostra_erro(self):
-        r = self.post(self.sessao(), F2_8.replace("Fim.", "Oi {{x}}."))
+        r = self.post(self.sessao(), F2_9.replace("Fim.", "Oi {{x}}."))
         self.assertEqual(r.status_code, 200)
         self.assertTemplateUsed(r, "ui/templates/editar.html")
         self.assertContains(r, "Nada foi gravado: corrija os erros marcados.")
@@ -177,7 +177,7 @@ def form_secoes(secoes, **extra):
     return dados
 
 
-F2_SECOES = [(x["id"], x["titulo"], x["corpo"]) for x in secoes_para_form(F2_8)]
+F2_SECOES = [(x["id"], x["titulo"], x["corpo"]) for x in secoes_para_form(F2_9)]
 
 
 def erros_da_secao(html, id_):

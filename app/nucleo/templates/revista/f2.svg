@@ -168,6 +168,7 @@ CSS dentro do <svg> (é o que chega ao minimapa): sem seletor pela classe da rai
 <rect class="f2-st46" x=".4" y="1" width="6" height="6"/>
 <text class="f2-tx f2-tx-bloco" x="20.1" y="8.1">TAREFAS POR NÍVEL</text>
 <text class="f2-tx f2-tx-bloco" x="20.1" y="21.2">DE COMPLEXIDADE</text>
+<g id="f2-btn-action-tarefas" transform="translate(27.4,37.8)"><circle class="f2-st20" r="7.8"/><path d="M-.3,3.4h.6v-3.1h3.1v-.6h-3.1v-3.1h-.6v3.1h-3.1v.6h3.1z"/></g>
 <line class="f2-st6" x1="141.8" y1="21.1" x2="349.1" y2="21.1"/>
 <rect class="f2-st46" x="363.4" y="17.4" width="6" height="6"/>
 <text class="f2-tx f2-tx-bloco" x="383.5" y="24.5">ITENS</text>

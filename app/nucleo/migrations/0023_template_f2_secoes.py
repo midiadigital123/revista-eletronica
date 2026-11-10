@@ -1,10 +1,10 @@
-# D-238: o F2 passa a ter 8 seções fixas (SECOES_F2). Regra congelada: migração não importa nucleo.servicos
+# D-238: o F2 passa a ter 9 seções fixas (SECOES_F2). Regra congelada: migração não importa nucleo.servicos
 # nem nucleo.texto, e não lê o seed; o texto do seed 2026 (f2-lp.hbs = f2-mt.hbs, sem o comentário de revisão)
 # vai nas constantes abaixo.
 #   1. cada Template F2 de LP ou MT ganha uma TemplateVersao nova (só INSERT, D-207) com esse texto;
 #   2. as cópias dlg-p2 e dlg-p3 das revistas viram texto_progressao e texto_habilidades do infográfico "outras"
 #      (ou do "alfa", se a revista só tem esse), só em campo vazio;
-#   3. as cópias do F2 cujo id não está nas 8 seções são apagadas.
+#   3. as cópias do F2 cujo id não está nas 9 seções são apagadas.
 # Linhas criadas ou apagadas aqui não têm registro do simple-history (o modelo histórico das migrações não
 # dispara o sinal): é aceito, como na 0022. Sem volta: o texto antigo fica na versão anterior, e as cópias
 # apagadas não voltam.
@@ -12,7 +12,7 @@ from django.db import migrations
 
 SECOES_F2 = (
     "abertura", "passo-descritor", "passo-habilidades", "passo-progressao", "passo-tarefas",
-    "dlg-descritor", "tarefas-fechamento", "fechamento",
+    "dlg-descritor", "dlg-tarefas", "tarefas-fechamento", "fechamento",
 )  # fmt: skip
 
 TEXTO_F2 = """## abertura
@@ -46,8 +46,6 @@ Tarefas por nível de complexidade
 
 Itens exemplares do descritor nas etapas de terminalidade. Clique nos botões amarelos para ver cada item.
 
-Aqui, apresentamos alguns itens exemplares, que representam possibilidades de avaliar a habilidade destacada nas etapas de terminalidade da Educação Básica. Isto é 2º ano do Ensino Fundamental, 5º ano do Ensino Fundamental, 9º ano do Ensino Fundamental e 3ª série do Ensino Médio.
-
 ## dlg-descritor
 Descritor
 
@@ -56,6 +54,11 @@ O desenvolvimento das habilidades previstas na Matriz de Referência requer um t
 Nesse percurso, é fundamental definir quais aprendizagens são esperadas em cada etapa, considerando tanto os conhecimentos que constituem o ponto de partida quanto aqueles que se pretende consolidar ao final de determinado período. A partir dessa perspectiva, uma mesma habilidade pode ser mobilizada em diferentes momentos da escolarização, com níveis crescentes de complexidade e em situações diversificadas de uso.
 
 Essa progressão possibilita acompanhar o desenvolvimento dos estudantes e favorecer a consolidação das aprendizagens de maneira gradual, ampliando as condições para que os conhecimentos construídos sejam mobilizados com autonomia em diferentes contextos.
+
+## dlg-tarefas
+Tarefas por nível de complexidade
+
+Aqui, apresentamos alguns itens exemplares, que representam possibilidades de avaliar a habilidade destacada nas etapas de terminalidade da Educação Básica. Isto é 2º ano do Ensino Fundamental, 5º ano do Ensino Fundamental, 9º ano do Ensino Fundamental e 3ª série do Ensino Médio.
 
 ## tarefas-fechamento
 Fechamento das tarefas

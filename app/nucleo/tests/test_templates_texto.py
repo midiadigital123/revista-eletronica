@@ -24,6 +24,7 @@ class SecoesF2Test(SimpleTestCase):
         self.assertEqual(rotulo("passo-tarefas"), "Passo: tarefas")
         self.assertEqual(rotulo("passo-descritor"), "Passo: descritor")
         self.assertEqual(rotulo("dlg-descritor"), "Diálogo do descritor")
+        self.assertEqual(rotulo("dlg-tarefas"), "Diálogo das tarefas")
         self.assertEqual(rotulo("tarefas-fechamento"), "Fechamento das tarefas")
         self.assertEqual(rotulo("fechamento"), "Fechamento")
 

@@ -41,7 +41,7 @@ class SvgTest(SimpleTestCase):
         ids = {el.get("id") for el in raiz.iter()}
         for bloco in ("cabecalho", "descritor", "habilidades", "progressao", "tarefas"):
             self.assertIn(f"f2-{bloco}", ids)
-        for passo in ("descritor", "habilidades", "progressao", "tarefa-1", "tarefa-2", "tarefa-3", "tarefa-4"):
+        for passo in ("descritor", "habilidades", "progressao", "tarefas", "tarefa-1", "tarefa-2", "tarefa-3", "tarefa-4"):
             self.assertIn(f"f2-btn-action-{passo}", ids)
         self.assertLess(len(svg.encode()), 150_000)  # o original tem 837 KB de texto em curva
         self.assertLess(svg.count("<path"), 20)  # sem glifos: só as formas do desenho

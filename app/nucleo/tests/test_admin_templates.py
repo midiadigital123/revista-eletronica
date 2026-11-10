@@ -20,24 +20,25 @@ from nucleo.servicos.resolver import versao_atual
 from nucleo.tests.test_resolver import F1, Mundo, usuario
 from nucleo.texto import TEXTO_MAX
 
-# F2 no formato do D-238 (8 seções fixas): é a versão 1 dos templates F2 destes testes.
-F2_8 = (
+# F2 no formato do D-238 (9 seções fixas): é a versão 1 dos templates F2 destes testes.
+F2_9 = (
     "## abertura\nAbertura\n\nBem-vindo.\n\n"
     "## passo-descritor\nDescritor\n\nPara os {{adjetivo_patrio_plural_masculino}}.\n\n"
     "## passo-habilidades\nHabilidades\n\nTexto.\n\n"
     "## passo-progressao\nProgressão\n\nTexto.\n\n"
     "## passo-tarefas\nTarefas\n\nTexto.\n\n"
     "## dlg-descritor\nDescritor\n\nDetalhe.\n\n"
+    "## dlg-tarefas\nTarefas por nível de complexidade\n\nAbertura das tarefas.\n\n"
     "## tarefas-fechamento\nFechamento das tarefas\n\nTexto.\n\n"
     "## fechamento\nFechamento\n\nFim.\n"
 )
-F2_NOVO = F2_8.replace("Fim.", "Novo {{ano}}.")
+F2_NOVO = F2_9.replace("Fim.", "Novo {{ano}}.")
 IMPACTO = "nucleo/template_impacto.html"
 
 
 class Base(TestCase):
     def setUp(self):
-        Mundo.montar(self, f2_lp=F2_8)
+        Mundo.montar(self, f2_lp=F2_9)
         self.tpl = self.templates["LP", "F2"]
         self.url = f"/admin/nucleo/template/{self.tpl.pk}/change/"
         self.ped = Client()
@@ -65,7 +66,7 @@ class Base(TestCase):
 class SalvarTest(Base):
     def test_variavel_fora_da_lista_e_recusada(self):
         sessao = self.abrir().context["bloqueio"]["sessao"]
-        ruim = F2_8.replace("Fim.", "Oi {{x}}.")
+        ruim = F2_9.replace("Fim.", "Oi {{x}}.")
         r = self.ped.post(self.url, self.dados(sessao, ruim))
         self.assertEqual(r.status_code, 200)
         self.assertTemplateNotUsed(r, IMPACTO)
@@ -88,13 +89,13 @@ class SalvarTest(Base):
         r = self.confirmar(r, texto=F2_NOVO.replace("\n", "\r\n"))  # textarea manda CRLF
         self.assertRedirects(r, self.url, fetch_redirect_response=False)
         v1, v2 = TemplateVersao.objects.filter(template=self.tpl).order_by("numero")
-        self.assertEqual(v1.texto, F2_8)  # versão antiga intacta
+        self.assertEqual(v1.texto, F2_9)  # versão antiga intacta
         self.assertEqual((v2.numero, v2.texto, v2.criada_por.username), (2, F2_NOVO, "ped"))
         self.assertFalse(Bloqueio.objects.exists())  # salvou e liberou
 
     def test_texto_igual_salva_nome_sem_impacto_nem_versao(self):
         sessao = self.abrir().context["bloqueio"]["sessao"]
-        r = self.ped.post(self.url, {**self.dados(sessao, F2_8), "nome": "Outro"})
+        r = self.ped.post(self.url, {**self.dados(sessao, F2_9), "nome": "Outro"})
         self.assertEqual(r.status_code, 302)
         self.tpl.refresh_from_db()
         self.assertEqual(self.tpl.nome, "Outro")
@@ -143,7 +144,7 @@ class SalvarTest(Base):
     def test_assinatura_adulterada_ou_texto_trocado_reabre_o_impacto(self):
         sessao = self.abrir().context["bloqueio"]["sessao"]
         impacto = self.ped.post(self.url, self.dados(sessao, F2_NOVO))
-        outro = F2_8.replace("Fim.", "Fim de outro jeito.")
+        outro = F2_9.replace("Fim.", "Fim de outro jeito.")
         for troca in ({"_impacto": "adulterada"}, {"_impacto": ""}, {"texto": outro}):
             with self.subTest(troca):
                 r = self.confirmar(impacto, **troca)
@@ -158,7 +159,7 @@ class SalvarTest(Base):
     def test_versao_base_mudou_reabre_o_impacto(self):
         sessao = self.abrir().context["bloqueio"]["sessao"]
         impacto = self.ped.post(self.url, self.dados(sessao, F2_NOVO))
-        TemplateVersao.objects.create(template=self.tpl, numero=2, texto=F2_8 + "\n")  # outro caminho gravou
+        TemplateVersao.objects.create(template=self.tpl, numero=2, texto=F2_9 + "\n")  # outro caminho gravou
         r = self.confirmar(impacto)
         self.assertTemplateUsed(r, IMPACTO)
         self.assertEqual(self.versoes(), 2)
@@ -212,7 +213,7 @@ class PreviewTest(Base):
         self.assertIn('<span class="variavel-vazia">{{ano}}</span>', json["html"])
         self.assertIn(
             "Seções obrigatórias faltando: passo-descritor, passo-habilidades, passo-progressao, passo-tarefas, "
-            "dlg-descritor, tarefas-fechamento, fechamento.",
+            "dlg-descritor, dlg-tarefas, tarefas-fechamento, fechamento.",
             json["erros"],
         )
 
