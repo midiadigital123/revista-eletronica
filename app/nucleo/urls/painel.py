@@ -26,6 +26,7 @@ from nucleo.lotes import em_edicao
 from nucleo.models import Ano, Componente, FotoRevista, Matriz, Parceiro, Revista, Template
 from nucleo.models.revista import Motivo
 from nucleo.servicos import resolver, validacao
+from nucleo.servicos.pendencias import pendencias
 
 # Coluna → códigos de `pendencias` que ela mostra (ordem das colunas da tela).
 COLUNAS = {
@@ -71,7 +72,7 @@ def impresso_pendente(foto, resolvido):
 def linha(revista):
     resolvido = resolver.resolver(revista)
     atual = resolver.hash_validado(revista, resolvido)
-    pendentes = resolver.pendencias(revista, resolvido)
+    pendentes = pendencias(revista, resolvido)
     foto = ultima_impressa(revista)
     celulas = {}
     for chave, (_, codigos) in COLUNAS.items():
@@ -190,7 +191,7 @@ def itens_validar(ano, ids, usuario):
                 "revista": revista,
                 "hash": (atual := resolver.hash_validado(revista, resolvido)),
                 "validada": validacao.validada(revista, atual),
-                "pendencias": [p._replace(link=link(p.codigo, revista)) for p in resolver.pendencias(revista, resolvido)],
+                "pendencias": [p._replace(link=link(p.codigo, revista)) for p in pendencias(revista, resolvido)],
                 "desatualizadas": resolver.secoes_desatualizadas(revista),  # D-087: só avisa
                 "diff": diff(revista, resolvido),
                 "editando": em_edicao([revista.projeto], usuario).get(revista.projeto_id, ""),  # o lote vai pular (D-121)

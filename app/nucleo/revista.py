@@ -18,6 +18,7 @@ from django.utils.safestring import mark_safe
 from nucleo import texto
 from nucleo.models import Revista, RevistaFasciculo, RevistaSecao, Template
 from nucleo.servicos import arquivos, resolver, validacao
+from nucleo.servicos.pendencias import pendencias
 from nucleo.templates_texto import rotulo
 
 
@@ -315,6 +316,6 @@ def estado_validacao(pk):
     return {
         "hash": atual,
         "validada": validacao.validada(revista, atual),
-        "pendencias": resolver.pendencias(revista, resolvido),
+        "pendencias": pendencias(revista, resolvido),
         "desatualizadas": [f"{c.revista_fasciculo.fasciculo} {c.secao}" for c in resolver.secoes_desatualizadas(revista)],
     }

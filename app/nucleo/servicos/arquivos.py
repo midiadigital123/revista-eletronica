@@ -24,6 +24,7 @@ from django.db.models.signals import post_delete
 from django.dispatch import receiver
 
 from nucleo.models import RevistaFasciculo, Tarefa
+from nucleo.servicos import resolver
 
 MB = 1024 * 1024
 SVG_MAX = 3 * MB
@@ -384,8 +385,6 @@ def ids_esperados(secoes):
 def gabarito_ids_csv(revista):
     """CSV com os ids que o design deve pôr no SVG do F2 (sem o prefixo f2-, que o upload põe).
     Comum ao admin e à tela B."""
-    from nucleo.servicos import resolver  # resolver importa este módulo (ids_faltando)
-
     f2 = RevistaFasciculo.objects.filter(revista=revista, fasciculo="F2").first()
     saida = io.StringIO()
     escritor = csv.writer(saida)

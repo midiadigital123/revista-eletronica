@@ -22,7 +22,8 @@ from django.template.loader import render_to_string
 
 from nucleo.models import RevistaInfograficoItem, Tarefa
 from nucleo.servicos.html import contexto_pagina, link_zip, paginas, template
-from nucleo.servicos.resolver import Pendencia, pendencias, resolver
+from nucleo.servicos.pendencias import Pendencia, pendencias
+from nucleo.servicos.resolver import resolver
 
 ESTATICOS = Path(__file__).resolve().parents[1] / "static" / "revista"
 EXTENSOES = {".js", ".css", ".svg", ".png", ".jpg", ".webp", ".woff2"}  # o resto (ex.: *.test.mjs) fica fora
@@ -147,7 +148,7 @@ def zip_revista(revista):
         if ctx is None:
             raise Pendente([Pendencia("zip_pagina", f"A página {slug} não tem infográfico.")])
         html[link_zip(slug)] = render_to_string(template(slug), ctx)
-    # ponytail: zip em memória (capa ≤ 5 MB + imagens dos infográficos + itens PDF sem limite de tamanho);
+    # ponytail: zip em memória (capa ≤ 5 MB + imagens dos infográficos + itens PDF ≤ 5 MB cada, ITEM_MAX);
     # quando pesar, trocar o BytesIO por tempfile.SpooledTemporaryFile e devolver FileResponse.
     saida = io.BytesIO()
     with zipfile.ZipFile(saida, "w") as z:

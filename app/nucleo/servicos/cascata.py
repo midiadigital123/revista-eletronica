@@ -14,7 +14,7 @@ from nucleo.models import (
     RevistaFasciculo,
     RevistaInfografico,
 )
-from nucleo.models.revista import Motivo, TipoInfografico
+from nucleo.models.revista import EtapaReferencial, Motivo, TipoInfografico
 from nucleo.servicos.foto import fotografar
 
 
@@ -112,8 +112,8 @@ def _sincronizar_infograficos(projeto, linhas, usuario, agora):
     for revista in Revista.objects.filter(projeto=projeto, arquivada_em__isnull=True):
         codigos = etapas.get(revista.componente_id, set())
         devem_existir = {
-            TipoInfografico.ALFA: "2EF" in codigos,
-            TipoInfografico.OUTRAS: bool(codigos - {"2EF"}),
+            TipoInfografico.ALFA: EtapaReferencial.EF2 in codigos,
+            TipoInfografico.OUTRAS: bool(codigos - {EtapaReferencial.EF2}),
         }
         atuais = {i.tipo: i for i in RevistaInfografico.objects.filter(revista=revista)}
         for tipo, deve in devem_existir.items():

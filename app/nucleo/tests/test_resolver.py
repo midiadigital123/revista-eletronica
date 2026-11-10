@@ -38,13 +38,13 @@ from nucleo.models import (
 from nucleo.models.revista import Motivo
 from nucleo.servicos.cascata import gravar_cortes
 from nucleo.servicos.foto import fotografar
+from nucleo.servicos.pendencias import pendencias
 from nucleo.servicos.resolver import (
     FAIXA_SEM_TEMPLATE,
     conteudo_impresso,
     carregar,
     escala,
     hash_validado,
-    pendencias,
     resolver,
     secoes_desatualizadas,
     sha256,

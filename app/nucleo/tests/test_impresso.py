@@ -313,6 +313,10 @@ class GabaritoPlanilhaTest(SimpleTestCase):
         c = openpyxl.load_workbook(io.BytesIO(planilhas.planilha_f1(dados, "9ef", "MT", {})))["Níveis"]["C2"]
         self.assertEqual((c.value, c.data_type), ('=HYPERLINK("http://exemplo.invalid","x")', "s"))
 
+    def test_componente_sem_layout_falha(self):  # antes caía no layout do LP sem avisar
+        with self.assertRaisesMessage(ValueError, "Sem layout de planilha para o componente CN."):
+            planilhas.planilha_f1({}, "5ef", "CN", {})
+
 
 class DiffTextoTest(SimpleTestCase):
     """O diff que o impresso leva ao InDesign: por palavra, só o trecho que mudou (diff_texto)."""

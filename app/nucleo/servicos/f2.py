@@ -36,6 +36,7 @@ COR_SEM_MARCA = "#dadada"
 # etapa, 1EF a 3EM. ponytail: alturas do desenho de LP; texto mais longo é cortado pelo line-clamp.
 TABELA_Y = 64.8
 ALTURAS_LINHAS = (22.7, 22.6, 22.7, 22.7, 22.7, 39.7, 39.6, 25.6, 25.5, 39.7, 39.6, 39.7)
+assert len(EtapaReferencial.values) == len(ALTURAS_LINHAS)  # o zip abaixo cortaria etapas em silêncio
 # Progressão (bloco progressao, local): x da 1ª coluna e largura de cada etapa.
 PROGRESSAO_X = 19.3
 PROGRESSAO_PASSO = 37.3

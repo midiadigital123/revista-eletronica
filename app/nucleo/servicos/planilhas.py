@@ -94,7 +94,9 @@ def _larguras(ws, larguras):
 
 def planilha_f1(dados, etapa, componente, cores, passo=None):
     """xlsx de uma etapa: abas "Níveis" (descritor × nível) e "Escala" (padrões, limites e cor)."""
-    layout = LAYOUTS.get(componente, LAYOUTS["LP"])
+    if componente not in LAYOUTS:
+        raise ValueError(f"Sem layout de planilha para o componente {componente}.")
+    layout = LAYOUTS[componente]
     ns = niveis(dados)
     padroes = [p["chave"] for p in dados["padroes"]]
     wb = Workbook()
