@@ -152,7 +152,9 @@ def recarregar(revista):
 def preencher_infograficos(revista, sha="a" * 64):
     """Infográficos ativos da revista sem pendência: habilidade, 2 etapas com código e marca, 4 itens com imagem."""
     for inf in RevistaInfografico.objects.filter(revista=revista, arquivado_em__isnull=True):
-        RevistaInfografico.objects.filter(pk=inf.pk).update(habilidade="Inferir informação.")
+        RevistaInfografico.objects.filter(pk=inf.pk).update(
+            habilidade="Inferir informação.", texto_habilidades="As habilidades.", texto_progressao="A progressão."
+        )
         for etapa, marca in (("9EF", "A"), ("5EF", "I")):
             RevistaInfograficoEtapa.objects.update_or_create(
                 infografico=inf, etapa=etapa, defaults={"ano_id": inf.ano_id, "marca": marca, "codigo": "EF15LP18", "texto": "Relacionar."}
@@ -363,7 +365,7 @@ class ResolverTest(TestCase):
 
     def test_pendencias(self):
         lp = self.go["LP"]
-        self.assertEqual([p.codigo for p in pendencias(lp)], ["infografico"] * 4 + ["capa"])
+        self.assertEqual([p.codigo for p in pendencias(lp)], ["infografico"] * 6 + ["capa"])
         preencher_infograficos(lp)
         Revista.objects.filter(pk=lp.pk).update(capa="capas/x.png", capa_sha256="c" * 64)
         self.assertEqual(pendencias(recarregar(lp)), [])  # sem SVG: o F2 sai dos infográficos (D-237)
@@ -547,6 +549,18 @@ class ResolverTest(TestCase):
         ])
         RevistaInfograficoEtapa.objects.filter(infografico=inf, etapa="9EF").update(texto="Só o texto.")
         self.assertNotIn(f"{titulo}: o passo Habilidades está ligado e nenhuma etapa tem código ou texto.", self.mensagens(lp))
+
+    def test_passo_ligado_sem_texto_do_clique(self):
+        """Conselho da fase 2 (D-250): passo ligado com o texto do clique vazio abriria um modal só com o título."""
+        lp, inf = self.infografico()
+        titulo = "Avaliação e Currículo – Outras Etapas"
+        RevistaInfografico.objects.filter(pk=inf.pk).update(texto_habilidades="", texto_progressao=" ")
+        self.assertEqual(self.mensagens(lp), [
+            f"{titulo}: o passo Habilidades está ligado e falta o texto do clique.",
+            f"{titulo}: o passo Progressão está ligado e falta o texto do clique.",
+        ])
+        RevistaInfografico.objects.filter(pk=inf.pk).update(passos_desligados=["habilidades", "progressao"])
+        self.assertEqual(self.mensagens(lp), [])
 
     def test_passo_desligado_nao_gera_pendencia(self):
         lp, inf = self.infografico()

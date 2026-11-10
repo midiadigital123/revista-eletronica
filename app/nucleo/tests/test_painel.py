@@ -24,6 +24,8 @@ DICA_INFOGRAFICO = " ".join(
         "falta a habilidade destacada.",
         "o passo Habilidades está ligado e nenhuma etapa tem código ou texto.",
         "o passo Progressão precisa de pelo menos 2 etapas com marca.",
+        "o passo Habilidades está ligado e falta o texto do clique.",
+        "o passo Progressão está ligado e falta o texto do clique.",
         "o passo Tarefas precisa dos 4 itens com imagem.",
     )
 )

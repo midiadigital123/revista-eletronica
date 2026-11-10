@@ -68,6 +68,7 @@ from nucleo.models import (
     TemplateVersao,
 )
 from nucleo.models.revista import PASSOS, EtapaReferencial, Motivo, TipoInfografico
+from nucleo.servicos.f2 import texto_puro
 from nucleo.variaveis import VARIAVEIS
 
 VAZIO = "---"  # linha sem habilidade (CONTEUDO_VAZIO do contrato)
@@ -445,6 +446,11 @@ def pendencias(revista, resolvido=None):
             faltas.append("o passo Habilidades está ligado e nenhuma etapa tem código ou texto.")
         if "progressao" in passos and sum(bool(e["marca"]) for e in etapas) < 2:
             faltas.append("o passo Progressão precisa de pelo menos 2 etapas com marca.")
+        faltas += [  # sem o texto, o + abriria um modal só com o título (D-250)
+            f"o passo {rotulo} está ligado e falta o texto do clique."
+            for p, rotulo in (("habilidades", "Habilidades"), ("progressao", "Progressão"))
+            if p in passos and not texto_puro(inf["textos"][p])
+        ]
         if "tarefas" in passos and sum(bool(i["imagem"]) for i in inf["itens"]) < 4:  # posições 1 a 4, únicas
             faltas.append("o passo Tarefas precisa dos 4 itens com imagem.")
         saida += [Pendencia("infografico", f"{inf['titulo']}: {f}") for f in faltas]
