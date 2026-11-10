@@ -2,11 +2,11 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-F2 gerado: fase 2 de 5 — tarefas 0 a 3 de 7 concluídas e revisadas na `feat/f2-f2` (worktree `/home/otavio.peres/dev/revista-express-f2-f2`, stack `COMPOSE_PROJECT_NAME=f2-f2 -p f2-f2`; plano `docs/superpowers/plans/2026-11-09-f2-fase-2.md`; ledger em `.superpowers/sdd/2026-11-09-f2-fase-2/progress.md`). Funcionando: template F2 com 9 seções fixas (D-238, D-241), seeds e migração 0023; `templates/revista/f2.svg` fiel ao desenho; `f2.gerar(infografico, secoes, base_imagens, componente)` monta SVG, tour e modais de um infográfico (D-242), com reflow do passo desligado, 12 etapas, rowspan e conectores; suíte 853 OK, 8 pulados (em 6b6685a; a correção 906b427 rodou `test_f2`, 9 OK). Quebrado/pendente: tarefas 4 a 7 (o `gerar` ainda não é chamado pelas páginas: T5); a `integ/f2-gerado` só entra na `main` com as fases 1 a 3 (D-237).
+F2 gerado: fase 2 de 5 — tarefas 0 a 4 de 7 concluídas e revisadas na `feat/f2-f2` (worktree `/home/otavio.peres/dev/revista-express-f2-f2`, stack `COMPOSE_PROJECT_NAME=f2-f2 -p f2-f2`; plano `docs/superpowers/plans/2026-11-09-f2-fase-2.md`; ledger em `.superpowers/sdd/2026-11-09-f2-fase-2/progress.md`). Funcionando: template F2 com 9 seções (D-238, D-241); `f2.svg`; `f2.gerar` (D-242); resolvido com `f2.infograficos`, pendência `infografico`, passo e coluna "Infográficos"; passo desligado invisível (não conta variável, não entra no hash; tarefas desligado tira os itens, D-243, conselho unânime). Suíte 862 OK, 8 pulados. Quebrado/pendente: tarefas 5 a 7; até a T6, o zip dá 500 em revista sem SVG (`empacotar.py`, marcado `ponytail:`); a `integ/f2-gerado` só entra na `main` com as fases 1 a 3 (D-237).
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Disparar o implementador da tarefa 4 com `.superpowers/sdd/2026-11-09-f2-fase-2/task-4-brief.md` (BASE 906b427).
+Disparar o implementador da tarefa 5 com `.superpowers/sdd/2026-11-09-f2-fase-2/task-5-brief.md` (BASE = HEAD da `feat/f2-f2`).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1979,6 +1979,15 @@ Disparar o implementador da tarefa 4 com `.superpowers/sdd/2026-11-09-f2-fase-2/
 - **Arquivos afetados:** `servicos/f2.py`, `servicos/html.py`, `tests/test_f2.py`, briefs das tarefas 3, 4 e 5.
 - **Status:** ativa
 
+### D-243 — Conselho da tarefa 4: passo Tarefas desligado tira os itens do resolvido (2026-11-10 12:30)
+- **Contexto:** depois da revisão da tarefa 4 (texto de passo desligado não conta variável, 4e16fae), o /conselho (5 analistas + debate) achou o mesmo defeito na análise dos itens: com o passo Tarefas desligado, `renderizado(i.analise)` ainda contava variáveis e uma variável vazia num item invisível travava o "Validado".
+- **Decisão:** com `tarefas` em `passos_desligados`, `itens` sai `[]` do resolvido (O3). Veredito unânime na rodada final (5×0); na rodada 1 o placar foi O2 3 × O3 2.
+- **Motivo:** a regra "passo desligado é invisível" fica num lugar só (o resolver), igual ao que `f2.gerar` mostra; pelo plano da T6 o zip copia e exige as imagens dos itens do resolvido, então com a O2 uma imagem invisível sumida barraria o zip ou a T6 repetiria o filtro. O banco continua guardando os itens.
+- **Descartadas:** O1 manter (deixa o Validado travar por texto invisível); O2 só esvaziar a análise (imagem invisível continuaria no hash e no zip); O4 como opção de voto (sem voto). A O4 entrou como acréscimo, a pedido do usuário em 10/11: `docs/regras-de-negocio.md` (pendência `infografico`), `docs/modelo-er.md` (hash com `imagem_sha256`) e marca `ponytail:` na ponte de `empacotar.py`.
+- **Pendência registrada para a T6:** `empacotar.py:110` faz `default_storage.exists(revista.svg_f2)` com `svg_f2=None` desde que a pendência `svg` saiu → 500 no zip entre T4 e T6.
+- **Arquivos afetados:** `servicos/resolver.py`, `servicos/empacotar.py` (comentário), `tests/test_resolver.py`, `docs/regras-de-negocio.md`, `docs/modelo-er.md`; dossiê, mesa, análises e réplicas em `.superpowers/sdd/2026-11-09-f2-fase-2/conselho-t4-*.md`.
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [ ] (09/11, plano da fase 2) A planilha e o "o que mudou" do impresso só ganham os infográficos na fase 4. Se as fases 1 a 3 forem para a `main` sem a 4, o impresso não vê o conteúdo novo do F2. Puxar a parte do impresso da fase 4 para a 3, ou deployar 1 a 4 juntas? Decidir antes da fase 3 — depende de: Otavio
 - [x] (D-237: opção A) (09/11, contra a D-236) Fase 2 sozinha na `main` trava o "Validado" e o zip de toda revista: as pendências novas do infográfico (habilidade vazia, passo ligado sem dado, item sem imagem) só se resolvem na tela da fase 3. Opções: (A) `integ/f2-gerado` entra na `main` só com as fases 1 a 3; (B) a fase 2 não cria pendência nova, e elas entram na fase 3 — depende de: Otavio
@@ -2071,6 +2080,8 @@ Disparar o implementador da tarefa 4 com `.superpowers/sdd/2026-11-09-f2-fase-2/
 ### 2026-11-10
 - Tarefa 3 planejada: 8 lacunas do brief fechadas (D-242); briefs 3, 4 e 5 ajustados.
 - Tarefa 3 implementada (6b6685a), revisada (aprovada com 7 Minor) e corrigida (906b427); prova visual conferida.
+- Tarefa 4 implementada (bf9cdd7), revisada (1 Important + 5 Minor) e corrigida (4e16fae).
+- Conselho da tarefa 4: O3 unânime (D-243); mudança e O4 (docs, ponytail) aplicadas; suíte 862 OK.
 
 ### 2026-11-09
 - Retomada da fase 2 do F2. Antes: relatório da fase 1 julgado pela doutrina dos agentes (degraus, análise sóbria, meta-análise). Nada apagável no código da fase 1.
