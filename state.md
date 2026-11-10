@@ -2,11 +2,11 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-F2 gerado: fase 2 de 5 — tarefas 0 a 2 de 7 concluídas e revisadas na `feat/f2-f2` (worktree `/home/otavio.peres/dev/revista-express-f2-f2`, stack `COMPOSE_PROJECT_NAME=f2-f2 -p f2-f2`; plano `docs/superpowers/plans/2026-11-09-f2-fase-2.md`; ledger em `.superpowers/sdd/2026-11-09-f2-fase-2/progress.md`). Funcionando: template F2 com 9 seções fixas (D-238, D-241), seeds do docx e migração 0023; `templates/revista/f2.svg` fiel ao desenho em uso, com os botões ❶ (laranja) a ❹ e um + por item (PNGs aprovados pelo usuário); suíte 846 OK, 8 pulados. Quebrado/pendente: tarefa 3 (gerador `servicos/f2.py`) parada pelo usuário antes de começar; tarefas 4 a 7; a `integ/f2-gerado` só entra na `main` com as fases 1 a 3 (D-237).
+F2 gerado: fase 2 de 5 — tarefas 0 a 3 de 7 concluídas e revisadas na `feat/f2-f2` (worktree `/home/otavio.peres/dev/revista-express-f2-f2`, stack `COMPOSE_PROJECT_NAME=f2-f2 -p f2-f2`; plano `docs/superpowers/plans/2026-11-09-f2-fase-2.md`; ledger em `.superpowers/sdd/2026-11-09-f2-fase-2/progress.md`). Funcionando: template F2 com 9 seções fixas (D-238, D-241), seeds e migração 0023; `templates/revista/f2.svg` fiel ao desenho; `f2.gerar(infografico, secoes, base_imagens, componente)` monta SVG, tour e modais de um infográfico (D-242), com reflow do passo desligado, 12 etapas, rowspan e conectores; suíte 853 OK, 8 pulados (em 6b6685a; a correção 906b427 rodou `test_f2`, 9 OK). Quebrado/pendente: tarefas 4 a 7 (o `gerar` ainda não é chamado pelas páginas: T5); a `integ/f2-gerado` só entra na `main` com as fases 1 a 3 (D-237).
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Retomar a tarefa 3: disparar o implementador com `.superpowers/sdd/2026-11-09-f2-fase-2/task-3-brief.md` (BASE 2aa1ecc).
+Disparar o implementador da tarefa 4 com `.superpowers/sdd/2026-11-09-f2-fase-2/task-4-brief.md` (BASE 906b427).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1971,6 +1971,14 @@ Retomar a tarefa 3: disparar o implementador com `.superpowers/sdd/2026-11-09-f2
 - **Arquivos afetados:** `texto.py`, `templates_seed/2026/f2-*.hbs`, `migrations/0023_template_f2_secoes.py`, `templates/revista/f2.svg`, `servicos/f2.py`.
 - **Status:** ativa
 
+### D-242 — Lacunas do brief da tarefa 3 fechadas antes de implementar (2026-11-10 10:00)
+- **Contexto:** ao planejar a tarefa 3 (gerador `servicos/f2.py`), o brief não batia com o código: o `f2.svg` usa `componente`, que o infográfico da T4 não traz; `html.py` importaria `f2` e vice-versa; os conectores (`linhas`) não tinham regra; a "progressão sem linha" do protótipo não existe no `f2.svg`; o resolvido só traz as etapas gravadas, e o desenho tem 12.
+- **Decisão:** `gerar(infografico, secoes, base_imagens, componente)`; `ROTULO_TOUR` e `_texto` passam de `html.py` para `f2.py` (`texto_puro`); `CONECTORES` com os 3 pontos do desenho, e os pontos iniciais com o y do 1º andam com o bloco; tabela e progressão sempre com as 12 etapas de `EtapaReferencial`, completando as vazias em cinza; linha vazia do topo vira célula vazia própria; título do modal do item por `format_html`; `analise` chega renderizada (T4).
+- **Motivo:** menor diff que fecha cada lacuna sem mexer no `f2.svg` aprovado; o import em uma direção só evita ciclo quando a T5 importar `f2`.
+- **Descartadas:** `componente` dentro do dict do infográfico (repetiria o mesmo valor em todo infográfico e mexeria no hash); conectores recalculados por geometria (só a progressão se move); manter a regra "menos de 2 marcas" (não há polilinha no desenho).
+- **Arquivos afetados:** `servicos/f2.py`, `servicos/html.py`, `tests/test_f2.py`, briefs das tarefas 3, 4 e 5.
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [ ] (09/11, plano da fase 2) A planilha e o "o que mudou" do impresso só ganham os infográficos na fase 4. Se as fases 1 a 3 forem para a `main` sem a 4, o impresso não vê o conteúdo novo do F2. Puxar a parte do impresso da fase 4 para a 3, ou deployar 1 a 4 juntas? Decidir antes da fase 3 — depende de: Otavio
 - [x] (D-237: opção A) (09/11, contra a D-236) Fase 2 sozinha na `main` trava o "Validado" e o zip de toda revista: as pendências novas do infográfico (habilidade vazia, passo ligado sem dado, item sem imagem) só se resolvem na tela da fase 3. Opções: (A) `integ/f2-gerado` entra na `main` só com as fases 1 a 3; (B) a fase 2 não cria pendência nova, e elas entram na fase 3 — depende de: Otavio
@@ -2060,6 +2068,10 @@ Retomar a tarefa 3: disparar o implementador com `.superpowers/sdd/2026-11-09-f2
 - [ ] Migrar `api/` (Express + Mongo) para Django + PostgreSQL, mantendo o React de `editor/`? Motivos do usuário (2026-10-26): herança entre projetos, templates de escala por parceiro (com parentesco entre si), auth/perfis mais fortes (uso amplo todo ano), auditoria de mudanças de texto para avisar a equipe do impresso; equipe já sabe Django. Proposta de modelo apresentada, sem decisão — herança viva decidida (D-045); depende de: usuário confirmar a regra de conflito (sobrescrita local do filho vence ou o pai vence?)
 
 ## Sessões
+### 2026-11-10
+- Tarefa 3 planejada: 8 lacunas do brief fechadas (D-242); briefs 3, 4 e 5 ajustados.
+- Tarefa 3 implementada (6b6685a), revisada (aprovada com 7 Minor) e corrigida (906b427); prova visual conferida.
+
 ### 2026-11-09
 - Retomada da fase 2 do F2. Antes: relatório da fase 1 julgado pela doutrina dos agentes (degraus, análise sóbria, meta-análise). Nada apagável no código da fase 1.
 - Achado: a premissa da D-236 cai. A fase 2 cria pendências por infográfico (habilidade vazia etc.), e `servicos/validacao.py:43` recusa o "Validado" e `empacotar.py:101` recusa o zip com pendência; sem a tela da fase 3, ninguém as resolve. Usuário escolheu A: D-237.
