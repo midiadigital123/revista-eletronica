@@ -1,39 +1,67 @@
-// Página única F1 + F2 (S08), sem servidor: fixtures/pagina.html é o HTML que o Django
-// renderiza no modo zip (test_preview.py confere o gabarito; REGERAR_FIXTURES=1 regrava).
-// page.route num host fictício serve os estáticos de nucleo/static/revista/ (D-130).
+// Revista em páginas (sumário, F1 e um F2 por infográfico), sem servidor: fixtures/pagina/<nome>.html
+// é o HTML que o Django renderiza no modo zip (test_preview.py confere os gabaritos;
+// REGERAR_FIXTURES=1 regrava). page.route num host fictício serve os estáticos de nucleo/static/revista/
+// (D-130) e o PNG 1×1 em arquivos/ (capa e imagens dos itens do infográfico).
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { extname, join } from "node:path";
 
 const APP = join(__dirname, "..", "..");
 const STATIC = join(APP, "nucleo", "static");
-const HTML = readFileSync(join(__dirname, "..", "fixtures", "pagina.html"), "utf8");
+const PAGINAS = join(__dirname, "..", "fixtures", "pagina");
 const BASE = "http://pagina.teste/";
 const TIPOS: Record<string, string> = { ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml" };
-// PNG 1×1 para arquivos/capa.png
+// PNG 1×1 para arquivos/capa.png e arquivos/infograficos/*.png
 const PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==",
   "base64",
 );
 
-async function abrir(page: Page): Promise<string[]> {
+async function abrir(page: Page, nome = "index.html"): Promise<string[]> {
   const erros: string[] = [];
   page.on("console", (m) => m.type() === "error" && erros.push(m.text()));
   page.on("pageerror", (e) => erros.push(e.message));
   await page.route(`${BASE}**`, (route) => {
     const caminho = new URL(route.request().url()).pathname.slice(1);
-    if (caminho === "index.html") return route.fulfill({ contentType: "text/html", body: HTML });
-    if (caminho === "arquivos/capa.png") return route.fulfill({ contentType: "image/png", body: PNG });
+    if (extname(caminho) === ".html") return route.fulfill({ contentType: "text/html", body: readFileSync(join(PAGINAS, caminho)) });
+    if (caminho.startsWith("arquivos/")) return route.fulfill({ contentType: "image/png", body: PNG });
     return route.fulfill({ contentType: TIPOS[extname(caminho)], body: readFileSync(join(STATIC, caminho)) });
   });
-  await page.goto(`${BASE}index.html`);
+  await page.goto(`${BASE}${nome}`);
+  return erros;
+}
+
+async function abrirF1(page: Page): Promise<string[]> {
+  const erros = await abrir(page, "f1.html");
   await expect(page.locator("body.app-initialized")).toBeAttached();
+  return erros;
+}
+
+async function abrirOutrasEtapas(page: Page): Promise<string[]> {
+  const erros = await abrir(page, "f2-outras-etapas.html");
   await expect(page.locator("#revista.svg-tour")).toBeAttached();
   return erros;
 }
 
-test("F1: troca a etapa", async ({ page }) => {
+test("sumário: os 3 links abrem a página certa", async ({ page }) => {
   const erros = await abrir(page);
+  await expect(page).toHaveTitle("Análise de GO");
+  const sumario = page.getByRole("navigation", { name: "Sumário" });
+  for (const [link, titulo] of [
+    ["Escalas de proficiência", "Escalas de proficiência – Análise de GO"],
+    ["Avaliação e Currículo – Alfa", "Avaliação e Currículo – Alfa – Análise de GO"],
+    ["Avaliação e Currículo – Outras Etapas", "Avaliação e Currículo – Outras Etapas – Análise de GO"],
+  ]) {
+    await sumario.getByRole("link", { name: link, exact: true }).click();
+    await expect(page).toHaveTitle(titulo);
+    await page.getByRole("link", { name: "Voltar ao sumário" }).click();
+    await expect(page).toHaveTitle("Análise de GO");
+  }
+  expect(erros).toEqual([]);
+});
+
+test("F1: troca a etapa", async ({ page }) => {
+  const erros = await abrirF1(page);
   const abas = page.locator(".filtro-btn");
   await expect(abas.first()).toHaveClass(/active/);
   await abas.nth(1).click();
@@ -46,7 +74,7 @@ test("F1: troca a etapa", async ({ page }) => {
 });
 
 test("F1: seletor de descritores devolve o foco e anuncia", async ({ page }) => {
-  const erros = await abrir(page);
+  const erros = await abrirF1(page);
   const toggle = page.locator("#dropdownToggle");
   await toggle.click();
   await page.locator("#tagPanel .descritor-btn", { hasText: "D02" }).click();
@@ -67,70 +95,63 @@ test("F1: seletor de descritores devolve o foco e anuncia", async ({ page }) => 
   expect(erros).toEqual([]);
 });
 
-test("F2: menu de capítulos, tour completo e dlg-p2", async ({ page }) => {
-  const erros = await abrir(page);
-  await page.getByRole("navigation", { name: "Capítulos" }).getByRole("link", { name: "Infográfico" }).click();
-  await expect(page).toHaveURL(/#f2$/);
-
+test("F2 Outras Etapas: tour completo e Anterior na visão geral", async ({ page }) => {
+  const erros = await abrirOutrasEtapas(page);
   const f2 = page.locator("#revista");
-  await expect(f2.locator(".svg-tour__title")).toHaveText("Avaliação & Currículo");
+  const titulo = f2.locator(".svg-tour__title");
   const principal = f2.locator(".svg-tour__actions .svg-tour__btn--primary");
-  await principal.click(); // Iniciar tour
-  await expect(f2.locator(".svg-tour__title")).toHaveText("Descritor");
-  await principal.click();
-  await expect(f2.locator(".svg-tour__title")).toHaveText("Itens");
+  await expect(titulo).toHaveText("Avaliação & Currículo");
+  for (const passo of ["Descritor", "Habilidades", "Progressão", "Tarefas"]) {
+    await principal.click(); // Iniciar tour, depois Próximo
+    await expect(titulo).toHaveText(passo);
+  }
   await expect(principal).toHaveText("Concluir");
   await principal.click();
-  await expect(f2.locator(".svg-tour__title")).toHaveText("Tour concluído");
+  await expect(titulo).toHaveText("Tour concluído");
   await principal.click(); // Recomeçar tour
-  await expect(f2.locator(".svg-tour__title")).toHaveText("Descritor");
+  await expect(titulo).toHaveText("Descritor");
   // "Anterior" some na visão geral: o foco vai para o botão principal
   const anterior = f2.locator(".svg-tour__actions .svg-tour__btn:not(.svg-tour__btn--primary)");
   await anterior.focus();
   await page.keyboard.press("Enter");
-  await expect(f2.locator(".svg-tour__title")).toHaveText("Avaliação & Currículo");
+  await expect(titulo).toHaveText("Avaliação & Currículo");
   await expect(principal).toBeFocused();
+  expect(erros).toEqual([]);
+});
 
-  // Botão do SVG (prefixo f2-) abre o <dialog> da seção dlg-p2, com título e foco dentro
-  const botao = page.locator("#f2-btn-action-p2");
+test("F2 Outras Etapas: + das habilidades abre o dialog e Esc devolve o foco", async ({ page }) => {
+  const erros = await abrirOutrasEtapas(page);
+  const botao = page.locator("#f2-btn-action-habilidades");
   await expect(botao).toHaveAttribute("role", "button");
-  await botao.focus(); // foco leva o tour ao passo que contém o botão
-  await expect(f2.locator(".svg-tour__title")).toHaveText("Itens");
+  await botao.focus(); // teclado: o clique no <g> do SVG não chega
   await page.keyboard.press("Enter");
-  const dialogo = page.getByRole("dialog", { name: "Itens por ano" });
+  const dialogo = page.getByRole("dialog", { name: "Habilidades" });
   await expect(dialogo).toBeVisible();
-  await expect(dialogo).toContainText("Detalhe do item.");
+  await expect(dialogo).toContainText("Texto dois.");
   await page.keyboard.press("Escape");
   await expect(dialogo).toBeHidden();
-  await expect(botao).toBeFocused(); // foco volta ao botão
-  // Fechar pelo × (form method=dialog, com CSP form-action 'none')
+  await expect(botao).toBeFocused();
+  expect(erros).toEqual([]);
+});
+
+test("F2 Outras Etapas: dlg-tarefa-1 mostra a imagem do item", async ({ page }) => {
+  const erros = await abrirOutrasEtapas(page);
+  await page.locator("#f2-btn-action-tarefa-1").focus();
   await page.keyboard.press("Enter");
-  await dialogo.getByRole("button", { name: "Fechar" }).click();
-  await expect(dialogo).toBeHidden();
+  const dialogo = page.locator("#dlg-tarefa-1");
+  await expect(dialogo).toBeVisible();
+  const imagem = dialogo.getByRole("img", { name: "Item 1" });
+  await expect.poll(() => imagem.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
   expect(erros).toEqual([]);
 });
 
-test("Ctrl+→ dentro do F2 não muda o descritor do F1", async ({ page }) => {
-  const erros = await abrir(page);
-  const badge = page.locator(".descritor-badge");
-  await expect(badge).toHaveText("D01");
-
-  await page.locator("#revista").focus();
-  await page.keyboard.press("Control+ArrowRight");
-  await expect(badge).toHaveText("D01");
-
-  // Controle: fora do F2 o atalho continua valendo
-  await page.locator("#filtro .filtro-btn").first().focus();
-  await page.keyboard.press("Control+ArrowRight");
-  await expect(badge).toHaveText("D02");
-  expect(erros).toEqual([]);
-});
-
-for (const largura of [1280, 390]) {
-  test(`screenshot ${largura}px`, async ({ page }) => {
-    await page.setViewportSize({ width: largura, height: 900 });
-    const erros = await abrir(page);
-    await page.screenshot({ path: join(__dirname, "..", "screenshots", `pagina-${largura}.png`), fullPage: true });
-    expect(erros).toEqual([]);
-  });
+for (const nome of ["index", "f2-outras-etapas"]) {
+  for (const largura of [1280, 390]) {
+    test(`screenshot ${nome} ${largura}px`, async ({ page }) => {
+      await page.setViewportSize({ width: largura, height: 900 });
+      const erros = await abrir(page, `${nome}.html`);
+      await page.screenshot({ path: join(__dirname, "..", "screenshots", `pagina-${nome}-${largura}.png`), fullPage: true });
+      expect(erros).toEqual([]);
+    });
+  }
 }

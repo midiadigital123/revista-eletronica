@@ -91,7 +91,8 @@ export async function revistaPropria(page: Page, prefixo: string, matriz = "Demo
   await expect(page.locator("#arquivos")).toContainText("SVG enviado");
   await page.setInputFiles("#arquivo-capa", CAPA);
   await expect(page.locator("#arquivos img.revista-capa")).toBeVisible();
-  await expect(page.locator("#situacao")).toContainText("6 de 6 prontos");
+  // ponytail: volta a 6 de 6 na fase 3, quando o infográfico for editável
+  await expect(page.locator("#situacao")).toContainText("5 de 6 prontos");
   await liberarBloqueio(page);
   return { nome, revista };
 }
