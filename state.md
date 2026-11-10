@@ -2,11 +2,11 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Fase 3 do F2 (K-028) aberta: worktree `/home/otavio.peres/dev/revista-express-f2-f3`, branch `feat/f2-f3` saída da `integ/f2-gerado` (`93c28f5`), com a `main` mergeada (PRs #8 a #11: abrir ano D-246, docs D-233/D-234 da main, kanban D-253). Funcionando: tudo da fase 2 (F2 gerado, páginas separadas, zip) + primeiro ano vazio + kanban. Quebrado/pendente: specs E2E `impacto`, `impresso`, `painel` e `revista-textos` vermelhos até a fase 3 (pendência `infografico`); fases 4 e 5; S17/S18. Tarefas no `kanban.md`.
+Fase 3 do F2 (K-028), T0 de 6 em andamento: plano aprovado e copiado para `docs/superpowers/plans/2026-11-10-f2-fase-3.md` (D-254); suíte Django rodando na stack `-p f2-f3` para provar o merge da `main`. Worktree `/home/otavio.peres/dev/revista-express-f2-f3`, branch `feat/f2-f3`. Funcionando: tudo da fase 2 (F2 gerado, páginas separadas, zip) + primeiro ano vazio + kanban. Quebrado/pendente: specs E2E `impacto`, `impresso`, `painel` e `revista-textos` vermelhos até a T4 (pendência `infografico`); fases 4 e 5; S17/S18. Tarefas no `kanban.md`.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Rodar a suíte Django na stack `-p f2-f3` para provar o merge da `main`; depois, planejar a T1 da fase 3 (D-252).
+Conferir o resultado da suíte da T0 e, verde, commitar a T0 (`docs: plano da fase 3 do F2 (D-254)`) com o ok do usuário.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2061,6 +2061,14 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Arquivos afetados:** `kanban.md`, `.gitignore`, `state.md`; fora do repo: `~/.claude/skills/kanban/`, `~/.claude/settings.json`, `~/.claude/CLAUDE.md`.
 - **Status:** ativa
 
+### D-254 — Plano da fase 3 do F2: tela dos infográficos em 6 tarefas (2026-11-10 23:00)
+- **Contexto:** pedido do usuário ("escreva o plano da fase 3"); fontes: mapa da fase 3 no plano da fase 2, D-250 a D-252 e o relatório da auditoria.
+- **Decisão:** plano `docs/superpowers/plans/2026-11-10-f2-fase-3.md`, aprovado pelo usuário: T0 suíte + plano; T1 `servicos/pendencias.py` (`pendencias_f1`/`pendencias_f2`) + itens rápidos da D-252; T2 regra de gravação em `nucleo/infografico.py` (`form_do_campo`, um campo por envio, nomes `inf-<pk>-…`) + `arquivos.receber_imagem_item`; T3 passo "Infográficos" na ficha da revista (um cartão por infográfico ativo, autosave + modal de impacto, grade fixa de 12 linhas, 4 itens) e a UI do SVG sai do passo Arquivos; T4 `criar_demo` com o JSON do docx (movido para `nucleo/dados/`), `revistaPropria` volta a "6 de 6" desligando os 3 passos e preenchendo a habilidade, `infografico.spec.ts` novo; T5 editor de templates F2, docs, revisão, merge na `integ/f2-gerado` com o ok. Cerca de 3 dias úteis.
+- **Motivo:** a pendência `infografico` só se resolve com a tela; a regra fica fora da view, como `nucleo/revista.py`, e toda gravação usa o protocolo `ui_autosave` que já trata bloqueio, conflito e impacto.
+- **Descartadas:** `quote()` no `src` da imagem (`f2.py:126`) — o upload grava com nome uuid, o gatilho "nome livre" não acontece; preview com as URLs do zip (O7) — a tela não cria chamador novo de `contexto_pagina`; imagem nomeada pelo sha256 (`preview.py:128`) — revista arquivada recusa POST, linha e foto não divergem (o `ponytail:` fica); `revistaPropria` preenchendo o infográfico inteiro — o spec novo cobre o preenchimento completo, o helper só precisa do mínimo para "6 de 6".
+- **Arquivos afetados:** `docs/superpowers/plans/2026-11-10-f2-fase-3.md`, `state.md`, `kanban.md`.
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (D-252) (10/11, auditoria do código) Quais itens do "fazer agora" entram e onde: `planilhas.py:97` falha explícita para componente sem layout; enum no lugar de "2EF" em `cascata.py` e assert nas 12 etapas de `f2.py`; constante `ANO_DEMO` no E2E (138 ocorrências de 2026); separar `pendencias_f1`/`pendencias_f2`; helper `pode(user, modelo, acao)` (48 checagens fora de `permissoes.py`). Depois: hash do resolvido persistido (o resolver roda por revista no painel, impacto, matriz, paleta e impresso; teto ~50 revistas) e painel paginado com poda de fotos — depende de: Otavio
 - [ ] (10/11, conselho da fase 2) O 1º parágrafo de `tarefas-fechamento` (seed `f2-lp.hbs`/`f2-mt.hbs` e migração 0023) fala dos itens do D05 de LP (tirinha, charge), contra o motivo da D-240. Tirar do seed e da 0023 antes da fase 4 (quando o impresso lê a seção)? — depende de: Otavio
@@ -2637,3 +2645,6 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - Docker: 15 stacks das worktrees apagadas derrubadas (agent-*, ano-vazio, uibchk, revista-e2e) com 20 volumes de banco; ficam as stacks/volumes de `revista-eletronica` (dev), `f2-f1`, `f2-f2`, `revista-express-f2-*` e `etapa-projeto`. 94 volumes anônimos soltos (sem dono identificável) não foram tocados.
 - PR com a pausa da etapa do projeto (K-034), a limpeza de worktrees e Docker e o learning "branch que vai sozinha para a main sai da main".
 - Learning: limpeza de worktree com arquivos do root termina por container; stacks Docker saem à parte (PR #11).
+
+### 2026-11-10 23:00
+- Plano da fase 3 escrito e aprovado (D-254): 6 tarefas, ~3 dias úteis; 3 itens da auditoria ficam fora (quote, URLs do zip no preview, imagem por sha256).

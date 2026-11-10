@@ -3,8 +3,6 @@
 ## Backlog
 - **K-034** Etapa do projeto (`feat/etapa-do-projeto`): 14 commits fora da `main`, tarefa 5 em WIP · pausada
   nota: parada por decisão do usuário em 10/11; branch e worktree `revista-express-etapa` ficam como estão
-- **K-028** Fase 3 do F2: tela dos infográficos (resolve a pendência `infografico`), a partir da T1
-  nota: os specs E2E `impacto`, `impresso`, `painel` e `revista-textos` voltam ao verde aqui
 - **K-029** Fase 4 do F2: remover o SVG enviado, impresso com os infográficos, docs
 - **K-030** Merge da `integ/f2-gerado` na `main`, com as fases 1 a 4 juntas (D-249)
 - **K-031** Fase 5 do F2: animação por passo (desejável)
@@ -12,6 +10,16 @@
 - **K-033** S18 — E2E da temporada
 
 ## Doing
+- **K-028** Fase 3 do F2: tela dos infográficos (resolve a pendência `infografico`) · desde 2026-11-10 · D-252 · D-254
+  nota: worktree `revista-express-f2-f3`, branch `feat/f2-f3`, stack `-p f2-f3`; os specs E2E `impacto`, `impresso`, `painel` e `revista-textos` voltam ao verde aqui
+  - [x] worktree + merge da `main` (`b5fd1e6`)
+  - [ ] T0 suíte Django verde depois do merge + plano (`docs/superpowers/plans/2026-11-10-f2-fase-3.md`, D-254)
+  - [x] plano da fase 3 aprovado (D-254)
+  - [ ] T1 `servicos/pendencias.py` + itens rápidos da auditoria (D-252)
+  - [ ] T2 regra de gravação do infográfico + upload da imagem do item
+  - [ ] T3 passo "Infográficos" na ficha da revista (sai a UI do SVG)
+  - [ ] T4 `criar_demo` com o docx + E2E (`infografico.spec.ts`, 4 specs de volta ao verde)
+  - [ ] T5 editor de templates F2, docs, revisão, merge na `integ/f2-gerado`
 
 ## Review
 
