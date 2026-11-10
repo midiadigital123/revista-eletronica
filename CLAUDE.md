@@ -47,8 +47,8 @@ de importação: montar em `/pdfs` (`-v "<pasta>:/pdfs:ro"`); sem eles, 8 testes
 - `app/sistema/`: settings (`DATABASE_URL`, `pt-br`, `USE_TZ`) e urls.
 - `app/nucleo/`: app único. Um arquivo por área em `models/`, `admin/`, `urls/` (um `include`
   por módulo; `urls/ui_*.py` são as telas B) e `servicos/` (regra de negócio fora do admin:
-  `cascata`, `resolver`, `validacao`, `foto`, `html`, `empacotar`, `planilhas`, `importar_matriz`,
-  `matriz`, `abrir_ano`, `bloqueio`, `arquivos`, `impacto`, `exclusao`).
+  `cascata`, `resolver`, `pendencias`, `validacao`, `foto`, `html`, `f2`, `empacotar`, `planilhas`,
+  `importar_matriz`, `matriz`, `abrir_ano`, `bloqueio`, `arquivos`, `impacto`, `exclusao`).
 - Telas B: `templates/ui/` e `static/ui/`. A regra fica em módulo comum (`cortes.py`, `matriz.py`,
   `lotes.py`, `planilha_variaveis.py`…) ou em `servicos/`, e o admin importa dele: nunca duplique a regra.
 - `app/nucleo/permissoes.py`: tabela papel × ação, fonte única (4 grupos: Pedagógica, Mídias
@@ -78,9 +78,11 @@ A revista tem várias páginas, as mesmas no preview e no zip (`templates/revist
 para 2 a 5 padrões (cores em `--color-padrao-k`, sobrescritas por projeto); `static/revista/f2/`
 é o svg-tour copiado sem alteração.
 
-F2 hoje: o SVG enviado na revista, mostrado pelo svg-tour. Aprovado e não implementado: F2 gerado
-pelo servidor como SVG, preenchido na interface, até dois infográficos por revista (Alfa e Outras
-Etapas). Plano em `docs/superpowers/specs/2026-11-06-*.md` (D-227 a D-232). `example/` guarda
+F2 hoje (branch `integ/f2-gerado`, fases 1 a 3): gerado pelo servidor como SVG a partir dos
+infográficos da revista (até dois: Alfa e Outras Etapas), preenchidos no passo "Infográficos" da
+ficha da revista (regra em `nucleo/infografico.py`, D-254). O upload do SVG saiu da tela; o código
+dele sai na fase 4. Specs em `docs/superpowers/specs/2026-11-06-*.md` (D-227 a D-232), planos das
+fases em `docs/superpowers/plans/`. `example/` guarda
 protótipos estáticos fora do sistema (`f2-gerado/` é a fase 0, D-228), cada um com `LEIA-ME.md`.
 
 Formato do F1 por etapa: `{scaleRange, cortes, Dxx: {topic, description, prerequisites[],

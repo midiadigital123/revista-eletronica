@@ -64,7 +64,7 @@ Documentos que este texto não repete:
 | **Validado** | Clique da Pedagógica que grava o hash da revista vista. "Está validada" = hash gravado igual ao hash atual, calculado na hora. | D-074, D-084, `app/nucleo/servicos/validacao.py:20` |
 | **Impresso / "Revista Impressa Atualizada"** | Clique do perfil Impresso que grava a foto `impresso` e zera "o que mudou" daquela revista. | D-072, D-077, `app/nucleo/servicos/validacao.py:54` |
 | **Intervalo mínimo (passo)** | Distância entre os níveis da régua; gera as linhas vazias. Um campo só, chamado `passo`. | D-091, D-155 |
-| **Pendência** | Motivo que bloqueia o Validado (falta matriz, template, SVG, capa, variável…). | D-112, `app/nucleo/servicos/resolver.py:335` |
+| **Pendência** | Motivo que bloqueia o Validado (falta matriz, template, dado do infográfico, capa, variável…). | D-112, `app/nucleo/servicos/pendencias.py:88` |
 
 ---
 
@@ -126,7 +126,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 |---|---|
 | Projeto não herda de outro projeto: só aponta para uma matriz (pelo parceiro_ano). | D-051, learning "Projeto não herda de outro projeto" |
 | Nasce sozinho quando o parceiro_ano recebe o primeiro corte; ninguém cria projeto à mão. | D-061, `app/nucleo/servicos/cascata.py:79-84`, `app/nucleo/admin/projeto.py:64` |
-| Nome inicial: `<nome do parceiro> - NOME DO PROJETO`. Enquanto o nome terminar assim, o Validado fica bloqueado. | D-065, D-093, `app/nucleo/servicos/cascata.py:83`, `app/nucleo/servicos/resolver.py:381` |
+| Nome inicial: `<nome do parceiro> - NOME DO PROJETO`. Enquanto o nome terminar assim, o Validado fica bloqueado. | D-065, D-093, `app/nucleo/servicos/cascata.py:83`, `app/nucleo/servicos/pendencias.py:99` |
 | Um projeto **ativo** por parceiro_ano (restrição do banco). | D-047, `app/nucleo/models/projeto.py:102-105` |
 | O projeto guarda: nome, valores das variáveis, sobrescrita de passo por etapa × componente e sobrescrita de cor por padrão. | D-052, D-053, D-060, D-100, `app/nucleo/models/projeto.py:66` |
 
@@ -241,7 +241,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | A revista lê o template **ao vivo**: editar o template muda todas as revistas que o usam e derruba o Validado delas. | D-099, D-104 |
 | Só a seção editada vira cópia (`RevistaSecao`), guardando a versão do template de onde saiu; as outras seções continuam ao vivo. | D-115, D-170, `app/nucleo/models/revista.py:86` |
 | Cópia nasce só quando o texto muda; texto igual ao template não cria cópia. Cópia que a pessoa deixa igual ao template continua cópia: só o descarte explícito apaga. | D-170 |
-| Template mudou numa seção com cópia: o texto da revista não muda; aparece aviso com diff "Seu texto | Template novo", com "Manter meu texto" ou "Descartar cópia". Não bloqueia o Validado. | D-087, D-115, D-170, `app/nucleo/servicos/resolver.py:386` |
+| Template mudou numa seção com cópia: o texto da revista não muda; aparece aviso com diff "Seu texto | Template novo", com "Manter meu texto" ou "Descartar cópia". Não bloqueia o Validado. | D-087, D-115, D-170, `app/nucleo/servicos/resolver.py:385` |
 | Não há fusão automática de textos. | D-115 |
 | Trocar o template de um fascículo com cópias exige digitar "descartar N cópia(s)"; as cópias saem na mesma transação. | D-104, D-170, D-171, `app/nucleo/revista.py:128` |
 | O lote de template pula revistas com cópia naquele fascículo e lista as puladas. | D-164, `app/nucleo/lotes.py:190-208` |
@@ -298,7 +298,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | Validação em lote: a tela mostra cada revista e envia pares (revista, hash visto); o servidor recusa as que mudaram. | D-120, `app/nucleo/urls/painel.py:165` |
 | Quem valida: `validar_revista` (Admin, Pedagógica, Mídias Digitais). | D-074, `app/nucleo/permissoes.py:76` |
 
-**Pendências que bloqueiam o Validado** (`app/nucleo/servicos/resolver.py:335-383`):
+**Pendências que bloqueiam o Validado** (`app/nucleo/servicos/pendencias.py`: `pendencias_f1`, `pendencias_f2` e as da revista em `pendencias`; a ordem da lista é a da tabela, D-252):
 
 | Código | Condição | Fonte |
 |---|---|---|
@@ -306,7 +306,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | `corte_sem_matriz` | etapa com corte que a matriz escolhida não tem | D-093 |
 | `corte_invalido` | cortes fora de ordem ou da escala (defensivo) | D-154 |
 | `template_f1`, `template_f2` | fascículo sem template | D-112 |
-| `infografico` | habilidade vazia; passo ligado sem dado (Habilidades: código ou texto e o texto do clique; Progressão: 2 marcas e o texto do clique; Tarefas: 4 imagens); passo desligado não gera pendência | D-237, D-243, D-250 |
+| `infografico` | habilidade vazia; passo ligado sem dado (Habilidades: código ou texto e o texto do clique; Progressão: 2 marcas e o texto do clique; Tarefas: 4 imagens); passo desligado não gera pendência. Resolve-se no passo "Infográficos" da ficha da revista | D-237, D-243, D-250, D-254 |
 | `capa` | falta capa | D-112 |
 | `variaveis` | variável usada nos textos efetivos sem valor | D-100 |
 | `nome_projeto` | nome ainda termina em " - NOME DO PROJETO" | D-093 |
