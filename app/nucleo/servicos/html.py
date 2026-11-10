@@ -11,17 +11,14 @@ Tudo o que a página lê vem inline (JSON e SVG): nada de `fetch` (D-125).
 """
 
 import re
-from html import unescape
 
 from django.core.files.storage import default_storage
-from django.utils.html import strip_tags
 from django.utils.safestring import mark_safe
 
+from nucleo.servicos.f2 import ROTULO_TOUR, texto_puro as _texto
 from nucleo.servicos.resolver import resolver
 
 COR = re.compile(r"#[0-9A-Fa-f]{6}")
-# Config do tour (antes em svg-tour/avaliacao-e-curriculo/revista.json); os textos vêm das seções.
-ROTULO_TOUR = "Infográfico: tour guiado"
 
 
 def css_das_cores(cores):
@@ -37,11 +34,6 @@ def css_das_cores(cores):
         r, g, b = (int(cor[i : i + 2], 16) for i in (1, 3, 5))
         vars_.append(f"--color-{chave}:{cor};--color-{chave}-bg:rgba({r}, {g}, {b}, 0.1);")
     return mark_safe(f":root{{{''.join(vars_)}}}" if vars_ else "")
-
-
-def _texto(html):
-    """HTML já renderizado → texto puro (o svg-tour põe título e texto por textContent)."""
-    return unescape(strip_tags(html)).strip()
 
 
 def _tour(secoes):

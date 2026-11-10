@@ -1,8 +1,21 @@
-"""Geometria do infográfico do F2, medida no desenho em uso (tests/fixtures/f2-lp.svg).
+"""Gerador do infográfico do F2: um infográfico resolvido -> SVG, tour e modais (D-239, D-242).
 
-O desenho está em templates/revista/f2.svg; aqui ficam só os números que o gerador precisa para
-posicionar os blocos e as linhas das tabelas. Coordenadas no viewBox 0 0 1190.6 793.7.
+O desenho está em templates/revista/f2.svg (o comentário do topo é o contrato do contexto); aqui
+ficam os números medidos no desenho em uso (tests/fixtures/f2-lp.svg), no viewBox 0 0 1190.6 793.7.
 """
+
+import re
+from html import unescape
+
+from django.template.loader import render_to_string
+from django.utils.html import format_html, strip_tags
+from django.utils.safestring import mark_safe
+
+from nucleo.models.revista import EtapaReferencial
+
+PASSOS = ("descritor", "habilidades", "progressao", "tarefas")  # ordem do tour; descritor sempre ligado
+# Config do tour (antes em svg-tour/avaliacao-e-curriculo/revista.json); os textos vêm das seções.
+ROTULO_TOUR = "Infográfico: tour guiado"
 
 # Caixa de cada bloco (x, y, largura, altura); x e y são o translate do <g id="f2-<bloco>">.
 CAIXA = {
@@ -26,3 +39,106 @@ ALTURAS_LINHAS = (22.7, 22.6, 22.7, 22.7, 22.7, 39.7, 39.6, 25.6, 25.5, 39.7, 39
 # Progressão (bloco progressao, local): x da 1ª coluna e largura de cada etapa.
 PROGRESSAO_X = 19.3
 PROGRESSAO_PASSO = 37.3
+# Conector do descritor até cada bloco (pontos do desenho). Os pontos do início com o y do 1º
+# andam junto com o bloco; o último é a ponta no cartão.
+CONECTORES = {
+    "tarefas": ((111.9, 445), (111.9, 216.8), (262.8, 216.8)),
+    "habilidades": ((640.6, 73.8), (486.5, 73.8), (486.5, 216.3), (405.7, 216.3)),
+    "progressao": ((640.6, 594.5), (550.6, 594.5), (550.6, 250.8), (405.7, 250.8)),
+}
+
+
+def texto_puro(html):
+    """HTML já renderizado → texto puro (o svg-tour põe título e texto por textContent)."""
+    return unescape(strip_tags(html)).strip()
+
+
+def _layout(ligados):
+    """Posição de cada bloco ligado: empilha por coluna mantendo o gap do desenho."""
+    pos = {"cabecalho": CAIXA["cabecalho"][:2]}
+    for nomes, gap in COLUNAS.values():
+        y = CAIXA[nomes[0]][1]
+        for nome in nomes:
+            if nome in ligados:
+                pos[nome] = (CAIXA[nome][0], y)
+                y += CAIXA[nome][3] + gap
+    return {nome: {"x": round(x, 1), "y": round(y, 1)} for nome, (x, y) in pos.items()}
+
+
+def _conector(nome, y_bloco):
+    dy = y_bloco - CAIXA[nome][1]
+    pontos = CONECTORES[nome]
+    pontos = [(x, y + dy if all(p[1] == y for p in pontos[: i + 1]) else y) for i, (x, y) in enumerate(pontos)]
+    return {"pontos": " ".join(f"{round(v, 1):g}" for p in pontos for v in p),
+            "fim": {"x": round(pontos[-1][0], 1), "y": round(pontos[-1][1], 1)}}
+
+
+def _tabela(etapas):
+    """As 12 linhas do referencial (etapa não gravada sai vazia) e as células mescladas (rowspan)."""
+    gravadas = {e["etapa"]: e for e in etapas}
+    tabela, celulas, y = [], [], TABELA_Y
+    for etapa, altura in zip(EtapaReferencial.values, ALTURAS_LINHAS):
+        g = gravadas.get(etapa, {})
+        marca, codigo, texto = (g.get(c) or "" for c in ("marca", "codigo", "texto"))
+        tabela.append({"etapa": etapa, "marca": marca, "cor": CORES_MARCA.get(marca, COR_SEM_MARCA),
+                       "y": round(y, 1), "altura": altura, "meio": round(altura / 2, 1)})
+        acima = celulas[-1] if celulas else None
+        if codigo or texto or not (acima and (acima["codigo"] or acima["texto"])):
+            celulas.append({"codigo": codigo, "texto": texto, "y": round(y, 1), "altura": altura})
+        else:
+            acima["altura"] += altura
+        y += altura
+    for c in celulas:
+        c["altura"] = round(c["altura"], 1)
+        c["clamp"] = max(1, int(c["altura"] // 12))  # line-height de .f2-cel
+    return tabela, celulas
+
+
+def gerar(infografico, secoes, base_imagens, componente):
+    """Um infográfico de resolvido["f2"]["infograficos"] -> {"svg", "tour", "modais"}.
+
+    `secoes` é {id: {"id", "titulo", "corpo"}}, com título escapado e corpo já renderizado; os
+    `textos` e a `analise` dos itens também chegam renderizados. Seção ausente sai vazia.
+    """
+    ligados = [p for p in PASSOS if p == "descritor" or p in infografico["passos"]]
+
+    def secao(id_):
+        return secoes.get(id_, {"titulo": "", "corpo": ""})
+
+    textos = infografico["textos"]
+    pos = _layout(ligados)
+    tabela, celulas = _tabela(infografico["etapas"])
+    itens = sorted(infografico["itens"], key=lambda i: i["posicao"]) if "tarefas" in ligados else []
+
+    modais = [{"id": "dlg-descritor", "titulo": mark_safe(secao("dlg-descritor")["titulo"]),
+               "corpo": mark_safe(secao("dlg-descritor")["corpo"] + textos["descritor"])}]
+    for passo, corpo in (("habilidades", textos["habilidades"]), ("progressao", textos["progressao"]),
+                         ("tarefas", secao("dlg-tarefas")["corpo"])):
+        if passo in ligados:
+            modais.append({"id": f"dlg-{passo}", "titulo": mark_safe(secao(f"passo-{passo}")["titulo"]),
+                           "corpo": mark_safe(corpo)})
+    for n, item in enumerate(itens, 1):
+        img = format_html('<img src="{}{}" alt="{}">', base_imagens, item["imagem"], item["texto_alternativo"]) if item["imagem"] else ""
+        modais.append({"id": f"dlg-tarefa-{n}", "titulo": format_html("{} – {}", item["descritor"], item["rotulo"]),
+                       "corpo": img + mark_safe(item["analise"])})
+
+    primeiro = re.search(r"<p\b[^>]*>(.*?)</p>", secao("abertura")["corpo"], re.S)
+    tour = {
+        "label": ROTULO_TOUR,
+        "intro": {"title": texto_puro(secao("abertura")["titulo"]), "text": texto_puro(primeiro[1]) if primeiro else ""},
+        "steps": [{"target": f"f2-{p}", "title": texto_puro(secao(f"passo-{p}")["titulo"]),
+                   "text": texto_puro(secao(f"passo-{p}")["corpo"])} for p in ligados],
+        "modais": [m["id"] for m in modais],
+    }
+    svg = render_to_string("revista/f2.svg", {
+        "componente": componente,
+        "habilidade": infografico["habilidade"],
+        "pos": pos,
+        "linhas": [_conector(p, pos[p]["y"]) for p in ligados if p in CONECTORES],
+        "tabela": tabela,
+        "celulas": celulas,
+        "pontos": [{"etapa": l["etapa"], "marca": l["marca"], "cor": l["cor"],
+                    "x": round(PROGRESSAO_X + i * PROGRESSAO_PASSO, 1)} for i, l in enumerate(tabela)],
+        "itens": itens,
+    })
+    return {"svg": mark_safe(svg), "tour": tour, "modais": modais}
