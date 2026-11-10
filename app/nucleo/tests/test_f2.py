@@ -3,6 +3,7 @@ import xml.etree.ElementTree as ET
 from django.template.loader import render_to_string
 from django.test import SimpleTestCase
 from django.utils.html import escape, json_script
+from django.utils.safestring import SafeData
 
 from nucleo.servicos import f2
 
@@ -120,6 +121,7 @@ class GerarTest(SimpleTestCase):
         info["habilidade"] = ESCAPE
         info["etapas"][0]["codigo"] = ESCAPE
         info["itens"][0]["descritor"] = ESCAPE
+        info["itens"][0]["texto_alternativo"] = ESCAPE
         secs = secoes()
         secs["passo-descritor"]["titulo"] = escape(ESCAPE)  # o resolvido entrega o título escapado
         r = gerar(info, secs)
@@ -131,6 +133,7 @@ class GerarTest(SimpleTestCase):
         self.assertEqual(r["tour"]["steps"][0]["title"], ESCAPE)
         self.assertEqual(json_script(r["tour"]).count("</script>"), 1)  # só o fechamento da tag
         self.assertIn(escape(ESCAPE), r["modais"][-1]["titulo"])
+        self.assertIn(f'alt="{escape(ESCAPE)}"', r["modais"][-1]["corpo"])
 
     def test_celula_mesclada_e_marca_vazia(self):
         etapas = [  # 1EF não gravada (vazia no topo); 3EF e 5EF.. 3EM vazias entram na de cima
@@ -145,12 +148,21 @@ class GerarTest(SimpleTestCase):
         self.assertEqual(celulas, [("22.7", ""), ("45.3", "(EF15LP18) Relacionar."), ("294.8", "Só texto.")])
         self.assertEqual(r["svg"].count(f'fill="{f2.COR_SEM_MARCA}"'), 2 * 10)  # tabela e progressão
         self.assertEqual(r["svg"].count(f'fill="{f2.CORES_MARCA["I"]}"'), 2)
+        self.assertEqual(r["svg"].count(f'fill="{f2.CORES_MARCA["A"]}"'), 2)
+
+    def test_sem_secoes_e_sem_etapas(self):
+        info = infografico()
+        info["etapas"] = []
+        r = f2.gerar(info, {}, "arquivos/", "Língua Portuguesa")
+        self.assertEqual(r["tour"]["intro"], {"title": "", "text": ""})
+        self.assertEqual(r["svg"].count(f'fill="{f2.COR_SEM_MARCA}"'), 2 * 12)  # tabela e progressão
 
     def test_item_sem_imagem_sai_sem_img(self):
         info = infografico()
         info["itens"][2]["imagem"] = ""  # posição 1
         modais = {m["id"]: m for m in gerar(info)["modais"]}
         self.assertNotIn("<img", modais["dlg-tarefa-1"]["corpo"])
+        self.assertIsInstance(modais["dlg-tarefa-1"]["corpo"], SafeData)
         self.assertIn("Análise 1.", modais["dlg-tarefa-1"]["corpo"])
         self.assertIn('<img src="arquivos/item2.png" alt="Item 2">', modais["dlg-tarefa-2"]["corpo"])
         self.assertEqual(modais["dlg-tarefa-2"]["titulo"], "D05 – 5EF rótulo")

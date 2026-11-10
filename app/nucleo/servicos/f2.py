@@ -67,8 +67,12 @@ def _layout(ligados):
 
 def _conector(nome, y_bloco):
     dy = y_bloco - CAIXA[nome][1]
-    pontos = CONECTORES[nome]
-    pontos = [(x, y + dy if all(p[1] == y for p in pontos[: i + 1]) else y) for i, (x, y) in enumerate(pontos)]
+    pontos = list(CONECTORES[nome])
+    # O trecho inicial na altura do 1º ponto sai do bloco e anda com ele; o resto liga ao cartão do
+    # descritor, que não se move. ponytail: vale para conectores que saem do bloco na horizontal (os 3
+    # do desenho); conector com outro formato pede ponto de ancoragem explícito.
+    n = next((i for i, (_, y) in enumerate(pontos) if y != pontos[0][1]), len(pontos))
+    pontos[:n] = [(x, y + dy) for x, y in pontos[:n]]
     return {"pontos": " ".join(f"{round(v, 1):g}" for p in pontos for v in p),
             "fim": {"x": round(pontos[-1][0], 1), "y": round(pontos[-1][1], 1)}}
 
@@ -112,15 +116,15 @@ def gerar(infografico, secoes, base_imagens, componente):
 
     modais = [{"id": "dlg-descritor", "titulo": mark_safe(secao("dlg-descritor")["titulo"]),
                "corpo": mark_safe(secao("dlg-descritor")["corpo"] + textos["descritor"])}]
-    for passo, corpo in (("habilidades", textos["habilidades"]), ("progressao", textos["progressao"]),
-                         ("tarefas", secao("dlg-tarefas")["corpo"])):
+    for passo in ("habilidades", "progressao", "tarefas"):
         if passo in ligados:
+            corpo = secao("dlg-tarefas")["corpo"] if passo == "tarefas" else textos[passo]
             modais.append({"id": f"dlg-{passo}", "titulo": mark_safe(secao(f"passo-{passo}")["titulo"]),
                            "corpo": mark_safe(corpo)})
     for n, item in enumerate(itens, 1):
         img = format_html('<img src="{}{}" alt="{}">', base_imagens, item["imagem"], item["texto_alternativo"]) if item["imagem"] else ""
         modais.append({"id": f"dlg-tarefa-{n}", "titulo": format_html("{} – {}", item["descritor"], item["rotulo"]),
-                       "corpo": img + mark_safe(item["analise"])})
+                       "corpo": mark_safe(img + item["analise"])})
 
     primeiro = re.search(r"<p\b[^>]*>(.*?)</p>", secao("abertura")["corpo"], re.S)
     tour = {
