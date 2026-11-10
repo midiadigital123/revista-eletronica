@@ -20,7 +20,7 @@ from django.utils.http import urlencode
 
 from nucleo.models import Ano, Componente, CorPadrao, Etapa, Parceiro
 from nucleo.paleta import PadraoImpactoForm, nomes, revistas_afetadas_padrao
-from nucleo.servicos.abrir_ano import AnoRecusado, abrir_ano
+from nucleo.servicos.abrir_ano import VAZIO, AnoRecusado, abrir_ano
 
 
 class ExclusaoAdminMixin:
@@ -76,14 +76,14 @@ class AnoAdmin(ExclusaoAdminMixin, SoLeitura, admin.ModelAdmin):
             raise PermissionDenied
         maior = Ano.objects.aggregate(m=Max("ano"))["m"]
         form = AbrirAnoForm(request.POST or None)
-        form.fields["ano"].help_text = f"Digite o ano. O próximo que pode ser aberto é {(maior or 0) + 1}."
+        form.fields["ano"].help_text = "Digite o ano." + (f" O próximo que pode ser aberto é {maior + 1}." if maior else "")
         if request.method == "POST" and form.is_valid():
             try:
                 novo, origem = abrir_ano(form.cleaned_data["ano"], request.user)
             except AnoRecusado as e:
                 form.add_error("ano", str(e))
             else:
-                messages.success(request, f"Ano {novo} aberto a partir de {origem}.")
+                messages.success(request, f"Ano {novo} aberto a partir de {origem}." if origem else VAZIO.format(novo))
                 return redirect("admin:nucleo_ano_changelist")
         contexto = {
             **self.admin_site.each_context(request),

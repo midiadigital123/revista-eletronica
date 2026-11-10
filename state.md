@@ -6,7 +6,7 @@ Docs alinhados ao código (D-233 e D-234) na `main` pelo PR #6 (merge `0622996`,
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Abrir a fase 2 do F2: worktree `/home/otavio.peres/dev/revista-express-f2-f2` (branch `feat/f2-f2`) a partir de `integ/f2-gerado`, com stack `-p f2-f2`.
+Criar a worktree `feat/f2-f3` a partir da `integ/f2-gerado` para a T1 da fase 3.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1223,7 +1223,7 @@ Abrir a fase 2 do F2: worktree `/home/otavio.peres/dev/revista-express-f2-f2` (b
 - **Motivo:** a virada é sempre a partir do ano anterior; o diff da D-113 mostra o que mudou desde o ano passado.
 - **Descartadas:** `--de` opcional (sem caso de uso); conferir permissão no serviço (o comando de ops não tem usuário); `TransactionTestCase` (não há teste de concorrência).
 - **Arquivos afetados:** `app/nucleo/servicos/abrir_ano.py`, `app/nucleo/management/commands/abrir_ano.py`, `app/nucleo/tests/test_abrir_ano.py`, `app/nucleo/models/texto.py` (só comentário)
-- **Status:** ativa. Verificado por mim: 162 testes OK (8 de PDF pulados), `makemigrations --check` limpo. Revisão (django-reviewer) em andamento. Limite `ponytail:`: leitura da origem sem trava (edição concorrente pode entrar pela metade). A confirmar com o usuário: `Tarefa.arquivo` compartilhado entre anos.
+- **Status:** ativa; ~~sem ano anterior, `AnoRecusado`~~ substituída por D-246 (banco vazio: o 1º ano nasce vazio). Verificado por mim: 162 testes OK (8 de PDF pulados), `makemigrations --check` limpo. Revisão (django-reviewer) em andamento. Limite `ponytail:`: leitura da origem sem trava (edição concorrente pode entrar pela metade). A confirmar com o usuário: `Tarefa.arquivo` compartilhado entre anos.
 
 ### D-149 — Correções da revisão do S16 (2026-10-29 19:35)
 - **Contexto:** revisão (django-reviewer) do S16: 0 críticos, 3 importantes. Uma substituição de matriz concorrente recria descritores e tarefas com ids novos, e a cópia em READ COMMITTED quebrava com `KeyError` (500). Um ano digitado errado (`20277`) criava milhares de linhas que nada apaga (FKs PROTECT). Nenhum teste provava que uma falha no meio desfaz tudo.
@@ -1915,6 +1915,14 @@ Abrir a fase 2 do F2: worktree `/home/otavio.peres/dev/revista-express-f2-f2` (b
 - **Arquivos afetados:** `CLAUDE.md`, `app/.env.example`, `app/e2e/playwright.config.ts`, `app/e2e/tests/helpers.ts`, `app/nucleo/usuarios.py`, `app/nucleo/models/controle.py`, `docs/e2e.md`, `docs/regras-de-negocio.md`
 - **Status:** ativa. Achado à parte: `entrar()` confere o sucesso com `not.toHaveURL(/\/admin\/login\//)`, mas depois da D-212 o login falho fica em `/conta/entrar/`, então a conferência sempre passa.
 
+### D-246 — Banco sem ano: "Abrir ano" cria o primeiro ano vazio (2026-11-10 17:00)
+- **Contexto:** com o banco vazio, `abrir_ano` recusava ("nenhum ano anterior a X para copiar"), e a tela de anos nem mostrava o formulário; o 1º ano só nascia pela linha de comando (`carregar_cadastros`). O usuário apontou que não dá para abrir o primeiro ano.
+- **Decisão:** sem ano nenhum, `abrir_ano(ano)` cria só a linha do ano, sem cópia, e devolve `(novo, None)`; qualquer número de ano é aceito (não há "seguinte" sem anterior). A tela de anos mostra o formulário também sem ano; mensagem comum `VAZIO` ("Ano X aberto vazio: cadastre etapas, componentes e cores.") na tela, no admin e no comando. O ano seguinte copia desse normalmente. `carregar_cadastros` continua valendo. Substitui, em parte, D-148.
+- **Motivo:** escolha do usuário em 10/11 ("Vazio").
+- **Descartadas:** nascer com os cadastros padrão do `carregar_cadastros` (4 etapas, LP/MT, 5 cores; recomendada, recusada pelo usuário); manter a recusa (o 1º ano só pela linha de comando).
+- **Arquivos afetados:** `servicos/abrir_ano.py`, `urls/ui_anos.py`, `admin/cadastro.py`, `management/commands/abrir_ano.py`, `templates/ui/anos/anos.html`, `tests/test_abrir_ano.py`, `tests/test_ui_anos.py`, `docs/regras-de-negocio.md`.
+- **Status:** ativa. Limite: a tela B só edita cores existentes (`ui_anos.py`, paleta); as 5 cores do 1º ano vazio só se criam pelo admin ou pelo `carregar_cadastros`. Ano digitado errado no 1º ano (ex.: 20266) sai pela exclusão de ano.
+
 ## Perguntas em aberto
 - [x] (09/11: D-236 mantida; PR #7 fechado sem merge — fase 1 só vai à `main` com a fase 2, testadas juntas) PR #7 (`feat/f2-f1` → `main`) em conflito só no `state.md`: Estado atual, Próxima ação, D-233/D-234 (números usados nas duas branches), Perguntas em aberto e Sessões. Resolver na worktree `revista-express-f2-f1`, renumerando D-233/D-234 da F2 para D-237/D-238 (o código cita D-233 em 4 arquivos). E a D-236 diz que a fase 1 só entra na `main` junto com a fase 2: o PR #7 a substitui? — depende de: Otavio.
 - [ ] Migração 0020 existe nas duas frentes: `0020_infograficos` (`feat/f2-f1`, seguida de 0021 e 0022) e `0020_etapa_do_projeto` (`feat/etapa-do-projeto`). A frente que entrar na `main` depois renumera a sua e refaz a dependência — depende de: ordem dos merges (usuário).
@@ -2442,3 +2450,5 @@ Abrir a fase 2 do F2: worktree `/home/otavio.peres/dev/revista-express-f2-f2` (b
 - Inventário de branches: além da `main`, só 3 frentes vivas (`integ/docs-atualizacao`, `feat/f2-f1` só local, `feat/etapa-do-projeto` com WIP); colisão de numeração D-xxx registrada nas Perguntas em aberto.
 - PR #6 mergeado na `main` (`0622996`) sem os 3 últimos commits da branch; `feat/f2-f1` confirmada no remoto.
 - PR #7 (fase 1 do F2) fechado sem merge: D-236 mantida pelo usuário (fase 1 e 2 testadas juntas antes da `main`).
+- D-246: banco sem ano — "Abrir ano" cria o 1º ano vazio (tela, admin e comando), na `fix/abrir-ano-vazio` a partir da `main`.
+- `fix/abrir-ano-vazio` mergeada (fast-forward) na `integ/abrir-ano`, criada a partir da `main`; suíte 806 OK, 8 pulados.

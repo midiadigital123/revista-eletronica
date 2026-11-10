@@ -24,7 +24,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 from nucleo.models import Ano, Componente, CorPadrao, Corte, Etapa, MatrizEtapaCC, Revista
 from nucleo.models.cadastro import COR_HEX, ordem_escolar  # noqa: F401 (testes importam daqui)
 from nucleo.paleta import PadraoImpactoForm, revistas_afetadas_padrao
-from nucleo.servicos.abrir_ano import AnoRecusado, abrir_ano
+from nucleo.servicos.abrir_ano import VAZIO, AnoRecusado, abrir_ano
 from nucleo.servicos.impacto import avisar_perdidos
 from nucleo.ui_autosave import form_de_um_campo, proxima_ordem, responder_campo
 
@@ -47,7 +47,7 @@ def anos(request):
         except AnoRecusado as e:
             form.add_error("ano", str(e))
         else:
-            messages.success(request, f"Ano {novo} aberto a partir de {origem}.")
+            messages.success(request, f"Ano {novo} aberto a partir de {origem}." if origem else VAZIO.format(novo))
             return redirect("ui_anos")
     contexto = {
         "anos": anos, "ano": anos[0] if anos else None, "proximo": anos[0].ano + 1 if anos else None,
