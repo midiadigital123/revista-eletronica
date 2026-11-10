@@ -13,6 +13,7 @@ from django.template.loader import render_to_string
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 
+from nucleo.management.commands import criar_demo
 from nucleo.models import (
     FotoRevista,
     Revista,
@@ -40,8 +41,8 @@ F2 = (
     "## dlg-descritor\nSobre o descritor\n\nDetalhe do descritor.\n\n## dlg-tarefas\nTarefas por nível\n\nOs itens.\n\n"
     "## tarefas-fechamento\nFechamento das tarefas\n\nSó no impresso.\n\n## fechamento\nAgora é com você\n\nUse o template.\n"
 )
-# SVG pequeno com a convenção de ids (D-108): passoN e btn-action-xx. ponytail: só alimenta a ponte de
-# empacotar.py (svg_f2 obrigatório até a tarefa 6) e os testes das telas que ainda recebem o SVG.
+# SVG pequeno com a convenção de ids (D-108): passoN e btn-action-xx. ponytail: só alimenta os testes
+# das telas que ainda recebem o SVG.
 SVG = b"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
 <style>.bolinha{fill:#ffeb00;stroke:#000}</style>
 <rect id="fundo" width="800" height="400" fill="#f8f9fa"/>
@@ -73,6 +74,14 @@ def dois_infograficos(revista):
                           "imagem": f"infograficos/{inf.tipo}-{p}.png", "imagem_sha256": "a" * 64,
                           "texto_alternativo": f"Item {p}", "analise": f"Análise do item {p}."},
             )  # fmt: skip
+    gravar_imagens(revista)
+
+
+def gravar_imagens(revista):
+    """Grava o PNG do criar_demo no caminho exato de cada item com imagem da revista."""
+    for caminho in RevistaInfograficoItem.objects.filter(infografico__revista=revista).exclude(imagem=None).values_list("imagem", flat=True):
+        default_storage.delete(caminho)
+        default_storage.save(caminho, ContentFile(criar_demo.PNG))
 
 
 def foto_antiga(revista):
@@ -263,6 +272,35 @@ class PaginaTest(MediaTemporaria, TestCase):
         Tarefa.objects.filter(pk=self.tarefa.pk).update(arquivo=caminho)
         r = self.client.get(f"{reverse('preview_f1', args=[self.rev.pk])}arquivos/itens/{nome}")
         self.assertEqual((r.status_code, r["Content-Type"]), (200, "image/png"))
+
+    def imagem(self, revista, nome):
+        return self.client.get(f"{reverse('preview', args=[revista.pk])}arquivos/infograficos/{nome}")
+
+    def test_imagem_do_item_tipo_fixo_e_nosniff(self):
+        dois_infograficos(self.rev)
+        self.assertIn(f'src="{reverse("preview", args=[self.rev.pk])}arquivos/infograficos/alfa-1.png"',
+                      self.get(self.rev, "alfa").content.decode())  # fmt: skip
+        r = self.imagem(self.rev, "alfa-1.png")
+        self.assertEqual((r.status_code, r["Content-Type"]), (200, "image/png"))
+        self.assertEqual(b"".join(r.streaming_content), criar_demo.PNG)
+        self.assertEqual(r["X-Content-Type-Options"], "nosniff")
+        self.assertEqual(r["Content-Security-Policy"], "default-src 'none'; sandbox")
+
+    def test_imagem_de_outra_revista_404(self):
+        dois_infograficos(self.rev)
+        self.assertEqual(self.imagem(self.go["MT"], "alfa-1.png").status_code, 404)
+
+    def test_imagem_sumida_404_e_pagina_abre(self):
+        dois_infograficos(self.rev)
+        default_storage.delete("infograficos/alfa-1.png")
+        self.assertEqual(self.get(self.rev, "alfa").status_code, 200)
+        self.assertEqual(self.imagem(self.rev, "alfa-1.png").status_code, 404)
+
+    def test_imagem_de_tipo_nao_imagem_404(self):
+        dois_infograficos(self.rev)
+        RevistaInfograficoItem.objects.filter(infografico__revista=self.rev, posicao=1).update(imagem="infograficos/x.svg")
+        default_storage.save("infograficos/x.svg", ContentFile(SVG))
+        self.assertEqual(self.imagem(self.rev, "x.svg").status_code, 404)
 
     def test_capa_com_tipo_fixo_e_nosniff(self):
         receber_capa(self.rev, SimpleUploadedFile("capa.jpg", PNG))

@@ -14,13 +14,13 @@ from django.test import TestCase
 from django.urls import reverse
 
 from nucleo.management.commands.criar_demo import PNG
-from nucleo.models import Parceiro, Revista, RevistaFasciculo, Tarefa, TemplateVersao
-from nucleo.servicos.arquivos import receber_capa, receber_svg
+from nucleo.models import Parceiro, Revista, RevistaFasciculo, RevistaInfografico, RevistaInfograficoItem, Tarefa, TemplateVersao
+from nucleo.servicos.arquivos import receber_capa
 from nucleo.servicos.cascata import gravar_cortes
 from nucleo.servicos.empacotar import Pendente, nome_zip, zip_revista
 from nucleo.servicos.html import contexto_pagina, link_zip
 from nucleo.servicos.resolver import carregar, resolver
-from nucleo.tests.test_preview import F2, SVG, dois_infograficos, foto_antiga
+from nucleo.tests.test_preview import F2, dois_infograficos, foto_antiga, gravar_imagens
 from nucleo.tests.test_resolver import MediaTemporaria, Mundo, preencher_infograficos, usuario
 
 # Zip que o Playwright zip.spec.ts extrai e abre por file:// (gabarito). Regerar: REGERAR_FIXTURES=1.
@@ -42,9 +42,10 @@ class ZipTest(MediaTemporaria, TestCase):
     def setUp(self):
         super().setUp()
         self.rev = carregar(self.go["LP"].pk)
-        receber_svg(self.rev, SimpleUploadedFile("x.svg", SVG))
         receber_capa(self.rev, SimpleUploadedFile("capa.png", PNG))
         preencher_infograficos(self.rev)
+        gravar_imagens(self.rev)
+        self.outras = RevistaInfografico.objects.get(revista=self.rev, tipo="outras").pk
         self.rev = carregar(self.rev.pk)
         self.item(self.tarefa, "itens/item1.png", PNG)  # LP 5EF D01 "Localiza."
 
@@ -72,6 +73,7 @@ class ZipTest(MediaTemporaria, TestCase):
             sorted(conteudo(dados)),
             [
                 "arquivos/capa.png",
+                *(f"arquivos/infograficos/{self.outras}-{p}.png" for p in range(1, 5)),
                 "arquivos/itens/item1.png",
                 "f1.html",
                 "f2-outras-etapas.html",
@@ -173,7 +175,52 @@ class ZipTest(MediaTemporaria, TestCase):
         self.assertIsNotNone(arquivada.arquivada_em)
         self.assertIn("arquivos/itens/item1.png", conteudo(zip_revista(arquivada)[1]))
         receber_capa(arquivada, SimpleUploadedFile("capa.png", PNG + b"\0"))  # outro sha256
-        self.assertIn("SVG ou capa mudaram", str(self.pendentes()))
+        erro = self.pendentes()
+        self.assertEqual([p.codigo for p in erro.pendencias], ["zip_foto"])
+        self.assertIn("A capa mudou depois da foto de arquivamento; o zip não bateria com o texto.", str(erro))
+
+    def arquivar(self):
+        gravar_cortes(self.rev.projeto.parceiro_ano, [(self.e5, self.mt, CORTES)], self.usuario)
+        self.assertIsNotNone(carregar(self.rev.pk).arquivada_em)
+
+    def test_arquivada_imagem_trocada(self):
+        self.arquivar()
+        RevistaInfograficoItem.objects.filter(infografico_id=self.outras, posicao=2).update(imagem_sha256="b" * 64)
+        RevistaInfograficoItem.objects.filter(infografico_id=self.outras, posicao=3).delete()
+        erro = self.pendentes()
+        self.assertEqual([p.codigo for p in erro.pendencias], ["zip_foto", "zip_foto"])
+        self.assertIn("Avaliação e Currículo – Outras Etapas, item 2: a imagem mudou depois da foto de arquivamento.", str(erro))
+        self.assertIn("Avaliação e Currículo – Outras Etapas, item 3: a imagem mudou", str(erro))
+
+    def test_arquivada_mesma_imagem_caminho_novo_sai(self):
+        """Reenviar a mesma imagem (mesmo sha, caminho novo): o zip usa o nome da foto e os bytes do caminho atual."""
+        self.arquivar()
+        antigo = f"infograficos/{self.outras}-1.png"
+        RevistaInfograficoItem.objects.filter(infografico_id=self.outras, posicao=1).update(imagem="infograficos/novo.png")
+        default_storage.save("infograficos/novo.png", ContentFile(PNG))
+        default_storage.delete(antigo)
+        arquivos = conteudo(zip_revista(carregar(self.rev.pk))[1])
+        self.assertEqual(arquivos[f"arquivos/{antigo}"], PNG)
+        self.assertNotIn("arquivos/infograficos/novo.png", arquivos)
+
+    def test_imagem_ausente(self):
+        default_storage.delete(f"infograficos/{self.outras}-3.png")
+        erro = self.pendentes()
+        self.assertEqual([p.codigo for p in erro.pendencias], ["zip_arquivo"])
+        self.assertIn(f"Arquivo ausente no storage: infograficos/{self.outras}-3.png.", str(erro))
+
+    def test_tarefas_desligado_nao_copia_imagens(self):
+        RevistaInfografico.objects.filter(pk=self.outras).update(passos_desligados=["tarefas"])
+        for p in range(1, 5):
+            default_storage.delete(f"infograficos/{self.outras}-{p}.png")
+        arquivos = conteudo(zip_revista(carregar(self.rev.pk))[1])
+        self.assertFalse([n for n in arquivos if n.startswith("arquivos/infograficos/")])
+
+    def test_colisao_de_nome_de_imagem(self):
+        RevistaInfograficoItem.objects.filter(infografico_id=self.outras, posicao=2).update(imagem=f"outra/{self.outras}-1.png")
+        erro = self.pendentes()
+        self.assertEqual([p.codigo for p in erro.pendencias], ["zip_arquivo"])
+        self.assertIn(f"Outro arquivo já usa o nome {self.outras}-1.png.", str(erro))
 
     def test_foto_antiga_sem_paginas_do_f2(self):
         """Foto de antes da D-237 (sem `infograficos`, com svg_sha256): o zip sai sem f2-*.html."""
