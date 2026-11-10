@@ -33,7 +33,7 @@ COLUNAS = {
     "template_f1": ("Template F1", ("template_f1",)),
     "template_f2": ("Template F2", ("template_f2",)),
     "variaveis": ("Variáveis", ("variaveis", "nome_projeto")),
-    "svg": ("SVG", ("svg", "ids_svg")),
+    "infograficos": ("Infográficos", ("infografico",)),
     "capa": ("Capa", ("capa",)),
     "validado": ("Validado", ()),
     "impresso": ("Impresso", ()),
@@ -54,7 +54,7 @@ def link(codigo, revista):
         return reverse("cortes", args=[ano])
     if codigo == "impresso":
         return reverse("ui_impresso", args=[ano]) + "?" + urlencode({"revista": revista.pk})
-    return reverse("ui_revista_editar", args=[ano, revista.pk])  # templates, SVG, capa, Validado
+    return reverse("ui_revista_editar", args=[ano, revista.pk])  # templates, infográficos, capa, Validado
 
 
 def ultima_impressa(revista):

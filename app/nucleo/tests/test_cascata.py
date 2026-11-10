@@ -320,19 +320,19 @@ class CascataTest(TransactionTestCase):
         mod = importlib.import_module("nucleo.migrations.0022_infograficos_existentes")
         mod.criar(apps, None)
 
-    def test_migracao_cria_os_infograficos_que_faltam_sem_mudar_o_resolvido(self):
+    def test_migracao_cria_os_infograficos_que_faltam_sem_tocar_nas_revistas(self):
+        # Desde a tarefa 4 da fase 2 o infográfico entra no resolvido (o hash muda uma vez, D-237);
+        # a migração continua sem gravar nada na revista.
         self.gravar(
             (self.e2, self.lp, [200, 300]), (self.e5, self.lp, [200, 300]), (self.e9, self.mt, [200, 300])
         )
         RevistaInfografico.objects.all().delete()
-        antes = {r.pk: resolver(r) for r in Revista.objects.all()}
         revistas = list(Revista.objects.values_list("pk", "hash_validado", "validado_em"))
         self.migrar()
         self.assertEqual(self.infograficos(self.lp), {"alfa": False, "outras": False})
         self.assertEqual(self.infograficos(self.mt), {"outras": False})
         self.migrar()  # idempotente
         self.assertEqual(RevistaInfografico.objects.count(), 3)
-        self.assertEqual({r.pk: resolver(r) for r in Revista.objects.all()}, antes)
         self.assertEqual(list(Revista.objects.values_list("pk", "hash_validado", "validado_em")), revistas)
 
     def test_migracao_ignora_revista_arquivada(self):

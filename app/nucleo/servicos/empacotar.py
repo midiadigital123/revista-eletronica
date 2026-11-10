@@ -102,7 +102,9 @@ def zip_revista(revista):
     if erros:
         raise Pendente(erros)
     # Arquivada: o HTML sai da foto (D-117), mas SVG e capa são os arquivos atuais.
-    if (resolvido["f2"]["svg_sha256"], resolvido["capa_sha256"]) != (revista.svg_sha256, revista.capa_sha256):
+    # O resolvido novo não traz svg_sha256 (D-237); só a foto antiga traz. A tarefa 6 troca o SVG pelas imagens dos itens.
+    svg_da_foto = resolvido["f2"].get("svg_sha256", revista.svg_sha256)
+    if (svg_da_foto, resolvido["capa_sha256"]) != (revista.svg_sha256, revista.capa_sha256):
         erros.append(Pendencia("zip_foto", "SVG ou capa mudaram depois da foto de arquivamento; o zip não bateria com o texto."))
     itens = _itens(revista, resolvido, erros)
     ausentes = [c for c in (revista.svg_f2, revista.capa, *itens.values()) if not default_storage.exists(c)]

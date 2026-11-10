@@ -20,7 +20,7 @@ from nucleo.servicos.empacotar import Pendente, nome_zip, zip_revista
 from nucleo.servicos.html import contexto_pagina
 from nucleo.servicos.resolver import carregar
 from nucleo.tests.test_preview import F2, SVG
-from nucleo.tests.test_resolver import MediaTemporaria, Mundo, usuario
+from nucleo.tests.test_resolver import MediaTemporaria, Mundo, preencher_infograficos, usuario
 
 # Zip que o Playwright zip.spec.ts extrai e abre por file:// (gabarito). Regerar: REGERAR_FIXTURES=1.
 GABARITO = Path(__file__).resolve().parents[2] / "e2e" / "fixtures" / "revista.zip"
@@ -43,6 +43,7 @@ class ZipTest(MediaTemporaria, TestCase):
         self.rev = carregar(self.go["LP"].pk)
         receber_svg(self.rev, SimpleUploadedFile("x.svg", SVG))
         receber_capa(self.rev, SimpleUploadedFile("capa.png", PNG))
+        preencher_infograficos(self.rev)
         self.rev = carregar(self.rev.pk)
         self.item(self.tarefa, "itens/item1.png", PNG)  # LP 5EF D01 "Localiza."
 
@@ -159,7 +160,7 @@ class ZipTest(MediaTemporaria, TestCase):
 
     def test_recusa_com_pendencias(self):
         erro = self.pendentes(carregar(self.go["MT"].pk))
-        self.assertTrue({"svg", "capa"} <= {p.codigo for p in erro.pendencias})
+        self.assertTrue({"infografico", "capa"} <= {p.codigo for p in erro.pendencias})
         self.assertIn("Falta a imagem de capa.", str(erro))
 
     def test_nome_sem_acento(self):

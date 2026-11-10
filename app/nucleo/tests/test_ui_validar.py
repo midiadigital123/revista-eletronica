@@ -52,10 +52,10 @@ class ValidarUiTest(Base):
         self.assertContains(r, reverse("painel", args=[2026]))  # sem Painel B, volta ao do admin
 
     def test_pendencia_desabilita_e_aponta_onde_resolver(self):
-        pe = self.pe["LP"]  # sem SVG nem capa
+        pe = self.pe["LP"]  # sem infográfico preenchido nem capa
         r = self.abrir(pe)
         self.assertContains(r, "pendência(s)")
-        self.assertContains(r, "Falta o SVG do F2.")
+        self.assertContains(r, "Avaliação e Currículo – Outras Etapas: falta a habilidade destacada.")
         self.assertContains(r, reverse("ui_revista_editar", args=[2026, pe.pk]))
         self.assertRegex(r.content.decode(), r'name="par" value="[^"]+" disabled')
         self.assertContains(r, "validar-pendente")

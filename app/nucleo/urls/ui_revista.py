@@ -126,7 +126,7 @@ PASSOS = (
     ("Matriz e cortes", ("matriz", "corte_sem_matriz", "corte_invalido")),
     ("Template do F1", ("template_f1",)),
     ("Template do F2", ("template_f2",)),
-    ("SVG do F2", ("svg", "ids_svg")),
+    ("Infográficos", ("infografico",)),
     ("Capa", ("capa",)),
     ("Dados do projeto", ("variaveis", "nome_projeto")),
 )
@@ -138,7 +138,7 @@ def _situacao(revista, pendencias):
         "matriz": f"{projeto}?aba=matriz", "corte_sem_matriz": link_pendencia("corte_sem_matriz", revista),  # U7b; a etapa que falta: a matriz
         "corte_invalido": f"{projeto}?aba=cortes",
         "template_f1": "#templates", "template_f2": "#templates",
-        "svg": "#arquivos", "ids_svg": "#arquivos", "capa": "#arquivos",
+        "infografico": "#arquivos", "capa": "#arquivos",  # infográfico: tela própria na fase 3
         "variaveis": f"{projeto}#variaveis", "nome_projeto": f"{projeto}#nome",
     }  # fmt: skip
     passos = [{"rotulo": r, "pendencias": [p for p in pendencias if p.codigo in codigos]} for r, codigos in PASSOS]

@@ -10,24 +10,37 @@ from django.test import TransactionTestCase
 from django.urls import reverse
 
 from nucleo.admin.bloqueio import CAMPO_SESSAO
-from nucleo.models import Bloqueio, Revista, RevistaFasciculo, RevistaSecao, TemplateVersao
+from nucleo.models import Bloqueio, Revista, RevistaFasciculo, RevistaInfograficoItem, RevistaSecao, TemplateVersao
 from nucleo.servicos import bloqueio, resolver, validacao
 from nucleo.servicos.resolver import carregar, hash_validado
 from nucleo.tests.test_admin_projeto import Base, mensagens
-from nucleo.tests.test_resolver import F1, Mundo
+from nucleo.tests.test_resolver import F1, Mundo, preencher_infograficos
 
 SVG_A, SVG_B = "a" * 64, "b" * 64
+# Dica da coluna Infográficos de revista do Mundo sem completar: o "outras" vazio, com os 3 passos ligados.
+DICA_INFOGRAFICO = " ".join(
+    f"Avaliação e Currículo – Outras Etapas: {m}"
+    for m in (
+        "falta a habilidade destacada.",
+        "o passo Habilidades está ligado e nenhuma etapa tem código ou texto.",
+        "o passo Progressão precisa de pelo menos 2 etapas com marca.",
+        "o passo Tarefas precisa dos 4 itens com imagem.",
+    )
+)
 
 
 def completar(revista, svg=SVG_A):
-    """Sem pendências: SVG com os ids do F2 e capa (só os campos; o resolver não lê o arquivo)."""
+    """Sem pendências: infográficos preenchidos (itens com `imagem_sha256=svg`) e capa, só os campos
+    (o resolver não lê os arquivos). O SVG antigo continua para o preview e o zip até a tarefa 6."""
+    preencher_infograficos(revista, svg)
     Revista.objects.filter(pk=revista.pk).update(
         svg_f2="f2/x.svg", svg_sha256=svg, svg_ids=["passo1", "btn-action-p2"], capa="capas/x.png", capa_sha256="c" * 64
     )
 
 
 def trocar_svg(revista, svg):
-    Revista.objects.filter(pk=revista.pk).update(svg_sha256=svg)
+    """Muda o hash sem mexer no impresso: a imagem dos itens dos infográficos (D-237; antes, o SVG)."""
+    RevistaInfograficoItem.objects.filter(infografico__revista=revista).update(imagem_sha256=svg)
 
 
 class ValidadoTest(Base):
@@ -141,16 +154,16 @@ class ValidadoTest(Base):
         rotulos = [str(x["revista"]) for x in r.context["linhas"]]
         self.assertEqual(len(rotulos), 4)  # GO LP/MT e PE LP/MT
         go_mt = self.go["MT"]
-        falta_svg = self.celula("svg", go_mt)
-        self.assertEqual((falta_svg["ok"], falta_svg["dica"]), (False, "Falta o SVG do F2."))
-        self.assertEqual(falta_svg["link"], reverse("ui_revista_editar", args=[2026, go_mt.pk]))
-        self.assertTrue(self.celula("svg")["ok"])
-        self.assertContains(r, f'<a class="status status-falta" href="{falta_svg["link"]}" title="Falta o SVG do F2.">')
-        # Filtro por pendência: só as sem SVG (GO MT, PE LP, PE MT).
-        r = self.client.get(self.painel, {"falta": "svg"})
+        falta = self.celula("infograficos", go_mt)
+        self.assertEqual((falta["ok"], falta["dica"]), (False, DICA_INFOGRAFICO))
+        self.assertEqual(falta["link"], reverse("ui_revista_editar", args=[2026, go_mt.pk]))
+        self.assertTrue(self.celula("infograficos")["ok"])
+        self.assertContains(r, f'<a class="status status-falta" href="{falta["link"]}" title="{DICA_INFOGRAFICO}">')
+        # Filtro por pendência: só as com infográfico incompleto (GO MT, PE LP, PE MT).
+        r = self.client.get(self.painel, {"falta": "infograficos"})
         self.assertEqual(len(r.context["linhas"]), 3)
         # Pendência + parceiro.
-        r = self.client.get(self.painel, {"falta": "svg", "parceiro": self.go["LP"].projeto.parceiro_ano.parceiro_id})
+        r = self.client.get(self.painel, {"falta": "infograficos", "parceiro": self.go["LP"].projeto.parceiro_ano.parceiro_id})
         self.assertEqual([x["revista"].pk for x in r.context["linhas"]], [go_mt.pk])
         # Variáveis: nome padrão do projeto aponta para o projeto.
         self.projeto_go.nome = "GO - NOME DO PROJETO"
@@ -172,7 +185,7 @@ class ValidadoTest(Base):
         todas, n_todas = consultas()
         go, n_go = consultas(parceiro=self.go["LP"].projeto.parceiro_ano.parceiro_id)
         por_linha = (todas - go) / (n_todas - n_go)
-        self.assertLessEqual(por_linha, 16, por_linha)  # medido no S12: 15 (resolver + pendências + foto); +1 nomes do ano (D-175)
+        self.assertLessEqual(por_linha, 19, por_linha)  # medido no S12: 15 (resolver + pendências + foto); +1 nomes do ano (D-175); +3 infográficos, etapas e itens (D-237)
 
 
 class LoteTest(TransactionTestCase):

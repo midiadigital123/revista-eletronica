@@ -329,7 +329,7 @@ class RevistaUiTest(Base):
         corpo = self.arquivo("arquivo_svg", "f2.svg", SVG_SEM_BOTAO).json()
         self.assertTrue(corpo["ok"], corpo)
         self.assertEqual(set(corpo["trocar"]), {"arquivos", "situacao"})
-        self.assertIn("Ids que faltam no SVG: btn-action-p2.", corpo["trocar"]["situacao"])  # a pendência, só lá
+        self.assertNotIn("Ids que faltam no SVG", corpo["trocar"]["situacao"])  # D-237: o SVG enviado não é mais pendência
         self.assertIn(reverse("ui_revista_gabarito", args=[2026, self.rev.pk]), corpo["trocar"]["arquivos"])
         self.assertEqual(Revista.objects.get(pk=self.rev.pk).svg_ids, ["fundo", "passo1", "passo2", "outro"])
 
@@ -403,9 +403,11 @@ class RevistaUiTest(Base):
         RevistaFasciculo.objects.filter(revista=self.rev, fasciculo="F2").update(template=None)
         r = self.abrir()
         pendencias = r.context["validacao"]["pendencias"]
-        self.assertGreaterEqual(len(pendencias), 3)  # template do F2, SVG, capa
+        self.assertGreaterEqual(len(pendencias), 3)  # template do F2, infográfico, capa
         for p in pendencias:
             self.assertContains(r, p.mensagem, count=1)
+        self.assertContains(r, "<span>Infográficos<span class=\"sr-only\">: pendente")  # o passo da Situação (antes "SVG do F2")
+        self.assertContains(r, "Avaliação e Currículo – Outras Etapas: falta a habilidade destacada.")
         self.assertContains(r, 'href="#templates"')
         self.assertContains(r, 'href="#arquivos"')
         for texto in ("faixa-vermelha", "caixa-erro", "Pendências que impedem", "não salvo não entra"):
