@@ -160,10 +160,12 @@ class GerarTest(SimpleTestCase):
     def test_item_sem_imagem_sai_sem_img(self):
         info = infografico()
         info["itens"][2]["imagem"] = ""  # posição 1
+        info["itens"][1]["imagem"] = "infograficos/item2.png"  # posição 2: o caminho do storage
         modais = {m["id"]: m for m in gerar(info)["modais"]}
         self.assertNotIn("<img", modais["dlg-tarefa-1"]["corpo"])
         self.assertIsInstance(modais["dlg-tarefa-1"]["corpo"], SafeData)
         self.assertIn("Análise 1.", modais["dlg-tarefa-1"]["corpo"])
+        # O src é <base_imagens><nome do arquivo>: sem "infograficos/" duplicado (D-244).
         self.assertIn('<img src="arquivos/item2.png" alt="Item 2">', modais["dlg-tarefa-2"]["corpo"])
         self.assertEqual(modais["dlg-tarefa-2"]["titulo"], "D05 – 5EF rótulo")
 

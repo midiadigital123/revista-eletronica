@@ -6,6 +6,7 @@ ficam os números medidos no desenho em uso (tests/fixtures/f2-lp.svg), no viewB
 
 import re
 from html import unescape
+from pathlib import PurePosixPath
 
 from django.template.loader import render_to_string
 from django.utils.html import format_html, strip_tags
@@ -102,6 +103,7 @@ def gerar(infografico, secoes, base_imagens, componente):
 
     `secoes` é {id: {"id", "titulo", "corpo"}}, com título escapado e corpo já renderizado; os
     `textos` e a `analise` dos itens também chegam renderizados. Seção ausente sai vazia.
+    A imagem do item sai em `<base_imagens><nome do arquivo>` (no banco, `infograficos/<nome>`).
     """
     ligados = [p for p in PASSOS if p == "descritor" or p in infografico["passos"]]
 
@@ -121,7 +123,7 @@ def gerar(infografico, secoes, base_imagens, componente):
             modais.append({"id": f"dlg-{passo}", "titulo": mark_safe(secao(f"passo-{passo}")["titulo"]),
                            "corpo": mark_safe(corpo)})
     for n, item in enumerate(itens, 1):
-        img = format_html('<img src="{}{}" alt="{}">', base_imagens, item["imagem"], item["texto_alternativo"]) if item["imagem"] else ""
+        img = format_html('<img src="{}{}" alt="{}">', base_imagens, PurePosixPath(item["imagem"]).name, item["texto_alternativo"]) if item["imagem"] else ""
         modais.append({"id": f"dlg-tarefa-{n}", "titulo": format_html("{} – {}", item["descritor"], item["rotulo"]),
                        "corpo": mark_safe(img + item["analise"])})
 

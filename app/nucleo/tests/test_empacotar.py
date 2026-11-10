@@ -13,13 +13,13 @@ from django.test import TestCase
 from django.urls import reverse
 
 from nucleo.management.commands.criar_demo import PNG
-from nucleo.models import Parceiro, Revista, Tarefa, TemplateVersao
+from nucleo.models import Parceiro, Revista, RevistaFasciculo, Tarefa, TemplateVersao
 from nucleo.servicos.arquivos import receber_capa, receber_svg
 from nucleo.servicos.cascata import gravar_cortes
 from nucleo.servicos.empacotar import Pendente, nome_zip, zip_revista
 from nucleo.servicos.html import contexto_pagina
 from nucleo.servicos.resolver import carregar
-from nucleo.tests.test_preview import F2, SVG
+from nucleo.tests.test_preview import F2, SVG, dois_infograficos
 from nucleo.tests.test_resolver import MediaTemporaria, Mundo, preencher_infograficos, usuario
 
 # Zip que o Playwright zip.spec.ts extrai e abre por file:// (gabarito). Regerar: REGERAR_FIXTURES=1.
@@ -72,6 +72,8 @@ class ZipTest(MediaTemporaria, TestCase):
             [
                 "arquivos/capa.png",
                 "arquivos/itens/item1.png",
+                "f1.html",
+                "f2-outras-etapas.html",
                 "index.html",
                 "revista/f1/assets/seta-anterior.svg",
                 "revista/f1/assets/seta-proxima.svg",
@@ -92,15 +94,28 @@ class ZipTest(MediaTemporaria, TestCase):
         self.assertEqual(metodos["arquivos/capa.png"], zipfile.ZIP_STORED)
         self.assertEqual(metodos["index.html"], zipfile.ZIP_DEFLATED)
 
+    def test_paginas_na_ordem_e_com_links_relativos(self):
+        dois_infograficos(self.rev)
+        with zipfile.ZipFile(io.BytesIO(zip_revista(carregar(self.rev.pk))[1])) as z:
+            paginas = [n for n in z.namelist() if n.endswith(".html")]
+        self.assertEqual(paginas, ["index.html", "f1.html", "f2-alfa.html", "f2-outras-etapas.html"])
+
     def test_index_inline_e_sem_fetch(self):
         arquivos = conteudo(zip_revista(self.rev)[1])
-        html = arquivos["index.html"].decode()
-        self.assertIn('<g id="f2-passo1">', html)  # SVG inline
-        self.assertIn('id="dados-tour"', html)
-        self.assertIn('<dialog id="dlg-p2"', html)
-        self.assertIn('src="arquivos/capa.png"', html)
-        self.assertIn('src="revista/f2/f2-init.js"', html)
-        self.assertNotIn("/static/", html)
+        index, f1, f2 = (arquivos[n].decode() for n in ("index.html", "f1.html", "f2-outras-etapas.html"))
+        self.assertIn('src="arquivos/capa.png"', index)
+        self.assertIn('href="f1.html"', index)
+        self.assertIn('href="f2-outras-etapas.html"', index)
+        self.assertIn('href="index.html"', f1)  # voltar ao sumário
+        self.assertIn('id="dados-revista"', f1)
+        self.assertIn('id="f2-descritor"', f2)  # SVG gerado, inline
+        self.assertIn('id="dados-tour"', f2)
+        self.assertIn('<dialog id="dlg-descritor"', f2)
+        self.assertIn('src="revista/f2/f2-init.js"', f2)
+        self.assertIn('<img src="arquivos/infograficos/', f2)
+        self.assertNotIn("infograficos/infograficos/", f2)
+        for html in (index, f1, f2):
+            self.assertNotIn("/static/", html)
         # svg-tour.js (cópia sem alteração, D-156) tem `SvgTour.load` com fetch; ninguém o chama.
         for nome, dados in arquivos.items():
             if nome.endswith((".html", ".js")) and nome != "revista/f2/svg-tour.js":
@@ -109,11 +124,12 @@ class ZipTest(MediaTemporaria, TestCase):
 
     def test_faixa_so_no_preview(self):
         """O zip renderiza com preview=False: a faixa que o preview mostra some."""
-        mt = carregar(self.go["MT"].pk)  # sem SVG: faixa_svg
+        RevistaFasciculo.objects.filter(revista=self.rev, fasciculo="F2").update(template=None)
 
         def corpo(preview):
-            ctx = contexto_pagina(mt, preview=preview, estaticos="revista/", capa=None)
-            return render_to_string("revista/index.html", ctx).split("<body>")[1]
+            ctx = contexto_pagina(self.rev, "outras", preview=preview, estaticos="revista/", capa=None,
+                                  link=lambda s: f"{s}.html", base_imagens="arquivos/infograficos/")  # fmt: skip
+            return render_to_string("revista/f2.html", ctx).split("<body>")[1]
 
         self.assertIn("faixa-vermelha", corpo(True))
         self.assertNotIn("faixa-vermelha", corpo(False))
@@ -123,7 +139,7 @@ class ZipTest(MediaTemporaria, TestCase):
         arquivos = conteudo(zip_revista(carregar(self.rev.pk))[1])
         self.assertEqual(arquivos["arquivos/itens/item2.pdf"], b"%PDF-1.4 item")
         self.assertIn("arquivos/itens/item1.png", arquivos)
-        self.assertIn('"item": {"id": "item2", "tipo": "pdf"}', arquivos["index.html"].decode())
+        self.assertIn('"item": {"id": "item2", "tipo": "pdf"}', arquivos["f1.html"].decode())
 
     def test_item_de_etapa_sem_corte_nao_entra(self):
         pa = self.rev.projeto.parceiro_ano
@@ -168,7 +184,8 @@ class ZipTest(MediaTemporaria, TestCase):
         self.assertEqual(nome_zip(carregar(self.rev.pk)), "sao-paulo-demonstracao-lp-2026.zip")
 
     def test_gabarito_do_playwright(self):
-        dados = zip_revista(self.rev)[1]
+        dois_infograficos(self.rev)
+        dados = zip_revista(carregar(self.rev.pk))[1]
         if os.environ.get("REGERAR_FIXTURES"):
             GABARITO.write_bytes(dados)
         self.assertEqual(GABARITO.read_bytes(), dados)

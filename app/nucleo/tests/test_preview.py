@@ -5,29 +5,41 @@ from pathlib import Path
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
+from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import CommandError, call_command
 from django.template.loader import render_to_string
-from django.test import TestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 
-from nucleo.models import Revista, RevistaFasciculo, TemplateVersao
-from nucleo.servicos.arquivos import receber_capa, receber_svg
+from nucleo.models import (
+    Revista,
+    RevistaFasciculo,
+    RevistaInfografico,
+    RevistaInfograficoEtapa,
+    RevistaInfograficoItem,
+    Tarefa,
+    TemplateVersao,
+)
+from nucleo.servicos.arquivos import receber_capa
 from nucleo.servicos.cascata import gravar_cortes
-from nucleo.servicos.html import contexto_pagina, css_das_cores
+from nucleo.servicos.html import TIPO_DA_PAGINA, contexto_pagina, css_das_cores, paginas, template
 from nucleo.servicos.resolver import resolver
 from nucleo.tests.test_resolver import MediaTemporaria, Mundo
 
-# Página que o Playwright pagina.spec.ts abre (gabarito). Regerar: REGERAR_FIXTURES=1.
-GABARITO = Path(__file__).resolve().parents[2] / "e2e" / "fixtures" / "pagina.html"
+# Páginas que o Playwright pagina.spec.ts abre (gabarito). Regerar: REGERAR_FIXTURES=1.
+GABARITO = Path(__file__).resolve().parents[2] / "e2e" / "fixtures" / "pagina"
 PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 32
 F2 = (
-    "## abertura\nAvaliação & Currículo\n\nSiga o tour.\n\n"
-    "## passo1\nDescritor\n\nPrimeiro bloco.\n\n## passo2\nItens\n\nSegundo bloco.\n\n"
-    "## dlg-p2\nItens por ano\n\nDetalhe do item.\n"
+    "## abertura\nAvaliação & Currículo\n\nSiga o tour.\n\nSegundo parágrafo.\n\n"
+    "## passo-descritor\nDescritor\n\nO descritor.\n\n## passo-habilidades\nHabilidades\n\nAs habilidades.\n\n"
+    "## passo-progressao\nProgressão\n\nA progressão.\n\n## passo-tarefas\nTarefas\n\nAs tarefas.\n\n"
+    "## dlg-descritor\nSobre o descritor\n\nDetalhe do descritor.\n\n## dlg-tarefas\nTarefas por nível\n\nOs itens.\n\n"
+    "## tarefas-fechamento\nFechamento das tarefas\n\nSó no impresso.\n\n## fechamento\nAgora é com você\n\nUse o template.\n"
 )
-# SVG pequeno com a convenção de ids (D-108): passoN e btn-action-xx.
+# SVG pequeno com a convenção de ids (D-108): passoN e btn-action-xx. ponytail: só alimenta a ponte de
+# empacotar.py (svg_f2 obrigatório até a tarefa 6) e os testes das telas que ainda recebem o SVG.
 SVG = b"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
 <style>.bolinha{fill:#ffeb00;stroke:#000}</style>
 <rect id="fundo" width="800" height="400" fill="#f8f9fa"/>
@@ -35,6 +47,30 @@ SVG = b"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
 <g id="passo2"><rect x="420" y="40" width="340" height="320" fill="#ff8d43"/>
 <g id="btn-action-p2"><circle class="bolinha" cx="590" cy="200" r="24"/></g></g>
 </svg>"""
+
+
+def dois_infograficos(revista):
+    """Alfa (criado aqui: o Mundo não tem 2EF) e Outras com dados curtos e fixos (nada depende do pk)."""
+    RevistaInfografico.objects.get_or_create(
+        revista=revista, tipo="alfa", defaults={"componente_id": revista.componente_id, "ano_id": revista.ano_id}
+    )
+    for inf in RevistaInfografico.objects.filter(revista=revista, arquivado_em__isnull=True):
+        RevistaInfografico.objects.filter(pk=inf.pk).update(
+            habilidade=f"Inferir informação ({inf.tipo}).", texto_descritor="Texto um.",
+            texto_habilidades="Texto dois.", texto_progressao="Texto três.",
+        )  # fmt: skip
+        for etapa, marca in (("5EF", "I"), ("9EF", "A")):
+            RevistaInfograficoEtapa.objects.update_or_create(
+                infografico=inf, etapa=etapa,
+                defaults={"ano_id": inf.ano_id, "marca": marca, "codigo": "EF15LP18", "texto": "Relacionar."},
+            )  # fmt: skip
+        for p in range(1, 5):
+            RevistaInfograficoItem.objects.update_or_create(
+                infografico=inf, posicao=p,
+                defaults={"ano_id": inf.ano_id, "etapa": "5EF", "descritor": "D05",
+                          "imagem": f"infograficos/{inf.tipo}-{p}.png", "imagem_sha256": "a" * 64,
+                          "texto_alternativo": f"Item {p}", "analise": f"Análise do item {p}."},
+            )  # fmt: skip
 
 
 class PaginaTest(MediaTemporaria, TestCase):
@@ -49,65 +85,115 @@ class PaginaTest(MediaTemporaria, TestCase):
         super().setUp()
         self.client.force_login(self.usuario)
 
-    def get(self, revista):
-        return self.client.get(reverse("preview", args=[revista.pk]))
+    def get(self, revista, pagina="index"):
+        if pagina == "index":
+            return self.client.get(reverse("preview", args=[revista.pk]))
+        if pagina == "f1":
+            return self.client.get(reverse("preview_f1", args=[revista.pk]))
+        return self.client.get(reverse("preview_f2", args=[revista.pk, pagina]))
 
     def test_login_obrigatorio(self):
         self.client.logout()
-        r = self.get(self.rev)
-        self.assertEqual(r.status_code, 302)
-        self.assertIn("/conta/entrar/", r["Location"])
+        for pagina in ("index", "f1", "outras"):
+            r = self.get(self.rev, pagina)
+            self.assertEqual(r.status_code, 302)
+            self.assertIn("/conta/entrar/", r["Location"])
 
     def test_sem_view_revista_403(self):
         staff = get_user_model().objects.create(username="staff", is_staff=True)  # sem grupo
         self.client.force_login(staff)
-        self.assertEqual(self.get(self.rev).status_code, 403)
+        for pagina in ("index", "f1", "outras"):
+            self.assertEqual(self.get(self.rev, pagina).status_code, 403)
         self.assertEqual(self.client.get(reverse("preview_capa", args=[self.rev.pk])).status_code, 403)
 
-    def test_arquivo_sumido_404(self):
-        receber_svg(self.rev, SimpleUploadedFile("x.svg", SVG))
+    def test_capa_sumida_404(self):
         receber_capa(self.rev, SimpleUploadedFile("capa.png", PNG))
         self.rev.refresh_from_db()
-        default_storage.delete(self.rev.svg_f2)
         default_storage.delete(self.rev.capa)
-        self.assertEqual(self.get(self.rev).status_code, 404)
+        self.assertEqual(self.get(self.rev).status_code, 200)  # a página abre; só a capa falha
         self.assertEqual(self.client.get(reverse("preview_capa", args=[self.rev.pk])).status_code, 404)
 
-    def test_200_com_f1_f2_e_dados_inline(self):
-        receber_svg(self.rev, SimpleUploadedFile("x.svg", SVG))
-        r = self.get(self.rev)
+    def test_sumario_lista_as_paginas(self):
+        dois_infograficos(self.rev)
+        html = self.get(self.rev).content.decode()
+        sumario = re.search(r'<nav[^>]*aria-label="Sumário"[^>]*>(.*?)</nav>', html, re.S).group(1)
+        self.assertEqual(
+            re.findall(r'href="([^"]+)"', sumario),
+            [reverse("preview_f1", args=[self.rev.pk]), reverse("preview_f2", args=[self.rev.pk, "alfa"]),
+             reverse("preview_f2", args=[self.rev.pk, "outras"])],
+        )  # fmt: skip
+        self.assertIn("Avaliação e Currículo – Alfa", sumario)
+        self.assertNotIn('id="dados-revista"', html)
+        self.assertNotIn("Voltar ao sumário", html)
+
+    def test_f2_tipo_inexistente_404(self):
+        self.assertEqual(self.get(self.rev, "outras").status_code, 200)
+        self.assertEqual(self.get(self.rev, "alfa").status_code, 404)  # o Mundo não tem 2EF
+        self.assertEqual(self.get(self.rev, "beta").status_code, 404)
+        self.assertEqual(self.get(self.rev, "f1").status_code, 200)
+        self.assertEqual(self.client.get(f"{reverse('preview', args=[self.rev.pk])}f2/f1/").status_code, 404)
+
+    def test_f1_inline(self):
+        r = self.get(self.rev, "f1")
         self.assertEqual(r.status_code, 200)
         html = r.content.decode()
         self.assertIn('id="dados-revista"', html)
-        self.assertIn('<g id="f2-passo1">', html)  # SVG inline, sanitizado e prefixado
-        self.assertIn('<dialog id="dlg-p2" aria-labelledby="dlgTitle-p2">', html)
         self.assertIn("<p>Texto <strong>Projeto GO</strong>.</p>", html)  # introdução, sem reescapar
-        self.assertIn("/static/revista/f2/f2-init.js", html)
+        self.assertIn(f'href="{reverse("preview", args=[self.rev.pk])}"', html)  # voltar ao sumário
+        self.assertIn("/static/revista/f1/script.js", html)
+        self.assertNotIn("svg-tour.js", html)
+        self.assertNotIn("dados-tour", html)
         self.assertNotIn("faixa-vermelha", html.split("<body>")[1])
         self.assertNotIn("fetch(", html)
+
+    def test_f2_svg_gerado_tour_e_modais(self):
+        dois_infograficos(self.rev)
+        r = self.get(self.rev, "outras")
+        self.assertEqual(r.status_code, 200)
+        html = r.content.decode()
+        self.assertIn('<h2 id="f2-titulo">Avaliação e Currículo – Outras Etapas</h2>', html)
+        self.assertIn("<p>Siga o tour.</p>", html)  # a abertura em texto corrido
+        self.assertIn('<div id="revista"><svg', html)
+        self.assertIn('id="f2-descritor"', html)
+        self.assertIn('<dialog id="dlg-descritor" aria-labelledby="dlgTitle-descritor">', html)
+        self.assertIn('<h3 id="dlgTitle-tarefa-1">', html)
+        self.assertIn("Agora é com você", html)  # o fechamento do F2
+        self.assertIn("Inferir informação (outras).", html)
+        self.assertNotIn("Inferir informação (alfa).", html)
+        self.assertIn("/static/revista/f2/f2-init.js", html)
+        self.assertNotIn("f1/script.js", html)
+        self.assertNotIn("dados-revista", html)
+        self.assertNotIn("faixa-vermelha", html.split("<body>")[1])
+        self.assertNotIn("fetch(", html)
+        # A ordem do f2.html: título, abertura, SVG, modais, fechamento, scripts.
+        ordem = ['id="f2-titulo"', "Siga o tour.", '<div id="revista">', '<dialog id="dlg-descritor"',
+                 "Agora é com você", 'id="dados-tour"', "f2/svg-tour.js"]  # fmt: skip
+        self.assertEqual([html.index(t) for t in ordem], sorted(html.index(t) for t in ordem))
+        # Imagem do item: <base_imagens><nome>, sem "infograficos/" duplicado (D-244).
+        base = f"{reverse('preview', args=[self.rev.pk])}arquivos/infograficos/"
+        self.assertIn(f'<img src="{base}outras-1.png" alt="Item 1">', html)
+        self.assertNotIn("infograficos/infograficos/", html)
         tour = json.loads(re.search(r'id="dados-tour" type="application/json">(.*?)</script>', html).group(1))
         self.assertEqual(tour["intro"]["title"], "Avaliação & Currículo")  # texto puro (textContent)
-        self.assertEqual([s["target"] for s in tour["steps"]], ["f2-passo1", "f2-passo2"])
-        self.assertEqual(tour["modais"], ["dlg-p2"])
-        # Chaves que o svg-tour lê (contrato com f2-init.js)
+        self.assertEqual([s["target"] for s in tour["steps"]], ["f2-descritor", "f2-habilidades", "f2-progressao", "f2-tarefas"])
         self.assertEqual(set(tour), {"label", "intro", "steps", "modais"})
-        self.assertEqual(set(tour["intro"]), {"title", "text"})
-        self.assertTrue(all(set(s) == {"target", "title", "text"} for s in tour["steps"]))
 
     def test_faixa_vermelha_sem_template(self):
         RevistaFasciculo.objects.filter(revista=self.rev, fasciculo="F1").update(template=None)
-        html = self.get(self.rev).content.decode()
-        self.assertIn("Falta escolher o template do F1.", html)
-        self.assertIn("Falta o SVG do F2.", html)
+        RevistaFasciculo.objects.filter(revista=self.rev, fasciculo="F2").update(template=None)
+        self.assertIn("Falta escolher o template do F1.", self.get(self.rev, "f1").content.decode())
+        html = self.get(self.rev, "outras").content.decode()
+        self.assertIn("Falta escolher o template do F2.", html)
+        self.assertNotIn("Falta o SVG do F2.", html)
 
     def test_faixa_vermelha_sem_matriz(self):
         """Item 21 (D-190): sem matriz o F1 sai sem descritores; a faixa diz o que falta. Ela fica
         fora do resolvido (senão o hash de toda revista muda e todas perdem o "Validado")."""
-        self.assertNotIn("Falta escolher a matriz", self.get(self.rev).content.decode())
+        self.assertNotIn("Falta escolher a matriz", self.get(self.rev, "f1").content.decode())
         pa = self.rev.projeto.parceiro_ano
         pa.matriz = None
         pa.save(update_fields=["matriz"])
-        html = self.get(self.rev).content.decode()
+        html = self.get(self.rev, "f1").content.decode()
         self.assertIn("Falta escolher a matriz (5EF, 9EF).", html)
         self.assertNotIn("Falta escolher a matriz", json.dumps(resolver(Revista.objects.get(pk=self.rev.pk)), ensure_ascii=False))
 
@@ -124,9 +210,18 @@ class PaginaTest(MediaTemporaria, TestCase):
             texto="## introducao\nNovo título\n\nTexto novo.\n\n## fechamento\nFim\n\nFim.\n",
         )  # fmt: skip
         self.assertIsNotNone(Revista.objects.get(pk=mt.pk).arquivada_em)
-        html = self.get(mt).content.decode()
-        self.assertIn("Análise de GO", html)
-        self.assertNotIn("Texto novo.", html)
+        for pagina in ("index", "f1"):
+            html = self.get(mt, pagina).content.decode()
+            self.assertIn("Análise de GO", html)
+            self.assertNotIn("Texto novo.", html)
+
+    def test_item_da_tarefa_pelo_caminho_relativo_do_f1(self):
+        """O JS do F1 abre `arquivos/itens/<nome>` relativo à página: `<id>/f1/` também serve o item."""
+        nome = "item1.png"
+        caminho = default_storage.save(f"itens/{nome}", ContentFile(PNG))
+        Tarefa.objects.filter(pk=self.tarefa.pk).update(arquivo=caminho)
+        r = self.client.get(f"{reverse('preview_f1', args=[self.rev.pk])}arquivos/itens/{nome}")
+        self.assertEqual((r.status_code, r["Content-Type"]), (200, "image/png"))
 
     def test_capa_com_tipo_fixo_e_nosniff(self):
         receber_capa(self.rev, SimpleUploadedFile("capa.jpg", PNG))
@@ -138,23 +233,60 @@ class PaginaTest(MediaTemporaria, TestCase):
         self.assertEqual(r["Content-Security-Policy"], "default-src 'none'; sandbox")
 
     def test_gabarito_do_playwright(self):
-        """Modo zip (S15): caminhos relativos e sem faixas; o Playwright abre este HTML."""
-        receber_svg(self.rev, SimpleUploadedFile("x.svg", SVG))
-        html = render_to_string(
-            "revista/index.html",
-            contexto_pagina(self.rev, preview=False, estaticos="revista/", capa="arquivos/capa.png"),
-        )
-        if os.environ.get("REGERAR_FIXTURES"):
-            GABARITO.write_text(html, encoding="utf-8")
-        self.assertEqual(GABARITO.read_text(encoding="utf-8"), html)
+        """Modo zip (S15): caminhos relativos e sem faixas; o Playwright abre estas páginas."""
+        dois_infograficos(self.rev)
+        rev = Revista.objects.get(pk=self.rev.pk)
+        slugs = [slug for slug, _ in paginas(resolver(rev))]
+        self.assertEqual(slugs, ["index", "f1", "f2-alfa", "f2-outras-etapas"])
+        for slug in slugs:
+            pagina = TIPO_DA_PAGINA.get(slug, slug)
+            ctx = contexto_pagina(rev, pagina, preview=False, estaticos="revista/", capa="arquivos/capa.png",
+                                  link=lambda s: f"{s}.html", base_imagens="arquivos/infograficos/")  # fmt: skip
+            html = render_to_string(template(pagina), ctx)
+            arquivo = GABARITO / f"{slug}.html"
+            if os.environ.get("REGERAR_FIXTURES"):
+                GABARITO.mkdir(exist_ok=True)
+                arquivo.write_text(html, encoding="utf-8")
+            self.assertEqual(arquivo.read_text(encoding="utf-8"), html, slug)
 
     def test_script_no_dado_nao_fecha_o_script(self):
-        ctx = contexto_pagina(self.rev, preview=False, estaticos="revista/", capa=None)
+        ctx = contexto_pagina(self.rev, "f1", preview=False, estaticos="revista/", capa=None,
+                              link=lambda s: f"{s}.html", base_imagens="arquivos/infograficos/")  # fmt: skip
         ctx["dados"] = {"x": "</script><!--&\u2028"}
-        html = render_to_string("revista/index.html", ctx)
+        html = render_to_string("revista/f1.html", ctx)
         # O primeiro </script> depois da abertura é o fechamento real: o dado veio escapado.
         corpo = re.search(r'id="dados-revista" type="application/json">(.*?)</script>', html).group(1)
         self.assertEqual(json.loads(corpo), ctx["dados"])
+
+
+class PaginasTest(SimpleTestCase):
+    """Sumário: index, f1 e um infográfico por página, na ordem do resolvido."""
+
+    def test_0_1_e_2_infograficos(self):
+        base = [("index", "Sumário"), ("f1", "Escalas de proficiência")]
+        alfa = {"tipo": "alfa", "titulo": "Alfa"}
+        outras = {"tipo": "outras", "titulo": "Outras"}
+        self.assertEqual(paginas({"f2": {"secoes": None, "infograficos": []}}), base)
+        self.assertEqual(paginas({"f2": {"infograficos": [outras]}}), [*base, ("f2-outras-etapas", "Outras")])
+        self.assertEqual(
+            paginas({"f2": {"infograficos": [alfa, outras]}}),
+            [*base, ("f2-alfa", "Alfa"), ("f2-outras-etapas", "Outras")],
+        )
+
+    def test_foto_antiga_so_index_e_f1(self):
+        """Ponto de revisão 2: foto sem a chave `infograficos` (com svg_sha256)."""
+        foto = {"f2": {"secoes": [], "svg_sha256": "a" * 64}}
+        self.assertEqual([s for s, _ in paginas(foto)], ["index", "f1"])
+
+    def test_scripts_de_cada_pagina(self):
+        """O f2.html não carrega o JS do F1, e o f1.html não carrega o svg-tour."""
+        def fonte(nome):
+            return (Path(__file__).resolve().parents[1] / "templates" / "revista" / nome).read_text(encoding="utf-8")
+
+        self.assertNotIn("f1/script.js", fonte("f2.html"))
+        self.assertIn("f2/svg-tour.js", fonte("f2.html"))
+        self.assertNotIn("svg-tour", fonte("f1.html"))
+        self.assertIn("f1/script.js", fonte("f1.html"))
 
 
 class HtmlTest(TestCase):

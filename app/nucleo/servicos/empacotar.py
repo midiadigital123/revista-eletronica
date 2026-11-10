@@ -1,9 +1,9 @@
 """Zip da revista (S15): site estático aberto por `file://`, sem servidor (D-103, D-109).
 
-Conteúdo: `index.html` (modo zip, sem faixas: D-116), `revista/f1/*` e `revista/f2/*`
-(cópia de `static/revista/`), `arquivos/capa.<ext>` e `arquivos/itens/<id>.<tipo>` (arquivo
-da tarefa, no caminho que o JS do F1 abre: D-154). Dados, SVG, tour e modais vão inline no
-`index.html` (D-125). Só sai sem pendências (D-112); problema do próprio pacote (item
+Conteúdo: as páginas `index.html`, `f1.html` e um `f2-*.html` por infográfico (D-233; modo zip,
+sem faixas: D-116), `revista/f1/*` e `revista/f2/*` (cópia de `static/revista/`),
+`arquivos/capa.<ext>` e `arquivos/itens/<id>.<tipo>` (arquivo da tarefa, no caminho que o JS do
+F1 abre: D-154). Dados, SVG, tour e modais vão inline nas páginas (D-125). Só sai sem pendências (D-112); problema do próprio pacote (item
 inválido, arquivo ausente, arquivada com SVG/capa trocados) também recusa.
 Bytes determinísticos: datas e permissões fixas, entradas em ordem.
 """
@@ -19,7 +19,7 @@ from django.core.files.storage import default_storage
 from django.template.loader import render_to_string
 
 from nucleo.models import Tarefa
-from nucleo.servicos.html import contexto_pagina
+from nucleo.servicos.html import TIPO_DA_PAGINA, contexto_pagina, paginas, template
 from nucleo.servicos.resolver import Pendencia, pendencias, resolver
 
 ESTATICOS = Path(__file__).resolve().parents[1] / "static" / "revista"
@@ -115,16 +115,18 @@ def zip_revista(revista):
         raise Pendente(erros)
 
     capa = "arquivos/capa" + PurePosixPath(revista.capa).suffix
-    try:  # SVG sumiu entre o exists() e a leitura em contexto_pagina
-        ctx = contexto_pagina(revista, preview=False, estaticos="revista/", capa=capa)
-    except FileNotFoundError:
-        raise Pendente([Pendencia("zip_arquivo", f"Arquivo ausente no storage: {revista.svg_f2}.")]) from None
-    html = render_to_string("revista/index.html", ctx)
+    html = {}
+    for slug, _ in paginas(resolvido):
+        pagina = TIPO_DA_PAGINA.get(slug, slug)
+        ctx = contexto_pagina(revista, pagina, preview=False, estaticos="revista/", capa=capa,
+                              link=lambda s: f"{s}.html", base_imagens="arquivos/infograficos/")  # fmt: skip
+        html[f"{slug}.html"] = render_to_string(template(pagina), ctx)
     # ponytail: zip em memória (SVG ~1 MB + capa ≤ 5 MB + itens PDF sem limite de tamanho);
     # quando pesar, trocar o BytesIO por tempfile.SpooledTemporaryFile e devolver FileResponse.
     saida = io.BytesIO()
     with zipfile.ZipFile(saida, "w") as z:
-        z.writestr(_entrada("index.html"), html)
+        for nome, pagina in html.items():
+            z.writestr(_entrada(nome), pagina)
         for arquivo in sorted(ESTATICOS.rglob("*")):
             if arquivo.is_file() and arquivo.suffix in EXTENSOES:
                 _copiar(z, "revista/" + arquivo.relative_to(ESTATICOS).as_posix(), arquivo.open("rb"))

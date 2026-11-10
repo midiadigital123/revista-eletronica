@@ -13,11 +13,10 @@
         .rv-pular { position: absolute; left: -9999px; }
         .rv-pular:focus { left: 1rem; top: 1rem; z-index: 2000; padding: .5rem 1rem; background: #fff; outline: 3px solid #000; }
         .capitulos { position: sticky; top: 0; z-index: 1100; background: var(--color-white); border-bottom: 1px solid var(--color-gray-200); }
-        .capitulos ul { display: flex; gap: var(--spacing-xs); justify-content: center; list-style: none; padding: var(--spacing-xs); }
+        .capitulos ul { display: flex; flex-wrap: wrap; gap: var(--spacing-xs); justify-content: center; list-style: none; padding: var(--spacing-xs); }
         .capitulos a { display: inline-block; min-height: 44px; padding: .6rem 1.25rem; border-radius: 999px; color: var(--color-black); font-weight: 600; text-decoration: none; background: var(--color-gray-100); }
         .capitulos a:hover { background: var(--color-primary); }
         .capitulos a:focus-visible { outline: 3px solid #000; outline-offset: 2px; }
-        .capitulo { scroll-margin-top: 4rem; }
         .fechamento-section { max-width: 48.75rem; margin: 0 auto; padding: var(--spacing-xl) var(--spacing-md); }
         .fechamento-section h2 { font-size: var(--font-size-h2); margin-bottom: var(--spacing-sm); }
         .fechamento-section p, .f2-abertura p { font-size: var(--font-size-p); margin-bottom: var(--spacing-sm); }
@@ -30,24 +29,11 @@
 </head>
 <body>
     <a class="rv-pular" href="#conteudo">Pular para o conteúdo</a>
-    <header>
-        <section class="hero-section">
-            <div class="hero-content">
-                <div class="hero-text">
-                    <h1>Análise de GO</h1>
-                </div>
-                <div class="hero-image">
-                    <img src="arquivos/capa.png" alt="">
-                </div>
-            </div>
-        </section>
-        <nav class="capitulos" aria-label="Capítulos">
-            <ul>
-                <li><a href="#f1">Escalas de proficiência</a></li>
-                <li><a href="#f2">Infográfico</a></li>
-            </ul>
-        </nav>
-    </header>
+    
+    <nav class="capitulos" aria-label="Revista">
+        <ul><li><a href="index.html">Voltar ao sumário</a></li></ul>
+    </nav>
+    
 
     <main id="conteudo">
     <section id="f1" class="capitulo" aria-labelledby="f1-titulo">
@@ -172,19 +158,6 @@
         </section>
         
     </section>
-
-    <section id="f2" class="capitulo f2-section" aria-labelledby="f2-titulo">
-        <h2 id="f2-titulo">Infográfico</h2>
-        
-        
-        <div id="revista"><svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
-<style>.f2-bolinha { fill: #ffeb00; stroke: #000 }</style>
-<rect id="f2-fundo" width="800" height="400" fill="#f8f9fa" />
-<g id="f2-passo1"><rect x="40" y="40" width="340" height="320" fill="#b3ccff" /></g>
-<g id="f2-passo2"><rect x="420" y="40" width="340" height="320" fill="#ff8d43" />
-<g id="f2-btn-action-p2"><circle class="f2-bolinha" cx="590" cy="200" r="24" /></g></g>
-</svg></div>
-    </section>
     </main>
 
     <aside class="menu-lateral" aria-label="Descritores">
@@ -201,24 +174,9 @@
         </div>
     </div>
 
-    
-    <dialog id="dlg-p2" aria-labelledby="dlgTitle-p2">
-        <div class="modal-body">
-            <form method="dialog" class="modal-close-row">
-                <button type="submit" aria-label="Fechar">&times;</button>
-            </form>
-            <h3 id="dlgTitle-p2">Itens por ano</h3>
-            <p>Detalhe do item.</p>
-
-        </div>
-    </dialog>
-    
 
     <script id="dados-revista" type="application/json">{"5ef": {"scaleRange": {"min": 0, "max": 500}, "cortes": {"padrao-1": 100, "padrao-2": 200, "padrao-3": 250, "padrao-4": 300}, "padroes": [{"chave": "padrao-1", "rotulo": "Padr\u00e3o 01"}, {"chave": "padrao-2", "rotulo": "Padr\u00e3o 02"}, {"chave": "padrao-3", "rotulo": "Padr\u00e3o 03"}, {"chave": "padrao-4", "rotulo": "Padr\u00e3o 04"}, {"chave": "padrao-5", "rotulo": "Padr\u00e3o 05"}], "D01": {"description": "Descritor 1 LP", "prerequisites": ["Pr\u00e9 1;", "Pr\u00e9 2."], "bncc": {"practices": "Leitura", "knowledge": "Estrat\u00e9gia", "skills": ["EF15LP02"]}, "scale": {"padrao-1": [{"level": 75, "fim": 100, "content": "---"}, {"level": 50, "fim": 75, "content": "---"}, {"level": 25, "fim": 50, "content": "---"}, {"level": 0, "fim": 25, "content": "---"}], "padrao-2": [{"level": 175, "fim": 200, "content": "---"}, {"level": 150, "fim": 175, "content": "---"}, {"level": 125, "fim": 150, "content": "---"}, {"level": 100, "fim": 150, "content": "Localiza."}], "padrao-3": [{"level": 200, "fim": 225, "content": "---"}], "padrao-4": [{"level": 275, "fim": 300, "content": "---"}, {"level": 250, "fim": 275, "content": "---"}, {"level": 225, "fim": 275, "content": "Cruza o corte 250."}], "padrao-5": [{"level": 475, "fim": 500, "content": "---"}, {"level": 450, "fim": 475, "content": "---"}, {"level": 425, "fim": 450, "content": "---"}, {"level": 400, "fim": 425, "content": "---"}, {"level": 375, "fim": 400, "content": "---"}, {"level": 350, "fim": 375, "content": "---"}, {"level": 325, "fim": 350, "content": "---"}, {"level": 300, "fim": 325, "content": "---"}]}}, "D02": {"description": "Descritor 2", "prerequisites": [], "bncc": {"practices": "", "knowledge": "", "skills": []}, "scale": {"padrao-1": [{"level": 75, "fim": 100, "content": "---"}, {"level": 50, "fim": 75, "content": "---"}, {"level": 25, "fim": 50, "content": "---"}, {"level": 0, "fim": 25, "content": "---"}], "padrao-2": [{"level": 175, "fim": 200, "content": "---"}, {"level": 150, "fim": 175, "content": "---"}, {"level": 125, "fim": 150, "content": "---"}, {"level": 100, "fim": 125, "content": "---"}], "padrao-3": [{"level": 225, "fim": 250, "content": "---"}, {"level": 200, "fim": 225, "content": "---"}], "padrao-4": [{"level": 275, "fim": 300, "content": "---"}, {"level": 250, "fim": 275, "content": "---"}], "padrao-5": [{"level": 475, "fim": 500, "content": "---"}, {"level": 450, "fim": 475, "content": "---"}, {"level": 425, "fim": 450, "content": "---"}, {"level": 400, "fim": 425, "content": "---"}, {"level": 375, "fim": 400, "content": "---"}, {"level": 350, "fim": 375, "content": "---"}, {"level": 325, "fim": 350, "content": "---"}, {"level": 300, "fim": 350, "content": "Infere."}]}}}, "9ef": {"scaleRange": {"min": 0, "max": 500}, "cortes": {"padrao-1": 100, "padrao-2": 200, "padrao-3": 250, "padrao-4": 300}, "padroes": [{"chave": "padrao-1", "rotulo": "Padr\u00e3o 01"}, {"chave": "padrao-2", "rotulo": "Padr\u00e3o 02"}, {"chave": "padrao-3", "rotulo": "Padr\u00e3o 03"}, {"chave": "padrao-4", "rotulo": "Padr\u00e3o 04"}, {"chave": "padrao-5", "rotulo": "Padr\u00e3o 05"}], "D01": {"description": "Descritor 1 LP", "prerequisites": ["Pr\u00e9 1;", "Pr\u00e9 2."], "bncc": {"practices": "Leitura", "knowledge": "Estrat\u00e9gia", "skills": ["EF15LP02"]}, "scale": {"padrao-1": [{"level": 75, "fim": 100, "content": "---"}, {"level": 50, "fim": 75, "content": "---"}, {"level": 25, "fim": 50, "content": "---"}, {"level": 0, "fim": 25, "content": "---"}], "padrao-2": [{"level": 175, "fim": 200, "content": "---"}, {"level": 150, "fim": 175, "content": "---"}, {"level": 125, "fim": 150, "content": "---"}, {"level": 100, "fim": 150, "content": "Localiza."}], "padrao-3": [{"level": 200, "fim": 225, "content": "---"}], "padrao-4": [{"level": 275, "fim": 300, "content": "---"}, {"level": 250, "fim": 275, "content": "---"}, {"level": 225, "fim": 275, "content": "Cruza o corte 250."}], "padrao-5": [{"level": 475, "fim": 500, "content": "---"}, {"level": 450, "fim": 475, "content": "---"}, {"level": 425, "fim": 450, "content": "---"}, {"level": 400, "fim": 425, "content": "---"}, {"level": 375, "fim": 400, "content": "---"}, {"level": 350, "fim": 375, "content": "---"}, {"level": 325, "fim": 350, "content": "---"}, {"level": 300, "fim": 325, "content": "---"}]}}, "D02": {"description": "Descritor 2", "prerequisites": [], "bncc": {"practices": "", "knowledge": "", "skills": []}, "scale": {"padrao-1": [{"level": 75, "fim": 100, "content": "---"}, {"level": 50, "fim": 75, "content": "---"}, {"level": 25, "fim": 50, "content": "---"}, {"level": 0, "fim": 25, "content": "---"}], "padrao-2": [{"level": 175, "fim": 200, "content": "---"}, {"level": 150, "fim": 175, "content": "---"}, {"level": 125, "fim": 150, "content": "---"}, {"level": 100, "fim": 125, "content": "---"}], "padrao-3": [{"level": 225, "fim": 250, "content": "---"}, {"level": 200, "fim": 225, "content": "---"}], "padrao-4": [{"level": 275, "fim": 300, "content": "---"}, {"level": 250, "fim": 275, "content": "---"}], "padrao-5": [{"level": 475, "fim": 500, "content": "---"}, {"level": 450, "fim": 475, "content": "---"}, {"level": 425, "fim": 450, "content": "---"}, {"level": 400, "fim": 425, "content": "---"}, {"level": 375, "fim": 400, "content": "---"}, {"level": 350, "fim": 375, "content": "---"}, {"level": 325, "fim": 350, "content": "---"}, {"level": 300, "fim": 350, "content": "Infere."}]}}}}</script>
-    <script id="dados-tour" type="application/json">{"label": "Infogr\u00e1fico: tour guiado", "intro": {"title": "Avalia\u00e7\u00e3o \u0026 Curr\u00edculo", "text": "Siga o tour."}, "steps": [{"target": "f2-passo1", "title": "Descritor", "text": "Primeiro bloco."}, {"target": "f2-passo2", "title": "Itens", "text": "Segundo bloco."}], "modais": ["dlg-p2"]}</script>
     <script src="revista/f1/script.js"></script>
-    <script src="revista/f2/svg-tour.js"></script>
-    <script src="revista/f2/svg-tour-modal.js"></script>
-    <script src="revista/f2/f2-init.js"></script>
+
 </body>
 </html>
