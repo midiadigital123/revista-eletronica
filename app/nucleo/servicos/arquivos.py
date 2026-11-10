@@ -108,10 +108,11 @@ def _gravar(pasta, extensao, dados):
     return default_storage.save(f"{pasta}/{uuid.uuid4().hex}.{extensao}", ContentFile(dados))
 
 
-def _salvar(revista, campos, novo, antigo):
-    """Salva a revista; se falhar, apaga o arquivo novo. O antigo sai no commit (decisão do S09)."""
+def _salvar(obj, campos, novo, antigo):
+    """Salva `obj` (revista, item do infográfico…; sem pk, cria); se falhar, apaga o arquivo novo.
+    O antigo sai no commit (decisão do S09)."""
     try:
-        revista.save(update_fields=campos)
+        obj.save(update_fields=campos if obj.pk else None)
     except BaseException:
         default_storage.delete(novo)
         raise
@@ -312,6 +313,18 @@ def receber_capa(revista, arquivo):
     revista.capa_sha256 = hashlib.sha256(dados).hexdigest()
     _salvar(revista, ["capa", "capa_sha256"], revista.capa, antigo)
     return revista
+
+
+def receber_imagem_item(item, arquivo):
+    """Grava a imagem do item do infográfico (PNG, JPG ou WebP até 5 MB, tipo pelo conteúdo) e o
+    sha256. Item ainda fora do banco (com infográfico, ano e posição postos) é criado aqui."""
+    dados = _ler(arquivo, ITEM_MAX, "Imagem")
+    extensao = tipo_imagem(dados) or _erro("A imagem precisa ser PNG, JPG ou WebP.")
+    antigo = item.imagem
+    item.imagem = _gravar("infograficos", extensao, dados)
+    item.imagem_sha256 = hashlib.sha256(dados).hexdigest()
+    _salvar(item, ["imagem", "imagem_sha256"], item.imagem, antigo)
+    return item
 
 
 # --- Item da tarefa (D-180, D-181) -----------------------------------------------
