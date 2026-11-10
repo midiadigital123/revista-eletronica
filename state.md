@@ -2069,6 +2069,7 @@ Retomar a tarefa 3: disparar o implementador com `.superpowers/sdd/2026-11-09-f2
 - Tarefa 1 concluída e revisada (434c4cd..3fb2dda; 843 OK). D-240 (fechamento das tarefas só genérico), confirmada pelo usuário.
 - Tarefa 2 concluída e revisada (36232e7..03403f0): `f2.svg` fiel ao desenho; PNGs aprovados (letra por etapa, botão ❶ laranja). D-241: botão + e modal `dlg-tarefas` para o clique ❹. Tarefa 3 interrompida para encaixar a D-241.
 - Ajuste da D-241 (2aa1ecc): seção `dlg-tarefas` e botão `f2-btn-action-tarefas`; 846 OK; re-revisão aprovada. Tarefa 3 retomada e parada de novo a pedido do usuário, sem deixar código. Sessão encerrada aqui; o usuário segue depois.
+- Learnings da sessão commitados com o ok do usuário: deploy só com as fases 1 a 3 e template F2 com seções fixas; botões dos cliques ❶–❹ e `localize off` no `f2.svg`.
 ### 2026-11-06 19:00
 - Fase 1 do plano do F2 gerado iniciada com subagentes (superpowers:subagent-driven-development): branch `integ/f2-gerado` saída da `main`, worktree `/home/otavio.peres/dev/revista-express-f2-f1` (`feat/f2-f1`), stack docker `-p f2-f1`.
 - D-233 registrada (páginas separadas, dados na tela B, animação por último). D-234: tarefa usada por item impede exclusão e reimportação (achado na leitura: a reimportação apaga os descritores e quebraria com `PROTECT`).
