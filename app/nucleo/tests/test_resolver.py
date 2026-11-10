@@ -477,6 +477,18 @@ class ResolverTest(TestCase):
         Projeto.objects.filter(pk=lp.projeto_id).update(nome_secretaria="")
         self.assertIn({"tipo": "variavel", "nome": "nome_secretaria"}, resolver(recarregar(lp))["lacunas"])
 
+    def test_texto_de_passo_desligado_nao_conta_variavel(self):  # invisível: nem lacuna, nem hash
+        lp = self.go["LP"]
+        RevistaInfografico.objects.filter(revista=lp).update(
+            texto_progressao="{{nome_secretaria}}", passos_desligados=["progressao"]
+        )
+        Projeto.objects.filter(pk=lp.projeto_id).update(nome_secretaria="")
+        lp = recarregar(lp)
+        r = resolver(lp)
+        self.assertNotIn({"tipo": "variavel", "nome": "nome_secretaria"}, r["lacunas"])
+        self.assertEqual(r["f2"]["infograficos"][0]["textos"]["progressao"], "")
+        self.assertNotIn("variaveis", [p.codigo for p in pendencias(lp)])
+
     def test_infografico_arquivado_fica_de_fora(self):
         lp = self.go["LP"]
         RevistaInfografico.objects.create(revista=lp, componente=self.lp, ano=self.ano, tipo="alfa", arquivado_em="2026-10-29T12:00:00Z")

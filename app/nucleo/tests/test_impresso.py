@@ -18,7 +18,7 @@ from nucleo.servicos.foto import fotografar
 from nucleo import texto
 from nucleo.servicos.resolver import carregar, hash_validado, resolver
 from nucleo.tests.test_admin_projeto import Base, mensagens
-from nucleo.tests.test_painel import SVG_B, completar, trocar_svg
+from nucleo.tests.test_painel import SVG_B, completar, trocar_imagem
 from nucleo.tests.test_resolver import F1
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -116,7 +116,7 @@ class ImpressoTest(Base):
         self.client.force_login(self.imp)
         aberta = self.abrir()
         self.assertContains(aberta, 'id="botao-impressa"')
-        trocar_svg(self.rev, SVG_B)  # mudou depois que a página abriu e a pedagógica validou a nova versão
+        trocar_imagem(self.rev, SVG_B)  # mudou depois que a página abriu e a pedagógica validou a nova versão
         self.validar()
         r = self.marcar(aberta.context["hash"])
         self.assertIn("Impresso não atualizado: a revista não está “Validado” na versão que a página mostrou; recarregue.", mensagens(r))
@@ -126,7 +126,7 @@ class ImpressoTest(Base):
         self.validar()
         self.client.force_login(self.imp)
         visto = self.abrir().context["hash"]
-        trocar_svg(self.rev, SVG_B)  # hash_validado continua = visto, mas a revista atual é outra
+        trocar_imagem(self.rev, SVG_B)  # hash_validado continua = visto, mas a revista atual é outra
         self.assertIn("Impresso não atualizado: a revista mudou depois que a página abriu; confira de novo.", mensagens(self.marcar(visto)))
         self.assertFalse(FotoRevista.objects.exists())
 

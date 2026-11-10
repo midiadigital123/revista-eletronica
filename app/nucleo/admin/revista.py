@@ -18,7 +18,7 @@ Forms, textos, arquivos e estado do "Validado" moram em `nucleo/revista.py` (a p
 o mesmo, D-183); aqui ficam o ModelAdmin, o inline e o widget com preview.
 
 Upload com ids faltando GRAVA e avisa (decisão do S11c): o template pode ganhar ou perder
-seções depois, e a pendência `ids_svg` do resolver já bloqueia o "Validado".
+seções depois; o SVG enviado não é mais pendência (D-237) e sai na fase 3.
 """
 
 import logging

@@ -38,7 +38,7 @@ def completar(revista, svg=SVG_A):
     )
 
 
-def trocar_svg(revista, svg):
+def trocar_imagem(revista, svg):
     """Muda o hash sem mexer no impresso: a imagem dos itens dos infográficos (D-237; antes, o SVG)."""
     RevistaInfograficoItem.objects.filter(infografico__revista=revista).update(imagem_sha256=svg)
 
@@ -85,7 +85,7 @@ class ValidadoTest(Base):
 
     def test_hash_velho_recusado(self):
         aberta = self.abrir()
-        trocar_svg(self.rev, SVG_B)  # mudou depois que a página abriu
+        trocar_imagem(self.rev, SVG_B)  # mudou depois que a página abriu
         r = self.validar(aberta)
         self.assertIn("Não validada: a revista mudou depois que a página abriu; confira de novo.", mensagens(r))
         self.assertIsNone(Revista.objects.get(pk=self.rev.pk).hash_validado)
@@ -112,13 +112,13 @@ class ValidadoTest(Base):
         r = self.client.get(self.url)
         self.assertNotContains(r, 'id="botao-validado"')
 
-    def test_trocar_svg_derruba_e_desfazer_volta(self):
+    def test_trocar_imagem_derruba_e_desfazer_volta(self):
         self.validar()
         self.assertTrue(self.celula("validado")["ok"])
-        trocar_svg(self.rev, SVG_B)
+        trocar_imagem(self.rev, SVG_B)
         self.assertFalse(self.celula("validado")["ok"])
         self.assertContains(self.abrir(), "a revista mudou depois do último")
-        trocar_svg(self.rev, SVG_A)  # desfez: o hash volta e o "Validado" volta (D-094)
+        trocar_imagem(self.rev, SVG_A)  # desfez: o hash volta e o "Validado" volta (D-094)
         self.assertTrue(self.celula("validado")["ok"])
         self.assertContains(self.abrir(), "✓ Validado")
 
@@ -208,7 +208,7 @@ class LoteTest(TransactionTestCase):
 
     def test_lote_de_3_com_1_alterado_no_meio_grava_2(self):
         pares = self.pares()
-        trocar_svg(self.pe["LP"], SVG_B)  # mudou entre ver o diff e enviar
+        trocar_imagem(self.pe["LP"], SVG_B)  # mudou entre ver o diff e enviar
         r = self.client.post(self.url, {"par": pares}, follow=True)
         msgs = mensagens(r)
         self.assertIn("Validadas 2 revista(s).", msgs)

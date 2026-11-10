@@ -11,9 +11,8 @@ from django.template.loader import render_to_string
 from django.utils.html import format_html, strip_tags
 from django.utils.safestring import mark_safe
 
-from nucleo.models.revista import EtapaReferencial
+from nucleo.models.revista import PASSOS, EtapaReferencial
 
-PASSOS = ("descritor", "habilidades", "progressao", "tarefas")  # ordem do tour; descritor sempre ligado
 # Config do tour (antes em svg-tour/avaliacao-e-curriculo/revista.json); os textos vêm das seções.
 ROTULO_TOUR = "Infográfico: tour guiado"
 

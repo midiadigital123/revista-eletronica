@@ -107,6 +107,7 @@ class TipoInfografico(models.TextChoices):  # D-230
 
 
 PASSOS_DESLIGAVEIS = ("habilidades", "progressao", "tarefas")  # D-227: abertura e descritor são fixos
+PASSOS = ("descritor", *PASSOS_DESLIGAVEIS)  # ordem do tour; descritor sempre ligado
 
 
 class EtapaReferencial(models.TextChoices):  # D-233

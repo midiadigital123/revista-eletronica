@@ -17,9 +17,9 @@ Só leitura; quem grava é `foto.fotografar`. Formato de `resolver(revista)`:
 Cada infográfico (o que `servicos/f2.gerar` consome):
 
     {"tipo", "titulo",                    # rótulo do TipoInfografico
-     "passos": [ligados, na ordem de f2.PASSOS],
+     "passos": [ligados, na ordem de PASSOS (models/revista.py)],
      "habilidade": str,
-     "textos": {"descritor", "progressao", "habilidades"},
+     "textos": {"descritor", "progressao", "habilidades"},  # passo desligado: ""
      "etapas": [{"etapa", "rotulo", "marca", "codigo", "texto"}],     # ordem do referencial, só as gravadas
      "itens": [{"posicao", "etapa", "rotulo", "descritor", "imagem", "imagem_sha256", "texto_alternativo", "analise"}]}
 
@@ -65,8 +65,7 @@ from nucleo.models import (
     Tarefa,
     TemplateVersao,
 )
-from nucleo.models.revista import EtapaReferencial, Motivo, TipoInfografico
-from nucleo.servicos.f2 import PASSOS
+from nucleo.models.revista import PASSOS, EtapaReferencial, Motivo, TipoInfografico
 from nucleo.variaveis import VARIAVEIS
 
 VAZIO = "---"  # linha sem habilidade (CONTEUDO_VAZIO do contrato)
@@ -274,10 +273,10 @@ def _infograficos(revista, renderizado):
             "titulo": TipoInfografico(inf.tipo).label,
             "passos": [p for p in PASSOS if p not in inf.passos_desligados],
             "habilidade": inf.habilidade,
-            "textos": {
+            "textos": {  # texto de passo desligado é invisível: não renderiza, não conta variável
                 "descritor": renderizado(inf.texto_descritor),
-                "progressao": renderizado(inf.texto_progressao),
-                "habilidades": renderizado(inf.texto_habilidades),
+                **{p: "" if p in inf.passos_desligados else renderizado(getattr(inf, f"texto_{p}"))
+                   for p in ("progressao", "habilidades")},
             },
             "etapas": [
                 {"etapa": e.etapa, "rotulo": rotulos[e.etapa], "marca": e.marca, "codigo": e.codigo, "texto": e.texto}
