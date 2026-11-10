@@ -69,8 +69,9 @@ de importação: montar em `/pdfs` (`-v "<pasta>:/pdfs:ro"`); sem eles, 8 testes
 
 ### Revista (F1 e F2)
 
-Uma página só, `app/nucleo/templates/revista/index.html`, serve o preview e o zip.
-`servicos/resolver.py` monta o JSON `dados-revista`; `static/revista/f1/script.js` desenha a régua
+A revista tem várias páginas, as mesmas no preview e no zip (`templates/revista/`: `_base.html`,
+`index.html` = sumário, `f1.html` e um `f2.html` por infográfico ativo); o SVG do F2 é gerado por
+`servicos/f2.py` a partir dos infográficos (D-233, D-239). `servicos/resolver.py` monta o JSON `dados-revista`; `static/revista/f1/script.js` desenha a régua
 para 2 a 5 padrões (cores em `--color-padrao-k`, sobrescritas por projeto); `static/revista/f2/`
 é o svg-tour copiado sem alteração.
 

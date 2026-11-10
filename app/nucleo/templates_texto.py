@@ -128,11 +128,6 @@ def previa(corpo, fasciculo=None, so_corpo=False):
 
 # --- U9b: editor por seção na tela B. O formato gravado continua o mesmo markdown `## id`. ---
 
-def secoes_permitidas(fasciculo):
-    """Estrutura do fascículo: as seções fixas (sempre presentes). Nenhuma é repetível desde o D-238."""
-    return {"fixas": list(texto.SECOES[fasciculo]), "repetiveis": {}}
-
-
 def id_permitido(id_, fasciculo):
     return id_ in texto.SECOES[fasciculo]
 

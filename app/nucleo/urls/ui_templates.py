@@ -35,9 +35,9 @@ from nucleo.models.texto import Fasciculo
 from nucleo.servicos.resolver import versao_atual
 from nucleo.templates_texto import (
     assinar, assinatura, com_uso, criar_versao, form_para_corpo, id_permitido, impacto, ler_assinatura,
-    previa_secoes, rotulo, secoes_para_form, secoes_permitidas,
+    previa_secoes, rotulo, secoes_para_form,
 )  # fmt: skip
-from nucleo.texto import TEXTO_MAX
+from nucleo.texto import SECOES, TEXTO_MAX
 from nucleo.ui_bloqueio import com_bloqueio
 from nucleo.variaveis import VARIAVEIS
 
@@ -93,7 +93,7 @@ def lista(request, ano=None):
 
 def esqueleto(fasciculo):
     """Texto inicial válido do fascículo: as seções fixas, cada uma com título e um corpo a trocar."""
-    return form_para_corpo([{"id": i, "titulo": rotulo(i), "corpo": "Escreva o texto desta seção."} for i in secoes_permitidas(fasciculo)["fixas"]])
+    return form_para_corpo([{"id": i, "titulo": rotulo(i), "corpo": "Escreva o texto desta seção."} for i in SECOES[fasciculo]])
 
 
 @require_http_methods(["GET", "POST"])
@@ -156,13 +156,13 @@ def _recusa(id_):
 def _contexto_secoes(tpl, secoes):
     """Seções para o editor e o índice, com rótulo, erros por campo e a prévia."""
     if not secoes:  # template ainda sem texto: começa pelas fixas
-        secoes = [{"id": i, "titulo": "", "corpo": ""} for i in secoes_permitidas(tpl.fasciculo)["fixas"]]
+        secoes = [{"id": i, "titulo": "", "corpo": ""} for i in SECOES[tpl.fasciculo]]
     corpo = form_para_corpo(secoes)
     if len(corpo) > TEXTO_MAX:
         html, erros, por_secao = "", [GRANDE], {s["id"]: [] for s in secoes}
     else:
         html, erros, por_secao = previa_secoes(secoes, tpl.fasciculo)
-    fixas = secoes_permitidas(tpl.fasciculo)["fixas"]
+    fixas = SECOES[tpl.fasciculo]
     for s in secoes:
         s["rotulo"], s["removivel"], s["erros"] = rotulo(s["id"]), s["id"] not in fixas, por_secao[s["id"]]
         s["erro_titulo"] = any(campo == "titulo" for _, campo in s["erros"])

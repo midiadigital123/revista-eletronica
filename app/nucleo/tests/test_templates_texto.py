@@ -10,16 +10,13 @@ from nucleo import texto
 from nucleo.management.commands.carregar_templates import AVISO
 from nucleo.models import RevistaFasciculo, RevistaInfografico, RevistaSecao, Template, TemplateVersao
 from nucleo.servicos.resolver import versao_atual
-from nucleo.templates_texto import impacto, rotulo, secoes_permitidas
+from nucleo.templates_texto import impacto, rotulo
 from nucleo.tests.test_resolver import F2_LP, Mundo
 
 SEED = settings.BASE_DIR / "templates_seed" / "2026"
 
 
 class SecoesF2Test(SimpleTestCase):
-    def test_secoes_permitidas_f2_sao_as_fixas_do_template(self):
-        self.assertEqual(secoes_permitidas("F2"), {"fixas": list(texto.SECOES_F2), "repetiveis": {}})
-
     def test_rotulos_do_f2(self):
         self.assertEqual(rotulo("passo-tarefas"), "Passo: tarefas")
         self.assertEqual(rotulo("passo-descritor"), "Passo: descritor")
@@ -58,7 +55,7 @@ class Migracao0023Test(TestCase):
     def secoes(self):
         return set(RevistaSecao.objects.filter(revista_fasciculo=self.rf).values_list("secao", flat=True))
 
-    def test_template_ganha_a_versao_seguinte_com_as_8_secoes(self):
+    def test_template_ganha_a_versao_seguinte_com_as_9_secoes(self):
         self.migrar()
         for cc in ("LP", "MT"):
             versoes = TemplateVersao.objects.filter(template=self.templates[cc, "F2"]).order_by("numero")

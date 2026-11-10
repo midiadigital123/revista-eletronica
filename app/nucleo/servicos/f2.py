@@ -104,6 +104,8 @@ def gerar(infografico, secoes, base_imagens, componente):
     `secoes` é {id: {"id", "titulo", "corpo"}}, com título escapado e corpo já renderizado; os
     `textos` e a `analise` dos itens também chegam renderizados. Seção ausente sai vazia.
     A imagem do item sai em `<base_imagens><nome do arquivo>` (no banco, `infograficos/<nome>`).
+    `componente`: rótulo vindo do banco vivo, fora do resolvido e da foto arquivada; ficou fora do
+    hash por decisão da D-242 (renomear componente é raro).
     """
     ligados = [p for p in PASSOS if p == "descritor" or p in infografico["passos"]]
 

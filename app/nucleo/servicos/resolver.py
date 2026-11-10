@@ -21,6 +21,7 @@ Cada infográfico (o que `servicos/f2.gerar` consome):
      "habilidade": str,
      "textos": {"descritor", "progressao", "habilidades"},  # passo desligado: ""
      "etapas": [{"etapa", "rotulo", "marca", "codigo", "texto"}],     # ordem do referencial, só as gravadas
+                                          # habilidades desligado: codigo e texto ""; com progressao também: []
      "itens": [{"posicao", "etapa", "rotulo", "descritor", "imagem", "imagem_sha256", "texto_alternativo", "analise"}]}
                                           # passo tarefas desligado: [] (D-243)
 
@@ -269,6 +270,11 @@ def _infograficos(revista, renderizado):
         )
     ):
         etapas = sorted(inf.revistainfograficoetapa_set.all(), key=lambda e: ordem[e.etapa])
+        # Etapa invisível sai do hash (D-243): código e texto só aparecem na tabela (habilidades),
+        # a marca também na progressão; sem os dois passos, nada da etapa aparece.
+        tabela = "habilidades" not in inf.passos_desligados
+        if not tabela and "progressao" in inf.passos_desligados:
+            etapas = []
         saida.append({
             "tipo": inf.tipo,
             "titulo": TipoInfografico(inf.tipo).label,
@@ -280,7 +286,8 @@ def _infograficos(revista, renderizado):
                    for p in ("progressao", "habilidades")},
             },
             "etapas": [
-                {"etapa": e.etapa, "rotulo": rotulos[e.etapa], "marca": e.marca, "codigo": e.codigo, "texto": e.texto}
+                {"etapa": e.etapa, "rotulo": rotulos[e.etapa], "marca": e.marca,
+                 "codigo": e.codigo if tabela else "", "texto": e.texto if tabela else ""}
                 for e in etapas
             ],
             "itens": [

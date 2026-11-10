@@ -1,10 +1,10 @@
 /**
- * F2 (infográfico svg-tour) na página única da revista (S08; substitui svg-tour/avaliacao-e-curriculo/revista.js).
+ * F2 (infográfico svg-tour) na página de um infográfico (f2.html, D-233; substitui
+ * svg-tour/avaliacao-e-curriculo/revista.js).
  *
- * Sem fetch (a página do zip abre por file://, S15): o SVG já está inline em #revista e os
- * textos do tour vêm de <script type="application/json" id="dados-tour">, gerado das seções
- * `abertura`, `passoN` e `dlg-*` do template F2. Ids do SVG têm o prefixo f2- (D-145):
- * seção dlg-xx → botão #f2-btn-action-xx → <dialog id="dlg-xx">.
+ * Sem fetch (a página do zip abre por file://, S15): o SVG já está inline em #revista e o
+ * tour vem de <script type="application/json" id="dados-tour">; os dois são gerados por
+ * servicos/f2.py. Ids do SVG têm o prefixo f2- (D-145): botão #f2-btn-action-xx → <dialog id="dlg-xx">.
  */
 (function () {
   "use strict";
@@ -15,7 +15,7 @@
     minScale: 1.6,
     minimapAuto: true,
     fitButton: false,
-    helpOnStart: false, // na página única a ajuda não abre sozinha: roubaria o foco do F1
+    helpOnStart: false, // a ajuda não abre sozinha
     helpGeneral: false,
     helpNote: "Toque nos botões amarelos (+) do desenho para abrir o detalhe de cada item.",
     dimOthers: true,

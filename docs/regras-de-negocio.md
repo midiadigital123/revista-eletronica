@@ -59,7 +59,7 @@ Documentos que este texto não repete:
 | **Template e versão** | Texto-modelo por ano × componente × fascículo, guardado em versões numeradas só de inserção. A versão atual é a de maior número. | D-098, D-125, `app/nucleo/models/texto.py:22` |
 | **Revista** | Projeto × componente (ex.: GO · LP). Unidade do Validado, da foto do impresso e do zip. | D-095, D-097, `app/nucleo/models/revista.py:25` |
 | **Fascículo** | Parte da revista: F1 (escalas e textos) e F2 (infográfico em SVG com tour e modais). Lista fixa no código. | D-122, `app/nucleo/models/texto.py:11` |
-| **Seção** | Bloco `## id` do template. F1: `introducao` e `fechamento`. F2: `abertura`, `passoN`, `dlg-*`. A 1ª linha de cada seção é o título. Uma seção editada vira cópia da revista (`RevistaSecao`). | D-111, D-114, D-115, D-139 |
+| **Seção** | Bloco `## id` do template. F1: `introducao` e `fechamento`. F2: as 9 de `texto.SECOES["F2"]` (`abertura`, `passo-*`, `dlg-*`, `tarefas-fechamento`, `fechamento`). A 1ª linha de cada seção é o título. Uma seção editada vira cópia da revista (`RevistaSecao`). | D-111, D-114, D-115, D-139 |
 | **Foto** | JSON da revista montada, gravado com o hash. Motivos: `impresso` (clique do Impresso) e `arquivamento`. | D-077, D-151, `app/nucleo/models/revista.py:109` |
 | **Validado** | Clique da Pedagógica que grava o hash da revista vista. "Está validada" = hash gravado igual ao hash atual, calculado na hora. | D-074, D-084, `app/nucleo/servicos/validacao.py:20` |
 | **Impresso / "Revista Impressa Atualizada"** | Clique do perfil Impresso que grava a foto `impresso` e zera "o que mudou" daquela revista. | D-072, D-077, `app/nucleo/servicos/validacao.py:54` |
@@ -223,7 +223,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 |---|---|
 | Template = um documento por ano × componente × fascículo; nome único nessa combinação. Revista de LP só oferece templates de LP. | D-098, `app/nucleo/models/texto.py:31-35` |
 | Formato: Markdown restrito (parágrafo, negrito, itálico, listas) + `{{variavel}}` da lista fixa. HTML, links, crase, citação, título e `{{` fora da lista são recusados ao salvar. Sem lógica (`if`/`each`). | D-105, D-123, D-139, D-144, `app/nucleo/texto.py:1-30` |
-| Seções do F1: exatamente `introducao` e `fechamento`. F2: `abertura` + ao menos um `passoN` + `dlg-*` opcionais. Seção repetida ou texto antes da 1ª seção é recusado. | D-111, D-114, D-139, `app/nucleo/texto.py:34-35` |
+| Seções do F1: exatamente `introducao` e `fechamento`. F2: exatamente as 9 de `texto.SECOES["F2"]`, todas obrigatórias (D-238). Seção repetida ou texto antes da 1ª seção é recusado. | D-111, D-114, D-139, `app/nucleo/texto.py:34-35` |
 | A 1ª linha de cada seção é o título (texto puro, não editável na revista). | D-115, D-139 |
 | Teto de 100 000 caracteres por template. | D-163, `app/nucleo/texto.py:32` |
 | Editar o texto cria a versão N+1; nunca há UPDATE de texto. Texto igual ao atual salva só o nome, sem versão nova. | D-115, D-162, `app/nucleo/templates_texto.py:90` |
@@ -292,7 +292,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | Regra | Fonte |
 |---|---|
 | O estado "validada" não é guardado: é `hash_validado == hash atual`, calculado na hora. | D-084, D-125, `app/nucleo/servicos/validacao.py:20` |
-| Hash = sha256 do JSON canônico da revista montada (escalas, cores, textos renderizados de F1 e F2, sha256 do SVG e da capa). | D-118, D-125, D-151, `app/nucleo/servicos/resolver.py:293` |
+| Hash = sha256 do JSON canônico da revista montada (escalas, cores, textos renderizados de F1 e F2, infográficos com o `imagem_sha256` dos itens, `capa_sha256`). Passo desligado não entra (D-243). | D-118, D-125, D-151, D-237, `app/nucleo/servicos/resolver.py:293` |
 | O clique envia o hash da versão vista; se a revista mudou, o servidor recusa. | D-089, `app/nucleo/servicos/validacao.py:39` |
 | Revalidar a mesma versão não troca quem validou nem quando. | D-174, `app/nucleo/servicos/validacao.py:41` |
 | Validação em lote: a tela mostra cada revista e envia pares (revista, hash visto); o servidor recusa as que mudaram. | D-120, `app/nucleo/urls/painel.py:165` |
@@ -347,7 +347,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 
 | Regra | Fonte |
 |---|---|
-| Um zip por revista: site estático com F1 e F2 em página única, aberto por duplo clique. | D-103, D-109, D-159 |
+| Um zip por revista: site estático com sumário (`index.html`), F1 e uma página F2 por infográfico ativo, aberto por duplo clique. | D-103, D-109, D-159, D-233 |
 | Revista com pendência não gera zip (lista as pendências). | D-159, `app/nucleo/servicos/empacotar.py:31` |
 | Leva só os itens que o HTML usa; zip reprodutível (mesmo conteúdo, mesmos bytes). | D-160 |
 | "Baixar zip" fica na lista de revistas (não no Painel). | D-179 |

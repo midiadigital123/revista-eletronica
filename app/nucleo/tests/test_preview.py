@@ -255,6 +255,21 @@ class PaginaTest(MediaTemporaria, TestCase):
             self.assertIn("Análise de GO", html)
             self.assertNotIn("Texto novo.", html)
 
+    def test_arquivada_mostra_o_infografico_da_foto(self):
+        mt = self.go["MT"]
+        RevistaInfografico.objects.filter(revista=mt).update(habilidade="Habilidade da foto.")
+        gravar_cortes(  # tira a MT dos cortes: a cascata arquiva e fotografa (D-117)
+            self.rev.projeto.parceiro_ano,
+            [(self.e5, self.lp, [100, 200, 250, 300]), (self.e9, self.lp, [100, 200, 250, 300])],
+            self.usuario,
+        )
+        RevistaInfografico.objects.filter(revista=mt).update(habilidade="Habilidade do banco.")
+        mt = Revista.objects.get(pk=mt.pk)
+        self.assertIsNotNone(mt.arquivada_em)
+        html = self.get(mt, "outras").content.decode()
+        self.assertIn("Habilidade da foto.", html)
+        self.assertNotIn("Habilidade do banco.", html)
+
     def test_foto_antiga_sem_paginas_do_f2(self):
         """Foto de antes da D-237 (sem `infograficos`): sumário e F1 abrem, o F2 não existe."""
         mt = self.go["MT"]

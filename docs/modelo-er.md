@@ -364,7 +364,7 @@ O Impresso nunca recebe `delete_*`. A tabela papel × ação completa está em [
 
 - **Fascículo:** coluna com CHECK ('F1', 'F2'). D-122.
 - **Lista de variáveis:** constante no código e uma coluna por variável em `projeto`. D-100.
-- **Seções do template:** cabeçalhos `## id` dentro do texto da versão, conferidos ao salvar (F1: `introducao`, `fechamento`; F2: `## passoN` e `## dlg-*`). D-111, D-114.
+- **Seções do template:** cabeçalhos `## id` dentro do texto da versão, conferidos ao salvar (F1: `introducao`, `fechamento`; F2: as 9 seções fixas de `texto.SECOES["F2"]`). D-111, D-114, D-238.
 - **Grupo de corte:** calculado na exportação. D-049, D-056.
 - **Etapas avaliadas:** existem cortes para parceiro_ano × etapa × componente. D-049.
 - **Padrão de cada tarefa:** calculado na renderização (âncora maior). D-058.

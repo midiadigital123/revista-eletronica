@@ -502,6 +502,20 @@ class ResolverTest(TestCase):
         self.assertNotIn({"tipo": "variavel", "nome": "nome_secretaria"}, r["lacunas"])
         self.assertNotIn("variaveis", [p.codigo for p in pendencias(lp)])
 
+    def test_habilidades_desligado_tira_codigo_e_texto(self):  # D-243: passo desligado é invisível
+        lp = self.go["LP"]
+        preencher_infograficos(lp)
+        inf = RevistaInfografico.objects.filter(revista=lp).first()
+        RevistaInfografico.objects.filter(pk=inf.pk).update(passos_desligados=["habilidades"])
+        antes = hash_validado(recarregar(lp))
+        inf.revistainfograficoetapa_set.update(codigo="EF99LP99", texto="Outro texto.")
+        lp = recarregar(lp)
+        self.assertEqual(hash_validado(lp), antes)  # código invisível não derruba o "Validado"
+        etapas = resolver(lp)["f2"]["infograficos"][0]["etapas"]
+        self.assertEqual([(e["marca"], e["codigo"], e["texto"]) for e in etapas], [("I", "", ""), ("A", "", "")])
+        RevistaInfografico.objects.filter(pk=inf.pk).update(passos_desligados=["habilidades", "progressao"])
+        self.assertEqual(resolver(recarregar(lp))["f2"]["infograficos"][0]["etapas"], [])
+
     def test_infografico_arquivado_fica_de_fora(self):
         lp = self.go["LP"]
         RevistaInfografico.objects.create(revista=lp, componente=self.lp, ano=self.ano, tipo="alfa", arquivado_em="2026-10-29T12:00:00Z")

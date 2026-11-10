@@ -59,7 +59,7 @@ def link(codigo, revista):
 
 def ultima_impressa(revista):
     # ponytail: carrega o JSON inteiro da foto; comparar por hash pede uma coluna hash_impresso
-    # (o `hash` da foto inclui SVG e capa, D-118) = migração. Fazer se o painel ficar lento.
+    # (o `hash` da foto inclui o imagem_sha256 dos itens e o capa_sha256, D-118, D-237) = migração. Fazer se o painel ficar lento.
     return FotoRevista.objects.filter(revista=revista, motivo=Motivo.IMPRESSO).order_by("-criada_em", "-pk").first()
 
 
