@@ -15,6 +15,7 @@ from nucleo.servicos.resolver import versao_atual
 from nucleo.templates_texto import form_para_corpo, secoes_para_form
 from nucleo.tests.test_admin_templates import F2_9, F2_NOVO, Base
 from nucleo.tests.test_resolver import F1 as F1_NOVO, usuario
+from nucleo.texto import SECOES_F2
 
 
 class UiBase(Base):
@@ -220,7 +221,9 @@ class EditorSecoesTest(UiBase):
 
     def test_f2_nao_tem_secao_repetivel(self):
         r = self.ped.get(self.editar)
+        self.assertEqual(tuple(re.findall(r'name="secao-\d+-id" value="([^"]*)"', r.content.decode())), SECOES_F2)
         self.assertNotContains(r, "Adicionar passo")
+        self.assertNotContains(r, 'data-acao="remover"')  # nenhum botão de estrutura: as 9 seções são fixas
         secoes = [*F2_SECOES, ("passo2", "Passo dois", "Novo.")]
         r = self.ped.post(self.editar, form_secoes(secoes, **{CAMPO_SESSAO: self.sessao()}))
         self.assertEqual(r.status_code, 422)
