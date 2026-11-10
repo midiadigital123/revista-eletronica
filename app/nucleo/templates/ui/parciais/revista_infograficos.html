@@ -1,0 +1,123 @@
+{% comment %}
+Passo 2 da revista (fase 3 do F2): um cartão por infográfico ativo (urls/ui_revista._infograficos), dentro
+do form campoAuto da página: cada campo salva sozinho pela `?acao=infografico` (nomes e regra em
+nucleo/infografico.py). A resposta troca a #situacao; a imagem de um item troca também este #infograficos
+(a miniatura). Passo desligado esconde o bloco dele pelo CSS (`:has` em revista.css), sem JS.
+Sem permissão ou revista arquivada: os mesmos campos, `disabled`.
+{% endcomment %}{% url 'ui_revista_editar' revista.ano.ano revista.pk as url %}<section class="revista-bloco" id="infograficos" aria-labelledby="infograficos-titulo" data-url="{{ url }}?acao=infografico">
+  <header class="revista-passo-cab">
+    <span class="revista-passo-num" aria-hidden="true">2</span>
+    <div>
+      <h2 class="secao-titulo" id="infograficos-titulo">Infográficos</h2>
+      <p class="mudo">O F2 da revista: um infográfico por grupo de etapas com corte. Passo desligado sai do tour.</p>
+    </div>
+  </header>
+  {% for inf in infograficos %}{% with p=inf.pk|stringformat:"s" %}{% with n="inf-"|add:p %}
+  <article class="card inf-card" aria-labelledby="{{ n }}-titulo">
+    <header class="inf-cab">
+      <h3 id="{{ n }}-titulo">{{ inf.get_tipo_display }}</h3>
+      <a class="btn btn-ghost btn-sm" href="{% url 'preview_f2' revista.pk inf.tipo %}" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+        Abrir prévia<span class="sr-only"> de {{ inf.get_tipo_display }} (nova aba)</span>
+      </a>
+    </header>
+
+    <div class="campo">
+      <label for="{{ n }}-habilidade">Habilidade destacada</label>
+      <input class="input" type="text" id="{{ n }}-habilidade" name="{{ n }}-habilidade" maxlength="500" value="{{ inf.habilidade }}"{% if not pode_infograficos %} disabled{% endif %}>
+    </div>
+    <div class="campo">
+      <label for="{{ n }}-texto_descritor">Texto do clique ❶ (descritor)</label>
+      <textarea class="textarea" id="{{ n }}-texto_descritor" name="{{ n }}-texto_descritor" rows="3"{% if not pode_infograficos %} disabled{% endif %}>{{ inf.texto_descritor }}</textarea>
+    </div>
+
+    <fieldset class="inf-passos">
+      <legend class="rotulo">Passos do tour</legend>
+      {% for passo, rotulo in passos_infografico %}
+      <label class="marcar"><input type="checkbox" id="{{ n }}-passo-{{ passo }}" data-passo="{{ passo }}" name="{{ n }}-passo-{{ passo }}"{% if passo not in inf.passos_desligados %} checked{% endif %}{% if not pode_infograficos %} disabled{% endif %}> {{ rotulo }}</label>
+      {% endfor %}
+    </fieldset>
+
+    <div class="campo" data-bloco="habilidades">
+      <label for="{{ n }}-texto_habilidades">Texto do clique ❸ (habilidades)</label>
+      <textarea class="textarea" id="{{ n }}-texto_habilidades" name="{{ n }}-texto_habilidades" rows="3"{% if not pode_infograficos %} disabled{% endif %}>{{ inf.texto_habilidades }}</textarea>
+    </div>
+    <div class="campo" data-bloco="progressao">
+      <label for="{{ n }}-texto_progressao">Texto do clique ❷ (progressão)</label>
+      <textarea class="textarea" id="{{ n }}-texto_progressao" name="{{ n }}-texto_progressao" rows="3"{% if not pode_infograficos %} disabled{% endif %}>{{ inf.texto_progressao }}</textarea>
+    </div>
+
+    <div class="inf-grade" data-bloco="grade">
+      <h4 class="rotulo" id="{{ n }}-grade-titulo">Referencial por etapa</h4>
+      <p class="ajuda">As Habilidades usam o código e o texto (vazios: a célula de cima se estende); a Progressão usa a marca.</p>
+      <div class="tabela-caixa">
+        <table class="tabela inf-tabela" aria-labelledby="{{ n }}-grade-titulo">
+          <thead><tr><th scope="col">Etapa</th><th scope="col">Marca</th><th scope="col">Código</th><th scope="col">Texto</th></tr></thead>
+          <tbody>
+            {% for etapa, rotulo, linha in inf.grade %}{% with c=n|add:"-etapa-"|add:etapa %}
+            <tr>
+              <th scope="row">{{ rotulo }}</th>
+              <td><select class="select" id="{{ c }}-marca" name="{{ c }}-marca" aria-label="Marca: {{ rotulo }}"{% if not pode_infograficos %} disabled{% endif %}>
+                <option value="">—</option>
+                {% for valor, nome in marcas %}<option value="{{ valor }}"{% if linha.marca == valor %} selected{% endif %}>{{ nome }}</option>{% endfor %}
+              </select></td>
+              <td><input class="input" type="text" id="{{ c }}-codigo" name="{{ c }}-codigo" maxlength="50" value="{{ linha.codigo }}" aria-label="Código: {{ rotulo }}"{% if not pode_infograficos %} disabled{% endif %}></td>
+              <td><textarea class="textarea inf-texto-curto" id="{{ c }}-texto" name="{{ c }}-texto" rows="1" aria-label="Texto: {{ rotulo }}"{% if not pode_infograficos %} disabled{% endif %}>{{ linha.texto }}</textarea></td>
+            </tr>
+            {% endwith %}{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="inf-itens" data-bloco="tarefas">
+      {% for posicao, item in inf.itens %}{% with ps=posicao|stringformat:"s" %}{% with c=n|add:"-item-"|add:ps %}
+      <fieldset class="inf-item">
+        <legend class="rotulo">Tarefa {{ posicao }}</legend>
+        <div class="inf-item-imagem">
+          {% if item.imagem %}<img class="inf-miniatura" src="{% url 'preview_imagem_infografico' revista.pk item.nome_imagem %}" alt="Imagem atual da tarefa {{ posicao }}" width="96" loading="lazy">{% endif %}
+          <div class="soltar"{% if pode_infograficos %} x-data="arquivoSoltar" data-soltar data-max="{{ item_max }}" data-tipo="Imagem" :data-sobre="sobre"{% endif %}>
+            <label class="soltar-area" for="{{ c }}-imagem">
+              <input class="sr-only" type="file" id="{{ c }}-imagem" name="{{ c }}-imagem" accept="image/png,image/jpeg,image/webp" aria-describedby="{{ c }}-imagem-ajuda"{% if not pode_infograficos %} disabled{% endif %}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+              <span><strong>{% if item.imagem %}Substituir a imagem{% else %}Enviar a imagem{% endif %}</strong><span class="sr-only"> da tarefa {{ posicao }}</span></span>
+              <span class="mudo" id="{{ c }}-imagem-ajuda">Item e suporte numa imagem só. PNG, JPG ou WebP até 5 MB.</span>
+            </label>
+            {% if pode_infograficos %}
+            <p class="soltar-progresso" x-show="enviando" x-cloak><progress aria-label="Enviando a imagem da tarefa {{ posicao }}"></progress><span>Enviando <span x-text="nome"></span>…</span></p>
+            <p class="erro" role="alert" x-show="erro" x-text="erro" x-cloak></p>
+            {% endif %}
+          </div>
+        </div>
+        <div class="inf-item-campos">
+          <div class="inf-item-linha">
+            <div class="campo">
+              <label for="{{ c }}-etapa">Etapa</label>
+              <select class="select" id="{{ c }}-etapa" name="{{ c }}-etapa"{% if not pode_infograficos %} disabled{% endif %}>
+                <option value="">—</option>
+                {% for valor, rotulo in etapas_referencial %}<option value="{{ valor }}"{% if item.etapa == valor %} selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="campo">
+              <label for="{{ c }}-descritor">Descritor</label>
+              <input class="input" type="text" id="{{ c }}-descritor" name="{{ c }}-descritor" maxlength="20" value="{{ item.descritor }}"{% if not pode_infograficos %} disabled{% endif %}>
+            </div>
+          </div>
+          <div class="campo">
+            <label for="{{ c }}-texto_alternativo">Texto alternativo</label>
+            <input class="input" type="text" id="{{ c }}-texto_alternativo" name="{{ c }}-texto_alternativo" maxlength="1000" value="{{ item.texto_alternativo }}"{% if not pode_infograficos %} disabled{% endif %}>
+          </div>
+          <div class="campo">
+            <label for="{{ c }}-analise">Análise</label>
+            <textarea class="textarea" id="{{ c }}-analise" name="{{ c }}-analise" rows="3"{% if not pode_infograficos %} disabled{% endif %}>{{ item.analise }}</textarea>
+          </div>
+        </div>
+      </fieldset>
+      {% endwith %}{% endwith %}{% endfor %}
+    </div>
+  </article>
+  {% endwith %}{% endwith %}
+  {% empty %}
+  {% include "ui/_componentes/vazio.html" with titulo="Sem infográfico" texto="Esta revista não tem infográfico: faltam cortes." only %}
+  {% endfor %}
+</section>

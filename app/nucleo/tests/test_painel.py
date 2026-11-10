@@ -158,7 +158,7 @@ class ValidadoTest(Base):
         go_mt = self.go["MT"]
         falta = self.celula("infograficos", go_mt)
         self.assertEqual((falta["ok"], falta["dica"]), (False, DICA_INFOGRAFICO))
-        self.assertEqual(falta["link"], reverse("ui_revista_editar", args=[2026, go_mt.pk]))
+        self.assertEqual(falta["link"], reverse("ui_revista_editar", args=[2026, go_mt.pk]) + "#infograficos")
         self.assertTrue(self.celula("infograficos")["ok"])
         self.assertContains(r, f'<a class="status status-falta" href="{falta["link"]}" title="{DICA_INFOGRAFICO}">')
         # Filtro por pendência: só as com infográfico incompleto (GO MT, PE LP, PE MT).

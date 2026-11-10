@@ -2,6 +2,7 @@
 docs/telas/fichas/revista.md, pelo client. A regra é a de nucleo/revista.py (testada também pelo admin)."""
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
@@ -13,6 +14,9 @@ from nucleo.models import (
     Projeto,
     Revista,
     RevistaFasciculo,
+    RevistaInfografico,
+    RevistaInfograficoEtapa,
+    RevistaInfograficoItem,
     RevistaSecao,
     Template,
     TemplateVersao,
@@ -330,7 +334,6 @@ class RevistaUiTest(Base):
         self.assertTrue(corpo["ok"], corpo)
         self.assertEqual(set(corpo["trocar"]), {"arquivos", "situacao"})
         self.assertNotIn("Ids que faltam no SVG", corpo["trocar"]["situacao"])  # D-237: o SVG enviado não é mais pendência
-        self.assertIn(reverse("ui_revista_gabarito", args=[2026, self.rev.pk]), corpo["trocar"]["arquivos"])
         self.assertEqual(Revista.objects.get(pk=self.rev.pk).svg_ids, ["fundo", "passo1", "passo2", "outro"])
 
     def test_capa_grava_e_mostra_a_miniatura(self):
@@ -367,6 +370,103 @@ class RevistaUiTest(Base):
         corpo = self.arquivo("arquivo_capa", "c.png", PNG, aberta, confirmar_impacto="on").json()
         self.assertTrue(corpo["ok"])
         self.assertNotEqual(Revista.objects.get(pk=self.rev.pk).capa, "capas/x.png")
+
+    # --- 6b. infográficos (fase 3 do F2: passo próprio, autosave por campo) ------------------------
+
+    def outras(self):
+        return RevistaInfografico.objects.get(revista=self.rev, tipo="outras")
+
+    def inf(self, campo, valor="", aberta=None, files=None, **extra):
+        return self.campo("infografico", aberta, files=files, campo=f"inf-{self.outras().pk}-{campo}", valor=valor, **extra)
+
+    def test_infograficos_um_cartao_por_ativo_com_12_etapas_e_4_itens(self):
+        inf = self.outras()
+        RevistaInfografico.objects.create(
+            revista=self.rev, componente=self.lp, ano=self.ano, tipo="alfa", arquivado_em=ARQUIVADO, habilidade="Velha."
+        )
+        RevistaInfograficoEtapa.objects.create(infografico=inf, ano=self.ano, etapa="5EF", marca="A", codigo="EF15LP18")
+        r = self.abrir()
+        self.assertContains(r, 'id="infograficos"', count=1)
+        self.assertContains(r, 'class="card inf-card"', count=1)  # o alfa arquivado não aparece
+        self.assertNotContains(r, "Velha.")
+        self.assertContains(r, f'href="{reverse("preview_f2", args=[self.rev.pk, "outras"])}" target="_blank"')
+        self.assertContains(r, f'name="inf-{inf.pk}-habilidade"')
+        for passo in ("habilidades", "progressao", "tarefas"):
+            self.assertContains(r, f'name="inf-{inf.pk}-passo-{passo}" checked')
+        self.assertContains(r, f'name="inf-{inf.pk}-etapa-', count=36)  # 12 etapas × marca, código, texto
+        self.assertContains(r, f'name="inf-{inf.pk}-etapa-1EF-marca" aria-label="Marca: 1º ano do Ensino Fundamental"')
+        self.assertContains(r, '<option value="A" selected>Aprofundar</option>', count=1)
+        self.assertContains(r, 'value="EF15LP18"')
+        self.assertContains(r, f'name="inf-{inf.pk}-item-', count=20)  # 4 itens × etapa, descritor, imagem, alt, análise
+        self.assertContains(r, 'href="#infograficos"')  # a pendência leva ao passo
+        self.assertNotContains(r, "arquivo-svg")
+        self.assertNotContains(r, reverse("ui_revista_gabarito", args=[2026, self.rev.pk]))
+
+    def test_infografico_salva_e_troca_a_situacao(self):
+        aberta = self.abrir()
+        corpo = self.inf("habilidade", "Inferir informação.", aberta).json()
+        self.assertTrue(corpo["ok"], corpo)
+        self.assertEqual(set(corpo["trocar"]), {"situacao"})  # o cartão não é trocado: o foco segue no campo seguinte
+        self.assertNotIn("falta a habilidade destacada", corpo["trocar"]["situacao"])
+        self.assertEqual(self.outras().habilidade, "Inferir informação.")
+        self.assertTrue(self.inf("passo-progressao", "", aberta).json()["ok"])
+        self.assertTrue(self.inf("etapa-9EF-marca", "C", aberta).json()["ok"])
+        self.assertEqual(self.outras().passos_desligados, ["progressao"])
+        self.assertEqual(RevistaInfograficoEtapa.objects.get(infografico=self.outras(), etapa="9EF").marca, "C")
+        r = self.abrir()
+        self.assertContains(r, f'name="inf-{self.outras().pk}-passo-progressao">')  # desligado: sem checked
+        self.assertContains(r, 'value="Inferir informação."')
+
+    def test_infografico_de_validada_pede_modal(self):
+        completar(self.rev)
+        Revista.objects.filter(pk=self.rev.pk).update(hash_validado=hash_validado(carregar(self.rev.pk)))
+        aberta = self.abrir()
+        corpo = self.inf("habilidade", "Outra.", aberta).json()
+        self.assertEqual(corpo["impacto"]["perdem"], [str(self.rev)])
+        self.assertEqual(self.outras().habilidade, "Inferir informação.")
+        self.assertTrue(self.inf("habilidade", "Outra.", aberta, confirmar_impacto="on").json()["ok"])
+        self.assertEqual(self.outras().habilidade, "Outra.")
+
+    def test_imagem_do_item_grava_e_mostra_a_miniatura(self):
+        corpo = self.inf("item-2-imagem", files={"valor": SimpleUploadedFile("i.png", PNG)}).json()
+        self.assertTrue(corpo["ok"], corpo)
+        self.assertEqual(set(corpo["trocar"]), {"infograficos", "situacao"})
+        item = RevistaInfograficoItem.objects.get(infografico=self.outras(), posicao=2)
+        self.assertTrue(item.imagem.startswith("infograficos/"))
+        nome_ = item.imagem.removeprefix("infograficos/")
+        self.assertIn(reverse("preview_imagem_infografico", args=[self.rev.pk, nome_]), corpo["trocar"]["infograficos"])
+
+    def test_infografico_invalido_422(self):
+        self.assertEqual(self.campo("infografico", campo="inf-999999-habilidade", valor="x").status_code, 422)
+        r = self.inf("habilidade", "x" * 501)
+        self.assertEqual(r.status_code, 422)
+        self.assertIn("500", r.json()["erros"][0])
+        r = self.inf("item-1-imagem", files={"valor": SimpleUploadedFile("i.gif", b"GIF89a")})
+        self.assertEqual(r.json()["erros"], ["A imagem precisa ser PNG, JPG ou WebP."])
+        self.assertEqual(self.outras().habilidade, "")
+        self.assertFalse(RevistaInfograficoItem.objects.exists())
+
+    def test_infografico_sem_permissao_403_e_campos_desligados(self):
+        self.client.force_login(self.imp)
+        r = self.client.get(self.url)
+        self.assertContains(r, f'name="inf-{self.outras().pk}-habilidade" maxlength="500" value="" disabled>')
+        self.assertEqual(self.client.post(f"{self.url}?acao=infografico", {"campo": "x"}, HTTP_ACCEPT="application/json").status_code, 403)
+        parcial = usuario("parcial")
+        perms = ("view_revista", "change_revista", "change_revistainfografico")
+        parcial.user_permissions.set(Permission.objects.filter(content_type__app_label="nucleo", codename__in=perms))
+        self.client.force_login(parcial)
+        self.assertEqual(self.inf("etapa-5EF-marca", "A").status_code, 403)  # sem add/change da etapa
+        self.assertEqual(self.inf("item-1-descritor", "D05").status_code, 403)
+        self.assertTrue(self.inf("habilidade", "Pode.").json()["ok"])
+        self.assertFalse(RevistaInfograficoEtapa.objects.exists() or RevistaInfograficoItem.objects.exists())
+
+    def test_infografico_de_arquivada_403(self):
+        Revista.objects.filter(pk=self.rev.pk).update(arquivada_em=ARQUIVADO)
+        r = self.client.get(self.url)
+        self.assertContains(r, f'name="inf-{self.outras().pk}-habilidade" maxlength="500" value="" disabled>')
+        dados = {"campo": f"inf-{self.outras().pk}-habilidade", "valor": "x"}
+        self.assertEqual(self.client.post(f"{self.url}?acao=infografico", dados, HTTP_ACCEPT="application/json").status_code, 403)
+        self.assertEqual(self.outras().habilidade, "")
 
     # --- 7. Validado ---------------------------------------------------------------------------
 
@@ -409,7 +509,8 @@ class RevistaUiTest(Base):
         self.assertContains(r, "<span>Infográficos<span class=\"sr-only\">: pendente")  # o passo da Situação (antes "SVG do F2")
         self.assertContains(r, "Avaliação e Currículo – Outras Etapas: falta a habilidade destacada.")
         self.assertContains(r, 'href="#templates"')
-        self.assertContains(r, 'href="#arquivos"')
+        self.assertContains(r, 'href="#arquivos"')  # a capa
+        self.assertContains(r, 'href="#infograficos"')
         for texto in ("faixa-vermelha", "caixa-erro", "Pendências que impedem", "não salvo não entra"):
             self.assertNotContains(r, texto)
 
@@ -445,7 +546,7 @@ class RevistaUiTest(Base):
         """S8: o gabarito sai da mesma função do admin (servicos/arquivos); as planilhas, pela rota do impresso."""
         url = reverse("ui_revista_gabarito", args=[2026, self.rev.pk])
         pagina = self.client.get(self.url)
-        self.assertContains(pagina, f'href="{url}"')
+        self.assertNotContains(pagina, url)  # fase 3 do F2: o link sai da tela; a rota fica até a fase 4
         self.assertContains(pagina, reverse("impresso_planilhas", args=[self.rev.pk]))
         self.assertNotContains(pagina, "/admin/nucleo/revista/")
         resp = self.client.get(url)
@@ -458,8 +559,6 @@ class RevistaUiTest(Base):
         plan = self.client.get(reverse("impresso_planilhas", args=[self.rev.pk]))
         self.assertEqual((plan.status_code, plan["Content-Type"]), (200, "application/zip"))
         self.assertTrue(plan["Content-Disposition"].startswith("attachment"))
-        RevistaFasciculo.objects.filter(revista=self.rev, fasciculo="F2").update(template=None)
-        self.assertNotContains(self.client.get(self.url), url)  # sem template do F2 não há gabarito a baixar
         self.assertEqual(self.client.get(reverse("ui_revista_gabarito", args=[2026, 999999])).status_code, 404)
         self.client.force_login(usuario("nada"))
         self.assertEqual(self.client.get(url).status_code, 403)
