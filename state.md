@@ -2,11 +2,11 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-F2 gerado: fase 2 de 5 — tarefas 0 a 5 de 7 concluídas e revisadas na `feat/f2-f2` (worktree `/home/otavio.peres/dev/revista-express-f2-f2`, stack `COMPOSE_PROJECT_NAME=f2-f2 -p f2-f2`; plano `docs/superpowers/plans/2026-11-09-f2-fase-2.md`; ledger em `.superpowers/sdd/2026-11-09-f2-fase-2/progress.md`). Funcionando: template F2 com 9 seções; `f2.gerar` (D-242); resolvido com infográficos e pendência `infografico` (D-243); a revista em páginas — sumário, F1 e uma página por infográfico, no preview (`/preview/<id>/`, `f1/`, `f2/<tipo>/`) e no zip (`index.html`, `f1.html`, `f2-*.html`), com o zip resolvendo a revista uma vez e `<title>`/`h1` por página (D-244). Suíte 873 OK, 8 pulados. Quebrado/pendente: tarefas 6 e 7; até a T6, imagens dos itens dão 404 no preview e não entram no zip, e o zip dá 500 em revista sem SVG (`ponytail:` em `empacotar.py`); specs E2E `pagina`, `zip` e `item` vermelhos até a T7; a `integ/f2-gerado` só entra na `main` com as fases 1 a 3 (D-237).
+F2 gerado: fase 2 de 5 — tarefas 0 a 6 de 7 concluídas e revisadas na `feat/f2-f2` (worktree `/home/otavio.peres/dev/revista-express-f2-f2`, stack `COMPOSE_PROJECT_NAME=f2-f2 -p f2-f2`; plano `docs/superpowers/plans/2026-11-09-f2-fase-2.md`; ledger em `.superpowers/sdd/2026-11-09-f2-fase-2/progress.md`). Funcionando: template F2 com 9 seções; `f2.gerar` (D-242); resolvido com infográficos e pendência `infografico` (D-243); revista em páginas no preview e no zip (D-244); imagens dos itens no preview (`/preview/<id>/arquivos/infograficos/<nome>`, só da própria revista, png/jpg/webp) e no zip (`arquivos/infograficos/`), arquivada conferida pelo sha da foto por item, zip sem SVG (D-245). Suíte 883 OK, 8 pulados. Quebrado/pendente: tarefa 7; specs E2E `pagina`, `zip` e `item` vermelhos até a T7; preview de arquivada com imagem reenviada sob outro nome mostra imagem quebrada (`ponytail:` em `preview.py`, até o upload da fase 3); a `integ/f2-gerado` só entra na `main` com as fases 1 a 3 (D-237).
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Planejar a tarefa 6 (imagens dos itens no preview e no zip, `zip_foto` por item, remoção das checagens de SVG) a partir de `.superpowers/sdd/2026-11-09-f2-fase-2/task-6-brief.md`.
+Planejar a tarefa 7 (specs E2E `pagina`, `zip` e `item`, `helpers.ts`, conferência no Firefox, revisão da fase, merge na `integ/f2-gerado`) a partir de `.superpowers/sdd/2026-11-09-f2-fase-2/task-7-brief.md`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1996,6 +1996,14 @@ Planejar a tarefa 6 (imagens dos itens no preview e no zip, `zip_foto` por item,
 - **Arquivos afetados:** `servicos/html.py`, `templates/revista/*`, `urls/preview.py`, `servicos/empacotar.py`, `servicos/f2.py`, briefs das tarefas 5 e 6.
 - **Status:** ativa
 
+### D-245 — Tarefa 6: imagens do zip vêm do caminho atual, conferidas pelo sha da foto (2026-11-10 15:30)
+- **Contexto:** o zip da revista arquivada sai da foto, mas os arquivos são os atuais; o brief não dizia de onde copiar a imagem do item nem como tratar dois itens com o mesmo nome de arquivo.
+- **Decisão:** o `src` usa o nome da foto; os bytes vêm do caminho atual do item, achado por (tipo, posição); sha da foto ≠ atual (ou item sumido) = `zip_foto` por item, com mensagem própria; a capa ganha mensagem própria. Mesmo nome com caminhos diferentes = `zip_arquivo`. A rota `preview_imagem_infografico` serve só imagem de item da própria revista (png/jpg/webp). O zip deixa de ler o SVG.
+- **Motivo:** mesmo padrão da capa (compara o sha, copia o atual); reenviar a mesma imagem (caminho novo com uuid) não quebra o zip; a colisão evitaria uma imagem cobrindo outra.
+- **Descartadas:** copiar do caminho da foto (o arquivo antigo é apagado ao trocar, e o zip quebraria mesmo com conteúdo igual); validar o nome por regex como nos itens do F1 (o `src` já sai escapado por `format_html` e o upload da fase 3 grava com uuid).
+- **Arquivos afetados:** `servicos/empacotar.py`, `urls/preview.py`, `tests/test_empacotar.py`, `tests/test_preview.py`, `e2e/fixtures/revista.zip`, brief da tarefa 6.
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [ ] (09/11, plano da fase 2) A planilha e o "o que mudou" do impresso só ganham os infográficos na fase 4. Se as fases 1 a 3 forem para a `main` sem a 4, o impresso não vê o conteúdo novo do F2. Puxar a parte do impresso da fase 4 para a 3, ou deployar 1 a 4 juntas? Decidir antes da fase 3 — depende de: Otavio
 - [x] (D-237: opção A) (09/11, contra a D-236) Fase 2 sozinha na `main` trava o "Validado" e o zip de toda revista: as pendências novas do infográfico (habilidade vazia, passo ligado sem dado, item sem imagem) só se resolvem na tela da fase 3. Opções: (A) `integ/f2-gerado` entra na `main` só com as fases 1 a 3; (B) a fase 2 não cria pendência nova, e elas entram na fase 3 — depende de: Otavio
@@ -2531,3 +2539,4 @@ Planejar a tarefa 6 (imagens dos itens no preview e no zip, `zip_foto` por item,
 - Decisão (b) revista: bloco não visitado fica escondido, não esmaecido. Demo ajustada (sem o estado "fantasma"); conferido no navegador: na visão geral os 4 blocos estão escondidos; no passo 2, o bloco do passo 3 continua escondido.
 - Bug de enquadramento na demo do F2 corrigido: com os blocos escondidos desde o início, os passos 2 e 3 enquadravam o título e o descritor (219%). Causa: o tour mede a caixa do alvo (`getBBox`) ao trocar de passo, e as peças escondidas com escala 0 contavam como um ponto perto da origem, esticando a caixa até o canto superior esquerdo. Correção: em repouso a peça fica escondida só por opacidade; o deslocamento e a escala entram no 1º quadro da animação. Conferido: enquadramento dos 4 passos igual ao da versão sem animação.
 - Usuário aprovou a demo ("ficou bom pra caramba"). Commit e push da pasta `example/` (exemplo original + demo) e de 2 aprendizados do trail (opacity !important do tour; esconder só por opacidade por causa do enquadramento).
+- Tarefa 6 do F2 gerado: imagens dos itens no preview e no zip, zip sem SVG, arquivada conferida pelo sha da foto por item (D-245; fdfecd3); revisão aprovada com 4 minors corrigidos (NUL → 404, testes de login/403/nome parcial; 0e6918a); prova: 8 imagens carregam no revista.zip por file://. Suíte 883 OK, 8 pulados.
