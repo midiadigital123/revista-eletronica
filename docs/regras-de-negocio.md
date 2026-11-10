@@ -74,8 +74,8 @@ Documentos que este texto não repete:
 
 | Regra | Fonte |
 |---|---|
-| Só se abre o ano seguinte ao maior existente (2026 → 2027). Ano repetido, ano com buraco ou sem ano anterior é recusado. | D-148, D-149, `app/nucleo/servicos/abrir_ano.py:60` |
-| O primeiro ano não se abre pela tela: entra pela carga inicial (comandos). | learning "Tela nova não importa nada do admin", `app/nucleo/servicos/abrir_ano.py:63` |
+| Só se abre o ano seguinte ao maior existente (2026 → 2027). Ano repetido ou ano com buraco é recusado. | D-148, D-149, `app/nucleo/servicos/abrir_ano.py:68` |
+| Banco sem ano: o primeiro ano se abre pela tela (ou `abrir_ano`) e nasce vazio, sem etapas, componentes nem cores; a carga inicial (`carregar_cadastros`) continua valendo. | D-246, `app/nucleo/servicos/abrir_ano.py:83` |
 | Abrir ano não tem desfazer: a pessoa digita o ano, sem valor sugerido no campo. | D-165, D-190 |
 | Tudo numa transação: se falhar no meio, nada fica. A leitura da origem é um retrato só (REPEATABLE READ). | D-125, D-149, `app/nucleo/servicos/abrir_ano.py:51` |
 | Quem abre: quem tem `abrir_ano` (Admin, Pedagógica, Mídias Digitais). Tela: `/ui/anos/`. | D-079, D-192, `app/nucleo/urls/ui_anos.py:40` |

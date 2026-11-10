@@ -4,6 +4,7 @@ Copia etapas, componentes, cores, matrizes (MEC, descritores e tarefas) e templa
 (a última versão vira a versão 1). Não copia parceiro_ano, cortes, projetos nem escolhas
 de matriz/template: o ano nasce em branco e os projetos vêm da cascata dos cortes novos
 (D-106, D-119). Tudo numa transação (D-125): falhou, nada fica.
+Banco sem ano nenhum: o 1º ano nasce vazio, sem cópia (D-246).
 """
 from django.db import IntegrityError, connection, transaction
 from django.db.models import Max
@@ -13,6 +14,10 @@ from nucleo.models import (
     Ano, Componente, CorPadrao, Descritor, Etapa, Matriz, MatrizEtapaCC, Tarefa, Template,
     TemplateVersao,
 )
+
+
+# Mensagem do 1º ano (tela, admin e comando).
+VAZIO = "Ano {} aberto vazio: cadastre etapas, componentes e cores."
 
 
 class AnoRecusado(ValueError):
@@ -42,7 +47,7 @@ def clonar(queryset, usuario, motivo, **trocas):
 
 def abrir_ano(ano, usuario=None):
     """Cria `ano`, que precisa ser o seguinte ao maior existente, copiando esse ano.
-    Devolve (ano novo, ano de origem).
+    Devolve (ano novo, ano de origem); origem é None no 1º ano (banco vazio, D-246).
 
     `usuario` vai para o histórico e para `TemplateVersao.criada_por` (nulo pelo comando).
     A permissão `abrir_ano` é conferida por quem chama (ação do admin, S11a).
@@ -60,12 +65,10 @@ def abrir_ano(ano, usuario=None):
         if Ano.objects.filter(ano=ano).exists():
             raise AnoRecusado(f"{ano} já está aberto")
         maior = Ano.objects.aggregate(m=Max("ano"))["m"]
-        if maior is None:
-            raise AnoRecusado(f"nenhum ano anterior a {ano} para copiar")
-        if ano != maior + 1:  # sem buracos: barra typo (20277) e 2027 × 2028 ao mesmo tempo
+        if maior is not None and ano != maior + 1:  # sem buracos: barra typo (20277) e 2027 × 2028 ao mesmo tempo
             raise AnoRecusado(f"{ano} recusado: o próximo ano que pode ser aberto é {maior + 1}")
-        origem = Ano.objects.get(ano=maior)
-        motivo = f"abrir ano {ano} a partir de {origem}"
+        origem = None if maior is None else Ano.objects.get(ano=maior)
+        motivo = f"abrir ano {ano} a partir de {origem}" if origem else f"abrir ano {ano} vazio"
 
         novo = Ano(ano=ano)
         novo._history_user, novo._change_reason = usuario, motivo
@@ -74,6 +77,11 @@ def abrir_ano(ano, usuario=None):
                 novo.save()
         except IntegrityError:
             raise AnoRecusado(f"{ano} já está aberto") from None
+        # 1º ano: etapas, componentes e cores são cadastrados depois (D-246).
+        # ponytail: dois "1º ano" diferentes ao mesmo tempo no banco vazio criam os dois (o UNIQUE só barra o
+        # mesmo ano); some com a exclusão de ano. Se importar, LOCK TABLE no Ano antes do aggregate.
+        if origem is None:
+            return novo, None
 
         def copiar(modelo, **trocas):
             filtro = {

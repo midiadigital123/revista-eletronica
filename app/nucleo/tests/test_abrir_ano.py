@@ -192,10 +192,14 @@ class AbrirAnoTest(TestCase):
 
 
 class SemAnoTest(TestCase):
-    def test_sem_ano_nenhum_recusa_sem_criar(self):
-        with self.assertRaisesMessage(AnoRecusado, "nenhum ano anterior a 2027"):
-            abrir_ano(2027)
-        self.assertFalse(Ano.objects.exists())
+    def test_primeiro_ano_nasce_vazio(self):
+        """Banco vazio: o 1º ano nasce sem cadastros, e o seguinte copia dele (D-246)."""
+        novo, origem = abrir_ano(2027)
+        self.assertIsNone(origem)
+        self.assertEqual(list(Ano.objects.values_list("ano", flat=True)), [2027])
+        for modelo in (Etapa, Componente, CorPadrao, Matriz, Template):
+            self.assertFalse(modelo.objects.exists(), modelo.__name__)
+        self.assertEqual(abrir_ano(2028)[1], novo)
 
 
 class ComandoAbrirAnoTest(TransactionTestCase):
@@ -209,3 +213,9 @@ class ComandoAbrirAnoTest(TransactionTestCase):
         self.assertEqual(Etapa.objects.filter(ano__ano=2027).count(), 4)
         with self.assertRaisesMessage(CommandError, "2027 já está aberto"):
             call_command("abrir_ano", "2027", stdout=StringIO())
+
+    def test_comando_primeiro_ano_vazio(self):
+        saida = StringIO()
+        call_command("abrir_ano", "2026", stdout=saida)
+        self.assertIn("2026 aberto vazio", saida.getvalue())
+        self.assertFalse(Etapa.objects.exists())
