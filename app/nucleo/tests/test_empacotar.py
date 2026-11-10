@@ -2,6 +2,7 @@ import io
 import os
 import zipfile
 from pathlib import Path
+from unittest import mock
 
 from django.contrib import admin
 from django.contrib.auth import get_user_model
@@ -17,9 +18,9 @@ from nucleo.models import Parceiro, Revista, RevistaFasciculo, Tarefa, TemplateV
 from nucleo.servicos.arquivos import receber_capa, receber_svg
 from nucleo.servicos.cascata import gravar_cortes
 from nucleo.servicos.empacotar import Pendente, nome_zip, zip_revista
-from nucleo.servicos.html import contexto_pagina
-from nucleo.servicos.resolver import carregar
-from nucleo.tests.test_preview import F2, SVG, dois_infograficos
+from nucleo.servicos.html import contexto_pagina, link_zip
+from nucleo.servicos.resolver import carregar, resolver
+from nucleo.tests.test_preview import F2, SVG, dois_infograficos, foto_antiga
 from nucleo.tests.test_resolver import MediaTemporaria, Mundo, preencher_infograficos, usuario
 
 # Zip que o Playwright zip.spec.ts extrai e abre por file:// (gabarito). Regerar: REGERAR_FIXTURES=1.
@@ -127,8 +128,8 @@ class ZipTest(MediaTemporaria, TestCase):
         RevistaFasciculo.objects.filter(revista=self.rev, fasciculo="F2").update(template=None)
 
         def corpo(preview):
-            ctx = contexto_pagina(self.rev, "outras", preview=preview, estaticos="revista/", capa=None,
-                                  link=lambda s: f"{s}.html", base_imagens="arquivos/infograficos/")  # fmt: skip
+            ctx = contexto_pagina(self.rev, "f2-outras-etapas", preview=preview, estaticos="revista/", capa=None,
+                                  link=link_zip, base_imagens="arquivos/infograficos/")  # fmt: skip
             return render_to_string("revista/f2.html", ctx).split("<body>")[1]
 
         self.assertIn("faixa-vermelha", corpo(True))
@@ -173,6 +174,22 @@ class ZipTest(MediaTemporaria, TestCase):
         self.assertIn("arquivos/itens/item1.png", conteudo(zip_revista(arquivada)[1]))
         receber_capa(arquivada, SimpleUploadedFile("capa.png", PNG + b"\0"))  # outro sha256
         self.assertIn("SVG ou capa mudaram", str(self.pendentes()))
+
+    def test_foto_antiga_sem_paginas_do_f2(self):
+        """Foto de antes da D-237 (sem `infograficos`, com svg_sha256): o zip sai sem f2-*.html."""
+        gravar_cortes(self.rev.projeto.parceiro_ano, [(self.e5, self.mt, CORTES)], self.usuario)
+        arquivada = carregar(self.rev.pk)
+        foto_antiga(arquivada)
+        paginas = sorted(n for n in conteudo(zip_revista(arquivada)[1]) if n.endswith(".html"))
+        self.assertEqual(paginas, ["f1.html", "index.html"])
+
+    def test_resolve_uma_vez(self):
+        """Pendências e páginas saem do mesmo resolvido: edição no meio do zip não mistura estados."""
+        dois_infograficos(self.rev)
+        contador = mock.Mock(wraps=resolver)
+        with mock.patch("nucleo.servicos.empacotar.resolver", contador), mock.patch("nucleo.servicos.html.resolver", contador):
+            zip_revista(carregar(self.rev.pk))
+        self.assertEqual(contador.call_count, 1)
 
     def test_recusa_com_pendencias(self):
         erro = self.pendentes(carregar(self.go["MT"].pk))

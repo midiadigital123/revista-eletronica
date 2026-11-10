@@ -5,10 +5,11 @@ nucleo.servicos.html.contexto_pagina(revista, "f1", ...): as chaves comuns do _b
 `etapas`, `dados` (JSON do F1, inline), `fechamento` e as faixas `sem_template_f1` e `sem_matriz`.
 Títulos e corpos das seções vêm prontos e escapados do resolver (|safe só neles).
 {% endcomment %}
+{% block titulo %}Escalas de proficiência – {{ block.super }}{% endblock %}
 {% block conteudo %}
     <main id="conteudo">
     <section id="f1" class="capitulo" aria-labelledby="f1-titulo">
-        <h2 id="f1-titulo" class="rv-sr-only">Escalas de proficiência</h2>
+        <h1 id="f1-titulo" class="rv-sr-only">Escalas de proficiência</h1>
         {% if preview and sem_template_f1 %}<div class="faixa-vermelha" role="status">Falta escolher o template do F1.</div>{% endif %}
         {% if preview and sem_matriz %}<div class="faixa-vermelha" role="status">Falta escolher a matriz ({{ sem_matriz|join:", " }}).</div>{% endif %}
         {% if introducao %}

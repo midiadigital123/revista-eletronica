@@ -2,7 +2,7 @@
 {% comment %}
 Base das páginas da revista (D-233): index (sumário), f1 e f2 (um infográfico por página).
 Contexto: nucleo.servicos.html.contexto_pagina (as chaves comuns: preview, estaticos, css_cores,
-introducao, sumario). Serve ao preview e ao zip do S15 (file://): estáticos por `estaticos`,
+introducao, sumario). `titulo`: o <title> (padrão: o título da revista, que o sumário usa). Serve ao preview e ao zip do S15 (file://): estáticos por `estaticos`,
 faixas vermelhas só com `preview` (D-116).
 {% endcomment %}
 <html lang="pt-BR">
@@ -10,7 +10,7 @@ faixas vermelhas só com `preview` (D-116).
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; frame-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
-    <title>{% if introducao %}{{ introducao.titulo|striptags|safe }}{% else %}Análise dos Resultados para Intervenção Pedagógica{% endif %}</title>
+    <title>{% block titulo %}{% if introducao %}{{ introducao.titulo|striptags|safe }}{% else %}Análise dos Resultados para Intervenção Pedagógica{% endif %}{% endblock %}</title>
     <link rel="stylesheet" href="{{ estaticos }}f2/revista.css">
     <link rel="stylesheet" href="{{ estaticos }}f1/styles.css">
     {% if css_cores %}<style>{{ css_cores }}</style>{% endif %}
@@ -26,7 +26,7 @@ faixas vermelhas só com `preview` (D-116).
         .fechamento-section h2 { font-size: var(--font-size-h2); margin-bottom: var(--spacing-sm); }
         .fechamento-section p, .f2-abertura p { font-size: var(--font-size-p); margin-bottom: var(--spacing-sm); }
         .f2-section { max-width: 1366px; margin: 0 auto; padding: var(--spacing-xl) var(--spacing-md); }
-        .f2-section > h2 { font-size: var(--font-size-h2); margin-bottom: var(--spacing-sm); }
+        .f2-section > h1 { font-size: var(--font-size-h2); margin-bottom: var(--spacing-sm); }
         dialog[id^="dlg-"] { margin: auto; } /* o reset do f1/styles.css (* {margin:0}) tirava a centralização */
         dialog[id^="dlg-"] .modal-body p { margin-bottom: var(--spacing-sm); }
         {% if preview %}.faixa-vermelha { margin: var(--spacing-sm) auto; max-width: 48.75rem; padding: var(--spacing-sm); background: #b00020; color: #fff; font-weight: 700; }

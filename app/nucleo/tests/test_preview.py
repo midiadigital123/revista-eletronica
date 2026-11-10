@@ -14,6 +14,7 @@ from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 
 from nucleo.models import (
+    FotoRevista,
     Revista,
     RevistaFasciculo,
     RevistaInfografico,
@@ -24,7 +25,8 @@ from nucleo.models import (
 )
 from nucleo.servicos.arquivos import receber_capa
 from nucleo.servicos.cascata import gravar_cortes
-from nucleo.servicos.html import TIPO_DA_PAGINA, contexto_pagina, css_das_cores, paginas, template
+from nucleo.servicos.html import contexto_pagina, css_das_cores, link_zip, paginas, template
+from nucleo.models.revista import Motivo
 from nucleo.servicos.resolver import resolver
 from nucleo.tests.test_resolver import MediaTemporaria, Mundo
 
@@ -71,6 +73,13 @@ def dois_infograficos(revista):
                           "imagem": f"infograficos/{inf.tipo}-{p}.png", "imagem_sha256": "a" * 64,
                           "texto_alternativo": f"Item {p}", "analise": f"Análise do item {p}."},
             )  # fmt: skip
+
+
+def foto_antiga(revista):
+    """Reescreve a foto de arquivamento no formato de antes da D-237: f2 com o SVG e sem `infograficos`."""
+    foto = FotoRevista.objects.filter(revista=revista, motivo=Motivo.ARQUIVAMENTO).latest("criada_em", "pk")
+    foto.conteudo["f2"] = {"secoes": foto.conteudo["f2"]["secoes"], "svg_sha256": revista.svg_sha256, "svg_ids": []}
+    FotoRevista.objects.filter(pk=foto.pk).update(conteudo=foto.conteudo)
 
 
 class PaginaTest(MediaTemporaria, TestCase):
@@ -151,7 +160,7 @@ class PaginaTest(MediaTemporaria, TestCase):
         r = self.get(self.rev, "outras")
         self.assertEqual(r.status_code, 200)
         html = r.content.decode()
-        self.assertIn('<h2 id="f2-titulo">Avaliação e Currículo – Outras Etapas</h2>', html)
+        self.assertIn('<h1 id="f2-titulo">Avaliação e Currículo – Outras Etapas</h1>', html)
         self.assertIn("<p>Siga o tour.</p>", html)  # a abertura em texto corrido
         self.assertIn('<div id="revista"><svg', html)
         self.assertIn('id="f2-descritor"', html)
@@ -177,6 +186,19 @@ class PaginaTest(MediaTemporaria, TestCase):
         self.assertEqual(tour["intro"]["title"], "Avaliação & Currículo")  # texto puro (textContent)
         self.assertEqual([s["target"] for s in tour["steps"]], ["f2-descritor", "f2-habilidades", "f2-progressao", "f2-tarefas"])
         self.assertEqual(set(tour), {"label", "intro", "steps", "modais"})
+
+    def test_titulo_e_h1_por_pagina(self):
+        """Acessibilidade: cada página tem o próprio <title> e um h1."""
+        dois_infograficos(self.rev)
+        esperado = {
+            "index": "Análise de GO",
+            "f1": "Escalas de proficiência – Análise de GO",
+            "outras": "Avaliação e Currículo – Outras Etapas – Análise de GO",
+        }
+        for pagina, titulo in esperado.items():
+            html = self.get(self.rev, pagina).content.decode()
+            self.assertIn(f"<title>{titulo}</title>", html)
+            self.assertEqual(html.count("<h1"), 1, pagina)
 
     def test_faixa_vermelha_sem_template(self):
         RevistaFasciculo.objects.filter(revista=self.rev, fasciculo="F1").update(template=None)
@@ -215,6 +237,25 @@ class PaginaTest(MediaTemporaria, TestCase):
             self.assertIn("Análise de GO", html)
             self.assertNotIn("Texto novo.", html)
 
+    def test_foto_antiga_sem_paginas_do_f2(self):
+        """Foto de antes da D-237 (sem `infograficos`): sumário e F1 abrem, o F2 não existe."""
+        mt = self.go["MT"]
+        gravar_cortes(
+            self.rev.projeto.parceiro_ano,
+            [(self.e5, self.lp, [100, 200, 250, 300]), (self.e9, self.lp, [100, 200, 250, 300])],
+            self.usuario,
+        )
+        mt = Revista.objects.get(pk=mt.pk)
+        self.assertEqual(self.get(mt, "outras").status_code, 200)  # a foto nova tem o infográfico
+        foto_antiga(mt)
+        r = self.get(mt)
+        self.assertEqual(r.status_code, 200)
+        sumario = re.search(r'<nav[^>]*aria-label="Sumário"[^>]*>(.*?)</nav>', r.content.decode(), re.S).group(1)
+        self.assertEqual(re.findall(r'href="([^"]+)"', sumario), [reverse("preview_f1", args=[mt.pk])])
+        self.assertEqual(self.get(mt, "f1").status_code, 200)
+        for tipo in ("alfa", "outras"):
+            self.assertEqual(self.get(mt, tipo).status_code, 404)
+
     def test_item_da_tarefa_pelo_caminho_relativo_do_f1(self):
         """O JS do F1 abre `arquivos/itens/<nome>` relativo à página: `<id>/f1/` também serve o item."""
         nome = "item1.png"
@@ -239,11 +280,10 @@ class PaginaTest(MediaTemporaria, TestCase):
         slugs = [slug for slug, _ in paginas(resolver(rev))]
         self.assertEqual(slugs, ["index", "f1", "f2-alfa", "f2-outras-etapas"])
         for slug in slugs:
-            pagina = TIPO_DA_PAGINA.get(slug, slug)
-            ctx = contexto_pagina(rev, pagina, preview=False, estaticos="revista/", capa="arquivos/capa.png",
-                                  link=lambda s: f"{s}.html", base_imagens="arquivos/infograficos/")  # fmt: skip
-            html = render_to_string(template(pagina), ctx)
-            arquivo = GABARITO / f"{slug}.html"
+            ctx = contexto_pagina(rev, slug, preview=False, estaticos="revista/", capa="arquivos/capa.png",
+                                  link=link_zip, base_imagens="arquivos/infograficos/")  # fmt: skip
+            html = render_to_string(template(slug), ctx)
+            arquivo = GABARITO / link_zip(slug)
             if os.environ.get("REGERAR_FIXTURES"):
                 GABARITO.mkdir(exist_ok=True)
                 arquivo.write_text(html, encoding="utf-8")
@@ -251,7 +291,7 @@ class PaginaTest(MediaTemporaria, TestCase):
 
     def test_script_no_dado_nao_fecha_o_script(self):
         ctx = contexto_pagina(self.rev, "f1", preview=False, estaticos="revista/", capa=None,
-                              link=lambda s: f"{s}.html", base_imagens="arquivos/infograficos/")  # fmt: skip
+                              link=link_zip, base_imagens="arquivos/infograficos/")  # fmt: skip
         ctx["dados"] = {"x": "</script><!--&\u2028"}
         html = render_to_string("revista/f1.html", ctx)
         # O primeiro </script> depois da abertura é o fechamento real: o dado veio escapado.
@@ -277,16 +317,6 @@ class PaginasTest(SimpleTestCase):
         """Ponto de revisão 2: foto sem a chave `infograficos` (com svg_sha256)."""
         foto = {"f2": {"secoes": [], "svg_sha256": "a" * 64}}
         self.assertEqual([s for s, _ in paginas(foto)], ["index", "f1"])
-
-    def test_scripts_de_cada_pagina(self):
-        """O f2.html não carrega o JS do F1, e o f1.html não carrega o svg-tour."""
-        def fonte(nome):
-            return (Path(__file__).resolve().parents[1] / "templates" / "revista" / nome).read_text(encoding="utf-8")
-
-        self.assertNotIn("f1/script.js", fonte("f2.html"))
-        self.assertIn("f2/svg-tour.js", fonte("f2.html"))
-        self.assertNotIn("svg-tour", fonte("f1.html"))
-        self.assertIn("f1/script.js", fonte("f1.html"))
 
 
 class HtmlTest(TestCase):

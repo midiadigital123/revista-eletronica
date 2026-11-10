@@ -19,7 +19,7 @@ from django.core.files.storage import default_storage
 from django.template.loader import render_to_string
 
 from nucleo.models import Tarefa
-from nucleo.servicos.html import TIPO_DA_PAGINA, contexto_pagina, paginas, template
+from nucleo.servicos.html import contexto_pagina, link_zip, paginas, template
 from nucleo.servicos.resolver import Pendencia, pendencias, resolver
 
 ESTATICOS = Path(__file__).resolve().parents[1] / "static" / "revista"
@@ -117,10 +117,12 @@ def zip_revista(revista):
     capa = "arquivos/capa" + PurePosixPath(revista.capa).suffix
     html = {}
     for slug, _ in paginas(resolvido):
-        pagina = TIPO_DA_PAGINA.get(slug, slug)
-        ctx = contexto_pagina(revista, pagina, preview=False, estaticos="revista/", capa=capa,
-                              link=lambda s: f"{s}.html", base_imagens="arquivos/infograficos/")  # fmt: skip
-        html[f"{slug}.html"] = render_to_string(template(pagina), ctx)
+        # O mesmo `resolvido` das pendências: resolver de novo por página misturaria estados (revista editada no meio).
+        ctx = contexto_pagina(revista, slug, preview=False, estaticos="revista/", capa=capa, link=link_zip,
+                              base_imagens="arquivos/infograficos/", resolvido=resolvido)  # fmt: skip
+        if ctx is None:
+            raise Pendente([Pendencia("zip_pagina", f"A página {slug} não tem infográfico.")])
+        html[link_zip(slug)] = render_to_string(template(slug), ctx)
     # ponytail: zip em memória (SVG ~1 MB + capa ≤ 5 MB + itens PDF sem limite de tamanho);
     # quando pesar, trocar o BytesIO por tempfile.SpooledTemporaryFile e devolver FileResponse.
     saida = io.BytesIO()

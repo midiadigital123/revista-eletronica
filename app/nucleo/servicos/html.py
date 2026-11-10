@@ -5,7 +5,7 @@ Os mesmos templates servem ao preview (S08) e ao zip (S15, aberto por `file://`)
 - `estaticos`: prefixo dos arquivos de `static/revista/` ("/static/revista/" no preview,
   "revista/" no zip);
 - `capa`: URL da capa (rota do preview ou "arquivos/capa.<ext>" no zip), ou None;
-- `link(slug)`: URL de uma página (rota do preview ou "<slug>.html" no zip);
+- `link(slug)`: URL de uma página (rota do preview ou `link_zip`);
 - `base_imagens`: prefixo das imagens dos itens do infográfico;
 - `preview`: só ele mostra as faixas vermelhas (D-116).
 Tudo o que a página lê vem inline (JSON e SVG): nada de `fetch` (D-125).
@@ -50,20 +50,26 @@ def paginas(resolvido):
     ]
 
 
-def template(pagina):
-    """Template de `pagina` ("index", "f1" ou um tipo de infográfico)."""
-    return f"revista/{pagina}.html" if pagina in ("index", "f1") else "revista/f2.html"
+def link_zip(slug):
+    """Link de uma página no zip (aberto por `file://`): o arquivo ao lado."""
+    return f"{slug}.html"
+
+
+def template(slug):
+    """Template da página `slug` (de `paginas`)."""
+    return f"revista/{slug}.html" if slug in ("index", "f1") else "revista/f2.html"
 
 
 CHAVES_DA_ETAPA = {"scaleRange", "cortes", "padroes"}  # o resto das chaves são descritores
 
 
-def contexto_pagina(revista, pagina, *, preview, estaticos, capa, link, base_imagens):
+def contexto_pagina(revista, pagina, *, preview, estaticos, capa, link, base_imagens, resolvido=None):
     """Contexto de `template(pagina)` para a revista resolvida (arquivada: a foto, D-117).
 
-    `pagina`: "index", "f1" ou um tipo de infográfico; None se o infográfico não existe (404).
+    `pagina`: o slug de `paginas` ("index", "f1", "f2-alfa"...); None se o infográfico não existe (404).
+    `resolvido`: um já montado (o zip passa o mesmo para todas as páginas); sem ele, resolve aqui.
     """
-    r = resolver(revista)
+    r = resolvido or resolver(revista)
     f1, secoes_f2 = r["f1"], r["f2"]["secoes"]
     f1_secoes = {s["id"]: s for s in f1["secoes"] or []}
     comum = {
@@ -87,7 +93,8 @@ def contexto_pagina(revista, pagina, *, preview, estaticos, capa, link, base_ima
             # `dados`, não do resolvido: uma chave nova lá mudaria o hash de toda revista.
             "sem_matriz": [e.upper() for e in f1["etapas"] if not set(f1["dados"][e]) - CHAVES_DA_ETAPA],
         }
-    inf = next((i for i in r["f2"].get("infograficos", []) if i["tipo"] == pagina), None)
+    tipo = TIPO_DA_PAGINA.get(pagina)
+    inf = next((i for i in r["f2"].get("infograficos", []) if i["tipo"] == tipo), None)
     if inf is None:
         return None
     por_id = {s["id"]: s for s in secoes_f2 or []}

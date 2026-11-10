@@ -35,7 +35,7 @@ def protegida(view):
     return require_GET(login_required(view))
 
 
-def _pagina(request, revista_id, pagina):
+def _pagina(request, revista_id, slug):
     try:
         revista = resolver.carregar(revista_id)
     except Revista.DoesNotExist:
@@ -49,13 +49,13 @@ def _pagina(request, revista_id, pagina):
         return reverse("preview_f2", args=[pk, TIPO_DA_PAGINA[slug]])
 
     contexto = contexto_pagina(
-        revista, pagina, preview=True, estaticos=static("revista/"),
+        revista, slug, preview=True, estaticos=static("revista/"),
         capa=reverse("preview_capa", args=[pk]) if revista.capa else None,
         link=link, base_imagens=f"{raiz}arquivos/infograficos/",
     )  # fmt: skip
     if contexto is None:
         raise Http404
-    return render(request, template(pagina), contexto)
+    return render(request, template(slug), contexto)
 
 
 @protegida
@@ -72,7 +72,7 @@ def pagina_f1(request, revista_id):
 def pagina_f2(request, revista_id, tipo):
     if tipo not in PAGINAS_F2:
         raise Http404
-    return _pagina(request, revista_id, tipo)
+    return _pagina(request, revista_id, PAGINAS_F2[tipo])
 
 
 @protegida
