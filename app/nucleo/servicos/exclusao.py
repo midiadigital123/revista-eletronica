@@ -225,7 +225,7 @@ def resumo_ano(ano):
 def apagar_ano(ano, usuario):
     """Apaga o ano e tudo dele numa transação. Parceiros e usuários ficam (são de todos os anos).
 
-    ponytail: os arquivos no storage (capa, SVG, item) ficam; o item é compartilhado entre anos (D-150).
+    ponytail: os arquivos no storage (capa, SVG, item, imagem de infográfico) ficam; o item é compartilhado entre anos (D-150).
     """
     with transaction.atomic(), _versoes_apagaveis():
         ano = Ano.objects.select_for_update().get(pk=ano.pk)

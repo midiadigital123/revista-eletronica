@@ -3,6 +3,7 @@ docs/telas/fichas/revista.md, pelo client. A regra é a de nucleo/revista.py (te
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
+from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
@@ -426,6 +427,34 @@ class RevistaUiTest(Base):
         self.assertEqual(self.outras().habilidade, "Inferir informação.")
         self.assertTrue(self.inf("habilidade", "Outra.", aberta, confirmar_impacto="on").json()["ok"])
         self.assertEqual(self.outras().habilidade, "Outra.")
+
+    def validada(self):
+        completar(self.rev)
+        Revista.objects.filter(pk=self.rev.pk).update(hash_validado=hash_validado(carregar(self.rev.pk)))
+        return self.abrir()
+
+    def test_infografico_de_validada_passo_so_grava_confirmado(self):
+        aberta = self.validada()
+        self.assertIn("impacto", self.inf("passo-tarefas", "", aberta).json())
+        self.assertNotIn("tarefas", self.outras().passos_desligados)
+        self.assertTrue(self.inf("passo-tarefas", "", aberta, confirmar_impacto="on").json()["ok"])
+        self.assertIn("tarefas", self.outras().passos_desligados)
+
+    def test_infografico_de_validada_linha_nova_so_nasce_confirmada(self):
+        aberta = self.validada()
+        RevistaInfograficoEtapa.objects.filter(infografico=self.outras(), etapa="1EF").delete()
+        self.assertIn("impacto", self.inf("etapa-1EF-codigo", "EF01LP01", aberta).json())
+        self.assertFalse(RevistaInfograficoEtapa.objects.filter(infografico=self.outras(), etapa="1EF").exists())
+        self.assertTrue(self.inf("etapa-1EF-codigo", "EF01LP01", aberta, confirmar_impacto="on").json()["ok"])
+        self.assertEqual(RevistaInfograficoEtapa.objects.get(infografico=self.outras(), etapa="1EF").codigo, "EF01LP01")
+
+    def test_infografico_de_validada_imagem_sem_confirmar_nao_grava(self):
+        aberta = self.validada()
+        antes = RevistaInfograficoItem.objects.get(infografico=self.outras(), posicao=2).imagem
+        corpo = self.inf("item-2-imagem", aberta=aberta, files={"valor": SimpleUploadedFile("i.png", PNG)}).json()
+        self.assertIn("impacto", corpo)
+        self.assertEqual(RevistaInfograficoItem.objects.get(infografico=self.outras(), posicao=2).imagem, antes)
+        self.assertFalse(default_storage.exists("infograficos") and default_storage.listdir("infograficos")[1])
 
     def test_imagem_do_item_grava_e_mostra_a_miniatura(self):
         corpo = self.inf("item-2-imagem", files={"valor": SimpleUploadedFile("i.png", PNG)}).json()

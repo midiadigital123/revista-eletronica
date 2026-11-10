@@ -131,7 +131,7 @@ class FormDoCampoTest(MediaTemporaria, TestCase):
         self.assertIn("arquivo", self.erros("item-2-imagem", arquivo=SimpleUploadedFile("x.png", GIF)))
         self.assertFalse(RevistaInfograficoItem.objects.exists())
 
-    def test_simular_imagem_nao_grava_arquivo(self):
+    def test_simular_imagem_so_grava_o_sha256(self):
         form, _, simular = form_do_campo(self.revista, self.campo("item-2-imagem"), "", SimpleUploadedFile("x.png", PNG))
         self.assertTrue(form.is_valid())
         simular(form.cleaned_data)

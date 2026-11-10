@@ -33,7 +33,7 @@ from django.urls import path, reverse
 from django.views.decorators.http import require_GET, require_http_methods
 
 from nucleo.contexto import ano_da_sessao
-from nucleo.infografico import form_do_campo
+from nucleo.infografico import familia, form_do_campo
 from nucleo.models import Ano, Revista, RevistaFasciculo, RevistaInfografico
 from nucleo.models.revista import EtapaReferencial, Marca
 from nucleo.revista import (
@@ -381,16 +381,18 @@ def _infografico(request, revista):
     `valor` nos FILES). A resposta troca a Situação; a imagem troca também o passo (a miniatura). Os
     textos não trocam o passo: o campo seguinte, já com o foco e talvez com texto digitado, se perderia."""
     campo = request.POST.get("campo", "")
-    familia = (campo.split("-", 3) + [""] * 3)[2]
-    if not request.user.has_perms(PERMS_INFOGRAFICO.get(familia, ["nucleo.change_revistainfografico"])):
+    if not request.user.has_perms(PERMS_INFOGRAFICO.get(familia(campo), ["nucleo.change_revistainfografico"])):
         raise PermissionDenied
     achado = form_do_campo(revista, campo, request.POST.get("valor", ""), request.FILES.get("valor"))
     if achado is None:
         return erros(["Este campo não pode ser alterado aqui. Recarregue a página."])
     form, gravar, simular = achado
+    # ponytail: a imagem troca o passo inteiro; um envio de texto de outro campo ainda em voo que volte 422
+    # perde a mensagem (o campo foi substituído). Trocar só o item enviado, se isso aparecer.
     pedacos = ("infograficos", "situacao") if campo.endswith("-imagem") else ("situacao",)
     return responder_campo(
-        request, form=form, simular=simular, revistas=lambda: [revista], titulo="Salvar o infográfico",
+        # simular sem o `trocar`: renderizar a página dentro do savepoint desfeito dobraria as queries
+        request, form=form, simular=simular or gravar, revistas=lambda: [revista], titulo="Salvar o infográfico",
         gravar=lambda dados: gravar(dados) or {"trocar": _pedacos(request, revista, *pedacos)},
     )  # fmt: skip
 

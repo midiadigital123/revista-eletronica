@@ -117,8 +117,8 @@ def preencher_infograficos(revista, caminho="infograficos/demo-{tipo}-{p}.png"):
     """Os infográficos ativos com os dados do docx e o PNG da capa em cada um dos 4 itens. Idempotente."""
     sha = hashlib.sha256(PNG).hexdigest()
     for inf in RevistaInfografico.objects.filter(revista=revista, arquivado_em__isnull=True):
-        RevistaInfografico.objects.filter(pk=inf.pk).update(
-            **{c: DOCX[c] for c in ("habilidade", "texto_descritor", "texto_habilidades", "texto_progressao")}
+        RevistaInfografico.objects.update_or_create(  # save(): o histórico registra
+            pk=inf.pk, defaults={c: DOCX[c] for c in ("habilidade", "texto_descritor", "texto_habilidades", "texto_progressao")}
         )
         for e in DOCX["etapas"]:
             RevistaInfograficoEtapa.objects.update_or_create(

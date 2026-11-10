@@ -74,6 +74,12 @@ CAMPO = re.compile(
 )
 
 
+def familia(campo):
+    """`etapa`, `item` ou `infografico` (habilidade, textos, passo): de que modelo é a permissão. None: campo desconhecido."""
+    m = CAMPO.fullmatch(campo)
+    return m and ("etapa" if m["etapa"] else "item" if m["posicao"] else "infografico")
+
+
 def form_do_campo(revista, campo, valor, arquivo=None):
     """`(form, gravar, simular)` do `campo` (nomes na docstring do módulo), ou None se o campo é
     desconhecido ou o infográfico não é da `revista` ou está arquivado (a view responde 422).
@@ -90,7 +96,10 @@ def form_do_campo(revista, campo, valor, arquivo=None):
     linha = {"infografico": inf, "ano_id": inf.ano_id}  # etapa ou item: a linha nova sai com o ano do infográfico
 
     if m["passo"]:
+        inf_pk = inf.pk
+
         def gravar(dados):
+            inf = RevistaInfografico.objects.get(pk=inf_pk)  # relê: a simulação desfeita mexeu na instância
             fora = set(inf.passos_desligados) - {m["passo"]}
             if not dados["ligado"]:
                 fora.add(m["passo"])
