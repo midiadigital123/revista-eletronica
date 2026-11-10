@@ -2,11 +2,11 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-F2 gerado: fase 2 de 5 (render, template novo e páginas) — tarefa 0 de 7 concluída. Worktree `/home/otavio.peres/dev/revista-express-f2-f2`, branch `feat/f2-f2` saída de `feat/f2-f1` (eec2a2c, = `integ/f2-gerado` + o commit da D-236), stack `COMPOSE_PROJECT_NAME=f2-f2 -p f2-f2`. Plano em `docs/superpowers/plans/2026-11-09-f2-fase-2.md`. Funcionando: tudo da fase 1 (suíte de 09/11: 833 OK, 8 pulados; `makemigrations --check` limpo). Quebrado/pendente: tarefas 1 a 7 da fase 2; fases 3 a 5; a `integ/f2-gerado` só entra na `main` com as fases 1 a 3 (D-237); S17/S18.
+F2 gerado: fase 2 de 5 — tarefas 0 a 2 de 7 concluídas e revisadas na `feat/f2-f2` (worktree `/home/otavio.peres/dev/revista-express-f2-f2`, stack `COMPOSE_PROJECT_NAME=f2-f2 -p f2-f2`; plano `docs/superpowers/plans/2026-11-09-f2-fase-2.md`; ledger em `.superpowers/sdd/2026-11-09-f2-fase-2/progress.md`). Funcionando: template F2 com 9 seções fixas (D-238, D-241), seeds do docx e migração 0023; `templates/revista/f2.svg` fiel ao desenho em uso, com os botões ❶ (laranja) a ❹ e um + por item (PNGs aprovados pelo usuário); suíte 846 OK, 8 pulados. Quebrado/pendente: tarefa 3 (gerador `servicos/f2.py`) parada pelo usuário antes de começar; tarefas 4 a 7; a `integ/f2-gerado` só entra na `main` com as fases 1 a 3 (D-237).
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Tarefa 1 do plano da fase 2: template F2 com as 8 seções fixas (`texto.SECOES_F2`), seeds novos e migração 0023.
+Retomar a tarefa 3: disparar o implementador com `.superpowers/sdd/2026-11-09-f2-fase-2/task-3-brief.md` (BASE 2aa1ecc).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1955,6 +1955,22 @@ Tarefa 1 do plano da fase 2: template F2 com as 8 seções fixas (`texto.SECOES_
 - **Arquivos afetados:** futuro: `templates/revista/f2.svg`, `servicos/f2.py`.
 - **Status:** ativa
 
+### D-240 — Fechamento do bloco de tarefas no template só com o texto genérico (2026-11-09 12:30)
+- **Contexto:** o plano da fase 2 mandava as linhas 150-158 do docx para a seção `tarefas-fechamento`; as linhas 150-154 falam do item (4,4) da 3ª série do EM (P121137H6).
+- **Decisão:** `tarefas-fechamento` leva só os 2 parágrafos genéricos (md 156 e 158). O texto sobre cada item é da revista: vai na `analise` do item (tela da fase 3).
+- **Motivo:** confirmado pelo usuário em 09/11 — o conjunto de itens muda com o descritor de cada revista.
+- **Descartadas:** as linhas 150-158 inteiras no template — o trecho do item (4,4) apareceria igual em toda revista.
+- **Arquivos afetados:** `templates_seed/2026/f2-*.hbs`, `migrations/0023_template_f2_secoes.py`.
+- **Status:** ativa
+
+### D-241 — Clique ❹ abre só a abertura do bloco de tarefas, num botão próprio (2026-11-09 14:00)
+- **Contexto:** o usuário viu o PNG da tarefa 2 e pediu o botão amarelo + sob "Tarefas por nível de complexidade", como nos passos anteriores. O texto do clique ❹ no docx é só o parágrafo "Aqui, apresentamos alguns itens exemplares…" (md 112); cada item é a imagem montada + o texto que a segue.
+- **Decisão:** nova seção fixa `dlg-tarefas` no template F2 (9 seções) com a abertura do ❹, aberta pelo botão `f2-btn-action-tarefas` sob o título do bloco. `passo-tarefas` fica só com o texto curto do tour. Os + de cada item continuam abrindo imagem + análise (D-232, D-235). Não há botão sob "Itens". Substitui a parte da D-233 que punha a abertura do bloco de tarefas no painel do tour.
+- **Motivo:** decisão do usuário em 09/11; segue o padrão dos outros passos (botão sob o título abre o texto do clique).
+- **Descartadas:** abertura no painel do tour (D-233) — o usuário quer o botão; botão sob "Itens" — confusão do usuário, desfeita por ele; um modal único com abertura + 4 itens + fechamento (como no docx) — mantido um modal por item (D-232).
+- **Arquivos afetados:** `texto.py`, `templates_seed/2026/f2-*.hbs`, `migrations/0023_template_f2_secoes.py`, `templates/revista/f2.svg`, `servicos/f2.py`.
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [ ] (09/11, plano da fase 2) A planilha e o "o que mudou" do impresso só ganham os infográficos na fase 4. Se as fases 1 a 3 forem para a `main` sem a 4, o impresso não vê o conteúdo novo do F2. Puxar a parte do impresso da fase 4 para a 3, ou deployar 1 a 4 juntas? Decidir antes da fase 3 — depende de: Otavio
 - [x] (D-237: opção A) (09/11, contra a D-236) Fase 2 sozinha na `main` trava o "Validado" e o zip de toda revista: as pendências novas do infográfico (habilidade vazia, passo ligado sem dado, item sem imagem) só se resolvem na tela da fase 3. Opções: (A) `integ/f2-gerado` entra na `main` só com as fases 1 a 3; (B) a fase 2 não cria pendência nova, e elas entram na fase 3 — depende de: Otavio
@@ -2050,6 +2066,9 @@ Tarefa 1 do plano da fase 2: template F2 com as 8 seções fixas (`texto.SECOES_
 - Suíte da fase 1 rodada de novo: 833 OK, 8 pulados; `makemigrations --check` limpo.
 - Plano da fase 2 escrito e aprovado (`docs/superpowers/plans/2026-11-09-f2-fase-2.md`, 7 tarefas, 4 a 5 dias), com o mapa do que fica para a fase 3. D-238 (ids do template F2 na fase 2) e D-239 (desenho = SVG em uso; Alfa = mesma estrutura).
 - Worktree `/home/otavio.peres/dev/revista-express-f2-f2` (`feat/f2-f2`, saída de `feat/f2-f1`) e stack `f2-f2` criadas; tarefa 0 concluída.
+- Tarefa 1 concluída e revisada (434c4cd..3fb2dda; 843 OK). D-240 (fechamento das tarefas só genérico), confirmada pelo usuário.
+- Tarefa 2 concluída e revisada (36232e7..03403f0): `f2.svg` fiel ao desenho; PNGs aprovados (letra por etapa, botão ❶ laranja). D-241: botão + e modal `dlg-tarefas` para o clique ❹. Tarefa 3 interrompida para encaixar a D-241.
+- Ajuste da D-241 (2aa1ecc): seção `dlg-tarefas` e botão `f2-btn-action-tarefas`; 846 OK; re-revisão aprovada. Tarefa 3 retomada e parada de novo a pedido do usuário, sem deixar código. Sessão encerrada aqui; o usuário segue depois.
 ### 2026-11-06 19:00
 - Fase 1 do plano do F2 gerado iniciada com subagentes (superpowers:subagent-driven-development): branch `integ/f2-gerado` saída da `main`, worktree `/home/otavio.peres/dev/revista-express-f2-f1` (`feat/f2-f1`), stack docker `-p f2-f1`.
 - D-233 registrada (páginas separadas, dados na tela B, animação por último). D-234: tarefa usada por item impede exclusão e reimportação (achado na leitura: a reimportação apaga os descritores e quebraria com `PROTECT`).
