@@ -2,11 +2,11 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Docs alinhados ao código (D-233 e D-234), commitados em `integ/docs-atualizacao` e no PR #6 para a `main` (https://github.com/midiadigital123/revista-eletronica/pull/6). Funcionando: comentários de código, `app/.env.example`, `CLAUDE.md` e fichas das telas B corrigidos; só comentário e texto, sem mudança de comportamento. `trail check` aponta 19 conflitos, todos falsos positivos (justificados no PR). Pendente: merge do PR #6 (espera o ok); `entrar()` do E2E não detecta login falho. F2 fases 1 a 5, S17 e S18 continuam pendentes.
+Docs alinhados ao código (D-233 e D-234) na `main` pelo PR #6 (merge `0622996`, 09/11). Ficaram fora do merge 3 commits posteriores de `integ/docs-atualizacao`: anotações de colisão (D-xxx e migração 0020) e a learning de numeração. `feat/f2-f1` já está no remoto (`origin/feat/f2-f1` = `eec2a2c`). Pendente: levar os 3 commits à `main`; `entrar()` do E2E não detecta login falho. F2 fases 2 a 5, etapa do projeto (tarefa 5 de 12), S17 e S18 continuam pendentes.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Usuário revisa e mergeia `integ/abrir-ano` (D-246, primeiro ano vazio) na `main`.
+Criar a worktree `feat/f2-f3` a partir da `integ/f2-gerado` para a T1 da fase 3.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1924,6 +1924,9 @@ Usuário revisa e mergeia `integ/abrir-ano` (D-246, primeiro ano vazio) na `main
 - **Status:** ativa. Limite: a tela B só edita cores existentes (`ui_anos.py`, paleta); as 5 cores do 1º ano vazio só se criam pelo admin ou pelo `carregar_cadastros`. Ano digitado errado no 1º ano (ex.: 20266) sai pela exclusão de ano.
 
 ## Perguntas em aberto
+- [x] (09/11: D-236 mantida; PR #7 fechado sem merge — fase 1 só vai à `main` com a fase 2, testadas juntas) PR #7 (`feat/f2-f1` → `main`) em conflito só no `state.md`: Estado atual, Próxima ação, D-233/D-234 (números usados nas duas branches), Perguntas em aberto e Sessões. Resolver na worktree `revista-express-f2-f1`, renumerando D-233/D-234 da F2 para D-237/D-238 (o código cita D-233 em 4 arquivos). E a D-236 diz que a fase 1 só entra na `main` junto com a fase 2: o PR #7 a substitui? — depende de: Otavio.
+- [ ] Migração 0020 existe nas duas frentes: `0020_infograficos` (`feat/f2-f1`, seguida de 0021 e 0022) e `0020_etapa_do_projeto` (`feat/etapa-do-projeto`). A frente que entrar na `main` depois renumera a sua e refaz a dependência — depende de: ordem dos merges (usuário).
+- [ ] Numeração de decisões colide entre branches: D-233 é "Docs alinhados" nesta branch (PR #6) e "Uma página por fascículo" em `feat/f2-f1`; D-229 a D-231 de `feat/etapa-do-projeto` são outras decisões na `main`. Renumerar na branch que entrar depois na `main` — depende de: ordem dos merges (usuário).
 - [ ] (D-234) `entrar()` em `e2e/tests/helpers.ts` não detecta login falho (confere `/admin/login/`, mas o login falho fica em `/conta/entrar/`). Trocar para ir direto a `/conta/entrar/` e conferir que saiu dela? Muda teste: rodar a suíte E2E — depende de: Otavio
 - [x] (D-234: sim) (D-233, 09/11) Comentários de código ainda falam do login do admin depois da D-212: `nucleo/usuarios.py` ("todo perfil entra pelo login do admin") e `e2e/tests/helpers.ts::entrar` ("Entra no admin", passa por `/admin/login/`, que redireciona). Corrigir? — depende de: Otavio
 - [x] (D-234: fica 1, motivo novo no comentário) (D-233, 09/11) Playwright: `workers: 1` ainda é preciso? O motivo escrito (D-191: painel, impresso e revista gravam a mesma revista DEMONSTRAÇÃO) caiu com a D-225, em que cada spec grava na própria revista — depende de: Otavio (medir a suíte com 2 workers?)
@@ -2444,5 +2447,8 @@ Usuário revisa e mergeia `integ/abrir-ano` (D-246, primeiro ano vazio) na `main
 - Fora do repositório: agente `minimalista`, agente `conselheiro` e skill `/conselho` criados em `~/.claude` (mantidos como estão, sem comandante via Workflow).
 - Diagnóstico do travamento da máquina às 11:05: sem OOM nem carga; suspeita sem prova no driver NVIDIA; SysRq sugerido para o próximo travamento.
 - PR #6 aberto: `integ/docs-atualizacao` → `main`; conflitos do `trail check` justificados como falsos positivos.
+- Inventário de branches: além da `main`, só 3 frentes vivas (`integ/docs-atualizacao`, `feat/f2-f1` só local, `feat/etapa-do-projeto` com WIP); colisão de numeração D-xxx registrada nas Perguntas em aberto.
+- PR #6 mergeado na `main` (`0622996`) sem os 3 últimos commits da branch; `feat/f2-f1` confirmada no remoto.
+- PR #7 (fase 1 do F2) fechado sem merge: D-236 mantida pelo usuário (fase 1 e 2 testadas juntas antes da `main`).
 - D-246: banco sem ano — "Abrir ano" cria o 1º ano vazio (tela, admin e comando), na `fix/abrir-ano-vazio` a partir da `main`.
 - `fix/abrir-ano-vazio` mergeada (fast-forward) na `integ/abrir-ano`, criada a partir da `main`; suíte 806 OK, 8 pulados.
