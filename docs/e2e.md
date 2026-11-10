@@ -58,6 +58,6 @@ Um spec nunca edita revista que ele mesmo não criou, nem o que alimenta a revis
 O spec cria o próprio parceiro "E2E …", e a cascata gera o projeto e a revista dele. Helpers em `app/e2e/tests/helpers.ts`:
 
 - `parceiroComProjeto`: parceiro "E2E …" com cortes, projeto e revista LP de 2026.
-- `revistaPropria`: o mesmo, com matriz, templates, SVG e capa, pronta para validar (6 de 6).
+- `revistaPropria`: o mesmo, com matriz, templates, infográfico e capa, pronta para validar (6 de 6).
 - `matrizPropria`: cópia "E2E …" da matriz Demonstração, para os specs que editam matriz.
 - `revistaDemo`: a revista LP da demonstração, só para os specs que leem.
