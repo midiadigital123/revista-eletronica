@@ -6,32 +6,11 @@ Docs alinhados ao código (D-233 e D-234) na `main` pelo PR #6 (merge `0622996`,
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Criar a worktree `feat/f2-f3` a partir da `integ/f2-gerado` para a T1 da fase 3.
+Criar a worktree `feat/f2-f3` a partir da `integ/f2-gerado` (depois de mergear a `main` nela) para a T1 da fase 3.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
-1. [x] S01 — Esqueleto Django + PostgreSQL + Playwright
-2. [x] S02 — Modelos de cadastro e matriz + FK composta
-3. [x] S03 — Parceiro_ano, corte, projeto, revista, texto, controle
-4. [x] S03b — Revista JS/CSS para 2 a 5 padrões
-5. [x] S04 — Cadastros iniciais + importador de matriz
-6. [x] S05 — Templates: formato, validação, seed
-7. [x] S06 — Cascata dos cortes
-8. [x] S09 — Serviço de SVG e capa
-9. [x] S10 — Bloqueio
-10. [x] S14 — Perfis e permissões
-11. [x] S07 — Resolver, foto, hash, pendências
-12. [x] S08 — Página única F1 + F2
-13. [x] S15 — Zip por revista
-14. [x] S11a — Admin: cadastros, cortes, matriz
-15. [x] S11b1 — Admin: templates
-16. [x] S11b2 — Admin: cópia por seção
-17. [x] S11c — Admin: projeto, variáveis, arquivos, lote
-18. [x] S12 — Painel + Validado
-19. [x] S13 — Impresso + planilhas
-20. [x] S16 — Abrir ano
-21. [ ] S17 — Carga 2026 + desligar o antigo  ← agora
-22. [ ] S18 — E2E da temporada
+Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 10/11, D-253).
 
 ## Decisões
 
@@ -1923,6 +1902,14 @@ Criar a worktree `feat/f2-f3` a partir da `integ/f2-gerado` para a T1 da fase 3.
 - **Arquivos afetados:** `servicos/abrir_ano.py`, `urls/ui_anos.py`, `admin/cadastro.py`, `management/commands/abrir_ano.py`, `templates/ui/anos/anos.html`, `tests/test_abrir_ano.py`, `tests/test_ui_anos.py`, `docs/regras-de-negocio.md`.
 - **Status:** ativa. Limite: a tela B só edita cores existentes (`ui_anos.py`, paleta); as 5 cores do 1º ano vazio só se criam pelo admin ou pelo `carregar_cadastros`. Ano digitado errado no 1º ano (ex.: 20266) sai pela exclusão de ano.
 
+### D-253 — Tarefas num kanban.md, fora do state.md (2026-11-10 15:30)
+- **Contexto:** o usuário pediu uma skill que mantenha, em toda conversa, um quadro Backlog · Doing · Review · Done de todas as tarefas. O "Plano" do `state.md` duplicaria a lista e estava parado em S17 "← agora", sem as fases do F2.
+- **Decisão:** `kanban.md` na raiz é a lista única; o "Plano" do `state.md` só aponta para ele. Skill global `~/.claude/skills/kanban` (regras) + `kanban.py` (stdlib) que gera o `kanban.html` (fora do git) + hooks globais `SessionStart` (põe o quadro no contexto) e `PostToolUse` Write/Edit (regera o HTML). Doing com no máximo 1 card; Review = espera o usuário; Done = aprovado ou mergeado. Número D-253 porque D-247 a D-252 já estão em uso na `integ/f2-gerado`.
+- **Motivo:** escolhas do usuário (markdown + HTML, todos os projetos, kanban vira a lista). Skill sozinha não roda em toda sessão; o hook garante. Vai para a `main` por PR próprio, saído da `main`, para não carregar o F2 (D-249).
+- **Descartadas:** Artifact no claude.ai com banco (fora do repositório, depende do claude.ai); manter Plano e kanban juntos (as duas listas divergiriam); arrastar cards no HTML (exigiria servidor gravando o `.md`).
+- **Arquivos afetados:** `kanban.md`, `.gitignore`, `state.md`; fora do repo: `~/.claude/skills/kanban/`, `~/.claude/settings.json`, `~/.claude/CLAUDE.md`.
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (09/11: D-236 mantida; PR #7 fechado sem merge — fase 1 só vai à `main` com a fase 2, testadas juntas) PR #7 (`feat/f2-f1` → `main`) em conflito só no `state.md`: Estado atual, Próxima ação, D-233/D-234 (números usados nas duas branches), Perguntas em aberto e Sessões. Resolver na worktree `revista-express-f2-f1`, renumerando D-233/D-234 da F2 para D-237/D-238 (o código cita D-233 em 4 arquivos). E a D-236 diz que a fase 1 só entra na `main` junto com a fase 2: o PR #7 a substitui? — depende de: Otavio.
 - [ ] Migração 0020 existe nas duas frentes: `0020_infograficos` (`feat/f2-f1`, seguida de 0021 e 0022) e `0020_etapa_do_projeto` (`feat/etapa-do-projeto`). A frente que entrar na `main` depois renumera a sua e refaz a dependência — depende de: ordem dos merges (usuário).
@@ -2452,3 +2439,8 @@ Criar a worktree `feat/f2-f3` a partir da `integ/f2-gerado` para a T1 da fase 3.
 - PR #7 (fase 1 do F2) fechado sem merge: D-236 mantida pelo usuário (fase 1 e 2 testadas juntas antes da `main`).
 - D-246: banco sem ano — "Abrir ano" cria o 1º ano vazio (tela, admin e comando), na `fix/abrir-ano-vazio` a partir da `main`.
 - `fix/abrir-ano-vazio` mergeada (fast-forward) na `integ/abrir-ano`, criada a partir da `main`; suíte 806 OK, 8 pulados.
+
+### 2026-11-10 15:30
+- D-253: skill `kanban` (global) e `kanban.md`; "Plano" migrado para cards. Branch `chore/kanban` saída da `main` para o PR não levar o F2.
+- Raio-x das worktrees (87): 78 mergeadas e limpas apagadas (44 com arquivos do root, apagadas por container); `.env` do Express antigo guardados fora do repo; checkout da `main` mantido. Sobram 9: `main`, `f2-f1`, `f2-f2`, `ano-vazio`, `docs`, `etapa` (14 commits fora de tudo), `s7` (só `graft/` solto), `revista-eletronica` (`django`, 07/10) e um destacado do S07.
+- PRs mergeados na `main` com o ok do usuário: #8 (`integ/abrir-ano`, D-246) e #9 (`integ/docs-atualizacao`, conflito do `state.md` resolvido mantendo as duas sessões). Em seguida, o PR da `chore/kanban`.

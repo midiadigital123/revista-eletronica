@@ -6,3 +6,4 @@ menu-funcionalidade/
 .playwright-mcp/
 __pycache__/
 app/staticfiles/
+kanban.html
