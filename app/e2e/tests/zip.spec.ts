@@ -68,6 +68,6 @@ test("file://: sumário → F1 com o item → sumário → Outras Etapas com a i
   await page.keyboard.press("Enter");
   const tarefa = page.locator("#dlg-tarefa-1");
   await expect(tarefa).toBeVisible();
-  await expect.poll(() => tarefa.getByRole("img", { name: "Item 1" }).evaluate(largura)).toBeGreaterThan(0);
+  await expect.poll(() => tarefa.getByRole("img", { name: "Tirinha de quatro quadrinhos" }).evaluate(largura)).toBeGreaterThan(0);
   expect(erros).toEqual([]);
 });

@@ -127,7 +127,7 @@ test("F2 Outras Etapas: + das habilidades abre o dialog e Esc devolve o foco", a
   await page.keyboard.press("Enter");
   const dialogo = page.getByRole("dialog", { name: "Habilidades" });
   await expect(dialogo).toBeVisible();
-  await expect(dialogo).toContainText("Texto dois.");
+  await expect(dialogo).toContainText("Este quadro traz as habilidades relacionadas a essa aprendizagem"); // texto_habilidades do docx
   await page.keyboard.press("Escape");
   await expect(dialogo).toBeHidden();
   await expect(botao).toBeFocused();
@@ -140,7 +140,7 @@ test("F2 Outras Etapas: dlg-tarefa-1 mostra a imagem do item", async ({ page }) 
   await page.keyboard.press("Enter");
   const dialogo = page.locator("#dlg-tarefa-1");
   await expect(dialogo).toBeVisible();
-  const imagem = dialogo.getByRole("img", { name: "Item 1" });
+  const imagem = dialogo.getByRole("img", { name: "Tirinha de quatro quadrinhos" });
   await expect.poll(() => imagem.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
   expect(erros).toEqual([]);
 });

@@ -33,6 +33,8 @@ from nucleo.tests.test_resolver import MediaTemporaria, Mundo
 
 # Páginas que o Playwright pagina.spec.ts abre (gabarito). Regerar: REGERAR_FIXTURES=1.
 GABARITO = Path(__file__).resolve().parents[2] / "e2e" / "fixtures" / "pagina"
+# Infográfico de LP 2026 tirado do docx (D-248): só os campos que o modelo guarda.
+DOCX = json.loads((Path(__file__).parent / "dados" / "infografico-docx.json").read_text(encoding="utf-8"))
 PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 32
 F2 = (
     "## abertura\nAvaliação & Currículo\n\nSiga o tour.\n\nSegundo parágrafo.\n\n"
@@ -53,26 +55,28 @@ SVG = b"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
 
 
 def dois_infograficos(revista):
-    """Alfa (criado aqui: o Mundo não tem 2EF) e Outras com dados curtos e fixos (nada depende do pk)."""
+    """Alfa (criado aqui: o Mundo não tem 2EF) e Outras com os dados do docx de LP 2026 (D-248).
+
+    Os dois têm os mesmos dados; só a habilidade do Alfa leva "(alfa)", para os testes provarem que
+    cada página mostra o seu. Nada depende do pk: os gabaritos ficam determinísticos.
+    """
     RevistaInfografico.objects.get_or_create(
         revista=revista, tipo="alfa", defaults={"componente_id": revista.componente_id, "ano_id": revista.ano_id}
     )
     for inf in RevistaInfografico.objects.filter(revista=revista, arquivado_em__isnull=True):
+        habilidade = DOCX["habilidade"] + (" (alfa)" if inf.tipo == "alfa" else "")
         RevistaInfografico.objects.filter(pk=inf.pk).update(
-            habilidade=f"Inferir informação ({inf.tipo}).", texto_descritor="Texto um.",
-            texto_habilidades="Texto dois.", texto_progressao="Texto três.",
-        )  # fmt: skip
-        for etapa, marca in (("5EF", "I"), ("9EF", "A")):
+            habilidade=habilidade, **{c: DOCX[c] for c in ("texto_descritor", "texto_habilidades", "texto_progressao")}
+        )
+        for e in DOCX["etapas"]:
             RevistaInfograficoEtapa.objects.update_or_create(
-                infografico=inf, etapa=etapa,
-                defaults={"ano_id": inf.ano_id, "marca": marca, "codigo": "EF15LP18", "texto": "Relacionar."},
-            )  # fmt: skip
-        for p in range(1, 5):
+                infografico=inf, etapa=e["etapa"], defaults={"ano_id": inf.ano_id, **e}
+            )
+        for p, item in enumerate(DOCX["itens"], 1):
             RevistaInfograficoItem.objects.update_or_create(
                 infografico=inf, posicao=p,
-                defaults={"ano_id": inf.ano_id, "etapa": "5EF", "descritor": "D05",
-                          "imagem": f"infograficos/{inf.tipo}-{p}.png", "imagem_sha256": "a" * 64,
-                          "texto_alternativo": f"Item {p}", "analise": f"Análise do item {p}."},
+                defaults={"ano_id": inf.ano_id, "imagem": f"infograficos/{inf.tipo}-{p}.png", "imagem_sha256": "a" * 64,
+                          **item},
             )  # fmt: skip
     gravar_imagens(revista)
 
@@ -181,8 +185,8 @@ class PaginaTest(MediaTemporaria, TestCase):
         self.assertIn('<dialog id="dlg-descritor" aria-labelledby="dlgTitle-descritor">', html)
         self.assertIn('<h3 id="dlgTitle-tarefa-1">', html)
         self.assertIn("Agora é com você", html)  # o fechamento do F2
-        self.assertIn("Inferir informação (outras).", html)
-        self.assertNotIn("Inferir informação (alfa).", html)
+        self.assertIn(f'class="f2-hab">{DOCX["habilidade"]}</div>', html)
+        self.assertNotIn("(alfa)", html)
         self.assertIn("/static/revista/f2/f2-init.js", html)
         self.assertNotIn("f1/script.js", html)
         self.assertNotIn("dados-revista", html)
@@ -194,7 +198,7 @@ class PaginaTest(MediaTemporaria, TestCase):
         self.assertEqual([html.index(t) for t in ordem], sorted(html.index(t) for t in ordem))
         # Imagem do item: <base_imagens><nome>, sem "infograficos/" duplicado (D-244).
         base = f"{reverse('preview', args=[self.rev.pk])}arquivos/infograficos/"
-        self.assertIn(f'<img src="{base}outras-1.png" alt="Item 1">', html)
+        self.assertIn(f'<img src="{base}outras-1.png" alt="{DOCX["itens"][0]["texto_alternativo"]}">', html)
         self.assertNotIn("infograficos/infograficos/", html)
         tour = json.loads(re.search(r'id="dados-tour" type="application/json">(.*?)</script>', html).group(1))
         self.assertEqual(tour["intro"]["title"], "Avaliação & Currículo")  # texto puro (textContent)
