@@ -116,6 +116,9 @@ class PaginaTest(MediaTemporaria, TestCase):
             r = self.get(self.rev, pagina)
             self.assertEqual(r.status_code, 302)
             self.assertIn("/conta/entrar/", r["Location"])
+        r = self.imagem(self.rev, "alfa-1.png")
+        self.assertEqual(r.status_code, 302)
+        self.assertIn("/conta/entrar/", r["Location"])
 
     def test_sem_view_revista_403(self):
         staff = get_user_model().objects.create(username="staff", is_staff=True)  # sem grupo
@@ -123,6 +126,8 @@ class PaginaTest(MediaTemporaria, TestCase):
         for pagina in ("index", "f1", "outras"):
             self.assertEqual(self.get(self.rev, pagina).status_code, 403)
         self.assertEqual(self.client.get(reverse("preview_capa", args=[self.rev.pk])).status_code, 403)
+        dois_infograficos(self.rev)
+        self.assertEqual(self.imagem(self.rev, "alfa-1.png").status_code, 403)
 
     def test_capa_sumida_404(self):
         receber_capa(self.rev, SimpleUploadedFile("capa.png", PNG))
@@ -295,6 +300,13 @@ class PaginaTest(MediaTemporaria, TestCase):
         default_storage.delete("infograficos/alfa-1.png")
         self.assertEqual(self.get(self.rev, "alfa").status_code, 200)
         self.assertEqual(self.imagem(self.rev, "alfa-1.png").status_code, 404)
+
+    def test_imagem_nome_parcial_e_nul_404(self):
+        """O nome casa inteiro (lfa-1.png não serve alfa-1.png); NUL no nome é 404, não 500 do PostgreSQL."""
+        dois_infograficos(self.rev)
+        self.assertEqual(self.imagem(self.rev, "lfa-1.png").status_code, 404)
+        self.assertEqual(self.imagem(self.rev, "a%00.png").status_code, 404)
+        self.assertEqual(self.client.get(f"{reverse('preview', args=[self.rev.pk])}arquivos/itens/a%00.png").status_code, 404)
 
     def test_imagem_de_tipo_nao_imagem_404(self):
         dois_infograficos(self.rev)

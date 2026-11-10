@@ -103,6 +103,8 @@ def servir(arquivo, tipo, sandbox=True, as_attachment=False):
 def item(request, revista_id, nome):
     revista = get_object_or_404(Revista.objects.select_related("projeto__parceiro_ano"), pk=revista_id)
     tipo = TIPOS_ITEM.get(PurePosixPath(nome).suffix)
+    if tipo is None or "\0" in nome:  # NUL: o PostgreSQL recusa o texto (DataError, 500)
+        raise Http404
     caminho = (
         Tarefa.objects.filter(
             descritor__matriz_etapa_cc__matriz_id=revista.projeto.parceiro_ano.matriz_id,
@@ -112,7 +114,7 @@ def item(request, revista_id, nome):
         .values_list("arquivo", flat=True)
         .first()
     )
-    if tipo is None or caminho is None:
+    if caminho is None:
         raise Http404
     try:
         arquivo = default_storage.open(caminho)
@@ -123,13 +125,17 @@ def item(request, revista_id, nome):
 
 @protegida
 def imagem_infografico(request, revista_id, nome):
+    # ponytail: busca pelo nome atual. Arquivada cuja imagem foi reenviada (mesmo sha, outro nome) mostra
+    # imagem quebrada no preview, embora o zip saia (D-245); resolver pela foto quando o upload da fase 3 existir.
     tipo = TIPOS_CAPA.get(PurePosixPath(nome).suffix)
+    if tipo is None or "\0" in nome:  # NUL: o PostgreSQL recusa o texto (DataError, 500)
+        raise Http404
     caminho = (
         RevistaInfograficoItem.objects.filter(infografico__revista_id=revista_id, imagem__endswith=f"/{nome}")
         .values_list("imagem", flat=True)
         .first()
     )
-    if tipo is None or caminho is None:
+    if caminho is None:
         raise Http404
     try:
         arquivo = default_storage.open(caminho)
