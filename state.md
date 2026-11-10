@@ -2,11 +2,11 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Fase 3 do F2 (K-028), T0 de 6 em andamento: plano aprovado e copiado para `docs/superpowers/plans/2026-11-10-f2-fase-3.md` (D-254); suíte Django rodando na stack `-p f2-f3` para provar o merge da `main`. Worktree `/home/otavio.peres/dev/revista-express-f2-f3`, branch `feat/f2-f3`. Funcionando: tudo da fase 2 (F2 gerado, páginas separadas, zip) + primeiro ano vazio + kanban. Quebrado/pendente: specs E2E `impacto`, `impresso`, `painel` e `revista-textos` vermelhos até a T4 (pendência `infografico`); fases 4 e 5; S17/S18. Tarefas no `kanban.md`.
+Fase 3 do F2 (K-028) pronta para revisão do usuário: T0 a T5 commitadas na `feat/f2-f3` (worktree `/home/otavio.peres/dev/revista-express-f2-f3`), 45 commits à frente da `integ/f2-gerado`. Funcionando: passo "Infográficos" na ficha da revista (um cartão por infográfico ativo, autosave + modal de impacto, grade de 12 etapas, 4 tarefas com imagem), pendências em `servicos/pendencias.py`, demo com o infográfico do docx sem pendência, UI do SVG fora da tela. Verificado: suíte Django 910 OK (8 pulados), `makemigrations --check` limpo, régua ok, Playwright inteiro 169/170 (a falha é o `ano.spec` chromium com `ERR_CONNECTION_RESET` no 1º `goto` do servidor recém-subido; passou na repetição). Pendente: merge na `integ/f2-gerado` (precisa do ok); fases 4 e 5; S17/S18.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Conferir o resultado da suíte da T0 e, verde, commitar a T0 (`docs: plano da fase 3 do F2 (D-254)`) com o ok do usuário.
+Com o ok do usuário, mergear `feat/f2-f3` na `integ/f2-gerado` (fast-forward se possível) e apagar a worktree `revista-express-f2-f3`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2069,6 +2069,14 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Arquivos afetados:** `docs/superpowers/plans/2026-11-10-f2-fase-3.md`, `state.md`, `kanban.md`.
 - **Status:** ativa
 
+### D-255 — Fase 3 do F2 executada: decisões tomadas na execução (2026-11-11 00:30)
+- **Contexto:** execução do plano da D-254 com subagentes em paralelo (T1 e T2 juntas; demo e editor junto com a T3; E2E depois da T3), cada um numa worktree irmã com stack própria, mergeados na `feat/f2-f3`.
+- **Decisão:** (1) os chamadores importam `servicos/pendencias.py` direto, sem reexportar pelo `resolver` (a reexportação fecha um ciclo de import); (2) no passo "Infográficos", salvar um campo troca só a Situação e o upload da imagem troca também o passo (redesenhar o cartão a cada campo apagaria o campo seguinte); o bloco do passo desligado some por CSS `:has()` (o Alpine CSP não aceita objeto inline no `x-data`); a grade de 12 etapas é de Habilidades e Progressão juntas; (3) ordem dos passos da ficha: 1 Templates · 2 Infográficos · 3 Capa (`#arquivos`) · 4 Textos; o link "Baixar gabarito de ids" saiu da tela (a rota fica até a fase 4); (4) `criar_demo.preencher_infograficos` grava a imagem direto no storage com nome fixo (idempotente), não por `receber_imagem_item` (nome uuid deixaria cópia a cada execução), e o JSON do docx foi para `nucleo/dados/`; (5) achados da revisão aplicados: simulação do impacto sem render da página, permissão pela família do regex (`infografico.familia`), passo relê o infográfico, demo grava por `save()` (histórico), 3 testes do modal; (6) `infografico.spec.ts` para em "5 de 6": a matriz Demonstração não tem 2EF e nenhuma tela inclui etapa na matriz; o "6 de 6" com infográfico é coberto pelo `revistaPropria`.
+- **Motivo:** menor diff que mantém regra fora da view, autosave sem perder digitação e demo reexecutável.
+- **Descartadas:** trocar o cartão inteiro a cada campo (apaga o campo seguinte); `x-show` com objeto no `x-data` (build CSP recusa); post_delete para a imagem do infográfico na exclusão (fica como `ponytail:` em `exclusao.py`); trocar só o item no upload da imagem (fica como `ponytail:` em `ui_revista._infografico`).
+- **Arquivos afetados:** `servicos/pendencias.py`, `nucleo/infografico.py`, `servicos/arquivos.py`, `urls/ui_revista.py`, `templates/ui/parciais/revista_infograficos.html`, `static/ui/telas/revista.css`, `urls/painel.py`, `management/commands/criar_demo.py`, `nucleo/dados/infografico-docx.json`, `e2e/tests/helpers.ts`, `e2e/tests/infografico.spec.ts`, docs da ficha da revista, regras e `CLAUDE.md`.
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (D-252) (10/11, auditoria do código) Quais itens do "fazer agora" entram e onde: `planilhas.py:97` falha explícita para componente sem layout; enum no lugar de "2EF" em `cascata.py` e assert nas 12 etapas de `f2.py`; constante `ANO_DEMO` no E2E (138 ocorrências de 2026); separar `pendencias_f1`/`pendencias_f2`; helper `pode(user, modelo, acao)` (48 checagens fora de `permissoes.py`). Depois: hash do resolvido persistido (o resolver roda por revista no painel, impacto, matriz, paleta e impresso; teto ~50 revistas) e painel paginado com poda de fotos — depende de: Otavio
 - [ ] (10/11, conselho da fase 2) O 1º parágrafo de `tarefas-fechamento` (seed `f2-lp.hbs`/`f2-mt.hbs` e migração 0023) fala dos itens do D05 de LP (tirinha, charge), contra o motivo da D-240. Tirar do seed e da 0023 antes da fase 4 (quando o impresso lê a seção)? — depende de: Otavio
@@ -2648,3 +2656,9 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 
 ### 2026-11-10 23:00
 - Plano da fase 3 escrito e aprovado (D-254): 6 tarefas, ~3 dias úteis; 3 itens da auditoria ficam fora (quote, URLs do zip no preview, imagem por sha256).
+
+### 2026-11-11 00:30
+- Fase 3 executada com subagentes em paralelo (worktrees `-t1`, `-t2`, `-t4a`, `-t3`, `-t4b`, cada uma com stack própria): T1 `b6347c4`, T2 `a38c1f4`, demo `4675875`, editor `6352867`, T3 `96c37d8`, docs `6784825`, revisão `9b2406d`, E2E `2e69443`. D-255.
+- Revisão `ecc:django-reviewer`: nenhum achado bloqueante; 7 de 8 aplicados, 1 virou `ponytail:`.
+- Verificação final: Django 910 OK; Playwright 169/170 (`ano.spec` chromium: conexão recusada no servidor recém-subido, não código).
+- Learnings: pendências em módulo próprio (`42c1fdd`); autosave do cartão do infográfico (`ad14cb3`).
