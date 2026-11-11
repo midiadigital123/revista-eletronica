@@ -11,16 +11,9 @@
 
 ## Doing
 ## Review
-- **K-029** Fase 4 do F2: sai o SVG enviado, impresso com os infográficos, docs · desde 2026-11-11 · D-256 · D-257
-  nota: worktree `revista-express-f2-f4`, branch `feat/f2-f4`, stack `-p f2-f4`; plano `docs/superpowers/plans/2026-11-11-f2-fase-4.md`
-  - [x] T0 worktree, suíte verde (910 OK, 8 pulados, `makemigrations --check` limpo), plano commitado (D-256)
-  - [x] T1 (`23f2236`, 882 OK, −750 linhas) sai o SVG enviado (modelo, migração 0024, sanitizador, gabarito, admin, fixture em `example/f2-gerado/desenho-original.svg`)
-  - [x] T2 (`9328d04`, merge `50a1a0c`, 916 OK) impresso com os textos dos infográficos ("o que mudou" e planilha F2; grupo do diff = título completo, aba = parte depois de " – ")
-  - [x] T3 (`3a5e734`, ajuste `bfff9d5`) `tarefas-fechamento` sem o parágrafo do D05 de LP (seed + migração 0025)
-  - [ ] T4 (docs `de4a67e`, revisão `97ed363`, Django 894 OK, Playwright 169/170; falta o merge na integ, com o ok) docs, learning, E2E, revisão, merge na `integ/f2-gerado`
-  espera: ok do usuário para o merge `feat/f2-f4` → `integ/f2-gerado`
 
 ## Done
+- **K-029** Fase 4 do F2: sai o SVG enviado, impresso com os textos dos infográficos, `tarefas-fechamento` sem o parágrafo do D05; mergeada na `integ/f2-gerado` por fast-forward (Django 894 OK, Playwright 169/170) · 2026-11-11 · D-256 · D-257
 - **K-028** Fase 3 do F2: tela dos infográficos, mergeada na `integ/f2-gerado` por fast-forward (Django 910 OK, Playwright 169/170) · 2026-11-11 · D-252 · D-254 · D-255
 - **K-037** Redesign do `kanban.html` com JS puro (busca, recolher colunas e checklist), `eefa697` na `main` de `~/.claude/skills/kanban` · 2026-11-10
 - **K-027** Skill `kanban`: quadro substitui o "Plano" do `state.md` · 2026-11-10 · D-253

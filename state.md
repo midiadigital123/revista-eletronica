@@ -2,11 +2,11 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Fase 4 do F2 (K-029) pronta para revisão do usuário na `feat/f2-f4` (worktree `/home/otavio.peres/dev/revista-express-f2-f4`). Funcionando: o SVG enviado saiu do código e do banco (migração 0024, −750 linhas); o impresso vê os textos dos infográficos no "o que mudou" e numa aba por infográfico da planilha F2 (imagem do item fora, D-118); o `tarefas-fechamento` perdeu o parágrafo do D05 de LP (seeds + migração 0025); docs e learning atualizadas. Verificado: Django 894 OK (8 pulados), `makemigrations --check` limpo, 0024/0025 de ida e volta, régua ok, Playwright 169/170 (`ano.spec`: primeiras navegações depois de o servidor subir, ambiente, D-257). Pendente: merge da `feat/f2-f4` na `integ/f2-gerado` (precisa do ok); depois o merge da `integ/f2-gerado` na `main` (K-030, D-249); fase 5; S17/S18.
+Fase 4 do F2 (K-029) mergeada na `integ/f2-gerado` (fast-forward, com o ok do usuário em 11/11). A integração tem as fases 1 a 4: F2 gerado a partir dos infográficos, SVG enviado fora do código e do banco (0024), impresso com os textos dos infográficos, `tarefas-fechamento` sem o parágrafo do D05 (0025). Verificado na `feat/f2-f4`: Django 894 OK (8 pulados), migrações de ida e volta, Playwright 169/170 (`ano.spec`, ambiente, D-257). Pendente: merge da `integ/f2-gerado` na `main` (K-030, só com o ok explícito do usuário; no deploy, revistas impressas com infográfico ficam pendentes uma vez e os `media/f2/*.svg` órfãos saem à mão); fase 5; S17/S18.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Com o ok do usuário, mergear `feat/f2-f4` na `integ/f2-gerado` (fast-forward) e apagar a worktree `revista-express-f2-f4`.
+Decidir com o usuário quando mergear a `integ/f2-gerado` na `main` (K-030): abrir o PR `integ/f2-gerado` → `main`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2685,3 +2685,4 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - Fase 4 executada: T1 `23f2236`, T2 `9328d04`, T3 `3a5e734` + `bfff9d5`, docs `de4a67e`, achados da revisão `97ed363`. D-257.
 - Revisão `ecc:django-reviewer`: nenhum achado bloqueante nem importante; 2 menores aplicados.
 - Verificação final: Django 894 OK; Playwright 169/170 (`ano.spec`, ambiente, confirmado numa stack nova).
+- Com o ok do usuário: `feat/f2-f4` mergeada na `integ/f2-gerado` por fast-forward; worktree `revista-express-f2-f4` e stack `f2-f4` apagadas; K-029 em Done.
