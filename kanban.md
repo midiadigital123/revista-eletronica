@@ -3,14 +3,14 @@
 ## Backlog
 - **K-034** Etapa do projeto (`feat/etapa-do-projeto`): 14 commits fora da `main`, tarefa 5 em WIP · pausada
   nota: parada por decisão do usuário em 10/11; branch e worktree `revista-express-etapa` ficam como estão
-- **K-030** Merge da `integ/f2-gerado` na `main`, com as fases 1 a 4 juntas (D-249)
-  nota: no deploy, toda revista impressa com infográfico fica "pendente" no impresso uma vez (D-256); apagar à mão os `media/f2/*.svg` órfãos
-  nota: o usuário pediu em 11/11 levar tudo à `main` depois do K-038; falta escolher PR ou merge direto
 - **K-031** Fase 5 do F2: animação por passo (desejável)
 - **K-032** S17 — Carga 2026 + desligar o antigo
 - **K-033** S18 — E2E da temporada
 
 ## Doing
+- **K-030** Merge da `integ/f2-gerado` na `main`, com as fases 1 a 4 juntas (D-249)
+  nota: no deploy, toda revista impressa com infográfico fica "pendente" no impresso uma vez (D-256); apagar à mão os `media/f2/*.svg` órfãos
+  nota: por PR (D-260); depois, bancos locais apagados e dev do zero na `main`
 ## Review
 
 ## Done
