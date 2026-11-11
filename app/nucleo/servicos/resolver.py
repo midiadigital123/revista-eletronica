@@ -366,12 +366,18 @@ def hash_validado(revista, resolvido=None):
 
 
 def impresso_de(resolvido):
-    """Parte do resolvido que o impresso confere: escalas, cores e textos do F1 e textos do F2.
-    Sem SVG nem capa (D-066, D-072, D-077, D-112). Serve também para fotos antigas (S13)."""
+    """Parte do resolvido que o impresso confere: escalas, cores e textos do F1; seções e infográficos
+    do F2, estes sem a imagem dos itens (trocar a imagem não deixa o impresso pendente, D-118).
+    Sem SVG nem capa (D-066, D-072, D-077, D-112). Serve também para fotos antigas (S13): sem a
+    chave `infograficos`, lista vazia (o diff mostra os infográficos como novos)."""
     f1, f2 = resolvido["f1"], resolvido["f2"]
+    sem_imagem = lambda i: {k: v for k, v in i.items() if k not in ("imagem", "imagem_sha256")}  # noqa: E731
     return {
         "f1": {k: f1.get(k) for k in ("etapas", "dados", "cores", "secoes")},
-        "f2": {"secoes": f2.get("secoes")},
+        "f2": {
+            "secoes": f2.get("secoes"),
+            "infograficos": [inf | {"itens": [sem_imagem(i) for i in inf["itens"]]} for inf in f2.get("infograficos", [])],
+        },
     }
 
 

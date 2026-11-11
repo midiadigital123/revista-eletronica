@@ -13,6 +13,7 @@ from django.utils.html import format_html, strip_tags
 from django.utils.safestring import mark_safe
 
 from nucleo.models.revista import PASSOS, EtapaReferencial
+from nucleo.texto import html_para_texto
 
 # Config do tour (antes em svg-tour/avaliacao-e-curriculo/revista.json); os textos vêm das seções.
 ROTULO_TOUR = "Infográfico: tour guiado"
@@ -52,6 +53,31 @@ CONECTORES = {
 def texto_puro(html):
     """HTML já renderizado → texto puro (o svg-tour põe título e texto por textContent)."""
     return unescape(strip_tags(html)).strip()
+
+
+def textos_impresso(inf):
+    """[(rótulo, texto puro)] de um infográfico resolvido: o que o impresso confere (diff e planilha F2).
+
+    Só textos: a imagem do item não entra (D-118). O resolvido já esvaziou o invisível (D-243);
+    aqui só saem as entradas vazias.
+    """
+    def juntar(sep, partes):
+        return sep.join(p.strip() for p in partes if p and p.strip())
+
+    t = inf["textos"]
+    pares = [
+        ("Habilidade", inf["habilidade"]),
+        ("❶ Descritor", html_para_texto(t["descritor"])),
+        ("❸ Habilidades", html_para_texto(t["habilidades"])),
+        ("❷ Progressão", html_para_texto(t["progressao"])),
+        ("Referencial", juntar("\n", (
+            juntar(" · ", (e["rotulo"] or e["etapa"], e["marca"], e["codigo"], e["texto"])) for e in inf["etapas"]
+        ))),
+        *((f"Tarefa {i['posicao']}", juntar("\n", (
+            juntar(" – ", (i["descritor"], i["rotulo"])), i["texto_alternativo"], html_para_texto(i["analise"]),
+        ))) for i in inf["itens"]),
+    ]  # fmt: skip
+    return [(rotulo, texto.strip()) for rotulo, texto in pares if texto and texto.strip()]
 
 
 def _layout(ligados):
