@@ -3,13 +3,19 @@
 ## Backlog
 - **K-034** Etapa do projeto (`feat/etapa-do-projeto`): 14 commits fora da `main`, tarefa 5 em WIP · pausada
   nota: parada por decisão do usuário em 10/11; branch e worktree `revista-express-etapa` ficam como estão
-- **K-029** Fase 4 do F2: remover o SVG enviado, impresso com os infográficos, docs
 - **K-030** Merge da `integ/f2-gerado` na `main`, com as fases 1 a 4 juntas (D-249)
 - **K-031** Fase 5 do F2: animação por passo (desejável)
 - **K-032** S17 — Carga 2026 + desligar o antigo
 - **K-033** S18 — E2E da temporada
 
 ## Doing
+- **K-029** Fase 4 do F2: sai o SVG enviado, impresso com os infográficos, docs · desde 2026-11-11 · D-256
+  nota: worktree `revista-express-f2-f4`, branch `feat/f2-f4`, stack `-p f2-f4`; plano `docs/superpowers/plans/2026-11-11-f2-fase-4.md`
+  - [x] T0 worktree, suíte verde (910 OK, 8 pulados, `makemigrations --check` limpo), plano commitado (D-256)
+  - [ ] T1 sai o SVG enviado (modelo, sanitizador, gabarito, admin, fixture)
+  - [ ] T2 impresso com os textos dos infográficos ("o que mudou" e planilha F2)
+  - [ ] T3 `tarefas-fechamento` sem o parágrafo do D05 de LP (seed + migração 0025)
+  - [ ] T4 docs, learning, E2E, revisão, merge na `integ/f2-gerado` (com o ok)
 ## Review
 
 ## Done

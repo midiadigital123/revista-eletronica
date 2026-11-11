@@ -2,11 +2,11 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Fase 3 do F2 (K-028) mergeada na `integ/f2-gerado` (fast-forward, com o ok do usuário em 11/11). A integração tem as fases 1 a 3: o F2 é gerado a partir dos infográficos, preenchidos no passo "Infográficos" da ficha da revista; a demo abre sem pendência. Verificado na `feat/f2-f3`: Django 910 OK (8 pulados), `makemigrations --check` limpo, Playwright 169/170 (`ano.spec` chromium com `ERR_CONNECTION_RESET` no servidor recém-subido, não código). Pendente: fase 4 (K-029: tirar o código do SVG enviado, impresso com os infográficos), depois o merge da `integ/f2-gerado` na `main` (K-030, D-249); fase 5; S17/S18.
+Fase 4 do F2 (K-029) em execução na worktree `/home/otavio.peres/dev/revista-express-f2-f4` (branch `feat/f2-f4`, saída da `integ/f2-gerado` `516f660`, stack `-p f2-f4`). Plano aprovado (D-256): T0 plano, T1 sai o SVG enviado, T2 impresso com os infográficos, T3 parágrafo do `tarefas-fechamento`, T4 docs/E2E/revisão/merge. Funcionando na integ: fases 1 a 3 (F2 gerado a partir dos infográficos preenchidos na ficha). Pendente: fase 4, depois o merge na `main` (K-030); fase 5; S17/S18.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Escrever o plano da fase 4 do F2 (K-029) numa worktree nova `revista-express-f2-f4`, saída da `integ/f2-gerado`.
+T1 e T2 da fase 4 em paralelo, cada uma numa worktree irmã `revista-express-f2-f4-t1`/`-t2`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2077,6 +2077,14 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Arquivos afetados:** `servicos/pendencias.py`, `nucleo/infografico.py`, `servicos/arquivos.py`, `urls/ui_revista.py`, `templates/ui/parciais/revista_infograficos.html`, `static/ui/telas/revista.css`, `urls/painel.py`, `management/commands/criar_demo.py`, `nucleo/dados/infografico-docx.json`, `e2e/tests/helpers.ts`, `e2e/tests/infografico.spec.ts`, docs da ficha da revista, regras e `CLAUDE.md`.
 - **Status:** ativa
 
+### D-256 — Plano da fase 4 do F2: sai o SVG enviado, o impresso vê os textos dos infográficos (2026-11-11 10:00)
+- **Contexto:** a fase 3 tirou o upload do SVG da tela, mas colunas, sanitizador, gabarito e fixture continuam; o impresso ("o que mudou" e planilha F2) não vê os infográficos. Pela D-249 a `integ/f2-gerado` só vai para a `main` com esta fase.
+- **Decisão:** plano em `docs/superpowers/plans/2026-11-11-f2-fase-4.md` (T0 a T4; T1 e T2 em paralelo, T3 depois da T1). (1) o impresso vê só os textos dos infográficos: trocar a imagem de uma tarefa não deixa o impresso pendente (escolha do usuário em 11/11, mesma regra da D-118); (2) `f2.textos_impresso(inf)` é a fonte única dos textos do infográfico para o diff e a planilha; (3) toda revista já impressa com infográfico preenchido fica "pendente" uma vez (a foto antiga não tem `infograficos`): aviso no K-030; (4) a fixture `f2-lp.svg` vai por `git mv` para `example/f2-gerado/desenho-original.svg`; (5) a migração só tira colunas e constraints, os `f2/*.svg` órfãos do storage saem à mão no deploy (nota no K-030); (6) o 1º parágrafo do `tarefas-fechamento` (itens do D05 de LP) sai do seed e das cópias iguais ao seed; texto editado fica (escolha do usuário em 11/11).
+- **Motivo:** o merge na `main` depende do impresso ver o F2; manter dois caminhos do F2 dobra testes e telas; D-118 já separava arquivo (hash) de texto (impresso).
+- **Descartadas:** imagens dos itens no impresso ("Imagem trocada" no diff + imagens no zip das planilhas: ~2 h a mais, contra a D-118, recusada pelo usuário); fixture convertida em PNG (perde as medidas exatas citadas em `f2.py` e `f2.svg`); apagar os SVGs do storage dentro da migração (sem volta); deixar o parágrafo para a Pedagógica corrigir revista por revista.
+- **Arquivos afetados:** plano da fase 4; na execução, `models/revista.py`, migrações 0024 e 0025, `servicos/arquivos.py`, `nucleo/revista.py`, `admin/revista.py`, `urls/ui_revista.py`, `servicos/f2.py`, `servicos/resolver.py`, `urls/impresso.py`, `servicos/planilhas.py`, seeds F2, docs.
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (D-252) (10/11, auditoria do código) Quais itens do "fazer agora" entram e onde: `planilhas.py:97` falha explícita para componente sem layout; enum no lugar de "2EF" em `cascata.py` e assert nas 12 etapas de `f2.py`; constante `ANO_DEMO` no E2E (138 ocorrências de 2026); separar `pendencias_f1`/`pendencias_f2`; helper `pode(user, modelo, acao)` (48 checagens fora de `permissoes.py`). Depois: hash do resolvido persistido (o resolver roda por revista no painel, impacto, matriz, paleta e impresso; teto ~50 revistas) e painel paginado com poda de fotos — depende de: Otavio
 - [ ] (10/11, conselho da fase 2) O 1º parágrafo de `tarefas-fechamento` (seed `f2-lp.hbs`/`f2-mt.hbs` e migração 0023) fala dos itens do D05 de LP (tirinha, charge), contra o motivo da D-240. Tirar do seed e da 0023 antes da fase 4 (quando o impresso lê a seção)? — depende de: Otavio
@@ -2663,3 +2671,6 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - Verificação final: Django 910 OK; Playwright 169/170 (`ano.spec` chromium: conexão recusada no servidor recém-subido, não código).
 - Learnings: pendências em módulo próprio (`42c1fdd`); autosave do cartão do infográfico (`ad14cb3`).
 - Com o ok do usuário: `feat/f2-f3` mergeada na `integ/f2-gerado` por fast-forward; worktree `revista-express-f2-f3` e stack `f2-f3` apagadas; K-028 em Done.
+
+### 2026-11-11 10:00
+- Plano da fase 4 escrito e aprovado (D-256); worktree `revista-express-f2-f4` criada a partir da `integ/f2-gerado`.
