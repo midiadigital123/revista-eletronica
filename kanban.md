@@ -2,7 +2,7 @@
 
 ## Backlog
 - **K-034** Etapa do projeto (`feat/etapa-do-projeto`): 14 commits fora da `main`, tarefa 5 em WIP · pausada
-  nota: parada por decisão do usuário em 10/11; branch e worktree `revista-express-etapa` ficam como estão
+  nota: parada por decisão do usuário em 10/11; worktree `revista-express-etapa` removida em 11/11 (limpa; a branch `feat/etapa-do-projeto` `d0a1954` fica no git e no GitHub: recriar com `git worktree add`); ao retomar, renumerar a `0020_etapa_do_projeto` para depois da 0025
 - **K-031** Fase 5 do F2: animação por passo (desejável)
 - **K-032** S17 — Carga 2026 + desligar o antigo
 - **K-033** S18 — E2E da temporada

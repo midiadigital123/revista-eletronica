@@ -2718,3 +2718,4 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - Inventário dos bancos locais (antes do K-030): só o de dev tem dado real e está na 0022; demais vazios, de teste ou já na 0025. O `revista-eletronica-db-1` foi recriado e ligado às 15:31 a partir da worktree `f2-aj`, por comando não identificado; continua na 0022, sem parceiro E2E.
 - Usuário decidiu descartar todos os bancos locais e recomeçar o dev do zero; K-030 por PR (D-260).
 - PR #12 (`integ/f2-gerado` → `main`) aberto e mergeado com o ok do usuário; K-030 em Done.
+- Limpeza com o ok do usuário: worktrees `f2-aj`, `f2-f2` e `revista-express-etapa` removidas (branch da etapa preservada), pastas `revista-express-f2-f1`, `revista-express-f2-f3` e `revista-django` apagadas; todos os bancos locais apagados; dev novo do zero (`migrate` até a 0025 + `admin`) no checkout `revista-express` na `main`. Commit do kanban na `main` autorizado pelo usuário.
