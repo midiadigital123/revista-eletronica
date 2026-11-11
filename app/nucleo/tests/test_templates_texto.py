@@ -1,4 +1,4 @@
-"""Regra dos templates de texto comum ao admin e à tela B: seções do F2, rótulos, impacto e a migração 0023."""
+"""Regra dos templates de texto comum ao admin e à tela B: seções do F2, rótulos, impacto e as migrações 0023 e 0025."""
 
 import importlib
 
@@ -8,7 +8,7 @@ from django.test import SimpleTestCase, TestCase
 
 from nucleo import texto
 from nucleo.management.commands.carregar_templates import AVISO
-from nucleo.models import RevistaFasciculo, RevistaInfografico, RevistaSecao, Template, TemplateVersao
+from nucleo.models import Revista, RevistaFasciculo, RevistaInfografico, RevistaSecao, Template, TemplateVersao
 from nucleo.servicos.resolver import versao_atual
 from nucleo.templates_texto import impacto, rotulo
 from nucleo.tests.test_resolver import F2_LP, Mundo
@@ -104,8 +104,9 @@ class Migracao0023Test(TestCase):
 
     def test_texto_congelado_e_o_do_seed(self):
         seed = AVISO.sub("", (SEED / "f2-lp.hbs").read_text(encoding="utf-8-sig"))
+        m25 = importlib.import_module("nucleo.migrations.0025_tarefas_fechamento_sem_lp")
         self.assertEqual(
-            self.mod.TEXTO_F2, seed,
+            self.mod.TEXTO_F2.replace(m25.RETIRAR, ""), seed,  # a 0025 tirou um parágrafo do seed
             "A migração 0023 é histórica: não a altere. Se o seed do F2 mudou de propósito, ajuste este teste.",
         )
 
@@ -117,3 +118,58 @@ class Migracao0023Test(TestCase):
         self.migrar()
         self.migrar()
         self.assertEqual(versao_atual(self.tpl.pk).numero, 2)
+
+
+class Migracao0025Test(TestCase):
+    """Molde: Migracao0023Test. Importa a função da migração."""
+
+    def setUp(self):
+        self.m23 = importlib.import_module("nucleo.migrations.0023_template_f2_secoes")
+        self.mod = importlib.import_module("nucleo.migrations.0025_tarefas_fechamento_sem_lp")
+        Mundo.montar(self, f2_lp=self.m23.TEXTO_F2)
+        self.tpl = self.templates["LP", "F2"]
+        self.v1 = versao_atual(self.tpl.pk)
+        self.corpo = texto.secoes(self.m23.TEXTO_F2)["tarefas-fechamento"][1]
+
+    def copia(self, revista, corpo):
+        rf = RevistaFasciculo.objects.get(revista=revista, fasciculo="F2")
+        return RevistaSecao.objects.create(
+            revista_fasciculo=rf, template=self.tpl, secao="tarefas-fechamento", texto=corpo, template_versao=self.v1
+        )
+
+    def migrar(self):
+        self.mod.frente(apps, None)
+
+    def test_template_ganha_versao_sem_o_paragrafo_e_a_anterior_fica(self):
+        self.migrar()
+        self.migrar()  # idempotente
+        v2 = versao_atual(self.tpl.pk)
+        self.assertEqual(v2.numero, 2)
+        self.assertNotIn(self.mod.PARAGRAFO, v2.texto)
+        self.assertEqual(v2.texto, self.m23.TEXTO_F2.replace(self.mod.RETIRAR, ""))
+        self.assertIn("Fechamento das tarefas\n\nEssa trajetória", v2.texto)
+        self.assertEqual(TemplateVersao.objects.get(pk=self.v1.pk).texto, self.m23.TEXTO_F2)
+        self.assertEqual(TemplateVersao.objects.filter(template=self.templates["LP", "F1"]).count(), 1)
+        self.assertEqual(TemplateVersao.objects.filter(template=self.templates["MT", "F2"]).count(), 1)  # sem o parágrafo
+
+    def test_copia_com_o_paragrafo_perde_o_paragrafo(self):
+        c = self.copia(self.go["LP"], self.corpo)
+        self.migrar()
+        c.refresh_from_db()
+        self.assertEqual(c.texto, self.corpo.replace(self.mod.RETIRAR, ""))
+        self.assertTrue(c.texto.startswith("Essa trajetória"))
+        self.assertEqual(c.template_versao_id, self.v1.pk)  # a versão de onde saiu fica
+
+    def test_copia_editada_fica(self):
+        editado = self.corpo.replace("tirinha", "tira", 1)
+        c = self.copia(self.go["LP"], editado)
+        self.migrar()
+        c.refresh_from_db()
+        self.assertEqual(c.texto, editado)
+
+    def test_revista_arquivada_fica(self):
+        c = self.copia(self.pe["LP"], self.corpo)
+        Revista.objects.filter(pk=self.pe["LP"].pk).update(arquivada_em="2026-10-29T12:00:00Z")
+        self.migrar()
+        c.refresh_from_db()
+        self.assertEqual(c.texto, self.corpo)
