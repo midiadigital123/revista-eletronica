@@ -11,19 +11,9 @@
 
 ## Doing
 ## Review
-- **K-028** Fase 3 do F2: tela dos infográficos (resolve a pendência `infografico`) · desde 2026-11-10 · D-252 · D-254 · D-255
-  nota: worktree `revista-express-f2-f3`, branch `feat/f2-f3`, stack `-p f2-f3`; os specs E2E `impacto`, `impresso`, `painel` e `revista-textos` voltam ao verde aqui
-  - [x] worktree + merge da `main` (`b5fd1e6`)
-  - [x] T0 suíte Django verde depois do merge (887 OK, 8 pulados, `makemigrations --check` limpo) + plano commitado `d6f7316` (`docs/superpowers/plans/2026-11-10-f2-fase-3.md`, D-254)
-  - [x] plano da fase 3 aprovado (D-254)
-  - [x] T1 (`b6347c4`, 888 OK) `servicos/pendencias.py` + itens rápidos da auditoria (D-252)
-  - [x] T2 (`a38c1f4`, merge `1d01400`, 898 OK) regra de gravação do infográfico + upload da imagem do item
-  - [x] T3 (`96c37d8`, merge `eb952e0`, 906 OK) passo "Infográficos" na ficha da revista (sai a UI do SVG)
-  - [x] T4 (demo `4675875`, E2E `2e69443`, Playwright 169/170) `criar_demo` com o docx + E2E (`infografico.spec.ts`, 4 specs de volta ao verde)
-  - [ ] T5 (editor `6352867`, docs `6784825`, revisão `9b2406d`; falta o merge na integ, com o ok) editor de templates F2, docs, revisão, merge na `integ/f2-gerado`
-  espera: ok do usuário para o merge `feat/f2-f3` → `integ/f2-gerado`
 
 ## Done
+- **K-028** Fase 3 do F2: tela dos infográficos, mergeada na `integ/f2-gerado` por fast-forward (Django 910 OK, Playwright 169/170) · 2026-11-11 · D-252 · D-254 · D-255
 - **K-037** Redesign do `kanban.html` com JS puro (busca, recolher colunas e checklist), `eefa697` na `main` de `~/.claude/skills/kanban` · 2026-11-10
 - **K-027** Skill `kanban`: quadro substitui o "Plano" do `state.md` · 2026-11-10 · D-253
 - **K-036** `integ/docs-atualizacao` na `main` (PR #9, conflito do `state.md` resolvido) · 2026-11-10
