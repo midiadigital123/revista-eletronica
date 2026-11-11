@@ -337,7 +337,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | O clique grava uma foto `impresso` com o resolvido inteiro; se o hash da foto diferir do visto, desfaz. Roda com o bloqueio do projeto. | D-151, D-178, `app/nucleo/urls/impresso.py:202-211` |
 | "O que mudou" = diferença entre a última foto `impresso` e a revista atual, nunca contra a última validação. Primeira vez: sem foto anterior. | D-077, learning "O que mudou para o impresso vem de um botão" |
 | O impresso compara escalas (com fim e item), cores e textos do F1, seções do F2 e os textos dos infográficos; capa e imagem dos itens ficam fora do diff. | D-112, D-118, D-153, D-178, D-256, `app/nucleo/servicos/resolver.py:368` |
-| Textos de cada infográfico que o impresso confere: habilidade, textos dos passos ❶ ❸ ❷, referencial (uma linha por etapa) e tarefas (descritor, rótulo, texto alternativo, análise). Fonte única do "o que mudou" e da planilha. | D-256, `app/nucleo/servicos/f2.py:58` |
+| Textos de cada infográfico que o impresso confere: habilidade, textos dos passos ❶ ❷ ❸ (descritor, habilidades, progressão: a ordem do tour), referencial (uma linha por etapa) e tarefas (descritor, rótulo, texto alternativo, análise). Fonte única do "o que mudou" e da planilha. | D-256, `app/nucleo/servicos/f2.py:58` |
 | "O que mudou" tem um grupo por infográfico, com o título completo (ex.: "Avaliação e Currículo – Outras Etapas"); a planilha F2 ganha uma aba por infográfico ("Alfa", "Outras Etapas"; colunas Campo e Texto). | D-256, `app/nucleo/urls/impresso.py:61`, `app/nucleo/servicos/planilhas.py:148` |
 | Trocar só a imagem de um item não deixa o impresso pendente. | D-118, D-256 |
 | Foto do impresso anterior à fase 4 do F2 não tem os infográficos: a revista com infográfico preenchido fica pendente uma vez, com os textos do infográfico como novos. | D-256 |
@@ -367,6 +367,9 @@ Direção aprovada em 06/11; fases 1 a 4 feitas na `integ/f2-gerado` (fase 0: o 
 | Passos desligados por infográfico (revista × tipo), gravados com o modal de impacto. | D-229, D-230 |
 | Abertura (4 parágrafos) também na web; um modal por item de tarefa (`dlg-tarefa-1..4`); item e suporte numa imagem só (`Tarefa.arquivo`); fechamento só texto. | D-232 |
 | O 1º parágrafo do `tarefas-fechamento` (itens do D05 de LP) saiu do seed F2; a migração 0025 o tira das cópias iguais ao seed, e texto editado fica. | D-240, D-256 |
+| O cartão do tour (antes do 1º passo) mostra só o título da `abertura`: os parágrafos dela já estão na página, logo acima. | D-258 |
+| O `tarefas-fechamento` aparece na web, sem título, logo depois do infográfico, e some com o passo Tarefas desligado (antes, só no impresso). | D-258 |
+| O modal ❶ é o `dlg-descritor` do template seguido do texto ❶ da revista: o campo guarda só a parte da revista (no docx de LP 2026, o 4º parágrafo). | D-242, D-258 |
 
 ---
 

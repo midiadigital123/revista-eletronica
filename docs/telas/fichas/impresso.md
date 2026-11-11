@@ -29,7 +29,7 @@ Mostrar à equipe do impresso, revista por revista, o que mudou no texto desde a
 - Detalhe da revista escolhida:
   - de quando e de quem é a última "Revista Impressa Atualizada" (e se a foto foi herdada de um projeto arquivado), ou "Primeira entrega";
   - por fascículo (F1, F2) e grupo (seção, cores, escala e descritores de cada etapa): cada item que mudou, marcado como **novo**, **alterado** ou **removido**, com a comparação antes/depois e o texto novo inteiro para copiar;
-  - no F2, um grupo por infográfico ativo, com o título completo (ex.: "Avaliação e Currículo – Outras Etapas"): habilidade, textos dos passos ❶ ❸ ❷, referencial (uma linha por etapa) e tarefas (descritor, rótulo, texto alternativo e análise). A imagem do item não entra: trocá-la não deixa o impresso pendente (D-118, D-256).
+  - no F2, um grupo por infográfico ativo, com o título completo (ex.: "Avaliação e Currículo – Outras Etapas"): habilidade, textos dos passos ❶ ❷ ❸, referencial (uma linha por etapa) e tarefas (descritor, rótulo, texto alternativo e análise). A imagem do item não entra: trocá-la não deixa o impresso pendente (D-118, D-256).
 
 ## Dados gravados
 
