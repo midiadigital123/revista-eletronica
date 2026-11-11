@@ -158,7 +158,15 @@ class Migracao0025Test(TestCase):
         c.refresh_from_db()
         self.assertEqual(c.texto, self.corpo.replace(self.mod.RETIRAR, ""))
         self.assertTrue(c.texto.startswith("Essa trajetória"))
-        self.assertEqual(c.template_versao_id, self.v1.pk)  # a versão de onde saiu fica
+        self.assertEqual(c.template_versao_id, versao_atual(self.tpl.pk).pk)  # já tem a mudança: não fica desatualizada
+
+    def test_copia_de_versao_mais_antiga_continua_desatualizada(self):
+        TemplateVersao.objects.create(template=self.tpl, numero=2, texto=self.m23.TEXTO_F2 + "\n")  # outra mudança depois da cópia
+        c = self.copia(self.go["LP"], self.corpo)
+        self.migrar()
+        c.refresh_from_db()
+        self.assertNotIn(self.mod.PARAGRAFO, c.texto)
+        self.assertEqual(c.template_versao_id, self.v1.pk)  # falta a mudança da versão 2: o aviso continua
 
     def test_copia_editada_fica(self):
         editado = self.corpo.replace("tirinha", "tira", 1)

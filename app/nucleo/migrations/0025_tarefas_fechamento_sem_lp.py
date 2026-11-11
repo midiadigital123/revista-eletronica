@@ -4,10 +4,11 @@
 # nem nucleo.texto, e não lê o seed; o parágrafo exato vai na constante abaixo.
 #   1. cada Template F2 cuja versão atual (a de maior número, como na 0023) tem o parágrafo ganha uma TemplateVersao
 #      nova (só INSERT, D-207) com o mesmo texto sem ele. O RevistaFasciculo aponta para o Template, não para a
-#      versão: a revista passa a ler a versão nova sozinha, como na 0023. A cópia guarda a versão de onde saiu
-#      (template_versao), que fica como está, como na 0023: a pendência de seção desatualizada avisa a mudança;
+#      versão: a revista passa a ler a versão nova sozinha, como na 0023;
 #   2. a cópia tarefas-fechamento de cada revista que tem o parágrafo exato perde o parágrafo; cópia em que o
-#      parágrafo foi editado fica como está (o texto é de quem editou).
+#      parágrafo foi editado fica como está (o texto é de quem editou). A cópia que saiu da versão substituída
+#      passa a apontar para a nova (template_versao): ela já tem a única mudança, e a pendência de seção
+#      desatualizada seria ruído. Cópia de versão mais antiga fica apontando para ela: faltam outras mudanças.
 #      Revista arquivada fica de fora, de propósito (ao contrário do item 3 da 0023): o texto dela continua válido,
 #      só desatualizado, e o arquivamento congela a revista (D-117); ao voltar, ela é revista com a pendência.
 # Linhas criadas ou alteradas aqui não têm registro do simple-history (o modelo histórico das migrações não dispara
@@ -35,10 +36,11 @@ def frente(apps, schema_editor):
     TemplateVersao = apps.get_model("nucleo", "TemplateVersao")
     RevistaSecao = apps.get_model("nucleo", "RevistaSecao")
 
+    trocadas = {}  # pk da versão substituída -> versão nova
     for template in Template.objects.filter(fasciculo="F2"):
         ultima = TemplateVersao.objects.filter(template=template).order_by("-numero").first()
         if ultima is not None and RETIRAR in ultima.texto:  # idempotente: a versão nova não tem o parágrafo
-            TemplateVersao.objects.create(
+            trocadas[ultima.pk] = TemplateVersao.objects.create(
                 template=template, numero=ultima.numero + 1, texto=ultima.texto.replace(RETIRAR, "")
             )
 
@@ -50,7 +52,11 @@ def frente(apps, schema_editor):
     )
     for copia in copias:
         copia.texto = copia.texto.replace(RETIRAR, "")
-        copia.save(update_fields=["texto"])
+        campos = ["texto"]
+        if copia.template_versao_id in trocadas:  # já tem a única mudança da versão nova: não fica desatualizada
+            copia.template_versao = trocadas[copia.template_versao_id]
+            campos.append("template_versao")
+        copia.save(update_fields=campos)
 
 
 class Migration(migrations.Migration):
