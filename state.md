@@ -2,11 +2,11 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Fase 4 do F2 (K-029) em execução na worktree `/home/otavio.peres/dev/revista-express-f2-f4` (branch `feat/f2-f4`, saída da `integ/f2-gerado` `516f660`, stack `-p f2-f4`). Plano aprovado (D-256): T0 plano, T1 sai o SVG enviado, T2 impresso com os infográficos, T3 parágrafo do `tarefas-fechamento`, T4 docs/E2E/revisão/merge. Funcionando na integ: fases 1 a 3 (F2 gerado a partir dos infográficos preenchidos na ficha). Pendente: fase 4, depois o merge na `main` (K-030); fase 5; S17/S18.
+Fase 4 do F2 (K-029) pronta para revisão do usuário na `feat/f2-f4` (worktree `/home/otavio.peres/dev/revista-express-f2-f4`). Funcionando: o SVG enviado saiu do código e do banco (migração 0024, −750 linhas); o impresso vê os textos dos infográficos no "o que mudou" e numa aba por infográfico da planilha F2 (imagem do item fora, D-118); o `tarefas-fechamento` perdeu o parágrafo do D05 de LP (seeds + migração 0025); docs e learning atualizadas. Verificado: Django 894 OK (8 pulados), `makemigrations --check` limpo, 0024/0025 de ida e volta, régua ok, Playwright 169/170 (`ano.spec`: primeiras navegações depois de o servidor subir, ambiente, D-257). Pendente: merge da `feat/f2-f4` na `integ/f2-gerado` (precisa do ok); depois o merge da `integ/f2-gerado` na `main` (K-030, D-249); fase 5; S17/S18.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-T1 e T2 da fase 4 em paralelo, cada uma numa worktree irmã `revista-express-f2-f4-t1`/`-t2`.
+Com o ok do usuário, mergear `feat/f2-f4` na `integ/f2-gerado` (fast-forward) e apagar a worktree `revista-express-f2-f4`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2085,9 +2085,17 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Arquivos afetados:** plano da fase 4; na execução, `models/revista.py`, migrações 0024 e 0025, `servicos/arquivos.py`, `nucleo/revista.py`, `admin/revista.py`, `urls/ui_revista.py`, `servicos/f2.py`, `servicos/resolver.py`, `urls/impresso.py`, `servicos/planilhas.py`, seeds F2, docs.
 - **Status:** ativa
 
+### D-257 — Fase 4 do F2 executada: decisões tomadas na execução (2026-11-11 12:30)
+- **Contexto:** T1 a T4 da fase 4 (D-256) executadas com subagentes em paralelo (worktrees `-t1`, `-t2`, `-t3`, `-t4a`); surgiram escolhas que o plano não fixava.
+- **Decisão:** (1) no "o que mudou" o grupo do infográfico é o título completo do `TipoInfografico` ("Avaliação e Currículo – Outras Etapas"); a aba da planilha é a parte depois de " – " ("Alfa", "Outras Etapas"), porque o título completo passa dos 31 caracteres do Excel; (2) os textos HTML do infográfico vão ao impresso por `texto.html_para_texto` (como as seções), não por `texto_puro`, para mudança de formatação aparecer no diff; (3) a 0025 passa o `template_versao` da cópia limpa para a versão nova só quando a cópia saiu da versão substituída: ela já tem a única mudança, e o aviso de seção desatualizada seria ruído; cópia de versão mais antiga continua apontando para ela (faltam outras mudanças); revista arquivada fica de fora (D-117); (4) o `defusedxml` fica no `requirements.txt` (comentado): o openpyxl o usa ao ler a planilha enviada; (5) as regras do `revista.css` com prefixo `f2-` ficam: o `f2.svg` gerado ainda as usa; (6) a falha do `ano.spec` no Playwright inteiro é ambiente: rodando só os specs de ano numa stack nova, as duas primeiras navegações depois de o servidor subir falham (`ERR_EMPTY_RESPONSE`/`ERR_CONNECTION_RESET`), seja qual for o spec.
+- **Motivo:** nomes curtos e únicos na planilha; uma regra só de texto puro no impresso; pendência sem falso positivo; segurança na leitura de xlsx.
+- **Descartadas:** grupo do diff só "Outras Etapas" (troca de 1 linha, fica para o usuário decidir); tirar o `defusedxml` (enfraquece a leitura do xlsx); manter o `template_versao` de toda cópia limpa (aviso falso em toda revista com cópia).
+- **Arquivos afetados:** `servicos/f2.py`, `servicos/resolver.py`, `urls/impresso.py`, `servicos/planilhas.py`, `migrations/0024_revista_sem_svg.py`, `migrations/0025_tarefas_fechamento_sem_lp.py`, `servicos/arquivos.py`, `requirements.txt`, testes, docs, learning `l-1ce96774` (substitui `l-705761ad`).
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (D-252) (10/11, auditoria do código) Quais itens do "fazer agora" entram e onde: `planilhas.py:97` falha explícita para componente sem layout; enum no lugar de "2EF" em `cascata.py` e assert nas 12 etapas de `f2.py`; constante `ANO_DEMO` no E2E (138 ocorrências de 2026); separar `pendencias_f1`/`pendencias_f2`; helper `pode(user, modelo, acao)` (48 checagens fora de `permissoes.py`). Depois: hash do resolvido persistido (o resolver roda por revista no painel, impacto, matriz, paleta e impresso; teto ~50 revistas) e painel paginado com poda de fotos — depende de: Otavio
-- [ ] (10/11, conselho da fase 2) O 1º parágrafo de `tarefas-fechamento` (seed `f2-lp.hbs`/`f2-mt.hbs` e migração 0023) fala dos itens do D05 de LP (tirinha, charge), contra o motivo da D-240. Tirar do seed e da 0023 antes da fase 4 (quando o impresso lê a seção)? — depende de: Otavio
+- [x] (D-256: sai do seed e das cópias iguais, migração 0025) (10/11, conselho da fase 2) O 1º parágrafo de `tarefas-fechamento` (seed `f2-lp.hbs`/`f2-mt.hbs` e migração 0023) fala dos itens do D05 de LP (tirinha, charge), contra o motivo da D-240. Tirar do seed e da 0023 antes da fase 4 (quando o impresso lê a seção)? — depende de: Otavio
 - [x] (D-249: deploy das fases 1 a 4 juntas) (09/11, plano da fase 2) A planilha e o "o que mudou" do impresso só ganham os infográficos na fase 4. Se as fases 1 a 3 forem para a `main` sem a 4, o impresso não vê o conteúdo novo do F2. Puxar a parte do impresso da fase 4 para a 3, ou deployar 1 a 4 juntas? Decidir antes da fase 3 — depende de: Otavio
 - [x] (D-237: opção A) (09/11, contra a D-236) Fase 2 sozinha na `main` trava o "Validado" e o zip de toda revista: as pendências novas do infográfico (habilidade vazia, passo ligado sem dado, item sem imagem) só se resolvem na tela da fase 3. Opções: (A) `integ/f2-gerado` entra na `main` só com as fases 1 a 3; (B) a fase 2 não cria pendência nova, e elas entram na fase 3 — depende de: Otavio
 - [ ] No banco de dev, SAESE LP (revista 3) e SAEGO LP (revista 13) estão com o "Validado" desatualizado: o hash gravado não bate com a revista resolvida, já com o código da `main` (visto em 06/11 ao testar a fase 1; não é efeito dela). Revalidar ou investigar o que mudou — depende de: Otavio
@@ -2674,3 +2682,6 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 
 ### 2026-11-11 10:00
 - Plano da fase 4 escrito e aprovado (D-256); worktree `revista-express-f2-f4` criada a partir da `integ/f2-gerado`.
+- Fase 4 executada: T1 `23f2236`, T2 `9328d04`, T3 `3a5e734` + `bfff9d5`, docs `de4a67e`, achados da revisão `97ed363`. D-257.
+- Revisão `ecc:django-reviewer`: nenhum achado bloqueante nem importante; 2 menores aplicados.
+- Verificação final: Django 894 OK; Playwright 169/170 (`ano.spec`, ambiente, confirmado numa stack nova).
