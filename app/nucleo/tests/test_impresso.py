@@ -289,9 +289,9 @@ class ImpressoTest(Base):
     def test_textos_impresso_do_infografico(self):
         criar_demo.preencher_infograficos(self.rev)  # dados do docx de LP 2026
         textos = dict(f2.textos_impresso(self.infografico()))
-        self.assertEqual(list(textos)[:6], ["Habilidade", "❶ Descritor", "❸ Habilidades", "❷ Progressão", "Referencial", "Tarefa 1"])
+        self.assertEqual(list(textos)[:6], ["Habilidade", "❶ Descritor", "❷ Habilidades", "❸ Progressão", "Referencial", "Tarefa 1"])
         self.assertTrue(textos["Habilidade"].startswith("Interpretar texto com auxílio"))
-        self.assertIn("**1º e 2º anos do Ensino Fundamental**", textos["❸ Habilidades"])  # HTML volta a Markdown
+        self.assertIn("**1º e 2º anos do Ensino Fundamental**", textos["❷ Habilidades"])  # HTML volta a Markdown
         referencial = textos["Referencial"].splitlines()
         self.assertEqual(len(referencial), 12)  # uma linha por etapa
         self.assertEqual(referencial[0], "1º ano do Ensino Fundamental · I · EF15LP18 · Relacionar texto com ilustrações e outros recursos gráficos.")

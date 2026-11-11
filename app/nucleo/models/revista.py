@@ -139,7 +139,7 @@ class RevistaInfografico(models.Model):
     arquivado_em = models.DateTimeField(null=True, blank=True)
     passos_desligados = ArrayField(models.TextField(), default=list, blank=True)
     habilidade = models.TextField(blank=True, default="")  # habilidade destacada (redação canônica)
-    # Textos dos cliques ❶ ❷ ❸.
+    # Textos dos cliques: ❶ descritor, ❷ habilidades, ❸ progressão (ordem do tour, PASSOS).
     texto_descritor = models.TextField(blank=True, default="")
     texto_progressao = models.TextField(blank=True, default="")
     texto_habilidades = models.TextField(blank=True, default="")

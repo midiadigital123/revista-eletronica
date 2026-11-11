@@ -32,8 +32,8 @@ test("infográficos: 2 cartões, Outras Etapas inteiro, prévia com tour e image
   for (const [rotulo, valor] of [
     ["Habilidade destacada", "Habilidade E2E das outras etapas."],
     ["Texto do clique ❶ (descritor)", "Descritor E2E."],
-    ["Texto do clique ❸ (habilidades)", "Habilidades E2E."],
-    ["Texto do clique ❷ (progressão)", "Progressão E2E."],
+    ["Texto do clique ❷ (habilidades)", "Habilidades E2E."],
+    ["Texto do clique ❸ (progressão)", "Progressão E2E."],
   ]) {
     await salvar(() => preencher(outras.getByLabel(rotulo, { exact: true }), valor));
   }

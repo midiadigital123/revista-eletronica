@@ -28,7 +28,9 @@ Sem permissão ou revista arquivada: os mesmos campos, `disabled`.
     </div>
     <div class="campo">
       <label for="{{ n }}-texto_descritor">Texto do clique ❶ (descritor)</label>
-      <textarea class="textarea" id="{{ n }}-texto_descritor" name="{{ n }}-texto_descritor" rows="3"{% if not pode_infograficos %} disabled{% endif %}>{{ inf.texto_descritor }}</textarea>
+      <textarea class="textarea" id="{{ n }}-texto_descritor" name="{{ n }}-texto_descritor" rows="4" aria-describedby="{{ n }}-texto_descritor-ajuda"{% if not pode_infograficos %} disabled{% endif %}>{{ inf.texto_descritor }}</textarea>
+      <p class="ajuda" id="{{ n }}-texto_descritor-ajuda">No modal, este texto entra depois do Diálogo do descritor do template.</p>
+      {% include "ui/parciais/revista_inf_template.html" with secoes=textos_template.descritor %}
     </div>
 
     <fieldset class="inf-passos">
@@ -39,14 +41,12 @@ Sem permissão ou revista arquivada: os mesmos campos, `disabled`.
     </fieldset>
 
     <div class="campo" data-bloco="habilidades">
-      <label for="{{ n }}-texto_habilidades">Texto do clique ❸ (habilidades)</label>
-      <textarea class="textarea" id="{{ n }}-texto_habilidades" name="{{ n }}-texto_habilidades" rows="3"{% if not pode_infograficos %} disabled{% endif %}>{{ inf.texto_habilidades }}</textarea>
-    </div>
-    <div class="campo" data-bloco="progressao">
-      <label for="{{ n }}-texto_progressao">Texto do clique ❷ (progressão)</label>
-      <textarea class="textarea" id="{{ n }}-texto_progressao" name="{{ n }}-texto_progressao" rows="3"{% if not pode_infograficos %} disabled{% endif %}>{{ inf.texto_progressao }}</textarea>
+      <label for="{{ n }}-texto_habilidades">Texto do clique ❷ (habilidades)</label>
+      <textarea class="textarea" id="{{ n }}-texto_habilidades" name="{{ n }}-texto_habilidades" rows="4"{% if not pode_infograficos %} disabled{% endif %}>{{ inf.texto_habilidades }}</textarea>
+      {% include "ui/parciais/revista_inf_template.html" with secoes=textos_template.habilidades %}
     </div>
 
+    {# Junto do ❷ (D-258); irmã dos blocos: só some com Habilidades e Progressão desligados. #}
     <div class="inf-grade" data-bloco="grade">
       <h4 class="rotulo" id="{{ n }}-grade-titulo">Referencial por etapa</h4>
       <p class="ajuda">As Habilidades usam o código e o texto (vazios: a célula de cima se estende); a Progressão usa a marca.</p>
@@ -70,7 +70,14 @@ Sem permissão ou revista arquivada: os mesmos campos, `disabled`.
       </div>
     </div>
 
+    <div class="campo" data-bloco="progressao">
+      <label for="{{ n }}-texto_progressao">Texto do clique ❸ (progressão)</label>
+      <textarea class="textarea" id="{{ n }}-texto_progressao" name="{{ n }}-texto_progressao" rows="4"{% if not pode_infograficos %} disabled{% endif %}>{{ inf.texto_progressao }}</textarea>
+      {% include "ui/parciais/revista_inf_template.html" with secoes=textos_template.progressao %}
+    </div>
+
     <div class="inf-itens" data-bloco="tarefas">
+      {% include "ui/parciais/revista_inf_template.html" with secoes=textos_template.tarefas %}
       {% for posicao, item in inf.itens %}{% with ps=posicao|stringformat:"s" %}{% with c=n|add:"-item-"|add:ps %}
       <fieldset class="inf-item">
         <legend class="rotulo">Tarefa {{ posicao }}</legend>
@@ -109,7 +116,7 @@ Sem permissão ou revista arquivada: os mesmos campos, `disabled`.
           </div>
           <div class="campo">
             <label for="{{ c }}-analise">Análise</label>
-            <textarea class="textarea" id="{{ c }}-analise" name="{{ c }}-analise" rows="3"{% if not pode_infograficos %} disabled{% endif %}>{{ item.analise }}</textarea>
+            <textarea class="textarea" id="{{ c }}-analise" name="{{ c }}-analise" rows="4"{% if not pode_infograficos %} disabled{% endif %}>{{ item.analise }}</textarea>
           </div>
         </div>
       </fieldset>

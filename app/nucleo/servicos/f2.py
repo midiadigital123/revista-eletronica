@@ -67,8 +67,8 @@ def textos_impresso(inf):
     pares = [
         ("Habilidade", inf["habilidade"]),
         ("❶ Descritor", html_para_texto(t["descritor"])),
-        ("❸ Habilidades", html_para_texto(t["habilidades"])),
-        ("❷ Progressão", html_para_texto(t["progressao"])),
+        ("❷ Habilidades", html_para_texto(t["habilidades"])),
+        ("❸ Progressão", html_para_texto(t["progressao"])),
         ("Referencial", juntar("\n", (
             juntar(" · ", (e["rotulo"] or e["etapa"], e["marca"], e["codigo"], e["texto"])) for e in inf["etapas"]
         ))),

@@ -389,6 +389,57 @@ class RevistaUiTest(Base):
         self.assertNotContains(r, "arquivo_svg")
         self.assertNotContains(r, "gabarito-ids")
 
+    def template_f2(self):
+        """Versão nova do template F2 da revista com as 9 seções do test_preview."""
+        from nucleo.tests.test_preview import F2
+
+        rf = RevistaFasciculo.objects.get(revista=self.rev, fasciculo="F2")
+        if rf.template is None:
+            rf.template = Template.objects.create(ano=self.ano, componente=self.lp, fasciculo="F2", nome="F2 teste")
+            rf.save(update_fields=["template"])
+        numero = TemplateVersao.objects.filter(template=rf.template).count() + 1
+        TemplateVersao.objects.create(template=rf.template, numero=numero, texto=F2)
+        return rf
+
+    def test_infografico_ordem_numeros_e_linhas(self):
+        """D-258: ❷ habilidades, a grade logo depois, ❸ progressão; caixas com rows="4" (o field-sizing fora do foco só se vê no navegador)."""
+        html = self.abrir().content.decode()
+        pk = self.outras().pk
+        ordem = [f'id="inf-{pk}-texto_descritor"', "Texto do clique ❷ (habilidades)", f'id="inf-{pk}-texto_habilidades"',
+                 "Referencial por etapa", "Texto do clique ❸ (progressão)", f'id="inf-{pk}-texto_progressao"',
+                 f'id="inf-{pk}-item-1-analise"']  # fmt: skip
+        self.assertEqual([html.index(t) for t in ordem], sorted(html.index(t) for t in ordem))
+        for campo in ("texto_descritor", "texto_habilidades", "texto_progressao", "item-1-analise"):
+            self.assertIn(f'id="inf-{pk}-{campo}" name="inf-{pk}-{campo}" rows="4"', html)
+
+    def test_infografico_mostra_os_textos_do_template(self):
+        rf = self.template_f2()
+        r = self.abrir()
+        self.assertContains(r, "Do template: Passo: descritor, Diálogo do descritor")
+        self.assertContains(r, "Detalhe do descritor.")
+        self.assertContains(r, 'href="?secao=F2%3Adlg-descritor#secao"')
+        self.assertContains(r, "Do template: Passo: tarefas, Diálogo das tarefas, Fechamento das tarefas")
+        self.assertContains(r, "Compare os itens.")
+        # Com cópia na revista, o cartão mostra o texto da cópia.
+        versao = TemplateVersao.objects.filter(template=rf.template).order_by("-numero").first()
+        RevistaSecao.objects.create(
+            revista_fasciculo=rf, template=rf.template, template_versao=versao, secao="dlg-descritor", texto="Meu descritor."
+        )
+        r = self.abrir()
+        self.assertContains(r, "Meu descritor.")
+        self.assertNotContains(r, "Detalhe do descritor.")
+        # O badge aparece na lista de seções e no "Do template" do cartão.
+        self.assertContains(r, '<span class="badge badge-secundario">cópia</span>', count=2)
+        # Markdown cru com autoescape: HTML na seção sai como texto.
+        RevistaSecao.objects.filter(secao="dlg-descritor").update(texto="<script>alert(1)</script>")
+        r = self.abrir()
+        self.assertContains(r, "&lt;script&gt;alert(1)&lt;/script&gt;")
+        self.assertNotContains(r, "<script>alert(1)</script>")
+
+    def test_infografico_sem_template_f2_sem_textos_do_template(self):
+        RevistaFasciculo.objects.filter(revista=self.rev, fasciculo="F2").update(template=None)
+        self.assertNotContains(self.abrir(), "Do template:")
+
     def test_infografico_salva_e_troca_a_situacao(self):
         aberta = self.abrir()
         corpo = self.inf("habilidade", "Inferir informação.", aberta).json()

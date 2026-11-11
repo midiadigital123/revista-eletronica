@@ -67,6 +67,16 @@
 .inf-card:has([data-passo=tarefas]:not(:checked)) [data-bloco=tarefas],
 .inf-card:has([data-passo=habilidades]:not(:checked)):has([data-passo=progressao]:not(:checked)) [data-bloco=grade] { display: none; }
 .inf-card .textarea:disabled { background-color: var(--muted); border-color: var(--border); box-shadow: none; }
+/* Caixas do cartão: 4 linhas (rows); com foco, o texto todo pelo field-sizing do ui.css (D-258). */
+.inf-card .textarea:not(.inf-texto-curto):not(:focus) { field-sizing: fixed; }
+/* Textos do template usados no passo (D-258): só leitura; Markdown cru, como no editor. */
+.inf-template { font-size: 0.875rem; }
+.inf-template summary { cursor: pointer; color: var(--muted-foreground); }
+.inf-template-secao { display: flex; flex-direction: column; gap: 0.25rem; margin-top: 0.5rem; padding: 0.5rem 0.75rem; border-radius: var(--radius-md); background: var(--muted); }
+.inf-template-cab { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.inf-template-cab a { margin-left: auto; text-decoration: underline; }
+.inf-template-titulo { font-weight: 500; }
+.inf-template-corpo { white-space: pre-wrap; max-height: 12rem; overflow-y: auto; }
 .inf-grade { display: flex; flex-direction: column; gap: 0.375rem; }
 .inf-tabela th, .inf-tabela td { padding: 0.25rem 0.5rem; vertical-align: top; text-align: left; }
 .inf-tabela thead th { font-weight: 500; color: var(--muted-foreground); }

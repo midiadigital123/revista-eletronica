@@ -230,8 +230,25 @@ def _contexto(request, revista, chave=None, form=None):
         contexto["foto"] = [(f.upper(), r[f]["secoes"]) for f in ("f1", "f2") if r[f]["secoes"]]
     else:
         contexto["blocos"] = blocos = blocos_de_texto(revista)
+        contexto["textos_template"] = _textos_template(blocos)
         contexto.update(_contexto_secao(request, blocos, chave or request.GET.get("secao"), form))
     return contexto
+
+
+# Seções do template F2 que cada passo do infográfico usa (servicos/f2.gerar e html.contexto_pagina),
+# mostradas só para leitura no cartão (D-258).
+SECOES_DO_PASSO = {
+    "descritor": ("passo-descritor", "dlg-descritor"),
+    "habilidades": ("passo-habilidades",),
+    "progressao": ("passo-progressao",),
+    "tarefas": ("passo-tarefas", "dlg-tarefas", "tarefas-fechamento"),
+}
+
+
+def _textos_template(blocos):
+    """{passo: [Secao efetiva do F2]}; vazio sem template F2. Vale para os dois infográficos da revista."""
+    secoes = {s.id: s for b in blocos if b.rf.fasciculo == "F2" for s in b.secoes}
+    return {passo: [secoes[i] for i in ids if i in secoes] for passo, ids in SECOES_DO_PASSO.items()}
 
 
 def _infograficos(revista):
