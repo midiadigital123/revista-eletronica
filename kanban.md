@@ -8,12 +8,11 @@
 - **K-033** S18 — E2E da temporada
 
 ## Doing
-- **K-030** Merge da `integ/f2-gerado` na `main`, com as fases 1 a 4 juntas (D-249)
-  nota: no deploy, toda revista impressa com infográfico fica "pendente" no impresso uma vez (D-256); apagar à mão os `media/f2/*.svg` órfãos
-  nota: por PR (D-260); depois, bancos locais apagados e dev do zero na `main`
 ## Review
 
 ## Done
+- **K-030** `integ/f2-gerado` na `main` pelo PR #12 (fases 1 a 4 do F2 + K-038); bancos locais apagados e dev do zero · 2026-11-11 · D-249 · D-260
+  nota: no deploy, toda revista impressa com infográfico fica "pendente" no impresso uma vez (D-256); apagar à mão os `media/f2/*.svg` órfãos; backup antes (a 0024 apaga as colunas do SVG)
 - **K-038** Ajustes do F2 depois da Demonstração: cartão do tour só com título, fechamento das tarefas na página, modal ❶ sem texto em dobro, ❷/❸ certos, referencial junto do ❷, caixas de 4 linhas, "Do template" no cartão; mergeado na `integ/f2-gerado` (Django 898 OK, Playwright 170/170) · 2026-11-11 · D-258 · D-259
 - **K-029** Fase 4 do F2: sai o SVG enviado, impresso com os textos dos infográficos, `tarefas-fechamento` sem o parágrafo do D05; mergeada na `integ/f2-gerado` por fast-forward (Django 894 OK, Playwright 169/170) · 2026-11-11 · D-256 · D-257
 - **K-028** Fase 3 do F2: tela dos infográficos, mergeada na `integ/f2-gerado` por fast-forward (Django 910 OK, Playwright 169/170) · 2026-11-11 · D-252 · D-254 · D-255
