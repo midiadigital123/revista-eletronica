@@ -11,7 +11,7 @@
 // preview, sem salvar; no fim o exclui pela tela B (E4, D-207).
 import { expect, test } from "@playwright/test";
 import { entrar, liberarBloqueio } from "./helpers";
-import { criarTemplate, excluirTemplate } from "./templates";
+import { criarTemplate, excluirTemplate, TEXTO_F2 } from "./templates";
 
 test("template: Inserir variável atualiza o preview", async ({ page }) => {
   const erros: string[] = [];
@@ -20,7 +20,7 @@ test("template: Inserir variável atualiza o preview", async ({ page }) => {
   await entrar(page, "/admin/nucleo/template/?fasciculo__exact=F2");
   await expect(page.locator('.abas-templates [aria-current="page"]')).toHaveText("Textos F2");
   const nome = `E2E admin ${Date.now().toString(36).toUpperCase()}`;
-  const pk = await criarTemplate(page, nome, "F2", "## abertura\nAbertura\n\nOlá.\n\n## passo1\nPasso um\n\nPara todos.\n");
+  const pk = await criarTemplate(page, nome, "F2", TEXTO_F2);
   await page.goto(`/admin/nucleo/template/${pk}/change/`);
 
   const editor = page.locator(".editor-template");
@@ -35,7 +35,7 @@ test("template: Inserir variável atualiza o preview", async ({ page }) => {
   await expect(area).toHaveValue("## abertura\nBoas-vindas\n\nOlá, {{ano}}");
   await expect(preview.locator(".variavel-vazia")).toHaveText("{{ano}}");
   await expect(preview.locator("h3")).toHaveText("Boas-vindas");
-  await expect(editor.locator(".editor-template-erros")).toContainText("passo1"); // validar ao vivo
+  await expect(editor.locator(".editor-template-erros")).toContainText("passo-descritor"); // validar ao vivo: faltam as outras 8
   expect(erros).toEqual([]);
 
   await liberarBloqueio(page);

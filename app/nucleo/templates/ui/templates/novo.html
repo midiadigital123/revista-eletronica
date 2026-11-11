@@ -40,7 +40,7 @@ Ficha: docs/telas/fichas/templates.md.{% endcomment %}
   <div class="campo">
     <label for="id_texto">Texto inicial</label>
     <textarea class="textarea tpl-novo-texto" id="id_texto" name="texto" rows="12" spellcheck="true" aria-describedby="texto-dica{% if form.texto.errors %} texto-erro{% endif %}"{% if form.texto.errors %} aria-invalid="true"{% endif %}>{{ form.texto.value|default:'' }}</textarea>
-    <p class="ajuda" id="texto-dica">Cada seção começa com <code>## id</code>, tem título na linha seguinte e depois o texto. F1: <code>introducao</code> e <code>fechamento</code>. F2: <code>abertura</code> e <code>passo1</code>, mais passos e diálogos no editor. Se trocar o fascículo, ajuste as seções.</p>
+    <p class="ajuda" id="texto-dica">Cada seção começa com <code>## id</code>, tem título na linha seguinte e depois o texto. F1: <code>introducao</code> e <code>fechamento</code>. F2: as 9 seções fixas, que o editor lista. Se trocar o fascículo, ajuste as seções.</p>
     {% if form.texto.errors %}<ul class="erro" id="texto-erro">{% for e in form.texto.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
   </div>
 

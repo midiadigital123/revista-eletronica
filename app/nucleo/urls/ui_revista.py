@@ -6,17 +6,19 @@ Regra em `nucleo/revista.py` (a mesma do admin), "Validado" em `servicos/validac
 - arquivos: `change_revista`; templates: + `change_revistafasciculo`; textos: + `add/change_revistasecao`;
   "Validado": + `validar_revista`. Revista ou projeto arquivado: só leitura, POST 403.
 - bloqueio: a revista trava o projeto dela (D-140), pela peça comum `ui_bloqueio.com_bloqueio`.
-Página em duas colunas (U8b): templates, arquivos e textos à esquerda; a coluna Situação (a única
+Página em duas colunas (U8b): templates, infográficos, capa e textos à esquerda; a coluna Situação (a única
 lista de pendências, com o "Validar revista") fixa à direita. Envios (`acao`):
 - `templates` e `arquivos`: autosave (protocolo de `ui_autosave`, `?acao=` na URL), um campo por vez,
   com o modal de impacto (U2); a resposta 200 traz em `trocar` o HTML novo das partes afetadas.
 - `texto`: autosave do texto de uma seção (`?acao=texto&secao=F1:id`), mesmo protocolo.
+- `infografico`: autosave de um campo do infográfico do F2 (regra em `nucleo/infografico.py`).
 - `secao`: HTMX, botões "Manter meu texto" e "Descartar cópia" (e o envio sem JS); devolve o painel
   da seção + lista de seções, Situação e mensagens (oob).
 - `validar`: HTMX com HX-Redirect.
 """
 
 import hashlib
+from pathlib import PurePosixPath
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -31,7 +33,9 @@ from django.urls import path, reverse
 from django.views.decorators.http import require_GET, require_http_methods
 
 from nucleo.contexto import ano_da_sessao
-from nucleo.models import Ano, Revista, RevistaFasciculo
+from nucleo.infografico import familia, form_do_campo
+from nucleo.models import Ano, Revista, RevistaFasciculo, RevistaInfografico
+from nucleo.models.revista import EtapaReferencial, Marca
 from nucleo.revista import (
     FasciculoForm,
     RevistaForm,
@@ -41,7 +45,6 @@ from nucleo.revista import (
     form_de_textos,
     frase_descarte,
     gravar_textos,
-    ids_do_f2,
     nome,
 )
 from nucleo.servicos import arquivos, resolver, validacao
@@ -52,6 +55,13 @@ from nucleo.urls.painel import link as link_pendencia
 
 ERRO_FORM = "Nada foi gravado: corrija os erros marcados."
 PERMS_TEXTO = ["nucleo.add_revistasecao", "nucleo.change_revistasecao"]
+# Campo `inf-<pk>-<família>-…`: a família diz a tabela; o resto é do RevistaInfografico (só `change`).
+PERMS_INFOGRAFICO = {
+    "etapa": ["nucleo.add_revistainfograficoetapa", "nucleo.change_revistainfograficoetapa"],
+    "item": ["nucleo.add_revistainfograficoitem", "nucleo.change_revistainfograficoitem"],
+}
+PASSOS_INFOGRAFICO = (("habilidades", "Habilidades"), ("progressao", "Progressão"), ("tarefas", "Tarefas"))  # PASSOS_DESLIGAVEIS
+PERMS_INFOGRAFICO_TODAS = ["nucleo.change_revistainfografico", *PERMS_INFOGRAFICO["etapa"], *PERMS_INFOGRAFICO["item"]]
 
 
 def pode_ver(user):
@@ -126,7 +136,7 @@ PASSOS = (
     ("Matriz e cortes", ("matriz", "corte_sem_matriz", "corte_invalido")),
     ("Template do F1", ("template_f1",)),
     ("Template do F2", ("template_f2",)),
-    ("SVG do F2", ("svg", "ids_svg")),
+    ("Infográficos", ("infografico",)),
     ("Capa", ("capa",)),
     ("Dados do projeto", ("variaveis", "nome_projeto")),
 )
@@ -138,7 +148,7 @@ def _situacao(revista, pendencias):
         "matriz": f"{projeto}?aba=matriz", "corte_sem_matriz": link_pendencia("corte_sem_matriz", revista),  # U7b; a etapa que falta: a matriz
         "corte_invalido": f"{projeto}?aba=cortes",
         "template_f1": "#templates", "template_f2": "#templates",
-        "svg": "#arquivos", "ids_svg": "#arquivos", "capa": "#arquivos",
+        "infografico": "#infograficos", "capa": "#arquivos",
         "variaveis": f"{projeto}#variaveis", "nome_projeto": f"{projeto}#nome",
     }  # fmt: skip
     passos = [{"rotulo": r, "pendencias": [p for p in pendencias if p.codigo in codigos]} for r, codigos in PASSOS]
@@ -182,6 +192,8 @@ def revista(request, ano, pk):
             return _template(request, revista)
         if acao == "arquivos" and quer_json(request):
             return _arquivo(request, revista)
+        if acao == "infografico" and quer_json(request):
+            return _infografico(request, revista)
         return HttpResponseBadRequest("Ação desconhecida. O nome do projeto se edita no Projeto (U5).")
     if e_htmx(request) and "secao" in request.GET:
         blocos = blocos_de_texto(revista)
@@ -204,12 +216,12 @@ def _contexto(request, revista, chave=None, form=None):
         "arquivada": so_foto, "validacao": _validacao(request, revista),
         "pode_templates": request.pode_gravar and request.user.has_perm("nucleo.change_revistafasciculo"),
         "fasciculos": _forms_fasciculo(request, revista),
-        "ids": ids_do_f2(revista) if revista.svg_f2 else None,
-        "svg_tamanho": _tamanho(revista.svg_f2), "capa_tamanho": _tamanho(revista.capa),
-        "svg_max": arquivos.SVG_MAX, "capa_max": arquivos.CAPA_MAX,
+        "capa_tamanho": _tamanho(revista.capa), "capa_max": arquivos.CAPA_MAX,
+        "infograficos": _infograficos(revista), "item_max": arquivos.ITEM_MAX, "passos_infografico": PASSOS_INFOGRAFICO,
+        "marcas": Marca.choices, "etapas_referencial": EtapaReferencial.choices,
+        "pode_infograficos": request.pode_gravar and request.user.has_perms(PERMS_INFOGRAFICO_TODAS),
         # U5: o nome do projeto se edita só no Projeto; aqui fica o link "Editar no projeto".
         "pode_nome": request.pode_gravar and request.user.has_perm("nucleo.change_projeto"),
-        "tem_f2": RevistaFasciculo.objects.filter(revista=revista, fasciculo="F2", template__isnull=False).exists(),
         "sem_template": RevistaFasciculo.objects.filter(revista=revista, template__isnull=True).exists(),
     }  # fmt: skip
     if so_foto:
@@ -218,8 +230,41 @@ def _contexto(request, revista, chave=None, form=None):
         contexto["foto"] = [(f.upper(), r[f]["secoes"]) for f in ("f1", "f2") if r[f]["secoes"]]
     else:
         contexto["blocos"] = blocos = blocos_de_texto(revista)
+        contexto["textos_template"] = _textos_template(blocos)
         contexto.update(_contexto_secao(request, blocos, chave or request.GET.get("secao"), form))
     return contexto
+
+
+# Seções do template F2 que cada passo do infográfico usa (servicos/f2.gerar e html.contexto_pagina),
+# mostradas só para leitura no cartão (D-258).
+SECOES_DO_PASSO = {
+    "descritor": ("passo-descritor", "dlg-descritor"),
+    "habilidades": ("passo-habilidades",),
+    "progressao": ("passo-progressao",),
+    "tarefas": ("passo-tarefas", "dlg-tarefas", "tarefas-fechamento"),
+}
+
+
+def _textos_template(blocos):
+    """{passo: [Secao efetiva do F2]}; vazio sem template F2. Vale para os dois infográficos da revista."""
+    secoes = {s.id: s for b in blocos if b.rf.fasciculo == "F2" for s in b.secoes}
+    return {passo: [secoes[i] for i in ids if i in secoes] for passo, ids in SECOES_DO_PASSO.items()}
+
+
+def _infograficos(revista):
+    """Cartões do passo Infográficos: os ativos com as 12 etapas do referencial e os 4 itens, cada um
+    com a linha gravada ou None (campos vazios; a linha nasce na 1ª gravação)."""
+    # ponytail: "alfa" < "outras" na ordem alfabética, que é a ordem dos cartões; um tipo novo pede ordem explícita.
+    infos = RevistaInfografico.objects.filter(revista=revista, arquivado_em__isnull=True).order_by("tipo")
+    infos = list(infos.prefetch_related("revistainfograficoetapa_set", "revistainfograficoitem_set"))
+    for inf in infos:
+        etapas = {e.etapa: e for e in inf.revistainfograficoetapa_set.all()}
+        itens = {i.posicao: i for i in inf.revistainfograficoitem_set.all()}
+        for i in itens.values():
+            i.nome_imagem = PurePosixPath(i.imagem).name if i.imagem else ""
+        inf.grade = [(valor, rotulo, etapas.get(valor)) for valor, rotulo in EtapaReferencial.choices]
+        inf.itens = [(p, itens.get(p)) for p in range(1, 5)]
+    return infos
 
 
 def _pagina(request, revista, chave=None, form=None):
@@ -324,28 +369,43 @@ def _template(request, revista):
 
 
 def _arquivo(request, revista):
-    """Autosave de um arquivo (`campo` = `arquivo_svg` ou `arquivo_capa`, o arquivo em `valor`): mesma
-    validação do admin (RevistaForm). O impacto simula só o sha256 (é o que entra no hash, D-118),
-    sem gravar arquivo à toa."""
+    """Autosave da capa (`campo` = `arquivo_capa`, o arquivo em `valor`): mesma validação do admin
+    (RevistaForm). O impacto simula só o sha256 (é o que entra no hash, D-118), sem gravar arquivo à toa."""
     campo = request.POST.get("campo", "")
-    if campo not in ("arquivo_svg", "arquivo_capa") or "valor" not in request.FILES:
-        return erros(["Escolha o arquivo do SVG ou da capa e envie de novo."])
+    if campo != "arquivo_capa" or "valor" not in request.FILES:
+        return erros(["Escolha o arquivo da capa e envie de novo."])
     form = RevistaForm({}, {campo: request.FILES["valor"]}, instance=revista)
-    form.fields[campo].label = ""  # "SVG maior que 3 MB: …" já diz qual
+    form.fields[campo].label = ""  # "Capa maior que 5 MB: …" já diz qual
 
     def simular(dados):
-        if campo == "arquivo_svg":
-            limpo, ids = arquivos.sanitizar_svg(dados[campo])
-            Revista.objects.filter(pk=revista.pk).update(svg_sha256=hashlib.sha256(limpo).hexdigest(), svg_ids=ids)
-        else:
-            Revista.objects.filter(pk=revista.pk).update(capa_sha256=hashlib.sha256(dados[campo]).hexdigest())
+        Revista.objects.filter(pk=revista.pk).update(capa_sha256=hashlib.sha256(dados[campo]).hexdigest())
 
     def gravar(dados):
-        (arquivos.receber_svg if campo == "arquivo_svg" else arquivos.receber_capa)(revista, dados[campo])
+        arquivos.receber_capa(revista, dados[campo])
         return {"trocar": _pedacos(request, revista, "arquivos", "situacao")}
 
-    titulo = "Trocar o SVG do F2" if campo == "arquivo_svg" else "Trocar a capa"
-    return responder_campo(request, form=form, simular=simular, gravar=gravar, revistas=lambda: [revista], titulo=titulo)
+    return responder_campo(request, form=form, simular=simular, gravar=gravar, revistas=lambda: [revista], titulo="Trocar a capa")
+
+
+def _infografico(request, revista):
+    """Autosave de um campo do infográfico (nomes em `nucleo/infografico.py`; a imagem do item vem em
+    `valor` nos FILES). A resposta troca a Situação; a imagem troca também o passo (a miniatura). Os
+    textos não trocam o passo: o campo seguinte, já com o foco e talvez com texto digitado, se perderia."""
+    campo = request.POST.get("campo", "")
+    if not request.user.has_perms(PERMS_INFOGRAFICO.get(familia(campo), ["nucleo.change_revistainfografico"])):
+        raise PermissionDenied
+    achado = form_do_campo(revista, campo, request.POST.get("valor", ""), request.FILES.get("valor"))
+    if achado is None:
+        return erros(["Este campo não pode ser alterado aqui. Recarregue a página."])
+    form, gravar, simular = achado
+    # ponytail: a imagem troca o passo inteiro; um envio de texto de outro campo ainda em voo que volte 422
+    # perde a mensagem (o campo foi substituído). Trocar só o item enviado, se isso aparecer.
+    pedacos = ("infograficos", "situacao") if campo.endswith("-imagem") else ("situacao",)
+    return responder_campo(
+        # simular sem o `trocar`: renderizar a página dentro do savepoint desfeito dobraria as queries
+        request, form=form, simular=simular or gravar, revistas=lambda: [revista], titulo="Salvar o infográfico",
+        gravar=lambda dados: gravar(dados) or {"trocar": _pedacos(request, revista, *pedacos)},
+    )  # fmt: skip
 
 
 def _validar(request, revista):
@@ -377,22 +437,9 @@ def zip_(request, ano, pk):
     return resposta
 
 
-@require_GET
-@login_required
-def gabarito(request, ano, pk):
-    """CSV dos ids que o design põe no SVG do F2 (o "Baixar gabarito de ids" do admin, mesma função)."""
-    if not pode_ver(request.user):
-        raise PermissionDenied
-    revista = _revista(ano, pk)
-    resposta = HttpResponse(arquivos.gabarito_ids_csv(revista), content_type="text/csv; charset=utf-8")
-    resposta["Content-Disposition"] = f'attachment; filename="gabarito-ids-revista-{revista.pk}.csv"'
-    return resposta
-
-
 urlpatterns = [
     path("", lista, name="ui_revista_inicio"),
     path("<int:ano>/", lista, name="ui_revista"),
     path("<int:ano>/<int:pk>/", revista, name="ui_revista_editar"),
     path("<int:ano>/<int:pk>/zip/", zip_, name="ui_revista_zip"),
-    path("<int:ano>/<int:pk>/gabarito-ids/", gabarito, name="ui_revista_gabarito"),
 ]

@@ -32,7 +32,11 @@ REF_LINK = re.compile(r"^ {0,3}\[[^\]]+\]:", re.M)  # definição de referência
 TEXTO_MAX = 100_000
 
 SECOES_F1 = ("introducao", "fechamento")
-ID_F2 = re.compile(r"abertura|passo[1-9][0-9]*|dlg-[a-z0-9]+(-[a-z0-9]+)*")
+SECOES_F2 = (
+    "abertura", "passo-descritor", "passo-habilidades", "passo-progressao", "passo-tarefas",
+    "dlg-descritor", "dlg-tarefas", "tarefas-fechamento", "fechamento",
+)  # fmt: skip
+SECOES = {"F1": SECOES_F1, "F2": SECOES_F2}
 
 # Marcador neutro da variável: caracteres de uso privado do Unicode em volta de um
 # nonce por chamada. O markdown-it os trata como letras (nem pontuação nem espaço),
@@ -108,16 +112,10 @@ def validar(texto, fasciculo):
     for id_ in sorted(i for i, n in Counter(ids).items() if n > 1):  # Counter: linear (o preview chama a cada digitação)
         erros.append(f"Seção repetida: {id_}.")
 
-    if fasciculo == "F1":
-        faltando = [s for s in SECOES_F1 if s not in ids]
-        estranhas = [i for i in ids if i not in SECOES_F1]
-    elif fasciculo == "F2":
-        faltando = ["abertura"] if "abertura" not in ids else []
-        if not any(i.startswith("passo") for i in ids):
-            faltando.append("passo1")
-        estranhas = [i for i in ids if not ID_F2.fullmatch(i)]
-    else:
+    if fasciculo not in SECOES:
         raise ValueError(f"fascículo desconhecido: {fasciculo}")
+    faltando = [s for s in SECOES[fasciculo] if s not in ids]
+    estranhas = [i for i in ids if i not in SECOES[fasciculo]]
     if faltando:
         erros.append(f"Seções obrigatórias faltando: {', '.join(faltando)}.")
     if estranhas:

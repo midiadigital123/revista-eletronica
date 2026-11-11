@@ -1,7 +1,7 @@
 // Zip da revista (S15) aberto por file://, sem servidor. fixtures/revista.zip é o zip que o
 // Django gera (test_empacotar confere o conteúdo; REGERAR_FIXTURES=1 regrava). O teste o
-// extrai num diretório temporário e abre index.html direto do disco.
-import { expect, test, type Page } from "@playwright/test";
+// extrai num diretório temporário e percorre as páginas a partir do index.html (sumário).
+import { expect, test } from "@playwright/test";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -32,49 +32,42 @@ test.beforeAll(() => {
 });
 test.afterAll(() => rmSync(pasta, { recursive: true, force: true }));
 
-async function abrir(page: Page): Promise<string[]> {
+test("file://: sumário → F1 com o item → sumário → Outras Etapas com a imagem da tarefa", async ({ page }) => {
   const erros: string[] = [];
   page.on("console", (m) => m.type() === "error" && erros.push(m.text()));
   page.on("pageerror", (e) => erros.push(e.message));
   page.on("requestfailed", (r) => erros.push(`falhou: ${r.url()}`));
+  const largura = (img: HTMLImageElement) => img.naturalWidth;
   await page.goto(pathToFileURL(join(pasta, "index.html")).href);
-  await expect(page.locator("body.app-initialized")).toBeAttached();
-  return erros;
-}
+  await expect.poll(() => page.locator(".hero-image img").evaluate(largura)).toBeGreaterThan(0); // capa
+  const sumario = page.getByRole("navigation", { name: "Sumário" });
 
-test("F1: file:// renderiza a escala", async ({ page }) => {
-  const erros = await abrir(page);
+  // F1: a escala e o "Ver item" com arquivos/itens/item1.png
+  await sumario.getByRole("link", { name: "Escalas de proficiência" }).click();
+  await expect(page.locator("body.app-initialized")).toBeAttached();
   await expect(page.locator(".escala-barra")).toHaveCount(5); // 4 cortes = 5 padrões
   await expect(page.locator(".descritor-badge")).toHaveText("D01");
-  await expect(page.locator(".escala-content > *").first()).toBeVisible();
-  await expect(page.locator(".hero-image img")).toHaveJSProperty("complete", true);
-  expect(await page.locator(".hero-image img").evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
-  expect(erros).toEqual([]);
-});
-
-test("F1: file:// abre o item da tarefa (arquivos/itens/item1.png)", async ({ page }) => {
-  const erros = await abrir(page);
   await page.locator(".ver-item-btn").first().click();
-  const imagem = page.locator("#itemModalImagem");
-  await expect(imagem).toBeVisible();
-  await expect(imagem).toHaveAttribute("src", "arquivos/itens/item1.png");
-  await expect.poll(() => imagem.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
-  expect(erros).toEqual([]);
-});
+  const item = page.locator("#itemModalImagem");
+  await expect(item).toBeVisible();
+  await expect(item).toHaveAttribute("src", "arquivos/itens/item1.png");
+  await expect.poll(() => item.evaluate(largura)).toBeGreaterThan(0);
+  await page.locator("#itemModalClose").click();
 
-test("F2: file:// abre o tour e o dlg-p2", async ({ page }) => {
-  const erros = await abrir(page);
+  // F2 Outras Etapas: tour até Tarefas e dlg-tarefa-1 com a imagem
+  await page.getByRole("link", { name: "Voltar ao sumário" }).click();
+  await sumario.getByRole("link", { name: "Avaliação e Currículo – Outras Etapas" }).click();
   const f2 = page.locator("#revista");
   await expect(f2).toHaveClass(/svg-tour/);
-  await page.getByRole("navigation", { name: "Capítulos" }).getByRole("link", { name: "Infográfico" }).click();
-  await expect(f2.locator(".svg-tour__title")).toHaveText("Avaliação & Currículo");
-  await f2.locator(".svg-tour__actions .svg-tour__btn--primary").click(); // Iniciar tour
-  await expect(f2.locator(".svg-tour__title")).toHaveText("Descritor");
-
-  await page.locator("#f2-btn-action-p2").focus(); // teclado, como no pagina.spec (o clique no <g> não chega)
+  const principal = f2.locator(".svg-tour__actions .svg-tour__btn--primary");
+  for (const passo of ["Descritor", "Habilidades", "Progressão", "Tarefas"]) {
+    await principal.click();
+    await expect(f2.locator(".svg-tour__title")).toHaveText(passo);
+  }
+  await page.locator("#f2-btn-action-tarefa-1").focus(); // teclado, como no pagina.spec (o clique no <g> não chega)
   await page.keyboard.press("Enter");
-  const dialogo = page.getByRole("dialog", { name: "Itens por ano" });
-  await expect(dialogo).toBeVisible();
-  await expect(dialogo).toContainText("Detalhe do item.");
+  const tarefa = page.locator("#dlg-tarefa-1");
+  await expect(tarefa).toBeVisible();
+  await expect.poll(() => tarefa.getByRole("img", { name: "Tirinha de quatro quadrinhos" }).evaluate(largura)).toBeGreaterThan(0);
   expect(erros).toEqual([]);
 });

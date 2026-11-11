@@ -17,17 +17,28 @@ from nucleo.management.commands.carregar_templates import AVISO
 from nucleo.models import Bloqueio, FotoRevista, RevistaFasciculo, RevistaSecao, Template, TemplateVersao
 from nucleo.models.revista import Motivo
 from nucleo.servicos.resolver import versao_atual
-from nucleo.tests.test_resolver import F1, F2_LP, Mundo, usuario
+from nucleo.tests.test_resolver import F1, Mundo, usuario
 from nucleo.texto import TEXTO_MAX
 
-# F2_LP com um passo2 a mais: as revistas com SVG só até passo1 ficariam sem o id.
-F2_NOVO = F2_LP + "\n## passo2\nPasso dois\n\nNovo {{ano}}.\n"
+# F2 no formato do D-238 (9 seções fixas): é a versão 1 dos templates F2 destes testes.
+F2_9 = (
+    "## abertura\nAbertura\n\nBem-vindo.\n\n"
+    "## passo-descritor\nDescritor\n\nPara os {{adjetivo_patrio_plural_masculino}}.\n\n"
+    "## passo-habilidades\nHabilidades\n\nTexto.\n\n"
+    "## passo-progressao\nProgressão\n\nTexto.\n\n"
+    "## passo-tarefas\nTarefas\n\nTexto.\n\n"
+    "## dlg-descritor\nDescritor\n\nDetalhe.\n\n"
+    "## dlg-tarefas\nTarefas por nível de complexidade\n\nAbertura das tarefas.\n\n"
+    "## tarefas-fechamento\nFechamento das tarefas\n\nTexto.\n\n"
+    "## fechamento\nFechamento\n\nFim.\n"
+)
+F2_NOVO = F2_9.replace("Fim.", "Novo {{ano}}.")
 IMPACTO = "nucleo/template_impacto.html"
 
 
 class Base(TestCase):
     def setUp(self):
-        Mundo.montar(self)
+        Mundo.montar(self, f2_lp=F2_9)
         self.tpl = self.templates["LP", "F2"]
         self.url = f"/admin/nucleo/template/{self.tpl.pk}/change/"
         self.ped = Client()
@@ -55,7 +66,7 @@ class Base(TestCase):
 class SalvarTest(Base):
     def test_variavel_fora_da_lista_e_recusada(self):
         sessao = self.abrir().context["bloqueio"]["sessao"]
-        ruim = F2_LP + "\n## passo2\nT\n\nOi {{x}}.\n"
+        ruim = F2_9.replace("Fim.", "Oi {{x}}.")
         r = self.ped.post(self.url, self.dados(sessao, ruim))
         self.assertEqual(r.status_code, 200)
         self.assertTemplateNotUsed(r, IMPACTO)
@@ -78,13 +89,13 @@ class SalvarTest(Base):
         r = self.confirmar(r, texto=F2_NOVO.replace("\n", "\r\n"))  # textarea manda CRLF
         self.assertRedirects(r, self.url, fetch_redirect_response=False)
         v1, v2 = TemplateVersao.objects.filter(template=self.tpl).order_by("numero")
-        self.assertEqual(v1.texto, F2_LP)  # versão antiga intacta
+        self.assertEqual(v1.texto, F2_9)  # versão antiga intacta
         self.assertEqual((v2.numero, v2.texto, v2.criada_por.username), (2, F2_NOVO, "ped"))
         self.assertFalse(Bloqueio.objects.exists())  # salvou e liberou
 
     def test_texto_igual_salva_nome_sem_impacto_nem_versao(self):
         sessao = self.abrir().context["bloqueio"]["sessao"]
-        r = self.ped.post(self.url, {**self.dados(sessao, F2_LP), "nome": "Outro"})
+        r = self.ped.post(self.url, {**self.dados(sessao, F2_9), "nome": "Outro"})
         self.assertEqual(r.status_code, 302)
         self.tpl.refresh_from_db()
         self.assertEqual(self.tpl.nome, "Outro")
@@ -133,7 +144,7 @@ class SalvarTest(Base):
     def test_assinatura_adulterada_ou_texto_trocado_reabre_o_impacto(self):
         sessao = self.abrir().context["bloqueio"]["sessao"]
         impacto = self.ped.post(self.url, self.dados(sessao, F2_NOVO))
-        outro = F2_NOVO + "\n## passo3\nTrês\n\nMais.\n"
+        outro = F2_9.replace("Fim.", "Fim de outro jeito.")
         for troca in ({"_impacto": "adulterada"}, {"_impacto": ""}, {"texto": outro}):
             with self.subTest(troca):
                 r = self.confirmar(impacto, **troca)
@@ -148,32 +159,28 @@ class SalvarTest(Base):
     def test_versao_base_mudou_reabre_o_impacto(self):
         sessao = self.abrir().context["bloqueio"]["sessao"]
         impacto = self.ped.post(self.url, self.dados(sessao, F2_NOVO))
-        TemplateVersao.objects.create(template=self.tpl, numero=2, texto=F2_LP + "\n")  # outro caminho gravou
+        TemplateVersao.objects.create(template=self.tpl, numero=2, texto=F2_9 + "\n")  # outro caminho gravou
         r = self.confirmar(impacto)
         self.assertTemplateUsed(r, IMPACTO)
         self.assertEqual(self.versoes(), 2)
 
 
 class ImpactoTest(Base):
-    def test_lista_svg_incompleto_impresso_e_copia(self):
-        go, pe = self.go["LP"], self.pe["LP"]
-        go.svg_f2, go.svg_sha256, go.svg_ids = "f2/go.svg", "a" * 64, ["passo1", "btn-action-p2"]
-        go.save()
+    def test_lista_impresso_e_copia(self):
+        pe = self.pe["LP"]
         FotoRevista.objects.create(revista=pe, motivo=Motivo.IMPRESSO, conteudo={}, hash="b" * 64, criada_por=self.usuario)
         rf = RevistaFasciculo.objects.get(revista=pe, fasciculo="F2")
         RevistaSecao.objects.create(
-            revista_fasciculo=rf, template=self.tpl, secao="passo1", texto="Cópia.",
+            revista_fasciculo=rf, template=self.tpl, secao="abertura", texto="Cópia.",
             template_versao=TemplateVersao.objects.get(template=self.tpl),
         )
         sessao = self.abrir().context["bloqueio"]["sessao"]
         r = self.ped.post(self.url, self.dados(sessao, F2_NOVO))
         linhas = {x["revista"].pk: x for x in r.context["revistas"]}
-        self.assertEqual(set(linhas), {go.pk, pe.pk})  # MT usa outro template
-        self.assertEqual(linhas[go.pk]["ids_faltando"], ["passo2"])
-        self.assertEqual(linhas[pe.pk]["ids_faltando"], [])  # sem SVG: a pendência é outra
+        self.assertEqual(set(linhas), {self.go["LP"].pk, pe.pk})  # MT usa outro template
         self.assertTrue(linhas[pe.pk]["impresso"])
-        self.assertEqual(linhas[pe.pk]["copias"], ["passo1"])
-        self.assertContains(r, "SVG incompleto: passo2")
+        self.assertEqual(linhas[pe.pk]["copias"], ["abertura"])
+        self.assertNotContains(r, "SVG incompleto")
         self.assertContains(r, "Já tem foto do impresso")
 
     def test_impacto_de_f1(self):
@@ -183,7 +190,6 @@ class ImpactoTest(Base):
         novo = F1.replace("Fim.", "Fim de novo.")
         r = self.ped.post(self.url, self.dados(sessao, novo))
         self.assertEqual({x["revista"].pk for x in r.context["revistas"]}, {self.go["LP"].pk, self.pe["LP"].pk})
-        self.assertTrue(all(x["ids_faltando"] == [] for x in r.context["revistas"]))
         self.assertEqual(self.confirmar(r).status_code, 302)
         self.assertEqual(versao_atual(self.tpl.pk).texto, novo)
 
@@ -202,10 +208,14 @@ class ImpactoTest(Base):
 
 class PreviewTest(Base):
     def test_preview_colore_variavel_e_mostra_erros(self):
-        r = self.ped.post("/templates/preview", {"texto": "## passo1\nOi\n\nPara {{ano}}.\n", "fasciculo": "F2"})
+        r = self.ped.post("/templates/preview", {"texto": "## abertura\nOi\n\nPara {{ano}}.\n", "fasciculo": "F2"})
         json = r.json()
         self.assertIn('<span class="variavel-vazia">{{ano}}</span>', json["html"])
-        self.assertIn("Seções obrigatórias faltando: abertura.", json["erros"])
+        self.assertIn(
+            "Seções obrigatórias faltando: passo-descritor, passo-habilidades, passo-progressao, passo-tarefas, "
+            "dlg-descritor, dlg-tarefas, tarefas-fechamento, fechamento.",
+            json["erros"],
+        )
 
     def test_preview_escapa_id_e_titulo(self):
         r = self.ped.post("/templates/preview", {"texto": "## <img/onerror=1>\nA < B <script>\n\nC.\n"})

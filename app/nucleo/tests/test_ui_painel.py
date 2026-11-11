@@ -9,7 +9,7 @@ from nucleo.models import Ano, Matriz, MatrizEtapaCC, ParceiroAno
 from nucleo.servicos import validacao
 from nucleo.servicos.resolver import carregar, hash_validado
 from nucleo.tests.test_admin_projeto import Base
-from nucleo.tests.test_painel import completar
+from nucleo.tests.test_painel import DICA_INFOGRAFICO, completar
 from nucleo.tests.test_resolver import usuario
 
 
@@ -39,11 +39,11 @@ class PainelUiTest(Base):
         completar(self.go["LP"])
         r = self.client.get(self.url)
         mt = self.go["MT"]
-        link = reverse("ui_revista_editar", args=[2026, mt.pk])
-        self.assertContains(r, f'<a class="status status-falta" href="{link}" title="Falta o SVG do F2.">')
-        # Cabeçalho: quantas faltam por coluna (SVG: GO MT, PE LP, PE MT).
-        svg = next(c for c in r.context["colunas"] if c["chave"] == "svg")
-        self.assertEqual((svg["faltam"], svg["url"]), (3, "?falta=svg"))
+        link = reverse("ui_revista_editar", args=[2026, mt.pk]) + "#infograficos"  # fase 3 do F2: o passo da ficha
+        self.assertContains(r, f'<a class="status status-falta" href="{link}" title="{DICA_INFOGRAFICO}">')
+        # Cabeçalho: quantas faltam por coluna (Infográficos: GO MT, PE LP, PE MT).
+        svg = next(c for c in r.context["colunas"] if c["chave"] == "infograficos")
+        self.assertEqual((svg["faltam"], svg["url"]), (3, "?falta=infograficos"))
 
     def test_so_leitura_impresso(self):
         self.client.force_login(self.imp)
@@ -65,10 +65,10 @@ class PainelUiTest(Base):
 
     def test_filtros_iguais_ao_admin(self):
         go = self.go["LP"].projeto.parceiro_ano.parceiro_id
-        self.assertEqual(len(self.client.get(self.url, {"falta": "svg"}).context["linhas"]), 4)
+        self.assertEqual(len(self.client.get(self.url, {"falta": "infograficos"}).context["linhas"]), 4)
         completar(self.go["LP"])
-        self.assertEqual(len(self.client.get(self.url, {"falta": "svg"}).context["linhas"]), 3)
-        r = self.client.get(self.url, {"falta": "svg", "parceiro": go})
+        self.assertEqual(len(self.client.get(self.url, {"falta": "infograficos"}).context["linhas"]), 3)
+        r = self.client.get(self.url, {"falta": "infograficos", "parceiro": go})
         self.assertEqual(self.pks(r), [self.go["MT"].pk])
         self.assertContains(r, f'<option value="{go}" selected>')
         # Falta e parceiro inválidos são ignorados, como no admin.
@@ -78,10 +78,10 @@ class PainelUiTest(Base):
         r = self.client.get(self.url, {"template": tpl.pk})
         self.assertEqual(sorted(self.pks(r)), sorted([self.go["LP"].pk, self.pe["LP"].pk]))
         self.assertContains(r, f'<option value="{tpl.pk}" selected>')
-        r = self.client.get(self.url, {"template": tpl.pk, "falta": "svg", "parceiro": go})
+        r = self.client.get(self.url, {"template": tpl.pk, "falta": "infograficos", "parceiro": go})
         self.assertEqual(r.context["sem_falta"], f"?parceiro={go}&template={tpl.pk}")  # o contador ativo desliga só a falta
         r = self.client.get(self.url, {"template": tpl.pk})
-        self.assertEqual(next(c for c in r.context["colunas"] if c["chave"] == "svg")["url"], f"?template={tpl.pk}&falta=svg")
+        self.assertEqual(next(c for c in r.context["colunas"] if c["chave"] == "infograficos")["url"], f"?template={tpl.pk}&falta=infograficos")
 
     def test_htmx_devolve_so_o_corpo(self):
         r = self.client.get(self.url, {"falta": "capa"}, headers={"HX-Request": "true"})
@@ -127,7 +127,7 @@ class PainelUiTest(Base):
         self.assertLess(lp, mt)
         self.assertLess(mt, html.index('data-grupo-linha="%d"' % self.projeto_pe.pk))
         # Com filtro de falta o grupo mostra só as revistas filtradas, mas a contagem é do parceiro.
-        r = self.client.get(self.url, {"falta": "svg"})
+        r = self.client.get(self.url, {"falta": "infograficos"})
         g = r.context["grupos"][0]
         self.assertEqual(([x["revista"] for x in g["linhas"]], g["completas"], g["total"]), ([self.go["MT"]], 1, 2))
 
@@ -145,14 +145,14 @@ class PainelUiTest(Base):
         go = self.go["LP"].projeto.parceiro_ano.parceiro_id
         r = self.client.get(self.url, {"parceiro": go})
         # Resumo: um contador por coluna, link-filtro (HTMX) que mantém o recorte.
-        self.assertContains(r, f'aria-pressed="false" hx-get="?parceiro={go}&amp;falta=svg"')
+        self.assertContains(r, f'aria-pressed="false" hx-get="?parceiro={go}&amp;falta=infograficos"')
         self.assertNotContains(r, "painel-limpar\"")  # "Limpar filtro" da falta; o "Limpar filtros" geral aparece
         self.assertNotContains(r, 'id="filtro-falta"')  # o contador substitui o select de falta
-        r = self.client.get(self.url, {"parceiro": go, "falta": "svg"})
+        r = self.client.get(self.url, {"parceiro": go, "falta": "infograficos"})
         self.assertContains(r, 'aria-pressed="true"')  # contador ativo destacado
         self.assertContains(r, f'href="?parceiro={go}" hx-get="?parceiro={go}"')  # Limpar filtro mantém o parceiro
         self.assertContains(r, "Limpar filtro")
-        self.assertContains(r, 'name="falta" value="svg"')  # trocar o parceiro mantém a falta
+        self.assertContains(r, 'name="falta" value="infograficos"')  # trocar o parceiro mantém a falta
 
     def test_estados_vazios(self):
         completar(self.go["LP"])
@@ -185,16 +185,16 @@ class PainelFiltrosTest(Base):
 
     def test_contador_ativo_volta_ao_estado_inicial(self):
         go = self.go["LP"].projeto.parceiro_ano.parceiro_id
-        r = self.client.get(self.url, {"parceiro": go, "falta": "svg"})
-        svg = self.contador(r, "svg")
+        r = self.client.get(self.url, {"parceiro": go, "falta": "infograficos"})
+        svg = self.contador(r, "infograficos")
         self.assertEqual(svg["url"], r.context["sem_falta"])  # o mesmo que "Limpar filtro"
         self.assertEqual(svg["url"], f"?parceiro={go}")
         self.assertEqual(self.contador(r, "capa")["url"], f"?parceiro={go}&falta=capa")  # os outros trocam a falta
         self.assertContains(r, f'aria-pressed="true" hx-get="?parceiro={go}"')
         self.assertContains(r, 'aria-pressed="false"')
         # Sem nenhum outro filtro: o contador ativo volta à página limpa.
-        r = self.client.get(self.url, {"falta": "svg"})
-        self.assertEqual(self.contador(r, "svg")["url"], self.url)
+        r = self.client.get(self.url, {"falta": "infograficos"})
+        self.assertEqual(self.contador(r, "infograficos")["url"], self.url)
 
     def test_cada_filtro_sozinho(self):
         go = self.go["LP"].projeto.parceiro_ano.parceiro_id
@@ -232,21 +232,21 @@ class PainelFiltrosTest(Base):
         self.assertContains(r, f'href="{self.url}" hx-get="{self.url}"')  # Limpar filtros: volta à página limpa
         self.assertContains(r, "Limpar filtros")
         self.assertContains(self.client.get(self.url, {"situacao": "validada"}), '<option value="validada" selected>')
-        self.assertContains(self.client.get(self.url, {"falta": "svg"}), "Limpar filtros")
+        self.assertContains(self.client.get(self.url, {"falta": "infograficos"}), "Limpar filtros")
 
     def test_combinacao_e_contadores_do_recorte(self):
         go = self.go["LP"].projeto.parceiro_ano.parceiro_id
         mt = self.go["MT"].componente_id
         r = self.client.get(self.url, {"parceiro": go, "componente": mt})
         self.assertEqual([x["revista"].pk for x in r.context["linhas"]], [self.go["MT"].pk])
-        self.assertEqual(self.contador(r, "svg")["faltam"], 1)  # só o recorte conta
-        self.assertEqual(self.contador(r, "svg")["url"], f"?parceiro={go}&componente={mt}&falta=svg")
+        self.assertEqual(self.contador(r, "infograficos")["faltam"], 1)  # só o recorte conta
+        self.assertEqual(self.contador(r, "infograficos")["url"], f"?parceiro={go}&componente={mt}&falta=infograficos")
         completar(self.go["LP"])
-        r = self.client.get(self.url, {"parceiro": go, "componente": mt, "falta": "svg", "situacao": "incompleta"})
+        r = self.client.get(self.url, {"parceiro": go, "componente": mt, "falta": "infograficos", "situacao": "incompleta"})
         self.assertEqual([x["revista"].pk for x in r.context["linhas"]], [self.go["MT"].pk])
         self.assertEqual(r.context["sem_falta"], f"?parceiro={go}&componente={mt}&situacao=incompleta")
-        self.assertContains(r, 'name="falta" value="svg"')  # trocar um select mantém a falta
-        r = self.client.get(self.url, {"componente": self.go["LP"].componente_id, "falta": "svg"})
+        self.assertContains(r, 'name="falta" value="infograficos"')  # trocar um select mantém a falta
+        r = self.client.get(self.url, {"componente": self.go["LP"].componente_id, "falta": "infograficos"})
         self.assertEqual([x["revista"].pk for x in r.context["linhas"]], [self.pe["LP"].pk])
         # Template de MT com componente LP: recorte vazio, sem erro.
         r = self.client.get(self.url, {"componente": self.go["LP"].componente_id, "template": self.templates["MT", "F2"].pk})
@@ -285,7 +285,7 @@ class PainelFiltrosTest(Base):
 
     def test_impresso_filtra_sem_validar(self):
         self.client.force_login(self.imp)
-        r = self.client.get(self.url, {"componente": self.go["LP"].componente_id, "situacao": "incompleta", "falta": "svg"})
+        r = self.client.get(self.url, {"componente": self.go["LP"].componente_id, "situacao": "incompleta", "falta": "infograficos"})
         self.assertEqual(r.status_code, 200)
         self.assertEqual(len(r.context["linhas"]), 2)
         self.assertNotContains(r, 'name="revista"')

@@ -149,18 +149,6 @@
 .tpl-secao-erros:empty {
   display: none;
 }
-.tpl-adicionar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-.tpl-adicionar-dlg {
-  display: flex;
-  gap: 0.375rem;
-}
-.tpl-adicionar-dlg .select {
-  width: auto;
-}
 .ajuda code,
 .tpl-render code {
   padding: 0 0.1875rem;

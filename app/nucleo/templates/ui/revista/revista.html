@@ -1,11 +1,12 @@
 {% extends "ui/base.html" %}{% load static %}
 {% comment %}
 T21: uma revista. View em nucleo/urls/ui_revista.py (revista); regra em nucleo/revista.py.
-U8b: duas colunas. À esquerda, os passos na ordem em que se resolvem (1 Templates, 2 Arquivos,
-3 Textos); à direita, a coluna Situação, fixa ao rolar: a única lista de pendências e o "Validar".
-Templates e arquivos salvam sozinhos (form campoAuto, ?acao= em cada data-url); a resposta troca
-#textos, #arquivos e #situacao. A seção vai por HTMX (revista_secao.html). O bloqueio do projeto
-(bloqueio.js) vive num form próprio, fora de qualquer alvo do HTMX.
+U8b: duas colunas. À esquerda, os passos na ordem em que se resolvem (1 Templates, 2 Infográficos,
+3 Capa, 4 Textos); à direita, a coluna Situação, fixa ao rolar: a única lista de pendências e o
+"Validar". Templates, infográficos e capa salvam sozinhos (form campoAuto, ?acao= em cada data-url);
+a resposta troca #textos, #infograficos, #arquivos e #situacao. A seção vai por HTMX
+(revista_secao.html). O bloqueio do projeto (bloqueio.js) vive num form próprio, fora de qualquer
+alvo do HTMX.
 {% endcomment %}
 {% block titulo %}{{ revista.projeto.nome }} · {{ revista.componente.nome }}{% endblock %}
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/projeto.css' %}"><link rel="stylesheet" href="{% static 'ui/telas/revista.css' %}">{% endblock %}
@@ -79,6 +80,7 @@ Templates e arquivos salvam sozinhos (form campoAuto, ?acao= em cada data-url); 
         {% endif %}
       </section>
 
+      {% include "ui/parciais/revista_infograficos.html" %}
       {% include "ui/parciais/revista_arquivos.html" %}
     {% if request.pode_gravar %}</form>{% else %}</div>{% endif %}
 

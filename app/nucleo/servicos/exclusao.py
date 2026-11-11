@@ -27,8 +27,8 @@ from django.utils import timezone
 
 from nucleo.models import (
     Ano, Bloqueio, Componente, CorPadrao, Corte, Descritor, Etapa, FotoRevista, Matriz, MatrizEtapaCC, Parceiro,
-    ParceiroAno, Projeto, ProjetoCor, ProjetoPasso, Revista, RevistaFasciculo, RevistaSecao, Tarefa, Template,
-    TemplateVersao,
+    ParceiroAno, Projeto, ProjetoCor, ProjetoPasso, Revista, RevistaFasciculo, RevistaInfografico,
+    RevistaSecao, Tarefa, Template, TemplateVersao,
 )  # fmt: skip
 
 PARTES = {Parceiro: ["parceiroano_set"], Matriz: ["matrizetapacc_set"], Template: ["templateversao_set"]}
@@ -48,7 +48,7 @@ class EmUso(Exception):
         self.impedimentos = impedimentos
 
 
-# Quem impede → (rótulo, modelo mostrado, caminho até ele). Fascículo e seção contam como a revista.
+# Quem impede → (rótulo, modelo mostrado, caminho até ele). Fascículo, seção e infográfico contam como a revista.
 GRUPO = {
     Corte: ("cortes", Corte, "pk"),
     Projeto: ("projetos", Projeto, "pk"),
@@ -56,6 +56,7 @@ GRUPO = {
     Revista: ("revistas", Revista, "pk"),
     RevistaFasciculo: ("revistas", Revista, "revista_id"),
     RevistaSecao: ("revistas", Revista, "revista_fasciculo__revista_id"),
+    RevistaInfografico: ("revistas", Revista, "revista_id"),
     ParceiroAno: ("parceiros que usam a matriz", ParceiroAno, "pk"),
     MatrizEtapaCC: ("etapas × componente de matriz", MatrizEtapaCC, "pk"),
     Template: ("templates", Template, "pk"),
@@ -196,8 +197,8 @@ def excluir(obj, usuario):
 
 # --- Ano inteiro (D-206) -----------------------------------------------------------------------
 
-# Ordem das dependências (folhas primeiro). Fascículos e seções saem com a revista; descritores e tarefas com
-# a MEC; bloqueios com o alvo (CASCADE).
+# Ordem das dependências (folhas primeiro). Fascículos, seções e infográficos saem com a revista; descritores e
+# tarefas com a MEC; bloqueios com o alvo (CASCADE).
 ORDEM_ANO = (
     (FotoRevista, "revista__ano"), (Revista, "ano"),
     (ProjetoPasso, "ano"), (ProjetoCor, "projeto__ano"), (Projeto, "ano"),
@@ -224,7 +225,7 @@ def resumo_ano(ano):
 def apagar_ano(ano, usuario):
     """Apaga o ano e tudo dele numa transação. Parceiros e usuários ficam (são de todos os anos).
 
-    ponytail: os arquivos no storage (capa, SVG, item) ficam; o item é compartilhado entre anos (D-150).
+    ponytail: os arquivos no storage (capa, SVG, item, imagem de infográfico) ficam; o item é compartilhado entre anos (D-150).
     """
     with transaction.atomic(), _versoes_apagaveis():
         ano = Ano.objects.select_for_update().get(pk=ano.pk)

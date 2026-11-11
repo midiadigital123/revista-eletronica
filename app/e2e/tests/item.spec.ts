@@ -70,8 +70,8 @@ test("item: sobe um PNG com texto alternativo, vê no preview e remove", async (
   await expect(page.locator(".messagelist")).toContainText(`Arquivo do item enviado para a tarefa ${TAREFA}.`);
   await expect(page.locator("#tarefa_set-group")).toContainText("PNG");
 
-  // 2. Preview da revista própria: o "Ver item" abre a imagem com o texto alternativo.
-  await page.goto(`/preview/${revista}/`);
+  // 2. F1 do preview da revista própria (D-244): o "Ver item" abre a imagem com o texto alternativo.
+  await page.goto(`/preview/${revista}/f1/`);
   await expect(page.locator("body.app-initialized")).toBeAttached();
   await page.locator(".ver-item-btn").first().click();
   const imagem = page.locator("#itemModalImagem");
@@ -85,7 +85,7 @@ test("item: sobe um PNG com texto alternativo, vê no preview e remove", async (
   await modal.getByLabel(/^Arquivo:?$/).setInputFiles({ name: "item.pdf", mimeType: "application/pdf", buffer: PDF });
   await modal.getByRole("button", { name: "Enviar" }).click();
   await expect(page.locator(".messagelist")).toContainText(`Arquivo do item enviado para a tarefa ${TAREFA}.`);
-  await page.goto(`/preview/${revista}/`);
+  await page.goto(`/preview/${revista}/f1/`);
   await expect(page.locator("body.app-initialized")).toBeAttached();
   const respostaPdf = page.waitForResponse((r) => /\/arquivos\/itens\/[^/]+\.pdf$/.test(r.url()));
   await page.locator(".ver-item-btn").first().click();

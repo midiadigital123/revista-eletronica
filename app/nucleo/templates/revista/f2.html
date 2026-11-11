@@ -1,0 +1,46 @@
+{% extends "revista/_base.html" %}
+{% comment %}
+Um infográfico do F2 por página (D-233). Contexto: nucleo.servicos.html.contexto_pagina(revista,
+<tipo>, ...): as chaves comuns do _base.html, mais `titulo` (rótulo do tipo), `abertura`,
+`tarefas_fechamento` (None com o passo Tarefas desligado; sem título, depois do infográfico, D-258) e
+`fechamento` (seções do template F2), `sem_template_f2` e o que servicos/f2.gerar devolve:
+`svg` (montado pelo f2.svg), `tour` (JSON do svg-tour) e `modais` (dlg-xx com título dlgTitle-xx).
+O <h1 id="f2-titulo"> é da página; o SVG usa f2-cabecalho.
+{% endcomment %}
+{% block titulo %}{{ titulo }} – {{ block.super }}{% endblock %}
+{% block conteudo %}
+    <main id="conteudo">
+    <section id="f2" class="f2-section" aria-labelledby="f2-titulo">
+        <h1 id="f2-titulo">{{ titulo }}</h1>
+        {% if abertura %}<div class="f2-abertura">{{ abertura.corpo|safe }}</div>{% endif %}
+        {% if preview and sem_template_f2 %}<div class="faixa-vermelha" role="status">Falta escolher o template do F2.</div>{% endif %}
+        <div id="revista">{{ svg }}</div>
+        {% if tarefas_fechamento.corpo %}<div class="f2-abertura f2-tarefas-fechamento">{{ tarefas_fechamento.corpo|safe }}</div>{% endif %}
+    </section>
+
+    {% for m in modais %}
+    <dialog id="{{ m.id }}" aria-labelledby="dlgTitle-{{ m.id|slice:'4:' }}">
+        <div class="modal-body">
+            <form method="dialog" class="modal-close-row">
+                <button type="submit" aria-label="Fechar">&times;</button>
+            </form>
+            <h3 id="dlgTitle-{{ m.id|slice:'4:' }}">{{ m.titulo|safe }}</h3>
+            {{ m.corpo|safe }}
+        </div>
+    </dialog>
+    {% endfor %}
+
+    {% if fechamento %}
+    <section class="fechamento-section" aria-labelledby="fechamento-titulo">
+        <h2 id="fechamento-titulo">{{ fechamento.titulo|safe }}</h2>
+        {{ fechamento.corpo|safe }}
+    </section>
+    {% endif %}
+    </main>
+{% endblock %}
+{% block scripts %}
+    {{ tour|json_script:"dados-tour" }}
+    <script src="{{ estaticos }}f2/svg-tour.js"></script>
+    <script src="{{ estaticos }}f2/svg-tour-modal.js"></script>
+    <script src="{{ estaticos }}f2/f2-init.js"></script>
+{% endblock %}

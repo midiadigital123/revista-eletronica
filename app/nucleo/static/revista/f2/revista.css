@@ -1,6 +1,6 @@
 /* Origem: svg-tour/avaliacao-e-curriculo/revista.css (commit bcadc29) + o <style> de
    revista-modais.html no fim (S08, D-103). Único ajuste: ids e classes do SVG com o prefixo
-   f2- do sanitizador (D-145): [id^="f2-btn-action-"] e .f2-st20. Revisão a11y do S08: foco dos
+   f2- (D-145), que o templates/revista/f2.svg gerado mantém: [id^="f2-btn-action-"] e .f2-st20. Revisão a11y do S08: foco dos
    botões do SVG com outline, reflow com zoom/tela estreita e fontes do painel em rem (fim do arquivo). */
 /* Identidade da revista aplicada ao tour (referência: revista-express/revista/styles.css).
    Não altera a lógica de common/svg-tour.js: usa as variáveis --svg-tour-* e sobrescreve com #revista (maior especificidade).

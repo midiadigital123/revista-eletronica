@@ -17,6 +17,9 @@ from nucleo.models import (
     ProjetoPasso,
     Revista,
     RevistaFasciculo,
+    RevistaInfografico,
+    RevistaInfograficoEtapa,
+    RevistaInfograficoItem,
     RevistaSecao,
     Template,
     TemplateVersao,
@@ -150,6 +153,13 @@ class RecusaRevistaTest(TestCase):
                 template_versao=versao,
             )
 
+        def infografico(**kw):
+            return lambda: RevistaInfografico.objects.create(
+                **{"revista": self.revista, "componente": lp, "ano": a26, "tipo": "alfa", **kw}
+            )
+
+        info = RevistaInfografico.objects.create(revista=self.revista, componente=lp, ano=a26, tipo="outras")
+
         casos = {
             "fk_matriz_etapa_cc_matriz_ano": [mec(matriz=self.matriz27)],
             "fk_matriz_etapa_cc_etapa_ano": [mec(etapa=e5_27)],
@@ -184,6 +194,13 @@ class RecusaRevistaTest(TestCase):
             ],
             "fk_revista_secao_fasciculo_template": [secao(self.t_lp_b, self.v_lp_b)],
             "fk_revista_secao_versao_template": [secao(self.t_lp, self.v_mt)],
+            "fk_revista_infografico_revista_ano": [infografico(ano=a27), infografico(componente=self.mt)],
+            "fk_revista_infografico_etapa_infografico_ano": [
+                lambda: RevistaInfograficoEtapa.objects.create(infografico=info, ano=a27, etapa="2EF")
+            ],
+            "fk_revista_infografico_item_infografico_ano": [
+                lambda: RevistaInfograficoItem.objects.create(infografico=info, ano=a27, posicao=1)
+            ],
         }
         self.assertEqual(set(casos), set(FKS_COMPOSTAS))
         self.escolher(self.t_lp)
@@ -191,10 +208,6 @@ class RecusaRevistaTest(TestCase):
             for i, acao in enumerate(acoes):
                 with self.subTest(fk=fk, caso=i):
                     self.recusa(acao, fk)
-
-    def test_svg_sem_hash(self):
-        r = Revista.objects.get(pk=self.rf.revista_id)
-        self.recusa(lambda: Revista.objects.filter(pk=r.pk).update(svg_f2="f2/x.svg"), "revista_svg_f2_com_hash")
 
 
 class TemplateVersaoTest(TestCase):

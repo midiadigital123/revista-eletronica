@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError, transaction
 from django.test import Client, TestCase, TransactionTestCase
-from django.urls import reverse
+from django.urls import NoReverseMatch, reverse
 
 from nucleo.admin.bloqueio import CAMPO_SESSAO
 from nucleo.admin.lote import escrever_travado
@@ -24,11 +24,8 @@ from nucleo.models import (
     TemplateVersao,
 )
 from nucleo.servicos import bloqueio
-from nucleo.tests.test_preview import SVG
+from nucleo.management.commands.criar_demo import PNG
 from nucleo.tests.test_resolver import MediaTemporaria, Mundo, usuario
-
-SVG_SEM_BOTAO = SVG.replace(b'id="btn-action-p2"', b'id="outro"')  # F2_LP pede passo1 e btn-action-p2
-
 
 def mensagens(resposta):
     return [str(m) for m in resposta.context["messages"]]
@@ -198,42 +195,16 @@ class RevistaUploadTest(Base):
             dados[f"revistafasciculo_set-{i}-template"] = rf.template_id
         return self.client.post(url, {**dados, **extra}, follow=True)
 
-    def test_svg_sem_um_id_grava_e_avisa(self):
+    def test_capa_valida(self):
         rev = self.go["LP"]
-        r = self.post_revista(rev, arquivo_svg=SimpleUploadedFile("f2.svg", SVG_SEM_BOTAO))
-        aviso = next(m for m in mensagens(r) if "Ids que faltam" in m)
-        self.assertIn("<strong>btn-action-p2</strong>", aviso)
-        self.assertIn("Esperados: passo1, btn-action-p2", aviso)
-        gabarito = reverse("admin:nucleo_revista_gabarito_ids", args=[rev.pk])
-        self.assertIn(f'href="{gabarito}">Baixar gabarito de ids', aviso)
-        self.assertEqual(Revista.objects.get(pk=rev.pk).svg_ids, ["fundo", "passo1", "passo2", "outro"])
-        # O aviso continua no formulário até o SVG ser trocado.
-        r = self.client.get(reverse("admin:nucleo_revista_change", args=[rev.pk]))
-        self.assertContains(r, "Baixar gabarito de ids")
-        csv = self.client.get(gabarito)
-        self.assertEqual(csv.content.decode().splitlines(), ["id_no_svg,secao_do_template", "passo1,passo1", "btn-action-p2,dlg-p2"])
-
-    def test_svg_e_capa_validos(self):
-        from nucleo.management.commands.criar_demo import PNG
-
-        rev = self.go["LP"]
-        r = self.post_revista(
-            rev, arquivo_svg=SimpleUploadedFile("f2.svg", SVG), arquivo_capa=SimpleUploadedFile("c.png", PNG)
-        )
-        self.assertFalse([m for m in mensagens(r) if "Ids que faltam" in m])
-        rev = Revista.objects.get(pk=rev.pk)
-        self.assertTrue(rev.svg_f2 and rev.capa)
+        self.post_revista(rev, arquivo_capa=SimpleUploadedFile("c.png", PNG))
+        self.assertTrue(Revista.objects.get(pk=rev.pk).capa)
 
     def test_arquivo_invalido_mostra_erro_e_nao_grava(self):
         rev = self.go["LP"]
-        r = self.post_revista(
-            rev, arquivo_svg=SimpleUploadedFile("f2.svg", b"<html/>"), arquivo_capa=SimpleUploadedFile("c.png", b"GIF89a")
-        )
-        self.assertContains(r, "O arquivo não é um SVG.")
+        r = self.post_revista(rev, arquivo_capa=SimpleUploadedFile("c.png", b"GIF89a"))
         self.assertContains(r, "Capa precisa ser PNG, JPG ou WebP.")
-        rev = Revista.objects.get(pk=rev.pk)
-        self.assertIsNone(rev.svg_f2)
-        self.assertIsNone(rev.capa)
+        self.assertIsNone(Revista.objects.get(pk=rev.pk).capa)
 
     def test_trocar_template_com_copias_recusado_no_form(self):
         rev = self.go["LP"]
@@ -299,7 +270,7 @@ class PermissoesTest(Base):
         self.assertEqual(self.client.get(projeto).status_code, 200)
         self.assertEqual(self.client.post(projeto, {"nome": "x"}).status_code, 403)
         revista = reverse("admin:nucleo_revista_change", args=[self.go["LP"].pk])
-        self.assertNotContains(self.client.get(revista), 'name="arquivo_svg"')
+        self.assertNotContains(self.client.get(revista), 'name="arquivo_capa"')
         self.assertFalse(bloqueio.quem_bloqueia(self.projeto_go))  # só ver não trava
         self.assertEqual(Projeto.objects.get(pk=self.projeto_go.pk).nome, "Projeto GO")
 
@@ -308,7 +279,8 @@ class PermissoesTest(Base):
                      "admin:nucleo_projeto_variaveis", "admin:nucleo_projeto_changelist"):  # fmt: skip
             self.assertEqual(self.client.get(reverse(nome)).status_code, 200, nome)
         r = self.client.get(reverse("admin:nucleo_revista_change", args=[self.go["LP"].pk]))
-        self.assertContains(r, 'name="arquivo_svg"')
+        self.assertContains(r, 'name="arquivo_capa"')
+        self.assertNotContains(r, "arquivo_svg")  # o SVG enviado saiu (fase 4 do F2)
         apagar = reverse("admin:nucleo_projeto_delete", args=[self.projeto_go.pk])
         self.assertEqual(self.client.get(apagar).status_code, 403)
         self.assertEqual(self.client.get(reverse("admin:nucleo_projeto_add")).status_code, 403)
@@ -364,11 +336,11 @@ class ArquivadosTest(Base):
         Revista.objects.filter(pk=rev.pk).update(arquivada_em=ARQUIVADO)
         url = reverse("admin:nucleo_revista_change", args=[rev.pk])
         r = self.client.get(url)
-        self.assertNotContains(r, 'name="arquivo_svg"')
+        self.assertNotContains(r, 'name="arquivo_capa"')
         self.assertNotContains(r, 'name="revistafasciculo_set-0-template"')
         self.assertFalse(bloqueio.quem_bloqueia(self.projeto_go))  # só ver não trava
-        self.assertEqual(self.client.post(url, {"arquivo_svg": SimpleUploadedFile("f2.svg", SVG)}).status_code, 403)
-        self.assertIsNone(Revista.objects.get(pk=rev.pk).svg_f2)
+        self.assertEqual(self.client.post(url, {"arquivo_capa": SimpleUploadedFile("c.png", PNG)}).status_code, 403)
+        self.assertIsNone(Revista.objects.get(pk=rev.pk).capa)
         lote = reverse("admin:nucleo_revista_escolher_template") + f"?ano=2026&componente={self.lp.pk}"
         self.assertNotIn(rev, self.client.get(lote).context["form"].fields["alvos"].queryset)
 
@@ -398,24 +370,20 @@ class RevistaPermissoesTest(Base):
         url = reverse("admin:nucleo_revista_change", args=[rev.pk])
         r = self.client.get(url)
         self.assertNotIn("bloqueio", r.context)  # só leitura
-        self.assertNotContains(r, 'name="arquivo_svg"')
-        r = self.client.post(url, {CAMPO_SESSAO: "chute", "arquivo_svg": SimpleUploadedFile("f2.svg", SVG)}, follow=True)
+        self.assertNotContains(r, 'name="arquivo_capa"')
+        r = self.client.post(url, {CAMPO_SESSAO: "chute", "arquivo_capa": SimpleUploadedFile("c.png", PNG)}, follow=True)
         self.assertIn("Não salvo: você perdeu o bloqueio de edição.", mensagens(r))
-        self.assertIsNone(Revista.objects.get(pk=rev.pk).svg_f2)
+        self.assertIsNone(Revista.objects.get(pk=rev.pk).capa)
 
     def test_impresso_post_403(self):
         self.client.force_login(self.imp)
         url = reverse("admin:nucleo_revista_change", args=[self.go["LP"].pk])
-        self.assertEqual(self.client.post(url, {"arquivo_svg": SimpleUploadedFile("f2.svg", SVG)}).status_code, 403)
-        self.assertIsNone(Revista.objects.get(pk=self.go["LP"].pk).svg_f2)
+        self.assertEqual(self.client.post(url, {"arquivo_capa": SimpleUploadedFile("c.png", PNG)}).status_code, 403)
+        self.assertIsNone(Revista.objects.get(pk=self.go["LP"].pk).capa)
 
-    def test_gabarito(self):
-        self.assertEqual(self.client.get(reverse("admin:nucleo_revista_gabarito_ids", args=[999999])).status_code, 404)
-        url = reverse("admin:nucleo_revista_gabarito_ids", args=[self.go["LP"].pk])
-        RevistaFasciculo.objects.filter(revista=self.go["LP"], fasciculo="F2").update(template=None)
-        self.assertEqual(self.client.get(url).content.decode().splitlines(), ["id_no_svg,secao_do_template"])
-        self.client.force_login(get_user_model().objects.create(username="sem", is_staff=True))
-        self.assertEqual(self.client.get(url).status_code, 403)
+    def test_sem_gabarito_de_ids(self):
+        with self.assertRaises(NoReverseMatch):  # saiu com o SVG enviado (fase 4 do F2)
+            reverse("admin:nucleo_revista_gabarito_ids", args=[self.go["LP"].pk])
 
     def test_nome_com_mais_de_200_caracteres(self):
         url = reverse("admin:nucleo_projeto_change", args=[self.projeto_go.pk])

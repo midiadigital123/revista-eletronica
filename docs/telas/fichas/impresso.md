@@ -28,7 +28,8 @@ Mostrar à equipe do impresso, revista por revista, o que mudou no texto desde a
 - Lista das revistas ativas do ano (parceiro e componente), cada uma com a situação: **Para atualizar** (mudou e está validada), **Aguardando "Validado"** (mudou, sem validação nesta versão) ou **Em dia** (nada mudou).
 - Detalhe da revista escolhida:
   - de quando e de quem é a última "Revista Impressa Atualizada" (e se a foto foi herdada de um projeto arquivado), ou "Primeira entrega";
-  - por fascículo (F1, F2) e grupo (seção, cores, escala e descritores de cada etapa): cada item que mudou, marcado como **novo**, **alterado** ou **removido**, com a comparação antes/depois e o texto novo inteiro para copiar.
+  - por fascículo (F1, F2) e grupo (seção, cores, escala e descritores de cada etapa): cada item que mudou, marcado como **novo**, **alterado** ou **removido**, com a comparação antes/depois e o texto novo inteiro para copiar;
+  - no F2, um grupo por infográfico ativo, com o título completo (ex.: "Avaliação e Currículo – Outras Etapas"): habilidade, textos dos passos ❶ ❷ ❸, referencial (uma linha por etapa) e tarefas (descritor, rótulo, texto alternativo e análise). A imagem do item não entra: trocá-la não deixa o impresso pendente (D-118, D-256).
 
 ## Dados gravados
 
@@ -41,7 +42,7 @@ Só um: a foto "impresso" da revista (o registro da "Revista Impressa Atualizada
 | Trocar de ano (seletor do cabeçalho) | todos | recarrega a tela no ano escolhido |
 | Escolher revista na lista | todos | troca só o detalhe; o endereço muda (dá para voltar e compartilhar o link) |
 | Copiar texto novo | todos | copia o texto do item; sem área de transferência, seleciona o texto para Ctrl+C |
-| Baixar planilhas | todos | baixa o zip com as planilhas do F1 (etapa × componente) e do F2 |
+| Baixar planilhas | todos | baixa o zip com as planilhas do F1 (etapa × componente) e do F2 (aba "F2" com as seções e uma aba por infográfico, "Alfa" ou "Outras Etapas", com as colunas Campo e Texto) |
 | Abrir preview | todos | abre a revista como ela sai, em outra aba |
 | Revista Impressa Atualizada | Impresso e Admin, com a revista validada nesta versão | grava a foto e volta à mesma revista, agora "Em dia" |
 | Ver no painel | todos | abre o painel do ano filtrado por "falta Impresso" |
@@ -50,6 +51,7 @@ Só um: a foto "impresso" da revista (o registro da "Revista Impressa Atualizada
 
 - **Ano sem revistas:** estado vazio "Nenhuma revista ativa neste ano" com o botão "Abrir cortes".
 - **Primeira entrega:** sem foto anterior; tudo aparece como novo.
+- **Infográficos depois da fase 4 do F2:** revista marcada antes, com infográfico preenchido, fica pendente uma vez ("Para atualizar" ou "Aguardando “Validado”"): a foto antiga não tem os infográficos, que aparecem como novos.
 - **Aguardando "Validado":** aviso amarelo; sem botão de marcar.
 - **Só leitura (perfil sem marcar):** aviso "Só leitura"; sem botão de marcar.
 - **Mudou só o que o diff de texto não mostra** (formatação ou arquivo de item): aviso para baixar as planilhas e conferir.

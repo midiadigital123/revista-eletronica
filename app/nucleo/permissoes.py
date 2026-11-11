@@ -35,6 +35,7 @@ MODELOS_NUCLEO = (
     "parceiroano", "corte", "projeto", "projetopasso", "projetocor",
     "template", "templateversao",
     "revista", "revistafasciculo", "revistasecao", "fotorevista",
+    "revistainfografico", "revistainfograficoetapa", "revistainfograficoitem",
     "bloqueio",
 )  # fmt: skip
 
@@ -72,6 +73,10 @@ ACOES = {
             "revista": ("change", "view"),
             "revistafasciculo": ("change", "view"),
             "revistasecao": EDITA,
+            # D-233: o infográfico nasce pela cascata (como a revista); etapa e item, ao digitar na tela B.
+            "revistainfografico": ("change", "view"),
+            "revistainfograficoetapa": EDITA,
+            "revistainfograficoitem": EDITA,
         },
     ),
     "validar": frozenset({"nucleo.validar_revista"}),

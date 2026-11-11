@@ -1,18 +1,22 @@
 """Dados de demonstração para ver o preview no navegador (S08).
 
 Cria (idempotente) o parceiro "DEMONSTRAÇÃO" no ano, com matriz pequena, cortes de LP,
-templates do seed, o SVG real do F2 (fixture dos testes) e uma capa lisa; cria ou atualiza
-o usuário `demo-preview` (só `view_revista`) com senha nova a cada execução e imprime a URL.
-Não toca em outros parceiros. Só com DEBUG; recusa trocar a senha de um `demo-preview`
-que não foi criado por este comando (marca em `first_name`).
+templates do seed, os infográficos do F2 com os dados do docx de LP 2026 (D-248) e uma capa
+lisa; cria ou atualiza o usuário `demo-preview` (só `view_revista`) com senha nova a cada
+execução e imprime a URL. Não toca em outros parceiros. Só com DEBUG; recusa trocar a senha
+de um `demo-preview` que não foi criado por este comando (marca em `first_name`).
 """
 
 import base64
+import hashlib
+import json
 import secrets
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
@@ -28,16 +32,20 @@ from nucleo.models import (
     ParceiroAno,
     Revista,
     RevistaFasciculo,
+    RevistaInfografico,
+    RevistaInfograficoEtapa,
+    RevistaInfograficoItem,
     Tarefa,
     Template,
 )
-from nucleo.servicos.arquivos import receber_capa, receber_svg
+from nucleo.servicos.arquivos import receber_capa
 from nucleo.servicos.cascata import gravar_cortes
 
 PARCEIRO = "DEMONSTRAÇÃO"
 USUARIO = "demo-preview"
 MARCA = "demo criado por criar_demo"
-SVG = settings.BASE_DIR / "nucleo" / "tests" / "fixtures" / "f2-lp.svg"
+# Infográfico de LP 2026 tirado do docx (D-248): só os campos que o modelo guarda.
+DOCX = json.loads((settings.BASE_DIR / "nucleo" / "dados" / "infografico-docx.json").read_text(encoding="utf-8"))
 CORTES = [150, 200, 250, 300]
 TAREFAS = [(100, 150, "Localiza informação explícita."), (225, 275, "Infere o sentido de uma palavra."),
            (325, 375, "Reconhece a tese de um texto argumentativo.")]  # fmt: skip
@@ -70,6 +78,7 @@ class Command(BaseCommand):
 
         with transaction.atomic():
             revista = self.revista(ano, usuario)
+            preencher_infograficos(revista)
         url = f"http://localhost:8000/preview/{revista.pk}/"
         self.stdout.write(self.style.SUCCESS(f"Preview: {url}\nUsuário: {USUARIO}  Senha: {senha}"))
 
@@ -100,6 +109,27 @@ class Command(BaseCommand):
         for rf in RevistaFasciculo.objects.filter(revista=revista):
             rf.template = Template.objects.get(ano=lp.ano, componente=lp, fasciculo=rf.fasciculo, nome="Padrão")
             rf.save()
-        receber_svg(revista, SimpleUploadedFile("f2.svg", SVG.read_bytes()))
         receber_capa(revista, SimpleUploadedFile("capa.png", PNG))
         return revista
+
+
+def preencher_infograficos(revista, caminho="infograficos/demo-{tipo}-{p}.png"):
+    """Os infográficos ativos com os dados do docx e o PNG da capa em cada um dos 4 itens. Idempotente."""
+    sha = hashlib.sha256(PNG).hexdigest()
+    for inf in RevistaInfografico.objects.filter(revista=revista, arquivado_em__isnull=True):
+        RevistaInfografico.objects.update_or_create(  # save(): o histórico registra
+            pk=inf.pk, defaults={c: DOCX[c] for c in ("habilidade", "texto_descritor", "texto_habilidades", "texto_progressao")}
+        )
+        for e in DOCX["etapas"]:
+            RevistaInfograficoEtapa.objects.update_or_create(
+                infografico=inf, etapa=e["etapa"], defaults={"ano_id": inf.ano_id, **e}
+            )
+        for p, item in enumerate(DOCX["itens"], 1):
+            imagem = caminho.format(tipo=inf.tipo, p=p)
+            # Direto no storage, não por arquivos.receber_imagem_item: ela grava com nome uuid e cada
+            # execução deixaria uma cópia; com nome fixo, rodar de novo não cria arquivo.
+            if not default_storage.exists(imagem):
+                default_storage.save(imagem, ContentFile(PNG))
+            RevistaInfograficoItem.objects.update_or_create(
+                infografico=inf, posicao=p, defaults={"ano_id": inf.ano_id, "imagem": imagem, "imagem_sha256": sha, **item}
+            )

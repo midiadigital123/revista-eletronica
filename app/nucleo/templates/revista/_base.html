@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+{% comment %}
+Base das páginas da revista (D-233): index (sumário), f1 e f2 (um infográfico por página).
+Contexto: nucleo.servicos.html.contexto_pagina (as chaves comuns: preview, estaticos, css_cores,
+introducao, sumario). `titulo`: o <title> (padrão: o título da revista, que o sumário usa). Serve ao preview e ao zip do S15 (file://): estáticos por `estaticos`,
+faixas vermelhas só com `preview` (D-116).
+{% endcomment %}
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; frame-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+    <title>{% block titulo %}{% if introducao %}{{ introducao.titulo|striptags|safe }}{% else %}Análise dos Resultados para Intervenção Pedagógica{% endif %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ estaticos }}f2/revista.css">
+    <link rel="stylesheet" href="{{ estaticos }}f1/styles.css">
+    {% if css_cores %}<style>{{ css_cores }}</style>{% endif %}
+    <style>
+        .rv-pular { position: absolute; left: -9999px; }
+        .rv-pular:focus { left: 1rem; top: 1rem; z-index: 2000; padding: .5rem 1rem; background: #fff; outline: 3px solid #000; }
+        .capitulos { position: sticky; top: 0; z-index: 1100; background: var(--color-white); border-bottom: 1px solid var(--color-gray-200); }
+        .capitulos ul { display: flex; flex-wrap: wrap; gap: var(--spacing-xs); justify-content: center; list-style: none; padding: var(--spacing-xs); }
+        .capitulos a { display: inline-block; min-height: 44px; padding: .6rem 1.25rem; border-radius: 999px; color: var(--color-black); font-weight: 600; text-decoration: none; background: var(--color-gray-100); }
+        .capitulos a:hover { background: var(--color-primary); }
+        .capitulos a:focus-visible { outline: 3px solid #000; outline-offset: 2px; }
+        .fechamento-section { max-width: 48.75rem; margin: 0 auto; padding: var(--spacing-xl) var(--spacing-md); }
+        .fechamento-section h2 { font-size: var(--font-size-h2); margin-bottom: var(--spacing-sm); }
+        .fechamento-section p, .f2-abertura p { font-size: var(--font-size-p); margin-bottom: var(--spacing-sm); }
+        .f2-section { max-width: 1366px; margin: 0 auto; padding: var(--spacing-xl) var(--spacing-md); }
+        .f2-section > h1 { font-size: var(--font-size-h2); margin-bottom: var(--spacing-sm); }
+        .f2-tarefas-fechamento { margin-top: var(--spacing-md); } /* depois do infográfico (D-258) */
+        dialog[id^="dlg-"] { margin: auto; } /* o reset do f1/styles.css (* {margin:0}) tirava a centralização */
+        dialog[id^="dlg-"] .modal-body p { margin-bottom: var(--spacing-sm); }
+        {% if preview %}.faixa-vermelha { margin: var(--spacing-sm) auto; max-width: 48.75rem; padding: var(--spacing-sm); background: #b00020; color: #fff; font-weight: 700; }
+        .variavel-vazia { background: #b00020; color: #fff; padding: 0 .25em; }{% endif %}
+    </style>
+</head>
+<body>
+    <a class="rv-pular" href="#conteudo">Pular para o conteúdo</a>
+    {% block sumario %}
+    <nav class="capitulos" aria-label="Revista">
+        <ul><li><a href="{{ sumario }}">Voltar ao sumário</a></li></ul>
+    </nav>
+    {% endblock %}
+{% block conteudo %}{% endblock %}
+{% block scripts %}{% endblock %}
+</body>
+</html>

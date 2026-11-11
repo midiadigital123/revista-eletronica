@@ -40,19 +40,6 @@ View: nucleo/urls/ui_templates.py (editar). Ficha: docs/telas/fichas/templates.m
       <div data-secoes>
         {% for s in secoes %}{% include "ui/parciais/templates_secao.html" with n=forloop.counter0 %}{% endfor %}
       </div>
-      {% if pode_gravar and permitidas.repetiveis %}
-      <div class="tpl-adicionar">
-        <button class="btn btn-outline" type="button" data-acao="passo" data-proximo="{{ proximo }}">+ Adicionar passo</button>
-        <span class="tpl-adicionar-dlg">
-          <label class="sr-only" for="dlg-passo">Passo do diálogo</label>
-          <select class="select" id="dlg-passo" data-dlg-passo>
-            {% for id, r in passos %}<option value="{{ id }}">{{ r }}</option>{% endfor %}
-          </select>
-          <button class="btn btn-outline" type="button" data-acao="dialogo">+ Adicionar diálogo</button>
-        </span>
-      </div>
-      <template data-modelo>{% include "ui/parciais/templates_secao.html" with s=modelo n="__N__" %}</template>
-      {% endif %}
       <p class="ajuda">Variáveis entre chaves duplas, como <code>{% templatetag openvariable %}ano{% templatetag closevariable %}</code>: use "{ } Variável". No texto valem negrito, itálico e listas; links, imagens, HTML e <code>#</code>, não. O título é texto puro.</p>
     </div>
 

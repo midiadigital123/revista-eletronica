@@ -42,7 +42,7 @@ Deixar cada projeto do ano pronto para gerar as revistas: o nome que sai na capa
   - **Matriz:** select "Matriz de <parceiro> em <ano>" com as matrizes do ano, a dica para usar "Atribuir matriz…" na Lista e o passo de cada etapa × componente na matriz ("5EF LP: 25").
   - **Cortes:** a linha deste parceiro da grade de Cortes, um bloco por etapa ("5EF até 500") com os componentes lado a lado, e o link "Ver a grade de cortes de <ano>".
   - **Passos e cores:** as amostras dos padrões (cor e nome efetivos, selo "do ano" ou "sobrescrita") e, por etapa, uma célula por componente com o passo ("Matriz: 25", "fora da matriz" ou "sem linhas vazias") e o selo "da matriz" ou "sobrescrito". Link "Editar as cores do ano" (com `change_corpadrao`). O nome do padrão se troca nas variáveis pd01 a pd05, na aba Dados.
-  - **Revistas:** um cartão por componente com Template F1 e F2 (ou "sem template"), SVG do F2 e Capa (✓ ou falta), o selo "Validada", "Sem “Validado”" ou "Arquivada", e os botões "Abrir revista" e "Preview".
+  - **Revistas:** um cartão por componente com Template F1 e F2 (ou "sem template") e Capa (✓ ou falta), o selo "Validada", "Sem “Validado”" ou "Arquivada", e os botões "Abrir revista" e "Preview".
 
 ### Dados gravados (um campo por vez)
 

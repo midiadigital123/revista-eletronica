@@ -1,0 +1,20 @@
+{% comment %}
+Textos do template F2 que entram num passo do infográfico (D-258), só leitura: o leitor do cartão vê o
+que o modal ou o balão do tour vai mostrar além dos campos da revista. Contexto: `secoes`, lista de
+nucleo.revista.Secao (urls/ui_revista._textos_template). Corpo em Markdown cru, como no editor; o texto
+se edita no painel da seção (vale para os dois infográficos da revista).
+{% endcomment %}{% if secoes %}
+<details class="inf-template">
+  <summary>Do template: {% for s in secoes %}{{ s.rotulo }}{% if not forloop.last %}, {% endif %}{% endfor %}</summary>
+  {% for s in secoes %}{% with k="F2:"|add:s.id %}
+  <div class="inf-template-secao">
+    <p class="inf-template-cab">
+      <strong>{{ s.rotulo }}</strong>{% if s.copia %} <span class="badge badge-secundario">cópia</span>{% endif %}
+      <a href="?secao={{ k|urlencode }}#secao">Editar nesta revista<span class="sr-only">: {{ s.rotulo }}</span></a>
+    </p>
+    <p class="inf-template-titulo">{{ s.titulo }}</p>
+    <div class="inf-template-corpo" tabindex="0" role="region" aria-label="Texto do template: {{ s.rotulo }}">{{ s.corpo }}</div>
+  </div>
+  {% endwith %}{% endfor %}
+</details>
+{% endif %}

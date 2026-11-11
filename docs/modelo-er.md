@@ -182,9 +182,6 @@ erDiagram
         bigint ano_id FK "só para FK composta"
         text capa "caminho no storage"
         text capa_sha256
-        text svg_f2 "caminho no storage, nome com uuid"
-        text svg_sha256
-        text_arr svg_ids "ids lidos no upload"
         timestamptz arquivada_em "nulo = ativa (D-117)"
         text hash_validado "hash da versão vista no clique"
         timestamptz validado_em
@@ -246,7 +243,7 @@ Fonte: `Meta.constraints` de cada modelo em `app/nucleo/models/` e `app/nucleo/d
 | projeto | UNIQUE (parceiro_ano_id) WHERE arquivado_em IS NULL; UNIQUE (id, ano_id); FK composta (parceiro_ano_id, ano_id); nome <= 200; cada variável manual <= 200 | D-047, D-068, D-100 |
 | projeto_passo | UNIQUE (projeto_id, etapa_id, componente_id); FKs compostas (projeto, ano), (etapa, ano), (componente, ano) | D-090, D-091 |
 | projeto_cor | UNIQUE (projeto_id, padrao); CHECK padrao BETWEEN 1 AND 5; CHECK cor ~ '^#[0-9A-Fa-f]{6}$'. Sem `ano_id`, logo sem FK composta | D-060 |
-| revista | UNIQUE (projeto_id, componente_id); UNIQUE (id, ano_id, componente_id); FKs compostas (projeto, ano), (componente, ano); CHECK (capa IS NULL) = (capa_sha256 IS NULL); idem svg_f2 e svg_sha256; sha256 em capa_sha256, svg_sha256 e hash_validado; capa e svg_f2 <= 500; permissões `validar_revista` e `marcar_impressa` | D-095, D-117, D-118 |
+| revista | UNIQUE (projeto_id, componente_id); UNIQUE (id, ano_id, componente_id); FKs compostas (projeto, ano), (componente, ano); CHECK (capa IS NULL) = (capa_sha256 IS NULL); sha256 em capa_sha256 e hash_validado; capa <= 500; permissões `validar_revista` e `marcar_impressa` | D-095, D-117, D-118 |
 | revista_fasciculo | UNIQUE (revista_id, fasciculo); UNIQUE (id, template_id); CHECK fasciculo IN ('F1','F2'); FK composta (revista_id, ano_id, componente_id); FK composta (template_id, ano_id, componente_id, fasciculo) → template, MATCH SIMPLE (nulo = sem template) | D-098, D-106, D-124 |
 | revista_secao | UNIQUE (revista_fasciculo_id, secao); FK composta (revista_fasciculo_id, template_id) → revista_fasciculo (id, template_id); FK composta (template_versao_id, template_id) → template_versao (id, template_id); secao <= 100 | D-104, D-115 |
 | foto_revista | CHECK motivo IN ('impresso','arquivamento'); sha256 em hash; índice `foto_revista_ultima_idx` (revista_id, motivo, criada_em DESC) | D-077, D-097 |
@@ -325,8 +322,8 @@ O Impresso nunca recebe `delete_*`. A tabela papel × ação completa está em [
 - **Texto efetivo de uma seção:** `revista_secao.texto` se houver cópia; senão, a seção da última `template_versao` do template escolhido.
 - **Template mudou numa seção com cópia:** a cópia aponta para uma versão menor que a atual e o texto daquela seção mudou. Aparece um aviso e a tela "seu texto | template novo com diff", com edição à mão ou "descartar cópia". Não bloqueia o "Validado" (D-087, D-115).
 - **Hash:** calculado em Python sobre JSON canônico (`json.dumps(..., sort_keys=True, separators=(",", ":"), ensure_ascii=False)`), nunca sobre o `jsonb` guardado, que reordena chaves.
-  - O hash do "Validado" cobre a revista resolvida mais `svg_sha256` e `capa_sha256` (D-118).
-  - A foto guarda a revista resolvida inteira (`conteudo` jsonb, com o hash dela), e o diff do impresso lê só a parte `impresso_de(resolvido)`: escalas, cores e textos do F1 e textos do F2, sem SVG nem capa (`app/nucleo/servicos/resolver.py:299`; D-151, D-153, D-178).
+  - O hash do "Validado" cobre a revista resolvida (com o `imagem_sha256` dos itens dos infográficos) mais `capa_sha256` (D-118, D-237). Passo desligado não entra no hash (D-243).
+  - A foto guarda a revista resolvida inteira (`conteudo` jsonb, com o hash dela), e o diff do impresso lê só a parte `impresso_de(resolvido)`: escalas, cores e textos do F1; seções e infográficos do F2, estes sem a imagem dos itens; sem capa (`app/nucleo/servicos/resolver.py:368`; D-151, D-153, D-178, D-256). Foto anterior à fase 4 do F2 não tem `infograficos`: a revista fica pendente no impresso uma vez.
   - Mudar uma variável derruba só a revista cujo texto a usa (D-125).
 - **Clique com versão:** "Validado" e "Revista Impressa Atualizada" enviam o hash visto, e o servidor recusa se o atual for outro (D-089). Em lote, vale a mesma regra por revista: o lote envia pares (revista, hash) (D-120).
 - **"Validado" é recusado se:**
@@ -334,12 +331,12 @@ O Impresso nunca recebe `delete_*`. A tabela papel × ação completa está em [
   - algum corte não tiver matriz_etapa_cc na matriz escolhida;
   - os cortes estiverem fora de ordem ou da escala (defensivo, `corte_invalido`);
   - faltar template no F1 ou no F2;
-  - faltar SVG ou capa;
-  - o SVG não tiver um id exigido pelas seções efetivas do F2;
+  - faltar dado num infográfico ativo (habilidade, ou passo ligado sem o que ele mostra);
+  - faltar capa;
   - alguma variável usada estiver vazia;
   - o nome ainda terminar em " - NOME DO PROJETO".
 
-  As mesmas condições alimentam o Painel da temporada (`app/nucleo/servicos/resolver.py:335`; D-093, D-106, D-112, D-120).
+  As mesmas condições alimentam o Painel da temporada (`app/nucleo/servicos/pendencias.py:88`; D-093, D-106, D-112, D-120, D-237).
 - **Preview:** abre sempre; texto sem template ou variável vazia aparece como faixa vermelha (D-116).
 - **Cascata num ponto só:** gravar cortes cria ou reativa revistas e projetos, ou arquiva os que ficaram sem cortes, num único serviço. A transação começa com `SELECT … FOR UPDATE` na linha de parceiro_ano (D-093, D-117).
 - **Arquivar a revista congela:** grava `foto_revista(motivo='arquivamento')` e a revista arquivada mostra essa foto. Quando os cortes voltam, a mesma linha é reativada. O projeto é arquivado quando todas as revistas dele estiverem arquivadas (D-117).
@@ -349,14 +346,8 @@ O Impresso nunca recebe `delete_*`. A tabela papel × ação completa está em [
   - Quem pode tomar: o bloqueio livre, o expirado ou o do **mesmo usuário** em qualquer sessão. A mesma pessoa em outra aba ou recarga assume, e a sessão antiga perde a renovação e a escrita, porque `renovar` e `conferir_na_transacao` exigem a `sessao_edicao` (D-191).
   - Expira em 30 s (`TTL`, `bloqueio.py:21`); a página renova a cada 10 s. O bloqueio trava só a escrita: todos continuam vendo.
   - O relógio é sempre o `now()` do banco. Toda rota de escrita confere o bloqueio na mesma transação, com `SELECT … FOR SHARE` (`bloqueio.py:83`). Ações em lote pulam alvos travados e listam os pulados (D-081, D-121).
-- **Template salvo:** cada salvamento insere uma template_versao; não há UPDATE de texto. Antes de salvar, a tela lista as revistas afetadas e os SVGs que ficariam sem algum id exigido (D-099, D-125).
-- **Upload de SVG:**
-  - leitura com `defusedxml`, só uma lista fixa de tags e atributos (sem `on*`, `script`, `foreignObject` nem `href` externo), até 3 MB;
-  - ids e classes recebem um prefixo;
-  - o arquivo é gravado com nome uuid e nunca é sobrescrito;
-  - `svg_ids` guarda os ids lidos.
-
-  Fonte: D-108 e D-125.
+- **Template salvo:** cada salvamento insere uma template_versao; não há UPDATE de texto. Antes de salvar, a tela lista as revistas afetadas, com as seções que têm cópia e se já há foto do impresso (D-099, D-125).
+- **SVG do F2:** não há upload; o servidor gera o SVG a partir dos infográficos da revista (D-239). As colunas `svg_f2`, `svg_sha256` e `svg_ids` e o sanitizador saíram na migração 0024 (fase 4 do F2).
 - **Abrir ano:** serviço `abrir_ano` (`app/nucleo/servicos/abrir_ano.py:43`), chamado pela tela `/ui/anos/` (D-192) e pelo comando `manage.py abrir_ano N`. Só abre o ano seguinte ao maior existente. Roda numa única transação, começando pelo `INSERT` em ano, de modo que o UNIQUE barra o segundo clique. Copia só cadastros (etapa, componente, cor_padrao, matriz com matriz_etapa_cc, descritor e tarefa, template com a última versão) usando um mapa de ids antigo→novo. Cortes, parceiro_ano, projetos e escolhas **não** passam, e `duplicada_de` aponta para a origem no ano anterior (D-119, D-124).
 - **Seed dos cadastros:** `manage.py carregar_cadastros --ano N` cria ano, etapas, componentes e cores/nomes dos padrões, sem alterar o que já existe. Os limites de escala (2EF = 1000; 5EF, 9EF e 3EM = 500) só existem aqui, como valor inicial de `Etapa.escala_max` (`app/nucleo/management/commands/carregar_cadastros.py:6`).
 - **Seed dos templates:** comando `carregar_templates --ano 2026` lê os `.hbs` do repositório, cria o template (`origem` = nome do arquivo) com a versão 1 e nunca sobrescreve. Daí em diante, a fonte é o banco (D-098).
@@ -365,7 +356,7 @@ O Impresso nunca recebe `delete_*`. A tabela papel × ação completa está em [
 
 - **Fascículo:** coluna com CHECK ('F1', 'F2'). D-122.
 - **Lista de variáveis:** constante no código e uma coluna por variável em `projeto`. D-100.
-- **Seções do template:** cabeçalhos `## id` dentro do texto da versão, conferidos ao salvar (F1: `introducao`, `fechamento`; F2: `## passoN` e `## dlg-*`). D-111, D-114.
+- **Seções do template:** cabeçalhos `## id` dentro do texto da versão, conferidos ao salvar (F1: `introducao`, `fechamento`; F2: as 9 seções fixas de `texto.SECOES["F2"]`). D-111, D-114, D-238.
 - **Grupo de corte:** calculado na exportação. D-049, D-056.
 - **Etapas avaliadas:** existem cortes para parceiro_ano × etapa × componente. D-049.
 - **Padrão de cada tarefa:** calculado na renderização (âncora maior). D-058.

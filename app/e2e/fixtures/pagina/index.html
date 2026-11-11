@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; frame-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+    <title>Análise de GO</title>
+    <link rel="stylesheet" href="revista/f2/revista.css">
+    <link rel="stylesheet" href="revista/f1/styles.css">
+    <style>:root{--color-padrao-1:#F72628;--color-padrao-1-bg:rgba(247, 38, 40, 0.1);--color-padrao-2:#FF8D43;--color-padrao-2-bg:rgba(255, 141, 67, 0.1);--color-padrao-3:#B3CCFF;--color-padrao-3-bg:rgba(179, 204, 255, 0.1);--color-padrao-4:#0ED3FF;--color-padrao-4-bg:rgba(14, 211, 255, 0.1);--color-padrao-5:#FFFFFF;--color-padrao-5-bg:rgba(255, 255, 255, 0.1);}</style>
+    <style>
+        .rv-pular { position: absolute; left: -9999px; }
+        .rv-pular:focus { left: 1rem; top: 1rem; z-index: 2000; padding: .5rem 1rem; background: #fff; outline: 3px solid #000; }
+        .capitulos { position: sticky; top: 0; z-index: 1100; background: var(--color-white); border-bottom: 1px solid var(--color-gray-200); }
+        .capitulos ul { display: flex; flex-wrap: wrap; gap: var(--spacing-xs); justify-content: center; list-style: none; padding: var(--spacing-xs); }
+        .capitulos a { display: inline-block; min-height: 44px; padding: .6rem 1.25rem; border-radius: 999px; color: var(--color-black); font-weight: 600; text-decoration: none; background: var(--color-gray-100); }
+        .capitulos a:hover { background: var(--color-primary); }
+        .capitulos a:focus-visible { outline: 3px solid #000; outline-offset: 2px; }
+        .fechamento-section { max-width: 48.75rem; margin: 0 auto; padding: var(--spacing-xl) var(--spacing-md); }
+        .fechamento-section h2 { font-size: var(--font-size-h2); margin-bottom: var(--spacing-sm); }
+        .fechamento-section p, .f2-abertura p { font-size: var(--font-size-p); margin-bottom: var(--spacing-sm); }
+        .f2-section { max-width: 1366px; margin: 0 auto; padding: var(--spacing-xl) var(--spacing-md); }
+        .f2-section > h1 { font-size: var(--font-size-h2); margin-bottom: var(--spacing-sm); }
+        .f2-tarefas-fechamento { margin-top: var(--spacing-md); } /* depois do infográfico (D-258) */
+        dialog[id^="dlg-"] { margin: auto; } /* o reset do f1/styles.css (* {margin:0}) tirava a centralização */
+        dialog[id^="dlg-"] .modal-body p { margin-bottom: var(--spacing-sm); }
+        
+    </style>
+</head>
+<body>
+    <a class="rv-pular" href="#conteudo">Pular para o conteúdo</a>
+    
+
+    <header>
+        <section class="hero-section">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>Análise de GO</h1>
+                </div>
+                <div class="hero-image">
+                    <img src="arquivos/capa.png" alt="">
+                </div>
+            </div>
+        </section>
+    </header>
+
+    <main id="conteudo">
+        <nav class="capitulos" aria-label="Sumário">
+            <ul>
+                
+                <li><a href="f1.html">Escalas de proficiência</a></li>
+                
+                <li><a href="f2-alfa.html">Avaliação e Currículo – Alfa</a></li>
+                
+                <li><a href="f2-outras-etapas.html">Avaliação e Currículo – Outras Etapas</a></li>
+                
+            </ul>
+        </nav>
+    </main>
+
+
+</body>
+</html>

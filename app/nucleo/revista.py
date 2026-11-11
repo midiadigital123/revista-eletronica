@@ -1,4 +1,4 @@
-"""Regra da revista (SVG, capa, template por fascículo, textos por seção, "Validado").
+"""Regra da revista (capa, template por fascículo, textos por seção, "Validado").
 
 Extraída de `admin/revista.py` para o admin e a página própria (`urls/ui_revista.py`) usarem a
 mesma regra (D-183). Detalhes das regras na docstring do admin: D-104, D-108, D-115, D-170, D-171.
@@ -11,21 +11,18 @@ from typing import NamedTuple
 from django import forms
 from django.contrib import messages
 from django.core.exceptions import ValidationError
-from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
 from nucleo import texto
 from nucleo.models import Revista, RevistaFasciculo, RevistaSecao, Template
 from nucleo.servicos import arquivos, resolver, validacao
+from nucleo.servicos.pendencias import pendencias
 from nucleo.templates_texto import rotulo
 
 
 class RevistaForm(forms.ModelForm):
     # Validam no clean (erro no campo); gravam no save_model, depois do form todo válido.
-    arquivo_svg = forms.FileField(
-        required=False, label="Trocar SVG do F2", help_text="Substitui o SVG anterior. Até 3 MB. Ids pela convenção: passoN, btn-action-xx."
-    )
     arquivo_capa = forms.FileField(
         required=False, label="Trocar capa", help_text="Substitui a capa anterior. PNG, JPG ou WebP até 5 MB."
     )
@@ -54,14 +51,6 @@ class RevistaForm(forms.ModelForm):
                     texto.validar_corpo(dados[campo])
                 except ValidationError as e:
                     self.add_error(campo, e)
-        return dados
-
-    def clean_arquivo_svg(self):
-        f = self.cleaned_data.get("arquivo_svg")
-        if not f:
-            return None
-        dados = arquivos._ler(f, arquivos.SVG_MAX, "SVG")
-        arquivos.sanitizar_svg(dados)  # ponytail: o receber_svg sanitiza de novo (3 MB no pior caso)
         return dados
 
     def clean_arquivo_capa(self):
@@ -264,36 +253,13 @@ def gravar_textos(request, form):
             messages.info(request, f"Textos do {f} salvos: {', '.join(mexeu)}.")
 
 
-def ids_do_f2(revista):
-    """(esperados, faltando) pelas seções efetivas do F2; None sem template do F2."""
-    f2 = RevistaFasciculo.objects.filter(revista=revista, fasciculo="F2").first()
-    secoes = resolver.secoes_efetivas(f2)
-    if secoes is None:
-        return None
-    nomes = [s[0] for s in secoes]
-    return arquivos.ids_esperados(nomes), arquivos.ids_faltando(revista, nomes)
-
-
-def aviso_ids(revista, faltando, esperados):
-    url = reverse("admin:nucleo_revista_gabarito_ids", args=[revista.pk])
-    return format_html(
-        'Ids que faltam no SVG: <strong>{}</strong>. Esperados: {}. <a class="button" href="{}">Baixar gabarito de ids</a>',
-        ", ".join(faltando), ", ".join(esperados), url,
-    )  # fmt: skip
-
-
 def form_de_textos(blocos, editor=None):
     """RevistaForm com um campo por seção dos `blocos` (o admin e a página própria usam)."""
     return type("RevistaForm", (RevistaForm,), {**campos_de_texto(blocos, editor), "blocos": blocos})
 
 
 def gravar_arquivos(request, revista, dados):
-    """Grava SVG e capa já validados pelo RevistaForm; ids faltando gravam e avisam (D-108)."""
-    if dados.get("arquivo_svg"):
-        arquivos.receber_svg(revista, dados["arquivo_svg"])
-        ids = ids_do_f2(revista)
-        if ids and ids[1]:
-            messages.warning(request, aviso_ids(revista, ids[1], ids[0]))
+    """Grava a capa já validada pelo RevistaForm."""
     if dados.get("arquivo_capa"):
         arquivos.receber_capa(revista, dados["arquivo_capa"])
 
@@ -315,6 +281,6 @@ def estado_validacao(pk):
     return {
         "hash": atual,
         "validada": validacao.validada(revista, atual),
-        "pendencias": resolver.pendencias(revista, resolvido),
+        "pendencias": pendencias(revista, resolvido),
         "desatualizadas": [f"{c.revista_fasciculo.fasciculo} {c.secao}" for c in resolver.secoes_desatualizadas(revista)],
     }

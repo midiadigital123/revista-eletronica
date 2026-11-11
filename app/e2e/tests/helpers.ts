@@ -1,5 +1,4 @@
-import path from "node:path";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 /** Entra pelo login das telas B e cai em `proxima` (`/admin/login/` redireciona para `/conta/entrar/`, D-212). Sem E2E_ADMIN_USUARIO e E2E_ADMIN_SENHA, pula o teste. */
 export async function entrar(page: Page, proxima = "/admin/") {
@@ -62,14 +61,26 @@ export async function matrizPropria(page: Page, prefixo: string) {
   return { nome, url: page.url(), pk: /\/m\/(\d+)\//.exec(page.url())![1] };
 }
 
-const SVG_F2 = path.join(__dirname, "../../nucleo/tests/fixtures/f2-lp.svg");
-const CAPA = { name: "capa.png", mimeType: "image/png", buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mP4/5oBAATXAesdPD2pAAAAAElFTkSuQmCC", "base64") };
+export const CAPA = { name: "capa.png", mimeType: "image/png", buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mP4/5oBAATXAesdPD2pAAAAAElFTkSuQmCC", "base64") };
 
 /** Revista LP 2026 própria e pronta para validar (6 de 6): parceiro "E2E …" com cortes de 5EF e 9EF LP,
- * `matriz` pelo lote, nome do projeto, templates Padrão, SVG e capa. Para os specs que gravam em revista
- * (D-225), no lugar da DEMONSTRAÇÃO. Devolve o nome do parceiro e o id da revista. */
+ * `matriz` pelo lote, nome do projeto, templates Padrão, o infográfico Outras Etapas no mínimo
+ * (`infograficoMinimo`) e capa. Para os specs que gravam em revista (D-225), no lugar da DEMONSTRAÇÃO.
+ * Devolve o nome do parceiro e o id da revista. */
 export async function revistaPropria(page: Page, prefixo: string, matriz = "Demonstração") {
-  const nome = await parceiroComProjeto(page, prefixo, ["5EF LP", "9EF LP"]);
+  const { nome, revista } = await fichaComTemplates(page, prefixo, ["5EF LP", "9EF LP"], matriz);
+  await infograficoMinimo(page, page.locator(".inf-card"));
+  await page.setInputFiles("#arquivo-capa", CAPA);
+  await expect(page.locator("#arquivos img.revista-capa")).toBeVisible();
+  await expect(page.locator("#situacao")).toContainText("6 de 6 prontos");
+  await liberarBloqueio(page);
+  return { nome, revista };
+}
+
+/** Parceiro "E2E …" com cortes em `colunas`, `matriz` pelo lote e nome do projeto; termina na ficha da
+ * revista LP com os templates Padrão do F1 e do F2 (sem infográfico nem capa). Devolve o nome e o id. */
+export async function fichaComTemplates(page: Page, prefixo: string, colunas: string[], matriz = "Demonstração") {
+  const nome = await parceiroComProjeto(page, prefixo, colunas);
   await atribuirEmMassa(page, nome, { matriz });
   await expect(page.locator("#mensagens")).toContainText("escolhida para 1 parceiro(s)");
   const revista = await revistaDaLista(page, nome, "LP");
@@ -87,13 +98,30 @@ export async function revistaPropria(page: Page, prefixo: string, matriz = "Demo
   await expect(salvo).toBeVisible();
   await page.selectOption("#template-F2", { label: "Padrão (F2)" });
   await expect(page.locator("#textos textarea")).toBeVisible();
-  await page.setInputFiles("#arquivo-svg", SVG_F2);
-  await expect(page.locator("#arquivos")).toContainText("SVG enviado");
-  await page.setInputFiles("#arquivo-capa", CAPA);
-  await expect(page.locator("#arquivos img.revista-capa")).toBeVisible();
-  await expect(page.locator("#situacao")).toContainText("6 de 6 prontos");
-  await liberarBloqueio(page);
   return { nome, revista };
+}
+
+/** Ficha da revista: `acao` muda um campo do infográfico; espera a resposta do autosave e o "Salvo às"
+ * (depois do 1º envio o "Salvo às" já está visível: só a resposta diz que este gravou). */
+export async function salvarInfografico(page: Page, acao: () => Promise<unknown>) {
+  const salvou = page.waitForResponse((r) => r.url().includes("acao=infografico") && r.status() === 200);
+  await acao();
+  await salvou;
+  await expect(page.locator("[data-status-salvo]").getByText(/Salvo às \d/)).toBeVisible();
+}
+
+/** O mínimo para o `cartao` (.inf-card) não ter pendência: os 3 passos desligados e a habilidade. */
+export async function infograficoMinimo(page: Page, cartao: Locator) {
+  for (const passo of ["Habilidades", "Progressão", "Tarefas"]) {
+    await salvarInfografico(page, () => cartao.getByLabel(passo, { exact: true }).uncheck());
+  }
+  await salvarInfografico(page, () => preencher(cartao.getByLabel("Habilidade destacada"), "Habilidade E2E."));
+}
+
+/** Preenche e sai do campo (Tab): o `change` do texto, que dispara o autosave. */
+export async function preencher(campo: Locator, valor: string) {
+  await campo.fill(valor);
+  await campo.press("Tab");
 }
 
 /** Nome da regional do projeto `nome` na planilha de Variáveis (projeto novo: nome provisório "<parceiro> - NOME DO PROJETO"). */

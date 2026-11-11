@@ -9,10 +9,25 @@ Só leitura; quem grava é `foto.fotografar`. Formato de `resolver(revista)`:
         "cores": {"padrao-1": "#F72628", ...},   # efetivas, até o maior n das etapas (D-060, D-064)
         "secoes": [{"id", "titulo", "corpo"}],   # None sem template
       },
-      "f2": {"secoes": [...] ou None, "svg_sha256": ..., "svg_ids": [...]},
+      "f2": {"secoes": [...] ou None, "infograficos": [...]},   # só os ativos, por `tipo` (D-237)
       "capa_sha256": ...,
       "lacunas": [{"tipo": "template", "fasciculo": "F1"}, {"tipo": "variavel", "nome": "..."}],
     }
+
+Cada infográfico (o que `servicos/f2.gerar` consome):
+
+    {"tipo", "titulo",                    # rótulo do TipoInfografico
+     "passos": [ligados, na ordem de PASSOS (models/revista.py)],
+     "habilidade": str,
+     "textos": {"descritor", "progressao", "habilidades"},  # passo desligado: ""
+     "etapas": [{"etapa", "rotulo", "marca", "codigo", "texto"}],     # ordem do referencial, só as gravadas
+                                          # habilidades desligado: codigo e texto ""; com progressao também: []
+     "itens": [{"posicao", "etapa", "rotulo", "descritor", "imagem", "imagem_sha256", "texto_alternativo", "analise"}]}
+                                          # passo tarefas desligado: [] (D-243)
+
+Só `textos.*` e `itens[].analise` são HTML (`texto.renderizar`, variáveis contadas em `usadas`); o resto
+é texto cru (o f2.svg faz o autoescape). `imagem`/`imagem_sha256` nulos saem "" (o hash não varia
+entre os dois); `rotulo` de item sem etapa: "".
 
 `titulo` e `corpo` são HTML já escapado (o `titulo` pode ter o `<span class="variavel-vazia">`):
 quem consome usa `|safe`/innerHTML, nunca como texto.
@@ -31,7 +46,6 @@ nome do ano muda o hash só das revistas que não sobrescrevem.
 import hashlib
 import json
 from pathlib import PurePosixPath
-from typing import NamedTuple
 
 from django.db.models import Prefetch
 
@@ -46,12 +60,13 @@ from nucleo.models import (
     ProjetoPasso,
     Revista,
     RevistaFasciculo,
+    RevistaInfografico,
+    RevistaInfograficoItem,
     RevistaSecao,
     Tarefa,
     TemplateVersao,
 )
-from nucleo.models.revista import Motivo
-from nucleo.servicos.arquivos import ids_faltando
+from nucleo.models.revista import PASSOS, EtapaReferencial, Motivo, TipoInfografico
 from nucleo.variaveis import VARIAVEIS
 
 VAZIO = "---"  # linha sem habilidade (CONTEUDO_VAZIO do contrato)
@@ -237,6 +252,55 @@ def valores_das_variaveis(projeto):
     return valores
 
 
+def _infograficos(revista, renderizado):
+    """Infográficos ativos no formato do topo. `renderizado(texto)`: HTML, contando as variáveis.
+
+    Entrar no resolvido muda o hash: derruba o "Validado" de toda revista uma vez (D-237).
+    """
+    ordem = {e: i for i, e in enumerate(EtapaReferencial.values)}
+    rotulos = dict(EtapaReferencial.choices)
+    saida = []
+    for inf in (
+        RevistaInfografico.objects.filter(revista=revista, arquivado_em__isnull=True)
+        .order_by("tipo")
+        .prefetch_related(
+            "revistainfograficoetapa_set",
+            Prefetch("revistainfograficoitem_set", queryset=RevistaInfograficoItem.objects.order_by("posicao")),
+        )
+    ):
+        etapas = sorted(inf.revistainfograficoetapa_set.all(), key=lambda e: ordem[e.etapa])
+        # Etapa invisível sai do hash (D-243): código e texto só aparecem na tabela (habilidades),
+        # a marca também na progressão; sem os dois passos, nada da etapa aparece.
+        tabela = "habilidades" not in inf.passos_desligados
+        if not tabela and "progressao" in inf.passos_desligados:
+            etapas = []
+        saida.append({
+            "tipo": inf.tipo,
+            "titulo": TipoInfografico(inf.tipo).label,
+            "passos": [p for p in PASSOS if p not in inf.passos_desligados],
+            "habilidade": inf.habilidade,
+            "textos": {  # texto de passo desligado é invisível: não renderiza, não conta variável
+                "descritor": renderizado(inf.texto_descritor),
+                **{p: "" if p in inf.passos_desligados else renderizado(getattr(inf, f"texto_{p}"))
+                   for p in ("progressao", "habilidades")},
+            },
+            "etapas": [
+                {"etapa": e.etapa, "rotulo": rotulos[e.etapa], "marca": e.marca,
+                 "codigo": e.codigo if tabela else "", "texto": e.texto if tabela else ""}
+                for e in etapas
+            ],
+            "itens": [
+                {
+                    "posicao": i.posicao, "etapa": i.etapa, "rotulo": rotulos.get(i.etapa, ""), "descritor": i.descritor,
+                    "imagem": i.imagem or "", "imagem_sha256": i.imagem_sha256 or "",
+                    "texto_alternativo": i.texto_alternativo, "analise": renderizado(i.analise),
+                }
+                for i in inf.revistainfograficoitem_set.all()
+            ] if "tarefas" not in inf.passos_desligados else [],  # invisível: fora do hash e do zip (D-243)
+        })  # fmt: skip
+    return saida
+
+
 # --- Resolver, hash e impresso ---------------------------------------------------
 
 
@@ -276,11 +340,15 @@ def resolver(revista):
             )
         return {"secoes": secoes}
 
+    def renderizado(corpo):
+        usadas.update(texto.variaveis_usadas(corpo))
+        return texto.renderizar(corpo, valores)
+
     etapas, dados = _f1_escalas(revista, projeto, valores)
     padroes = max((len(d["padroes"]) for d in dados.values()), default=0)
     usadas.update(f"pd{k:02d}" for k in range(1, padroes + 1))  # rótulos da escala: só os padrões que a revista tem
     f1 = {"etapas": etapas, "dados": dados, "cores": cores_efetivas(revista, projeto, padroes), **textos("F1")}
-    f2 = {**textos("F2"), "svg_sha256": revista.svg_sha256, "svg_ids": sorted(revista.svg_ids or [])}
+    f2 = {**textos("F2"), "infograficos": _infograficos(revista, renderizado)}
     # Mesmo critério de "vazio" de texto._valor.
     lacunas += [
         {"tipo": "variavel", "nome": n}
@@ -291,18 +359,25 @@ def resolver(revista):
 
 
 def hash_validado(revista, resolvido=None):
-    """sha256 do JSON canônico do resolvido. O resolvido já traz svg_sha256 e capa_sha256,
-    então trocar o SVG ou a capa muda o hash (D-118). `resolvido`: reaproveita um já montado."""
+    """sha256 do JSON canônico do resolvido. O resolvido já traz o imagem_sha256 dos itens dos
+    infográficos e o capa_sha256, então trocar uma imagem ou a capa muda o hash (D-118, D-237).
+    `resolvido`: reaproveita um já montado."""
     return sha256(resolver(revista) if resolvido is None else resolvido)
 
 
 def impresso_de(resolvido):
-    """Parte do resolvido que o impresso confere: escalas, cores e textos do F1 e textos do F2.
-    Sem SVG nem capa (D-066, D-072, D-077, D-112). Serve também para fotos antigas (S13)."""
+    """Parte do resolvido que o impresso confere: escalas, cores e textos do F1; seções e infográficos
+    do F2, estes sem a imagem dos itens (trocar a imagem não deixa o impresso pendente, D-118).
+    Sem SVG nem capa (D-066, D-072, D-077, D-112). Serve também para fotos antigas (S13): sem a
+    chave `infograficos`, lista vazia (o diff mostra os infográficos como novos)."""
     f1, f2 = resolvido["f1"], resolvido["f2"]
+    sem_imagem = lambda i: {k: v for k, v in i.items() if k not in ("imagem", "imagem_sha256")}  # noqa: E731
     return {
         "f1": {k: f1.get(k) for k in ("etapas", "dados", "cores", "secoes")},
-        "f2": {"secoes": f2.get("secoes")},
+        "f2": {
+            "secoes": f2.get("secoes"),
+            "infograficos": [inf | {"itens": [sem_imagem(i) for i in inf["itens"]]} for inf in f2.get("infograficos", [])],
+        },
     }
 
 
@@ -310,77 +385,7 @@ def conteudo_impresso(revista):
     return impresso_de(resolver(revista))
 
 
-# --- Pendências e seções desatualizadas -------------------------------------------
-
-
-class Pendencia(NamedTuple):
-    codigo: str
-    mensagem: str
-    # ponytail: link nulo até existirem as telas (S11/S12); o painel monta o link pelo código.
-    link: str | None = None
-
-
-def problema_dos_cortes(dados):
-    """Espelho do problemaDaEtapa do JS (D-131): cortes estritamente crescentes em (min, max).
-    Defensivo: a cascata já recusa (D-153), mas o dado pode ter entrado por outro caminho."""
-    anterior, maximo = dados["scaleRange"]["min"], dados["scaleRange"]["max"]
-    for i in range(1, len(dados["cortes"]) + 1):
-        v = dados["cortes"].get(f"padrao-{i}")
-        if v is None or not anterior < v < maximo:
-            return True
-        anterior = v
-    return False
-
-
-def pendencias(revista, resolvido=None):
-    """O que bloqueia o "Validado" (D-112, D-116, D-125). Lista vazia = pode validar.
-    `resolvido`: reaproveita um já montado (o painel monta uma vez para pendências e hash)."""
-    projeto = revista.projeto
-    pa = projeto.parceiro_ano
-    if resolvido is None:
-        resolvido = resolver(revista)
-    saida = []
-    if pa.matriz_id is None:
-        saida.append(Pendencia("matriz", "Falta escolher a matriz do parceiro no ano."))
-    else:
-        com_mec = set(
-            MatrizEtapaCC.objects.filter(matriz_id=pa.matriz_id, componente_id=revista.componente_id)
-            .values_list("etapa_id", flat=True)
-        )
-        sem_mec = [
-            c.etapa.codigo
-            for c in Corte.objects.filter(parceiro_ano=pa, componente_id=revista.componente_id)
-            .select_related("etapa")
-            .order_by("etapa__ordem")
-            if c.etapa_id not in com_mec
-        ]
-        if sem_mec:
-            saida.append(Pendencia("corte_sem_matriz", f"A matriz não tem a etapa: {', '.join(sem_mec)}."))
-    dados = resolvido["f1"]["dados"]
-    invalidas = [e.upper() for e in resolvido["f1"]["etapas"] if problema_dos_cortes(dados[e])]
-    if invalidas:
-        saida.append(
-            Pendencia("corte_invalido", f"Cortes fora de ordem ou da escala: {', '.join(invalidas)}.")
-        )
-    for lacuna in resolvido["lacunas"]:
-        if lacuna["tipo"] == "template":
-            saida.append(
-                Pendencia(f"template_{lacuna['fasciculo'].lower()}", f"Falta escolher o template do {lacuna['fasciculo']}.")
-            )
-    if not revista.svg_f2:
-        saida.append(Pendencia("svg", "Falta o SVG do F2."))
-    elif resolvido["f2"]["secoes"] is not None:
-        faltando = ids_faltando(revista, [s["id"] for s in resolvido["f2"]["secoes"]])
-        if faltando:
-            saida.append(Pendencia("ids_svg", f"Ids que faltam no SVG: {', '.join(faltando)}."))
-    if not revista.capa:
-        saida.append(Pendencia("capa", "Falta a imagem de capa."))
-    vazias = [lacuna["nome"] for lacuna in resolvido["lacunas"] if lacuna["tipo"] == "variavel"]
-    if vazias:
-        saida.append(Pendencia("variaveis", f"Variáveis sem valor: {', '.join(vazias)}."))
-    if projeto.nome.endswith(" - NOME DO PROJETO"):  # nome inicial da cascata (D-065)
-        saida.append(Pendencia("nome_projeto", "Troque o nome padrão do projeto."))
-    return saida
+# --- Seções desatualizadas (pendências: servicos/pendencias.py) ---------------------
 
 
 def secoes_desatualizadas(revista):

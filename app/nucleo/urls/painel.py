@@ -26,6 +26,7 @@ from nucleo.lotes import em_edicao
 from nucleo.models import Ano, Componente, FotoRevista, Matriz, Parceiro, Revista, Template
 from nucleo.models.revista import Motivo
 from nucleo.servicos import resolver, validacao
+from nucleo.servicos.pendencias import pendencias
 
 # Coluna → códigos de `pendencias` que ela mostra (ordem das colunas da tela).
 COLUNAS = {
@@ -33,7 +34,7 @@ COLUNAS = {
     "template_f1": ("Template F1", ("template_f1",)),
     "template_f2": ("Template F2", ("template_f2",)),
     "variaveis": ("Variáveis", ("variaveis", "nome_projeto")),
-    "svg": ("SVG", ("svg", "ids_svg")),
+    "infograficos": ("Infográficos", ("infografico",)),
     "capa": ("Capa", ("capa",)),
     "validado": ("Validado", ()),
     "impresso": ("Impresso", ()),
@@ -54,12 +55,14 @@ def link(codigo, revista):
         return reverse("cortes", args=[ano])
     if codigo == "impresso":
         return reverse("ui_impresso", args=[ano]) + "?" + urlencode({"revista": revista.pk})
-    return reverse("ui_revista_editar", args=[ano, revista.pk])  # templates, SVG, capa, Validado
+    if codigo == "infografico":
+        return reverse("ui_revista_editar", args=[ano, revista.pk]) + "#infograficos"
+    return reverse("ui_revista_editar", args=[ano, revista.pk])  # templates, capa, Validado
 
 
 def ultima_impressa(revista):
     # ponytail: carrega o JSON inteiro da foto; comparar por hash pede uma coluna hash_impresso
-    # (o `hash` da foto inclui SVG e capa, D-118) = migração. Fazer se o painel ficar lento.
+    # (o `hash` da foto inclui o imagem_sha256 dos itens e o capa_sha256, D-118, D-237) = migração. Fazer se o painel ficar lento.
     return FotoRevista.objects.filter(revista=revista, motivo=Motivo.IMPRESSO).order_by("-criada_em", "-pk").first()
 
 
@@ -71,7 +74,7 @@ def impresso_pendente(foto, resolvido):
 def linha(revista):
     resolvido = resolver.resolver(revista)
     atual = resolver.hash_validado(revista, resolvido)
-    pendentes = resolver.pendencias(revista, resolvido)
+    pendentes = pendencias(revista, resolvido)
     foto = ultima_impressa(revista)
     celulas = {}
     for chave, (_, codigos) in COLUNAS.items():
@@ -190,7 +193,7 @@ def itens_validar(ano, ids, usuario):
                 "revista": revista,
                 "hash": (atual := resolver.hash_validado(revista, resolvido)),
                 "validada": validacao.validada(revista, atual),
-                "pendencias": [p._replace(link=link(p.codigo, revista)) for p in resolver.pendencias(revista, resolvido)],
+                "pendencias": [p._replace(link=link(p.codigo, revista)) for p in pendencias(revista, resolvido)],
                 "desatualizadas": resolver.secoes_desatualizadas(revista),  # D-087: só avisa
                 "diff": diff(revista, resolvido),
                 "editando": em_edicao([revista.projeto], usuario).get(revista.projeto_id, ""),  # o lote vai pular (D-121)

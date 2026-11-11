@@ -4,6 +4,9 @@ Prova que o fascículo F2 pode ser um **SVG gerado de dados** (texto real, `fore
 texto longo, posições calculadas) carregado no `svg-tour.js` atual **sem alterar o svg-tour**,
 aberto por `file://`. Usa os arquivos da demo irmã por caminho relativo (`../f2-animado-tour/f2/`).
 
+`desenho-original.svg` é o desenho original do Illustrator (antes em `app/nucleo/tests/fixtures/f2-lp.svg`):
+referência das medidas de `app/nucleo/servicos/f2.py` e `app/nucleo/templates/revista/f2.svg`.
+
 ## Gerar e verificar
 
 ```bash
