@@ -28,7 +28,7 @@ Manter os textos-modelo das revistas (fascículos F1 e F2) de cada ano. Desde o 
   - **Seção aberta:** o rótulo travado (chip), "Título" (uma linha) e "Texto", com a mini-barra **N** (negrito), *I* (itálico), lista e "{ } Variável" (insere a variável escolhida no campo em que o cursor estava, título ou texto). Os erros da validação aparecem na seção certa.
   - **Pré-visualização** da seção aberta: título e texto renderizados, sem `## id`, com as variáveis em amarelo e o resultado da validação.
 - **Estrutura por fascículo:** no F1, Introdução e Fechamento, fixas (sem adicionar nem remover). No F2, Abertura e Passo 1 fixas; "+ Adicionar passo" cria o passo seguinte (maior + 1, nunca reaproveita um número removido) e "+ Adicionar diálogo" cria o diálogo do passo escolhido no select ao lado. Seção não fixa tem "Remover seção". A ordem segue a do fascículo; não se arrasta.
-- **Impacto:** número da versão que será criada; para cada revista ativa que usa o template: seções com cópia (não mudam), se já tem foto do impresso, ids que faltariam no SVG (só F2 com SVG).
+- **Impacto:** número da versão que será criada; para cada revista ativa que usa o template: seções com cópia (não mudam), se já tem foto do impresso.
 
 ## Dados gravados
 
@@ -140,9 +140,9 @@ Confira o impacto antes de criar a versão 2
 Padrão: Língua Portuguesa (LP), fascículo F2, 2026. Nada foi gravado ainda.
 (i) O texto passou na validação. Confirmar cria a versão 2; a versão 1 fica guardada. ...
 2 revistas ativas usam este template
- Revista        Seções com cópia   Impresso                   Ids que faltariam no SVG
-▌Projeto GO LP  nenhuma            não                        [SVG incompleto: passo2]
-▌Projeto PE LP  passo1             [Já tem foto do impresso]  nenhum
+ Revista        Seções com cópia   Impresso
+▌Projeto GO LP  nenhuma            não
+▌Projeto PE LP  passo1             [Já tem foto do impresso]
 ──────────────────────────────────────────────────────────────────────────────────────────────────────
 Voltar e editar não grava nada e mantém o seu texto.          [Voltar e editar] [Confirmar e criar versão 2]
 ```

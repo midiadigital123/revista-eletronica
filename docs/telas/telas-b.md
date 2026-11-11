@@ -32,7 +32,7 @@ O painel no estilo do admin saiu: `/painel/<ano>/` é a tela B (filtros parceiro
 
 ## 2. O que ainda é só admin
 
-Anos, Abrir ano, etapas, componentes, Padrões do ano e parceiros (criar e renomear) saíram desta lista: ver a tabela 1. Também saíram, com S6–S9 (D-210): criar matriz (`/ui/matriz/<ano>/nova/`, `ui_matriz_nova`), criar template (`/ui/templates/<ano>/novo/`, `ui_templates_novo`), planilha de grupos de corte (`cortes_exportar`), gabarito de ids do SVG (`ui_revista_gabarito`), baixar o arquivo do item (`ui_matriz_item_baixar`), planilhas F1/F2 na ficha da revista (`impresso_planilhas`) e usuários (`/ui/usuarios/`, ver a tabela 1). Depois, a página de criar senha também saiu do admin (D-216) e a exclusão de usuário passou a existir só na tela B (D-218). Os links que saem das telas B para o admin são os da coluna "Onde fica" (`grep "admin:" app/nucleo/templates/ui`).
+Anos, Abrir ano, etapas, componentes, Padrões do ano e parceiros (criar e renomear) saíram desta lista: ver a tabela 1. Também saíram, com S6–S9 (D-210): criar matriz (`/ui/matriz/<ano>/nova/`, `ui_matriz_nova`), criar template (`/ui/templates/<ano>/novo/`, `ui_templates_novo`), planilha de grupos de corte (`cortes_exportar`), gabarito de ids do SVG (`ui_revista_gabarito`, que saiu de vez com o SVG enviado na fase 4 do F2), baixar o arquivo do item (`ui_matriz_item_baixar`), planilhas F1/F2 na ficha da revista (`impresso_planilhas`) e usuários (`/ui/usuarios/`, ver a tabela 1). Depois, a página de criar senha também saiu do admin (D-216) e a exclusão de usuário passou a existir só na tela B (D-218). Os links que saem das telas B para o admin são os da coluna "Onde fica" (`grep "admin:" app/nucleo/templates/ui`).
 
 | O quê | Inventário | Onde fica |
 |---|---|---|
