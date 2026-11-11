@@ -182,9 +182,6 @@ erDiagram
         bigint ano_id FK "só para FK composta"
         text capa "caminho no storage"
         text capa_sha256
-        text svg_f2 "caminho no storage, nome com uuid"
-        text svg_sha256
-        text_arr svg_ids "ids lidos no upload"
         timestamptz arquivada_em "nulo = ativa (D-117)"
         text hash_validado "hash da versão vista no clique"
         timestamptz validado_em
@@ -246,7 +243,7 @@ Fonte: `Meta.constraints` de cada modelo em `app/nucleo/models/` e `app/nucleo/d
 | projeto | UNIQUE (parceiro_ano_id) WHERE arquivado_em IS NULL; UNIQUE (id, ano_id); FK composta (parceiro_ano_id, ano_id); nome <= 200; cada variável manual <= 200 | D-047, D-068, D-100 |
 | projeto_passo | UNIQUE (projeto_id, etapa_id, componente_id); FKs compostas (projeto, ano), (etapa, ano), (componente, ano) | D-090, D-091 |
 | projeto_cor | UNIQUE (projeto_id, padrao); CHECK padrao BETWEEN 1 AND 5; CHECK cor ~ '^#[0-9A-Fa-f]{6}$'. Sem `ano_id`, logo sem FK composta | D-060 |
-| revista | UNIQUE (projeto_id, componente_id); UNIQUE (id, ano_id, componente_id); FKs compostas (projeto, ano), (componente, ano); CHECK (capa IS NULL) = (capa_sha256 IS NULL); idem svg_f2 e svg_sha256; sha256 em capa_sha256, svg_sha256 e hash_validado; capa e svg_f2 <= 500; permissões `validar_revista` e `marcar_impressa` | D-095, D-117, D-118 |
+| revista | UNIQUE (projeto_id, componente_id); UNIQUE (id, ano_id, componente_id); FKs compostas (projeto, ano), (componente, ano); CHECK (capa IS NULL) = (capa_sha256 IS NULL); sha256 em capa_sha256 e hash_validado; capa <= 500; permissões `validar_revista` e `marcar_impressa` | D-095, D-117, D-118 |
 | revista_fasciculo | UNIQUE (revista_id, fasciculo); UNIQUE (id, template_id); CHECK fasciculo IN ('F1','F2'); FK composta (revista_id, ano_id, componente_id); FK composta (template_id, ano_id, componente_id, fasciculo) → template, MATCH SIMPLE (nulo = sem template) | D-098, D-106, D-124 |
 | revista_secao | UNIQUE (revista_fasciculo_id, secao); FK composta (revista_fasciculo_id, template_id) → revista_fasciculo (id, template_id); FK composta (template_versao_id, template_id) → template_versao (id, template_id); secao <= 100 | D-104, D-115 |
 | foto_revista | CHECK motivo IN ('impresso','arquivamento'); sha256 em hash; índice `foto_revista_ultima_idx` (revista_id, motivo, criada_em DESC) | D-077, D-097 |
@@ -350,13 +347,7 @@ O Impresso nunca recebe `delete_*`. A tabela papel × ação completa está em [
   - Expira em 30 s (`TTL`, `bloqueio.py:21`); a página renova a cada 10 s. O bloqueio trava só a escrita: todos continuam vendo.
   - O relógio é sempre o `now()` do banco. Toda rota de escrita confere o bloqueio na mesma transação, com `SELECT … FOR SHARE` (`bloqueio.py:83`). Ações em lote pulam alvos travados e listam os pulados (D-081, D-121).
 - **Template salvo:** cada salvamento insere uma template_versao; não há UPDATE de texto. Antes de salvar, a tela lista as revistas afetadas e os SVGs que ficariam sem algum id exigido (D-099, D-125).
-- **Upload de SVG:**
-  - leitura com `defusedxml`, só uma lista fixa de tags e atributos (sem `on*`, `script`, `foreignObject` nem `href` externo), até 3 MB;
-  - ids e classes recebem um prefixo;
-  - o arquivo é gravado com nome uuid e nunca é sobrescrito;
-  - `svg_ids` guarda os ids lidos.
-
-  Fonte: D-108 e D-125.
+- **SVG do F2:** não há upload; o servidor gera o SVG a partir dos infográficos da revista (D-239). As colunas `svg_f2`, `svg_sha256` e `svg_ids` e o sanitizador saíram na migração 0024 (fase 4 do F2).
 - **Abrir ano:** serviço `abrir_ano` (`app/nucleo/servicos/abrir_ano.py:43`), chamado pela tela `/ui/anos/` (D-192) e pelo comando `manage.py abrir_ano N`. Só abre o ano seguinte ao maior existente. Roda numa única transação, começando pelo `INSERT` em ano, de modo que o UNIQUE barra o segundo clique. Copia só cadastros (etapa, componente, cor_padrao, matriz com matriz_etapa_cc, descritor e tarefa, template com a última versão) usando um mapa de ids antigo→novo. Cortes, parceiro_ano, projetos e escolhas **não** passam, e `duplicada_de` aponta para a origem no ano anterior (D-119, D-124).
 - **Seed dos cadastros:** `manage.py carregar_cadastros --ano N` cria ano, etapas, componentes e cores/nomes dos padrões, sem alterar o que já existe. Os limites de escala (2EF = 1000; 5EF, 9EF e 3EM = 500) só existem aqui, como valor inicial de `Etapa.escala_max` (`app/nucleo/management/commands/carregar_cadastros.py:6`).
 - **Seed dos templates:** comando `carregar_templates --ano 2026` lê os `.hbs` do repositório, cria o template (`origem` = nome do arquivo) com a versão 1 e nunca sobrescreve. Daí em diante, a fonte é o banco (D-098).

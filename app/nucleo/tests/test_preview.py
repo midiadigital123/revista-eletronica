@@ -44,15 +44,6 @@ F2 = (
     "## dlg-descritor\nSobre o descritor\n\nDetalhe do descritor.\n\n## dlg-tarefas\nTarefas por nível\n\nOs itens.\n\n"
     "## tarefas-fechamento\nFechamento das tarefas\n\nSó no impresso.\n\n## fechamento\nAgora é com você\n\nUse o template.\n"
 )
-# SVG pequeno com a convenção de ids (D-108): passoN e btn-action-xx. ponytail: só alimenta os testes
-# das telas que ainda recebem o SVG.
-SVG = b"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
-<style>.bolinha{fill:#ffeb00;stroke:#000}</style>
-<rect id="fundo" width="800" height="400" fill="#f8f9fa"/>
-<g id="passo1"><rect x="40" y="40" width="340" height="320" fill="#b3ccff"/></g>
-<g id="passo2"><rect x="420" y="40" width="340" height="320" fill="#ff8d43"/>
-<g id="btn-action-p2"><circle class="bolinha" cx="590" cy="200" r="24"/></g></g>
-</svg>"""
 
 
 def dois_infograficos(revista):
@@ -81,7 +72,7 @@ def gravar_imagens(revista):
 def foto_antiga(revista):
     """Reescreve a foto de arquivamento no formato de antes da D-237: f2 com o SVG e sem `infograficos`."""
     foto = FotoRevista.objects.filter(revista=revista, motivo=Motivo.ARQUIVAMENTO).latest("criada_em", "pk")
-    foto.conteudo["f2"] = {"secoes": foto.conteudo["f2"]["secoes"], "svg_sha256": revista.svg_sha256, "svg_ids": []}
+    foto.conteudo["f2"] = {"secoes": foto.conteudo["f2"]["secoes"], "svg_sha256": "a" * 64, "svg_ids": []}
     FotoRevista.objects.filter(pk=foto.pk).update(conteudo=foto.conteudo)
 
 
@@ -320,7 +311,7 @@ class PaginaTest(MediaTemporaria, TestCase):
     def test_imagem_de_tipo_nao_imagem_404(self):
         dois_infograficos(self.rev)
         RevistaInfograficoItem.objects.filter(infografico__revista=self.rev, posicao=1).update(imagem="infograficos/x.svg")
-        default_storage.save("infograficos/x.svg", ContentFile(SVG))
+        default_storage.save("infograficos/x.svg", ContentFile(b'<svg xmlns="http://www.w3.org/2000/svg"/>'))
         self.assertEqual(self.imagem(self.rev, "x.svg").status_code, 404)
 
     def test_capa_com_tipo_fixo_e_nosniff(self):

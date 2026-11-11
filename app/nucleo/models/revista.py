@@ -28,9 +28,6 @@ class Revista(models.Model):
     ano = models.ForeignKey(Ano, on_delete=models.PROTECT)  # só para as FKs compostas
     capa = models.TextField(null=True, blank=True)  # caminho no storage
     capa_sha256 = models.TextField(null=True, blank=True)
-    svg_f2 = models.TextField(null=True, blank=True)  # caminho no storage, nome com uuid
-    svg_sha256 = models.TextField(null=True, blank=True)
-    svg_ids = ArrayField(models.TextField(), default=list, blank=True)
     arquivada_em = models.DateTimeField(null=True, blank=True)  # nulo = ativa (D-117)
     hash_validado = models.TextField(null=True, blank=True)
     validado_em = models.DateTimeField(null=True, blank=True)
@@ -49,12 +46,9 @@ class Revista(models.Model):
             models.UniqueConstraint(fields=["projeto", "componente"], name="revista_uniq"),
             models.UniqueConstraint(fields=["id", "ano", "componente"], name="revista_alvo_uniq"),
             juntos("revista", "capa", "capa_sha256"),
-            juntos("revista", "svg_f2", "svg_sha256"),
             sha256("revista", "capa_sha256"),
-            sha256("revista", "svg_sha256"),
             sha256("revista", "hash_validado"),
             max_len("revista", "capa", 500),
-            max_len("revista", "svg_f2", 500),
         ]
 
     def __str__(self):

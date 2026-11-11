@@ -209,10 +209,6 @@ class RecusaRevistaTest(TestCase):
                 with self.subTest(fk=fk, caso=i):
                     self.recusa(acao, fk)
 
-    def test_svg_sem_hash(self):
-        r = Revista.objects.get(pk=self.rf.revista_id)
-        self.recusa(lambda: Revista.objects.filter(pk=r.pk).update(svg_f2="f2/x.svg"), "revista_svg_f2_com_hash")
-
 
 class TemplateVersaoTest(TestCase):
     @classmethod

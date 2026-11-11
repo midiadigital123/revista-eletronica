@@ -24,9 +24,8 @@ from nucleo.models import (
 )
 from nucleo.servicos import bloqueio
 from nucleo.servicos.resolver import carregar, hash_validado
-from nucleo.tests.test_admin_projeto import ARQUIVADO, SVG_SEM_BOTAO, Base, mensagens
+from nucleo.tests.test_admin_projeto import ARQUIVADO, Base, mensagens
 from nucleo.tests.test_painel import completar
-from nucleo.tests.test_preview import SVG
 from nucleo.tests.test_resolver import F1, usuario
 
 PNG = bytes.fromhex(
@@ -166,8 +165,8 @@ class RevistaUiTest(Base):
         self.assertContains(r, "Análise de GO")  # título já resolvido da foto
         self.assertNotContains(r, "Salvar")
         self.assertFalse(bloqueio.quem_bloqueia(self.projeto_go))
-        self.assertEqual(self.client.post(self.url, {"acao": "arquivos", "arquivo_svg": SimpleUploadedFile("f2.svg", SVG)}).status_code, 403)
-        self.assertIsNone(Revista.objects.get(pk=self.rev.pk).svg_f2)
+        self.assertEqual(self.client.post(self.url, {"acao": "arquivos", "arquivo_capa": SimpleUploadedFile("c.png", PNG)}).status_code, 403)
+        self.assertIsNone(Revista.objects.get(pk=self.rev.pk).capa)
 
     # --- 3/4. textos pela regra do admin -------------------------------------------------------
 
@@ -330,36 +329,22 @@ class RevistaUiTest(Base):
     def arquivo(self, campo, nome, dados, aberta=None, **extra):
         return self.campo("arquivos", aberta, files={"valor": SimpleUploadedFile(nome, dados)}, campo=campo, **extra)
 
-    def test_svg_com_id_faltando_grava_e_mostra_os_ids(self):
-        corpo = self.arquivo("arquivo_svg", "f2.svg", SVG_SEM_BOTAO).json()
-        self.assertTrue(corpo["ok"], corpo)
-        self.assertEqual(set(corpo["trocar"]), {"arquivos", "situacao"})
-        self.assertNotIn("Ids que faltam no SVG", corpo["trocar"]["situacao"])  # D-237: o SVG enviado não é mais pendência
-        self.assertEqual(Revista.objects.get(pk=self.rev.pk).svg_ids, ["fundo", "passo1", "passo2", "outro"])
-
     def test_capa_grava_e_mostra_a_miniatura(self):
         corpo = self.arquivo("arquivo_capa", "c.png", PNG).json()
         self.assertTrue(corpo["ok"], corpo)
+        self.assertEqual(set(corpo["trocar"]), {"arquivos", "situacao"})
         self.assertIn(reverse("preview_capa", args=[self.rev.pk]), corpo["trocar"]["arquivos"])
         self.assertTrue(Revista.objects.get(pk=self.rev.pk).capa)
 
     def test_arquivo_invalido_422_e_nao_grava(self):
-        r = self.arquivo("arquivo_svg", "f2.svg", b"<html/>")
-        self.assertEqual(r.status_code, 422)
-        self.assertIn("O arquivo não é um SVG.", r.json()["erros"][0])
         r = self.arquivo("arquivo_capa", "c.png", b"GIF89a")
+        self.assertEqual(r.status_code, 422)
         self.assertEqual(r.json()["erros"], ["Capa precisa ser PNG, JPG ou WebP."])
-        r = self.arquivo("svg_f2", "f2.svg", SVG)  # só os dois campos de arquivo
-        self.assertEqual(r.status_code, 422)
-        rev = Revista.objects.get(pk=self.rev.pk)
-        self.assertFalse(rev.svg_f2)
-        self.assertFalse(rev.capa)
-
-    def test_upload_svg_grande_422_com_mensagem(self):
-        r = self.arquivo("arquivo_svg", "f2.svg", b" " * (3 * 2**20 + 1))
-        self.assertEqual(r.status_code, 422)
-        self.assertEqual(r.json()["erros"], ["SVG maior que 3 MB: reduza e envie de novo."])
-        self.assertFalse(Revista.objects.get(pk=self.rev.pk).svg_f2)
+        for campo in ("arquivo_svg", "svg_f2"):  # só a capa; o SVG enviado saiu (fase 4 do F2)
+            r = self.arquivo(campo, "f2.svg", b"<svg/>")
+            self.assertEqual(r.status_code, 422, campo)
+            self.assertEqual(r.json()["erros"], ["Escolha o arquivo da capa e envie de novo."])
+        self.assertFalse(Revista.objects.get(pk=self.rev.pk).capa)
 
     def test_capa_nova_em_validada_pede_modal(self):
         completar(self.rev)
@@ -401,7 +386,8 @@ class RevistaUiTest(Base):
         self.assertContains(r, f'name="inf-{inf.pk}-item-', count=20)  # 4 itens × etapa, descritor, imagem, alt, análise
         self.assertContains(r, 'href="#infograficos"')  # a pendência leva ao passo
         self.assertNotContains(r, "arquivo-svg")
-        self.assertNotContains(r, reverse("ui_revista_gabarito", args=[2026, self.rev.pk]))
+        self.assertNotContains(r, "arquivo_svg")
+        self.assertNotContains(r, "gabarito-ids")
 
     def test_infografico_salva_e_troca_a_situacao(self):
         aberta = self.abrir()
@@ -571,32 +557,20 @@ class RevistaUiTest(Base):
         for url in (self.url, reverse("ui_revista", args=[2026])):
             self.assertRedirects(self.client.get(url), f"{reverse('entrar')}?next={url}", fetch_redirect_response=False)
 
-    def test_gabarito_de_ids_e_planilhas_pela_tela_b(self):
-        """S8: o gabarito sai da mesma função do admin (servicos/arquivos); as planilhas, pela rota do impresso."""
-        url = reverse("ui_revista_gabarito", args=[2026, self.rev.pk])
+    def test_planilhas_pela_tela_b_sem_gabarito_de_ids(self):
+        """S8: as planilhas, pela rota do impresso; o gabarito de ids saiu com o SVG enviado (fase 4 do F2)."""
         pagina = self.client.get(self.url)
-        self.assertNotContains(pagina, url)  # fase 3 do F2: o link sai da tela; a rota fica até a fase 4
         self.assertContains(pagina, reverse("impresso_planilhas", args=[self.rev.pk]))
         self.assertNotContains(pagina, "/admin/nucleo/revista/")
-        resp = self.client.get(url)
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(resp["Content-Type"], "text/csv; charset=utf-8")
-        self.assertEqual(resp["Content-Disposition"], f'attachment; filename="gabarito-ids-revista-{self.rev.pk}.csv"')
-        self.assertEqual(resp.content.decode().splitlines(), ["id_no_svg,secao_do_template", "passo1,passo1", "btn-action-p2,dlg-p2"])
-        admin = self.client.get(reverse("admin:nucleo_revista_gabarito_ids", args=[self.rev.pk]))
-        self.assertEqual(admin.content, resp.content)  # o admin segue igual
         plan = self.client.get(reverse("impresso_planilhas", args=[self.rev.pk]))
         self.assertEqual((plan.status_code, plan["Content-Type"]), (200, "application/zip"))
         self.assertTrue(plan["Content-Disposition"].startswith("attachment"))
-        self.assertEqual(self.client.get(reverse("ui_revista_gabarito", args=[2026, 999999])).status_code, 404)
-        self.client.force_login(usuario("nada"))
-        self.assertEqual(self.client.get(url).status_code, 403)
+        self.assertEqual(self.client.get(f"/ui/revista/2026/{self.rev.pk}/gabarito-ids/").status_code, 404)
 
     def test_impresso_ve_os_downloads(self):
         self.client.force_login(usuario("imp-dl", "Impresso"))
         pagina = self.client.get(self.url)
         self.assertContains(pagina, reverse("impresso_planilhas", args=[self.rev.pk]))
-        self.assertEqual(self.client.get(reverse("ui_revista_gabarito", args=[2026, self.rev.pk])).status_code, 200)
 
     def test_zip_com_pendencias_volta_com_a_mensagem(self):
         r = self.client.get(reverse("ui_revista_zip", args=[2026, self.rev.pk]) + "?voltar=lista", follow=True)

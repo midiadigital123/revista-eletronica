@@ -352,28 +352,22 @@ def _template(request, revista):
 
 
 def _arquivo(request, revista):
-    """Autosave de um arquivo (`campo` = `arquivo_svg` ou `arquivo_capa`, o arquivo em `valor`): mesma
-    validação do admin (RevistaForm). O impacto simula só o sha256 (é o que entra no hash, D-118),
-    sem gravar arquivo à toa."""
+    """Autosave da capa (`campo` = `arquivo_capa`, o arquivo em `valor`): mesma validação do admin
+    (RevistaForm). O impacto simula só o sha256 (é o que entra no hash, D-118), sem gravar arquivo à toa."""
     campo = request.POST.get("campo", "")
-    if campo not in ("arquivo_svg", "arquivo_capa") or "valor" not in request.FILES:
-        return erros(["Escolha o arquivo do SVG ou da capa e envie de novo."])
+    if campo != "arquivo_capa" or "valor" not in request.FILES:
+        return erros(["Escolha o arquivo da capa e envie de novo."])
     form = RevistaForm({}, {campo: request.FILES["valor"]}, instance=revista)
-    form.fields[campo].label = ""  # "SVG maior que 3 MB: …" já diz qual
+    form.fields[campo].label = ""  # "Capa maior que 5 MB: …" já diz qual
 
     def simular(dados):
-        if campo == "arquivo_svg":
-            limpo, ids = arquivos.sanitizar_svg(dados[campo])
-            Revista.objects.filter(pk=revista.pk).update(svg_sha256=hashlib.sha256(limpo).hexdigest(), svg_ids=ids)
-        else:
-            Revista.objects.filter(pk=revista.pk).update(capa_sha256=hashlib.sha256(dados[campo]).hexdigest())
+        Revista.objects.filter(pk=revista.pk).update(capa_sha256=hashlib.sha256(dados[campo]).hexdigest())
 
     def gravar(dados):
-        (arquivos.receber_svg if campo == "arquivo_svg" else arquivos.receber_capa)(revista, dados[campo])
+        arquivos.receber_capa(revista, dados[campo])
         return {"trocar": _pedacos(request, revista, "arquivos", "situacao")}
 
-    titulo = "Trocar o SVG do F2" if campo == "arquivo_svg" else "Trocar a capa"
-    return responder_campo(request, form=form, simular=simular, gravar=gravar, revistas=lambda: [revista], titulo=titulo)
+    return responder_campo(request, form=form, simular=simular, gravar=gravar, revistas=lambda: [revista], titulo="Trocar a capa")
 
 
 def _infografico(request, revista):
@@ -426,22 +420,9 @@ def zip_(request, ano, pk):
     return resposta
 
 
-@require_GET
-@login_required
-def gabarito(request, ano, pk):
-    """CSV dos ids que o design põe no SVG do F2 (o "Baixar gabarito de ids" do admin, mesma função)."""
-    if not pode_ver(request.user):
-        raise PermissionDenied
-    revista = _revista(ano, pk)
-    resposta = HttpResponse(arquivos.gabarito_ids_csv(revista), content_type="text/csv; charset=utf-8")
-    resposta["Content-Disposition"] = f'attachment; filename="gabarito-ids-revista-{revista.pk}.csv"'
-    return resposta
-
-
 urlpatterns = [
     path("", lista, name="ui_revista_inicio"),
     path("<int:ano>/", lista, name="ui_revista"),
     path("<int:ano>/<int:pk>/", revista, name="ui_revista_editar"),
     path("<int:ano>/<int:pk>/zip/", zip_, name="ui_revista_zip"),
-    path("<int:ano>/<int:pk>/gabarito-ids/", gabarito, name="ui_revista_gabarito"),
 ]
