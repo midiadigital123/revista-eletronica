@@ -7,7 +7,7 @@ export const TEXTO_F2 =
   "## abertura\nAbertura\n\nOlá.\n\n## passo-descritor\nDescritor\n\nO descritor.\n\n" +
   "## passo-habilidades\nHabilidades\n\nAs habilidades.\n\n## passo-progressao\nProgressão\n\nA progressão.\n\n" +
   "## passo-tarefas\nTarefas\n\nAs tarefas.\n\n## dlg-descritor\nSobre o descritor\n\nDetalhe do descritor.\n\n" +
-  "## dlg-tarefas\nTarefas por nível\n\nOs itens.\n\n## tarefas-fechamento\nFechamento das tarefas\n\nSó no impresso.\n\n" +
+  "## dlg-tarefas\nTarefas por nível\n\nOs itens.\n\n## tarefas-fechamento\nFechamento das tarefas\n\nCompare os itens.\n\n" +
   "## fechamento\nAgora é com você\n\nUse o template.\n";
 
 /** Cria o template pelo admin e devolve o id. */

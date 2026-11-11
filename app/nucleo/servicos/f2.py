@@ -4,7 +4,6 @@ O desenho está em templates/revista/f2.svg (o comentário do topo é o contrato
 ficam os números medidos no desenho em uso (example/f2-gerado/desenho-original.svg), no viewBox 0 0 1190.6 793.7.
 """
 
-import re
 from html import unescape
 from pathlib import PurePosixPath
 
@@ -156,10 +155,10 @@ def gerar(infografico, secoes, base_imagens, componente):
         modais.append({"id": f"dlg-tarefa-{n}", "titulo": format_html("{} – {}", item["descritor"], item["rotulo"]),
                        "corpo": mark_safe(img + item["analise"])})
 
-    primeiro = re.search(r"<p\b[^>]*>(.*?)</p>", secao("abertura")["corpo"], re.S)
     tour = {
         "label": ROTULO_TOUR,
-        "intro": {"title": texto_puro(secao("abertura")["titulo"]), "text": texto_puro(primeiro[1]) if primeiro else ""},
+        # Só o título: os parágrafos da abertura já estão na página, logo acima do infográfico (D-258).
+        "intro": {"title": texto_puro(secao("abertura")["titulo"]), "text": ""},
         "steps": [{"target": f"f2-{p}", "title": texto_puro(secao(f"passo-{p}")["titulo"]),
                    "text": texto_puro(secao(f"passo-{p}")["corpo"])} for p in ligados],
         "modais": [m["id"] for m in modais],

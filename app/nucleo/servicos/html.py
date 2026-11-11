@@ -103,6 +103,8 @@ def contexto_pagina(revista, pagina, *, preview, estaticos, capa, link, base_ima
         **comum,
         "titulo": inf["titulo"],
         "abertura": por_id.get("abertura"),
+        # Compara os itens: vem depois do infográfico e só com o passo Tarefas ligado (D-258).
+        "tarefas_fechamento": por_id.get("tarefas-fechamento") if "tarefas" in inf["passos"] else None,
         "fechamento": por_id.get("fechamento"),
         "sem_template_f2": secoes_f2 is None,
         **gerado,  # svg (montado pelo f2.svg: vai com |safe), tour e modais

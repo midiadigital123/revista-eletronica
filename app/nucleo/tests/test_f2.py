@@ -179,7 +179,8 @@ class GerarTest(SimpleTestCase):
         self.assertEqual(len(r["modais"]), 8)
         for m in r["modais"]:
             self.assertIn(m["id"].replace("dlg-", "f2-btn-action-"), no_svg)
-        self.assertEqual(r["tour"]["intro"], {"title": "Avaliação e currículo", "text": "Primeiro parágrafo."})
+        # Só o título: os parágrafos da abertura já estão na página (D-258).
+        self.assertEqual(r["tour"]["intro"], {"title": "Avaliação e currículo", "text": ""})
         self.assertEqual(r["tour"]["label"], f2.ROTULO_TOUR)
 
     def test_alfa_e_outras_mesmo_desenho(self):

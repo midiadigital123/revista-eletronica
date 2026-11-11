@@ -42,7 +42,7 @@ F2 = (
     "## passo-descritor\nDescritor\n\nO descritor.\n\n## passo-habilidades\nHabilidades\n\nAs habilidades.\n\n"
     "## passo-progressao\nProgressão\n\nA progressão.\n\n## passo-tarefas\nTarefas\n\nAs tarefas.\n\n"
     "## dlg-descritor\nSobre o descritor\n\nDetalhe do descritor.\n\n## dlg-tarefas\nTarefas por nível\n\nOs itens.\n\n"
-    "## tarefas-fechamento\nFechamento das tarefas\n\nSó no impresso.\n\n## fechamento\nAgora é com você\n\nUse o template.\n"
+    "## tarefas-fechamento\nFechamento das tarefas\n\nCompare os itens.\n\n## fechamento\nAgora é com você\n\nUse o template.\n"
 )
 
 
@@ -173,18 +173,30 @@ class PaginaTest(MediaTemporaria, TestCase):
         self.assertNotIn("dados-revista", html)
         self.assertNotIn("faixa-vermelha", html.split("<body>")[1])
         self.assertNotIn("fetch(", html)
-        # A ordem do f2.html: título, abertura, SVG, modais, fechamento, scripts.
-        ordem = ['id="f2-titulo"', "Siga o tour.", '<div id="revista">', '<dialog id="dlg-descritor"',
-                 "Agora é com você", 'id="dados-tour"', "f2/svg-tour.js"]  # fmt: skip
+        self.assertNotIn("Fechamento das tarefas", html)  # a seção vai sem título (D-258)
+        # A ordem do f2.html: título, abertura, SVG, fechamento das tarefas, modais, fechamento, scripts.
+        ordem = ['id="f2-titulo"', "Siga o tour.", '<div id="revista">', '<div class="f2-abertura f2-tarefas-fechamento"><p>Compare os itens.</p>',
+                 '<dialog id="dlg-descritor"', "Agora é com você", 'id="dados-tour"', "f2/svg-tour.js"]  # fmt: skip
         self.assertEqual([html.index(t) for t in ordem], sorted(html.index(t) for t in ordem))
         # Imagem do item: <base_imagens><nome>, sem "infograficos/" duplicado (D-244).
         base = f"{reverse('preview', args=[self.rev.pk])}arquivos/infograficos/"
         self.assertIn(f'<img src="{base}outras-1.png" alt="{DOCX["itens"][0]["texto_alternativo"]}">', html)
         self.assertNotIn("infograficos/infograficos/", html)
         tour = json.loads(re.search(r'id="dados-tour" type="application/json">(.*?)</script>', html).group(1))
-        self.assertEqual(tour["intro"]["title"], "Avaliação & Currículo")  # texto puro (textContent)
+        # Texto puro (textContent); o cartão vai só com o título: a abertura já está na página (D-258).
+        self.assertEqual(tour["intro"], {"title": "Avaliação & Currículo", "text": ""})
         self.assertEqual([s["target"] for s in tour["steps"]], ["f2-descritor", "f2-habilidades", "f2-progressao", "f2-tarefas"])
         self.assertEqual(set(tour), {"label", "intro", "steps", "modais"})
+        # O modal ❶ é o template + só o 4º parágrafo do docx: o texto genérico não se repete (D-258).
+        self.assertNotIn("O desenvolvimento das habilidades previstas", html)
+        self.assertEqual(html.count("Como exemplo dessa trajetória"), 1)
+
+    def test_fechamento_das_tarefas_some_com_o_passo_desligado(self):
+        dois_infograficos(self.rev)
+        RevistaInfografico.objects.filter(revista=self.rev, tipo="outras").update(passos_desligados=["tarefas"])
+        html = self.get(self.rev, "outras").content.decode()
+        self.assertNotIn("Compare os itens.", html)
+        self.assertIn("Agora é com você", html)
 
     def test_titulo_e_h1_por_pagina(self):
         """Acessibilidade: cada página tem o próprio <title> e um h1."""

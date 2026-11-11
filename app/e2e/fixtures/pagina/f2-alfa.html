@@ -22,6 +22,7 @@
         .fechamento-section p, .f2-abertura p { font-size: var(--font-size-p); margin-bottom: var(--spacing-sm); }
         .f2-section { max-width: 1366px; margin: 0 auto; padding: var(--spacing-xl) var(--spacing-md); }
         .f2-section > h1 { font-size: var(--font-size-h2); margin-bottom: var(--spacing-sm); }
+        .f2-tarefas-fechamento { margin-top: var(--spacing-md); } /* depois do infográfico (D-258) */
         dialog[id^="dlg-"] { margin: auto; } /* o reset do f1/styles.css (* {margin:0}) tirava a centralização */
         dialog[id^="dlg-"] .modal-body p { margin-bottom: var(--spacing-sm); }
         
@@ -459,6 +460,8 @@
 </g>
 </svg>
 </div>
+        <div class="f2-abertura f2-tarefas-fechamento"><p>Compare os itens.</p>
+</div>
     </section>
 
     
@@ -469,9 +472,6 @@
             </form>
             <h3 id="dlgTitle-descritor">Sobre o descritor</h3>
             <p>Detalhe do descritor.</p>
-<p>O desenvolvimento das habilidades previstas na Matriz de Referência requer um trabalho pedagógico contínuo e progressivo ao longo da Educação Básica. Isso significa que uma habilidade não deve ser compreendida como uma aprendizagem pontual, mas como um conhecimento que se constrói gradualmente, por meio de diferentes oportunidades de exploração, retomada e aprofundamento.</p>
-<p>Nesse percurso, é fundamental definir quais aprendizagens são esperadas em cada etapa, considerando tanto os conhecimentos que constituem o ponto de partida quanto aqueles que se pretende consolidar ao final de determinado período. A partir dessa perspectiva, uma mesma habilidade pode ser mobilizada em diferentes momentos da escolarização, com níveis crescentes de complexidade e em situações diversificadas de uso.</p>
-<p>Essa progressão possibilita acompanhar o desenvolvimento dos estudantes e favorecer a consolidação das aprendizagens de maneira gradual, ampliando as condições para que os conhecimentos construídos sejam mobilizados com autonomia em diferentes contextos.</p>
 <p>Como exemplo dessa trajetória, destacamos a habilidade da Matriz de Língua Portuguesa definida como “Interpretar texto com auxílio de material gráfico diverso (propagandas, quadrinhos, foto, etc.)”. A análise dessa habilidade permite compreender como seu desenvolvimento pode ser planejado de forma progressiva ao longo da escolarização.</p>
 
         </div>
@@ -586,7 +586,7 @@
     </main>
 
 
-    <script id="dados-tour" type="application/json">{"label": "Infogr\u00e1fico: tour guiado", "intro": {"title": "Avalia\u00e7\u00e3o \u0026 Curr\u00edculo", "text": "Siga o tour."}, "steps": [{"target": "f2-descritor", "title": "Descritor", "text": "O descritor."}, {"target": "f2-habilidades", "title": "Habilidades", "text": "As habilidades."}, {"target": "f2-progressao", "title": "Progress\u00e3o", "text": "A progress\u00e3o."}, {"target": "f2-tarefas", "title": "Tarefas", "text": "As tarefas."}], "modais": ["dlg-descritor", "dlg-habilidades", "dlg-progressao", "dlg-tarefas", "dlg-tarefa-1", "dlg-tarefa-2", "dlg-tarefa-3", "dlg-tarefa-4"]}</script>
+    <script id="dados-tour" type="application/json">{"label": "Infogr\u00e1fico: tour guiado", "intro": {"title": "Avalia\u00e7\u00e3o \u0026 Curr\u00edculo", "text": ""}, "steps": [{"target": "f2-descritor", "title": "Descritor", "text": "O descritor."}, {"target": "f2-habilidades", "title": "Habilidades", "text": "As habilidades."}, {"target": "f2-progressao", "title": "Progress\u00e3o", "text": "A progress\u00e3o."}, {"target": "f2-tarefas", "title": "Tarefas", "text": "As tarefas."}], "modais": ["dlg-descritor", "dlg-habilidades", "dlg-progressao", "dlg-tarefas", "dlg-tarefa-1", "dlg-tarefa-2", "dlg-tarefa-3", "dlg-tarefa-4"]}</script>
     <script src="revista/f2/svg-tour.js"></script>
     <script src="revista/f2/svg-tour-modal.js"></script>
     <script src="revista/f2/f2-init.js"></script>

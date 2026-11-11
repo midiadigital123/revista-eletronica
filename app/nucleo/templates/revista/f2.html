@@ -1,7 +1,8 @@
 {% extends "revista/_base.html" %}
 {% comment %}
 Um infográfico do F2 por página (D-233). Contexto: nucleo.servicos.html.contexto_pagina(revista,
-<tipo>, ...): as chaves comuns do _base.html, mais `titulo` (rótulo do tipo), `abertura` e
+<tipo>, ...): as chaves comuns do _base.html, mais `titulo` (rótulo do tipo), `abertura`,
+`tarefas_fechamento` (None com o passo Tarefas desligado; sem título, depois do infográfico, D-258) e
 `fechamento` (seções do template F2), `sem_template_f2` e o que servicos/f2.gerar devolve:
 `svg` (montado pelo f2.svg), `tour` (JSON do svg-tour) e `modais` (dlg-xx com título dlgTitle-xx).
 O <h1 id="f2-titulo"> é da página; o SVG usa f2-cabecalho.
@@ -14,6 +15,7 @@ O <h1 id="f2-titulo"> é da página; o SVG usa f2-cabecalho.
         {% if abertura %}<div class="f2-abertura">{{ abertura.corpo|safe }}</div>{% endif %}
         {% if preview and sem_template_f2 %}<div class="faixa-vermelha" role="status">Falta escolher o template do F2.</div>{% endif %}
         <div id="revista">{{ svg }}</div>
+        {% if tarefas_fechamento.corpo %}<div class="f2-abertura f2-tarefas-fechamento">{{ tarefas_fechamento.corpo|safe }}</div>{% endif %}
     </section>
 
     {% for m in modais %}
