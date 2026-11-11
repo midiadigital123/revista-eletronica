@@ -24,7 +24,7 @@ from nucleo.models import (
     Tarefa,
     TemplateVersao,
 )
-from nucleo.models.revista import Motivo
+from nucleo.models.revista import Motivo, TipoInfografico
 from nucleo.servicos import bloqueio, f2, planilhas, validacao
 from nucleo.servicos.foto import fotografar
 from nucleo import texto
@@ -338,6 +338,18 @@ class ImpressoTest(Base):
         aba = wb["Outras Etapas"]
         self.assertEqual([c.value for c in aba[1]], ["Campo", "Texto"])
         self.assertIn("Referencial", [c.value for c in aba["A"]])
+
+    def test_alfa_e_outras_juntos_no_diff_e_na_planilha(self):
+        """Dois infográficos ativos: uma aba e um grupo do diff para cada, sem nome truncado nem repetido."""
+        RevistaInfografico.objects.get_or_create(
+            revista=self.rev, tipo="alfa", defaults={"componente_id": self.rev.componente_id, "ano_id": self.rev.ano_id}
+        )
+        criar_demo.preencher_infograficos(self.rev)
+        self.imprimir()
+        RevistaInfografico.objects.filter(revista=self.rev).update(habilidade="Nova habilidade.")
+        alfa = TipoInfografico("alfa").label
+        self.assertEqual(list(self.abrir().context["mudancas"]["F2"]), [alfa, OUTRAS])
+        self.assertEqual(self.planilha("Projeto GO - LP F2.xlsx").sheetnames, ["F2", "Alfa", "Outras Etapas"])
 
 
 def celulas(ws):

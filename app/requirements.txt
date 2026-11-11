@@ -1,7 +1,7 @@
 Django>=6.1,<6.2
 psycopg[binary]>=3.2,<4
 django-simple-history>=3.13,<4
-defusedxml>=0.7.1,<0.8
+defusedxml>=0.7.1,<0.8  # o openpyxl usa ao ler a planilha enviada (importacao/xlsx.py)
 openpyxl>=3.1.5,<4
 markdown-it-py>=4.2,<5
 gunicorn>=23,<24
