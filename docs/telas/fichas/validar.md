@@ -87,7 +87,7 @@ Pré-marcadas: só as prontas (sem pendência e ainda não validadas). Com pend�
 │ ┃ Primeira impressão: não há versão impressa para comparar.                                             │
 │                                                                                                         │
 │ ┃ [–] Projeto PE · LP          (2 pendência(s))                                   [Validar esta] desab. │
-│ ┃ ██ Falta o SVG do F2.  Resolver                                                                       │
+│ ┃ ██ Avaliação e Currículo – Alfa: falta a habilidade destacada.  Resolver                              │
 │ ┃ ██ Falta a imagem de capa.  Resolver                                                                  │
 │ ┃ ⚠ Seções desatualizadas: F1 fechamento. Não impede o “Validado”.                                      │
 │                                                                                                         │

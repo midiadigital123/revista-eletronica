@@ -27,7 +27,7 @@ Reunir numa página o que a equipe precisa para deixar uma revista pronta: o tem
 3. **Coluna principal:**
    - **1 Templates:** um select por fascículo ("Template do F1", "Template do F2"), só com templates do mesmo ano, componente e fascículo. Salva ao escolher.
    - **2 Infográficos** (`#infograficos`, fase 3 do F2, D-254): um cartão por infográfico ativo (Alfa antes de Outras Etapas), com "Abrir prévia" (nova aba, `preview_f2`). No cartão: habilidade destacada, texto do clique ❶, os checkboxes "Passos do tour" (Habilidades, Progressão, Tarefas), os textos ❸ e ❷, a grade "Referencial por etapa" de 12 linhas fixas (1EF a 3EM: marca, código, texto) e as 4 tarefas (imagem por área de soltar com miniatura, etapa, descritor, texto alternativo, análise). Passo desligado esconde o seu bloco (CSS `:has()`); a grade some só com Habilidades e Progressão desligadas. A linha de etapa ou item nasce na 1ª gravação. Sem infográfico ativo: "Esta revista não tem infográfico: faltam cortes."
-   - **3 Capa** (`#arquivos`): miniatura e área de soltar ("Enviar a capa" / "Substituir a capa"). Envia ao escolher, com barra de progresso. O upload do SVG saiu da tela na fase 3; o código dele sai na fase 4.
+   - **3 Capa** (`#arquivos`): miniatura e área de soltar ("Enviar a capa" / "Substituir a capa"). Envia ao escolher, com barra de progresso. O F2 não tem arquivo enviado: o SVG é gerado dos infográficos (D-239; o upload saiu na fase 4).
    - **4 Textos:** só com os dois templates escolhidos; antes disso, o estado vazio "Escolha os templates acima". Lista das seções à esquerda (F1 e F2, com marca "cópia" ou "desatualizada"); à direita, uma seção por vez, com o título do template (não se edita) e o texto, que salva sozinho ao sair do campo.
 4. **Coluna Situação (fixa):** "N de 6 prontos" com barra de progresso, ou "Validada por <nome> em dd/mm HH:MM". Checklist dos passos (Matriz e cortes, Template do F1, Template do F2, Infográficos, Capa, Dados do projeto; "Outras pendências" se houver): ✓ pronto ou ○ pendente, em cor neutra, cada pendência um link para onde se resolve. Aviso de seções desatualizadas (não impede). Botão "Validar revista" e o link "O que mudou para o impresso".
 
@@ -85,7 +85,7 @@ Reunir numa página o que a equipe precisa para deixar uma revista pronta: o tem
 - Bloqueio perdido: "Não salvo: você perdeu o bloqueio de edição (outra pessoa ou aba abriu esta página). Recarregue e refaça a alteração."
 - Zip recusado: "Zip recusado. Pendências: …"
 - Seção que saiu do template: "Esta seção saiu do template. Recarregue a página."
-- Envio de arquivo sem arquivo: "Escolha o arquivo do SVG ou da capa e envie de novo." (capa; o texto cita o SVG até a fase 4)
+- Envio de arquivo sem arquivo: "Escolha o arquivo da capa e envie de novo."
 - Campo do infográfico desconhecido, de outra revista ou de infográfico arquivado: "Este campo não pode ser alterado aqui. Recarregue a página."
 - Aviso de seções desatualizadas: "Seções desatualizadas: <lista>. Não impede o “Validado”."
 

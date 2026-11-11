@@ -1,6 +1,6 @@
 # Regras de negócio vigentes — revista-express
 
-Data: 2026-11-09. Branch de referência: `main` (`1601c93`).
+Data: 2026-11-11. Branch de referência: `main` (`1601c93`); F2 (seções 6.2, 6.4 e 6.6) na `integ/f2-gerado`, fase 4.
 
 Este documento lista **só a regra que vale hoje** no sistema Django (`app/nucleo`) que gera as revistas de resultados (fascículos F1 e F2) por parceiro e ano. Não conta a história do projeto. Detalhes de tabelas, variáveis e telas ficam nos documentos linkados.
 
@@ -58,7 +58,7 @@ Documentos que este texto não repete:
 | **Corte** | Lista de 1 a 4 valores do parceiro_ano × etapa × componente. A existência do corte diz que o parceiro avalia aquela etapa × componente. | D-049, D-055, `app/nucleo/models/projeto.py:33` |
 | **Template e versão** | Texto-modelo por ano × componente × fascículo, guardado em versões numeradas só de inserção. A versão atual é a de maior número. | D-098, D-125, `app/nucleo/models/texto.py:22` |
 | **Revista** | Projeto × componente (ex.: GO · LP). Unidade do Validado, da foto do impresso e do zip. | D-095, D-097, `app/nucleo/models/revista.py:25` |
-| **Fascículo** | Parte da revista: F1 (escalas e textos) e F2 (infográfico em SVG com tour e modais). Lista fixa no código. | D-122, `app/nucleo/models/texto.py:11` |
+| **Fascículo** | Parte da revista: F1 (escalas e textos) e F2 (infográfico com tour e modais, num SVG gerado pelo servidor). Lista fixa no código. | D-122, `app/nucleo/models/texto.py:11` |
 | **Seção** | Bloco `## id` do template. F1: `introducao` e `fechamento`. F2: as 9 de `texto.SECOES["F2"]` (`abertura`, `passo-*`, `dlg-*`, `tarefas-fechamento`, `fechamento`). A 1ª linha de cada seção é o título. Uma seção editada vira cópia da revista (`RevistaSecao`). | D-111, D-114, D-115, D-139 |
 | **Foto** | JSON da revista montada, gravado com o hash. Motivos: `impresso` (clique do Impresso) e `arquivamento`. | D-077, D-151, `app/nucleo/models/revista.py:109` |
 | **Validado** | Clique da Pedagógica que grava o hash da revista vista. "Está validada" = hash gravado igual ao hash atual, calculado na hora. | D-074, D-084, `app/nucleo/servicos/validacao.py:20` |
@@ -88,7 +88,7 @@ Documentos que este texto não repete:
 | Padrões do ano: cor **e** nome | Cortes |
 | Matrizes, com MECs (inclusive `passo`), descritores e tarefas | Projetos, nomes de projeto, valores das variáveis |
 | Templates, com a **última** versão virando a versão 1 | Template escolhido em cada fascículo, cópias de seção |
-| Caminho do arquivo do item (o mesmo arquivo nos dois anos) | Sobrescritas de passo e de cor do projeto, SVG, capa, fotos |
+| Caminho do arquivo do item (o mesmo arquivo nos dois anos) | Sobrescritas de passo e de cor do projeto, infográficos, capa, fotos |
 
 Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-106`.
 
@@ -194,7 +194,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | Duas cascatas do mesmo parceiro_ano não rodam ao mesmo tempo (trava na linha do parceiro_ano). | D-125, D-138, `app/nucleo/servicos/cascata.py:54-60` |
 | Primeiro corte → projeto novo (se não houver ativo). Componente novo → revista nova com F1 e F2. | D-061, D-095, `app/nucleo/servicos/cascata.py:91-97` |
 | Componente que perdeu todos os cortes → revista arquivada, com foto de arquivamento tirada antes de apagar os cortes. | D-117, D-138, `app/nucleo/servicos/cascata.py:61-77` |
-| Componente que volta no mesmo ano → a **mesma** revista é reativada (SVG, capa, cópias e fotos mantidos). | D-117, `app/nucleo/servicos/cascata.py:96` |
+| Componente que volta no mesmo ano → a **mesma** revista é reativada (capa, infográficos, cópias e fotos mantidos). | D-117, `app/nucleo/servicos/cascata.py:96` |
 | Etapa sem corte some da revista; etapa com corte entra. | D-065, `app/nucleo/servicos/resolver.py:130` |
 
 ### 4.4 Padrões, cores e régua
@@ -227,7 +227,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | A 1ª linha de cada seção é o título (texto puro, não editável na revista). | D-115, D-139 |
 | Teto de 100 000 caracteres por template. | D-163, `app/nucleo/texto.py:32` |
 | Editar o texto cria a versão N+1; nunca há UPDATE de texto. Texto igual ao atual salva só o nome, sem versão nova. | D-115, D-162, `app/nucleo/templates_texto.py:90` |
-| Antes de gravar, a tela de impacto lista as revistas que usam o template (e quantas têm cópia) e os SVGs que ficariam sem algum id exigido. | D-099, D-162, D-166, `app/nucleo/templates_texto.py:69` |
+| Antes de gravar, a tela de impacto lista as revistas que usam o template, com as seções que têm cópia e se a revista já tem foto do impresso. | D-099, D-162, D-166, `app/nucleo/templates_texto.py:74` |
 | O "Confirmar" só grava se o texto e a versão-base forem os da tela de impacto (assinatura válida por 30 min). Duplo clique não duplica versão. | D-163, `app/nucleo/templates_texto.py:31` |
 | O editor de templates mantém o botão "Salvar" (não tem autosave). | D-196 |
 | Editar exige `change_template` + `add_templateversao`; template novo nasce com a versão 1, na mesma transação (tela B "Novo template", exige `add_template` + `add_templateversao`; texto inicial com as seções fixas do fascículo). | D-162, `docs/telas/telas-b.md` (seção 2) |
@@ -276,15 +276,14 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 - Revista arquivada não pode ser validada nem marcada impressa (`app/nucleo/servicos/validacao.py:35`, `app/nucleo/servicos/validacao.py:66`).
 - Preview abre sempre; fascículo sem template aparece como faixa vermelha (D-116, `app/nucleo/servicos/resolver.py:58`).
 
-### 6.2 Arquivos da revista: SVG do F2 e capa
+### 6.2 Arquivos da revista: capa e imagens dos itens
 
 | Regra | Fonte |
 |---|---|
-| SVG: um por revista (parceiro × componente), entregue pelo design já nomeado pela convenção, até 3 MB. | D-108, `app/nucleo/servicos/arquivos.py:27` |
-| Ids exigidos: `passoN` → `passoN`; `dlg-xx` → `btn-action-xx`. SVG com id faltando é gravado com aviso e gabarito CSV, mas vira pendência. | D-111, D-164, `app/nucleo/servicos/arquivos.py:368-388` |
-| SVG passa por lista branca de tags, atributos e CSS; `<!DOCTYPE>`, at-rules e URL externa recusam o arquivo inteiro. | D-137, D-145, learning "O SVG enviado pelo design passa por lista branca" |
-| Capa: PNG, JPG ou WebP até 5 MB, tipo pela assinatura dos bytes. É campo da revista, fora do template. | D-109, D-137, `app/nucleo/servicos/arquivos.py:28` |
-| Trocar SVG ou capa muda o hash (derruba o Validado); reenviar o mesmo arquivo não muda. | D-118, D-151 |
+| O F2 não tem arquivo enviado: o servidor gera o SVG a partir dos infográficos (seção 6.6). O upload do SVG, o sanitizador, a conferência de ids e o gabarito saíram na fase 4 do F2 (migração 0024). | D-239, D-256 |
+| Capa: PNG, JPG ou WebP até 5 MB, tipo pela assinatura dos bytes. É campo da revista, fora do template. | D-109, D-137, `app/nucleo/servicos/arquivos.py:64` |
+| Imagem do item do infográfico (passo Tarefas): PNG, JPG ou WebP até 5 MB, tipo pela assinatura dos bytes. | D-232, D-254, `app/nucleo/servicos/arquivos.py:75` |
+| Trocar a capa ou a imagem de um item muda o hash (derruba o Validado); reenviar o mesmo arquivo não muda. | D-118, D-151, D-237 |
 | Arquivo antigo é apagado do disco só depois do commit e só se o caminho mudou. | D-137 |
 
 ### 6.3 Validado
@@ -323,7 +322,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | Corte (inclui mudar o padrão de uma tarefa) | Revista do componente | D-077 |
 | Cor ou nome do padrão do ano; sobrescrita de cor/`pdNN` | Revistas com aquele padrão que não sobrescrevem | D-153, D-175 |
 | Troca de matriz do parceiro_ano | Revistas do parceiro | D-101 |
-| SVG ou capa | Só a revista | D-118 |
+| Capa; infográficos (textos, passos ligados, imagem dos itens) | Só a revista | D-118, D-237 |
 
 - Desfazer a mudança faz o Validado voltar sozinho (o hash volta) (D-094, `app/nucleo/servicos/validacao.py:3-4`).
 - Seção desatualizada (template mudou sob uma cópia) só avisa; não bloqueia (D-087).
@@ -337,7 +336,11 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | "Revista Impressa Atualizada" só é aceito se a revista está validada exatamente no hash que a tela mostrou. | D-074, D-089, `app/nucleo/servicos/validacao.py:54-76` |
 | O clique grava uma foto `impresso` com o resolvido inteiro; se o hash da foto diferir do visto, desfaz. Roda com o bloqueio do projeto. | D-151, D-178, `app/nucleo/urls/impresso.py:202-211` |
 | "O que mudou" = diferença entre a última foto `impresso` e a revista atual, nunca contra a última validação. Primeira vez: sem foto anterior. | D-077, learning "O que mudou para o impresso vem de um botão" |
-| O impresso compara escalas (com fim e item), cores e textos do F1 e textos do F2; SVG e capa ficam fora do diff. | D-112, D-118, D-153, D-178, `app/nucleo/servicos/resolver.py:299` |
+| O impresso compara escalas (com fim e item), cores e textos do F1, seções do F2 e os textos dos infográficos; capa e imagem dos itens ficam fora do diff. | D-112, D-118, D-153, D-178, D-256, `app/nucleo/servicos/resolver.py:368` |
+| Textos de cada infográfico que o impresso confere: habilidade, textos dos passos ❶ ❸ ❷, referencial (uma linha por etapa) e tarefas (descritor, rótulo, texto alternativo, análise). Fonte única do "o que mudou" e da planilha. | D-256, `app/nucleo/servicos/f2.py:58` |
+| "O que mudou" tem um grupo por infográfico, com o título completo (ex.: "Avaliação e Currículo – Outras Etapas"); a planilha F2 ganha uma aba por infográfico ("Alfa", "Outras Etapas"; colunas Campo e Texto). | D-256, `app/nucleo/urls/impresso.py:61`, `app/nucleo/servicos/planilhas.py:148` |
+| Trocar só a imagem de um item não deixa o impresso pendente. | D-118, D-256 |
+| Foto do impresso anterior à fase 4 do F2 não tem os infográficos: a revista com infográfico preenchido fica pendente uma vez, com os textos do infográfico como novos. | D-256 |
 | Mudança de formatação (negrito, itálico, listas) aparece no diff. | D-178 |
 | O impresso não baixa de novo para saber o que mudou; as planilhas (por revista) podem ser baixadas a qualquer momento. | D-072, D-078, D-177 |
 | Planilhas do impresso: células sempre texto (sem fórmula) e caracteres de controle removidos. | D-168, D-178 |
@@ -352,17 +355,18 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | Leva só os itens que o HTML usa; zip reprodutível (mesmo conteúdo, mesmos bytes). | D-160 |
 | "Baixar zip" fica na lista de revistas (não no Painel). | D-179 |
 
-### 6.6 F2 montado pelo sistema **[não implementado]**
+### 6.6 F2 montado pelo sistema
 
-Direção aprovada em 06/11. Hoje vale a seção 6.2 (SVG enviado pelo design). Do plano, só existe a fase 0: o protótipo estático `example/f2-gerado/`. Detalhes: [`docs/superpowers/specs/2026-11-06-f2-na-interface-mapeamento.md`](superpowers/specs/2026-11-06-f2-na-interface-mapeamento.md) e [`docs/superpowers/specs/2026-11-06-f2-campos-do-docx.md`](superpowers/specs/2026-11-06-f2-campos-do-docx.md).
+Direção aprovada em 06/11; fases 1 a 4 feitas na `integ/f2-gerado` (fase 0: o protótipo estático `example/f2-gerado/`). Os infográficos se preenchem no passo "Infográficos" da ficha da revista (D-254); o SVG enviado pelo design saiu na fase 4 (D-256). Detalhes: [`docs/superpowers/specs/2026-11-06-f2-na-interface-mapeamento.md`](superpowers/specs/2026-11-06-f2-na-interface-mapeamento.md) e [`docs/superpowers/specs/2026-11-06-f2-campos-do-docx.md`](superpowers/specs/2026-11-06-f2-campos-do-docx.md).
 
 | Decidido | Fonte |
 |---|---|
 | O F2 é todo preenchido na interface, sobre passos canônicos (`abertura` e `descritor` fixos; `habilidades`, `progressao` e `tarefas` desligáveis). | D-227 |
-| O servidor gera o SVG (texto real, no hash e no "o que mudou"); o `svg-tour.js` fica intocado. Some o upload do SVG nomeado à mão. | D-227, D-228 |
+| O servidor gera o SVG (texto real, no hash e no "o que mudou"); o `svg-tour.js` fica intocado. Não há upload de SVG. | D-227, D-228, D-239 |
 | Até 2 infográficos por revista, derivados dos cortes pela cascata: "Alfa" se há corte no 2EF; "Outras Etapas" se há corte em outra etapa. | D-230 |
 | Passos desligados por infográfico (revista × tipo), gravados com o modal de impacto. | D-229, D-230 |
 | Abertura (4 parágrafos) também na web; um modal por item de tarefa (`dlg-tarefa-1..4`); item e suporte numa imagem só (`Tarefa.arquivo`); fechamento só texto. | D-232 |
+| O 1º parágrafo do `tarefas-fechamento` (itens do D05 de LP) saiu do seed F2; a migração 0025 o tira das cópias iguais ao seed, e texto editado fica. | D-240, D-256 |
 
 ---
 
@@ -423,7 +427,7 @@ Fonte única: `app/nucleo/permissoes.py`. Grupos fixos criados por migração; m
 | **Excluir** parceiro, etapa, componente, matriz ou template, só se nada os usa; desativar parceiro | ✓ | ✓ | ✓ | — | D-205, D-207, D-208, `permissoes.py:47` |
 | **Apagar o ano inteiro** | ✓ | — | — | — | D-206, `permissoes.py:48` |
 | Criar/editar template (nova versão) | ✓ | ✓ | ✓ | — | D-102, `permissoes.py:59` |
-| Editar projeto (nome, variáveis), revista (SVG, capa, template, textos) | ✓ | ✓ | ✓ | — | `permissoes.py:65-75` |
+| Editar projeto (nome, variáveis), revista (capa, template, textos, infográficos) | ✓ | ✓ | ✓ | — | `permissoes.py:67-81` |
 | **Excluir** sobrescrita de passo e de cor do projeto ("voltar ao do ano/matriz") | ✓ | ✓ | ✓ | — | D-166, `permissoes.py:68-69` |
 | Validar revista | ✓ | ✓ | ✓ | — | D-074, `permissoes.py:76` |
 | Marcar "Revista Impressa Atualizada" | ✓ | — | — | ✓ | D-177, D-220, `permissoes.py:20` |
@@ -508,7 +512,6 @@ Só as não marcadas `[x]`.
 |---|---|---|
 | Seeds 2026 (D-139): `f2-mt.hbs` é cópia do LP; modais `dlg-p4-i1..i4` com "Conteúdo em breve."; fechamento do F1 = "Utilização dos resultados"?; nome do template "Padrão". | Pedagógica | A abertura do F1 de MT já foi trocada (D-176). |
 | Bloqueio (D-140): portar a saída por inatividade do editor antigo? POST recusado deve reexibir o digitado em vez de descartar? | usuário | Hoje o bloqueio só cai por falta de renovação (30 s). |
-| SVG com `<!DOCTYPE>` é recusado (D-137): o design exporta sem DOCTYPE? | usuário / design | Se exportar com DOCTYPE, todo upload falha. |
 | Autor da foto herdada (D-135): usuário da cascata (atual) ou autor da foto original? | usuário | Hoje: usuário da cascata. |
 | Intervalo mínimo e cor sobrescritos não têm `versao_base`: mudança no valor da matriz/ano não avisa o projeto que sobrescreveu. Precisa? | usuário | — |
 | `skills[]` → "relacionadas" × "correspondente" na planilha: a heurística pelo "(" serve ao impresso? | equipe de impressão | Mesma heurística no importador (D-141). |
@@ -516,7 +519,7 @@ Só as não marcadas `[x]`.
 | Versões 2 a 8 do template "Padrão (F1)" LP 2026 (texto de teste E2E) continuam no banco de dev; a v9 já tem o texto limpo, mas a v8 é a base de cópias de seção. | usuário | Dado do ambiente de dev, não regra. Versão só sai com o template (D-207). |
 | Editor de templates ainda usa o aviso nativo ao sair com alteração; levar o diálogo da D-223 para ele? | usuário | — |
 | F1 e F2 deixam de ficar na mesma página (aviso de 05/11, ainda sem decisão D-xxx). | usuário | Afeta a página única (D-156) e o zip (seção 6.5, D-159). |
-| F2 montado pelo sistema (seção 6.6): fases 1 a 5 ainda não disparadas. | usuário | D-227 a D-232. |
+| F2 montado pelo sistema (seção 6.6): fase 5 ainda não disparada; fases 1 a 4 esperam o merge na `main`. | usuário | D-227 a D-232, D-249, D-256. |
 
 Perguntas ainda abertas no `state.md` que **já têm resposta** em decisão posterior (fechar no `state.md`):
 
