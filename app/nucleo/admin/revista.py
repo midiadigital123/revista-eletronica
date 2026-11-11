@@ -1,4 +1,4 @@
-"""Admin de Revista: upload de SVG e capa, template por fascículo, "Baixar zip" (S15, S11c).
+"""Admin de Revista: upload da capa, template por fascículo, "Baixar zip" (S15, S11c).
 
 Edita com o bloqueio do projeto (D-140, D-143). `hash_validado`, `validado_*` e `arquivada_em`
 são só leitura: só os serviços os escrevem (D-142). Nunca inclui nem exclui (D-117).
@@ -16,9 +16,6 @@ não salvos) leva o hash da revista exibida e a sessão do bloqueio da aba para 
 
 Forms, textos, arquivos e estado do "Validado" moram em `nucleo/revista.py` (a página própria usa
 o mesmo, D-183); aqui ficam o ModelAdmin, o inline e o widget com preview.
-
-Upload com ids faltando GRAVA e avisa (decisão do S11c): o template pode ganhar ou perder
-seções depois; o SVG enviado não é mais pendência (D-237) e sai na fase 3.
 """
 
 import logging
@@ -42,20 +39,18 @@ from nucleo.revista import (  # regra comum ao admin e à página própria (D-18
     FasciculoForm,
     RevistaForm,
     avisar_descartes,
-    aviso_ids,
     blocos_de_texto,
     estado_validacao,
     faixas_sem_template,
     form_de_textos,
     gravar_arquivos,
     gravar_textos,
-    ids_do_f2,
     nome,
 )
-from nucleo.servicos import arquivos, bloqueio, resolver, validacao
+from nucleo.servicos import bloqueio, resolver, validacao
 from nucleo.servicos.empacotar import Pendente, zip_revista
 
-UPLOADS = ("arquivo_svg", "arquivo_capa")
+UPLOADS = ("arquivo_capa",)
 log = logging.getLogger(__name__)
 
 
@@ -111,12 +106,11 @@ class RevistaAdmin(BloqueioAdminMixin, admin.ModelAdmin):
     list_select_related = ("projeto", "componente")
     list_filter = ("ano", "componente")
     readonly_fields = (
-        "projeto", "componente", "ano", "svg_f2", "svg_sha256", "conferencia_ids", "capa", "capa_sha256",
+        "projeto", "componente", "ano", "capa", "capa_sha256",
         "hash_validado", "validado_em", "validado_por", "arquivada_em", "textos",
     )  # fmt: skip
     fieldsets = (
         (None, {"fields": ("projeto", "componente", "ano")}),
-        ("SVG do F2", {"fields": ("arquivo_svg", "svg_f2", "svg_sha256", "conferencia_ids")}),
         ("Capa", {"fields": ("arquivo_capa", "capa", "capa_sha256")}),
         ("Validação", {"fields": ("hash_validado", "validado_em", "validado_por", "arquivada_em")}),
     )
@@ -193,18 +187,6 @@ class RevistaAdmin(BloqueioAdminMixin, admin.ModelAdmin):
         rotulo = "versão arquivada ↗" if obj.arquivada_em else "preview ↗"  # arquivada: a foto (D-117)
         return format_html('<a href="{}" target="_blank" rel="noopener">{}</a>', reverse("preview", args=[obj.pk]), rotulo)
 
-    @admin.display(description="Ids do SVG")
-    def conferencia_ids(self, obj):
-        if not obj.svg_f2:
-            return "Sem SVG."
-        ids = ids_do_f2(obj)
-        if ids is None:
-            return "Sem template do F2: nada a conferir."
-        esperados, faltando = ids
-        if faltando:
-            return aviso_ids(obj, faltando, esperados)
-        return format_html("Todos os {} ids esperados estão no SVG.", len(esperados))
-
     def has_add_permission(self, request):
         return False  # revista nasce pela cascata (S06)
 
@@ -228,7 +210,6 @@ class RevistaAdmin(BloqueioAdminMixin, admin.ModelAdmin):
     def get_urls(self):
         return [
             lote.rota(self, "escolher-template/", lambda r: lote.escolher_template(self, r), "escolher_template"),
-            lote.rota(self, "<int:pk>/gabarito-ids/", self.gabarito_ids, "gabarito_ids"),
             lote.rota(self, "<int:pk>/validar/", require_POST(self.validar_view), "validar"),
         ] + super().get_urls()
 
@@ -267,15 +248,6 @@ class RevistaAdmin(BloqueioAdminMixin, admin.ModelAdmin):
         else:
             messages.success(request, "Revista validada.")
         return HttpResponseRedirect(reverse("admin:nucleo_revista_change", args=[pk]))
-
-    def gabarito_ids(self, request, pk):
-        """CSV com os ids que o design deve pôr no SVG (sem o prefixo f2-, que o upload põe)."""
-        revista = get_object_or_404(Revista, pk=pk)
-        if not self.has_view_permission(request, revista):
-            raise PermissionDenied
-        resposta = HttpResponse(arquivos.gabarito_ids_csv(revista), content_type="text/csv; charset=utf-8")
-        resposta["Content-Disposition"] = f'attachment; filename="gabarito-ids-revista-{revista.pk}.csv"'
-        return resposta
 
     def changelist_view(self, request, extra_context=None):
         links = []

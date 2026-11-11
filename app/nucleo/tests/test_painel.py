@@ -33,10 +33,10 @@ DICA_INFOGRAFICO = " ".join(
 
 def completar(revista, svg=SVG_A):
     """Sem pendências: infográficos preenchidos (itens com `imagem_sha256=svg`) e capa, só os campos
-    (o resolver não lê os arquivos). O SVG antigo continua para o preview e o zip até a tarefa 6."""
+    (o resolver não lê os arquivos)."""
     preencher_infograficos(revista, svg)
     Revista.objects.filter(pk=revista.pk).update(
-        svg_f2="f2/x.svg", svg_sha256=svg, svg_ids=["passo1", "btn-action-p2"], capa="capas/x.png", capa_sha256="c" * 64
+        capa="capas/x.png", capa_sha256="c" * 64
     )
 
 

@@ -57,7 +57,7 @@ class AbasTest(Base):
             self.assertContains(r, reverse("preview", args=[rev.pk]))
         self.assertContains(r, "Template F1")
         self.assertContains(r, "Padrão")
-        self.assertContains(r, "SVG do F2")
+        self.assertNotContains(r, "SVG do F2")  # o SVG enviado saiu (fase 4 do F2)
         self.assertContains(r, "Capa")
         self.assertContains(r, "Sem “Validado”")
         validar(lp)

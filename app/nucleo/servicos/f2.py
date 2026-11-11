@@ -1,7 +1,7 @@
 """Gerador do infográfico do F2: um infográfico resolvido -> SVG, tour e modais (D-239, D-242).
 
 O desenho está em templates/revista/f2.svg (o comentário do topo é o contrato do contexto); aqui
-ficam os números medidos no desenho em uso (tests/fixtures/f2-lp.svg), no viewBox 0 0 1190.6 793.7.
+ficam os números medidos no desenho em uso (example/f2-gerado/desenho-original.svg), no viewBox 0 0 1190.6 793.7.
 """
 
 import re

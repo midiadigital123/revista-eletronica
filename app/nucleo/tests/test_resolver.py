@@ -319,14 +319,6 @@ class ResolverTest(TestCase):
         self.assertNotEqual(hash_validado(lp), hash_antes)
         self.assertEqual(conteudo_impresso(lp), impresso_antes)
 
-    def test_svg_nao_entra_no_resolvido(self):  # D-237: o F2 sai dos infográficos, não do SVG enviado
-        lp = self.go["LP"]
-        antes = hash_validado(lp)
-        Revista.objects.filter(pk=lp.pk).update(svg_f2="f2/novo.svg", svg_sha256="b" * 64, svg_ids=["passo1"])
-        lp = recarregar(lp)
-        self.assertEqual(hash_validado(lp), antes)
-        self.assertEqual(set(resolver(lp)["f2"]), {"secoes", "infograficos"})
-
     def test_corte_do_pe_muda_so_o_pe(self):
         go, pe = conteudo_impresso(self.go["LP"]), conteudo_impresso(self.pe["LP"])
         Corte.objects.filter(

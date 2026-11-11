@@ -206,7 +206,6 @@ A página é onde o projeto sobrescreve o que vem do ano e da matriz: cada valor
     </header>
     <dl class="pj-cartao-dados">
       {% for f, t in c.templates %}<dt>Template {{ f }}</dt><dd>{% if t %}{{ t.nome }}{% else %}<span class="mudo">sem template</span>{% endif %}</dd>{% endfor %}
-      <dt>SVG do F2</dt><dd>{% include "ui/_componentes/status.html" with ok=r.svg_f2 titulo="Sem SVG do F2" %}</dd>
       <dt>Capa</dt><dd>{% include "ui/_componentes/status.html" with ok=r.capa titulo="Sem capa" %}</dd>
     </dl>
     <div class="acoes">

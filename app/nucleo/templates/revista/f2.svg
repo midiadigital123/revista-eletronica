@@ -1,5 +1,5 @@
 {% load l10n %}{% comment %}
-Infográfico do F2: o desenho de tests/fixtures/f2-lp.svg com os textos trocados por dados (D-239).
+Infográfico do F2: o desenho de example/f2-gerado/desenho-original.svg com os textos trocados por dados (D-239).
 Cada bloco é um <g id="f2-<bloco>" transform="translate(x,y)"> em coordenadas locais; o reflow do
 passo desligado só muda o translate. Geometria em servicos/f2.py.
 
