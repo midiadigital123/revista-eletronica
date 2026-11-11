@@ -5,6 +5,7 @@
   nota: parada por decisão do usuário em 10/11; branch e worktree `revista-express-etapa` ficam como estão
 - **K-030** Merge da `integ/f2-gerado` na `main`, com as fases 1 a 4 juntas (D-249)
   nota: no deploy, toda revista impressa com infográfico fica "pendente" no impresso uma vez (D-256); apagar à mão os `media/f2/*.svg` órfãos
+  nota: o usuário pediu em 11/11 levar tudo à `main` depois do K-038; falta escolher PR ou merge direto
 - **K-031** Fase 5 do F2: animação por passo (desejável)
 - **K-032** S17 — Carga 2026 + desligar o antigo
 - **K-033** S18 — E2E da temporada
@@ -13,6 +14,7 @@
 ## Review
 
 ## Done
+- **K-038** Ajustes do F2 depois da Demonstração: cartão do tour só com título, fechamento das tarefas na página, modal ❶ sem texto em dobro, ❷/❸ certos, referencial junto do ❷, caixas de 4 linhas, "Do template" no cartão; mergeado na `integ/f2-gerado` (Django 898 OK, Playwright 170/170) · 2026-11-11 · D-258 · D-259
 - **K-029** Fase 4 do F2: sai o SVG enviado, impresso com os textos dos infográficos, `tarefas-fechamento` sem o parágrafo do D05; mergeada na `integ/f2-gerado` por fast-forward (Django 894 OK, Playwright 169/170) · 2026-11-11 · D-256 · D-257
 - **K-028** Fase 3 do F2: tela dos infográficos, mergeada na `integ/f2-gerado` por fast-forward (Django 910 OK, Playwright 169/170) · 2026-11-11 · D-252 · D-254 · D-255
 - **K-037** Redesign do `kanban.html` com JS puro (busca, recolher colunas e checklist), `eefa697` na `main` de `~/.claude/skills/kanban` · 2026-11-10
