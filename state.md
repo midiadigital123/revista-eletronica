@@ -2,11 +2,11 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Fase 3 do F2 (K-028) pronta para revisão do usuário: T0 a T5 commitadas na `feat/f2-f3` (worktree `/home/otavio.peres/dev/revista-express-f2-f3`), 45 commits à frente da `integ/f2-gerado`. Funcionando: passo "Infográficos" na ficha da revista (um cartão por infográfico ativo, autosave + modal de impacto, grade de 12 etapas, 4 tarefas com imagem), pendências em `servicos/pendencias.py`, demo com o infográfico do docx sem pendência, UI do SVG fora da tela. Verificado: suíte Django 910 OK (8 pulados), `makemigrations --check` limpo, régua ok, Playwright inteiro 169/170 (a falha é o `ano.spec` chromium com `ERR_CONNECTION_RESET` no 1º `goto` do servidor recém-subido; passou na repetição). Pendente: merge na `integ/f2-gerado` (precisa do ok); fases 4 e 5; S17/S18.
+Fase 3 do F2 (K-028) mergeada na `integ/f2-gerado` (fast-forward, com o ok do usuário em 11/11). A integração tem as fases 1 a 3: o F2 é gerado a partir dos infográficos, preenchidos no passo "Infográficos" da ficha da revista; a demo abre sem pendência. Verificado na `feat/f2-f3`: Django 910 OK (8 pulados), `makemigrations --check` limpo, Playwright 169/170 (`ano.spec` chromium com `ERR_CONNECTION_RESET` no servidor recém-subido, não código). Pendente: fase 4 (K-029: tirar o código do SVG enviado, impresso com os infográficos), depois o merge da `integ/f2-gerado` na `main` (K-030, D-249); fase 5; S17/S18.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Com o ok do usuário, mergear `feat/f2-f3` na `integ/f2-gerado` (fast-forward se possível) e apagar a worktree `revista-express-f2-f3`.
+Escrever o plano da fase 4 do F2 (K-029) numa worktree nova `revista-express-f2-f4`, saída da `integ/f2-gerado`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2662,3 +2662,4 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - Revisão `ecc:django-reviewer`: nenhum achado bloqueante; 7 de 8 aplicados, 1 virou `ponytail:`.
 - Verificação final: Django 910 OK; Playwright 169/170 (`ano.spec` chromium: conexão recusada no servidor recém-subido, não código).
 - Learnings: pendências em módulo próprio (`42c1fdd`); autosave do cartão do infográfico (`ad14cb3`).
+- Com o ok do usuário: `feat/f2-f3` mergeada na `integ/f2-gerado` por fast-forward; worktree `revista-express-f2-f3` e stack `f2-f3` apagadas; K-028 em Done.
