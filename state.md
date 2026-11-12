@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo 4 de 4 (pedido de 12/11): D-263 aplicada. Uma worktree fixa de trabalho substitui a pasta por tarefa; K-032 e K-039 já estão na `main`.
-Funcionando: `importar_cortes` na `main` (33 parceiros, 148 cortes, suíte 900 OK); só existem o dev da 8000 (`revista-eletronica_pg-dados`) e a worktree `../revista-express-trabalho` (`.env` próprio: projeto `revista-express-trabalho`, porta 8001); regra nova no `CLAUDE.md`.
-Quebrado/pendente: a carga ainda não rodou no dev da 8000 (o app dele monta a worktree `revista-eletronica`, na branch `django`, sem o comando); 40 cortes sem dado e valores de 2025 a validar (pergunta em aberto D-261); 95 volumes anônimos do Docker intocados (pergunta em aberto D-262).
+Passo 3 de 3 (pedido de 12/11): dev da 8000 recriado do zero com só a carga 2026 (D-264).
+Funcionando: banco novo na 0025, ano 2026 (etapas, componentes, cores), superusuário `admin`, 33 parceiros, 148 cortes, 26 projetos, 52 revistas; app na 8000.
+Também no dev: matriz Comunitária 2026 (198 descritores, 1093 tarefas, dos 3 PDFs SAEGO 2025) e 4 templates Padrão (F1/F2 × LP/MT). Quebrado/pendente: nenhuma revista tem matriz nem template escolhidos ainda (Projetos > Atribuir matriz/template); passo 25 de 5EF/9EF/3EM pela tela da matriz (D-184); `app/media/` vazia (arquivos do banco antigo apagados em 12/11, 65 MB, D-264); 40 cortes sem dado e valores de 2025 a validar (D-261); mudanças desta sessão no `state.md` ainda sem commit.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Escolher o próximo card do Backlog (K-034 etapa do projeto, K-031 fase 5, K-033 E2E da temporada) ou carregar 2026 no dev da 8000.
+Em `http://localhost:8000/ui/projeto/ano/2026/`, marcar todos os parceiros e usar "Atribuir matriz…" e "Atribuir template…"; depois dizer se commito o `state.md` na `main`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2143,8 +2143,17 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Arquivos afetados:** `CLAUDE.md`, pasta `revista-express-carga-2026` renomeada para `revista-express-trabalho`.
 - **Status:** ativa. Substitui a parte "uma worktree irmã por trabalho" da D-226 e da D-231.
 
+### D-264 — Dev da 8000 recriado do zero com a carga 2026 (2026-11-12 14:30)
+- **Contexto:** depois da carga no dev, o usuário viu que o banco misturava os dados antigos (parceiro SAESE com projeto, "Acre - Avalia Acre 2026") com a carga, e pediu para começar do zero.
+- **Decisão:** `docker compose down -v` na pasta da `main` (apaga o volume `revista-eletronica_pg-dados`), depois `migrate`, `carregar_cadastros --ano 2026`, `createsuperuser admin` e `importar_cortes`; nada além disso (sem usuários de papel, matrizes ou templates). Backup do estado anterior fora do repositório.
+- **Motivo:** pedido do usuário, "apenas" a carga 2026 no banco limpo; mesmo caminho da D-260 (só `migrate` + admin).
+- **Descartadas:** apagar só o projeto e os cortes do SAESE (o usuário recusou a exclusão parcial e pediu o zero); manter os usuários `root` e `admin` antigos (o zero os apaga; fica só o `admin` novo).
+- **Arquivos afetados:** nenhum arquivo do código; volume do dev e conteúdo de `app/media/` (ignorada pelo git; apagada pelo container, os arquivos eram do root).
+- **Status:** ativa
+
 ## Perguntas em aberto
-- [ ] (D-262) Os 95 volumes anônimos do Docker (todos dangling) podem ser apagados? Nenhum é atribuível a este projeto; ver `docker volume ls -f dangling=true` — depende de: Otavio
+- [x] (12/11, conferido: 0 de 95 são dados de Postgres, nada é banco deste projeto; seguem intocados por serem possivelmente de outros projetos) (D-262) Os 95 volumes anônimos do Docker podem ser apagados? — depende de: Otavio
+- [x] (D-264: dev recriado do zero, os dois parceiros saíram) (12/11) No dev da 8000: "SAESE" (8 cortes, 1 projeto) é o mesmo que "SE" da carga, e "Acre - Avalia Acre 2026" (0 cortes) o mesmo que "AC". Apagar/renomear? — depende de: Otavio
 - [ ] (D-261, 12/11) Os valores de `Cortes dos Padrões…xlsx` são os de 2025: valem para 2026? E os 40 cortes que faltam (RS, Angra dos Reis, Rio (município), SP, AL, RJ, TO, JOINVILLE 5EF, MG 3EM, PR 3EM)? Também: Cód_Bizagi 2332 repetido em Anchieta e Angra dos Reis, e SC listada nas duas abas — depende de: Pedagógica
 - [x] (D-260: nenhum dado é necessário; bancos apagados e dev do zero) (11/11, inventário dos bancos antes do K-030) Banco de dev `revista-eletronica_pg-dados` está na 0022 com dado real (PAEBES, SAEGO, SAESE; 7 revistas, 6 validadas; 10 infográficos; 6 SVGs enviados; 2 cópias F1). Ir para a 0025 pede pg_dump antes (0023 e 0025 não voltam; 0024 apaga as colunas do SVG). Depois do migrate: as 6 validadas mudam de hash e os 10 infográficos ficam com pendência até serem preenchidos. Os outros bancos locais são vazios ou de teste (f2-f2, f2-f3, etapa-projeto, revista-express-f2-f2 órfão) ou já estão na 0025 (demo-f2, f2-aj). A `feat/etapa-do-projeto` tem `0020_etapa_do_projeto`, que colide com a `0020_infograficos`: renumerar ao retomar o K-034. Migrar o dev agora ou recriá-lo? — depende de: Otavio
 - [x] (D-252) (10/11, auditoria do código) Quais itens do "fazer agora" entram e onde: `planilhas.py:97` falha explícita para componente sem layout; enum no lugar de "2EF" em `cascata.py` e assert nas 12 etapas de `f2.py`; constante `ANO_DEMO` no E2E (138 ocorrências de 2026); separar `pendencias_f1`/`pendencias_f2`; helper `pode(user, modelo, acao)` (48 checagens fora de `permissoes.py`). Depois: hash do resolvido persistido (o resolver roda por revista no painel, impacto, matriz, paleta e impresso; teto ~50 revistas) e painel paginado com poda de fotos — depende de: Otavio
@@ -2252,6 +2261,9 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - Usuário conferiu na porta 8001 e autorizou o merge direto na `main` (K-032 em Done). Pediu a limpeza dos bancos das outras worktrees (K-039).
 - K-039 feito: duas stacks e 30 imagens antigas apagadas; dev intacto (D-262).
 - D-263: uma worktree fixa de trabalho (opção 1 do usuário); `CLAUDE.md` atualizado.
+- D-264: dev da 8000 apagado e recriado só com a carga 2026 (33 parceiros, 148 cortes); `app/media/` esvaziada (168 arquivos órfãos).
+- Dev: `carregar_templates --ano 2026` (4 templates) e `importar_matriz --ano 2026 --nome Comunitária` com os 3 PDFs de `docs/fontes/2025` (198 descritores, como no roteiro S17).
+- Carga 2026 rodada no dev da 8000 (`importar_cortes --usuario root`, simulação antes): 35 parceiros, 156 cortes. Volumes: só o do dev é banco; os 95 anônimos não são Postgres (critério: `PG_VERSION` + tabela `parceiro_ano` no catálogo, validado no volume do dev).
 
 ### 2026-11-10
 - Tarefa 3 planejada: 8 lacunas do brief fechadas (D-242); briefs 3, 4 e 5 ajustados.
