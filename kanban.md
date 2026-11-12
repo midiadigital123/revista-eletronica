@@ -4,11 +4,12 @@
 - **K-034** Etapa do projeto (`feat/etapa-do-projeto`): 14 commits fora da `main`, tarefa 5 em WIP · pausada
   nota: parada por decisão do usuário em 10/11; worktree `revista-express-etapa` removida em 11/11 (limpa; a branch `feat/etapa-do-projeto` `d0a1954` fica no git e no GitHub: recriar com `git worktree add`); ao retomar, renumerar a `0020_etapa_do_projeto` para depois da 0025
 - **K-031** Fase 5 do F2: animação por passo (desejável)
-- **K-032** S17 — Carga 2026 + desligar o antigo
 - **K-033** S18 — E2E da temporada
 
 ## Doing
 ## Review
+- **K-032** S17 — Carga 2026: comando `importar_cortes` (33 parceiros, 148 cortes pela cascata) em `feat/carga-2026`, teste 2 OK · D-261
+  nota: suíte 900 OK; falta o ok do usuário e o merge na `integ/carga-2026`; 40 cortes sem dado na planilha (RS, Angra, Rio (município), SP, AL, RJ, TO…); a planilha de cortes é a de 2025
 
 ## Done
 - **K-030** `integ/f2-gerado` na `main` pelo PR #12 (fases 1 a 4 do F2 + K-038); bancos locais apagados e dev do zero · 2026-11-11 · D-249 · D-260

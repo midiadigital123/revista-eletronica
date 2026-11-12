@@ -2,11 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-K-030 feito (D-260): `integ/f2-gerado` na `main` pelo PR #12 (merge commit), com as fases 1 a 4 do F2 e o K-038. Depois do merge: worktrees `f2-aj` e `f2-f2` removidas, todos os bancos locais apagados (inclusive o Mongo do sistema antigo) e dev novo do zero no checkout `revista-express` na `main` (só `migrate` + `admin`). K-038 feito (D-258, D-259): ajustes do F2 apontados pelo usuário na Demonstração, mergeados na `integ/f2-gerado` com o ok do usuário em 11/11. Cartão do tour só com o título; `tarefas-fechamento` na página depois do infográfico; modal ❶ sem o texto genérico em dobro (dado da demo); ficha com ❷ habilidades / ❸ progressão, referencial logo depois do ❷, caixas de 4 linhas que crescem com foco e "Do template" por passo. Verificado: Django 898 OK (8 pulados), Playwright 170/170 (168 na rodada inteira + os 2 specs de ano repetidos com o servidor aquecido, D-259). O usuário pediu, em 11/11, levar tudo à `main` depois destes ajustes (K-030). Antes: fase 4 do F2 (K-029) mergeada na `integ/f2-gerado`. A integração tem as fases 1 a 4: F2 gerado a partir dos infográficos, SVG enviado fora do código e do banco (0024), impresso com os textos dos infográficos, `tarefas-fechamento` sem o parágrafo do D05 (0025). Verificado na `feat/f2-f4`: Django 894 OK (8 pulados), migrações de ida e volta, Playwright 169/170 (`ano.spec`, ambiente, D-257). Pendente: merge da `integ/f2-gerado` na `main` (K-030, só com o ok explícito do usuário; no deploy, revistas impressas com infográfico ficam pendentes uma vez e os `media/f2/*.svg` órfãos saem à mão); fase 5; S17/S18.
+Passo 3 de 4 (K-032, carga 2026 de parceiros e cortes, D-261): comando e teste prontos na `feat/carga-2026`; falta o merge na `integ/carga-2026` e o ok do usuário.
+Funcionando: `importar_cortes --ano 2026 <Somativas.xlsx> <Cortes.xlsx> --usuario <login> [--simular]` cria 33 parceiros e grava 148 cortes pela cascata (26 projetos, 52 revistas, 21 com "Outras Etapas"); segunda rodada pula quem já tem corte. Suíte inteira 900 OK (8 pulados), com `test_importar_cortes` 2 OK. Conferido num banco isolado (`COMPOSE_PROJECT_NAME=carga2026`), com as planilhas reais.
+Quebrado/pendente: 40 cortes sem dado na planilha (RS, Angra dos Reis, Rio (município), SP sem nenhum; AL, RJ, TO, JOINVILLE, MG, PR parciais); a planilha de cortes é a de 2025 (mesmo sha256), a Pedagógica precisa validar os valores; carga no dev do checkout `revista-express` só depois do merge.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Escolher o próximo card do Backlog com o usuário (K-034 etapa do projeto, K-031 fase 5, K-032 carga 2026).
+Conferir a grade de Cortes de 2026 nas telas B (stack `carga2026`, `docker compose up -d app` na worktree `revista-express-carga-2026`; login `admin`) e dizer se posso commitar e mesclar na `integ/carga-2026`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -1490,7 +1492,7 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Motivo:** respostas do usuário.
 - **Descartadas:** comando `importar_cortes` a partir da planilha de 2025; planilhas de níveis como fonte; `--passo 25` na importação (valeria também para o 2EF).
 - **Arquivos afetados:** `docs/s17-carga-2026.md` (em `feat/s17-preparo`)
-- **Status:** ativa.
+- **Status:** ativa; o item (1) ~~substituído por D-261~~
 
 ### D-185 — Correções da revisão de segurança do upload do item e da exclusão (2026-10-30 14:30)
 - **Contexto:** revisão (security-reviewer) de e93babb e 299de99: 0 críticos, 1 importante, 6 menores. Sem path traversal, sem IDOR entre revistas, sem XSS no `alt`; polyglot e SVG-como-PNG barrados; CSRF, código conferido no servidor e permissões OK.
@@ -2117,7 +2119,16 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Arquivos afetados:** nenhum arquivo do código; volumes e containers docker locais; worktrees `revista-express-f2-aj` e `revista-express-f2-f2`.
 - **Status:** ativa
 
+### D-261 — Carga 2026: parceiros e cortes importados das planilhas (2026-11-12 11:00)
+- **Contexto:** o usuário pediu para cruzar `Somativas 2026.xlsx` (abas REDES_ESTADUAIS e REDES_MUNICIPAIS; colunas Subprograma, Disciplinas, Etapas para revista eletrônica) com `Cortes dos Padrões por Etapa e Parceiro.xlsx` e popular o banco de 2026. A planilha de cortes é idêntica à de 2025 do repositório (mesmo sha256).
+- **Decisão:** (1) novo comando `importar_cortes`, que cria os parceiros e grava os cortes que existem na planilha pela `gravar_cortes` (cascata, D-061): projeto, revistas e infográficos saem dela. (2) Linhas ALFA e regular do mesmo parceiro são **uma** revista por componente: o parceiro soma as etapas das linhas; só muda o F2 (Alfa se há corte no 2EF, Outras Etapas se há em outra, D-230). (3) Só entram as etapas cadastradas no ano (2EF, 5EF, 9EF, 3EM) e só LP e MT; as outras (4EF, 8EF, 2EM…) ficam para o K-034. (4) Nome do parceiro: sigla de UF para estado (GO, SC) e o nome da planilha de cortes para cidade (Florianópolis, JOINVILLE, PORTO ALEGRE, SALVADOR); cidades novas: Anchieta, Angra dos Reis, Belo Horizonte, Niterói, "Rio (município)". (5) Parceiro sem etapa padrão (Anchieta, Belo Horizonte, Niterói) nasce sem cortes. (6) Parceiro que já tem corte é pulado, porque `gravar_cortes` substitui todos: reexecutar não apaga o que a Pedagógica digitou. (7) Lacuna fica vazia, sem chute. (8) Subprograma não entra nas variáveis do projeto. (9) Substitui o item (1) da D-184.
+- **Motivo:** adiantar o trabalho da Pedagógica com o dado que já existe; a cascata já valida (D-055) e cria tudo, então o comando só lê e casa nomes.
+- **Descartadas:** digitar tudo na grade (D-184: o usuário agora quer o adiantamento); nome completo do estado (foge da planilha de cortes e dos 29 de 2025); preencher `nome_programa`/`sigla_programa` pelo Subprograma (fora do pedido, e ALFA e regular dividem o projeto); criar AM, BA e DF (só existem na planilha de 2025); gravar cortes de etapa que o parceiro não avalia em 2026 (MS 5EF e 9EF, RO 3EM).
+- **Arquivos afetados:** `app/nucleo/management/commands/importar_cortes.py`, `app/nucleo/tests/test_importar_cortes.py`
+- **Status:** ativa
+
 ## Perguntas em aberto
+- [ ] (D-261, 12/11) Os valores de `Cortes dos Padrões…xlsx` são os de 2025: valem para 2026? E os 40 cortes que faltam (RS, Angra dos Reis, Rio (município), SP, AL, RJ, TO, JOINVILLE 5EF, MG 3EM, PR 3EM)? Também: Cód_Bizagi 2332 repetido em Anchieta e Angra dos Reis, e SC listada nas duas abas — depende de: Pedagógica
 - [x] (D-260: nenhum dado é necessário; bancos apagados e dev do zero) (11/11, inventário dos bancos antes do K-030) Banco de dev `revista-eletronica_pg-dados` está na 0022 com dado real (PAEBES, SAEGO, SAESE; 7 revistas, 6 validadas; 10 infográficos; 6 SVGs enviados; 2 cópias F1). Ir para a 0025 pede pg_dump antes (0023 e 0025 não voltam; 0024 apaga as colunas do SVG). Depois do migrate: as 6 validadas mudam de hash e os 10 infográficos ficam com pendência até serem preenchidos. Os outros bancos locais são vazios ou de teste (f2-f2, f2-f3, etapa-projeto, revista-express-f2-f2 órfão) ou já estão na 0025 (demo-f2, f2-aj). A `feat/etapa-do-projeto` tem `0020_etapa_do_projeto`, que colide com a `0020_infograficos`: renumerar ao retomar o K-034. Migrar o dev agora ou recriá-lo? — depende de: Otavio
 - [x] (D-252) (10/11, auditoria do código) Quais itens do "fazer agora" entram e onde: `planilhas.py:97` falha explícita para componente sem layout; enum no lugar de "2EF" em `cascata.py` e assert nas 12 etapas de `f2.py`; constante `ANO_DEMO` no E2E (138 ocorrências de 2026); separar `pendencias_f1`/`pendencias_f2`; helper `pode(user, modelo, acao)` (48 checagens fora de `permissoes.py`). Depois: hash do resolvido persistido (o resolver roda por revista no painel, impacto, matriz, paleta e impresso; teto ~50 revistas) e painel paginado com poda de fotos — depende de: Otavio
 - [x] (D-256: sai do seed e das cópias iguais, migração 0025) (10/11, conselho da fase 2) O 1º parágrafo de `tarefas-fechamento` (seed `f2-lp.hbs`/`f2-mt.hbs` e migração 0023) fala dos itens do D05 de LP (tirinha, charge), contra o motivo da D-240. Tirar do seed e da 0023 antes da fase 4 (quando o impresso lê a seção)? — depende de: Otavio
@@ -2218,6 +2229,10 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - [ ] Migrar `api/` (Express + Mongo) para Django + PostgreSQL, mantendo o React de `editor/`? Motivos do usuário (2026-10-26): herança entre projetos, templates de escala por parceiro (com parentesco entre si), auth/perfis mais fortes (uso amplo todo ano), auditoria de mudanças de texto para avisar a equipe do impresso; equipe já sabe Django. Proposta de modelo apresentada, sem decisão — herança viva decidida (D-045); depende de: usuário confirmar a regra de conflito (sobrescrita local do filho vence ou o pai vence?)
 
 ## Sessões
+### 2026-11-12
+- Análise das duas planilhas: 33 parceiros únicos, 148 cortes casam, 40 faltam; a de cortes é a de 2025 (D-261).
+- Worktree `revista-express-carga-2026` (`feat/carga-2026` ← `integ/carga-2026` ← `main`); comando `importar_cortes` e teste (2 OK); carga real conferida num banco isolado.
+
 ### 2026-11-10
 - Tarefa 3 planejada: 8 lacunas do brief fechadas (D-242); briefs 3, 4 e 5 ajustados.
 - Tarefa 3 implementada (6b6685a), revisada (aprovada com 7 Minor) e corrigida (906b427); prova visual conferida.
