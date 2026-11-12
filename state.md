@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo 3 de 3 (K-040): botão "Copiar de <ano>" corrigido (D-266), script de povoamento (D-265) e seção no README, commitados e mesclados na `main` a pedido do usuário em 12/11 (sem push ainda).
-Funcionando: `./scripts/povoar-banco-2026.sh` na raiz refaz o banco do zero (33 parceiros, 148 cortes, 4 templates, matriz Comunitária, `admin`), provado idêntico ao dev da 8000; a aba Variáveis só mostra "Copiar de <ano-1>" se o ano anterior existe (62 testes OK nos módulos tocados).
-Quebrado/pendente: a `main` está à frente do GitHub (precisa de push para o outro computador clonar); suíte inteira não rodada depois do fix; o E2E `variaveis.spec` espera o botão e precisa do ano anterior na demonstração; 40 cortes sem dado e valores de 2025 a validar (D-261).
+Passo 6 de 6 concluído (K-041): demo de UI/UX aprovada pelo usuário em 12/11, commitada (`d0a8984`) e enviada na branch `feat/ux-proposta`; **não** mesclada na `main` por pedido dele. Direção "régua de proficiência" escolhida pelo usuário (D-267).
+Funcionando: 77 páginas geradas por `python3 gerar.py` (Hoje, Revistas, 32 fichas de revista, Parceiros e 16 fichas, Configurar o ano, Matrizes e Templates com versões, Entrega, Usuários, login, Excluir, Estados, Sobre esta proposta); `verificar_links.py` OK; 1440 e 390 px sem erro de console nem rolagem horizontal; `git diff main -- app/` vazio. Revisor do Impeccable: 12 achados, 10 aplicados em um lote (vocabulário passo x fase, dados que contradiziam a fase, números de Hoje, Entrega sem marcar tudo por padrão e com confirmação, esteira vertical no celular, títulos sem salto).
+Quebrado/pendente: não aplicados por decisão: abas Cortes/Variáveis de Parceiros continuam grades próprias (achado 11); sem barra "Gravar" na Matriz › Etapa (achado 8); legenda de Hoje repete os números da régua (9b). Sem verificação final do revisor (limite de duas rodadas). `DESIGN.md` da raiz não foi tocado (descreve o editor antigo); o sistema visual está no `LEIA-ME.md`. A `main` está à frente do GitHub (push pendente, K-040); 40 cortes sem dado e valores de 2025 a validar (D-261).
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Dizer se faço o push da `main` para o GitHub, para o outro computador clonar e rodar o script.
+Dizer se a direção da demo vira um plano de implementação no Django (cinco rodadas: casca e navegação, Revistas, Parceiros, Entrega, Biblioteca) e se quer abrir PR de `feat/ux-proposta` para a `main`. À parte, ainda aberto: push da `main` para o GitHub (K-040).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2167,6 +2167,14 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Arquivos afetados:** `app/nucleo/planilha_variaveis.py`, `app/nucleo/urls/ui_variaveis.py`, `templates/ui/parciais/variaveis_linha.html`, `templates/ui/variaveis/pagina.html`, `tests/test_ui_variaveis.py`
 - **Status:** ativa
 
+### D-267 — Proposta de UI/UX como demo estática gerada em Python (2026-11-12 18:00)
+- **Contexto:** o usuário pediu uma análise de ponta a ponta das telas B e uma nova UI/UX (hierarquia da informação, fluxo de navegação), mostrada numa demo com todas as páginas e dados fictícios, sem alterar o código existente e sem montar a revista. Respondeu que o visual pode mudar e que quer HTML estático clicável em `example/`.
+- **Decisão:** `example/ux-proposta/` com gerador Python só com a stdlib (`gerar.py`, `dados.py`, `paginas/*.py`), 1 CSS e 1 JS puros, Inter local copiada do repo, páginas `.html` versionadas. Navegação por esteira em 5 fases (Preparar, Montar, Conferir, Validada, Impressa) com barra lateral: Hoje, Revistas, Parceiros, Entrega, Biblioteca (Matrizes, Templates). Nenhuma regra de negócio nova: as fases saem de pendências, Validado e foto do impresso. Cores dos Padrões só como dado.
+- **Motivo:** repete o padrão de `example/f2-gerado/` (gerar.py + LEIA-ME), abre por `file://` sem Docker e é barato de refazer; a análise aponta 10 problemas de estrutura (menu por objeto e não por esteira, revista com 4 portas, 3 vocabulários de situação, configuração do ano escondida, Validar fora do menu).
+- **Descartadas:** Artifact publicado (fora do repositório, usuário preferiu o HTML em `example/`); página única com roteador JS (perde URL por tela e foge do padrão do repositório); mexer só no fluxo mantendo o visual (usuário liberou o visual).
+- **Arquivos afetados:** `example/ux-proposta/*` (novos); `app/` não muda.
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (12/11, conferido: 0 de 95 são dados de Postgres, nada é banco deste projeto; seguem intocados por serem possivelmente de outros projetos) (D-262) Os 95 volumes anônimos do Docker podem ser apagados? — depende de: Otavio
 - [x] (D-264: dev recriado do zero, os dois parceiros saíram) (12/11) No dev da 8000: "SAESE" (8 cortes, 1 projeto) é o mesmo que "SE" da carga, e "Acre - Avalia Acre 2026" (0 cortes) o mesmo que "AC". Apagar/renomear? — depende de: Otavio
@@ -2784,3 +2792,10 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - Usuário decidiu descartar todos os bancos locais e recomeçar o dev do zero; K-030 por PR (D-260).
 - PR #12 (`integ/f2-gerado` → `main`) aberto e mergeado com o ok do usuário; K-030 em Done.
 - Limpeza com o ok do usuário: worktrees `f2-aj`, `f2-f2` e `revista-express-etapa` removidas (branch da etapa preservada), pastas `revista-express-f2-f1`, `revista-express-f2-f3` e `revista-django` apagadas; todos os bancos locais apagados; dev novo do zero (`migrate` até a 0025 + `admin`) no checkout `revista-express` na `main`. Commit do kanban na `main` autorizado pelo usuário.
+
+### 2026-11-12 18:00
+- K-041: análise das telas B (3 varreduras + fichas) e plano aprovado; `integ/ux-proposta` criada da `main` e `feat/ux-proposta` na worktree de trabalho; D-267 registrada.
+
+### 2026-11-12 (continuação)
+- K-041 em Review: 4 módulos de páginas entregues por subagentes, 77 páginas, links e abas conferidos, uma rodada de capturas e outra de confirmação; detector do Impeccable rodado uma vez (achados `design-system-*` ignorados: comparam com o DESIGN.md do editor antigo); revisor final pediu fix, 10 de 12 achados aplicados.
+- Usuário viu a demo e aprovou: commit `d0a8984` na `feat/ux-proposta`, push dessa branch ao GitHub, sem merge na `main`.

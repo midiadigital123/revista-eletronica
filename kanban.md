@@ -11,6 +11,8 @@
 ## Review
 
 ## Done
+- **K-041** Proposta de nova UI/UX em demo clicável (`example/ux-proposta/`): 77 páginas, direção "régua de proficiência", dados fictícios, `app/` intacto; aprovada pelo usuário em 12/11, commitada e enviada na `feat/ux-proposta` (sem merge na `main`) · 2026-11-12 · D-267
+  nota: 3 achados do revisor ficaram de fora de propósito (abas de Parceiros, barra Gravar na Matriz, legenda de Hoje); a direção ainda não virou plano de implementação no Django
 - **K-040** Botão "Copiar de <ano>" some sem ano anterior e script `scripts/povoar-banco-2026.sh` (banco do zero com a carga 2026, provado idêntico ao dev), com seção no README; mergeado na `main` · 2026-11-12 · D-265 · D-266
 - **K-039** Bancos Docker das worktrees apagados: stacks `carga2026` e `revista-express-carga-2026` (volumes) e 30 imagens antigas; dev da 8000 intacto · 2026-11-12 · D-262
   nota: 95 volumes anônimos sem dono ficaram (pergunta em aberto)
