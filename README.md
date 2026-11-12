@@ -44,6 +44,51 @@ Abra `http://localhost:8000/` (vai para o Painel do ano mais novo; sem ano, para
   (só com DEBUG; imprime a URL e a senha do usuário `demo-preview`).
 - Detalhes de Docker, backup e restore: [`docs/docker.md`](docs/docker.md).
 
+### Povoar um banco novo com a carga de 2026
+
+`scripts/povoar-banco-2026.sh` recria, num banco **vazio**, o que a equipe usa de partida em 2026 (D-265).
+O banco não vai para o git: o script refaz tudo pelos comandos do sistema, com as fontes do repositório.
+
+```bash
+ADMIN_SENHA='troque-esta-senha' ./scripts/povoar-banco-2026.sh   # na raiz do repositório
+```
+
+Sem `ADMIN_SENHA`, o script pergunta a senha no terminal. Ao fim, imprime a URL (`http://localhost:8000`,
+usuário `admin`).
+
+**O que ele cria**
+
+| O quê | Quantidade | Fonte |
+|---|---|---|
+| Ano 2026, 4 etapas (2EF, 5EF, 9EF, 3EM), 2 componentes (LP, MT), 5 cores de padrão | 1 + 4 + 2 + 5 | `carregar_cadastros` |
+| Usuário `admin` (superusuário) | 1 | `createsuperuser`, senha de `ADMIN_SENHA` |
+| Parceiros, cortes de LP e MT, projetos e revistas (pela cascata) | 33, 148, 26, 52 | `docs/fontes/2026/Somativas 2026.xlsx` e `docs/fontes/2025/planilhas importantes/Cortes dos Padrões por Etapa e Parceiro.xlsx` (`importar_cortes`) |
+| Templates de texto "Padrão" (F1 e F2 × LP e MT) | 4 | `app/templates_seed/2026/` |
+| Matriz "Comunitária" | 198 descritores, 1093 tarefas | 3 PDFs em `docs/fontes/2025/PDFs Matriz Comunitária/` |
+
+**Atributos que controlam o script**
+
+| Atributo | Para que serve | Default |
+|---|---|---|
+| `ADMIN_SENHA` | Senha do usuário `admin` | pergunta no terminal |
+| `COMPOSE_PROJECT_NAME` | Projeto Docker (banco e volume) onde carregar; troque para não tocar no banco principal | o da `.env` ou o nome da pasta |
+| `APP_PORT` / `APP_BIND` | Porta e interface em que o app sobe no fim | `8000` / `127.0.0.1` |
+
+**Regras e limites**
+
+- Pré-requisitos: Docker com `compose`, o repositório clonado e rodar da raiz. Não precisa de Python local.
+- O script recusa um banco que já tenha dados (parceiro ou ano). Para recomeçar do zero:
+  `docker compose down -v` (apaga o volume do banco) e rode de novo.
+- Parceiro sem etapa entre as 4 do sistema (Anchieta, Belo Horizonte, Niterói) nasce sem cortes e sem projeto.
+  Faltam 40 cortes que a planilha não tem (RS, Angra dos Reis, Rio (município), SP sem nenhum; AL, RJ, TO,
+  JOINVILLE, MG e PR em parte): a Pedagógica completa pela aba Cortes.
+- Os valores de cortes são os da planilha de 2025 (o arquivo é idêntico); a Pedagógica valida para 2026.
+- Não escolhe matriz nem template por revista: depois da carga, use "Atribuir matriz…" e "Atribuir
+  template…" em Projetos. Também não cria usuários dos grupos Pedagógica, Mídias Digitais e Impresso
+  (ver `criar_usuarios`).
+- Para carregar sem tocar no dev: `COMPOSE_PROJECT_NAME=teste APP_PORT=8002 ./scripts/povoar-banco-2026.sh`
+  e, ao terminar, `COMPOSE_PROJECT_NAME=teste docker compose down -v`.
+
 ## 2. Como testar
 
 | O que | Comando | Observação |
