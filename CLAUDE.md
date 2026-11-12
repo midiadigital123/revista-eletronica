@@ -38,8 +38,9 @@ cd app/e2e && npx playwright test             # com o app de pé e E2E_ADMIN_USU
 
 Suíte E2E inteira (precisa da demonstração): stack isolada, ver `docs/e2e.md`.
 
-Worktrees: use `docker compose -p <nome>` (banco e volume próprios), com `COMPOSE_PROJECT_NAME=<nome>`
-no ambiente se o `.env` fixar o nome. PDFs SAEGO para os testes
+Worktrees: a de trabalho (`../revista-express-trabalho`) tem `.env` próprio (ignorado pelo git) com
+`COMPOSE_PROJECT_NAME=revista-express-trabalho` e `APP_PORT=8001`: banco e volume próprios, sem disputar a
+porta 8000 do dev. Sem `.env`, o compose usa o nome da pasta e sobe um banco vazio. PDFs SAEGO para os testes
 de importação: montar em `/pdfs` (`-v "<pasta>:/pdfs:ro"`); sem eles, 8 testes são pulados.
 
 ## Architecture
@@ -93,8 +94,10 @@ bncc: {practices, knowledge, skills[]}, scale: {padrao-1..N: [{level, fim, conte
 - Textos, nomes e mensagens em português (PT-BR).
 - `state.md` é atualizado no mesmo turno de cada decisão (regras no CLAUDE.md global).
 - Atalho deliberado com teto conhecido leva comentário `ponytail:`.
-- Fluxo git (D-226, D-231): nada é editado na worktree da `main`. Cada trabalho roda numa worktree
-  irmã (`../revista-express-<tema>`) com branch própria, saída de `integ/<tema>` (que sai da `main`).
+- Fluxo git (D-226, D-231, D-263): nada é editado na worktree da `main`. Existe **uma** worktree fixa de
+  trabalho, `../revista-express-trabalho` (não crie uma pasta por tarefa): a cada tarefa troque de branch
+  nela, `git switch -c feat/<tema> integ/<tema>` (a `integ/<tema>` sai da `main`). Uma tarefa por vez.
+  Pasta extra só para trabalho em paralelo com subagentes, e apagada (pasta, stack e volume) ao mesclar.
   Merge na `integ/<tema>` só com testes verdes; merge na `main` só depois do "ok" explícito do usuário.
 - **Testes E2E nunca editam revista que o próprio teste não criou. Nunca.** Isso vale também para o que
   alimenta a revista: projeto, variáveis, cortes, textos, arquivos e template escolhido. O spec cria o
