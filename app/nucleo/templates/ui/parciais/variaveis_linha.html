@@ -1,7 +1,7 @@
 {% comment %}
 Linha da planilha de variáveis (um <tbody> por projeto: a linha + os erros dela). A página inclui
 uma por projeto; o "Copiar de <ano-1>" (HTMX) devolve só esta, com as mensagens fora do alvo.
-Contexto: l (urls/ui_variaveis.linha), ano, pode_editar, colunas; oob=True na resposta HTMX.
+Contexto: l (urls/ui_variaveis.linha), ano, pode_editar, tem_anterior (o botão só existe se o ano anterior existe), colunas; oob=True na resposta HTMX.
 Autosave (U3): o <tbody> leva a rota do projeto (data-url) e o prefixo do formset a tirar do nome (data-prefixo).
 U10d: data-trava-linha: o 409 de bloqueio (projeto aberto por outra pessoa) trava só esta linha, não a planilha.
 {% endcomment %}{% with p=l.form.instance %}<tbody id="projeto-{{ p.pk }}"{% if l.erros %} class="grade-com-erro"{% endif %}{% if pode_editar %} data-url="{% url 'ui_projeto_campo' p.pk %}" data-prefixo="form-{{ l.indice }}-" data-trava-linha{% endif %}>
@@ -10,7 +10,7 @@ U10d: data-trava-linha: o 409 de bloqueio (projeto aberto por outra pessoa) trav
       <input type="hidden" name="form-{{ l.indice }}-id" value="{{ p.pk }}">
       <a class="link-linha" href="{% url 'ui_projeto' p.pk %}">{{ p.parceiro_ano.parceiro }}</a>
       <span class="mudo" title="{{ p.nome }}">{{ p.nome }}</span>
-      {% if pode_editar %}
+      {% if pode_editar and tem_anterior %}
       <button type="submit" form="copiar-{{ p.pk }}" id="copiar-btn-{{ p.pk }}" class="btn btn-ghost btn-sm"
         aria-label="Copiar de {{ ano.ano|add:-1 }} para {{ p }}"
         hx-post="{% url 'ui_variaveis_copiar' ano.ano p.pk %}?i={{ l.indice }}" hx-params="none"

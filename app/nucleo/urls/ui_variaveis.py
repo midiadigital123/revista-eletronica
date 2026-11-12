@@ -16,7 +16,9 @@ from django.views.decorators.http import require_POST, require_http_methods
 
 from nucleo.contexto import ano_da_sessao
 from nucleo.models import Ano
-from nucleo.planilha_variaveis import VariaveisForm, copiar, pk_do_post, planilha, pode_gravar, pode_ver, projetos_do_ano
+from nucleo.planilha_variaveis import (
+    VariaveisForm, copiar, pk_do_post, planilha, pode_gravar, pode_ver, projetos_do_ano, tem_ano_anterior,
+)
 from nucleo.ui_bloqueio import e_htmx
 from nucleo.variaveis import VARIAVEIS
 
@@ -76,7 +78,7 @@ def variaveis(request, ano):
             **contexto,
             "linhas": [linha(f, i) for i, f in enumerate(formset.forms)],
             "colunas": COLUNAS, "grupos": GRUPOS, "cabecalho": [(v, curto(v), v.nome in INICIOS) for v in COLUNAS],
-            "ano": ano, "secao": "projetos", "aba": "variaveis",
+            "ano": ano, "secao": "projetos", "aba": "variaveis", "tem_anterior": tem_ano_anterior(ano),
         },
     )  # fmt: skip
 
@@ -114,7 +116,10 @@ def copiar_linha(request, ano, pk):
     return TemplateResponse(
         request,
         "ui/parciais/variaveis_linha.html",
-        {"l": linha(form, indice), "ano": projeto.ano, "pode_editar": True, "colunas": COLUNAS, "oob": True},
+        {
+            "l": linha(form, indice), "ano": projeto.ano, "pode_editar": True, "colunas": COLUNAS, "oob": True,
+            "tem_anterior": tem_ano_anterior(projeto.ano),
+        },
     )
 
 

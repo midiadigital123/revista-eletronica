@@ -21,7 +21,16 @@ def dados(resposta):
 class VariaveisUiTest(Base):
     url = reverse("ui_variaveis", args=[2026])
 
+    def test_sem_ano_anterior_nao_ha_botao_de_copiar(self):
+        r = self.client.get(self.url)  # só o 2026 no banco
+        self.assertEqual(r.status_code, 200)
+        self.assertNotContains(r, "Copiar de")
+        self.assertNotContains(r, "copiar-btn-")
+        self.assertNotContains(r, 'id="copiar-')  # nem os forms escondidos do modo sem JS
+        self.assertContains(r, 'x-data="campoAuto"')  # a planilha continua editável
+
     def test_get_com_permissao(self):
+        Ano.objects.create(ano=2025)
         r = self.client.get(self.url)
         self.assertEqual(r.status_code, 200)
         self.assertTemplateUsed(r, "ui/base.html")

@@ -59,7 +59,7 @@
 
 </form>
 
-{% if pode_editar %}
+{% if pode_editar and tem_anterior %}
 {# Sem JS, o "Copiar de <ano-1>" envia estes forms (fora do form da planilha) e a página recarrega. #}
 {% for l in linhas %}<form method="post" id="copiar-{{ l.form.instance.pk }}" action="{% url 'ui_variaveis_copiar' ano.ano l.form.instance.pk %}" hidden>{% csrf_token %}</form>{% endfor %}
 {% endif %}

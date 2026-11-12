@@ -12,7 +12,7 @@ from django.forms import modelformset_factory
 
 from nucleo import texto
 from nucleo.admin.lote import avisar_pulados, escrever_travado
-from nucleo.models import Projeto, TemplateVersao
+from nucleo.models import Ano, Projeto, TemplateVersao
 from nucleo.projeto import limitar, mostrar_nome_do_ano
 from nucleo.variaveis import EDITAVEIS, TAMANHO_MAX, VARIAVEIS
 
@@ -35,6 +35,11 @@ def templates_por_variavel(ano):
         for nome in texto.variaveis_usadas(versao.texto):
             usos[nome].append(f"{t.componente.codigo} {t.fasciculo} {t.nome}")
     return {nome: sorted(lista) for nome, lista in usos.items()}
+
+
+def tem_ano_anterior(ano):
+    """O ano imediatamente anterior existe no banco: sem ele não há de onde copiar (o botão some)."""
+    return Ano.objects.filter(ano=ano.ano - 1).exists()
 
 
 def anterior_de(projeto):
