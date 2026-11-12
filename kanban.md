@@ -7,11 +7,12 @@
 - **K-033** S18 — E2E da temporada
 
 ## Doing
-- **K-039** Limpar os bancos Docker das outras worktrees: inventário feito antes, o usuário escolhe o que apagar
 
 ## Review
 
 ## Done
+- **K-039** Bancos Docker das worktrees apagados: stacks `carga2026` e `revista-express-carga-2026` (volumes) e 30 imagens antigas; dev da 8000 intacto · 2026-11-12 · D-262
+  nota: 95 volumes anônimos sem dono ficaram (pergunta em aberto)
 - **K-032** S17 — Carga 2026: comando `importar_cortes` (33 parceiros, 148 cortes pela cascata), conferido pelo usuário nas telas B e mergeado direto na `main` (suíte 900 OK) · 2026-11-12 · D-261
   nota: 40 cortes sem dado na planilha (RS, Angra, Rio (município), SP, AL, RJ, TO…); a planilha de cortes é a de 2025: a Pedagógica valida os valores
 - **K-030** `integ/f2-gerado` na `main` pelo PR #12 (fases 1 a 4 do F2 + K-038); bancos locais apagados e dev do zero · 2026-11-11 · D-249 · D-260

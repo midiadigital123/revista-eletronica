@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo 4 de 4 (K-032, carga 2026, D-261): feito. Usuário conferiu as telas B em 12/11 ("tudo funcionou muito bem") e mandou mesclar direto na `main`.
-Funcionando: `importar_cortes --ano 2026 <Somativas.xlsx> <Cortes.xlsx> --usuario <login> [--simular]` na `main`: 33 parceiros, 148 cortes pela cascata (26 projetos, 52 revistas); segunda rodada pula quem já tem corte. Suíte 900 OK (8 pulados).
-Quebrado/pendente: 40 cortes sem dado na planilha e valores de 2025 a validar pela Pedagógica (pergunta em aberto D-261); a carga ainda não foi rodada no dev do checkout `revista-express` (`revista-eletronica-app-1`, porta 8000); K-039 em andamento: inventário e limpeza dos bancos Docker das worktrees.
+Passo 4 de 4 (pedido de 12/11): D-263 aplicada. Uma worktree fixa de trabalho substitui a pasta por tarefa; K-032 e K-039 já estão na `main`.
+Funcionando: `importar_cortes` na `main` (33 parceiros, 148 cortes, suíte 900 OK); só existem o dev da 8000 (`revista-eletronica_pg-dados`) e a worktree `../revista-express-trabalho` (`.env` próprio: projeto `revista-express-trabalho`, porta 8001); regra nova no `CLAUDE.md`.
+Quebrado/pendente: a carga ainda não rodou no dev da 8000 (o app dele monta a worktree `revista-eletronica`, na branch `django`, sem o comando); 40 cortes sem dado e valores de 2025 a validar (pergunta em aberto D-261); 95 volumes anônimos do Docker intocados (pergunta em aberto D-262).
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Dizer quais bancos/volumes da lista do inventário (K-039) podem ser apagados.
+Escolher o próximo card do Backlog (K-034 etapa do projeto, K-031 fase 5, K-033 E2E da temporada) ou carregar 2026 no dev da 8000.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2127,7 +2127,24 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Arquivos afetados:** `app/nucleo/management/commands/importar_cortes.py`, `app/nucleo/tests/test_importar_cortes.py`
 - **Status:** ativa
 
+### D-262 — Bancos Docker das worktrees apagados (2026-11-12 13:10)
+- **Contexto:** depois da carga 2026 (K-032), o usuário pediu para eliminar as outras instâncias de banco das worktrees. Inventário: a `.env` da raiz fixa `COMPOSE_PROJECT_NAME=revista-eletronica`, então `revista-eletronica_pg-dados` é o dev da porta 8000; `carga2026_pg-dados` (122 MB, 33 parceiros e 148 cortes, usado na conferência) e `revista-express-carga-2026_pg-dados` (53 MB, 0 linhas, subiu sem querer porque o compose usou o nome da pasta) eram os únicos outros; 95 volumes anônimos e 30 imagens antigas.
+- **Decisão:** (escolhas do usuário) apagar as duas stacks com volumes (`down -v`) e as imagens `agent-*-app` (20), `revista-express-f2-f1/f2/f3-app`, `revista-prod-teste-app`, `revista-base-app`, `revista-e2e-app`, `revista-eletronica-api/editor` e as das duas stacks. Ficam o volume e a imagem do dev.
+- **Motivo:** a carga já está na `main` e se refaz em ~1 minuto; o resto era lixo de worktrees removidas.
+- **Descartadas:** apagar `revista-eletronica_pg-dados` (é o dev atual, com dados criados à mão; o usuário não marcou); `docker volume prune` nos 95 anônimos (nenhum dá para atribuir ao projeto, e há volumes de outros projetos no mesmo Docker).
+- **Arquivos afetados:** nenhum arquivo do código; containers, volumes e imagens locais.
+- **Status:** ativa
+
+### D-263 — Uma worktree fixa de trabalho, em vez de uma pasta por tarefa (2026-11-12 13:40)
+- **Contexto:** o usuário reclamou de uma pasta nova a cada worktree. Cada pasta sem `.env` subia o próprio projeto Docker: hoje isso criou um banco vazio e disputou a porta 8000 com o dev (D-262).
+- **Decisão:** (escolha do usuário, opção 1) existe uma worktree fixa, `../revista-express-trabalho`, com `.env` próprio (`COMPOSE_PROJECT_NAME=revista-express-trabalho`, `APP_PORT=8001`); a cada tarefa troca-se de branch nela, `git switch -c feat/<tema> integ/<tema>`; uma tarefa por vez; pasta extra só para trabalho paralelo com subagentes, apagada ao mesclar. A `main` continua intocada (D-226, D-231) e o merge nela só com o ok do usuário.
+- **Motivo:** uma pasta, um projeto Docker e um banco só; sem bancos soltos nem conflito de porta.
+- **Descartadas:** trabalhar com `git switch` na própria pasta da `main` (contraria a D-226 e põe a stack do dev sobre a branch da tarefa); worktree temporária por tarefa (continua criando e apagando pastas a cada vez); worktrees organizadas em `.claude/worktrees/` (as pastas continuam existindo).
+- **Arquivos afetados:** `CLAUDE.md`, pasta `revista-express-carga-2026` renomeada para `revista-express-trabalho`.
+- **Status:** ativa. Substitui a parte "uma worktree irmã por trabalho" da D-226 e da D-231.
+
 ## Perguntas em aberto
+- [ ] (D-262) Os 95 volumes anônimos do Docker (todos dangling) podem ser apagados? Nenhum é atribuível a este projeto; ver `docker volume ls -f dangling=true` — depende de: Otavio
 - [ ] (D-261, 12/11) Os valores de `Cortes dos Padrões…xlsx` são os de 2025: valem para 2026? E os 40 cortes que faltam (RS, Angra dos Reis, Rio (município), SP, AL, RJ, TO, JOINVILLE 5EF, MG 3EM, PR 3EM)? Também: Cód_Bizagi 2332 repetido em Anchieta e Angra dos Reis, e SC listada nas duas abas — depende de: Pedagógica
 - [x] (D-260: nenhum dado é necessário; bancos apagados e dev do zero) (11/11, inventário dos bancos antes do K-030) Banco de dev `revista-eletronica_pg-dados` está na 0022 com dado real (PAEBES, SAEGO, SAESE; 7 revistas, 6 validadas; 10 infográficos; 6 SVGs enviados; 2 cópias F1). Ir para a 0025 pede pg_dump antes (0023 e 0025 não voltam; 0024 apaga as colunas do SVG). Depois do migrate: as 6 validadas mudam de hash e os 10 infográficos ficam com pendência até serem preenchidos. Os outros bancos locais são vazios ou de teste (f2-f2, f2-f3, etapa-projeto, revista-express-f2-f2 órfão) ou já estão na 0025 (demo-f2, f2-aj). A `feat/etapa-do-projeto` tem `0020_etapa_do_projeto`, que colide com a `0020_infograficos`: renumerar ao retomar o K-034. Migrar o dev agora ou recriá-lo? — depende de: Otavio
 - [x] (D-252) (10/11, auditoria do código) Quais itens do "fazer agora" entram e onde: `planilhas.py:97` falha explícita para componente sem layout; enum no lugar de "2EF" em `cascata.py` e assert nas 12 etapas de `f2.py`; constante `ANO_DEMO` no E2E (138 ocorrências de 2026); separar `pendencias_f1`/`pendencias_f2`; helper `pode(user, modelo, acao)` (48 checagens fora de `permissoes.py`). Depois: hash do resolvido persistido (o resolver roda por revista no painel, impacto, matriz, paleta e impresso; teto ~50 revistas) e painel paginado com poda de fotos — depende de: Otavio
@@ -2233,6 +2250,8 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - Análise das duas planilhas: 33 parceiros únicos, 148 cortes casam, 40 faltam; a de cortes é a de 2025 (D-261).
 - Worktree `revista-express-carga-2026` (`feat/carga-2026` ← `integ/carga-2026` ← `main`); comando `importar_cortes` e teste (2 OK); carga real conferida num banco isolado.
 - Usuário conferiu na porta 8001 e autorizou o merge direto na `main` (K-032 em Done). Pediu a limpeza dos bancos das outras worktrees (K-039).
+- K-039 feito: duas stacks e 30 imagens antigas apagadas; dev intacto (D-262).
+- D-263: uma worktree fixa de trabalho (opção 1 do usuário); `CLAUDE.md` atualizado.
 
 ### 2026-11-10
 - Tarefa 3 planejada: 8 lacunas do brief fechadas (D-242); briefs 3, 4 e 5 ajustados.
