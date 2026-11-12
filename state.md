@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo 3 de 3 (pedido de 12/11): dev da 8000 recriado do zero com só a carga 2026 (D-264).
-Funcionando: banco novo na 0025, ano 2026 (etapas, componentes, cores), superusuário `admin`, 33 parceiros, 148 cortes, 26 projetos, 52 revistas; app na 8000.
-Também no dev: matriz Comunitária 2026 (198 descritores, 1093 tarefas, dos 3 PDFs SAEGO 2025) e 4 templates Padrão (F1/F2 × LP/MT). Quebrado/pendente: nenhuma revista tem matriz nem template escolhidos ainda (Projetos > Atribuir matriz/template); passo 25 de 5EF/9EF/3EM pela tela da matriz (D-184); `app/media/` vazia (arquivos do banco antigo apagados em 12/11, 65 MB, D-264); 40 cortes sem dado e valores de 2025 a validar (D-261); mudanças desta sessão no `state.md` ainda sem commit.
+Passo 3 de 3 (K-040): botão "Copiar de <ano>" corrigido (D-266), script de povoamento (D-265) e seção no README, commitados e mesclados na `main` a pedido do usuário em 12/11 (sem push ainda).
+Funcionando: `./scripts/povoar-banco-2026.sh` na raiz refaz o banco do zero (33 parceiros, 148 cortes, 4 templates, matriz Comunitária, `admin`), provado idêntico ao dev da 8000; a aba Variáveis só mostra "Copiar de <ano-1>" se o ano anterior existe (62 testes OK nos módulos tocados).
+Quebrado/pendente: a `main` está à frente do GitHub (precisa de push para o outro computador clonar); suíte inteira não rodada depois do fix; o E2E `variaveis.spec` espera o botão e precisa do ano anterior na demonstração; 40 cortes sem dado e valores de 2025 a validar (D-261).
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Em `http://localhost:8000/ui/projeto/ano/2026/`, marcar todos os parceiros e usar "Atribuir matriz…" e "Atribuir template…"; depois dizer se commito o `state.md` na `main`.
+Dizer se faço o push da `main` para o GitHub, para o outro computador clonar e rodar o script.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2151,6 +2151,22 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Arquivos afetados:** nenhum arquivo do código; volume do dev e conteúdo de `app/media/` (ignorada pelo git; apagada pelo container, os arquivos eram do root).
 - **Status:** ativa
 
+### D-265 — Script que povoa o banco com a carga 2026 (2026-11-12 16:30)
+- **Contexto:** o usuário vai abrir a aplicação em outro computador e pediu um script para trazer "exatamente" o banco de agora (33 parceiros, 148 cortes, matriz Comunitária, 4 templates, `admin`).
+- **Decisão:** `scripts/povoar-banco-2026.sh` (bash + Docker) refaz o banco vazio pelos comandos já existentes (`migrate`, `carregar_cadastros`, `createsuperuser`, `importar_cortes`, `carregar_templates`, `importar_matriz`), com as fontes no repositório: `docs/fontes/2026/Somativas 2026.xlsx` (nova), a planilha de cortes e os 3 PDFs de `docs/fontes/2025`. A senha do `admin` vem de `ADMIN_SENHA` ou de prompt. Recusa banco que já tenha dados. Provado: rodado num projeto Docker descartável, o hash por tabela (ids e valores, sem datas) ficou igual ao do dev.
+- **Motivo:** a D-260/regra do projeto proíbe dump e segredo no git (o banco não é versionado); os dados da carga são todos reproduzíveis das fontes.
+- **Descartadas:** `pg_dump` commitado (leva o hash da senha do `admin`, histórico e usuários; contraria "nenhum segredo no repositório"); dump copiado à mão por pen drive (não fica no repositório e não se repete); script que lê o dev atual (dependeria do outro computador alcançar este banco).
+- **Arquivos afetados:** `scripts/povoar-banco-2026.sh`, `docs/fontes/2026/Somativas 2026.xlsx`, `README.md` (seção 1)
+- **Status:** ativa
+
+### D-266 — "Copiar de <ano>" só aparece se o ano anterior existe (2026-11-12 16:30)
+- **Contexto:** o usuário viu "Copiar de 2025" na aba Variáveis de um banco sem o ano 2025.
+- **Decisão:** a view manda `tem_anterior` (`planilha_variaveis.tem_ano_anterior`: existe `Ano` com ano-1); sem ele somem o botão e os forms escondidos do modo sem JS. Parceiro sem projeto no ano anterior, em banco que tem o ano anterior, continua com o botão e a mensagem "não há projeto do parceiro em <ano-1>".
+- **Motivo:** sem o ano anterior não há de onde copiar; o botão era ação que nunca funcionaria.
+- **Descartadas:** esconder o botão por parceiro sem projeto no ano anterior (uma consulta a mais por linha e esconde a mensagem que explica o motivo; o pedido era sobre o ano).
+- **Arquivos afetados:** `app/nucleo/planilha_variaveis.py`, `app/nucleo/urls/ui_variaveis.py`, `templates/ui/parciais/variaveis_linha.html`, `templates/ui/variaveis/pagina.html`, `tests/test_ui_variaveis.py`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (12/11, conferido: 0 de 95 são dados de Postgres, nada é banco deste projeto; seguem intocados por serem possivelmente de outros projetos) (D-262) Os 95 volumes anônimos do Docker podem ser apagados? — depende de: Otavio
 - [x] (D-264: dev recriado do zero, os dois parceiros saíram) (12/11) No dev da 8000: "SAESE" (8 cortes, 1 projeto) é o mesmo que "SE" da carga, e "Acre - Avalia Acre 2026" (0 cortes) o mesmo que "AC". Apagar/renomear? — depende de: Otavio
@@ -2261,6 +2277,8 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - Usuário conferiu na porta 8001 e autorizou o merge direto na `main` (K-032 em Done). Pediu a limpeza dos bancos das outras worktrees (K-039).
 - K-039 feito: duas stacks e 30 imagens antigas apagadas; dev intacto (D-262).
 - D-263: uma worktree fixa de trabalho (opção 1 do usuário); `CLAUDE.md` atualizado.
+- Botão "Copiar de <ano>" some sem ano anterior (D-266, commit `1282dd3`); script `scripts/povoar-banco-2026.sh` escrito e provado idêntico ao dev (D-265).
+- README: seção "Povoar um banco novo com a carga de 2026" (o que o script cria, atributos `ADMIN_SENHA`, `COMPOSE_PROJECT_NAME`, `APP_PORT`/`APP_BIND`, regras e limites).
 - D-264: dev da 8000 apagado e recriado só com a carga 2026 (33 parceiros, 148 cortes); `app/media/` esvaziada (168 arquivos órfãos).
 - Dev: `carregar_templates --ano 2026` (4 templates) e `importar_matriz --ano 2026 --nome Comunitária` com os 3 PDFs de `docs/fontes/2025` (198 descritores, como no roteiro S17).
 - Carga 2026 rodada no dev da 8000 (`importar_cortes --usuario root`, simulação antes): 35 parceiros, 156 cortes. Volumes: só o do dev é banco; os 95 anônimos não são Postgres (critério: `PG_VERSION` + tabela `parceiro_ano` no catálogo, validado no volume do dev).

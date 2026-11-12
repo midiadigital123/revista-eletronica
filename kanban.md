@@ -11,6 +11,7 @@
 ## Review
 
 ## Done
+- **K-040** Botão "Copiar de <ano>" some sem ano anterior e script `scripts/povoar-banco-2026.sh` (banco do zero com a carga 2026, provado idêntico ao dev), com seção no README; mergeado na `main` · 2026-11-12 · D-265 · D-266
 - **K-039** Bancos Docker das worktrees apagados: stacks `carga2026` e `revista-express-carga-2026` (volumes) e 30 imagens antigas; dev da 8000 intacto · 2026-11-12 · D-262
   nota: 95 volumes anônimos sem dono ficaram (pergunta em aberto)
 - **K-032** S17 — Carga 2026: comando `importar_cortes` (33 parceiros, 148 cortes pela cascata), conferido pelo usuário nas telas B e mergeado direto na `main` (suíte 900 OK) · 2026-11-12 · D-261
