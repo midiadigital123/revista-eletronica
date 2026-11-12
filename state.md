@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo 3 de 4 (K-032, carga 2026 de parceiros e cortes, D-261): comando e teste prontos na `feat/carga-2026`; falta o merge na `integ/carga-2026` e o ok do usuário.
-Funcionando: `importar_cortes --ano 2026 <Somativas.xlsx> <Cortes.xlsx> --usuario <login> [--simular]` cria 33 parceiros e grava 148 cortes pela cascata (26 projetos, 52 revistas, 21 com "Outras Etapas"); segunda rodada pula quem já tem corte. Suíte inteira 900 OK (8 pulados), com `test_importar_cortes` 2 OK. Conferido num banco isolado (`COMPOSE_PROJECT_NAME=carga2026`), com as planilhas reais.
-Quebrado/pendente: 40 cortes sem dado na planilha (RS, Angra dos Reis, Rio (município), SP sem nenhum; AL, RJ, TO, JOINVILLE, MG, PR parciais); a planilha de cortes é a de 2025 (mesmo sha256), a Pedagógica precisa validar os valores; carga no dev do checkout `revista-express` só depois do merge.
+Passo 4 de 4 (K-032, carga 2026, D-261): feito. Usuário conferiu as telas B em 12/11 ("tudo funcionou muito bem") e mandou mesclar direto na `main`.
+Funcionando: `importar_cortes --ano 2026 <Somativas.xlsx> <Cortes.xlsx> --usuario <login> [--simular]` na `main`: 33 parceiros, 148 cortes pela cascata (26 projetos, 52 revistas); segunda rodada pula quem já tem corte. Suíte 900 OK (8 pulados).
+Quebrado/pendente: 40 cortes sem dado na planilha e valores de 2025 a validar pela Pedagógica (pergunta em aberto D-261); a carga ainda não foi rodada no dev do checkout `revista-express` (`revista-eletronica-app-1`, porta 8000); K-039 em andamento: inventário e limpeza dos bancos Docker das worktrees.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Conferir a grade de Cortes de 2026 nas telas B (stack `carga2026`, `docker compose up -d app` na worktree `revista-express-carga-2026`; login `admin`) e dizer se posso commitar e mesclar na `integ/carga-2026`.
+Dizer quais bancos/volumes da lista do inventário (K-039) podem ser apagados.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2232,6 +2232,7 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 ### 2026-11-12
 - Análise das duas planilhas: 33 parceiros únicos, 148 cortes casam, 40 faltam; a de cortes é a de 2025 (D-261).
 - Worktree `revista-express-carga-2026` (`feat/carga-2026` ← `integ/carga-2026` ← `main`); comando `importar_cortes` e teste (2 OK); carga real conferida num banco isolado.
+- Usuário conferiu na porta 8001 e autorizou o merge direto na `main` (K-032 em Done). Pediu a limpeza dos bancos das outras worktrees (K-039).
 
 ### 2026-11-10
 - Tarefa 3 planejada: 8 lacunas do brief fechadas (D-242); briefs 3, 4 e 5 ajustados.
