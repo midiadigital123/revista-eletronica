@@ -5,7 +5,7 @@
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/matriz.css' %}">{% endblock %}
 
 {% block conteudo %}
-<a class="mudo voltar" href="{% url 'ui_matriz_detalhe' matriz.pk %}">‹ {{ matriz.nome }}</a>
+<c-voltar href="{% url 'ui_matriz_detalhe' matriz.pk %}">{{ matriz.nome }}</c-voltar>
 <c-pagina-cab titulo="Reimportar {{ matriz.nome }}">
   <p class="mudo">Só as etapas × componente do arquivo são tocadas. Nelas, descritores e tarefas são apagados e recriados a partir do arquivo; edições feitas no sistema se perdem.</p>
 </c-pagina-cab>

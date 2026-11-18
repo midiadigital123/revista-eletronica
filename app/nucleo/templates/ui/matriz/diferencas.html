@@ -5,7 +5,7 @@
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/matriz.css' %}">{% endblock %}
 
 {% block conteudo %}
-<a class="mudo voltar" href="{% url 'ui_matriz_detalhe' matriz.pk %}">‹ {{ matriz.nome }}</a>
+<c-voltar href="{% url 'ui_matriz_detalhe' matriz.pk %}">{{ matriz.nome }}</c-voltar>
 <c-pagina-cab titulo="Diferenças da origem">
   <p class="mudo">{% if matriz.duplicada_de %}O que {{ matriz.nome }} ({{ matriz.ano.ano }}) tem de diferente de {{ matriz.duplicada_de.nome }} ({{ matriz.duplicada_de.ano.ano }}).{% else %}{{ matriz.nome }} não foi duplicada de outra matriz.{% endif %}</p>
 </c-pagina-cab>

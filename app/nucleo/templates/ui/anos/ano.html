@@ -6,7 +6,7 @@ A ordem das etapas é a escolar (`ordem_escolar`). Sem `pode.<tabela>`, só text
 {% block titulo %}Ano {{ ano.ano }}{% endblock %}
 
 {% block conteudo %}
-<a class="mudo voltar" href="{% url 'ui_anos' %}">‹ Anos</a>
+<c-voltar href="{% url 'ui_anos' %}">Anos</c-voltar>
 <c-pagina-cab titulo="Ano {{ ano.ano }}">
   <p class="mudo">Etapas e componentes valem para todas as matrizes, cortes e revistas deste ano.</p>
   <c-slot name="acoes">{% if pode.etapas or pode.componentes %}{% include "ui/_componentes/status_salvo.html" with ocioso="Etapas e componentes salvam sozinhos; cada padrão, pelo Salvar dele." %}{% endif %}</c-slot>

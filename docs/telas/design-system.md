@@ -127,6 +127,8 @@ nomeadas no teste, com o motivo) e trava o HTML de cada componente.
 | `<c-abas>` + `<c-aba>` | `nav.abas` + links | `rotulo`; `href`, `atual` | padrão |
 | `<c-icone>` | `svg` de traço 24 × 24 | `nome`, `espessura` (padrão 2) | — |
 | `<c-modal>` | `dialog.dialogo` | `id`, `titulo`, `titulo_id`, `class` | padrão, `titulo`, `descricao`, `rodape` |
+| `<c-botao-icone>` | `a.btn-icone` ou `button.btn-icone` com o ícone dentro | `icone`, `rotulo` (obrigatório: vira `aria-label`), `dica`, `href`, `type`, `class` | — |
+| `<c-voltar>` | `a.mudo.voltar` com o sinal ‹ | `href` | padrão (o texto) |
 
 ```html
 <c-pagina-cab titulo="Usuários">

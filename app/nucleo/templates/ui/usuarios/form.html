@@ -5,7 +5,7 @@
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/usuarios.css' %}">{% endblock %}
 
 {% block conteudo %}
-<a class="mudo voltar" href="{% url 'ui_usuarios' %}">‹ Usuários</a>
+<c-voltar href="{% url 'ui_usuarios' %}">Usuários</c-voltar>
 <c-pagina-cab titulo="{{ titulo }}">
   <p class="mudo">{{ texto }}</p>
 </c-pagina-cab>

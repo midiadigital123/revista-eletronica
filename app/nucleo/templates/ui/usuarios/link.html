@@ -5,7 +5,7 @@ definir a própria senha, para enviar sem mandar senha. Só aparece na resposta 
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/usuarios.css' %}">{% endblock %}
 
 {% block conteudo %}
-<a class="mudo voltar" href="{% url 'ui_usuarios' %}">‹ Usuários</a>
+<c-voltar href="{% url 'ui_usuarios' %}">Usuários</c-voltar>
 <c-pagina-cab titulo="Link de acesso de {{ alvo.username }}">
   <p class="mudo">Envie só para {{ alvo.get_full_name|default:alvo.username }}, por e-mail ou mensagem direta. Quem abrir o link primeiro define a senha.</p>
 </c-pagina-cab>

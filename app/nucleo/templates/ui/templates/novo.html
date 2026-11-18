@@ -5,7 +5,7 @@ Ficha: docs/telas/fichas/templates.md.{% endcomment %}
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/templates.css' %}">{% endblock %}
 
 {% block conteudo %}
-<a class="mudo voltar" href="{% url 'ui_templates' ano.ano %}?aba={{ aba }}">‹ Templates {{ aba }}</a>
+<c-voltar href="{% url 'ui_templates' ano.ano %}?aba={{ aba }}">Templates {{ aba }}</c-voltar>
 <c-pagina-cab titulo="Novo template">
   <p class="mudo">Ano {{ ano.ano }}. Grava o template com a versão 1 e abre o editor por seção para você refinar o texto.</p>
 </c-pagina-cab>

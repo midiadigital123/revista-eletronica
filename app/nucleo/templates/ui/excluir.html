@@ -5,7 +5,7 @@ sai junto (resumo_ano) e só o Admin chega aqui (D-206). Parceiro em uso: Desati
 {% block titulo %}{% if resumo is not None %}Apagar o ano {{ obj.ano }}{% else %}Excluir {{ titulo }}{% endif %}{% endblock %}
 
 {% block conteudo %}
-<a class="mudo voltar" href="{{ voltar }}">‹ Voltar sem excluir</a>
+<c-voltar href="{{ voltar }}">Voltar sem excluir</c-voltar>
 <c-pagina-cab>
   {% if resumo is not None %}
   <h1>Apagar o ano {{ obj.ano }}</h1>

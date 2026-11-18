@@ -6,7 +6,7 @@ no fim, a zona de perigo "Excluir matriz…" (E3, D-205) leva a ui_excluir.{% en
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/matriz.css' %}">{% endblock %}
 
 {% block conteudo %}
-<a class="mudo voltar" href="{% url 'ui_matriz' matriz.ano.ano %}">‹ Matrizes de {{ matriz.ano.ano }}</a>
+<c-voltar href="{% url 'ui_matriz' matriz.ano.ano %}">Matrizes de {{ matriz.ano.ano }}</c-voltar>
 <c-pagina-cab>
   {% if pode_alterar %}{# U5: renomear inline, pelo autosave (campoAuto + nomeInline) #}
   <form id="matriz-nome" x-data="campoAuto" novalidate>{% csrf_token %}{% url 'ui_matriz_renomear' matriz.pk as url %}

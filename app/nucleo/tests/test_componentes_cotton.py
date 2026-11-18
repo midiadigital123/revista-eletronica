@@ -25,6 +25,7 @@ MIGRADOS: dict[str, str] = {
     "<svg": "<c-icone>",
     '<dialog class="dialogo': "<c-modal>",
     'class="btn-icone': "<c-botao-icone>",
+    'class="mudo voltar': "<c-voltar>",
 }
 
 # (arquivo relativo a templates/ui, marcação crua) → motivo de ficar cru
@@ -57,6 +58,8 @@ EXCECOES: dict[tuple[str, str], str] = {
     ("_componentes/ordem.html", "<svg"): "a alça de arrastar é preenchida (fill), não de traço",
     ("parciais/matriz_painel.html", '<dialog class="dialogo'): "atributos condicionais na tag (impacto do item da tarefa)",
     ("parciais/matriz_tarefa.html", 'class="btn-icone'): "é o <c-botao variante=ghost> quadrado da tarefa, com a classe só para o tamanho",
+    ("projeto/projeto.html", 'class="mudo voltar'): "trilha em <nav>, com o sinal escondido do leitor de tela",
+    ("revista/revista.html", 'class="mudo voltar'): "trilha de dois níveis em <nav>",
     ("projeto/projeto.html", 'class="campo'): "a caixa do campo é o próprio <form> do autosave da matriz",
 }
 
@@ -165,6 +168,12 @@ class SaidaDosComponentes(SimpleTestCase):
             renderizar('<c-botao-icone icone="fechar" type="submit" class="tpl-excluir" name="acao" value="ativar" rotulo="Ativar" />'),
             '<button class="btn-icone tpl-excluir" type="submit" name="acao" value="ativar" aria-label="Ativar">'
             + svg + '<path d="M18 6 6 18M6 6l12 12"/></svg></button>',
+        )
+
+    def test_voltar(self):
+        self.assertEqual(
+            renderizar('<c-voltar href="/ui/usuarios/">{{ x }}</c-voltar>', x=self.perigoso),
+            '<a class="mudo voltar" href="/ui/usuarios/">‹ A &amp; B &lt;i&gt;</a>',
         )
 
     def test_modal(self):

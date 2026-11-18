@@ -11,7 +11,7 @@ todo pedido HTMX; os forms também a levam, para funcionar sem JS).
 
 {% block conteudo %}
 <form id="bloqueio-form" hidden>{% csrf_token %}{% include "ui/_componentes/bloqueio.html" %}</form>
-<a class="mudo voltar" href="{% url 'ui_matriz_detalhe' mec.matriz.pk %}">‹ {{ mec.matriz.nome }} ({{ mec.matriz.ano.ano }})</a>
+<c-voltar href="{% url 'ui_matriz_detalhe' mec.matriz.pk %}">{{ mec.matriz.nome }} ({{ mec.matriz.ano.ano }})</c-voltar>
 <c-pagina-cab>
   <c-slot name="titulo">{{ mec.etapa.codigo }} <span class="mudo matriz-cc">{{ mec.componente.nome|default:mec.componente.codigo }}</span></c-slot>
   <p class="mudo">{{ mec.matriz.nome }} · escala até {{ mec.etapa.escala_max }} · afeta {{ afetadas }} revista(s) ativa(s)</p>

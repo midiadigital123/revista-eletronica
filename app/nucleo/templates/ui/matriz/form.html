@@ -5,8 +5,8 @@
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/matriz.css' %}">{% endblock %}
 
 {% block conteudo %}
-{% if matriz %}<a class="mudo voltar" href="{% url 'ui_matriz_detalhe' matriz.pk %}">‹ {{ matriz.nome }}</a>
-{% else %}<a class="mudo voltar" href="{% url 'ui_matriz' ano.ano %}">‹ Matrizes {{ ano.ano }}</a>{% endif %}
+{% if matriz %}<c-voltar href="{% url 'ui_matriz_detalhe' matriz.pk %}">{{ matriz.nome }}</c-voltar>
+{% else %}<c-voltar href="{% url 'ui_matriz' ano.ano %}">Matrizes {{ ano.ano }}</c-voltar>{% endif %}
 <c-card tag="div" class="matriz-cartao-form">
   {% include "ui/parciais/matriz_form.html" %}
 </c-card>
