@@ -21,6 +21,7 @@ from nucleo.planilha_variaveis import (
 )
 from nucleo.ui_bloqueio import e_htmx
 from nucleo.variaveis import VARIAVEIS
+from nucleo.widgets import classe_css
 
 # Colunas agrupadas como os fieldsets do form do projeto (ordem da 1ª aparição do grupo).
 _GRUPOS = list(dict.fromkeys(v.grupo for v in VARIAVEIS if not v.automatica))
@@ -42,7 +43,7 @@ def celulas(form):
         campo = form[v.nome]
         attrs = campo.field.widget.attrs
         attrs.pop("size", None)
-        attrs.update({"class": "input", "autocomplete": "off", "aria-label": f"{form.instance} {v.rotulo}"})
+        attrs.update({"class": classe_css(campo.field.widget), "autocomplete": "off", "aria-label": f"{form.instance} {v.rotulo}"})
         if campo.errors:
             attrs["aria-invalid"] = "true"
         saida.append({"campo": campo, "inicio": v.nome in INICIOS})

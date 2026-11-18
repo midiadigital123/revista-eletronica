@@ -27,6 +27,7 @@ from nucleo.paleta import PadraoImpactoForm, revistas_afetadas_padrao
 from nucleo.servicos.abrir_ano import VAZIO, AnoRecusado, abrir_ano
 from nucleo.servicos.impacto import avisar_perdidos
 from nucleo.ui_autosave import form_de_um_campo, proxima_ordem, responder_campo
+from nucleo.widgets import classe_css
 
 
 class AbrirAnoForm(forms.Form):  # cópia do form do admin: importá-lo daria import circular (admin → urls)
@@ -68,7 +69,7 @@ class _DoAno(forms.ModelForm):
             self.fields["codigo"].widget.attrs["title"] = "O código não muda depois de criado."
         for nome, campo in self.fields.items():
             onde = self.instance.codigo if self.instance.pk else "linha nova"
-            campo.widget.attrs.update({"class": "input", "aria-label": f"{campo.label} ({onde})"})
+            campo.widget.attrs.update({"class": classe_css(campo.widget), "aria-label": f"{campo.label} ({onde})"})
 
     codigo = forms.CharField(label="Código", max_length=20)  # TextField no modelo; o limite vem do CHECK
 
