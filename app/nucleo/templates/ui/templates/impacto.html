@@ -31,7 +31,7 @@ View: nucleo/urls/ui_templates.py (editar, POST). Ficha: docs/telas/fichas/templ
         <tr{% if r.impresso %} class="tpl-atencao"{% endif %}>
           <th scope="row">{{ r.revista.projeto }} <span class="mudo">{{ r.revista.componente.codigo }}</span></th>
           <td class="quebra">{% if r.copias %}{% for c in r.copias %}<code class="variavel">{{ c }}</code>{% if not forloop.last %} {% endif %}{% endfor %}{% else %}<span class="mudo">nenhuma</span>{% endif %}</td>
-          <td>{% if r.impresso %}<span class="badge badge-alerta">Já tem foto do impresso</span>{% else %}<span class="mudo">não</span>{% endif %}</td>
+          <td>{% if r.impresso %}<c-badge variante="alerta">Já tem foto do impresso</c-badge>{% else %}<span class="mudo">não</span>{% endif %}</td>
         </tr>
       {% endfor %}
       </tbody>

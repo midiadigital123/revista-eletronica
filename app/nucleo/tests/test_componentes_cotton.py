@@ -17,6 +17,7 @@ UI = Path(__file__).resolve().parent.parent / "templates" / "ui"
 MIGRADOS: dict[str, str] = {
     'class="pagina-cab': "<c-pagina-cab>",
     'class="campo': "<c-campo>",
+    'class="badge': "<c-badge>",
 }
 
 # (arquivo relativo a templates/ui, marcação crua) → motivo de ficar cru
@@ -24,6 +25,8 @@ EXCECOES: dict[tuple[str, str], str] = {
     ("_componentes/matriz_campo.html", 'class="campo'): "já é o campo dos forms do Django (16 usos); label com classe condicional",
     ("parciais/revista_secao.html", 'class="campo'): "atributos condicionais na caixa e inputs ocultos antes do label",
     ("parciais/templates_secao.html", 'class="campo'): "o label vive dentro da barra de ferramentas",
+    ("_componentes/selo_sobrescrita.html", 'class="badge'): "x-cloak condicional no span; já é o selo dos 3 usos",
+    ("parciais/matriz_tarefa.html", 'class="badge'): "o selo é um link (<a>) para baixar o arquivo",
     ("projeto/projeto.html", 'class="campo'): "a caixa do campo é o próprio <form> do autosave da matriz",
 }
 
@@ -79,6 +82,10 @@ class SaidaDosComponentes(SimpleTestCase):
             '<span class="badge badge-alerta" title="A &amp; B &lt;i&gt;">A &amp; B &lt;i&gt;</span>',
         )
         self.assertEqual(renderizar("<c-badge>3</c-badge>"), '<span class="badge">3</span>')
+        self.assertEqual(
+            renderizar('<c-badge variante="secundario" class="tpl-chip">x</c-badge>'),
+            '<span class="badge badge-secundario tpl-chip">x</span>',
+        )
 
     def test_botao(self):
         self.assertEqual(

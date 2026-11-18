@@ -3,7 +3,7 @@ campo editável. Contexto: s (id, rotulo, titulo, corpo, removivel, erros, erro_
 aparece; as outras ficam hidden no form).{% endcomment %}
 <section class="tpl-secao" id="secao-{{ s.id }}" data-secao="{{ s.id }}" aria-labelledby="rotulo-{{ s.id }}"{% if s.id != ativa %} hidden{% endif %}>
   <header class="tpl-secao-cab">
-    <span class="badge badge-secundario tpl-chip" id="rotulo-{{ s.id }}">{{ s.rotulo }}</span>
+    <c-badge variante="secundario" class="tpl-chip" id="rotulo-{{ s.id }}">{{ s.rotulo }}</c-badge>
     {% if pode_gravar and s.removivel %}<button class="btn btn-ghost btn-sm tpl-remover" type="button" data-acao="remover">Remover seção</button>{% endif %}
   </header>
   <input type="hidden" name="secao-{{ n }}-id" value="{{ s.id }}" data-campo="id">

@@ -28,7 +28,7 @@ trocar template/arquivo troca este #situacao. Pendência é tarefa, não erro: �
   </ol>
 
   {% if validacao.desatualizadas %}
-  <p class="revista-desatualizadas"><span class="badge badge-alerta">Aviso</span> Seções desatualizadas: {{ validacao.desatualizadas|join:", " }}. Não impede o “Validado”.</p>
+  <p class="revista-desatualizadas"><c-badge variante="alerta">Aviso</c-badge> Seções desatualizadas: {{ validacao.desatualizadas|join:", " }}. Não impede o “Validado”.</p>
   {% endif %}
 
   {% if validacao.pode and not validacao.validada %}

@@ -18,7 +18,7 @@
     <thead><tr><th scope="col">Revista</th><th scope="col">Validado</th></tr></thead>
     <tbody>
     {% for revista, validada in revistas %}
-      <tr><th scope="row">{{ revista }}</th><td>{% if validada %}<span class="badge badge-erro">Perde o “Validado”</span>{% else %}<span class="mudo">—</span>{% endif %}</td></tr>
+      <tr><th scope="row">{{ revista }}</th><td>{% if validada %}<c-badge variante="erro">Perde o “Validado”</c-badge>{% else %}<span class="mudo">—</span>{% endif %}</td></tr>
     {% endfor %}
     </tbody>
   </table>

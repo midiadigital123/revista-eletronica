@@ -24,11 +24,11 @@ pode_gravar, componente. rf.tem_copias = o fascículo tem texto próprio (trocar
           {% for f, rf in l.fasciculos %}
           <td data-atual="{{ f }}" data-valor="{{ rf.template_id|default:'' }}"{% if rf.tem_copias %} data-copias{% endif %}>
             {% if rf.template %}{{ rf.template.nome }}{% else %}<span class="mudo">sem template</span>{% endif %}
-            {% if rf.tem_copias %}<span class="badge badge-contorno" title="O projeto editou o texto deste fascículo: o lote não troca o template dele. Troque pela revista.">texto próprio</span>{% endif %}
+            {% if rf.tem_copias %}<c-badge variante="contorno" title="O projeto editou o texto deste fascículo: o lote não troca o template dele. Troque pela revista.">texto próprio</c-badge>{% endif %}
             <span class="lote-novo" data-novo hidden></span>
           </td>
           {% endfor %}
-          <td>{% if l.editando %}<span class="badge badge-alerta" title="O projeto está aberto; o lote não grava nele.">Em edição por {{ l.editando }}: será pulado</span>{% endif %}</td>
+          <td>{% if l.editando %}<c-badge variante="alerta" title="O projeto está aberto; o lote não grava nele.">Em edição por {{ l.editando }}: será pulado</c-badge>{% endif %}</td>
         </tr>
       {% endfor %}
       </tbody>

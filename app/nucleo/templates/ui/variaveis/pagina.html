@@ -47,7 +47,7 @@
         <tbody>
         {% for v, usos in legenda %}
           <tr>
-            <td><span class="variavel">{% templatetag openvariable %}{{ v.nome }}{% templatetag closevariable %}</span>{% if v.automatica %} <span class="badge badge-secundario">do cadastro</span>{% endif %}</td>
+            <td><span class="variavel">{% templatetag openvariable %}{{ v.nome }}{% templatetag closevariable %}</span>{% if v.automatica %} <c-badge variante="secundario">do cadastro</c-badge>{% endif %}</td>
             <td class="quebra">{{ v.descricao }}</td>
             <td class="quebra">{{ usos|join:", "|default:"—" }}</td>
           </tr>

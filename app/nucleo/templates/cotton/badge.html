@@ -1,4 +1,5 @@
 {% comment %}
 Badge (contagem ou rótulo curto). `variante`: secundario, contorno, alerta, erro; sem variante, a cheia.
+`class` acrescenta classes da tela. Os outros atributos vão para o span.
   <c-badge variante="alerta">sem matriz</c-badge>
-{% endcomment %}<c-vars variante="" /><span class="badge{% if variante %} badge-{{ variante }}{% endif %}"{% if attrs.attrs_dict %} {{ attrs }}{% endif %}>{{ slot }}</span>
+{% endcomment %}<c-vars variante="" class="" /><span class="badge{% if variante %} badge-{{ variante }}{% endif %}{% if class %} {{ class }}{% endif %}"{% if attrs.attrs_dict %} {{ attrs }}{% endif %}>{{ slot }}</span>

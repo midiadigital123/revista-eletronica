@@ -18,7 +18,7 @@ quando o seletor sai do grupo atual (`option[selected]`, CSS em telas/usuarios.c
     <tbody>
     {% for linha in linhas %}{% with u=linha.u %}
       <tr{% if not u.is_active %} class="usuarios-inativo"{% endif %}>
-        <th scope="row">{{ u.username }}{% if u == request.user %} <span class="badge badge-contorno">você</span>{% endif %}</th>
+        <th scope="row">{{ u.username }}{% if u == request.user %} <c-badge variante="contorno">você</c-badge>{% endif %}</th>
         <td>{{ u.get_full_name|default:"—" }}</td>
         <td>
           {% if linha.mudar_grupo %}
@@ -32,7 +32,7 @@ quando o seletor sai do grupo atual (`option[selected]`, CSS em telas/usuarios.c
           </form>
           {% else %}{{ linha.grupos|default:"Sem grupo" }}{% endif %}
         </td>
-        <td>{% if u.is_active %}<span class="badge badge-secundario">Ativo</span>{% else %}<span class="badge badge-alerta">Desativado</span>{% endif %}</td>
+        <td>{% if u.is_active %}<c-badge variante="secundario">Ativo</c-badge>{% else %}<c-badge variante="alerta">Desativado</c-badge>{% endif %}</td>
         <td>{% if u.last_login %}{{ u.last_login|date:"d/m/Y H:i" }}{% else %}<span class="mudo">Nunca entrou</span>{% endif %}</td>
         <td class="usuarios-acoes">
           {% if linha.editar or linha.mudar_ativo %}

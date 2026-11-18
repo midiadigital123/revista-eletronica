@@ -18,7 +18,7 @@ alvo do HTMX.
     <div><dt>Parceiro</dt><dd>{{ revista.projeto.parceiro_ano.parceiro.nome }}</dd></div>
     <div><dt>Ano</dt><dd>{{ revista.ano.ano }}</dd></div>
   </dl>
-  {% if arquivada or pode_nome %}<p class="mudo">{% if arquivada %}<span class="badge badge-secundario">Arquivada</span>{% endif %}{% if arquivada and pode_nome %} · {% endif %}{% if pode_nome %}<a class="link" href="{% url 'ui_projeto' revista.projeto_id %}#nome">Editar o nome do projeto</a>{% endif %}</p>{% endif %}
+  {% if arquivada or pode_nome %}<p class="mudo">{% if arquivada %}<c-badge variante="secundario">Arquivada</c-badge>{% endif %}{% if arquivada and pode_nome %} · {% endif %}{% if pode_nome %}<a class="link" href="{% url 'ui_projeto' revista.projeto_id %}#nome">Editar o nome do projeto</a>{% endif %}</p>{% endif %}
   <c-slot name="acoes">
     {% if request.pode_gravar %}{% include "ui/_componentes/status_salvo.html" %}{% endif %}
     <a class="btn btn-ghost" href="{% url 'preview' revista.pk %}" target="_blank" rel="noopener" title="Abre mesmo com pendências; o que falta aparece marcado.">

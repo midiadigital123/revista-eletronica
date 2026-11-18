@@ -34,12 +34,12 @@
   <h3 id="fasc-{{ fasciculo }}" class="impresso-fasc-titulo">{{ fasciculo }}</h3>
   {% for grupo, itens in grupos.items %}
   <div class="card impresso-grupo" id="grupo-{{ fasciculo }}-{{ grupo|slugify }}">
-    {% with i=itens.0 %}<h4>{{ i.rotulo_grupo }}{% if i.rotulo == i.rotulo_grupo %} {% if i.antes is None %}<span class="badge badge-contorno">novo</span>{% elif i.depois is None %}<span class="badge badge-erro">removido</span>{% else %}<span class="badge badge-secundario">alterado</span>{% endif %}{% endif %}</h4>{% endwith %}
+    {% with i=itens.0 %}<h4>{{ i.rotulo_grupo }}{% if i.rotulo == i.rotulo_grupo %} {% if i.antes is None %}<c-badge variante="contorno">novo</c-badge>{% elif i.depois is None %}<c-badge variante="erro">removido</c-badge>{% else %}<c-badge variante="secundario">alterado</c-badge>{% endif %}{% endif %}</h4>{% endwith %}
     {% for i in itens %}
     <div class="impresso-item">
       {% if i.rotulo != i.rotulo_grupo %}<div class="impresso-item-cab">
         <h5>{{ i.rotulo }}</h5>
-        {% if i.antes is None %}<span class="badge badge-contorno">novo</span>{% elif i.depois is None %}<span class="badge badge-erro">removido</span>{% else %}<span class="badge badge-secundario">alterado</span>{% endif %}
+        {% if i.antes is None %}<c-badge variante="contorno">novo</c-badge>{% elif i.depois is None %}<c-badge variante="erro">removido</c-badge>{% else %}<c-badge variante="secundario">alterado</c-badge>{% endif %}
       </div>{% endif %}
       {% if i.blocos %}{% include "ui/_componentes/impresso_diff.html" with blocos=i.blocos %}
       {% elif i.depois is None %}<div class="diff-palavras"><p class="diff-mudou"><del>{{ i.antes }}</del></p></div>{% endif %}
