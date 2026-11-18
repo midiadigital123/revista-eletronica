@@ -58,8 +58,8 @@ action = a ação recusada (o Confirmar do modal reenvia o form sem botão).
           </th>
           <td>{% if s.arquivada %}<span class="tag tag-apagada">Arquivada</span>{% else %}<span class="tag {{ s.situacao_tag }}">{{ s.situacao }}</span>{% endif %}</td>
           <td class="pj-acoes">
-            <a class="btn-icone" href="{% url 'preview' s.revista.pk %}" target="_blank" rel="noopener" aria-label="Abrir preview de {{ s.revista }} (nova aba)" data-dica="Abrir preview"><c-icone nome="abrir-fora" /></a>
-            <a class="btn-icone" href="{% url 'ui_revista_zip' ano.ano s.revista.pk %}?voltar=lista" aria-label="Baixar zip de {{ s.revista }}" data-dica="Baixar zip"><c-icone nome="baixar" /></a>
+            <c-botao-icone icone="abrir-fora" href="{% url 'preview' s.revista.pk %}" target="_blank" rel="noopener" rotulo="Abrir preview de {{ s.revista }} (nova aba)" dica="Abrir preview" />
+            <c-botao-icone icone="baixar" href="{% url 'ui_revista_zip' ano.ano s.revista.pk %}?voltar=lista" rotulo="Baixar zip de {{ s.revista }}" dica="Baixar zip" />
           </td>
         </tr>
 {% endwith %}        {% endfor %}

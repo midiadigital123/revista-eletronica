@@ -17,7 +17,7 @@
     <tbody>
     {% for a in anos %}
       <tr><th scope="row">{{ a.ano }}</th><td><a class="link" href="{% url 'painel' a.ano %}">Painel de {{ a.ano }}</a></td><td><a class="link" href="{% url 'ui_ano' a.ano %}">Etapas e componentes de {{ a.ano }}</a></td>{% if perms.nucleo.delete_ano %}
-        <td class="linha-nova-acoes"><a class="btn-icone" href="{% url 'ui_excluir' 'ano' a.ano %}?voltar={{ request.path|urlencode }}" aria-label="Excluir ano {{ a.ano }}" data-dica="Excluir ano"><c-icone nome="lixeira" /></a></td>{% endif %}</tr>
+        <td class="linha-nova-acoes"><c-botao-icone icone="lixeira" href="{% url 'ui_excluir' 'ano' a.ano %}?voltar={{ request.path|urlencode }}" rotulo="Excluir ano {{ a.ano }}" dica="Excluir ano" /></td>{% endif %}</tr>
     {% endfor %}
     </tbody>
   </table>

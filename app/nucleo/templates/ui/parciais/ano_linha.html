@@ -9,8 +9,8 @@ leva ao `ui_excluir` (D-205). É link, não form: a linha já está dentro do fo
   <td>{{ f.id }}{{ f.codigo }}</td>
   <td>{% if tabela == "etapas" %}{{ f.escala_max }}{% else %}{{ f.nome }}{% endif %}</td>
   <td class="linha-nova-acoes">{% if f.instance.pk %}{% if tabela == "etapas" and perms.nucleo.delete_etapa %}
-    <a class="btn-icone" href="{% url 'ui_excluir' 'etapa' f.instance.pk %}?voltar={{ request.path|urlencode }}" aria-label="Excluir etapa {{ f.instance.codigo }}" data-dica="Excluir"><c-icone nome="lixeira" /></a>{% elif tabela == "componentes" and perms.nucleo.delete_componente %}
-    <a class="btn-icone" href="{% url 'ui_excluir' 'componente' f.instance.pk %}?voltar={{ request.path|urlencode }}" aria-label="Excluir componente {{ f.instance.codigo }}" data-dica="Excluir"><c-icone nome="lixeira" /></a>{% endif %}{% else %}
+    <c-botao-icone icone="lixeira" href="{% url 'ui_excluir' 'etapa' f.instance.pk %}?voltar={{ request.path|urlencode }}" rotulo="Excluir etapa {{ f.instance.codigo }}" dica="Excluir" />{% elif tabela == "componentes" and perms.nucleo.delete_componente %}
+    <c-botao-icone icone="lixeira" href="{% url 'ui_excluir' 'componente' f.instance.pk %}?voltar={{ request.path|urlencode }}" rotulo="Excluir componente {{ f.instance.codigo }}" dica="Excluir" />{% endif %}{% else %}
     <c-botao tamanho="sm" type="submit">Incluir {% if tabela == "etapas" %}etapa{% else %}componente{% endif %}</c-botao>
     <c-botao variante="ghost" tamanho="sm" @click="descartar">Descartar</c-botao>{% endif %}</td>
 </tr>

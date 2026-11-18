@@ -39,16 +39,16 @@ quando o seletor sai do grupo atual (`option[selected]`, CSS em telas/usuarios.c
           <div class="acoes">
             {% if linha.editar and u.is_active %}
             <form method="post" action="{% url 'ui_usuarios_link' u.pk %}">{% csrf_token %}
-              <button class="btn-icone" type="submit" aria-label="Link de acesso de {{ u.username }}" data-dica="Link de acesso"><c-icone nome="link" /></button>
+              <c-botao-icone icone="link" type="submit" rotulo="Link de acesso de {{ u.username }}" dica="Link de acesso" />
             </form>
             {% endif %}
-            {% if linha.editar %}<a class="btn-icone" href="{% url 'ui_usuarios_senha' u.pk %}" aria-label="Redefinir senha de {{ u.username }}" data-dica="Redefinir senha"><c-icone nome="chave" /></a>{% endif %}
+            {% if linha.editar %}<c-botao-icone icone="chave" href="{% url 'ui_usuarios_senha' u.pk %}" rotulo="Redefinir senha de {{ u.username }}" dica="Redefinir senha" />{% endif %}
             {% if linha.mudar_ativo %}
             <form method="post" action="{% url 'ui_usuarios_ativo' u.pk %}">{% csrf_token %}
-              {% if u.is_active %}<button class="btn-icone" type="submit" name="acao" value="desativar" aria-label="Desativar {{ u.username }}" data-dica="Desativar"><c-icone nome="usuario-x" /></button>
-              {% else %}<button class="btn-icone" type="submit" name="acao" value="ativar" aria-label="Ativar {{ u.username }}" data-dica="Ativar"><c-icone nome="usuario-ok" /></button>{% endif %}
+              {% if u.is_active %}<c-botao-icone icone="usuario-x" type="submit" name="acao" value="desativar" rotulo="Desativar {{ u.username }}" dica="Desativar" />
+              {% else %}<c-botao-icone icone="usuario-ok" type="submit" name="acao" value="ativar" rotulo="Ativar {{ u.username }}" dica="Ativar" />{% endif %}
             </form>
-            <a class="btn-icone" href="{% url 'ui_usuarios_excluir' u.pk %}" aria-label="Excluir {{ u.username }}" data-dica="Excluir"><c-icone nome="lixeira" /></a>
+            <c-botao-icone icone="lixeira" href="{% url 'ui_usuarios_excluir' u.pk %}" rotulo="Excluir {{ u.username }}" dica="Excluir" />
             {% endif %}
           </div>
           {% else %}<span class="mudo">Só o superusuário altera</span>{% endif %}

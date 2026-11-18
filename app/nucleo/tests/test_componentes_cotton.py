@@ -24,6 +24,7 @@ MIGRADOS: dict[str, str] = {
     'class="btn': "<c-botao>",
     "<svg": "<c-icone>",
     '<dialog class="dialogo': "<c-modal>",
+    'class="btn-icone': "<c-botao-icone>",
 }
 
 # (arquivo relativo a templates/ui, marcação crua) → motivo de ficar cru
@@ -55,6 +56,7 @@ EXCECOES: dict[tuple[str, str], str] = {
     ("_componentes/girando.html", "<svg"): "o spinner tem classe e id condicional; já é um include",
     ("_componentes/ordem.html", "<svg"): "a alça de arrastar é preenchida (fill), não de traço",
     ("parciais/matriz_painel.html", '<dialog class="dialogo'): "atributos condicionais na tag (impacto do item da tarefa)",
+    ("parciais/matriz_tarefa.html", 'class="btn-icone'): "é o <c-botao variante=ghost> quadrado da tarefa, com a classe só para o tamanho",
     ("projeto/projeto.html", 'class="campo'): "a caixa do campo é o próprio <form> do autosave da matriz",
 }
 
@@ -97,10 +99,21 @@ class NomesDosIcones(SimpleTestCase):
         usados = {
             (arquivo.relative_to(modelos).as_posix(), nome)
             for arquivo in modelos.rglob("*.html")
-            for nome in re.findall(r'<c-icone[^>]*\bnome="([^"]*)"', arquivo.read_text(encoding="utf-8"))
+            for nome in re.findall(r'<c-(?:icone[^>]*[^:]\bnome|botao-icone[^>]*\bicone)="([^"]*)"', arquivo.read_text(encoding="utf-8"))
         }
         self.assertTrue(usados)
         self.assertEqual(sorted(u for u in usados if u[1] not in existentes), [])
+
+
+    def test_todo_botao_de_icone_tem_rotulo(self):
+        """Botão sem texto e sem aria-label não existe para leitor de tela."""
+        sem = [
+            f"{arquivo.relative_to(UI).as_posix()}: {tag[:80]}"
+            for arquivo in UI.rglob("*.html")
+            for tag in re.findall(r"<c-botao-icone\b[^>]*>", arquivo.read_text(encoding="utf-8"))
+            if not re.search(r'\brotulo="[^"]+"', tag)
+        ]
+        self.assertEqual(sem, [])
 
 
 class SaidaDosComponentes(SimpleTestCase):
@@ -140,6 +153,19 @@ class SaidaDosComponentes(SimpleTestCase):
             '<p class="aviso aviso-erro" role="alert">A &amp; B &lt;i&gt;</p>',
         )
         self.assertEqual(renderizar('<c-aviso role="status"><p>x</p></c-aviso>'), '<div class="aviso" role="status"><p>x</p></div>')
+
+    def test_botao_icone(self):
+        svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+        self.assertEqual(
+            renderizar('<c-botao-icone icone="fechar" href="/x" target="_blank" rotulo="Excluir {{ n }}" dica="Excluir" />', n="A & B"),
+            '<a class="btn-icone" href="/x" target="_blank" aria-label="Excluir A &amp; B" data-dica="Excluir">'
+            + svg + '<path d="M18 6 6 18M6 6l12 12"/></svg></a>',
+        )
+        self.assertEqual(
+            renderizar('<c-botao-icone icone="fechar" type="submit" class="tpl-excluir" name="acao" value="ativar" rotulo="Ativar" />'),
+            '<button class="btn-icone tpl-excluir" type="submit" name="acao" value="ativar" aria-label="Ativar">'
+            + svg + '<path d="M18 6 6 18M6 6l12 12"/></svg></button>',
+        )
 
     def test_modal(self):
         html = renderizar(
