@@ -1,0 +1,12 @@
+{% comment %}
+Cabeçalho de página (design-system.md §2). O slot padrão vai abaixo do h1 (subtítulo, metadados);
+o slot `acoes` vira a coluna de ações e some quando vem vazio.
+  <c-pagina-cab titulo="Usuários"><p class="mudo">…</p><c-slot name="acoes">…</c-slot></c-pagina-cab>
+{% endcomment %}<c-vars titulo="" acoes="" />
+<header class="pagina-cab">
+  <div>
+    <h1>{{ titulo }}</h1>
+    {{ slot }}
+  </div>
+  {% if acoes.strip %}<div class="acoes">{{ acoes }}</div>{% endif %}
+</header>

@@ -1,0 +1,4 @@
+{% comment %}
+Badge (contagem ou rótulo curto). `variante`: secundario, contorno, alerta, erro; sem variante, a cheia.
+  <c-badge variante="alerta">sem matriz</c-badge>
+{% endcomment %}<c-vars variante="" /><span class="badge{% if variante %} badge-{{ variante }}{% endif %}"{% if attrs.attrs_dict %} {{ attrs }}{% endif %}>{{ slot }}</span>

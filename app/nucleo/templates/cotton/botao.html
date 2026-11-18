@@ -1,0 +1,35 @@
+{% comment %} Botão. `variante`: outline, ghost, destrutivo (sem variante = a
+ação principal); `tamanho`: sm, lg. Com `href` vira link; sem,
+<button>
+  (type="button" se nada for dito). Os outros atributos são repassados.
+  <c-botao variante="outline" tamanho="sm" href="{% url 'x' %}">Abrir</c-botao>
+  {% endcomment %}<c-vars variante="" tamanho="" href="" type="button" />{% if
+  href %}<a
+    class="btn{% if variante %} btn-{{ variante }}{% endif %}{% if tamanho %} btn-{{ tamanho }}{% endif %}"
+    href="{{ href }}"
+    {%
+    if
+    attrs.attrs_dict
+    %}
+    {{
+    attrs
+    }}{%
+    endif
+    %}
+    >{{ slot }}</a
+  >{% else %}<button
+    type="{{ type }}"
+    class="btn{% if variante %} btn-{{ variante }}{% endif %}{% if tamanho %} btn-{{ tamanho }}{% endif %}"
+    {%
+    if
+    attrs.attrs_dict
+    %}
+    {{
+    attrs
+    }}{%
+    endif
+    %}
+  >
+    {{ slot }}</button
+  >{% endif %}
+</button>
