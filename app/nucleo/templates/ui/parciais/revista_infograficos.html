@@ -13,7 +13,7 @@ Sem permissão ou revista arquivada: os mesmos campos, `disabled`.
     </div>
   </header>
   {% for inf in infograficos %}{% with p=inf.pk|stringformat:"s" %}{% with n="inf-"|add:p %}
-  <article class="card inf-card" aria-labelledby="{{ n }}-titulo">
+  <c-card tag="article" class="inf-card" aria-labelledby="{{ n }}-titulo">
     <header class="inf-cab">
       <h3 id="{{ n }}-titulo">{{ inf.get_tipo_display }}</h3>
       <a class="btn btn-ghost btn-sm" href="{% url 'preview_f2' revista.pk inf.tipo %}" target="_blank" rel="noopener">
@@ -114,7 +114,7 @@ Sem permissão ou revista arquivada: os mesmos campos, `disabled`.
       </fieldset>
       {% endwith %}{% endwith %}{% endfor %}
     </div>
-  </article>
+  </c-card>
   {% endwith %}{% endwith %}
   {% empty %}
   {% include "ui/_componentes/vazio.html" with titulo="Sem infográfico" texto="Esta revista não tem infográfico: faltam cortes." only %}

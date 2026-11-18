@@ -53,7 +53,7 @@ alvo do HTMX.
     <div class="revista-passos">
     {% endif %}
       {% url 'ui_revista_editar' revista.ano.ano revista.pk as url %}
-      <section class="card revista-passo" id="templates" aria-labelledby="templates-titulo">
+      <c-card class="revista-passo" id="templates" aria-labelledby="templates-titulo">
         <header class="revista-passo-cab">
           <span class="revista-passo-num" aria-hidden="true">1</span>
           <div>
@@ -74,7 +74,7 @@ alvo do HTMX.
           {% for f in fasciculos %}<div><dt>{{ f.prefix }}</dt><dd>{{ f.instance.template.nome|default:"Sem template" }}</dd></div>{% endfor %}
         </dl>
         {% endif %}
-      </section>
+      </c-card>
 
       {% include "ui/parciais/revista_infograficos.html" %}
       {% include "ui/parciais/revista_arquivos.html" %}

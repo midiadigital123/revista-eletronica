@@ -5,6 +5,7 @@ A cada leva da migração, a marcação crua do componente entra em MIGRADOS; o 
 EXCECOES, com o motivo.
 """
 
+import re
 from pathlib import Path
 
 from django.template import Context, Template
@@ -19,6 +20,7 @@ MIGRADOS: dict[str, str] = {
     'class="campo': "<c-campo>",
     'class="badge': "<c-badge>",
     'class="aviso': "<c-aviso>",
+    'class="card': "<c-card>",
 }
 
 # (arquivo relativo a templates/ui, marcação crua) → motivo de ficar cru
@@ -29,8 +31,19 @@ EXCECOES: dict[tuple[str, str], str] = {
     ("_componentes/mensagens.html", 'class="aviso'): "o aviso é o <li> da lista de mensagens do Django",
     ("_componentes/selo_sobrescrita.html", 'class="badge'): "x-cloak condicional no span; já é o selo dos 3 usos",
     ("parciais/matriz_tarefa.html", 'class="badge'): "o selo é um link (<a>) para baixar o arquivo",
+    ("anos/anos.html", 'class="card'): "a caixa do card é o próprio <form>",
+    ("excluir.html", 'class="card'): "a caixa do card é o próprio <form>",
+    ("matriz/reimportar.html", 'class="card'): "a caixa do card é o próprio <form>",
+    ("parciais/revista_secao.html", 'class="card'): "a caixa do card é o próprio <form>",
+    ("templates/novo.html", 'class="card'): "a caixa do card é o próprio <form>",
+    ("usuarios/form.html", 'class="card'): "a caixa do card é o próprio <form>",
     ("projeto/projeto.html", 'class="campo'): "a caixa do campo é o próprio <form> do autosave da matriz",
 }
+
+
+def tem_cru(cru, texto):
+    """A classe do componente como palavra inteira: `class="card` não casa com `class="card-estreito`."""
+    return re.search(re.escape(cru) + r'(?=[ "{])', texto) is not None
 
 
 class CatracaDosComponentes(SimpleTestCase):
@@ -40,7 +53,7 @@ class CatracaDosComponentes(SimpleTestCase):
             relativo = arquivo.relative_to(UI).as_posix()
             for n, linha in enumerate(arquivo.read_text(encoding="utf-8").splitlines(), 1):
                 for cru, componente in MIGRADOS.items():
-                    if cru in linha and (relativo, cru) not in EXCECOES:
+                    if tem_cru(cru, linha) and (relativo, cru) not in EXCECOES:
                         achados.append(f"{relativo}:{n}: {cru!r} escrito à mão; use {componente}")
         self.assertEqual(achados, [], "\n" + "\n".join(achados))
 
@@ -49,7 +62,7 @@ class CatracaDosComponentes(SimpleTestCase):
         sobrando = [
             f"{relativo}: {cru!r}"
             for relativo, cru in EXCECOES
-            if cru not in (UI / relativo).read_text(encoding="utf-8")
+            if not tem_cru(cru, (UI / relativo).read_text(encoding="utf-8"))
         ]
         self.assertEqual(sobrando, [])
 
@@ -140,3 +153,7 @@ class SaidaDosComponentes(SimpleTestCase):
             '<c-card titulo="Cores" titulo_id="t"><c-slot name="lateral"><a class="link" href="/x">Editar</a></c-slot></c-card>'
         )
         self.assertIn('<div class="card-cab">', com_lateral)
+        self.assertEqual(
+            renderizar('<c-card tag="main" class="entrar-card"><p>x</p></c-card>').replace("\n", "").replace("  ", ""),
+            '<main class="card entrar-card"><p>x</p></main>',
+        )

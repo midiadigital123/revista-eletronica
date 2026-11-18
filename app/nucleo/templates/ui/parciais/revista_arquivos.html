@@ -2,7 +2,7 @@
 Passo 3 da revista (U8b): a capa (o SVG do F2 saiu da tela na fase 3; o F2 vem dos infográficos).
 Dentro do form campoAuto da página: a área de soltar (componente `arquivoSoltar`) envia ao escolher,
 pela `?acao=arquivos`; a resposta troca este #arquivos e a #situacao. Contexto: urls/ui_revista._contexto. Só o que falta vai para a Situação; aqui, o estado.
-{% endcomment %}{% url 'ui_revista_editar' revista.ano.ano revista.pk as url %}<section class="card revista-passo" id="arquivos" aria-labelledby="arquivos-titulo" data-url="{{ url }}?acao=arquivos">
+{% endcomment %}{% url 'ui_revista_editar' revista.ano.ano revista.pk as url %}<c-card class="revista-passo" id="arquivos" aria-labelledby="arquivos-titulo" data-url="{{ url }}?acao=arquivos">
   <header class="revista-passo-cab">
     <span class="revista-passo-num" aria-hidden="true">3</span>
     <div>
@@ -28,4 +28,4 @@ pela `?acao=arquivos`; a resposta troca este #arquivos e a #situacao. Contexto: 
       {% elif not revista.capa %}<p class="mudo">Sem capa.</p>{% endif %}
     </div>
   </div>
-</section>
+</c-card>

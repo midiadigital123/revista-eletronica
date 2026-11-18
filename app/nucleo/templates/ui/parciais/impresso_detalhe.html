@@ -33,7 +33,7 @@
 <section class="impresso-fasciculo" aria-labelledby="fasc-{{ fasciculo }}">
   <h3 id="fasc-{{ fasciculo }}" class="impresso-fasc-titulo">{{ fasciculo }}</h3>
   {% for grupo, itens in grupos.items %}
-  <div class="card impresso-grupo" id="grupo-{{ fasciculo }}-{{ grupo|slugify }}">
+  <c-card tag="div" class="impresso-grupo" id="grupo-{{ fasciculo }}-{{ grupo|slugify }}">
     {% with i=itens.0 %}<h4>{{ i.rotulo_grupo }}{% if i.rotulo == i.rotulo_grupo %} {% if i.antes is None %}<c-badge variante="contorno">novo</c-badge>{% elif i.depois is None %}<c-badge variante="erro">removido</c-badge>{% else %}<c-badge variante="secundario">alterado</c-badge>{% endif %}{% endif %}</h4>{% endwith %}
     {% for i in itens %}
     <div class="impresso-item">
@@ -61,7 +61,7 @@
       {% endif %}
     </div>
     {% endfor %}
-  </div>
+  </c-card>
   {% endfor %}
 </section>
 {% empty %}

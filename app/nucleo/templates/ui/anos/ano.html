@@ -12,8 +12,7 @@ A ordem das etapas é a escolar (`ordem_escolar`). Sem `pode.<tabela>`, só text
   <c-slot name="acoes">{% if pode.etapas or pode.componentes %}{% include "ui/_componentes/status_salvo.html" with ocioso="Etapas e componentes salvam sozinhos; cada padrão, pelo Salvar dele." %}{% endif %}</c-slot>
 </c-pagina-cab>
 
-<section class="card" aria-labelledby="etapas-titulo">
-  <h2 class="secao-titulo" id="etapas-titulo">Etapas</h2>
+<c-card titulo="Etapas" titulo_id="etapas-titulo">
   <p class="mudo">O código não muda depois de criado. A escala máxima fica travada quando a etapa já tem corte ou matriz. A ordem é a escolar: o fundamental (EF) antes do médio (EM) e, em cada um, pela série.</p>
   {% if pode.etapas %}<form method="post" id="etapas-form" novalidate x-data="campoAuto">{% csrf_token %}<input type="hidden" name="tabela" value="etapas">{{ etapas.management_form }}
   <div x-data="linhaNova" data-total="id_etapas-TOTAL_FORMS">{% endif %}
@@ -33,10 +32,9 @@ A ordem das etapas é a escolar (`ordem_escolar`). Sem `pode.<tabela>`, só text
   <template data-molde>{% include "ui/parciais/ano_linha.html" with f=etapas.empty_form tabela="etapas" %}</template>
   <button class="btn btn-outline btn-sm adicionar-linha" type="button" data-abrir-linha @click="abrir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Adicionar etapa</button>
   </div></form>{% endif %}
-</section>
+</c-card>
 
-<section class="card" aria-labelledby="componentes-titulo">
-  <h2 class="secao-titulo" id="componentes-titulo">Componentes</h2>
+<c-card titulo="Componentes" titulo_id="componentes-titulo">
   <p class="mudo">O código não muda depois de criado; o nome pode ser corrigido. A lista segue o código.</p>
   {% if pode.componentes %}<form method="post" id="componentes-form" novalidate x-data="campoAuto">{% csrf_token %}<input type="hidden" name="tabela" value="componentes">{{ componentes.management_form }}
   <div x-data="linhaNova" data-total="id_componentes-TOTAL_FORMS">{% endif %}
@@ -56,10 +54,9 @@ A ordem das etapas é a escolar (`ordem_escolar`). Sem `pode.<tabela>`, só text
   <template data-molde>{% include "ui/parciais/ano_linha.html" with f=componentes.empty_form tabela="componentes" %}</template>
   <button class="btn btn-outline btn-sm adicionar-linha" type="button" data-abrir-linha @click="abrir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Adicionar componente</button>
   </div></form>{% endif %}
-</section>
+</c-card>
 
-<section class="card" id="padroes" aria-labelledby="padroes-titulo">
-  <h2 class="secao-titulo" id="padroes-titulo">Padrões</h2>
+<c-card titulo="Padrões" titulo_id="padroes-titulo" id="padroes">
   <p class="mudo">Nome e cor de cada padrão valem para todos os projetos do ano, menos os que sobrescrevem no projeto.{% if pode.padroes %} Aqui cada linha grava pelo seu botão Salvar (não salva sozinha): mudar pode tirar o “Validado” de revistas, e a lista aparece antes de gravar.{% endif %}</p>
   <div class="tabela-rolavel tabela-padroes" x-data="tabelaRolavel">
     <table class="tabela">
@@ -100,5 +97,5 @@ A ordem das etapas é a escolar (`ordem_escolar`). Sem `pode.<tabela>`, só text
     {% for e in novo.non_field_errors %}<p class="erro">{{ e }}</p>{% endfor %}
   </details>
   {% endif %}
-</section>
+</c-card>
 {% endblock %}

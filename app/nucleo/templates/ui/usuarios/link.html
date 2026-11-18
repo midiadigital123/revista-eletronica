@@ -10,7 +10,7 @@ definir a própria senha, para enviar sem mandar senha. Só aparece na resposta 
   <p class="mudo">Envie só para {{ alvo.get_full_name|default:alvo.username }}, por e-mail ou mensagem direta. Quem abrir o link primeiro define a senha.</p>
 </c-pagina-cab>
 
-<div class="card card-estreito usuarios-link">
+<c-card tag="div" class="card-estreito usuarios-link">
   <c-aviso tag="p">O link vale {{ dias }} dia{{ dias|pluralize }} e funciona uma vez.{% if alvo.has_usable_password %} A senha atual de {{ alvo.username }} continua valendo até a nova ser definida.{% endif %} Venceu? Gere outro aqui.</c-aviso>
 
   <div class="usuarios-copiar">
@@ -32,5 +32,5 @@ Crie sua senha neste link (vale por {{ dias }} dia{{ dias|pluralize }} e só fun
 Depois, entre por {{ entrar }}</textarea>
     <div class="acoes"><button type="button" class="btn btn-outline btn-sm" data-copiar="#mensagem-acesso"><span aria-live="polite">Copiar mensagem</span></button></div>
   </div>
-</div>
+</c-card>
 {% endblock %}

@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="{% static 'ui/ui.css' %}">
 </head>
 <body class="entrar">
-  <main class="card entrar-card">
+  <c-card tag="main" class="entrar-card">
     <header class="entrar-cab">
       <p class="marca">Revista Eletrônica</p>
       <h1 class="secao-titulo">Criar senha</h1>
@@ -34,6 +34,6 @@
     <c-aviso tag="p" variante="erro" role="alert">Este link venceu ou já foi usado. Peça um novo a quem gerencia os usuários.</c-aviso>
     <a class="btn btn-outline" href="{% url 'entrar' %}">Ir para o login</a>
     {% endif %}
-  </main>
+  </c-card>
 </body>
 </html>

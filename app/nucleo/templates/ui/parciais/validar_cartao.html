@@ -3,7 +3,7 @@ Cartão de uma revista na tela Validar (urls/ui_validar.py). Contexto: `i` (item
 `pode_validar`; `oob` quando vem do "Validar esta" pelo HTMX (troca também as mensagens).
 Estado na borda esquerda: pronta (neutra), validada (verde), pendente (vermelha).
 {% endcomment %}{% with r=i.revista par=i.revista.pk|stringformat:"d"|add:":"|add:i.hash %}
-<article class="card validar-cartao {% if i.pendencias %}validar-pendente{% elif i.validada %}validar-validada{% endif %}" id="validar-{{ r.pk }}" aria-labelledby="validar-{{ r.pk }}-nome">
+<c-card tag="article" class="validar-cartao {% if i.pendencias %}validar-pendente{% elif i.validada %}validar-validada{% endif %}" id="validar-{{ r.pk }}" aria-labelledby="validar-{{ r.pk }}-nome">
   <header class="validar-cab">
     {% if pode_validar %}<input type="hidden" name="revista" value="{{ r.pk }}">{% endif %}
     <h2 class="validar-nome" id="validar-{{ r.pk }}-nome">
@@ -33,5 +33,5 @@ Estado na borda esquerda: pronta (neutra), validada (verde), pendente (vermelha)
   {% if i.diff is None %}<p class="mudo">Primeira impressão: não há versão impressa para comparar.</p>
   {% elif i.diff %}<details class="recolhivel"><summary>Mudanças desde a última impressa</summary><div class="tabela-caixa">{{ i.diff }}</div></details>
   {% else %}<p class="mudo">Sem mudanças desde a última impressa.</p>{% endif %}
-</article>
+</c-card>
 {% endwith %}{% if oob %}{% include "ui/_componentes/mensagens.html" with oob=True %}{% endif %}
