@@ -129,8 +129,10 @@ export const regional = (page: Page, nome: string) =>
   page.getByLabel(`${nome} - NOME DO PROJETO Nome da regional`, { exact: true });
 
 /** Painel B: roda `acao` e espera o HTMX trocar o corpo (o form velho é marcado e some na troca;
- * sem isso a próxima ação pode cair no corpo que está saindo). */
+ * sem isso a próxima ação pode cair no corpo que está saindo). O DOMContentLoaded vem antes: o HTMX é
+ * `defer`, e o `entrar` volta assim que a URL muda; clicar antes disso não dispara a troca. */
 async function trocarCorpoPainel(page: Page, acao: () => Promise<unknown>) {
+  await page.waitForLoadState("domcontentloaded");
   await page.locator("#painel-corpo form.painel-filtros").evaluate((f) => f.setAttribute("data-velho", ""));
   await acao();
   await expect(page.locator("#painel-corpo form.painel-filtros:not([data-velho])")).toHaveCount(1);

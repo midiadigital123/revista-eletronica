@@ -1,13 +1,17 @@
 // Seletor de ano do cabeçalho (U6): trocar de ano no painel filtrado cai na mesma tela, com o filtro.
 // Precisa de dois anos: crie um ano vazio (ex.: 2025) depois do criar_demo 2026. Não use abrir_ano 2027:
-// ele copia os descritores e o item.spec passa a achar dois "D01". Só lê.
+// ele copia os descritores e o item.spec passa a achar dois "D01".
+// Cria o próprio parceiro "E2E Ano …": a revista dele nasce sem "Validado", então o contador existe mesmo
+// com a demonstração validada (antes o spec dependia disso e falhava sozinho).
 import { expect, test } from "@playwright/test";
-import { entrar, filtrarFalta } from "./helpers";
+import { entrar, filtrarFalta, parceiroComProjeto } from "./helpers";
 
 test("seletor de ano: troca no painel filtrado mantém a tela e o filtro", async ({ page }) => {
   const erros: string[] = [];
   page.on("pageerror", (e) => erros.push(e.message));
-  await entrar(page, "/painel/2026/");
+  await entrar(page);
+  await parceiroComProjeto(page, "Ano");
+  await page.goto("/painel/2026/");
   await filtrarFalta(page, "Validado"); // HTMX: a URL muda sem renderizar o cabeçalho (U8: contador no lugar do select)
   await expect(page).toHaveURL(/\/painel\/2026\/\?falta=validado(&|$)/);
 
