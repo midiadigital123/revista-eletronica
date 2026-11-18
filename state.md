@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo 3 de 3 (K-040): botão "Copiar de <ano>" corrigido (D-266), script de povoamento (D-265) e seção no README, commitados e mesclados na `main` a pedido do usuário em 12/11 (sem push ainda).
-Funcionando: `./scripts/povoar-banco-2026.sh` na raiz refaz o banco do zero (33 parceiros, 148 cortes, 4 templates, matriz Comunitária, `admin`), provado idêntico ao dev da 8000; a aba Variáveis só mostra "Copiar de <ano-1>" se o ano anterior existe (62 testes OK nos módulos tocados).
-Quebrado/pendente: a `main` está à frente do GitHub (precisa de push para o outro computador clonar); suíte inteira não rodada depois do fix; o E2E `variaveis.spec` espera o botão e precisa do ano anterior na demonstração; 40 cortes sem dado e valores de 2025 a validar (D-261).
+Passo 6 de 6 concluído (K-043, D-271): migração dos componentes das telas B para django-cotton mesclada na `main` (`7011933`, fast-forward da `integ/cotton`), sem push. Dev da 8000 com a imagem reconstruída (dependência `django-cotton`).
+Funcionando: marcação crua em `templates/ui/` antes → depois: `pagina-cab` 24 → 0, `campo` 39 → 5, `badge` 52 → 3, `aviso` 19 → 1, `card` 28 → 6, `btn` 106 → 16 (todos os que ficaram são exceções nomeadas, com motivo, em `test_componentes_cotton.py`); 3152 → 3023 linhas; 8 componentes em `templates/cotton/`; seção "Componentes de template" no `docs/telas/design-system.md`. Suíte Django 910 OK (8 pulados). E2E inteiro final (todas as levas): 149 passaram, 20 pulados (Impresso, sem usuário do grupo na 8001), 1 falha de dado já conhecida (`ano.spec` em 1280 px: a revista LP da demonstração está validada, o contador "Validado" não é botão; passa em 1440 px). Capturas de 8 telas conferidas, todas HTTP 200. Na `main`: `manage.py check` sem erro, login da 8000 responde 200 e os 9 testes dos componentes passam.
+Quebrado/pendente: a `main` está à frente do GitHub (sem push); os 13 `class="btn-icone"` sozinhos não foram migrados; a suíte inteira não foi rodada de novo na `main` depois do merge (é o mesmo commit testado na `integ/cotton`); o E2E deixou o usuário `e2e-outra` no banco da 8001; pendências antigas da D-261 continuam.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Dizer se faço o push da `main` para o GitHub, para o outro computador clonar e rodar o script.
+Escolher o próximo componente da lista (recomendado: ícone) ou pedir o push da `main`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2167,7 +2167,51 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Arquivos afetados:** `app/nucleo/planilha_variaveis.py`, `app/nucleo/urls/ui_variaveis.py`, `templates/ui/parciais/variaveis_linha.html`, `templates/ui/variaveis/pagina.html`, `tests/test_ui_variaveis.py`
 - **Status:** ativa
 
+### D-267 — DEBUG desligado no servidor da porta 8000 (2026-11-17)
+- **Contexto:** a usuária viu a página de erro detalhada do Django (CSRF, página velha no navegador; recarregar resolveu). O servidor da 8000 é aberto para a rede (`APP_BIND=0.0.0.0`) e mostrava configuração e rastros de erro para qualquer pessoa.
+- **Decisão:** `DJANGO_DEBUG=0` no `.env` da raiz (não versionado) e `collectstatic` para encher `app/staticfiles/`, que o `sistema/urls.py` serve sem DEBUG (D-214).
+- **Motivo:** muda só o `.env`, sem código; a chave própria já estava no `.env`, então o settings não recusa subir.
+- **Descartadas:** `runserver --insecure` — muda o Dockerfile/compose; trocar para Gunicorn (compose de produção) — maior que o pedido.
+- **Atenção:** CSS/JS alterado no checkout da 8000 só aparece depois de `docker compose run --rm app python manage.py collectstatic --noinput`. Para voltar: `DJANGO_DEBUG=1` no `.env` e `docker compose up -d app`.
+- **Arquivos afetados:** `.env` (fora do git), `app/staticfiles/` (ignorado)
+- **Status:** ~~substituída por D-268~~
+
+### D-268 — DEBUG religado no servidor da porta 8000 (2026-11-17), substitui D-267
+- **Contexto:** logo depois da D-267, o usuário pediu para voltar com o DEBUG.
+- **Decisão:** `DJANGO_DEBUG=1` no `.env` da raiz e app reiniciado. A pasta `app/staticfiles/` fica no disco, ignorada e sem uso com DEBUG.
+- **Motivo:** pedido do usuário; o servidor da 8000 é o dev e continua mostrando a página de erro detalhada para a rede.
+- **Descartadas:** manter DEBUG desligado — o usuário pediu para voltar.
+- **Arquivos afetados:** `.env` (fora do git)
+- **Status:** ativa
+
+### D-269 — Proposta de nova UI/UX (`feat/ux-proposta`) abandonada (2026-11-18)
+- **Contexto:** a demo da esteira de 5 fases (`example/ux-proposta/`, 12/11) foi enviada ao GitHub sem merge e esperava aprovação. Na branch ela levou os números D-267 e K-041, que na `main` já são outros (D-267 = DEBUG).
+- **Decisão:** a proposta não vira código. A branch `feat/ux-proposta` fica no GitHub como arquivo, sem merge e sem ser apagada.
+- **Motivo:** decisão do usuário em 18/11 ("vamos abandonar essa ideia"); o incômodo dele é a falta de componentização das telas atuais, não a navegação.
+- **Descartadas:** apagar a branch local e remota — o usuário escolheu manter; implementar as 5 fatias no Django — abandonado.
+- **Arquivos afetados:** nenhum na `main`
+- **Status:** ativa
+
+### D-270 — DaisyUI descartado; demo de componentização com django-cotton na página Projeto (2026-11-18)
+- **Contexto:** o usuário sente que "tudo parece solto" nas telas B. Medição: os componentes existem só como classes CSS (`class="btn` 117×, `card` 28×, `campo` 39×, `pagina-cab` 24× escritos à mão), sem unidade de template.
+- **Decisão:** demo na worktree de trabalho (`feat/cotton-demo`, saída de `integ/cotton`, porta 8001): `django-cotton` 2.9.0 no `requirements.txt` e no `INSTALLED_APPS`; 7 componentes em `app/nucleo/templates/cotton/` (`pagina_cab`, `card`, `campo`, `badge`, `botao`, `abas`, `aba`); `ui/projeto/projeto.html` reescrito com eles. Mesmo CSS, mesmas views, nenhum teste editado. É demo: nada commitado nem mesclado; adotar no sistema todo é decisão à parte.
+- **Motivo:** componente de template dá uma peça por componente sem build e sem trocar o visual; o cotton aceita conteúdo dentro da tag (slots), o que o `{% include %}` não faz.
+- **Descartadas:** DaisyUI — é classe CSS (não resolve o "solto"), exige Tailwind 4 e passo de build que o projeto não tem, e 7 nomes colidem com o `ui.css`; só `{% include %}` — sem slots, modal, card e campo ficam desajeitados; rota paralela ou cópia da página para a demo — a página real convertida na branch deixa os testes existentes provarem a equivalência; página Projetos · Lista (recomendada por mim) e Usuários · Lista — o usuário escolheu Projeto (detalhe).
+- **Achados técnicos:** props sem valor padrão no `<c-vars>` herdariam variável de mesmo nome do contexto da página, então toda prop tem padrão `""`; atributo condicional não vai solto na tag do componente: vira prop (`oculto="{% if … %}1{% endif %}"`); `{{ attrs }}` vazio deixava um espaço antes do `>` e quebrava 3 testes, resolvido com `{% if attrs.attrs_dict %}`; a ordem dos atributos da `<section>` segue a que o teste espera (`id`, `aria-labelledby`, `hidden`). O `card` usa a classe `pj-secao-cab`, que ainda mora em `telas/projeto.css`: ao adotar, ela sobe para o `ui.css`.
+- **Arquivos afetados:** (worktree de trabalho) `app/requirements.txt`, `app/sistema/settings.py`, `app/nucleo/templates/cotton/*.html`, `app/nucleo/templates/ui/projeto/projeto.html`
+- **Status:** ativa
+
+### D-271 — django-cotton adotado nas telas B: 6 componentes migrados em levas (2026-11-18)
+- **Contexto:** a demo da página Projeto (D-270, K-042) passou em tudo (suíte 901, E2E 2/2, capturas) e o usuário aprovou ("Deu certinho!"), pedindo o plano de migração dos componentes mais usados. Medição nos 75 templates de `templates/ui/`, fora a página Projeto: `btn` 115 usos em 45 arquivos, `badge` 47/23, `campo` 36/17, `pagina-cab` 23/23, `card` 21/19, `aviso` 19/15.
+- **Decisão:** migrar em 7 levas na `integ/cotton`, cada uma em `feat/cotton-<componente>`, com saída HTML idêntica e sem editar teste: 0 base (commit da demo, `.pj-secao-cab` sobe para o `ui.css` como `card-cab`, teste-catraca `test_componentes_cotton.py` que falha com marcação crua de componente já migrado), 1 `<c-pagina-cab>`, 2 `<c-campo>`, 3 `<c-badge>`, 4 `<c-aviso>` (novo), 5 `<c-card>` (prop `tag`), 6 `<c-botao>` (prop `icone`). Suíte Django inteira por leva; E2E inteiro depois das levas 2 e 6, rodado pelo usuário (credenciais). Medir o tempo da lista de projetos e do painel antes da leva 3 e depois das levas 3 e 6: piora acima de 20% devolve a classe crua dentro do laço.
+- **Motivo:** ordem do maior ganho e menor risco (cabeçalho e campo) para o maior volume (botão, que ganha pouco por uso); a catraca impede a marcação solta de voltar; cada leva é mesclável, dá para parar em qualquer uma.
+- **Descartadas:** migrar os 18 includes de `ui/_componentes/` — já são unidade de template, trocar `{% include %}` por `<c-…>` não muda nada; componentizar `mudo`, `link`, `acoes`, `tabela` — são utilitárias ou estrutura própria; migrar `templates/nucleo/`, `admin/` e `revista/` — admin do Django e revista publicada, fora das telas B; começar pelo botão por ser o mais usado — é o de menor ganho por uso e o de mais atributos dinâmicos (41 com tag Django).
+- **Arquivos afetados:** `app/nucleo/templates/ui/**` (≈60), `app/nucleo/templates/cotton/*.html`, `app/nucleo/static/ui/ui.css`, `app/nucleo/static/ui/telas/projeto.css`, `app/nucleo/tests/test_componentes_cotton.py`, `docs/telas/design-system.md`
+- **Status:** ativa
+
 ## Perguntas em aberto
+- [x] (18/11, D-270) A demo do django-cotton convence? Se sim, adotar tela por tela (ordem sugerida: ícones, botão, campo, cabeçalho, card, modal) ou parar na demo — depende de: Otavio — respondida em 18/11: convence, adotar (D-271)
+- [x] (18/11, respondida pela D-270: DaisyUI descartado, demo com django-cotton) Adotar DaisyUI nas telas B? Análise: exige Tailwind 4 + passo de build (hoje não há nenhum), 7 classes do `ui.css` colidem de nome (`btn`, `badge`, `card`, `input`, `select`, `textarea`, `link`), 75 templates e 1.525 linhas de CSS a reescrever, e o `DESIGN.md` fixa a forma do preset shadcn. Recomendação: não adotar; se a queixa for visual, polir telas específicas no `ui.css` atual. Complemento (18/11): a queixa do usuário é componentização ("tudo parece solto"), e a medição confirma: os componentes são classes CSS, não unidades de template (`class="btn` 117×, `<svg` inline 70×, `campo` 39×, `card` 28×, `pagina-cab` 24×, `<dialog` 10× escritos à mão; 253 classes em `telas/*.css` contra 135 no `ui.css`; 209 de 337 classes usadas uma vez só). DaisyUI não resolve isso (também é classe CSS); o caminho proposto é componente de template (django-cotton ou `{% include %}`), piloto no `<dialog>` — depende de: Otavio
 - [x] (12/11, conferido: 0 de 95 são dados de Postgres, nada é banco deste projeto; seguem intocados por serem possivelmente de outros projetos) (D-262) Os 95 volumes anônimos do Docker podem ser apagados? — depende de: Otavio
 - [x] (D-264: dev recriado do zero, os dois parceiros saíram) (12/11) No dev da 8000: "SAESE" (8 cortes, 1 projeto) é o mesmo que "SE" da carga, e "Acre - Avalia Acre 2026" (0 cortes) o mesmo que "AC". Apagar/renomear? — depende de: Otavio
 - [ ] (D-261, 12/11) Os valores de `Cortes dos Padrões…xlsx` são os de 2025: valem para 2026? E os 40 cortes que faltam (RS, Angra dos Reis, Rio (município), SP, AL, RJ, TO, JOINVILLE 5EF, MG 3EM, PR 3EM)? Também: Cód_Bizagi 2332 repetido em Anchieta e Angra dos Reis, e SC listada nas duas abas — depende de: Pedagógica
@@ -2269,6 +2313,7 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - [ ] Lista real de perfis e matriz papel × ação (tabela da seção 9 do PDF de modelagem) — depende de: usuário
 - [ ] Onde guardar o status "aplicado no impresso" (cada modelo terá a própria tabela de histórico) e o formato do marcador de padrão sobrescrito — depende de: sessão de modelagem
 - [ ] Migrar `api/` (Express + Mongo) para Django + PostgreSQL, mantendo o React de `editor/`? Motivos do usuário (2026-10-26): herança entre projetos, templates de escala por parceiro (com parentesco entre si), auth/perfis mais fortes (uso amplo todo ano), auditoria de mudanças de texto para avisar a equipe do impresso; equipe já sabe Django. Proposta de modelo apresentada, sem decisão — herança viva decidida (D-045); depende de: usuário confirmar a regra de conflito (sobrescrita local do filho vence ou o pai vence?)
+- [ ] (18/11, D-271) Quais componentes cotton vêm depois? Candidatos medidos: ícone SVG (70 usos, 30 desenhos distintos, o mais repetido 10 vezes), botão de ícone `btn-icone` (13), modal `dialogo` (10), trilha/voltar (15), controles `input`/`select`/`textarea` (48), tabela (43), título de seção (19) — depende de: Otavio
 
 ## Sessões
 ### 2026-11-12
@@ -2784,3 +2829,20 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - Usuário decidiu descartar todos os bancos locais e recomeçar o dev do zero; K-030 por PR (D-260).
 - PR #12 (`integ/f2-gerado` → `main`) aberto e mergeado com o ok do usuário; K-030 em Done.
 - Limpeza com o ok do usuário: worktrees `f2-aj`, `f2-f2` e `revista-express-etapa` removidas (branch da etapa preservada), pastas `revista-express-f2-f1`, `revista-express-f2-f3` e `revista-django` apagadas; todos os bancos locais apagados; dev novo do zero (`migrate` até a 0025 + `admin`) no checkout `revista-express` na `main`. Commit do kanban na `main` autorizado pelo usuário.
+
+### 2026-11-17
+- Erro CSRF de uma usuária no login: página de login velha no navegador; recarregar resolveu, sem mudança de código.
+- DEBUG desligado no servidor da 8000 (D-267): login 200, CSS 200, 404 sem detalhe.
+- DEBUG religado a pedido do usuário (D-268): login 200 e o 404 volta a mostrar a página de debug.
+- Stack da 8000 derrubada (`docker compose down`, sem `-v`) e subida de novo a pedido do usuário: login 200, banco preservado (34 parceiros).
+
+### 2026-11-18
+- Análise de viabilidade do DaisyUI nas telas B (sem código): recomendação de não adotar; pergunta em aberto registrada.
+- Proposta de nova UI/UX (`feat/ux-proposta`) abandonada pelo usuário; branch mantida sem merge (D-269).
+- Demo do django-cotton na página Projeto (D-270, K-042): 7 componentes, template reescrito, 52 testes de projeto e suíte inteira (901) OK na worktree de trabalho; E2E e capturas esperam um usuário com perfil na 8001.
+- K-042 verificado: E2E `projeto.spec.ts` 2/2 na 8001 e capturas das 5 abas, rodados pelo usuário (a criação do usuário de teste `e2e` por mim foi negada pela permissão do ambiente; não contornei). Card em Review.
+- Demo aprovada pelo usuário; K-042 em Done. Plano da migração aprovado (D-271, K-043): 7 levas na `integ/cotton`.
+- K-043, levas 0 a 4 na `integ/cotton` (suíte 910 OK). Achado: `cotton/aba.html` e `cotton/botao.html` tinham sido quebrados por um formatador depois do E2E da demo e entraram assim no commit `ed5349e`; corrigidos na leva 0 (`060fbd8`), com teste que trava a saída de cada componente. Desvios do plano: uma suíte só para as levas 3 e 4; E2E inteiro movido para depois da leva 4; custo de render medido em laço de 1.000 no container (o banco da 8001 só tem a demonstração). Ano 2025 vazio criado na 8001 para o E2E.
+- K-043, levas 5 e 6 e a doc na `integ/cotton` (`7bd03af` e seguinte; suíte 910 OK): card 15 convertidos e 6 crus (o card é o próprio form); botão 88 convertidos e 16 crus em 12 arquivos. Botão sem `type` ganhou `type="submit"` explícito e a ordem `type`/`class` mudou em alguns; nenhum teste Django dependia disso. Falha do `ano.spec` no E2E das levas 1 a 4 é de dado (revista LP da demonstração validada pelo usuário às 14h23), não da migração. K-043 em Review.
+- K-043: E2E inteiro final rodado pelo usuário (149 passaram, 20 pulados, 1 falha de dado conhecida) e capturas de 8 telas conferidas. Falta o "ok" para a `main`.
+- "ok" do usuário: `integ/cotton` mesclada na `main` por fast-forward (`7011933`); imagem do app da 8000 reconstruída; K-043 em Done. Lista de próximos componentes entregue (pergunta em aberto).

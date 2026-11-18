@@ -11,6 +11,8 @@
 ## Review
 
 ## Done
+- **K-043** Migração dos componentes das telas B para django-cotton: cabeçalho, campo, selo, aviso, card e botão (219 usos convertidos, 29 crus com motivo na catraca); mesclada na `main` (suíte 910 OK, E2E 149 passaram) · 2026-11-18 · D-271
+- **K-042** Demo: página Projeto (detalhe) refeita com django-cotton (7 componentes, suíte 901 OK, E2E 2/2, capturas), aprovada pelo usuário · 2026-11-18 · D-270
 - **K-040** Botão "Copiar de <ano>" some sem ano anterior e script `scripts/povoar-banco-2026.sh` (banco do zero com a carga 2026, provado idêntico ao dev), com seção no README; mergeado na `main` · 2026-11-12 · D-265 · D-266
 - **K-039** Bancos Docker das worktrees apagados: stacks `carga2026` e `revista-express-carga-2026` (volumes) e 30 imagens antigas; dev da 8000 intacto · 2026-11-12 · D-262
   nota: 95 volumes anônimos sem dono ficaram (pergunta em aberto)
