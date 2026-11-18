@@ -18,7 +18,7 @@ aparece; as outras ficam hidden no form).{% endcomment %}
         <c-botao variante="ghost" tamanho="sm" data-acao="negrito" aria-label="Negrito" title="Negrito (**texto**)"><b>N</b></c-botao>
         <c-botao variante="ghost" tamanho="sm" data-acao="italico" aria-label="Itálico" title="Itálico (*texto*)"><i>I</i></c-botao>
         <c-botao variante="ghost" tamanho="sm" data-acao="lista" aria-label="Lista" title="Lista (- item)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+          <c-icone nome="lista" />
         </c-botao>
         <label class="sr-only" for="variavel-{{ s.id }}">Variável a inserir</label>
         <select class="select tpl-variavel" id="variavel-{{ s.id }}" data-variavel>

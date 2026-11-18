@@ -43,7 +43,7 @@ projeto (nome do projeto primeiro, parceiro em cinza). A página inclui; o filtr
   <p class="painel-resumo"><strong>{{ completas }}</strong> de {{ todas|length }} revista{{ todas|length|pluralize }} completa{{ todas|length|pluralize }}{% if falta %} · {{ linhas|length }} sem {% for c in colunas %}{% if c.chave == falta %}{{ c.rotulo }}{% endif %}{% endfor %}{% endif %}</p>
   <ul class="painel-contadores">
     {% for c in colunas %}<li>{% if c.faltam %}<button type="button" class="painel-contador" aria-pressed="{% if c.chave == falta %}true{% else %}false{% endif %}" hx-get="{{ c.url }}" title="{% if c.chave == falta %}Voltar a todas as revistas{% else %}Ver só as revistas sem {{ c.rotulo }}{% endif %}"><span class="painel-contador-n">{{ c.faltam }}</span>{{ c.rotulo }}<span class="sr-only"> sem {{ c.rotulo }}</span></button>
-    {% else %}<span class="painel-contador painel-contador-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>{{ c.rotulo }}<span class="sr-only">: em dia</span></span>{% endif %}</li>{% endfor %}
+    {% else %}<span class="painel-contador painel-contador-ok"><c-icone nome="check" espessura="2.5" />{{ c.rotulo }}<span class="sr-only">: em dia</span></span>{% endif %}</li>{% endfor %}
   </ul>
   {% if falta %}<a class="link painel-limpar" href="{{ sem_falta }}" hx-get="{{ sem_falta }}">Limpar filtro</a>{% endif %}
 </section>
@@ -84,7 +84,7 @@ projeto (nome do projeto primeiro, parceiro em cinza). A página inclui; o filtr
             {% if pode_validar %}<input type="checkbox" name="revista" value="{{ l.revista.pk }}" data-de="{{ g.projeto.pk }}" aria-label="Selecionar {{ l.revista }}">{% endif %}
             <a class="link-linha" href="{% url 'ui_revista_editar' ano.ano l.revista.pk %}"><c-badge variante="secundario">{{ l.revista.componente.codigo }}</c-badge><span class="sr-only">{{ g.projeto.nome }} · </span>{{ l.revista.componente.nome }}</a>
             <a class="painel-preview" href="{% url 'preview' l.revista.pk %}" target="_blank" rel="noopener" title="Abre mesmo com pendências; o que falta aparece em faixa vermelha.">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Preview<span class="sr-only"> de {{ l.revista }} (abre em nova aba)</span></a>
+              <c-icone nome="abrir-fora" />Preview<span class="sr-only"> de {{ l.revista }} (abre em nova aba)</span></a>
           </th>
           {% for c in l.celulas %}<td class="painel-cel coluna-{{ c.coluna }}">{% if c.ok and c.link %}<a href="{{ c.link }}" title="Ver a última versão impressa">{% include "ui/_componentes/status.html" with ok=True titulo="ok" %}</a>{% else %}{% include "ui/_componentes/status.html" with ok=c.ok url=c.link titulo=c.dica %}{% endif %}</td>{% endfor %}
         </tr>

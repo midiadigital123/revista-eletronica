@@ -39,16 +39,16 @@ quando o seletor sai do grupo atual (`option[selected]`, CSS em telas/usuarios.c
           <div class="acoes">
             {% if linha.editar and u.is_active %}
             <form method="post" action="{% url 'ui_usuarios_link' u.pk %}">{% csrf_token %}
-              <button class="btn-icone" type="submit" aria-label="Link de acesso de {{ u.username }}" data-dica="Link de acesso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
+              <button class="btn-icone" type="submit" aria-label="Link de acesso de {{ u.username }}" data-dica="Link de acesso"><c-icone nome="link" /></button>
             </form>
             {% endif %}
-            {% if linha.editar %}<a class="btn-icone" href="{% url 'ui_usuarios_senha' u.pk %}" aria-label="Redefinir senha de {{ u.username }}" data-dica="Redefinir senha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg></a>{% endif %}
+            {% if linha.editar %}<a class="btn-icone" href="{% url 'ui_usuarios_senha' u.pk %}" aria-label="Redefinir senha de {{ u.username }}" data-dica="Redefinir senha"><c-icone nome="chave" /></a>{% endif %}
             {% if linha.mudar_ativo %}
             <form method="post" action="{% url 'ui_usuarios_ativo' u.pk %}">{% csrf_token %}
-              {% if u.is_active %}<button class="btn-icone" type="submit" name="acao" value="desativar" aria-label="Desativar {{ u.username }}" data-dica="Desativar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" x2="22" y1="8" y2="13"/><line x1="22" x2="17" y1="8" y2="13"/></svg></button>
-              {% else %}<button class="btn-icone" type="submit" name="acao" value="ativar" aria-label="Ativar {{ u.username }}" data-dica="Ativar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg></button>{% endif %}
+              {% if u.is_active %}<button class="btn-icone" type="submit" name="acao" value="desativar" aria-label="Desativar {{ u.username }}" data-dica="Desativar"><c-icone nome="usuario-x" /></button>
+              {% else %}<button class="btn-icone" type="submit" name="acao" value="ativar" aria-label="Ativar {{ u.username }}" data-dica="Ativar"><c-icone nome="usuario-ok" /></button>{% endif %}
             </form>
-            <a class="btn-icone" href="{% url 'ui_usuarios_excluir' u.pk %}" aria-label="Excluir {{ u.username }}" data-dica="Excluir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></a>
+            <a class="btn-icone" href="{% url 'ui_usuarios_excluir' u.pk %}" aria-label="Excluir {{ u.username }}" data-dica="Excluir"><c-icone nome="lixeira" /></a>
             {% endif %}
           </div>
           {% else %}<span class="mudo">Só o superusuário altera</span>{% endif %}

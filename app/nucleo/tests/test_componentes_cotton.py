@@ -22,6 +22,7 @@ MIGRADOS: dict[str, str] = {
     'class="aviso': "<c-aviso>",
     'class="card': "<c-card>",
     'class="btn': "<c-botao>",
+    "<svg": "<c-icone>",
 }
 
 # (arquivo relativo a templates/ui, marcação crua) → motivo de ficar cru
@@ -50,6 +51,8 @@ EXCECOES: dict[tuple[str, str], str] = {
     ("parciais/validar_cartao.html", 'class="btn'): "atributos do HTMX em várias linhas",
     ("projeto/lista.html", 'class="btn'): "disabled e title condicionais no botão",
     ("senha_definir.html", 'class="btn'): "<input type=submit> da tela de senha",
+    ("_componentes/girando.html", "<svg"): "o spinner tem classe e id condicional; já é um include",
+    ("_componentes/ordem.html", "<svg"): "a alça de arrastar é preenchida (fill), não de traço",
     ("projeto/projeto.html", 'class="campo'): "a caixa do campo é o próprio <form> do autosave da matriz",
 }
 
@@ -82,6 +85,20 @@ class CatracaDosComponentes(SimpleTestCase):
 
 def renderizar(fonte, **contexto):
     return Template(CottonCompiler().process(fonte)).render(Context(contexto))
+
+
+class NomesDosIcones(SimpleTestCase):
+    def test_todo_icone_usado_existe(self):
+        """Nome errado renderiza um svg vazio, sem erro: o teste pega."""
+        modelos = UI.parent
+        existentes = set(re.findall(r'nome == "([\w-]+)"', (modelos / "cotton" / "icone.html").read_text(encoding="utf-8")))
+        usados = {
+            (arquivo.relative_to(modelos).as_posix(), nome)
+            for arquivo in modelos.rglob("*.html")
+            for nome in re.findall(r'<c-icone[^>]*\bnome="([^"]*)"', arquivo.read_text(encoding="utf-8"))
+        }
+        self.assertTrue(usados)
+        self.assertEqual(sorted(u for u in usados if u[1] not in existentes), [])
 
 
 class SaidaDosComponentes(SimpleTestCase):
@@ -121,6 +138,15 @@ class SaidaDosComponentes(SimpleTestCase):
             '<p class="aviso aviso-erro" role="alert">A &amp; B &lt;i&gt;</p>',
         )
         self.assertEqual(renderizar('<c-aviso role="status"><p>x</p></c-aviso>'), '<div class="aviso" role="status"><p>x</p></div>')
+
+    def test_icone(self):
+        svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"{}>'
+        self.assertEqual(renderizar('<c-icone nome="check" />'), svg.format("2", "") + '<path d="M20 6 9 17l-5-5"/></svg>')
+        self.assertEqual(
+            renderizar('<c-icone nome="mais" espessura="2.5" width="16" />'),
+            svg.format("2.5", ' width="16"') + '<path d="M5 12h14"/><path d="M12 5v14"/></svg>',
+        )
+        self.assertEqual(renderizar('<c-botao><c-icone nome="fechar" />Fechar</c-botao>').count("<svg"), 1)
 
     def test_botao(self):
         self.assertEqual(

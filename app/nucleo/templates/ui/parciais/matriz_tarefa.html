@@ -22,9 +22,9 @@ empty_form ou devolvida com erro): data-manual, entra pelo "Incluir tarefa" (POS
   {% if t.pk %}
   <div class="matriz-tarefa-acoes">
     {% if pode_gravar %}<c-botao variante="ghost" class="btn-icone" data-abrir="item-{{ t.pk }}" aria-label="Arquivo do item da tarefa {{ t.codigo }}" title="Arquivo do item (PDF ou imagem)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></c-botao>{% endif %}
+      <c-icone nome="clipe" /></c-botao>{% endif %}
     {% if excluir_tarefa %}<c-botao variante="ghost" href="{% url 'ui_matriz_excluir_tarefa' mec.pk descritor.pk t.pk %}" class="btn-icone matriz-excluir" aria-label="Excluir tarefa {{ t.codigo }}" title="Excluir tarefa">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></c-botao>{% endif %}
+      <c-icone nome="fechar" /></c-botao>{% endif %}
   </div>
   {% if t.arquivo %}<p class="matriz-tarefa-extra"><a class="badge badge-contorno" href="{% url 'ui_matriz_item_baixar' mec.pk descritor.pk t.pk %}" title="Baixar o arquivo do item">{{ t.arquivo|slice:"-3:"|upper }}</a>{% if t.texto_alternativo %} <span class="mudo matriz-alt">{{ t.texto_alternativo|truncatechars:60 }}</span>{% endif %}</p>{% endif %}
   {% for e in f.non_field_errors %}<p class="erro matriz-tarefa-extra" role="alert">{{ e }}</p>{% endfor %}

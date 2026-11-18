@@ -7,7 +7,7 @@ trocar template/arquivo troca este #situacao. Pendência é tarefa, não erro: �
   <header class="revista-situacao-cab">
     <h2 class="secao-titulo" id="situacao-titulo">Situação</h2>
     {% if validacao.validada %}
-    <p class="revista-validada"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>Validada por {{ revista.validado_por.get_full_name|default:revista.validado_por }} em {{ revista.validado_em|date:"d/m H:i" }}</p>
+    <p class="revista-validada"><c-icone nome="ok-circulo" />Validada por {{ revista.validado_por.get_full_name|default:revista.validado_por }} em {{ revista.validado_em|date:"d/m H:i" }}</p>
     {% else %}
     <p class="mudo">{{ validacao.prontos }} de {{ validacao.passos|length }} prontos{% if revista.hash_validado %} · mudou depois do último “Validado” ({{ revista.validado_em|date:"d/m H:i" }}){% endif %}</p>
     <progress class="revista-progresso" value="{{ validacao.prontos }}" max="{{ validacao.passos|length }}" aria-hidden="true"></progress>
@@ -17,8 +17,8 @@ trocar template/arquivo troca este #situacao. Pendência é tarefa, não erro: �
   <ol class="revista-checklist">
     {% for p in validacao.passos %}
     <li{% if not p.pendencias %} data-ok{% endif %}>
-      {% if p.pendencias %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/></svg>
-      {% else %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>{% endif %}
+      {% if p.pendencias %}<c-icone nome="circulo" />
+      {% else %}<c-icone nome="check" />{% endif %}
       <div>
         <span>{{ p.rotulo }}<span class="sr-only">{% if p.pendencias %}: pendente{% else %}: pronto{% endif %}</span></span>
         {% if p.pendencias %}<ul>{% for x in p.pendencias %}<li>{% if x.url %}<a class="link" href="{{ x.url }}">{{ x.mensagem }}</a>{% else %}{{ x.mensagem }}{% endif %}</li>{% endfor %}</ul>{% endif %}
@@ -37,7 +37,7 @@ trocar template/arquivo troca este #situacao. Pendência é tarefa, não erro: �
     <input type="hidden" name="hash_visto" value="{{ validacao.hash }}">
     <input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">
     {% if validacao.pendencias %}<button class="btn btn-outline" type="submit" id="botao-validado" disabled aria-describedby="validar-motivo">{% else %}<button class="btn" type="submit" id="botao-validado">{% endif %}
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+      <c-icone nome="check" />
       Validar revista
     </button>
     {% if validacao.pendencias %}<p class="mudo" id="validar-motivo">Resolva as pendências acima para validar.</p>{% endif %}

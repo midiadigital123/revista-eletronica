@@ -30,7 +30,7 @@ A ordem das etapas é a escolar (`ordem_escolar`). Sem `pode.<tabela>`, só text
   </div>
   {% if pode.etapas %}
   <template data-molde>{% include "ui/parciais/ano_linha.html" with f=etapas.empty_form tabela="etapas" %}</template>
-  <c-botao variante="outline" tamanho="sm" class="adicionar-linha" data-abrir-linha @click="abrir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Adicionar etapa</c-botao>
+  <c-botao variante="outline" tamanho="sm" class="adicionar-linha" data-abrir-linha @click="abrir"><c-icone nome="mais" /> Adicionar etapa</c-botao>
   </div></form>{% endif %}
 </c-card>
 
@@ -52,7 +52,7 @@ A ordem das etapas é a escolar (`ordem_escolar`). Sem `pode.<tabela>`, só text
   </div>
   {% if pode.componentes %}
   <template data-molde>{% include "ui/parciais/ano_linha.html" with f=componentes.empty_form tabela="componentes" %}</template>
-  <c-botao variante="outline" tamanho="sm" class="adicionar-linha" data-abrir-linha @click="abrir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Adicionar componente</c-botao>
+  <c-botao variante="outline" tamanho="sm" class="adicionar-linha" data-abrir-linha @click="abrir"><c-icone nome="mais" /> Adicionar componente</c-botao>
   </div></form>{% endif %}
 </c-card>
 
@@ -87,7 +87,7 @@ A ordem das etapas é a escolar (`ordem_escolar`). Sem `pode.<tabela>`, só text
   </div>
   {% if novo and pode.novo_padrao %}
   <details class="novo-padrao"{% if novo.errors %} open{% endif %}>
-    <summary class="btn btn-outline btn-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Adicionar padrão</summary>
+    <summary class="btn btn-outline btn-sm"><c-icone nome="mais" /> Adicionar padrão</summary>
     <form method="post" class="novo-padrao-form" novalidate>{% csrf_token %}<input type="hidden" name="tabela" value="novo_padrao">
       {% for campo in novo %}
       <c-campo rotulo="{{ campo.label }}" para="{{ campo.id_for_label }}" :erros="campo.errors">{{ campo }}</c-campo>

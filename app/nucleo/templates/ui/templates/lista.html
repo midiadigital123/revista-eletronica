@@ -8,7 +8,7 @@
   <p class="mudo">Textos-modelo das revistas, por fascículo. Editar um texto cria uma versão nova; a anterior fica guardada.</p>
   <c-slot name="acoes">{% if ano and pode_criar %}
     <c-botao variante="outline" href="{% url 'ui_templates_novo' ano.ano %}?aba={{ aba }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+      <c-icone nome="mais" />
       Novo template
     </c-botao>
   {% endif %}</c-slot>
@@ -46,7 +46,7 @@
         <td>{% if t.n_usado %}<a class="link" href="{% url 'painel' ano.ano %}?template={{ t.pk }}" title="Abre o Painel filtrado por este template.">usado por {{ t.n_usado }}</a>{% if t.n_copia %} <span class="mudo">({{ t.n_copia }} com cópia de seção)</span>{% endif %}{% else %}<span class="mudo">nenhuma revista</span>{% endif %}</td>
         {% if perms.nucleo.delete_template %}{# D-207: a página diz se está em uso; sem contagem prévia por linha (plano E0). #}
         <td class="tpl-acoes"><a class="btn-icone tpl-excluir" href="{% url 'ui_excluir' 'template' t.pk %}?voltar={{ voltar|urlencode }}" aria-label="Excluir template {{ t.nome }} ({{ t.componente.codigo }})…" data-dica="Excluir template…">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></a></td>
+          <c-icone nome="lixeira" /></a></td>
         {% endif %}
       </tr>
     {% endfor %}

@@ -48,7 +48,7 @@ Impacto (U2): form.precisa_confirmar abre o modal de impacto; o modal do item li
         {% if pode_gravar %}
         <template data-molde>{% include "ui/parciais/matriz_tarefa.html" with f=tarefa_nova %}</template>
         <div><c-botao variante="outline" tamanho="sm" data-abrir-linha @click="abrir">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          <c-icone nome="mais" />
           Adicionar tarefa</c-botao></div>
         </div>{% endif %}
       </section>
@@ -63,7 +63,7 @@ Impacto (U2): form.precisa_confirmar abre o modal de impacto; o modal do item li
       <p class="mudo">Apaga {{ descritor.codigo }} e as tarefas dele de toda revista que usa esta etapa × componente. Na próxima tela, digite o código para confirmar.</p>
     </div>
     <c-botao variante="destrutivo" tamanho="sm" href="{% url 'ui_matriz_excluir_descritor' mec.pk descritor.pk %}" aria-label="Excluir o descritor {{ descritor.codigo }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+      <c-icone nome="lixeira" />
       Excluir</c-botao>
   </section>
   {% endif %}

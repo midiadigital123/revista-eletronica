@@ -2,14 +2,14 @@
 Contexto: previa_html (já escapado por texto.renderizar), previa_erros (texto.validar), secoes, oob.
 Na resposta HTMX (oob) troca também o índice lateral e os erros de cada seção.{% endcomment %}{% if previa_erros %}
 <div class="tpl-validacao caixa-erro" role="alert">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+  <c-icone nome="alerta-circulo" />
   <div><strong>Ainda não dá para salvar:</strong>
     <ul>{% for e in previa_erros %}<li>{{ e }}</li>{% endfor %}</ul>
   </div>
 </div>
 {% else %}
 <p class="tpl-validacao tpl-validacao-ok" role="status">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+  <c-icone nome="check" espessura="2.5" />
   Texto válido para o fascículo.
 </p>
 {% endif %}
