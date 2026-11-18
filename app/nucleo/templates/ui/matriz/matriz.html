@@ -15,19 +15,19 @@ no fim, a zona de perigo "Excluir matriz…" (E3, D-205) leva a ui_excluir.{% en
   {% else %}<h1>{{ matriz.nome }}</h1>{% endif %}
   <p class="mudo">Matriz de {{ matriz.ano.ano }}{% if matriz.duplicada_de %} · cópia de {{ matriz.duplicada_de.nome }} ({{ matriz.duplicada_de.ano.ano }}){% endif %}</p>
   <c-slot name="acoes">
-    {% if matriz.duplicada_de %}<a class="btn btn-ghost" href="{% url 'ui_matriz_diferencas' matriz.pk %}">Diferenças da origem</a>{% endif %}
+    {% if matriz.duplicada_de %}<c-botao variante="ghost" href="{% url 'ui_matriz_diferencas' matriz.pk %}">Diferenças da origem</c-botao>{% endif %}
     {% if pode_alterar %}
     {% include "ui/_componentes/status_salvo.html" %}
-    <a class="btn btn-outline" href="{% url 'ui_matriz_reimportar' matriz.pk %}">
+    <c-botao variante="outline" href="{% url 'ui_matriz_reimportar' matriz.pk %}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
       Reimportar
-    </a>
+    </c-botao>
     {% endif %}
     {% if pode_duplicar %}
-    <button type="button" class="btn" data-abrir="dlg-duplicar">
+    <c-botao data-abrir="dlg-duplicar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
       Duplicar
-    </button>
+    </c-botao>
     {% endif %}
   </c-slot>
 </c-pagina-cab>
@@ -68,9 +68,9 @@ no fim, a zona de perigo "Excluir matriz…" (E3, D-205) leva a ui_excluir.{% en
     <p class="mudo">Só sai se nenhum parceiro a usa. Sai com as etapas × componente, os descritores e as tarefas dela. Na próxima tela, digite o nome para confirmar.</p>
   </div>
   {% url 'ui_matriz' matriz.ano.ano as lista %}
-  <a class="btn btn-destrutivo btn-sm" href="{% url 'ui_excluir' 'matriz' matriz.pk %}?voltar={{ lista|urlencode }}">
+  <c-botao variante="destrutivo" tamanho="sm" href="{% url 'ui_excluir' 'matriz' matriz.pk %}?voltar={{ lista|urlencode }}">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-    Excluir matriz…</a>
+    Excluir matriz…</c-botao>
 </section>
 {% endif %}
 

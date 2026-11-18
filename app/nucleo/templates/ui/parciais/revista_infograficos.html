@@ -16,10 +16,10 @@ Sem permissão ou revista arquivada: os mesmos campos, `disabled`.
   <c-card tag="article" class="inf-card" aria-labelledby="{{ n }}-titulo">
     <header class="inf-cab">
       <h3 id="{{ n }}-titulo">{{ inf.get_tipo_display }}</h3>
-      <a class="btn btn-ghost btn-sm" href="{% url 'preview_f2' revista.pk inf.tipo %}" target="_blank" rel="noopener">
+      <c-botao variante="ghost" tamanho="sm" href="{% url 'preview_f2' revista.pk inf.tipo %}" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
         Abrir prévia<span class="sr-only"> de {{ inf.get_tipo_display }} (nova aba)</span>
-      </a>
+      </c-botao>
     </header>
 
     <c-campo rotulo="Habilidade destacada" para="{{ n }}-habilidade">

@@ -11,5 +11,5 @@ não vira botão vazio. `mais=True` põe o "+" de criar antes do rótulo. `url2`
   <h2>{{ titulo }}</h2>
   {% if texto %}<p>{{ texto }}</p>{% endif %}
   {% if rotulo %}{% if abrir %}<button type="button" class="btn btn-outline" data-abrir="{{ abrir }}">{% elif url %}<a class="btn btn-outline" href="{{ url }}">{% endif %}{% if abrir or url %}{% if mais %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>{% endif %}{{ rotulo }}{% if abrir %}</button>{% else %}</a>{% endif %}{% endif %}{% endif %}
-  {% if rotulo2 and url2 %}<a class="btn btn-outline" href="{{ url2 }}">{{ rotulo2 }}</a>{% endif %}
+  {% if rotulo2 and url2 %}<c-botao variante="outline" href="{{ url2 }}">{{ rotulo2 }}</c-botao>{% endif %}
 </div>

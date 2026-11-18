@@ -48,7 +48,7 @@ View: nucleo/urls/ui_templates.py (editar, POST). Ficha: docs/telas/fichas/templ
   <input type="hidden" name="texto" value="{{ texto }}">
   <input type="hidden" name="_impacto" value="{{ assinatura }}">
   <span class="mudo">Voltar e editar não grava nada e mantém o seu texto.</span>
-  <button class="btn btn-outline" type="submit" name="_voltar" value="1">Voltar e editar</button>
-  <button class="btn" type="submit" name="_confirmar" value="1">Confirmar e criar versão {{ nova }}</button>
+  <c-botao variante="outline" type="submit" name="_voltar" value="1">Voltar e editar</c-botao>
+  <c-botao type="submit" name="_confirmar" value="1">Confirmar e criar versão {{ nova }}</c-botao>
 </form>
 {% endblock %}

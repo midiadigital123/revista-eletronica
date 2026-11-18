@@ -32,7 +32,7 @@
     </form>
     {% else %}
     <c-aviso tag="p" variante="erro" role="alert">Este link venceu ou já foi usado. Peça um novo a quem gerencia os usuários.</c-aviso>
-    <a class="btn btn-outline" href="{% url 'entrar' %}">Ir para o login</a>
+    <c-botao variante="outline" href="{% url 'entrar' %}">Ir para o login</c-botao>
     {% endif %}
   </c-card>
 </body>

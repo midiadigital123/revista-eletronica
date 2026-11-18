@@ -33,7 +33,7 @@
     <p class="ajuda" id="ano-dica">Digite o ano.{% if proximo %} O próximo que pode ser aberto é {{ proximo }}.{% endif %}</p>
     {% if form.ano.errors %}<p class="erro" id="ano-erro">{{ form.ano.errors.0 }}</p>{% endif %}
   </c-campo>
-  <div><button class="btn" type="submit">Abrir ano</button></div>
+  <div><c-botao type="submit">Abrir ano</c-botao></div>
 </form>
 {% endif %}
 {% endblock %}

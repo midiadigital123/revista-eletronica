@@ -35,7 +35,7 @@ projeto (nome do projeto primeiro, parceiro em cinza). A página inclui; o filtr
     </select>
   </c-campo>
   {% if filtrado %}<a class="link painel-limpar-tudo" href="{{ request.path }}" hx-get="{{ request.path }}" hx-target="#painel-corpo" hx-indicator="#painel-corpo" hx-push-url="true">Limpar filtros</a>{% endif %}
-  <noscript><button class="btn btn-outline" type="submit">Filtrar</button></noscript>
+  <noscript><c-botao variante="outline" type="submit">Filtrar</c-botao></noscript>
 </form>
 
 {% if todas %}
@@ -96,7 +96,7 @@ projeto (nome do projeto primeiro, parceiro em cinza). A página inclui; o filtr
   {% if pode_validar %}
   <div class="barra-salvar painel-barra">
     <span class="mudo" aria-live="polite" data-selecionadas>Nenhuma selecionada</span>
-    <button class="btn" type="submit" data-validar disabled>Validar selecionadas</button>
+    <c-botao type="submit" data-validar disabled>Validar selecionadas</c-botao>
   </div>
   {% endif %}
 </form>

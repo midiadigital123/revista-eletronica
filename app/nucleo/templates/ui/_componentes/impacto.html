@@ -21,6 +21,6 @@ U8b: copias + frase + fasciculo (trocar template com cópias de seção, D-171):
   {% endif %}
   <footer>
     <button type="button" class="btn btn-outline" @click="cancelar"{% if not frase %} autofocus{% endif %}>Cancelar</button>
-    <button type="button" class="btn btn-destrutivo" @click="confirmar">{{ acao }} e {% if perdem %}tirar Validado{% else %}apagar cópias{% endif %}</button>
+    <c-botao variante="destrutivo" @click="confirmar">{{ acao }} e {% if perdem %}tirar Validado{% else %}apagar cópias{% endif %}</c-botao>
   </footer>
 </dialog>

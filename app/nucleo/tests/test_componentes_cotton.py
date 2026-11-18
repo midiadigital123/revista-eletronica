@@ -21,6 +21,7 @@ MIGRADOS: dict[str, str] = {
     'class="badge': "<c-badge>",
     'class="aviso': "<c-aviso>",
     'class="card': "<c-card>",
+    'class="btn': "<c-botao>",
 }
 
 # (arquivo relativo a templates/ui, marcação crua) → motivo de ficar cru
@@ -37,6 +38,18 @@ EXCECOES: dict[tuple[str, str], str] = {
     ("parciais/revista_secao.html", 'class="card'): "a caixa do card é o próprio <form>",
     ("templates/novo.html", 'class="card'): "a caixa do card é o próprio <form>",
     ("usuarios/form.html", 'class="card'): "a caixa do card é o próprio <form>",
+    ("_componentes/anos.html", 'class="btn'): "aria-current condicional no botão",
+    ("_componentes/impacto.html", 'class="btn'): "autofocus condicional no botão",
+    ("_componentes/nome_inline.html", 'class="btn'): ":aria-label do Alpine junto do aria-label fixo",
+    ("_componentes/vazio.html", 'class="btn'): "abre <button> ou <a> conforme o ramo do if, com um fechamento só",
+    ("anos/ano.html", 'class="btn'): "o botão é o <summary> do details",
+    ("base.html", 'class="btn'): "aria-current condicional no link",
+    ("entrar.html", 'class="btn'): "<input type=submit> da tela de entrada",
+    ("parciais/revista_secao_estado.html", 'class="btn'): "hx-vals com aspas simples e JSON dentro",
+    ("parciais/revista_situacao.html", 'class="btn'): "abre o botão com ou sem disabled conforme o ramo do if",
+    ("parciais/validar_cartao.html", 'class="btn'): "atributos do HTMX em várias linhas",
+    ("projeto/lista.html", 'class="btn'): "disabled e title condicionais no botão",
+    ("senha_definir.html", 'class="btn'): "<input type=submit> da tela de senha",
     ("projeto/projeto.html", 'class="campo'): "a caixa do campo é o próprio <form> do autosave da matriz",
 }
 
@@ -119,6 +132,10 @@ class SaidaDosComponentes(SimpleTestCase):
             '<button type="submit" class="btn btn-destrutivo" name="a" x-on:click="abrir" disabled>ok</button>',
         )
         self.assertEqual(renderizar("<c-botao>ok</c-botao>"), '<button type="button" class="btn">ok</button>')
+        self.assertEqual(
+            renderizar('<c-botao variante="ghost" class="btn-icone x" ::disabled="ocupado" @click="salvar">ok</c-botao>'),
+            '<button type="button" class="btn btn-ghost btn-icone x" :disabled="ocupado" @click="salvar">ok</button>',
+        )
 
     def test_abas(self):
         html = renderizar(

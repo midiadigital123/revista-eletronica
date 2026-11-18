@@ -7,10 +7,10 @@
 <c-pagina-cab titulo="Templates">
   <p class="mudo">Textos-modelo das revistas, por fascículo. Editar um texto cria uma versão nova; a anterior fica guardada.</p>
   <c-slot name="acoes">{% if ano and pode_criar %}
-    <a class="btn btn-outline" href="{% url 'ui_templates_novo' ano.ano %}?aba={{ aba }}">
+    <c-botao variante="outline" href="{% url 'ui_templates_novo' ano.ano %}?aba={{ aba }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
       Novo template
-    </a>
+    </c-botao>
   {% endif %}</c-slot>
 </c-pagina-cab>
 

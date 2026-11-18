@@ -89,8 +89,8 @@ action = a ação recusada (o Confirmar do modal reenvia o form sem botão).
       {% if not matrizes %}<p class="ajuda">Nenhuma matriz em {{ ano.ano }}: cadastre em Matrizes.</p>{% endif %}
     </c-campo>
     <footer>
-      <button type="button" class="btn btn-outline" data-fechar>Cancelar</button>
-      <button class="btn" type="submit" formaction="{% url 'ui_projeto_massa' ano.ano 'matriz' %}">Atribuir matriz</button>
+      <c-botao variante="outline" data-fechar>Cancelar</c-botao>
+      <c-botao type="submit" formaction="{% url 'ui_projeto_massa' ano.ano 'matriz' %}">Atribuir matriz</c-botao>
     </footer>
   </dialog>
   {% endif %}
@@ -118,8 +118,8 @@ action = a ação recusada (o Confirmar do modal reenvia o form sem botão).
     </c-campo>
     {% endfor %}
     <footer>
-      <button type="button" class="btn btn-outline" data-fechar>Cancelar</button>
-      <button class="btn" type="submit" formaction="{% url 'ui_projeto_massa' ano.ano 'template' %}">Atribuir template</button>
+      <c-botao variante="outline" data-fechar>Cancelar</c-botao>
+      <c-botao type="submit" formaction="{% url 'ui_projeto_massa' ano.ano 'template' %}">Atribuir template</c-botao>
     </footer>
   </dialog>
   {% endif %}

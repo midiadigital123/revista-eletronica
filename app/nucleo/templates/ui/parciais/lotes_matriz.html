@@ -44,10 +44,10 @@ Contexto: form (nucleo.lotes.MatrizLoteForm), linhas [{pa, marcado, projeto, edi
         {% for m in form.fields.matriz.queryset %}<option value="{{ m.pk }}"{% if form.matriz.value|stringformat:"s" == m.pk|stringformat:"s" %} selected{% endif %}>{{ m.nome }}</option>{% endfor %}
       </select>
     </div>
-    <button class="btn" type="submit">
+    <c-botao type="submit">
       {% include "ui/_componentes/girando.html" with id="lote-girando" %}
       Aplicar aos selecionados
-    </button>
+    </c-botao>
     {% if form.matriz.errors %}<p class="erro lote-erro" id="erro-matriz" role="alert">{{ form.matriz.errors.0 }}</p>{% endif %}
     {% if not form.fields.matriz.queryset.exists %}<p class="ajuda mudo lote-erro">Nenhuma matriz em {{ ano.ano }}: cadastre em Matrizes.</p>{% endif %}
   </div>

@@ -49,10 +49,10 @@ pode_gravar, componente. rf.tem_copias = o fascículo tem texto próprio (trocar
       </select>
     </div>
     {% endif %}{% endfor %}
-    <button class="btn" type="submit">
+    <c-botao type="submit">
       {% include "ui/_componentes/girando.html" with id="lote-girando" %}
       Aplicar aos selecionados
-    </button>
+    </c-botao>
     {% for campo in form %}{% if campo.name != "alvos" and campo.errors %}<p class="erro lote-erro" role="alert">{{ campo.label }}: {{ campo.errors.0 }}</p>{% endif %}{% endfor %}
   </div>
   {% endif %}

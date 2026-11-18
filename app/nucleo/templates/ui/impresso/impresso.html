@@ -8,7 +8,7 @@ Lista + detalhe: a lista é só links (?revista=pk); o HTMX troca o #detalhe e p
 {% block conteudo %}
 <c-pagina-cab titulo="Impresso">
   <p class="mudo">O que mudou em cada revista desde a última “Revista Impressa Atualizada”, para levar ao InDesign.</p>
-  <c-slot name="acoes"><a class="btn btn-ghost" href="{% url 'painel' ano.ano %}?falta=impresso">Ver no painel</a></c-slot>
+  <c-slot name="acoes"><c-botao variante="ghost" href="{% url 'painel' ano.ano %}?falta=impresso">Ver no painel</c-botao></c-slot>
 </c-pagina-cab>
 
 

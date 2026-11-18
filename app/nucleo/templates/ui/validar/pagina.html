@@ -6,7 +6,7 @@
 {% block conteudo %}
 <c-pagina-cab titulo="Validar revistas">
   <p class="mudo">{{ ano.ano }}: {{ itens|length }} revista(s). Cada uma é validada na versão mostrada aqui; se mudar antes do envio, é recusada.</p>
-  <c-slot name="acoes"><a class="btn btn-ghost" href="{{ url_painel }}">Voltar ao painel</a></c-slot>
+  <c-slot name="acoes"><c-botao variante="ghost" href="{{ url_painel }}">Voltar ao painel</c-botao></c-slot>
 </c-pagina-cab>
 
 {% if fora > 0 %}
@@ -29,7 +29,7 @@
   {% if pode_validar %}
   <div class="barra-salvar">
     <span class="mudo" aria-live="polite"><span data-marcadas></span>Projetos em edição por outra sessão são pulados.</span>
-    <button class="btn" type="submit" data-enviar>Validar marcadas</button>
+    <c-botao type="submit" data-enviar>Validar marcadas</c-botao>
   </div>
   {% endif %}
 </form>

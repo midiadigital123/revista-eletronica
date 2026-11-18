@@ -18,6 +18,6 @@
     {% if f.help_text %}<div class="ajuda" id="{{ f.auto_id }}_helptext">{{ f.help_text }}</div>{% endif %}
   </c-campo>
   {% endfor %}
-  <div class="acoes"><button class="btn" type="submit">{{ botao }}</button><a class="btn btn-ghost" href="{% url 'ui_usuarios' %}">Cancelar</a></div>
+  <div class="acoes"><c-botao type="submit">{{ botao }}</c-botao><c-botao variante="ghost" href="{% url 'ui_usuarios' %}">Cancelar</c-botao></div>
 </form>
 {% endblock %}

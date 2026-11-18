@@ -30,7 +30,7 @@ A ordem das etapas é a escolar (`ordem_escolar`). Sem `pode.<tabela>`, só text
   </div>
   {% if pode.etapas %}
   <template data-molde>{% include "ui/parciais/ano_linha.html" with f=etapas.empty_form tabela="etapas" %}</template>
-  <button class="btn btn-outline btn-sm adicionar-linha" type="button" data-abrir-linha @click="abrir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Adicionar etapa</button>
+  <c-botao variante="outline" tamanho="sm" class="adicionar-linha" data-abrir-linha @click="abrir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Adicionar etapa</c-botao>
   </div></form>{% endif %}
 </c-card>
 
@@ -52,7 +52,7 @@ A ordem das etapas é a escolar (`ordem_escolar`). Sem `pode.<tabela>`, só text
   </div>
   {% if pode.componentes %}
   <template data-molde>{% include "ui/parciais/ano_linha.html" with f=componentes.empty_form tabela="componentes" %}</template>
-  <button class="btn btn-outline btn-sm adicionar-linha" type="button" data-abrir-linha @click="abrir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Adicionar componente</button>
+  <c-botao variante="outline" tamanho="sm" class="adicionar-linha" data-abrir-linha @click="abrir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Adicionar componente</c-botao>
   </div></form>{% endif %}
 </c-card>
 
@@ -69,7 +69,7 @@ A ordem das etapas é a escolar (`ordem_escolar`). Sem `pode.<tabela>`, só text
           <td><form method="post" id="padrao-{{ cp.padrao }}" novalidate>{% csrf_token %}<input type="hidden" name="tabela" value="padroes"><input type="hidden" name="padrao" value="{{ cp.pk }}"></form>
             <input class="input" form="padrao-{{ cp.padrao }}" type="text" name="{{ f.nome.html_name }}" id="{{ f.nome.id_for_label }}" value="{{ f.nome.value|default_if_none:'' }}" data-original="{{ f.initial.nome|default_if_none:'' }}" maxlength="200" aria-label="Nome do Padrão {{ cp.padrao }}"{% if f.nome.errors %} aria-invalid="true"{% endif %}{% if f.errors %} aria-describedby="padrao-{{ cp.padrao }}-erros"{% endif %}></td>
           <td><input form="padrao-{{ cp.padrao }}" type="color" name="{{ f.cor.html_name }}" id="{{ f.cor.id_for_label }}" value="{% if f.cor.errors %}{{ f.initial.cor }}{% else %}{{ f.cor.value }}{% endif %}" data-original="{{ f.initial.cor }}" aria-label="Cor do Padrão {{ cp.padrao }}"{% if f.cor.errors %} aria-invalid="true"{% endif %}{% if f.errors %} aria-describedby="padrao-{{ cp.padrao }}-erros"{% endif %}> <span class="mudo">{{ f.initial.cor|upper }}</span></td>
-          <td><button class="btn btn-outline btn-sm" type="submit" form="padrao-{{ cp.padrao }}" aria-label="Salvar Padrão {{ cp.padrao }}">Salvar</button>
+          <td><c-botao variante="outline" tamanho="sm" type="submit" form="padrao-{{ cp.padrao }}" aria-label="Salvar Padrão {{ cp.padrao }}">Salvar</c-botao>
             {% if f.precisa_confirmar %}{% with n=cp.padrao|stringformat:"s" %}{% include "ui/_componentes/impacto.html" with form_id="padrao-"|add:n campo=f.confirmar_impacto.html_name acao="Salvar" perdem=f.perdem %}{% endwith %}{% endif %}</td>
           {% else %}
           <td>{{ cp.nome|default:"sem nome" }}</td><td>{{ cp.cor|upper }}</td>
@@ -92,7 +92,7 @@ A ordem das etapas é a escolar (`ordem_escolar`). Sem `pode.<tabela>`, só text
       {% for campo in novo %}
       <c-campo rotulo="{{ campo.label }}" para="{{ campo.id_for_label }}" :erros="campo.errors">{{ campo }}</c-campo>
       {% endfor %}
-      <button class="btn btn-sm" type="submit">Incluir padrão</button>
+      <c-botao tamanho="sm" type="submit">Incluir padrão</c-botao>
     </form>
     {% for e in novo.non_field_errors %}<p class="erro">{{ e }}</p>{% endfor %}
   </details>

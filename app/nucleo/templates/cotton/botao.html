@@ -1,5 +1,7 @@
 {% comment %}
 Botão. `variante`: outline, ghost, destrutivo (sem variante = a ação principal); `tamanho`: sm, lg.
-Com `href` vira link; sem, é button (type="button" se nada for dito). Os outros atributos são repassados.
+Com `href` vira link; sem, é button (type="button" se nada for dito: para enviar o form, type="submit").
+`class` acrescenta classes da tela; os outros atributos são repassados (data-*, hx-*, @click…).
+Atributo do Alpine com dois-pontos leva dois: ::disabled="ocupado".
   <c-botao variante="outline" tamanho="sm" href="{% url 'x' %}">Abrir</c-botao>
-{% endcomment %}<c-vars variante="" tamanho="" href="" type="button" />{% if href %}<a class="btn{% if variante %} btn-{{ variante }}{% endif %}{% if tamanho %} btn-{{ tamanho }}{% endif %}" href="{{ href }}"{% if attrs.attrs_dict %} {{ attrs }}{% endif %}>{{ slot }}</a>{% else %}<button type="{{ type }}" class="btn{% if variante %} btn-{{ variante }}{% endif %}{% if tamanho %} btn-{{ tamanho }}{% endif %}"{% if attrs.attrs_dict %} {{ attrs }}{% endif %}>{{ slot }}</button>{% endif %}
+{% endcomment %}<c-vars variante="" tamanho="" href="" type="button" class="" />{% if href %}<a class="btn{% if variante %} btn-{{ variante }}{% endif %}{% if tamanho %} btn-{{ tamanho }}{% endif %}{% if class %} {{ class }}{% endif %}" href="{{ href }}"{% if attrs.attrs_dict %} {{ attrs }}{% endif %}>{{ slot }}</a>{% else %}<button type="{{ type }}" class="btn{% if variante %} btn-{{ variante }}{% endif %}{% if tamanho %} btn-{{ tamanho }}{% endif %}{% if class %} {{ class }}{% endif %}"{% if attrs.attrs_dict %} {{ attrs }}{% endif %}>{{ slot }}</button>{% endif %}

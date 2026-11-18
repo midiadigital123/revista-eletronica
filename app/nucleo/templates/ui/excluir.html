@@ -37,9 +37,9 @@ sai junto (resumo_ano) e só o Admin chega aqui (D-206). Parceiro em uso: Desati
 <form method="post" action="{% url 'ui_parceiro_ativo' obj.pk %}{% if voltar_query %}?voltar={{ voltar_query|urlencode }}{% endif %}" class="acoes">{% csrf_token %}
   {% if obj.desativado_em %}
   <p class="mudo">Desativado em {{ obj.desativado_em|date:"d/m/Y" }}: só aparece nos anos em que tem cortes ou projeto.</p>
-  <button type="submit" name="acao" value="reativar" class="btn btn-outline">Reativar o parceiro</button>
+  <c-botao variante="outline" type="submit" name="acao" value="reativar">Reativar o parceiro</c-botao>
   {% else %}
-  <button type="submit" name="acao" value="desativar" class="btn btn-outline">Desativar o parceiro</button>
+  <c-botao variante="outline" type="submit" name="acao" value="desativar">Desativar o parceiro</c-botao>
   <p class="mudo">Desativado, ele sai da grade dos anos em que não tem cortes. Os anos com dados dele continuam iguais.</p>
   {% endif %}
 </form>
@@ -63,8 +63,8 @@ sai junto (resumo_ano) e só o Admin chega aqui (D-206). Parceiro em uso: Desati
   {% include "ui/_componentes/confirmar.html" with nome="confirmacao" codigo=codigo texto="A exclusão não se desfaz pela tela." erro=form.confirmacao.errors.0 %}
   {% endif %}
   <div class="acoes">
-    <a class="btn btn-outline" href="{{ voltar }}">Voltar sem excluir</a>
-    <button type="submit" class="btn btn-destrutivo" data-confirmado>{% if resumo is not None %}Apagar o ano {{ obj.ano }}{% else %}Excluir{% endif %}</button>
+    <c-botao variante="outline" href="{{ voltar }}">Voltar sem excluir</c-botao>
+    <c-botao variante="destrutivo" type="submit" data-confirmado>{% if resumo is not None %}Apagar o ano {{ obj.ano }}{% else %}Excluir{% endif %}</c-botao>
   </div>
 </form>
 {% endif %}

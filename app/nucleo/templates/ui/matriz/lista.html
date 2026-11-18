@@ -8,8 +8,8 @@
 <c-pagina-cab titulo="Matrizes">
   <p class="mudo">Descritores e tarefas que as revistas do ano usam, por etapa e componente.</p>
   <c-slot name="acoes">{% if ano %}
-    <a class="btn btn-ghost" href="{% url 'painel' ano.ano %}">Ver painel de {{ ano.ano }}</a>
-    {% if perms.nucleo.add_matriz %}<button type="button" class="btn" data-abrir="dlg-nova">Nova matriz</button>{% endif %}
+    <c-botao variante="ghost" href="{% url 'painel' ano.ano %}">Ver painel de {{ ano.ano }}</c-botao>
+    {% if perms.nucleo.add_matriz %}<c-botao data-abrir="dlg-nova">Nova matriz</c-botao>{% endif %}
   {% endif %}</c-slot>
 </c-pagina-cab>
 

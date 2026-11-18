@@ -32,8 +32,8 @@
   {% include "ui/_componentes/bloqueio.html" %}
   {% include "ui/_componentes/confirmar.html" with nome="confirmacao" codigo=obj.codigo texto="Confira a lista acima: a exclusão não se desfaz pela tela." erro=form.confirmacao.errors.0 %}
   <div class="acoes matriz-fim">
-    <a class="btn btn-outline" href="{{ voltar }}">Voltar sem excluir</a>
-    <button type="submit" class="btn btn-destrutivo" data-confirmado>Excluir {{ rotulo }}</button>
+    <c-botao variante="outline" href="{{ voltar }}">Voltar sem excluir</c-botao>
+    <c-botao variante="destrutivo" type="submit" data-confirmado>Excluir {{ rotulo }}</c-botao>
   </div>
 </form>
 {% endif %}

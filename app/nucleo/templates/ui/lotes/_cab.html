@@ -3,7 +3,7 @@ Cabeçalho comum das duas abas de Lotes: título, ano, abas e aviso de só leitu
 Contexto: ano, anos, aba ("matriz" | "template"), pode_gravar.
 {% endcomment %}<c-pagina-cab titulo="Lotes">
   <p class="mudo">Atribua a mesma matriz ou o mesmo template a vários de uma vez.</p>
-  <c-slot name="acoes"><a class="btn btn-ghost" href="{% url 'painel' ano.ano %}">Ver painel de {{ ano.ano }}</a></c-slot>
+  <c-slot name="acoes"><c-botao variante="ghost" href="{% url 'painel' ano.ano %}">Ver painel de {{ ano.ano }}</c-botao></c-slot>
 </c-pagina-cab>
 
 

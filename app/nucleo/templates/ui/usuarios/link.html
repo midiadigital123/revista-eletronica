@@ -16,7 +16,7 @@ definir a própria senha, para enviar sem mandar senha. Só aparece na resposta 
   <div class="usuarios-copiar">
     <label for="link-acesso">Link</label>
     <input class="input" id="link-acesso" type="text" value="{{ link }}" readonly>
-    <div class="acoes"><button type="button" class="btn btn-sm" data-copiar="#link-acesso"><span aria-live="polite">Copiar link</span></button></div>
+    <div class="acoes"><c-botao tamanho="sm" data-copiar="#link-acesso"><span aria-live="polite">Copiar link</span></c-botao></div>
   </div>
 
   <div class="usuarios-copiar">
@@ -30,7 +30,7 @@ Crie sua senha neste link (vale por {{ dias }} dia{{ dias|pluralize }} e só fun
 {{ link }}
 
 Depois, entre por {{ entrar }}</textarea>
-    <div class="acoes"><button type="button" class="btn btn-outline btn-sm" data-copiar="#mensagem-acesso"><span aria-live="polite">Copiar mensagem</span></button></div>
+    <div class="acoes"><c-botao variante="outline" tamanho="sm" data-copiar="#mensagem-acesso"><span aria-live="polite">Copiar mensagem</span></c-botao></div>
   </div>
 </c-card>
 {% endblock %}

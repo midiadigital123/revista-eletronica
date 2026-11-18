@@ -38,8 +38,8 @@ Ficha: docs/telas/fichas/templates.md.{% endcomment %}
   </c-campo>
 
   <div class="acoes">
-    <button class="btn" type="submit">Criar template</button>
-    <a class="btn btn-outline" href="{% url 'ui_templates' ano.ano %}?aba={{ aba }}">Cancelar</a>
+    <c-botao type="submit">Criar template</c-botao>
+    <c-botao variante="outline" href="{% url 'ui_templates' ano.ano %}?aba={{ aba }}">Cancelar</c-botao>
   </div>
 </form>
 {% endblock %}

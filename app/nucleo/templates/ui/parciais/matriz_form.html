@@ -14,7 +14,7 @@ Contexto: form, titulo, url, chave (id do modal). Mensagens de erro do servidor:
   {% for campo in form %}{% include "ui/_componentes/matriz_campo.html" %}{% endfor %}
   {% if form.precisa_confirmar %}{% include "ui/_componentes/impacto.html" with form_id="form-"|add:chave acao="Criar descritor" perdem=form.perdem %}{% endif %}
   <footer>
-    <button type="button" class="btn btn-outline" data-fechar>Cancelar</button>
-    <button type="submit" class="btn">{% if chave == "duplicar" %}Duplicar{% elif chave == "nova" %}Criar matriz{% else %}Criar descritor{% endif %}</button>
+    <c-botao variante="outline" data-fechar>Cancelar</c-botao>
+    <c-botao type="submit">{% if chave == "duplicar" %}Duplicar{% elif chave == "nova" %}Criar matriz{% else %}Criar descritor{% endif %}</c-botao>
   </footer>
 </form>

@@ -9,7 +9,7 @@ quando o seletor sai do grupo atual (`option[selected]`, CSS em telas/usuarios.c
 {% block conteudo %}
 <c-pagina-cab titulo="Usuários">
   <p class="mudo">Quem entra no sistema e em qual grupo. O grupo decide o que a pessoa pode fazer. Quem sai é desativado; só se exclui quem nunca registrou nada no sistema.</p>
-  <c-slot name="acoes">{% if perms.auth.add_user %}<a class="btn" href="{% url 'ui_usuarios_novo' %}">Novo usuário</a>{% endif %}</c-slot>
+  <c-slot name="acoes">{% if perms.auth.add_user %}<c-botao href="{% url 'ui_usuarios_novo' %}">Novo usuário</c-botao>{% endif %}</c-slot>
 </c-pagina-cab>
 
 <div class="tabela-caixa">
@@ -28,7 +28,7 @@ quando o seletor sai do grupo atual (`option[selected]`, CSS em telas/usuarios.c
               {% if not linha.grupo_atual %}<option value="" selected>Sem grupo</option>{% endif %}
               {% for g in grupos %}<option value="{{ g.pk }}"{% if g == linha.grupo_atual %} selected{% endif %}>{{ g.name }}</option>{% endfor %}
             </select>
-            <button class="btn btn-outline btn-sm" type="submit" aria-label="Mudar grupo de {{ u.username }}">Mudar</button>
+            <c-botao variante="outline" tamanho="sm" type="submit" aria-label="Mudar grupo de {{ u.username }}">Mudar</c-botao>
           </form>
           {% else %}{{ linha.grupos|default:"Sem grupo" }}{% endif %}
         </td>

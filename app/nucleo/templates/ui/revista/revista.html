@@ -21,18 +21,18 @@ alvo do HTMX.
   {% if arquivada or pode_nome %}<p class="mudo">{% if arquivada %}<c-badge variante="secundario">Arquivada</c-badge>{% endif %}{% if arquivada and pode_nome %} · {% endif %}{% if pode_nome %}<a class="link" href="{% url 'ui_projeto' revista.projeto_id %}#nome">Editar o nome do projeto</a>{% endif %}</p>{% endif %}
   <c-slot name="acoes">
     {% if request.pode_gravar %}{% include "ui/_componentes/status_salvo.html" %}{% endif %}
-    <a class="btn btn-ghost" href="{% url 'preview' revista.pk %}" target="_blank" rel="noopener" title="Abre mesmo com pendências; o que falta aparece marcado.">
+    <c-botao variante="ghost" href="{% url 'preview' revista.pk %}" target="_blank" rel="noopener" title="Abre mesmo com pendências; o que falta aparece marcado.">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
       {% if arquivada %}Abrir versão arquivada{% else %}Abrir preview{% endif %}<span class="sr-only"> (nova aba)</span>
-    </a>
-    <a class="btn btn-outline" href="{% url 'ui_revista_zip' revista.ano.ano revista.pk %}">
+    </c-botao>
+    <c-botao variante="outline" href="{% url 'ui_revista_zip' revista.ano.ano revista.pk %}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>
       Baixar zip
-    </a>
-    {% if perms.nucleo.view_revista %}<a class="btn btn-outline" href="{% url 'impresso_planilhas' revista.pk %}">
+    </c-botao>
+    {% if perms.nucleo.view_revista %}<c-botao variante="outline" href="{% url 'impresso_planilhas' revista.pk %}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>
       Baixar planilhas
-    </a>{% endif %}
+    </c-botao>{% endif %}
     <a class="link mudo revista-cab-link" href="{% url 'ui_impresso' revista.ano.ano %}?revista={{ revista.pk }}">Tela do impresso</a>
   </c-slot>
 </c-pagina-cab>

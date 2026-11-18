@@ -20,8 +20,8 @@
     {% include "ui/_componentes/matriz_campo.html" with campo=form.confirmacao %}
   {% endif %}
   <div class="acoes matriz-fim">
-    <a class="btn btn-outline" href="{% url 'ui_matriz_detalhe' matriz.pk %}">Voltar sem importar</a>
-    <button type="submit" class="btn btn-destrutivo">Importar e substituir</button>
+    <c-botao variante="outline" href="{% url 'ui_matriz_detalhe' matriz.pk %}">Voltar sem importar</c-botao>
+    <c-botao variante="destrutivo" type="submit">Importar e substituir</c-botao>
   </div>
 </form>
 {% endblock %}

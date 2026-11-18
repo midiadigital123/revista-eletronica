@@ -20,8 +20,8 @@ seguem com o aviso nativo do navegador (beforeunload), que não se troca.
     <p class="mudo" id="sair-texto"><span x-text="nome"></span> tem uma alteração que ainda não foi salva. Salve ou descarte antes de sair desta página.</p>
   </header>
   <footer>
-    <button type="button" class="btn btn-outline" @click="continuar" autofocus>Continuar editando</button>
-    <button type="button" class="btn btn-outline" @click="descartar">Descartar e sair</button>
-    <button type="button" class="btn" @click="salvarESair">Salvar e sair</button>
+    <c-botao variante="outline" @click="continuar" autofocus>Continuar editando</c-botao>
+    <c-botao variante="outline" @click="descartar">Descartar e sair</c-botao>
+    <c-botao @click="salvarESair">Salvar e sair</c-botao>
   </footer>
 </dialog>
