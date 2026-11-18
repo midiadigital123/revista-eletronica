@@ -4,11 +4,11 @@
 <!-- sobrescrever a cada atualização -->
 Passo 5 de 5 concluído (K-046, D-275): `ano.spec` independente da demonstração e helper do painel esperando o HTMX; mesclado na `main` e enviado ao GitHub.
 Funcionando: E2E inteiro na 8002 com 170 passaram, 0 falhas, 0 pulados (primeira rodada sem a falha conhecida do `ano.spec`); suíte Django 918 OK (8 pulados); 15 componentes cotton nas telas B.
-Quebrado/pendente: capturas manuais das 3 telas do plano D-274 não feitas; usuários de teste `e2e` e `imp-e2e` no banco da 8002; pendências antigas da D-261.
+Quebrado/pendente: usuários de teste `e2e` e `imp-e2e` no banco da 8002; pendências antigas da D-261.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Escolher o próximo trabalho no `kanban.md` (Backlog: K-034, K-031, K-033) ou pedir as capturas das 3 telas do D-274.
+Escolher o próximo trabalho no `kanban.md` (Backlog: K-034, K-031, K-033) ou apagar os usuários de teste `e2e` e `imp-e2e` da 8002 se não forem mais usados.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2894,3 +2894,4 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - "Junte tudo e commite na main" (usuário): `integ/cotton-3` mesclada na `main` por fast-forward; K-045 em Done. Capturas das 3 telas do plano não feitas.
 - Push da `main` (`e4dfd3a`) a pedido do usuário. Correção do `ano.spec` (D-275, K-046) na `feat/ano-spec`: `ano.spec` + `painel.spec` ×3 nas duas larguras, 30/30 (antes 6 falhas em 6 sozinho).
 - E2E inteiro com a correção: 170 passaram, 0 falhas, 0 pulados. "Após os testes darem certo pode mergear na main e fazer o push" (usuário): `integ/ano-spec` mesclada na `main` e enviada; K-046 em Done.
+- Capturas das 3 telas do D-274 na 8002 (form com erro, ficha da revista sem permissão, editor de template em leitura): borda vermelha nos campos com erro, 57 de 57 controles travados na ficha, editor todo em leitura. Vistas pelo usuário.
