@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo 5 de 5 concluído (K-045, D-274): controles `<c-input>`, `<c-select>`, `<c-textarea>` e `nucleo.widgets.classe_css` mesclados na `main` (fast-forward da `integ/cotton-3`), sem push.
-Funcionando: 15 componentes em `app/nucleo/templates/cotton/`; suíte Django 918 OK (8 pulados); E2E inteiro na 8002 com 169 passaram, 0 pulados, 1 falha (`ano.spec` em 1280 px). HTML do painel idêntico ao da versão anterior (comparado byte a byte).
-Quebrado/pendente: `ano.spec` falha sozinho porque a revista LP da demonstração da 8002 está validada (o painel não mostra o contador "Validado"); na rodada inteira falha por intermitência do helper `trocarCorpoPainel`. A `main` está à frente do GitHub (sem push). Capturas manuais das 3 telas do plano não foram feitas. Usuários de teste `e2e` e `imp-e2e` criados no banco da 8002.
+Passo 5 de 5 concluído (K-046, D-275): `ano.spec` independente da demonstração e helper do painel esperando o HTMX; mesclado na `main` e enviado ao GitHub.
+Funcionando: E2E inteiro na 8002 com 170 passaram, 0 falhas, 0 pulados (primeira rodada sem a falha conhecida do `ano.spec`); suíte Django 918 OK (8 pulados); 15 componentes cotton nas telas B.
+Quebrado/pendente: capturas manuais das 3 telas do plano D-274 não feitas; usuários de teste `e2e` e `imp-e2e` no banco da 8002; pendências antigas da D-261.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Escolher: "push" para enviar a `main` ao GitHub, ou corrigir o `ano.spec` (criar a própria revista sem validação em vez de depender da demonstração).
+Escolher o próximo trabalho no `kanban.md` (Backlog: K-034, K-031, K-033) ou pedir as capturas das 3 telas do D-274.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2234,6 +2234,14 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Arquivos afetados:** `app/nucleo/templates/cotton/input.html`, `select.html`, `textarea.html`, 20 templates de `app/nucleo/templates/ui/`, `app/nucleo/widgets.py`, `app/nucleo/urls/ui_{anos,excluir,matriz,projeto,revista,usuarios,variaveis}.py`, `app/nucleo/tests/test_componentes_cotton.py`, `app/nucleo/tests/test_widgets.py`, `docs/telas/design-system.md`
 - **Status:** ativa
 
+### D-275 — `ano.spec` cria o próprio parceiro; helper do painel espera o HTMX ligar (2026-11-18)
+- **Contexto:** o `ano.spec` falhava em 1280 px em quase toda rodada inteira e, sozinho, falhava sempre na 8002. Duas causas: (1) dependia de alguma revista de 2026 sem "Validado" para o contador existir, e a LP da demonstração estava validada (sozinho: o clique estourava 30 s); (2) o `entrar` volta assim que a URL muda, antes de o HTMX (`defer`) ligar a página, e o primeiro clique no painel não disparava a troca (rodada inteira: o form novo não aparecia em 5 s, só no primeiro projeto, com o cache vazio).
+- **Decisão:** o spec cria o parceiro "E2E Ano …" com `parceiroComProjeto` (a revista nasce sem "Validado") e abre o painel depois; `trocarCorpoPainel` (helper de `filtrarPainel` e `filtrarFalta`) espera o `domcontentloaded` antes de agir.
+- **Motivo:** spec não depende de dado que não criou (D-225); a espera no helper corrige todos os chamadores de uma vez.
+- **Descartadas:** desvalidar a revista da demonstração — dado que o spec não criou, e volta a quebrar quando alguém validar; espera dentro do `entrar` — muda o tempo de todos os specs, e o problema só aparece onde se clica em HTMX logo depois de entrar.
+- **Arquivos afetados:** `app/e2e/tests/ano.spec.ts`, `app/e2e/tests/helpers.ts`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (18/11, D-270) A demo do django-cotton convence? Se sim, adotar tela por tela (ordem sugerida: ícones, botão, campo, cabeçalho, card, modal) ou parar na demo — depende de: Otavio — respondida em 18/11: convence, adotar (D-271)
 - [x] (18/11, respondida pela D-270: DaisyUI descartado, demo com django-cotton) Adotar DaisyUI nas telas B? Análise: exige Tailwind 4 + passo de build (hoje não há nenhum), 7 classes do `ui.css` colidem de nome (`btn`, `badge`, `card`, `input`, `select`, `textarea`, `link`), 75 templates e 1.525 linhas de CSS a reescrever, e o `DESIGN.md` fixa a forma do preset shadcn. Recomendação: não adotar; se a queixa for visual, polir telas específicas no `ui.css` atual. Complemento (18/11): a queixa do usuário é componentização ("tudo parece solto"), e a medição confirma: os componentes são classes CSS, não unidades de template (`class="btn` 117×, `<svg` inline 70×, `campo` 39×, `card` 28×, `pagina-cab` 24×, `<dialog` 10× escritos à mão; 253 classes em `telas/*.css` contra 135 no `ui.css`; 209 de 337 classes usadas uma vez só). DaisyUI não resolve isso (também é classe CSS); o caminho proposto é componente de template (django-cotton ou `{% include %}`), piloto no `<dialog>` — depende de: Otavio
@@ -2884,3 +2892,5 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - Plano do item 5 aprovado (D-274, K-045). Leva E (`e1c8eb6`, 45 controles em `<c-input>`/`<c-select>`/`<c-textarea>`, 3 crus) e leva F (`9f8b742`, `classe_css`) mescladas na `integ/cotton-3` (`1f53d75`) antes da suíte inteira (desvio da regra "merge só com testes verdes": rodei só os testes dos componentes e de usuários antes).
 - Suíte 918 OK. E2E inteiro na 8002 (rodado por mim, com o `root`): 169 passaram, 0 pulados, 1 falha no `ano.spec` 1280 (`trocarCorpoPainel`, o form novo não apareceu em 5 s). Sozinho, ele falha 6 de 6 por dado (LP da demonstração validada às 17h23, sem o contador "Validado"). HTML do painel com o template da `main` e com o da `integ/cotton-3`: idêntico. Criados no banco da 8002 os usuários de teste `e2e` e `imp-e2e` (senhas só no scratchpad).
 - "Junte tudo e commite na main" (usuário): `integ/cotton-3` mesclada na `main` por fast-forward; K-045 em Done. Capturas das 3 telas do plano não feitas.
+- Push da `main` (`e4dfd3a`) a pedido do usuário. Correção do `ano.spec` (D-275, K-046) na `feat/ano-spec`: `ano.spec` + `painel.spec` ×3 nas duas larguras, 30/30 (antes 6 falhas em 6 sozinho).
+- E2E inteiro com a correção: 170 passaram, 0 falhas, 0 pulados. "Após os testes darem certo pode mergear na main e fazer o push" (usuário): `integ/ano-spec` mesclada na `main` e enviada; K-046 em Done.
