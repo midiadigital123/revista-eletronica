@@ -109,6 +109,40 @@ Cores fora dos tokens só onde o admin/preview já fixou: faixa vermelha `#b0002
 | Só leitura nativo | form inteiro sem permissão | `<fieldset disabled>`: os campos ganham o fundo de só leitura |
 | Modal com form | o HTMX troca o form inteiro do modal | `<dialog class="dialogo"><form>…</form></dialog>` (o `form` vira a coluna do modal) |
 
+### Componentes de template (django-cotton, D-270 e D-271)
+
+Os componentes mais usados são arquivos em `app/nucleo/templates/cotton/` e entram na tela como tag
+`<c-nome>`. Cada um gera exatamente as classes do `ui.css`; o CSS não mudou. Tela nova usa a tag, não a
+classe: `nucleo/tests/test_componentes_cotton.py` falha se a marcação crua voltar (as exceções ficam
+nomeadas no teste, com o motivo) e trava o HTML de cada componente.
+
+| Tag | Gera | Props | Slots |
+|---|---|---|---|
+| `<c-pagina-cab>` | `header.pagina-cab` | `titulo`, `acoes_class` | padrão (abaixo do h1), `titulo` (com marcação), `acoes` |
+| `<c-card>` | `section.card` | `titulo`, `titulo_id`, `tag`, `class`, `oculto` | padrão, `descricao`, `lateral` |
+| `<c-campo>` | `div.campo` + `label` | `rotulo`, `para`, `:erros`, `dica`, `class` | padrão (o controle), `rotulo`, `ajuda` |
+| `<c-badge>` | `span.badge` | `variante` (secundario, contorno, alerta, erro), `class` | padrão |
+| `<c-aviso>` | `div.aviso` ou `p.aviso` | `variante` (erro, alerta), `tag`, `class` | padrão |
+| `<c-botao>` | `button.btn` ou `a.btn` (com `href`) | `variante` (outline, ghost, destrutivo), `tamanho` (sm, lg), `href`, `type`, `class` | padrão |
+| `<c-abas>` + `<c-aba>` | `nav.abas` + links | `rotulo`; `href`, `atual` | padrão |
+
+```html
+<c-pagina-cab titulo="Usuários">
+  <p class="mudo">Quem entra no sistema e em qual grupo.</p>
+  <c-slot name="acoes"><c-botao href="{% url 'ui_usuarios_novo' %}">Novo usuário</c-botao></c-slot>
+</c-pagina-cab>
+<c-campo rotulo="Nome" para="id_nome" :erros="form.nome.errors">{{ form.nome }}</c-campo>
+```
+
+Regras ao escrever ou mudar um componente:
+
+- Toda prop tem valor padrão no `<c-vars>` (`titulo=""`): prop sem padrão herda a variável de mesmo nome da página.
+- Atributo condicional não entra na tag do componente (`{% if x %} disabled{% endif %}`): vira prop, ou a marcação fica crua, como exceção nomeada no teste.
+- `<c-botao>` sem `type` é `type="button"`; para enviar o form, `type="submit"`.
+- Atributo do Alpine com dois-pontos leva dois (`::disabled="ocupado"`); `@click` e `x-*` passam direto.
+- Cada tag `{% … %}` fica inteira numa linha. Formatador automático quebra a tag e o Django deixa de lê-la (`.prettierignore` cobre `app/nucleo/templates/`).
+- Custo: 40 a 50 µs a mais por uso em relação à classe crua (medido em laço de 1.000).
+
 ### Estados dos controles (U10b)
 
 | Estado | Como |
