@@ -129,6 +129,9 @@ nomeadas no teste, com o motivo) e trava o HTML de cada componente.
 | `<c-modal>` | `dialog.dialogo` | `id`, `titulo`, `titulo_id`, `class` | padrão, `titulo`, `descricao`, `rodape` |
 | `<c-botao-icone>` | `a.btn-icone` ou `button.btn-icone` com o ícone dentro | `icone`, `rotulo` (obrigatório: vira `aria-label`), `dica`, `href`, `type`, `class` | — |
 | `<c-voltar>` | `a.mudo.voltar` com o sinal ‹ | `href` | padrão (o texto) |
+| `<c-input>` | `input.input` | `:erros`, `erro_id`, `:editavel`, `trava`, `class` | — |
+| `<c-select>` | `select.select` | as mesmas do `<c-input>` | padrão (as `<option>`) |
+| `<c-textarea>` | `textarea.textarea` | as mesmas do `<c-input>` | padrão (o texto) |
 
 ```html
 <c-pagina-cab titulo="Usuários">
@@ -156,6 +159,13 @@ nomeadas no teste, com o motivo) e trava o HTML de cada componente.
 | `clipe` | arquivo anexado | `usuario-ok` | reativar usuário |
 | `copiar` | copiar, duplicar | `usuario-x` | desativar usuário |
 | `enviar` | upload, reimportar | `fechar` | remover, fechar |
+
+Controles (`<c-input>`, `<c-select>`, `<c-textarea>`, D-274): o estado vai em props, não em `{% if %}` na tag.
+`:erros="form.nome.errors"` não vazio põe `aria-invalid="true"` e, com `erro_id="nome-erro"`, o `aria-describedby`;
+condição composta vai como texto (`erros="{% if a or b %}1{% endif %}"`). `:editavel="pode_gravar"` falso trava com
+`disabled`, ou com `readonly` se `trava="readonly"`. A prop é positiva porque `:editavel="not x"` não funciona no
+cotton; variável ausente do contexto deixa o campo editável, então a view tem de mandar a permissão.
+Widget de form do Django leva a classe por `nucleo.widgets.classe_css(widget)`, nunca escrita à mão na view.
 
 Modal (`<c-modal>`): abre com `data-abrir="id"` num botão e fecha com `data-fechar` (`static/ui/ui.js`). Sem
 `titulo` é só a casca, para o form que o HTMX troca inteiro e traz o próprio cabeçalho (`parciais/matriz_form.html`).

@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo 4 de 4 concluído (K-044, D-272 e D-273): ícone, modal, botão de ícone e voltar como componentes cotton mesclados na `main` (`735564d`, fast-forward da `integ/cotton-2`), sem push.
-Funcionando: 12 componentes em `app/nucleo/templates/cotton/` (pagina_cab, card, campo, badge, aviso, botao, botao_icone, icone, modal, voltar, abas, aba); catraca e saída travada em `test_componentes_cotton.py` (15 testes); suíte Django 916 OK (8 pulados); E2E inteiro 147 passaram, 20 pulados, 1 falha de dado conhecida e 2 intermitentes no painel (20 de 20 na repetição). Na `main`: `manage.py check` sem erro, login da 8000 responde 200, Playwright reinstalado em `app/e2e`.
-Quebrado/pendente: a `main` está à frente do GitHub (sem push); a suíte inteira não foi rodada de novo na `main` depois do merge (mesmo commit testado na `integ/cotton-2`); no banco da 8002 ficaram 6 parceiros "E2E Painel …" e o usuário `e2e-outra`; pendências antigas da D-261 continuam.
+Passo 5 de 5 concluído (K-045, D-274): controles `<c-input>`, `<c-select>`, `<c-textarea>` e `nucleo.widgets.classe_css` mesclados na `main` (fast-forward da `integ/cotton-3`), sem push.
+Funcionando: 15 componentes em `app/nucleo/templates/cotton/`; suíte Django 918 OK (8 pulados); E2E inteiro na 8002 com 169 passaram, 0 pulados, 1 falha (`ano.spec` em 1280 px). HTML do painel idêntico ao da versão anterior (comparado byte a byte).
+Quebrado/pendente: `ano.spec` falha sozinho porque a revista LP da demonstração da 8002 está validada (o painel não mostra o contador "Validado"); na rodada inteira falha por intermitência do helper `trocarCorpoPainel`. A `main` está à frente do GitHub (sem push). Capturas manuais das 3 telas do plano não foram feitas. Usuários de teste `e2e` e `imp-e2e` criados no banco da 8002.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Escolher: "push" para enviar a `main` ao GitHub, ou o próximo componente (item 5: controles `input`/`select`/`textarea`).
+Escolher: "push" para enviar a `main` ao GitHub, ou corrigir o `ano.spec` (criar a própria revista sem validação em vez de depender da demonstração).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2225,6 +2225,15 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Arquivos afetados:** `app/nucleo/templates/cotton/botao_icone.html`, `app/nucleo/templates/cotton/voltar.html`, 16 templates de `app/nucleo/templates/ui/`, `app/nucleo/tests/test_componentes_cotton.py`, `docs/telas/design-system.md`
 - **Status:** ativa
 
+### D-274 — Controles de formulário viram componentes com o estado em props; classe dos widgets numa função (2026-11-18)
+- **Contexto:** item 5 da lista de componentes. 48 controles `input`/`select`/`textarea` escritos à mão; 30 deles com `{% if %}` na tag para erro (`aria-invalid`/`aria-describedby`) ou trava por permissão (`readonly`/`disabled`). Nas views, a regra "qual classe vai em qual widget" estava copiada em 4 laços e 5 pontos.
+- **Decisão:** `<c-input>`, `<c-select>` e `<c-textarea>` com as props `:erros`, `erro_id`, `:editavel` e `trava` (padrão `disabled`); 45 controles convertidos, 3 crus com motivo na catraca (`senha_definir`: autofocus só no 1º do laço; `cortes_grade` e `anos/ano`: aria-invalid e aria-describedby com condições diferentes). Views: `nucleo.widgets.classe_css(widget)` nos 9 pontos.
+- **Motivo:** o ganho está no estado: esquecer `aria-invalid` tira a borda vermelha e o anúncio; esquecer a trava deixa digitar o que o servidor recusa.
+- **Descartadas:** prop negativa (`:travado="not x"`) — o cotton não avalia `not` na prop dinâmica (fica sempre verdadeiro); por isso `editavel`, positiva. Função que recebe o form (o plano) — a função por widget serve também aos 5 pontos de um campo só; nome `classe` — colide com a variável local `classe` (modelo) de `ui_excluir.py`. Renderizar todo campo pelo form do Django — mexe em views e 16 telas, fora do escopo.
+- **Cuidado:** variável ausente do contexto em `:editavel` deixa o campo editável (o `{% if not x %}` antigo travava). Conferido: toda view que usa `pode_gravar`, `pode_textos`, `pode_infograficos` e `grade.pode_gravar` os manda. Variável ausente em `:erros` não acende o erro (certo).
+- **Arquivos afetados:** `app/nucleo/templates/cotton/input.html`, `select.html`, `textarea.html`, 20 templates de `app/nucleo/templates/ui/`, `app/nucleo/widgets.py`, `app/nucleo/urls/ui_{anos,excluir,matriz,projeto,revista,usuarios,variaveis}.py`, `app/nucleo/tests/test_componentes_cotton.py`, `app/nucleo/tests/test_widgets.py`, `docs/telas/design-system.md`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (18/11, D-270) A demo do django-cotton convence? Se sim, adotar tela por tela (ordem sugerida: ícones, botão, campo, cabeçalho, card, modal) ou parar na demo — depende de: Otavio — respondida em 18/11: convence, adotar (D-271)
 - [x] (18/11, respondida pela D-270: DaisyUI descartado, demo com django-cotton) Adotar DaisyUI nas telas B? Análise: exige Tailwind 4 + passo de build (hoje não há nenhum), 7 classes do `ui.css` colidem de nome (`btn`, `badge`, `card`, `input`, `select`, `textarea`, `link`), 75 templates e 1.525 linhas de CSS a reescrever, e o `DESIGN.md` fixa a forma do preset shadcn. Recomendação: não adotar; se a queixa for visual, polir telas específicas no `ui.css` atual. Complemento (18/11): a queixa do usuário é componentização ("tudo parece solto"), e a medição confirma: os componentes são classes CSS, não unidades de template (`class="btn` 117×, `<svg` inline 70×, `campo` 39×, `card` 28×, `pagina-cab` 24×, `<dialog` 10× escritos à mão; 253 classes em `telas/*.css` contra 135 no `ui.css`; 209 de 337 classes usadas uma vez só). DaisyUI não resolve isso (também é classe CSS); o caminho proposto é componente de template (django-cotton ou `{% include %}`), piloto no `<dialog>` — depende de: Otavio
@@ -2872,3 +2881,6 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - Os dois ambientes no ar (8000 e 8002). O app da 8000 não subia por uma edição sem commit no `docker-compose.yml` da main (`@db:5532`, das 16h19): a porta interna do Postgres é sempre 5432; desfeita. Repetição do `painel.spec` (`--repeat-each=3`): 20 execuções, 20 passaram, incluindo 5 de cada um dos dois testes que tinham falhado; a rodada parou antes das 4 últimas e sem o resumo. Conclusão: as duas falhas do E2E inteiro são intermitentes (rodada feita logo depois de reiniciar a máquina), não regressão das levas A a D. K-044 em Review.
 - "Aprovado, pode mergear": `integ/cotton-2` mesclada na `main` por fast-forward (`735564d`); `npm ci` em `app/e2e` da main (o link quebrado saiu com o merge); K-044 em Done.
 - Porta da worktree de trabalho corrigida na documentação a pedido do usuário: `CLAUDE.md` e `docs/docker.md` passam de `APP_PORT=8001` para `8002` (mesclado direto na `main`; o `.env` da worktree já estava em 8002). Decisões antigas do `state.md` que citam a 8001 ficam como estão (histórico).
+- Plano do item 5 aprovado (D-274, K-045). Leva E (`e1c8eb6`, 45 controles em `<c-input>`/`<c-select>`/`<c-textarea>`, 3 crus) e leva F (`9f8b742`, `classe_css`) mescladas na `integ/cotton-3` (`1f53d75`) antes da suíte inteira (desvio da regra "merge só com testes verdes": rodei só os testes dos componentes e de usuários antes).
+- Suíte 918 OK. E2E inteiro na 8002 (rodado por mim, com o `root`): 169 passaram, 0 pulados, 1 falha no `ano.spec` 1280 (`trocarCorpoPainel`, o form novo não apareceu em 5 s). Sozinho, ele falha 6 de 6 por dado (LP da demonstração validada às 17h23, sem o contador "Validado"). HTML do painel com o template da `main` e com o da `integ/cotton-3`: idêntico. Criados no banco da 8002 os usuários de teste `e2e` e `imp-e2e` (senhas só no scratchpad).
+- "Junte tudo e commite na main" (usuário): `integ/cotton-3` mesclada na `main` por fast-forward; K-045 em Done. Capturas das 3 telas do plano não feitas.

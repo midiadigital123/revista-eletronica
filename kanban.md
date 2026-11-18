@@ -11,6 +11,7 @@
 ## Review
 
 ## Done
+- **K-045** Controles `<c-input>`, `<c-select>`, `<c-textarea>` (45 convertidos, 3 crus) e `classe_css` nos widgets; mesclados na `main` (suíte 918 OK, E2E 169 passaram, 1 falha conhecida do `ano.spec`) · 2026-11-18 · D-274
 - **K-044** Componentes `<c-icone>` (68 svgs, 26 desenhos), `<c-modal>` (7), `<c-botao-icone>` (11) e `<c-voltar>` (13) nas telas B; mesclados na `main` (suíte 916 OK, E2E 147 passaram) · 2026-11-18 · D-272 · D-273
 - **K-043** Migração dos componentes das telas B para django-cotton: cabeçalho, campo, selo, aviso, card e botão (219 usos convertidos, 29 crus com motivo na catraca); mesclada na `main` (suíte 910 OK, E2E 149 passaram) · 2026-11-18 · D-271
 - **K-042** Demo: página Projeto (detalhe) refeita com django-cotton (7 componentes, suíte 901 OK, E2E 2/2, capturas), aprovada pelo usuário · 2026-11-18 · D-270
