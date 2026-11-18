@@ -11,7 +11,7 @@ definir a própria senha, para enviar sem mandar senha. Só aparece na resposta 
 </c-pagina-cab>
 
 <div class="card card-estreito usuarios-link">
-  <p class="aviso">O link vale {{ dias }} dia{{ dias|pluralize }} e funciona uma vez.{% if alvo.has_usable_password %} A senha atual de {{ alvo.username }} continua valendo até a nova ser definida.{% endif %} Venceu? Gere outro aqui.</p>
+  <c-aviso tag="p">O link vale {{ dias }} dia{{ dias|pluralize }} e funciona uma vez.{% if alvo.has_usable_password %} A senha atual de {{ alvo.username }} continua valendo até a nova ser definida.{% endif %} Venceu? Gere outro aqui.</c-aviso>
 
   <div class="usuarios-copiar">
     <label for="link-acesso">Link</label>

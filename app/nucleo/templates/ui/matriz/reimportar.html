@@ -11,7 +11,7 @@
 </c-pagina-cab>
 
 <form method="post" enctype="multipart/form-data" class="card matriz-cartao-form" novalidate>{% csrf_token %}
-  {% for e in form.non_field_errors %}<p class="aviso aviso-erro" role="alert">{{ e }}</p>{% endfor %}
+  {% for e in form.non_field_errors %}<c-aviso tag="p" variante="erro" role="alert">{{ e }}</c-aviso>{% endfor %}
   {% include "ui/_componentes/matriz_campo.html" with campo=form.arquivo %}
   {% include "ui/_componentes/matriz_campo.html" with campo=form.passo %}
   {% if tem_mec %}

@@ -32,7 +32,7 @@ sai junto (resumo_ano) e só o Admin chega aqui (D-206). Parceiro em uso: Desati
     </tbody>
   </table>
 </div>
-{% if dica %}<p class="aviso aviso-alerta">{{ dica }}</p>{% endif %}
+{% if dica %}<c-aviso tag="p" variante="alerta">{{ dica }}</c-aviso>{% endif %}
 {% if pode_desativar %}
 <form method="post" action="{% url 'ui_parceiro_ativo' obj.pk %}{% if voltar_query %}?voltar={{ voltar_query|urlencode }}{% endif %}" class="acoes">{% csrf_token %}
   {% if obj.desativado_em %}
@@ -54,7 +54,7 @@ sai junto (resumo_ano) e só o Admin chega aqui (D-206). Parceiro em uso: Desati
   </table>
 </div>
 {% elif resumo is not None %}
-<p class="aviso">O ano {{ obj.ano }} está vazio.</p>
+<c-aviso tag="p">O ano {{ obj.ano }} está vazio.</c-aviso>
 {% endif %}
 <form method="post" class="card card-estreito" novalidate>{% csrf_token %}
   {% if resumo is not None %}

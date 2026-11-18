@@ -14,7 +14,7 @@ Impacto (U2): form.precisa_confirmar abre o modal de impacto; o modal do item li
     {% if request.bloqueio %}<input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">{% endif %}
     {% if pode_gravar %}{{ form.confirmar_impacto }}{% endif %}
     <fieldset{% if not pode_gravar %} disabled{% endif %}>
-      {% for e in form.non_field_errors %}<p class="aviso aviso-erro" role="alert">{{ e }}</p>{% endfor %}
+      {% for e in form.non_field_errors %}<c-aviso tag="p" variante="erro" role="alert">{{ e }}</c-aviso>{% endfor %}
       <section class="matriz-secao" aria-labelledby="sec-identificacao">
         <h3 id="sec-identificacao" class="secao-titulo">Identificação</h3>
         <div class="matriz-grade-ident">
@@ -77,9 +77,9 @@ Impacto (U2): form.precisa_confirmar abre o modal de impacto; o modal do item li
         <p class="mudo">O arquivo é da matriz: aparece em toda revista que usa esta etapa × componente.{% if t.arquivo %} Enviar outro troca o atual (<a class="link" href="{% url 'ui_matriz_item_baixar' mec.pk descritor.pk t.pk %}">baixar {{ t.arquivo|slice:"-3:"|upper }}</a>).{% endif %}</p>
       </header>
       {% if item_perdem %}
-      <p class="aviso aviso-alerta">Enviar ou remover tira o “Validado” de {{ item_perdem|length }} revista(s):</p>
+      <c-aviso tag="p" variante="alerta">Enviar ou remover tira o “Validado” de {{ item_perdem|length }} revista(s):</c-aviso>
       <ul class="impacto-lista">{% for r in item_perdem %}<li>{{ r }}</li>{% endfor %}</ul>
-      {% elif item_impacto.0 %}<p class="aviso aviso-alerta">Afeta {{ item_impacto.0 }} revista(s) ativa(s); {{ item_impacto.1 }} perde(m) o “Validado”.</p>{% endif %}
+      {% elif item_impacto.0 %}<c-aviso tag="p" variante="alerta">Afeta {{ item_impacto.0 }} revista(s) ativa(s); {{ item_impacto.1 }} perde(m) o “Validado”.</c-aviso>{% endif %}
       {% for campo in item %}{% include "ui/_componentes/matriz_campo.html" %}{% endfor %}
       <footer>
         <button type="button" class="btn btn-outline" data-fechar>Cancelar</button>

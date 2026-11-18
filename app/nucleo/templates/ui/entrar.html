@@ -19,7 +19,7 @@ redireciona para cá (sistema/urls.py), então é a única porta de entrada. Pá
       <h1 class="secao-titulo">Entrar</h1>
     </header>
     {% if form.non_field_errors %}
-    <p class="aviso aviso-erro" role="alert">Usuário ou senha incorretos. Confira os dois e tente de novo. As maiúsculas contam.</p>
+    <c-aviso tag="p" variante="erro" role="alert">Usuário ou senha incorretos. Confira os dois e tente de novo. As maiúsculas contam.</c-aviso>
     {% endif %}
     <form method="post" action="{% url 'entrar' %}" class="entrar-form">
       {% csrf_token %}
