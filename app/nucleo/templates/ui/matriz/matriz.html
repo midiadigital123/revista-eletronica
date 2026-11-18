@@ -7,16 +7,14 @@ no fim, a zona de perigo "Excluir matriz…" (E3, D-205) leva a ui_excluir.{% en
 
 {% block conteudo %}
 <a class="mudo voltar" href="{% url 'ui_matriz' matriz.ano.ano %}">‹ Matrizes de {{ matriz.ano.ano }}</a>
-<header class="pagina-cab">
-  <div>
-    {% if pode_alterar %}{# U5: renomear inline, pelo autosave (campoAuto + nomeInline) #}
-    <form id="matriz-nome" x-data="campoAuto" novalidate>{% csrf_token %}{% url 'ui_matriz_renomear' matriz.pk as url %}
-      <h1>{% include "ui/_componentes/nome_inline.html" with nome=matriz.nome %}</h1>
-    </form>
-    {% else %}<h1>{{ matriz.nome }}</h1>{% endif %}
-    <p class="mudo">Matriz de {{ matriz.ano.ano }}{% if matriz.duplicada_de %} · cópia de {{ matriz.duplicada_de.nome }} ({{ matriz.duplicada_de.ano.ano }}){% endif %}</p>
-  </div>
-  <div class="acoes">
+<c-pagina-cab>
+  {% if pode_alterar %}{# U5: renomear inline, pelo autosave (campoAuto + nomeInline) #}
+  <form id="matriz-nome" x-data="campoAuto" novalidate>{% csrf_token %}{% url 'ui_matriz_renomear' matriz.pk as url %}
+    <h1>{% include "ui/_componentes/nome_inline.html" with nome=matriz.nome %}</h1>
+  </form>
+  {% else %}<h1>{{ matriz.nome }}</h1>{% endif %}
+  <p class="mudo">Matriz de {{ matriz.ano.ano }}{% if matriz.duplicada_de %} · cópia de {{ matriz.duplicada_de.nome }} ({{ matriz.duplicada_de.ano.ano }}){% endif %}</p>
+  <c-slot name="acoes">
     {% if matriz.duplicada_de %}<a class="btn btn-ghost" href="{% url 'ui_matriz_diferencas' matriz.pk %}">Diferenças da origem</a>{% endif %}
     {% if pode_alterar %}
     {% include "ui/_componentes/status_salvo.html" %}
@@ -31,8 +29,8 @@ no fim, a zona de perigo "Excluir matriz…" (E3, D-205) leva a ui_excluir.{% en
       Duplicar
     </button>
     {% endif %}
-  </div>
-</header>
+  </c-slot>
+</c-pagina-cab>
 
 {% if not pode_alterar and not pode_duplicar %}
 {% include "ui/_componentes/so_leitura.html" with texto="Só leitura: seu perfil vê a matriz, mas não altera. Para editar, peça a permissão de matriz a um administrador." %}

@@ -4,13 +4,10 @@
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/validar.css' %}">{% endblock %}
 
 {% block conteudo %}
-<header class="pagina-cab">
-  <div>
-    <h1>Validar revistas</h1>
-    <p class="mudo">{{ ano.ano }}: {{ itens|length }} revista(s). Cada uma é validada na versão mostrada aqui; se mudar antes do envio, é recusada.</p>
-  </div>
-  <div class="acoes"><a class="btn btn-ghost" href="{{ url_painel }}">Voltar ao painel</a></div>
-</header>
+<c-pagina-cab titulo="Validar revistas">
+  <p class="mudo">{{ ano.ano }}: {{ itens|length }} revista(s). Cada uma é validada na versão mostrada aqui; se mudar antes do envio, é recusada.</p>
+  <c-slot name="acoes"><a class="btn btn-ghost" href="{{ url_painel }}">Voltar ao painel</a></c-slot>
+</c-pagina-cab>
 
 {% if fora > 0 %}
 <div class="aviso aviso-alerta" role="status">

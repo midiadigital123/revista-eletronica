@@ -12,12 +12,10 @@ todo pedido HTMX; os forms também a levam, para funcionar sem JS).
 {% block conteudo %}
 <form id="bloqueio-form" hidden>{% csrf_token %}{% include "ui/_componentes/bloqueio.html" %}</form>
 <a class="mudo voltar" href="{% url 'ui_matriz_detalhe' mec.matriz.pk %}">‹ {{ mec.matriz.nome }} ({{ mec.matriz.ano.ano }})</a>
-<header class="pagina-cab">
-  <div>
-    <h1>{{ mec.etapa.codigo }} <span class="mudo matriz-cc">{{ mec.componente.nome|default:mec.componente.codigo }}</span></h1>
-    <p class="mudo">{{ mec.matriz.nome }} · escala até {{ mec.etapa.escala_max }} · afeta {{ afetadas }} revista(s) ativa(s)</p>
-  </div>
-  <div class="acoes">
+<c-pagina-cab>
+  <c-slot name="titulo">{{ mec.etapa.codigo }} <span class="mudo matriz-cc">{{ mec.componente.nome|default:mec.componente.codigo }}</span></c-slot>
+  <p class="mudo">{{ mec.matriz.nome }} · escala até {{ mec.etapa.escala_max }} · afeta {{ afetadas }} revista(s) ativa(s)</p>
+  <c-slot name="acoes">
     {% if pode_gravar %}{% include "ui/_componentes/status_salvo.html" %}{% endif %}
     {# U9: configurações da etapa × componente num popover nativo (componente popoverSob posiciona sob o botão). #}
     <div x-data="popoverSob">
@@ -29,8 +27,8 @@ todo pedido HTMX; os forms também a levam, para funcionar sem JS).
         {% include "ui/parciais/matriz_intervalo.html" with intervalo=intervalo %}
       </div>
     </div>
-  </div>
-</header>
+  </c-slot>
+</c-pagina-cab>
 
 {% if not perfil_edita %}
 {% include "ui/_componentes/so_leitura.html" with texto="Só leitura: seu perfil vê a matriz, mas não altera. Para editar, peça a permissão de matriz a um administrador." %}

@@ -14,7 +14,7 @@ action = a ação recusada (o Confirmar do modal reenvia o form sem botão).
 
 {% block conteudo %}
 {% if not ano %}
-<header class="pagina-cab"><div><h1>Projetos</h1></div></header>
+<c-pagina-cab titulo="Projetos" />
 {% if perms.nucleo.abrir_ano %}{% url 'ui_anos' as u %}
 {% include "ui/_componentes/vazio.html" with titulo="Nenhum ano aberto" texto="Abra um ano para lançar os cortes e criar os projetos." url=u rotulo="Abrir anos" %}
 {% else %}

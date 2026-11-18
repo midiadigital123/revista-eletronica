@@ -5,12 +5,9 @@ Ficha: docs/telas/fichas/painel.md. O corpo (filtros, resumo por coluna, tabela 
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/painel.css' %}">{% endblock %}
 
 {% block conteudo %}
-<header class="pagina-cab">
-  <div>
-    <h1>Painel da temporada {{ ano.ano }}</h1>
-    <p class="mudo">As revistas ativas, por parceiro: o que falta para cada uma sair completa, e onde resolver.</p>
-  </div>
-</header>
+<c-pagina-cab titulo="Painel da temporada {{ ano.ano }}">
+  <p class="mudo">As revistas ativas, por parceiro: o que falta para cada uma sair completa, e onde resolver.</p>
+</c-pagina-cab>
 
 
 {% if not pode_validar %}

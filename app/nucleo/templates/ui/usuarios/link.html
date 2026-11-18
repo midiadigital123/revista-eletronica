@@ -6,12 +6,9 @@ definir a própria senha, para enviar sem mandar senha. Só aparece na resposta 
 
 {% block conteudo %}
 <a class="mudo voltar" href="{% url 'ui_usuarios' %}">‹ Usuários</a>
-<header class="pagina-cab">
-  <div>
-    <h1>Link de acesso de {{ alvo.username }}</h1>
-    <p class="mudo">Envie só para {{ alvo.get_full_name|default:alvo.username }}, por e-mail ou mensagem direta. Quem abrir o link primeiro define a senha.</p>
-  </div>
-</header>
+<c-pagina-cab titulo="Link de acesso de {{ alvo.username }}">
+  <p class="mudo">Envie só para {{ alvo.get_full_name|default:alvo.username }}, por e-mail ou mensagem direta. Quem abrir o link primeiro define a senha.</p>
+</c-pagina-cab>
 
 <div class="card card-estreito usuarios-link">
   <p class="aviso">O link vale {{ dias }} dia{{ dias|pluralize }} e funciona uma vez.{% if alvo.has_usable_password %} A senha atual de {{ alvo.username }} continua valendo até a nova ser definida.{% endif %} Venceu? Gere outro aqui.</p>

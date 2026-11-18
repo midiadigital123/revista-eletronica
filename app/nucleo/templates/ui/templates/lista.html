@@ -4,20 +4,15 @@
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/templates.css' %}">{% endblock %}
 
 {% block conteudo %}
-<header class="pagina-cab">
-  <div>
-    <h1>Templates</h1>
-    <p class="mudo">Textos-modelo das revistas, por fascículo. Editar um texto cria uma versão nova; a anterior fica guardada.</p>
-  </div>
-  {% if ano and pode_criar %}
-  <div class="acoes">
+<c-pagina-cab titulo="Templates">
+  <p class="mudo">Textos-modelo das revistas, por fascículo. Editar um texto cria uma versão nova; a anterior fica guardada.</p>
+  <c-slot name="acoes">{% if ano and pode_criar %}
     <a class="btn btn-outline" href="{% url 'ui_templates_novo' ano.ano %}?aba={{ aba }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
       Novo template
     </a>
-  </div>
-  {% endif %}
-</header>
+  {% endif %}</c-slot>
+</c-pagina-cab>
 
 {% if not ano %}
 {% if perms.nucleo.abrir_ano %}{% url 'ui_anos' as u %}

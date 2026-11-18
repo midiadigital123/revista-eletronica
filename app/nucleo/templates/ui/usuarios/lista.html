@@ -7,13 +7,10 @@ quando o seletor sai do grupo atual (`option[selected]`, CSS em telas/usuarios.c
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/usuarios.css' %}">{% endblock %}
 
 {% block conteudo %}
-<header class="pagina-cab">
-  <div>
-    <h1>Usuários</h1>
-    <p class="mudo">Quem entra no sistema e em qual grupo. O grupo decide o que a pessoa pode fazer. Quem sai é desativado; só se exclui quem nunca registrou nada no sistema.</p>
-  </div>
-  {% if perms.auth.add_user %}<div class="acoes"><a class="btn" href="{% url 'ui_usuarios_novo' %}">Novo usuário</a></div>{% endif %}
-</header>
+<c-pagina-cab titulo="Usuários">
+  <p class="mudo">Quem entra no sistema e em qual grupo. O grupo decide o que a pessoa pode fazer. Quem sai é desativado; só se exclui quem nunca registrou nada no sistema.</p>
+  <c-slot name="acoes">{% if perms.auth.add_user %}<a class="btn" href="{% url 'ui_usuarios_novo' %}">Novo usuário</a>{% endif %}</c-slot>
+</c-pagina-cab>
 
 <div class="tabela-caixa">
   <table class="tabela">

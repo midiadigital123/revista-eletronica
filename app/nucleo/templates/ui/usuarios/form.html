@@ -6,12 +6,9 @@
 
 {% block conteudo %}
 <a class="mudo voltar" href="{% url 'ui_usuarios' %}">‹ Usuários</a>
-<header class="pagina-cab">
-  <div>
-    <h1>{{ titulo }}</h1>
-    <p class="mudo">{{ texto }}</p>
-  </div>
-</header>
+<c-pagina-cab titulo="{{ titulo }}">
+  <p class="mudo">{{ texto }}</p>
+</c-pagina-cab>
 
 <form method="post" class="card card-estreito" novalidate>{% csrf_token %}
   {% if form.non_field_errors %}<div class="caixa-erro" role="alert"><ul>{% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}

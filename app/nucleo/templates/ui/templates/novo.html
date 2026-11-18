@@ -6,12 +6,9 @@ Ficha: docs/telas/fichas/templates.md.{% endcomment %}
 
 {% block conteudo %}
 <a class="mudo voltar" href="{% url 'ui_templates' ano.ano %}?aba={{ aba }}">‹ Templates {{ aba }}</a>
-<header class="pagina-cab">
-  <div>
-    <h1>Novo template</h1>
-    <p class="mudo">Ano {{ ano.ano }}. Grava o template com a versão 1 e abre o editor por seção para você refinar o texto.</p>
-  </div>
-</header>
+<c-pagina-cab titulo="Novo template">
+  <p class="mudo">Ano {{ ano.ano }}. Grava o template com a versão 1 e abre o editor por seção para você refinar o texto.</p>
+</c-pagina-cab>
 
 <form method="post" class="card tpl-novo" novalidate>{% csrf_token %}
   <div class="campo">

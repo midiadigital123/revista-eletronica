@@ -4,12 +4,9 @@
 {% block titulo %}Anos{% endblock %}
 
 {% block conteudo %}
-<header class="pagina-cab">
-  <div>
-    <h1>Anos</h1>
-    <p class="mudo">Cada ano tem seus cadastros, cortes, matrizes, templates e revistas.</p>
-  </div>
-</header>
+<c-pagina-cab titulo="Anos">
+  <p class="mudo">Cada ano tem seus cadastros, cortes, matrizes, templates e revistas.</p>
+</c-pagina-cab>
 
 {% if not anos %}
 {% include "ui/_componentes/vazio.html" with titulo="Nenhum ano aberto" texto="O primeiro ano nasce vazio; os seguintes copiam o anterior." %}

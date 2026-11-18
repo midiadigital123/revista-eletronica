@@ -14,7 +14,9 @@ from django_cotton.compiler_regex import CottonCompiler
 UI = Path(__file__).resolve().parent.parent / "templates" / "ui"
 
 # marcação crua → componente que a substitui
-MIGRADOS: dict[str, str] = {}
+MIGRADOS: dict[str, str] = {
+    'class="pagina-cab': "<c-pagina-cab>",
+}
 
 # (arquivo relativo a templates/ui, marcação crua) → motivo de ficar cru
 EXCECOES: dict[tuple[str, str], str] = {}

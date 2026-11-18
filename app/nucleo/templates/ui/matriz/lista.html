@@ -5,16 +5,13 @@
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/matriz.css' %}">{% endblock %}
 
 {% block conteudo %}
-<header class="pagina-cab">
-  <div>
-    <h1>Matrizes</h1>
-    <p class="mudo">Descritores e tarefas que as revistas do ano usam, por etapa e componente.</p>
-  </div>
-  {% if ano %}<div class="acoes">
+<c-pagina-cab titulo="Matrizes">
+  <p class="mudo">Descritores e tarefas que as revistas do ano usam, por etapa e componente.</p>
+  <c-slot name="acoes">{% if ano %}
     <a class="btn btn-ghost" href="{% url 'painel' ano.ano %}">Ver painel de {{ ano.ano }}</a>
     {% if perms.nucleo.add_matriz %}<button type="button" class="btn" data-abrir="dlg-nova">Nova matriz</button>{% endif %}
-  </div>{% endif %}
-</header>
+  {% endif %}</c-slot>
+</c-pagina-cab>
 
 {% if not ano %}
 {% if perms.nucleo.abrir_ano %}{% url 'ui_anos' as u %}

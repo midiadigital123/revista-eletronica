@@ -6,17 +6,15 @@ sai junto (resumo_ano) e só o Admin chega aqui (D-206). Parceiro em uso: Desati
 
 {% block conteudo %}
 <a class="mudo voltar" href="{{ voltar }}">‹ Voltar sem excluir</a>
-<header class="pagina-cab">
-  <div>
-    {% if resumo is not None %}
-    <h1>Apagar o ano {{ obj.ano }}</h1>
-    <p class="mudo">Sai o ano inteiro, com tudo o que é dele. Parceiros e usuários ficam, porque são de todos os anos. Não se desfaz pela tela.</p>
-    {% else %}
-    <h1>Excluir {{ titulo }}</h1>
-    {% if impedimentos %}<p class="mudo">Não dá para excluir: isto está em uso. Nada foi apagado.</p>{% else %}<p class="mudo">Nada usa isto. A exclusão não se desfaz pela tela.</p>{% endif %}
-    {% endif %}
-  </div>
-</header>
+<c-pagina-cab>
+  {% if resumo is not None %}
+  <h1>Apagar o ano {{ obj.ano }}</h1>
+  <p class="mudo">Sai o ano inteiro, com tudo o que é dele. Parceiros e usuários ficam, porque são de todos os anos. Não se desfaz pela tela.</p>
+  {% else %}
+  <h1>Excluir {{ titulo }}</h1>
+  {% if impedimentos %}<p class="mudo">Não dá para excluir: isto está em uso. Nada foi apagado.</p>{% else %}<p class="mudo">Nada usa isto. A exclusão não se desfaz pela tela.</p>{% endif %}
+  {% endif %}
+</c-pagina-cab>
 
 {% if impedimentos %}
 <div class="tabela-caixa card">
