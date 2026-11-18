@@ -14,7 +14,7 @@ U8b: copias + frase + fasciculo (trocar template com cópias de seção, D-171):
   {% if frase %}
   <c-campo para="{{ form_id }}-confirmacao">
     <c-slot name="rotulo">Para confirmar, digite <code>{{ frase }}</code></c-slot>
-    <input class="input" id="{{ form_id }}-confirmacao" name="confirmacao" autocomplete="off" spellcheck="false">
+    <c-input id="{{ form_id }}-confirmacao" name="confirmacao" autocomplete="off" spellcheck="false" />
   </c-campo>
   {% endif %}
   <c-slot name="rodape">

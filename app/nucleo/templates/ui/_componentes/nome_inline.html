@@ -10,6 +10,6 @@ e o protocolo (impacto, 422, 409) é o do autosave. Componente `nomeInline` em s
   </button>
   <span class="nome-inline-campo" x-show="editando" x-cloak>
     <label class="sr-only" for="{{ id }}">Novo nome de {{ nome }}</label>
-    <input class="input" id="{{ id }}" name="nome" value="{{ nome }}" maxlength="200" autocomplete="off" spellcheck="false">
+    <c-input id="{{ id }}" name="nome" value="{{ nome }}" maxlength="200" autocomplete="off" spellcheck="false" />
   </span>
 </span>{% endwith %}

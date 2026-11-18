@@ -8,7 +8,7 @@ aparece; as outras ficam hidden no form).{% endcomment %}
   </header>
   <input type="hidden" name="secao-{{ n }}-id" value="{{ s.id }}" data-campo="id">
   <c-campo rotulo="Título" para="titulo-{{ s.id }}">
-    <input class="input" id="titulo-{{ s.id }}" name="secao-{{ n }}-titulo" data-campo="titulo" value="{{ s.titulo }}" maxlength="300" autocomplete="off" aria-describedby="erros-{{ s.id }}"{% if s.erro_titulo %} aria-invalid="true"{% endif %}{% if not pode_gravar %} readonly{% endif %}>
+    <c-input id="titulo-{{ s.id }}" name="secao-{{ n }}-titulo" data-campo="titulo" value="{{ s.titulo }}" maxlength="300" autocomplete="off" aria-describedby="erros-{{ s.id }}" :erros="s.erro_titulo" :editavel="pode_gravar" trava="readonly" />
   </c-campo>
   <div class="campo">
     <div class="tpl-barra">
@@ -21,15 +21,15 @@ aparece; as outras ficam hidden no form).{% endcomment %}
           <c-icone nome="lista" />
         </c-botao>
         <label class="sr-only" for="variavel-{{ s.id }}">Variável a inserir</label>
-        <select class="select tpl-variavel" id="variavel-{{ s.id }}" data-variavel>
+        <c-select class="tpl-variavel" id="variavel-{{ s.id }}" data-variavel>
           {% for grupo, itens in grupos.items %}<optgroup label="{{ grupo }}">{% for v in itens %}<option value="{{ v.nome }}" title="{{ v.descricao }}">{{ v.rotulo }}</option>{% endfor %}</optgroup>{% endfor %}
-        </select>
+        </c-select>
         <c-botao variante="outline" tamanho="sm" data-acao="variavel" title="Insere no campo em que você estava (Título ou Texto)">{ } Variável</c-botao>
       </div>
       {% endif %}
     </div>
-    <textarea class="textarea tpl-corpo" id="corpo-{{ s.id }}" name="secao-{{ n }}-corpo" data-campo="corpo" rows="3" spellcheck="true" aria-describedby="erros-{{ s.id }}"{% if s.erro_corpo %} aria-invalid="true"{% endif %}{% if not pode_gravar %} readonly{% endif %}>
-{{ s.corpo }}</textarea>
+    <c-textarea class="tpl-corpo" id="corpo-{{ s.id }}" name="secao-{{ n }}-corpo" data-campo="corpo" rows="3" spellcheck="true" aria-describedby="erros-{{ s.id }}" :erros="s.erro_corpo" :editavel="pode_gravar" trava="readonly">
+{{ s.corpo }}</c-textarea>
   </div>
   {% include "ui/parciais/templates_secao_erros.html" %}
 </section>

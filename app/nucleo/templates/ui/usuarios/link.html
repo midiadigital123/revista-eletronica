@@ -15,13 +15,13 @@ definir a própria senha, para enviar sem mandar senha. Só aparece na resposta 
 
   <div class="usuarios-copiar">
     <label for="link-acesso">Link</label>
-    <input class="input" id="link-acesso" type="text" value="{{ link }}" readonly>
+    <c-input id="link-acesso" type="text" value="{{ link }}" readonly />
     <div class="acoes"><c-botao tamanho="sm" data-copiar="#link-acesso"><span aria-live="polite">Copiar link</span></c-botao></div>
   </div>
 
   <div class="usuarios-copiar">
     <label for="mensagem-acesso">Mensagem pronta</label>
-    <textarea class="textarea" id="mensagem-acesso" readonly rows="9">Olá{% if alvo.first_name %}, {{ alvo.first_name }}{% endif %}.
+    <c-textarea id="mensagem-acesso" readonly rows="9">Olá{% if alvo.first_name %}, {{ alvo.first_name }}{% endif %}.
 
 Seu acesso ao sistema da Revista Eletrônica está pronto.
 Usuário: {{ alvo.username }}
@@ -29,7 +29,7 @@ Usuário: {{ alvo.username }}
 Crie sua senha neste link (vale por {{ dias }} dia{{ dias|pluralize }} e só funciona uma vez):
 {{ link }}
 
-Depois, entre por {{ entrar }}</textarea>
+Depois, entre por {{ entrar }}</c-textarea>
     <div class="acoes"><c-botao variante="outline" tamanho="sm" data-copiar="#mensagem-acesso"><span aria-live="polite">Copiar mensagem</span></c-botao></div>
   </div>
 </c-card>

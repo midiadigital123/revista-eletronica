@@ -98,7 +98,7 @@ Demo K-042: escrita com componentes django-cotton (templates/cotton/: pagina_cab
             {% include "ui/_componentes/selo_sobrescrita.html" with sobrescrito=c.sobrescrito herdado_txt="da matriz" proprio_txt="sobrescrito" %}
           </div>
           {% if pode_gravar %}
-          <input class="input" type="number" min="1" step="1" inputmode="numeric" id="passo-{{ chave }}" name="passo-{{ chave }}" value="{{ c.passo|default_if_none:'' }}" placeholder="{{ c.matriz|default_if_none:'—' }}" data-valor aria-describedby="passo-{{ chave }}-matriz"{% if c.sem_vazias %} disabled{% endif %}>
+          <c-input type="number" min="1" step="1" inputmode="numeric" id="passo-{{ chave }}" name="passo-{{ chave }}" value="{{ c.passo|default_if_none:'' }}" placeholder="{{ c.matriz|default_if_none:'—' }}" data-valor aria-describedby="passo-{{ chave }}-matriz" editavel="{% if not c.sem_vazias %}1{% endif %}" />
           <p class="ajuda" id="passo-{{ chave }}-matriz">Matriz: {{ c.da_matriz }}</p>
           <label class="marcar"><input type="checkbox" name="sem-{{ chave }}" data-sem{% if c.sem_vazias %} checked{% endif %}> Sem linhas vazias<span class="sr-only"> em {{ b.etapa.codigo }} {{ c.componente.codigo }}</span></label>
           <button type="button" class="link pj-voltar" @click="voltar" x-show="sobrescrito"{% if not c.sobrescrito %} x-cloak{% endif %}>Voltar ao passo da matriz<span class="sr-only"> em {{ b.etapa.codigo }} {{ c.componente.codigo }}</span></button>
@@ -129,10 +129,10 @@ Demo K-042: escrita com componentes django-cotton (templates/cotton/: pagina_cab
   <form method="post" id="matriz" class="campo pj-matriz" x-data="campoAuto" data-url="{% url 'ui_projeto_matriz' projeto.pk %}">{% csrf_token %}
     <input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">
     <label for="pj-matriz">Matriz de {{ projeto.parceiro_ano.parceiro.nome }} em {{ projeto.ano.ano }}</label>
-    <select class="select" id="pj-matriz" name="matriz">
+    <c-select id="pj-matriz" name="matriz">
       {% if not projeto.parceiro_ano.matriz_id %}<option value="">Escolha a matriz</option>{% endif %}
       {% for m in matrizes %}<option value="{{ m.pk }}"{% if m.pk == projeto.parceiro_ano.matriz_id %} selected{% endif %}>{{ m.nome }}</option>{% empty %}<option value="">Nenhuma matriz em {{ projeto.ano.ano }}</option>{% endfor %}
-    </select>
+    </c-select>
     <p class="ajuda">Para vários parceiros de uma vez, use “Atribuir matriz…” na <a class="link" href="{% url 'ui_projeto_lista' projeto.ano.ano %}">lista de projetos</a>.</p>
   </form>
   {% else %}
@@ -160,7 +160,7 @@ Demo K-042: escrita com componentes django-cotton (templates/cotton/: pagina_cab
         {% for c, cel in b.campos %}
         <c-campo para="corte-{{ cel.chave }}" dica="{{ c.codigo }} {{ c.nome }}">
           <c-slot name="rotulo">{{ c.codigo }} <span class="mudo">{{ c.nome }}</span></c-slot>
-          <input class="input" id="corte-{{ cel.chave }}" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" name="c-{{ cel.chave }}" value="{{ cel.texto }}" placeholder="sem corte" aria-label="{{ cel.titulo }}"{% if not grade.pode_gravar %} readonly{% endif %}>
+          <c-input id="corte-{{ cel.chave }}" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" name="c-{{ cel.chave }}" value="{{ cel.texto }}" placeholder="sem corte" aria-label="{{ cel.titulo }}" :editavel="grade.pode_gravar" trava="readonly" />
         </c-campo>
         {% endfor %}
       </div>

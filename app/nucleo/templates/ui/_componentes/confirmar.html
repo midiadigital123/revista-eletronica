@@ -6,6 +6,6 @@ O servidor confere de novo (a regra é do form, não do JS).
 {% endcomment %}<div class="confirmar">
   <p>{{ texto }}</p>
   <label class="rotulo" for="confirmar-{{ nome }}">Para confirmar, digite <code>{{ codigo }}</code></label>
-  <input class="input" id="confirmar-{{ nome }}" name="{{ nome }}" autocomplete="off" spellcheck="false" data-confirmar="{{ codigo }}"{% if erro %} aria-invalid="true" aria-describedby="confirmar-{{ nome }}-erro"{% endif %}>
+  <c-input id="confirmar-{{ nome }}" name="{{ nome }}" autocomplete="off" spellcheck="false" data-confirmar="{{ codigo }}" :erros="erro" erro_id="confirmar-{{ nome }}-erro" />
   {% if erro %}<p class="erro" id="confirmar-{{ nome }}-erro">{{ erro }}</p>{% endif %}
 </div>

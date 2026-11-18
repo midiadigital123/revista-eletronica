@@ -43,10 +43,10 @@ pode_gravar, componente. rf.tem_copias = o fascículo tem texto próprio (trocar
     {% for campo in form %}{% if campo.name != "alvos" %}
     <div class="lote-campo">
       <label class="rotulo" for="lote-{{ campo.name }}">{{ campo.label|cut:"Template " }}</label>
-      <select class="select" name="{{ campo.name }}" id="lote-{{ campo.name }}" data-previa="{{ campo.label|cut:'Template ' }}"{% if campo.errors or form.non_field_errors %} aria-invalid="true" aria-describedby="erro-templates"{% endif %}>
+      <c-select name="{{ campo.name }}" id="lote-{{ campo.name }}" data-previa="{{ campo.label|cut:'Template ' }}" erros="{% if campo.errors or form.non_field_errors %}1{% endif %}" erro_id="erro-templates">
         <option value="">Não mudar</option>
         {% for t in campo.field.queryset %}<option value="{{ t.pk }}"{% if campo.value|stringformat:"s" == t.pk|stringformat:"s" %} selected{% endif %}>{{ t.nome }}</option>{% endfor %}
-      </select>
+      </c-select>
     </div>
     {% endif %}{% endfor %}
     <c-botao type="submit">

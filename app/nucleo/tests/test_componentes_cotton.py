@@ -26,6 +26,9 @@ MIGRADOS: dict[str, str] = {
     '<dialog class="dialogo': "<c-modal>",
     'class="btn-icone': "<c-botao-icone>",
     'class="mudo voltar': "<c-voltar>",
+    'class="input': "<c-input>",
+    'class="select': "<c-select>",
+    'class="textarea': "<c-textarea>",
 }
 
 # (arquivo relativo a templates/ui, marcação crua) → motivo de ficar cru
@@ -61,6 +64,9 @@ EXCECOES: dict[tuple[str, str], str] = {
     ("projeto/projeto.html", 'class="mudo voltar'): "trilha em <nav>, com o sinal escondido do leitor de tela",
     ("revista/revista.html", 'class="mudo voltar'): "trilha de dois níveis em <nav>",
     ("projeto/projeto.html", 'class="campo'): "a caixa do campo é o próprio <form> do autosave da matriz",
+    ("senha_definir.html", 'class="input'): "autofocus só no primeiro campo do laço",
+    ("parciais/cortes_grade.html", 'class="input'): "aria-invalid (célula) e aria-describedby (linha) com condições diferentes",
+    ("anos/ano.html", 'class="input'): "aria-invalid (campo) e aria-describedby (form do padrão) com condições diferentes",
 }
 
 
@@ -241,6 +247,32 @@ class SaidaDosComponentes(SimpleTestCase):
             '<p class="ajuda">Até 200.</p><p class="erro">Obrigatório.</p></div>',
             html,
         )
+
+    def test_controles(self):
+        """Os quatro estados: normal, com erro, travado com disabled, travado com readonly."""
+        self.assertEqual(
+            renderizar('<c-input id="a" value="{{ x }}" required />', x=self.perigoso),
+            '<input class="input" id="a" value="A &amp; B &lt;i&gt;" required>',
+        )
+        self.assertEqual(
+            renderizar('<c-input id="a" :erros="e" erro_id="a-erro" :editavel="p" />', e=["x"], p=True),
+            '<input class="input" id="a" aria-invalid="true" aria-describedby="a-erro">',
+        )
+        self.assertEqual(renderizar('<c-input id="a" :erros="e" erro_id="a-erro" />', e=[]), '<input class="input" id="a">')
+        self.assertEqual(
+            renderizar('<c-select class="tpl" id="s" :editavel="p"><option>{{ x }}</option></c-select>', p=False, x=self.perigoso),
+            '<select class="select tpl" id="s" disabled><option>A &amp; B &lt;i&gt;</option></select>',
+        )
+        self.assertEqual(
+            renderizar('<c-textarea id="t" :erros="e" :editavel="p" trava="readonly">{{ x }}\nfim</c-textarea>', e=["x"], p=False, x="<b>"),
+            '<textarea class="textarea" id="t" aria-invalid="true" readonly>&lt;b&gt;\nfim</textarea>',
+        )
+        # condição composta vai como texto; variável da página com o nome da prop não vaza
+        self.assertEqual(
+            renderizar('<c-input id="a" erros="{% if a or b %}1{% endif %}" erro_id="n" />', b=["x"]),
+            '<input class="input" id="a" aria-invalid="true" aria-describedby="n">',
+        )
+        self.assertEqual(renderizar('<c-input id="a" />', erros=["x"], editavel=False), '<input class="input" id="a">')
 
     def test_card(self):
         html = renderizar(

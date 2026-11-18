@@ -46,9 +46,9 @@ todo pedido HTMX; os forms também a levam, para funcionar sem JS).
     <form class="matriz-busca" method="get" action="" role="search"
       hx-get="{% url 'ui_matriz_mec' mec.pk %}" hx-include="#ativo" hx-trigger="submit" hx-target="#lista-descritores" hx-swap="outerHTML">
       <c-icone nome="busca" />
-      <input class="input" id="busca" type="search" name="q" value="{{ q }}" placeholder="Código ou texto" aria-label="Buscar descritor" autocomplete="off"
+      <c-input id="busca" type="search" name="q" value="{{ q }}" placeholder="Código ou texto" aria-label="Buscar descritor" autocomplete="off"
         hx-get="{% url 'ui_matriz_mec' mec.pk %}" hx-include="#ativo"
-        hx-trigger="input changed delay:300ms" hx-target="#lista-descritores" hx-swap="outerHTML">
+        hx-trigger="input changed delay:300ms" hx-target="#lista-descritores" hx-swap="outerHTML" />
     </form>
     {% include "ui/parciais/matriz_lista.html" %}
   </nav>

@@ -25,10 +25,10 @@ redireciona para cá (sistema/urls.py), então é a única porta de entrada. Pá
       {% csrf_token %}
       <input type="hidden" name="next" value="{{ next }}">
       <c-campo rotulo="Usuário" para="id_username">
-        <input class="input" type="text" name="username" id="id_username" value="{{ form.username.value|default:'' }}" autocomplete="username" autocapitalize="none" required autofocus{% if form.non_field_errors %} aria-invalid="true"{% endif %}>
+        <c-input type="text" name="username" id="id_username" value="{{ form.username.value|default:'' }}" autocomplete="username" autocapitalize="none" required autofocus :erros="form.non_field_errors" />
       </c-campo>
       <c-campo rotulo="Senha" para="id_password">
-        <input class="input" type="password" name="password" id="id_password" autocomplete="current-password" required{% if form.non_field_errors %} aria-invalid="true"{% endif %}>
+        <c-input type="password" name="password" id="id_password" autocomplete="current-password" required :erros="form.non_field_errors" />
       </c-campo>
       <input class="btn" type="submit" value="Entrar">
     </form>

@@ -24,10 +24,10 @@ quando o seletor sai do grupo atual (`option[selected]`, CSS em telas/usuarios.c
           {% if linha.mudar_grupo %}
           <form method="post" action="{% url 'ui_usuarios_grupo' u.pk %}" class="acoes usuarios-grupo">{% csrf_token %}
             <label class="sr-only" for="grupo-{{ u.pk }}">Grupo de {{ u.username }}</label>
-            <select class="select" id="grupo-{{ u.pk }}" name="grupo" required>
+            <c-select id="grupo-{{ u.pk }}" name="grupo" required>
               {% if not linha.grupo_atual %}<option value="" selected>Sem grupo</option>{% endif %}
               {% for g in grupos %}<option value="{{ g.pk }}"{% if g == linha.grupo_atual %} selected{% endif %}>{{ g.name }}</option>{% endfor %}
-            </select>
+            </c-select>
             <c-botao variante="outline" tamanho="sm" type="submit" aria-label="Mudar grupo de {{ u.username }}">Mudar</c-botao>
           </form>
           {% else %}{{ linha.grupos|default:"Sem grupo" }}{% endif %}

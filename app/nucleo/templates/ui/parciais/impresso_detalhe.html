@@ -46,7 +46,7 @@
       {% if i.depois is not None %}
       <div class="impresso-copiar">
         <label class="impresso-copiar-rotulo" for="novo-{{ fasciculo }}-{{ grupo|slugify }}-{{ forloop.counter }}">{% if i.antes is None %}Texto novo{% else %}Só o trecho que mudou, já no texto novo{% endif %}</label>
-        <textarea class="textarea" id="novo-{{ fasciculo }}-{{ grupo|slugify }}-{{ forloop.counter }}" readonly rows="2">{{ i.trecho }}</textarea>
+        <c-textarea id="novo-{{ fasciculo }}-{{ grupo|slugify }}-{{ forloop.counter }}" readonly rows="2">{{ i.trecho }}</c-textarea>
         <div class="acoes">
           <c-botao variante="outline" tamanho="sm" data-copiar="#novo-{{ fasciculo }}-{{ grupo|slugify }}-{{ forloop.counter }}">
             <c-icone nome="copiar" />

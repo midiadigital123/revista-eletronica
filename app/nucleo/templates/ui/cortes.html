@@ -28,7 +28,7 @@
   <div data-linhas></div>
   <template data-molde><form method="post" action="{% url 'cortes_novo_parceiro' ano.ano %}" class="acoes linha-nova-form">{% csrf_token %}
     <label class="sr-only" for="novo-parceiro">Nome do parceiro novo</label>
-    <input class="input" id="novo-parceiro" name="nome" required maxlength="200" placeholder="Nome do parceiro (ex.: SAEGO)">
+    <c-input id="novo-parceiro" name="nome" required maxlength="200" placeholder="Nome do parceiro (ex.: SAEGO)" />
     <c-botao tamanho="sm" type="submit">Incluir parceiro</c-botao>
     <c-botao variante="ghost" tamanho="sm" @click="descartar">Descartar</c-botao>
   </form></template>

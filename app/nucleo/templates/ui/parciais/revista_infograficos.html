@@ -23,10 +23,10 @@ Sem permissão ou revista arquivada: os mesmos campos, `disabled`.
     </header>
 
     <c-campo rotulo="Habilidade destacada" para="{{ n }}-habilidade">
-      <input class="input" type="text" id="{{ n }}-habilidade" name="{{ n }}-habilidade" maxlength="500" value="{{ inf.habilidade }}"{% if not pode_infograficos %} disabled{% endif %}>
+      <c-input type="text" id="{{ n }}-habilidade" name="{{ n }}-habilidade" maxlength="500" value="{{ inf.habilidade }}" :editavel="pode_infograficos" />
     </c-campo>
     <c-campo rotulo="Texto do clique ❶ (descritor)" para="{{ n }}-texto_descritor">
-      <textarea class="textarea" id="{{ n }}-texto_descritor" name="{{ n }}-texto_descritor" rows="4" aria-describedby="{{ n }}-texto_descritor-ajuda"{% if not pode_infograficos %} disabled{% endif %}>{{ inf.texto_descritor }}</textarea>
+      <c-textarea id="{{ n }}-texto_descritor" name="{{ n }}-texto_descritor" rows="4" aria-describedby="{{ n }}-texto_descritor-ajuda" :editavel="pode_infograficos">{{ inf.texto_descritor }}</c-textarea>
       <p class="ajuda" id="{{ n }}-texto_descritor-ajuda">No modal, este texto entra depois do Diálogo do descritor do template.</p>
       {% include "ui/parciais/revista_inf_template.html" with secoes=textos_template.descritor %}
     </c-campo>
@@ -39,7 +39,7 @@ Sem permissão ou revista arquivada: os mesmos campos, `disabled`.
     </fieldset>
 
     <c-campo rotulo="Texto do clique ❷ (habilidades)" para="{{ n }}-texto_habilidades" data-bloco="habilidades">
-      <textarea class="textarea" id="{{ n }}-texto_habilidades" name="{{ n }}-texto_habilidades" rows="4"{% if not pode_infograficos %} disabled{% endif %}>{{ inf.texto_habilidades }}</textarea>
+      <c-textarea id="{{ n }}-texto_habilidades" name="{{ n }}-texto_habilidades" rows="4" :editavel="pode_infograficos">{{ inf.texto_habilidades }}</c-textarea>
       {% include "ui/parciais/revista_inf_template.html" with secoes=textos_template.habilidades %}
     </c-campo>
 
@@ -54,12 +54,12 @@ Sem permissão ou revista arquivada: os mesmos campos, `disabled`.
             {% for etapa, rotulo, linha in inf.grade %}{% with c=n|add:"-etapa-"|add:etapa %}
             <tr>
               <th scope="row">{{ rotulo }}</th>
-              <td><select class="select" id="{{ c }}-marca" name="{{ c }}-marca" aria-label="Marca: {{ rotulo }}"{% if not pode_infograficos %} disabled{% endif %}>
+              <td><c-select id="{{ c }}-marca" name="{{ c }}-marca" aria-label="Marca: {{ rotulo }}" :editavel="pode_infograficos">
                 <option value="">—</option>
                 {% for valor, nome in marcas %}<option value="{{ valor }}"{% if linha.marca == valor %} selected{% endif %}>{{ nome }}</option>{% endfor %}
-              </select></td>
-              <td><input class="input" type="text" id="{{ c }}-codigo" name="{{ c }}-codigo" maxlength="50" value="{{ linha.codigo }}" aria-label="Código: {{ rotulo }}"{% if not pode_infograficos %} disabled{% endif %}></td>
-              <td><textarea class="textarea inf-texto-curto" id="{{ c }}-texto" name="{{ c }}-texto" rows="1" aria-label="Texto: {{ rotulo }}"{% if not pode_infograficos %} disabled{% endif %}>{{ linha.texto }}</textarea></td>
+              </c-select></td>
+              <td><c-input type="text" id="{{ c }}-codigo" name="{{ c }}-codigo" maxlength="50" value="{{ linha.codigo }}" aria-label="Código: {{ rotulo }}" :editavel="pode_infograficos" /></td>
+              <td><c-textarea class="inf-texto-curto" id="{{ c }}-texto" name="{{ c }}-texto" rows="1" aria-label="Texto: {{ rotulo }}" :editavel="pode_infograficos">{{ linha.texto }}</c-textarea></td>
             </tr>
             {% endwith %}{% endfor %}
           </tbody>
@@ -68,7 +68,7 @@ Sem permissão ou revista arquivada: os mesmos campos, `disabled`.
     </div>
 
     <c-campo rotulo="Texto do clique ❸ (progressão)" para="{{ n }}-texto_progressao" data-bloco="progressao">
-      <textarea class="textarea" id="{{ n }}-texto_progressao" name="{{ n }}-texto_progressao" rows="4"{% if not pode_infograficos %} disabled{% endif %}>{{ inf.texto_progressao }}</textarea>
+      <c-textarea id="{{ n }}-texto_progressao" name="{{ n }}-texto_progressao" rows="4" :editavel="pode_infograficos">{{ inf.texto_progressao }}</c-textarea>
       {% include "ui/parciais/revista_inf_template.html" with secoes=textos_template.progressao %}
     </c-campo>
 
@@ -95,20 +95,20 @@ Sem permissão ou revista arquivada: os mesmos campos, `disabled`.
         <div class="inf-item-campos">
           <div class="inf-item-linha">
             <c-campo rotulo="Etapa" para="{{ c }}-etapa">
-              <select class="select" id="{{ c }}-etapa" name="{{ c }}-etapa"{% if not pode_infograficos %} disabled{% endif %}>
+              <c-select id="{{ c }}-etapa" name="{{ c }}-etapa" :editavel="pode_infograficos">
                 <option value="">—</option>
                 {% for valor, rotulo in etapas_referencial %}<option value="{{ valor }}"{% if item.etapa == valor %} selected{% endif %}>{{ rotulo }}</option>{% endfor %}
-              </select>
+              </c-select>
             </c-campo>
             <c-campo rotulo="Descritor" para="{{ c }}-descritor">
-              <input class="input" type="text" id="{{ c }}-descritor" name="{{ c }}-descritor" maxlength="20" value="{{ item.descritor }}"{% if not pode_infograficos %} disabled{% endif %}>
+              <c-input type="text" id="{{ c }}-descritor" name="{{ c }}-descritor" maxlength="20" value="{{ item.descritor }}" :editavel="pode_infograficos" />
             </c-campo>
           </div>
           <c-campo rotulo="Texto alternativo" para="{{ c }}-texto_alternativo">
-            <input class="input" type="text" id="{{ c }}-texto_alternativo" name="{{ c }}-texto_alternativo" maxlength="1000" value="{{ item.texto_alternativo }}"{% if not pode_infograficos %} disabled{% endif %}>
+            <c-input type="text" id="{{ c }}-texto_alternativo" name="{{ c }}-texto_alternativo" maxlength="1000" value="{{ item.texto_alternativo }}" :editavel="pode_infograficos" />
           </c-campo>
           <c-campo rotulo="Análise" para="{{ c }}-analise">
-            <textarea class="textarea" id="{{ c }}-analise" name="{{ c }}-analise" rows="4"{% if not pode_infograficos %} disabled{% endif %}>{{ item.analise }}</textarea>
+            <c-textarea id="{{ c }}-analise" name="{{ c }}-analise" rows="4" :editavel="pode_infograficos">{{ item.analise }}</c-textarea>
           </c-campo>
         </div>
       </fieldset>
