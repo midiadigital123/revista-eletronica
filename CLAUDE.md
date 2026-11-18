@@ -39,7 +39,7 @@ cd app/e2e && npx playwright test             # com o app de pé e E2E_ADMIN_USU
 Suíte E2E inteira (precisa da demonstração): stack isolada, ver `docs/e2e.md`.
 
 Worktrees: a de trabalho (`../revista-express-trabalho`) tem `.env` próprio (ignorado pelo git) com
-`COMPOSE_PROJECT_NAME=revista-express-trabalho` e `APP_PORT=8001`: banco e volume próprios, sem disputar a
+`COMPOSE_PROJECT_NAME=revista-express-trabalho` e `APP_PORT=8002`: banco e volume próprios, sem disputar a
 porta 8000 do dev. Sem `.env`, o compose usa o nome da pasta e sobe um banco vazio. PDFs SAEGO para os testes
 de importação: montar em `/pdfs` (`-v "<pasta>:/pdfs:ro"`); sem eles, 8 testes são pulados.
 

@@ -66,7 +66,7 @@ docker compose exec -T db psql -U revista revista < backup-AAAA-MM-DD.sql
 
 ## Troubleshooting
 
-- **Porta 8000 já em uso:** `APP_PORT=8001 docker compose up -d app`, ou outro nome de projeto com `-p`.
+- **Porta 8000 já em uso:** `APP_PORT=8002 docker compose up -d app`, ou outro nome de projeto com `-p`.
 - **`app` não sobe:** `docker compose logs app`. Sem `DJANGO_DEBUG=1`, a `DJANGO_SECRET_KEY` é obrigatória.
 - **Tela quebrada depois de trocar de branch:** falta aplicar migração. `docker compose run --rm app python manage.py migrate`.
 - **Banco não conecta:** `docker compose ps` deve mostrar `db` como `healthy`.
