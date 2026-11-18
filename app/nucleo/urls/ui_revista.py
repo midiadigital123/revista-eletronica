@@ -52,6 +52,7 @@ from nucleo.servicos.empacotar import Pendente, zip_revista
 from nucleo.ui_autosave import Conflito, erros, quer_json, responder_campo
 from nucleo.ui_bloqueio import com_bloqueio, e_htmx
 from nucleo.urls.painel import link as link_pendencia
+from nucleo.widgets import classe_css
 
 ERRO_FORM = "Nada foi gravado: corrija os erros marcados."
 PERMS_TEXTO = ["nucleo.add_revistasecao", "nucleo.change_revistasecao"]
@@ -125,7 +126,7 @@ def _forms_fasciculo(request, revista, dados=None):
         f = FasciculoForm(dados, instance=rf, prefix=rf.fasciculo)
         f.pode_descartar = pode_descartar  # o admin põe o mesmo por subclasse (FasciculoInline.get_formset)
         f.fields["template"].empty_label = "Sem template"
-        f.fields["template"].widget.attrs.update({"class": "select", "id": f"template-{rf.fasciculo}"})
+        f.fields["template"].widget.attrs.update({"class": classe_css(f.fields["template"].widget), "id": f"template-{rf.fasciculo}"})
         forms_.append(f)
     return forms_
 

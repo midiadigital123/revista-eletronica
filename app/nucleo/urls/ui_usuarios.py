@@ -30,13 +30,14 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 from nucleo import usuarios as regra
 from nucleo.matriz import ExcluirForm
 from nucleo.servicos.exclusao import Impedimento
+from nucleo.widgets import classe_css
 
 GERENCIAR = "auth.change_user"  # `gerenciar_usuarios` (nucleo/permissoes.py): só o Admin
 
 
 def _classes(form):
     for campo in form.fields.values():
-        campo.widget.attrs["class"] = "select" if isinstance(campo.widget, forms.Select) else "input"
+        campo.widget.attrs["class"] = classe_css(campo.widget)
     return form
 
 
@@ -187,7 +188,8 @@ def excluir(request, pk):
         raise PermissionDenied
     titulo = f"o usuário {alvo.username}"
     form = ExcluirForm(request.POST or None, codigo=alvo.username)
-    form.fields["confirmacao"].widget.attrs["class"] = "input"
+    w = form.fields["confirmacao"].widget
+    w.attrs["class"] = classe_css(w)
     achados = regra.rastros(alvo)
     if request.method == "POST" and not achados and form.is_valid():
         try:

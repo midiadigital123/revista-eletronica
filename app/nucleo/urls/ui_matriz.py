@@ -48,6 +48,7 @@ from nucleo.servicos.impacto import avisar_perdidos
 from nucleo.ui_autosave import erros, form_de_um_campo, proxima_ordem, quer_json, reordenar, responder_campo
 from nucleo.ui_bloqueio import com_bloqueio, e_htmx
 from nucleo.urls.preview import TIPOS_ITEM, servir
+from nucleo.widgets import classe_css
 
 ERROS = "Nada foi gravado: corrija os erros marcados."
 EDITAR = (
@@ -75,7 +76,7 @@ def _estilo(*forms_):
                 continue
             if form.is_bound and not isinstance(w, forms.FileInput):  # Cancelar do modal de impacto volta a isto
                 w.attrs["data-original"] = campo.prepare_value(form[nome].initial) or ""
-            w.attrs["class"] = "textarea" if isinstance(w, forms.Textarea) else "select" if isinstance(w, forms.Select) else "input"
+            w.attrs["class"] = classe_css(w)
             if nome in erros:
                 w.attrs["aria-invalid"] = "true"
     return forms_[0] if len(forms_) == 1 else forms_
