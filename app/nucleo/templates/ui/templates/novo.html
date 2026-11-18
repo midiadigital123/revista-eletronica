@@ -11,35 +11,31 @@ Ficha: docs/telas/fichas/templates.md.{% endcomment %}
 </c-pagina-cab>
 
 <form method="post" class="card tpl-novo" novalidate>{% csrf_token %}
-  <div class="campo">
-    <label for="id_componente">Componente</label>
+  <c-campo rotulo="Componente" para="id_componente">
     <select class="select" id="id_componente" name="componente" required{% if form.componente.errors %} aria-invalid="true" aria-describedby="componente-erro"{% endif %}>
       <option value="">Escolha o componente</option>
       {% for c in componentes %}<option value="{{ c.pk }}"{% if form.componente.value|stringformat:"s" == c.pk|stringformat:"s" %} selected{% endif %}>{{ c.codigo }} {{ c.nome }}</option>{% endfor %}
     </select>
     {% if form.componente.errors %}<p class="erro" id="componente-erro">{{ form.componente.errors.0 }}</p>{% endif %}
-  </div>
+  </c-campo>
 
-  <div class="campo">
-    <label for="id_fasciculo">Fascículo</label>
+  <c-campo rotulo="Fascículo" para="id_fasciculo">
     <select class="select" id="id_fasciculo" name="fasciculo" required{% if form.fasciculo.errors %} aria-invalid="true" aria-describedby="fasciculo-erro"{% endif %}>
       {% for valor, rotulo in form.fields.fasciculo.choices %}{% if valor %}<option value="{{ valor }}"{% if form.fasciculo.value == valor %} selected{% endif %}>{{ valor }}</option>{% endif %}{% endfor %}
     </select>
     {% if form.fasciculo.errors %}<p class="erro" id="fasciculo-erro">{{ form.fasciculo.errors.0 }}</p>{% endif %}
-  </div>
+  </c-campo>
 
-  <div class="campo">
-    <label for="id_nome">Nome</label>
+  <c-campo rotulo="Nome" para="id_nome">
     <input class="input" id="id_nome" name="nome" value="{{ form.nome.value|default:'' }}" maxlength="200" autocomplete="off" required{% if form.nome.errors or form.non_field_errors %} aria-invalid="true" aria-describedby="nome-erro"{% endif %}>
     <div id="nome-erro">{% for e in form.nome.errors %}<p class="erro">{{ e }}</p>{% endfor %}{% for e in form.non_field_errors %}<p class="erro">{{ e }}</p>{% endfor %}</div>
-  </div>
+  </c-campo>
 
-  <div class="campo">
-    <label for="id_texto">Texto inicial</label>
+  <c-campo rotulo="Texto inicial" para="id_texto">
     <textarea class="textarea tpl-novo-texto" id="id_texto" name="texto" rows="12" spellcheck="true" aria-describedby="texto-dica{% if form.texto.errors %} texto-erro{% endif %}"{% if form.texto.errors %} aria-invalid="true"{% endif %}>{{ form.texto.value|default:'' }}</textarea>
     <p class="ajuda" id="texto-dica">Cada seção começa com <code>## id</code>, tem título na linha seguinte e depois o texto. F1: <code>introducao</code> e <code>fechamento</code>. F2: as 9 seções fixas, que o editor lista. Se trocar o fascículo, ajuste as seções.</p>
     {% if form.texto.errors %}<ul class="erro" id="texto-erro">{% for e in form.texto.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
-  </div>
+  </c-campo>
 
   <div class="acoes">
     <button class="btn" type="submit">Criar template</button>

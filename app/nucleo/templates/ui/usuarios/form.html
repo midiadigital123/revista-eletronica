@@ -13,12 +13,10 @@
 <form method="post" class="card card-estreito" novalidate>{% csrf_token %}
   {% if form.non_field_errors %}<div class="caixa-erro" role="alert"><ul>{% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
   {% for f in form %}
-  <div class="campo">
-    <label for="{{ f.id_for_label }}">{{ f.label }}</label>
+  <c-campo rotulo="{{ f.label }}" para="{{ f.id_for_label }}" :erros="f.errors">
     {{ f }}
     {% if f.help_text %}<div class="ajuda" id="{{ f.auto_id }}_helptext">{{ f.help_text }}</div>{% endif %}
-    {% for e in f.errors %}<p class="erro">{{ e }}</p>{% endfor %}
-  </div>
+  </c-campo>
   {% endfor %}
   <div class="acoes"><button class="btn" type="submit">{{ botao }}</button><a class="btn btn-ghost" href="{% url 'ui_usuarios' %}">Cancelar</a></div>
 </form>

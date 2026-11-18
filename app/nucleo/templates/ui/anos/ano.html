@@ -93,7 +93,7 @@ A ordem das etapas é a escolar (`ordem_escolar`). Sem `pode.<tabela>`, só text
     <summary class="btn btn-outline btn-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Adicionar padrão</summary>
     <form method="post" class="novo-padrao-form" novalidate>{% csrf_token %}<input type="hidden" name="tabela" value="novo_padrao">
       {% for campo in novo %}
-      <div class="campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% for e in campo.errors %}<p class="erro">{{ e }}</p>{% endfor %}</div>
+      <c-campo rotulo="{{ campo.label }}" para="{{ campo.id_for_label }}" :erros="campo.errors">{{ campo }}</c-campo>
       {% endfor %}
       <button class="btn btn-sm" type="submit">Incluir padrão</button>
     </form>

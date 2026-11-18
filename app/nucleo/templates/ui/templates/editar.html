@@ -24,11 +24,10 @@ View: nucleo/urls/ui_templates.py (editar). Ficha: docs/telas/fichas/templates.m
   hx-post="{% url 'ui_templates_previa' tpl.pk %}" hx-trigger="input delay:400ms" hx-target="#previa" hx-sync="this:replace" hx-indicator="#previa-carregando"{% endif %}>{% csrf_token %}
   {% include "ui/_componentes/bloqueio.html" %}
 
-  <div class="campo tpl-nome-campo">
-    <label for="id_nome">Nome</label>
+  <c-campo rotulo="Nome" para="id_nome" class="tpl-nome-campo">
     <input class="input" id="id_nome" name="nome" value="{{ form.nome.value|default:'' }}" maxlength="200" autocomplete="off"{% if form.nome.errors %} aria-invalid="true" aria-describedby="nome-erro"{% endif %}{% if not pode_gravar %} readonly{% endif %}>
     {% if form.nome.errors %}<p class="erro" id="nome-erro">{{ form.nome.errors.0 }}</p>{% endif %}
-  </div>
+  </c-campo>
 
   <div class="tpl-editor">
     <aside class="tpl-lado">{% include "ui/parciais/templates_indice.html" %}</aside>

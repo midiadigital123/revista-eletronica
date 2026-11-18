@@ -4,41 +4,36 @@ projeto (nome do projeto primeiro, parceiro em cinza). A página inclui; o filtr
 {% endcomment %}<form class="painel-filtros" method="get" action="{% url 'painel' ano.ano %}"
       hx-get="{% url 'painel' ano.ano %}" hx-trigger="change" hx-target="#painel-corpo" hx-sync="this:replace" hx-indicator="#painel-corpo" hx-push-url="true">
   {% if falta %}<input type="hidden" name="falta" value="{{ falta }}">{% endif %}
-  <div class="campo">
-    <label for="filtro-parceiro">Parceiro</label>
+  <c-campo rotulo="Parceiro" para="filtro-parceiro">
     <select class="select" id="filtro-parceiro" name="parceiro">
       <option value="">Todos</option>
       {% for p in opcoes_parceiro %}<option value="{{ p.pk }}"{% if p.pk == parceiro.pk %} selected{% endif %}>{{ p.nome }}</option>{% endfor %}
     </select>
-  </div>
-  <div class="campo">
-    <label for="filtro-componente">Componente</label>
+  </c-campo>
+  <c-campo rotulo="Componente" para="filtro-componente">
     <select class="select" id="filtro-componente" name="componente">
       <option value="">Todos</option>
       {% for c in opcoes_componente %}<option value="{{ c.pk }}"{% if c.pk == componente.pk %} selected{% endif %}>{{ c.codigo }}</option>{% endfor %}
     </select>
-  </div>
-  <div class="campo painel-filtro-largo">
-    <label for="filtro-template">Template</label>
+  </c-campo>
+  <c-campo rotulo="Template" para="filtro-template" class="painel-filtro-largo">
     <select class="select" id="filtro-template" name="template">
       <option value="">Todos</option>
       {% for t in opcoes_template %}<option value="{{ t.pk }}"{% if t.pk == template.pk %} selected{% endif %}>{{ t.componente.codigo }} · {{ t }}</option>{% endfor %}
     </select>
-  </div>
-  <div class="campo">
-    <label for="filtro-matriz">Matriz</label>
+  </c-campo>
+  <c-campo rotulo="Matriz" para="filtro-matriz">
     <select class="select" id="filtro-matriz" name="matriz">
       <option value="">Todas</option>
       {% for m in opcoes_matriz %}<option value="{{ m.pk }}"{% if m.pk == matriz.pk %} selected{% endif %}>{{ m.nome }}</option>{% endfor %}
     </select>
-  </div>
-  <div class="campo">
-    <label for="filtro-situacao">Situação</label>
+  </c-campo>
+  <c-campo rotulo="Situação" para="filtro-situacao">
     <select class="select" id="filtro-situacao" name="situacao">
       <option value="">Todas</option>
       {% for valor, rotulo in situacoes.items %}<option value="{{ valor }}"{% if valor == situacao %} selected{% endif %}>{{ rotulo }}</option>{% endfor %}
     </select>
-  </div>
+  </c-campo>
   {% if filtrado %}<a class="link painel-limpar-tudo" href="{{ request.path }}" hx-get="{{ request.path }}" hx-target="#painel-corpo" hx-indicator="#painel-corpo" hx-push-url="true">Limpar filtros</a>{% endif %}
   <noscript><button class="btn btn-outline" type="submit">Filtrar</button></noscript>
 </form>

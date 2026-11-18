@@ -22,16 +22,14 @@ Sem permissão ou revista arquivada: os mesmos campos, `disabled`.
       </a>
     </header>
 
-    <div class="campo">
-      <label for="{{ n }}-habilidade">Habilidade destacada</label>
+    <c-campo rotulo="Habilidade destacada" para="{{ n }}-habilidade">
       <input class="input" type="text" id="{{ n }}-habilidade" name="{{ n }}-habilidade" maxlength="500" value="{{ inf.habilidade }}"{% if not pode_infograficos %} disabled{% endif %}>
-    </div>
-    <div class="campo">
-      <label for="{{ n }}-texto_descritor">Texto do clique ❶ (descritor)</label>
+    </c-campo>
+    <c-campo rotulo="Texto do clique ❶ (descritor)" para="{{ n }}-texto_descritor">
       <textarea class="textarea" id="{{ n }}-texto_descritor" name="{{ n }}-texto_descritor" rows="4" aria-describedby="{{ n }}-texto_descritor-ajuda"{% if not pode_infograficos %} disabled{% endif %}>{{ inf.texto_descritor }}</textarea>
       <p class="ajuda" id="{{ n }}-texto_descritor-ajuda">No modal, este texto entra depois do Diálogo do descritor do template.</p>
       {% include "ui/parciais/revista_inf_template.html" with secoes=textos_template.descritor %}
-    </div>
+    </c-campo>
 
     <fieldset class="inf-passos">
       <legend class="rotulo">Passos do tour</legend>
@@ -40,11 +38,10 @@ Sem permissão ou revista arquivada: os mesmos campos, `disabled`.
       {% endfor %}
     </fieldset>
 
-    <div class="campo" data-bloco="habilidades">
-      <label for="{{ n }}-texto_habilidades">Texto do clique ❷ (habilidades)</label>
+    <c-campo rotulo="Texto do clique ❷ (habilidades)" para="{{ n }}-texto_habilidades" data-bloco="habilidades">
       <textarea class="textarea" id="{{ n }}-texto_habilidades" name="{{ n }}-texto_habilidades" rows="4"{% if not pode_infograficos %} disabled{% endif %}>{{ inf.texto_habilidades }}</textarea>
       {% include "ui/parciais/revista_inf_template.html" with secoes=textos_template.habilidades %}
-    </div>
+    </c-campo>
 
     {# Junto do ❷ (D-258); irmã dos blocos: só some com Habilidades e Progressão desligados. #}
     <div class="inf-grade" data-bloco="grade">
@@ -70,11 +67,10 @@ Sem permissão ou revista arquivada: os mesmos campos, `disabled`.
       </div>
     </div>
 
-    <div class="campo" data-bloco="progressao">
-      <label for="{{ n }}-texto_progressao">Texto do clique ❸ (progressão)</label>
+    <c-campo rotulo="Texto do clique ❸ (progressão)" para="{{ n }}-texto_progressao" data-bloco="progressao">
       <textarea class="textarea" id="{{ n }}-texto_progressao" name="{{ n }}-texto_progressao" rows="4"{% if not pode_infograficos %} disabled{% endif %}>{{ inf.texto_progressao }}</textarea>
       {% include "ui/parciais/revista_inf_template.html" with secoes=textos_template.progressao %}
-    </div>
+    </c-campo>
 
     <div class="inf-itens" data-bloco="tarefas">
       {% include "ui/parciais/revista_inf_template.html" with secoes=textos_template.tarefas %}
@@ -98,26 +94,22 @@ Sem permissão ou revista arquivada: os mesmos campos, `disabled`.
         </div>
         <div class="inf-item-campos">
           <div class="inf-item-linha">
-            <div class="campo">
-              <label for="{{ c }}-etapa">Etapa</label>
+            <c-campo rotulo="Etapa" para="{{ c }}-etapa">
               <select class="select" id="{{ c }}-etapa" name="{{ c }}-etapa"{% if not pode_infograficos %} disabled{% endif %}>
                 <option value="">—</option>
                 {% for valor, rotulo in etapas_referencial %}<option value="{{ valor }}"{% if item.etapa == valor %} selected{% endif %}>{{ rotulo }}</option>{% endfor %}
               </select>
-            </div>
-            <div class="campo">
-              <label for="{{ c }}-descritor">Descritor</label>
+            </c-campo>
+            <c-campo rotulo="Descritor" para="{{ c }}-descritor">
               <input class="input" type="text" id="{{ c }}-descritor" name="{{ c }}-descritor" maxlength="20" value="{{ item.descritor }}"{% if not pode_infograficos %} disabled{% endif %}>
-            </div>
+            </c-campo>
           </div>
-          <div class="campo">
-            <label for="{{ c }}-texto_alternativo">Texto alternativo</label>
+          <c-campo rotulo="Texto alternativo" para="{{ c }}-texto_alternativo">
             <input class="input" type="text" id="{{ c }}-texto_alternativo" name="{{ c }}-texto_alternativo" maxlength="1000" value="{{ item.texto_alternativo }}"{% if not pode_infograficos %} disabled{% endif %}>
-          </div>
-          <div class="campo">
-            <label for="{{ c }}-analise">Análise</label>
+          </c-campo>
+          <c-campo rotulo="Análise" para="{{ c }}-analise">
             <textarea class="textarea" id="{{ c }}-analise" name="{{ c }}-analise" rows="4"{% if not pode_infograficos %} disabled{% endif %}>{{ item.analise }}</textarea>
-          </div>
+          </c-campo>
         </div>
       </fieldset>
       {% endwith %}{% endwith %}{% endfor %}

@@ -7,10 +7,9 @@ aparece; as outras ficam hidden no form).{% endcomment %}
     {% if pode_gravar and s.removivel %}<button class="btn btn-ghost btn-sm tpl-remover" type="button" data-acao="remover">Remover seção</button>{% endif %}
   </header>
   <input type="hidden" name="secao-{{ n }}-id" value="{{ s.id }}" data-campo="id">
-  <div class="campo">
-    <label for="titulo-{{ s.id }}">Título</label>
+  <c-campo rotulo="Título" para="titulo-{{ s.id }}">
     <input class="input" id="titulo-{{ s.id }}" name="secao-{{ n }}-titulo" data-campo="titulo" value="{{ s.titulo }}" maxlength="300" autocomplete="off" aria-describedby="erros-{{ s.id }}"{% if s.erro_titulo %} aria-invalid="true"{% endif %}{% if not pode_gravar %} readonly{% endif %}>
-  </div>
+  </c-campo>
   <div class="campo">
     <div class="tpl-barra">
       <label for="corpo-{{ s.id }}">Texto</label>

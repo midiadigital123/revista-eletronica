@@ -22,12 +22,11 @@
       <input type="text" name="username" value="{{ form.user.get_username }}" autocomplete="username" hidden>
       <p class="mudo">Usuário: <strong>{{ form.user.get_username }}</strong></p>
       {% for f in form %}
-      <div class="campo">
-        <label for="{{ f.id_for_label }}">{{ f.label }}</label>
+      <c-campo rotulo="{{ f.label }}" para="{{ f.id_for_label }}">
         <input class="input" type="password" name="{{ f.html_name }}" id="{{ f.id_for_label }}" autocomplete="new-password" required{% if forloop.first %} autofocus{% endif %}{% if f.errors %} aria-invalid="true" aria-describedby="{{ f.auto_id }}_erro"{% endif %}>
         {% if f.help_text %}<div class="ajuda">{{ f.help_text }}</div>{% endif %}
         {% for e in f.errors %}<p class="erro" id="{{ f.auto_id }}_erro">{{ e }}</p>{% endfor %}
-      </div>
+      </c-campo>
       {% endfor %}
       <input class="btn" type="submit" value="Criar senha">
     </form>

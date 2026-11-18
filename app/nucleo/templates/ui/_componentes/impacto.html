@@ -14,10 +14,10 @@ U8b: copias + frase + fasciculo (trocar template com cópias de seção, D-171):
   </header>
   {% if perdem %}<ul class="impacto-lista">{% for r in perdem %}<li>{{ r }}</li>{% endfor %}</ul>{% endif %}
   {% if frase %}
-  <div class="campo">
-    <label for="{{ form_id }}-confirmacao">Para confirmar, digite <code>{{ frase }}</code></label>
+  <c-campo para="{{ form_id }}-confirmacao">
+    <c-slot name="rotulo">Para confirmar, digite <code>{{ frase }}</code></c-slot>
     <input class="input" id="{{ form_id }}-confirmacao" name="confirmacao" autocomplete="off" spellcheck="false">
-  </div>
+  </c-campo>
   {% endif %}
   <footer>
     <button type="button" class="btn btn-outline" @click="cancelar"{% if not frase %} autofocus{% endif %}>Cancelar</button>

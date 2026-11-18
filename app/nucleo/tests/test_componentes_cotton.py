@@ -16,10 +16,16 @@ UI = Path(__file__).resolve().parent.parent / "templates" / "ui"
 # marcação crua → componente que a substitui
 MIGRADOS: dict[str, str] = {
     'class="pagina-cab': "<c-pagina-cab>",
+    'class="campo': "<c-campo>",
 }
 
 # (arquivo relativo a templates/ui, marcação crua) → motivo de ficar cru
-EXCECOES: dict[tuple[str, str], str] = {}
+EXCECOES: dict[tuple[str, str], str] = {
+    ("_componentes/matriz_campo.html", 'class="campo'): "já é o campo dos forms do Django (16 usos); label com classe condicional",
+    ("parciais/revista_secao.html", 'class="campo'): "atributos condicionais na caixa e inputs ocultos antes do label",
+    ("parciais/templates_secao.html", 'class="campo'): "o label vive dentro da barra de ferramentas",
+    ("projeto/projeto.html", 'class="campo'): "a caixa do campo é o próprio <form> do autosave da matriz",
+}
 
 
 class CatracaDosComponentes(SimpleTestCase):

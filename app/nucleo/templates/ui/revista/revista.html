@@ -64,10 +64,9 @@ alvo do HTMX.
         {% if pode_templates %}
         <div class="revista-templates" data-url="{{ url }}?acao=templates">
           {% for f in fasciculos %}
-          <div class="campo">
-            <label for="template-{{ f.prefix }}">Template do {{ f.prefix }}</label>
+          <c-campo rotulo="Template do {{ f.prefix }}" para="template-{{ f.prefix }}">
             {{ f.template }}
-          </div>
+          </c-campo>
           {% endfor %}
         </div>
         {% else %}

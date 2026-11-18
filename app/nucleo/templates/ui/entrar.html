@@ -24,14 +24,12 @@ redireciona para cá (sistema/urls.py), então é a única porta de entrada. Pá
     <form method="post" action="{% url 'entrar' %}" class="entrar-form">
       {% csrf_token %}
       <input type="hidden" name="next" value="{{ next }}">
-      <div class="campo">
-        <label for="id_username">Usuário</label>
+      <c-campo rotulo="Usuário" para="id_username">
         <input class="input" type="text" name="username" id="id_username" value="{{ form.username.value|default:'' }}" autocomplete="username" autocapitalize="none" required autofocus{% if form.non_field_errors %} aria-invalid="true"{% endif %}>
-      </div>
-      <div class="campo">
-        <label for="id_password">Senha</label>
+      </c-campo>
+      <c-campo rotulo="Senha" para="id_password">
         <input class="input" type="password" name="password" id="id_password" autocomplete="current-password" required{% if form.non_field_errors %} aria-invalid="true"{% endif %}>
-      </div>
+      </c-campo>
       <input class="btn" type="submit" value="Entrar">
     </form>
   </main>
