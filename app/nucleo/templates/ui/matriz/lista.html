@@ -50,9 +50,9 @@
 {% endif %}
 {% endif %}
 {% if ano and nova %}
-<dialog class="dialogo" id="dlg-nova" aria-labelledby="dlg-nova-titulo">
+<c-modal id="dlg-nova">
   {% url 'ui_matriz_nova' ano.ano as url %}
   {% include "ui/parciais/matriz_form.html" with form=nova chave="nova" titulo="Nova matriz" %}
-</dialog>
+</c-modal>
 {% endif %}
 {% endblock %}

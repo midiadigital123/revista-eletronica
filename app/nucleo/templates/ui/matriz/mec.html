@@ -58,9 +58,9 @@ todo pedido HTMX; os forms também a levam, para funcionar sem JS).
 </div>
 
 {% if pode_gravar %}
-<dialog class="dialogo" id="dlg-novo" aria-labelledby="dlg-novo-titulo">
+<c-modal id="dlg-novo">
   {% url 'ui_matriz_novo' mec.pk as url %}
   {% with titulo="Novo descritor em "|add:mec.etapa.codigo|add:" "|add:mec.componente.codigo %}{% include "ui/parciais/matriz_form.html" with form=novo chave="novo" %}{% endwith %}
-</dialog>
+</c-modal>
 {% endif %}
 {% endblock %}

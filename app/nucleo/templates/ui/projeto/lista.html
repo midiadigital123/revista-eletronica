@@ -76,11 +76,8 @@ action = a ação recusada (o Confirmar do modal reenvia o form sem botão).
   </div>
 
   {% if pode_matriz %}
-  <dialog class="dialogo" id="dlg-matriz" aria-labelledby="dlg-matriz-titulo">
-    <header>
-      <h2 id="dlg-matriz-titulo">Atribuir matriz</h2>
-      <p class="mudo">Vale para os parceiros marcados em {{ ano.ano }}. Se alguma revista validada mudar, você confirma antes de gravar.</p>
-    </header>
+  <c-modal id="dlg-matriz" titulo="Atribuir matriz">
+    <c-slot name="descricao"><p class="mudo">Vale para os parceiros marcados em {{ ano.ano }}. Se alguma revista validada mudar, você confirma antes de gravar.</p></c-slot>
     <c-campo rotulo="Matriz" para="massa-matriz">
       <select class="select" id="massa-matriz" name="matriz" data-previa="matriz">
         <option value="">Escolha a matriz</option>
@@ -88,19 +85,16 @@ action = a ação recusada (o Confirmar do modal reenvia o form sem botão).
       </select>
       {% if not matrizes %}<p class="ajuda">Nenhuma matriz em {{ ano.ano }}: cadastre em Matrizes.</p>{% endif %}
     </c-campo>
-    <footer>
+    <c-slot name="rodape">
       <c-botao variante="outline" data-fechar>Cancelar</c-botao>
       <c-botao type="submit" formaction="{% url 'ui_projeto_massa' ano.ano 'matriz' %}">Atribuir matriz</c-botao>
-    </footer>
-  </dialog>
+    </c-slot>
+  </c-modal>
   {% endif %}
 
   {% if pode_template %}
-  <dialog class="dialogo" id="dlg-template" aria-labelledby="dlg-template-titulo">
-    <header>
-      <h2 id="dlg-template-titulo">Atribuir template</h2>
-      <p class="mudo">Vale para as revistas do componente nos parceiros marcados. Fascículo com texto próprio na revista é pulado e listado: troque pela revista.</p>
-    </header>
+  <c-modal id="dlg-template" titulo="Atribuir template">
+    <c-slot name="descricao"><p class="mudo">Vale para as revistas do componente nos parceiros marcados. Fascículo com texto próprio na revista é pulado e listado: troque pela revista.</p></c-slot>
     {% regroup templates by componente.codigo as por_cc %}
     <c-campo rotulo="Componente" para="massa-componente">
       <select class="select" id="massa-componente" name="componente">
@@ -117,11 +111,11 @@ action = a ação recusada (o Confirmar do modal reenvia o form sem botão).
       </select>
     </c-campo>
     {% endfor %}
-    <footer>
+    <c-slot name="rodape">
       <c-botao variante="outline" data-fechar>Cancelar</c-botao>
       <c-botao type="submit" formaction="{% url 'ui_projeto_massa' ano.ano 'template' %}">Atribuir template</c-botao>
-    </footer>
-  </dialog>
+    </c-slot>
+  </c-modal>
   {% endif %}
   {% endif %}
 

@@ -75,9 +75,9 @@ no fim, a zona de perigo "Excluir matriz…" (E3, D-205) leva a ui_excluir.{% en
 {% endif %}
 
 {% if pode_duplicar %}
-<dialog class="dialogo" id="dlg-duplicar" aria-labelledby="dlg-duplicar-titulo">
+<c-modal id="dlg-duplicar">
   {% url 'ui_matriz_duplicar' matriz.pk as url %}
   {% with titulo="Duplicar "|add:matriz.nome %}{% include "ui/parciais/matriz_form.html" with form=duplicar chave="duplicar" %}{% endwith %}
-</dialog>
+</c-modal>
 {% endif %}
 {% endblock %}

@@ -14,14 +14,11 @@ seguem com o aviso nativo do navegador (beforeunload), que não se troca.
   <span class="mudo" x-show="salvo" x-cloak><c-icone nome="check" />Salvo às <span x-text="salvoEm"></span></span>
   <span class="status-salvo-erro" x-show="erro" x-cloak><c-icone nome="alerta-circulo" /><span x-text="texto"></span><template x-if="podeTentar"><span> · <button type="button" class="link" @click="tentar">Tentar de novo</button></span></template></span>
 </div>
-<dialog class="dialogo" x-data="sairSemSalvar" aria-labelledby="sair-titulo" aria-describedby="sair-texto" @cancel.prevent="continuar">
-  <header>
-    <h2 id="sair-titulo">Alterações não salvas</h2>
-    <p class="mudo" id="sair-texto"><span x-text="nome"></span> tem uma alteração que ainda não foi salva. Salve ou descarte antes de sair desta página.</p>
-  </header>
-  <footer>
+<c-modal titulo="Alterações não salvas" titulo_id="sair-titulo" x-data="sairSemSalvar" aria-describedby="sair-texto" @cancel.prevent="continuar">
+  <c-slot name="descricao"><p class="mudo" id="sair-texto"><span x-text="nome"></span> tem uma alteração que ainda não foi salva. Salve ou descarte antes de sair desta página.</p></c-slot>
+  <c-slot name="rodape">
     <c-botao variante="outline" @click="continuar" autofocus>Continuar editando</c-botao>
     <c-botao variante="outline" @click="descartar">Descartar e sair</c-botao>
     <c-botao @click="salvarESair">Salvar e sair</c-botao>
-  </footer>
-</dialog>
+  </c-slot>
+</c-modal>

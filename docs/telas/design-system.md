@@ -125,6 +125,8 @@ nomeadas no teste, com o motivo) e trava o HTML de cada componente.
 | `<c-aviso>` | `div.aviso` ou `p.aviso` | `variante` (erro, alerta), `tag`, `class` | padrão |
 | `<c-botao>` | `button.btn` ou `a.btn` (com `href`) | `variante` (outline, ghost, destrutivo), `tamanho` (sm, lg), `href`, `type`, `class` | padrão |
 | `<c-abas>` + `<c-aba>` | `nav.abas` + links | `rotulo`; `href`, `atual` | padrão |
+| `<c-icone>` | `svg` de traço 24 × 24 | `nome`, `espessura` (padrão 2) | — |
+| `<c-modal>` | `dialog.dialogo` | `id`, `titulo`, `titulo_id`, `class` | padrão, `titulo`, `descricao`, `rodape` |
 
 ```html
 <c-pagina-cab titulo="Usuários">
@@ -133,6 +135,28 @@ nomeadas no teste, com o motivo) e trava o HTML de cada componente.
 </c-pagina-cab>
 <c-campo rotulo="Nome" para="id_nome" :erros="form.nome.errors">{{ form.nome }}</c-campo>
 ```
+
+Ícones (`<c-icone nome="…" />`, D-272). O tamanho vem do CSS de quem contém (`.btn svg`, `.aviso svg`…);
+ícone novo é mais um ramo em `cotton/icone.html` e uma linha aqui. Um teste falha se a tela usar nome que não existe.
+
+| Nome | Uso | Nome | Uso |
+|---|---|---|---|
+| `abrir-fora` | abre em nova aba | `imagem` | arquivo de imagem |
+| `ajustes` | configurações | `info` | recado neutro |
+| `alerta` | aviso (triângulo) | `lapis` | renomear |
+| `alerta-circulo` | erro ou atenção | `link` | link de acesso |
+| `baixar` | download | `lista` | lista (editor) |
+| `busca` | procurar | `lixeira` | excluir |
+| `cadeado` | só leitura, bloqueio | `mais` | adicionar |
+| `chave` | senha | `ok-circulo` | sucesso, validada |
+| `check` | feito, em dia | `pasta` | estado vazio |
+| `circulo` | passo ainda aberto | `relogio` | aguardando |
+| `clipe` | arquivo anexado | `usuario-ok` | reativar usuário |
+| `copiar` | copiar, duplicar | `usuario-x` | desativar usuário |
+| `enviar` | upload, reimportar | `fechar` | remover, fechar |
+
+Modal (`<c-modal>`): abre com `data-abrir="id"` num botão e fecha com `data-fechar` (`static/ui/ui.js`). Sem
+`titulo` é só a casca, para o form que o HTMX troca inteiro e traz o próprio cabeçalho (`parciais/matriz_form.html`).
 
 Regras ao escrever ou mudar um componente:
 

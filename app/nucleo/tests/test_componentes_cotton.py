@@ -23,6 +23,7 @@ MIGRADOS: dict[str, str] = {
     'class="card': "<c-card>",
     'class="btn': "<c-botao>",
     "<svg": "<c-icone>",
+    '<dialog class="dialogo': "<c-modal>",
 }
 
 # (arquivo relativo a templates/ui, marcação crua) → motivo de ficar cru
@@ -53,6 +54,7 @@ EXCECOES: dict[tuple[str, str], str] = {
     ("senha_definir.html", 'class="btn'): "<input type=submit> da tela de senha",
     ("_componentes/girando.html", "<svg"): "o spinner tem classe e id condicional; já é um include",
     ("_componentes/ordem.html", "<svg"): "a alça de arrastar é preenchida (fill), não de traço",
+    ("parciais/matriz_painel.html", '<dialog class="dialogo'): "atributos condicionais na tag (impacto do item da tarefa)",
     ("projeto/projeto.html", 'class="campo'): "a caixa do campo é o próprio <form> do autosave da matriz",
 }
 
@@ -138,6 +140,25 @@ class SaidaDosComponentes(SimpleTestCase):
             '<p class="aviso aviso-erro" role="alert">A &amp; B &lt;i&gt;</p>',
         )
         self.assertEqual(renderizar('<c-aviso role="status"><p>x</p></c-aviso>'), '<div class="aviso" role="status"><p>x</p></div>')
+
+    def test_modal(self):
+        html = renderizar(
+            '<c-modal id="dlg-x" titulo="Atribuir" class="impacto" x-data="impacto"><c-slot name="descricao"><p class="mudo">d</p></c-slot>'
+            '<p>corpo</p><c-slot name="rodape"><button>ok</button></c-slot></c-modal>'
+        )
+        self.assertInHTML(
+            '<dialog class="dialogo impacto" id="dlg-x" aria-labelledby="dlg-x-titulo" x-data="impacto">'
+            '<header><h2 id="dlg-x-titulo">Atribuir</h2><p class="mudo">d</p></header><p>corpo</p>'
+            "<footer><button>ok</button></footer></dialog>",
+            html,
+        )
+        casca = renderizar('<c-modal id="dlg-nova"><form>f</form></c-modal>')
+        self.assertInHTML('<dialog class="dialogo" id="dlg-nova" aria-labelledby="dlg-nova-titulo"><form>f</form></dialog>', casca)
+        self.assertNotIn("<header>", casca)
+        self.assertNotIn("<footer>", casca)
+        outro_id = renderizar('<c-modal titulo="Sair" titulo_id="sair-titulo"></c-modal>')
+        self.assertIn('<dialog class="dialogo" aria-labelledby="sair-titulo">', outro_id)
+        self.assertIn('<h2 id="sair-titulo">Sair</h2>', outro_id)
 
     def test_icone(self):
         svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"{}>'
