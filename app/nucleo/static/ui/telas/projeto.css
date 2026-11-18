@@ -36,11 +36,6 @@
 .pj-meta dt { color: var(--muted-foreground); }
 .pj-meta dd { margin: 0; font-weight: 500; }
 
-/* Cabeçalho de seção com uma ação discreta à direita (link para a planilha, a paleta, a grade do ano) */
-.pj-secao-cab { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 0.5rem 1.5rem; }
-.pj-secao-cab > div { display: flex; flex-direction: column; gap: 0.25rem; max-width: 48rem; }
-.pj-secao-cab > .link { font-size: 0.875rem; font-weight: 500; white-space: nowrap; }
-
 /* Herdado × sobrescrito: "Voltar…" é um link-botão pequeno */
 .pj-voltar {
   align-self: flex-start; padding: 0; border: 0; background: none; cursor: pointer;

@@ -1,11 +1,12 @@
 {% comment %}
-Cabeçalho de página (design-system.md §2). O slot padrão vai abaixo do h1 (subtítulo, metadados);
-o slot `acoes` vira a coluna de ações e some quando vem vazio.
+Cabeçalho de página (design-system.md §2). `titulo` (atributo, ou slot quando leva marcação) vira o h1;
+sem `titulo`, o slot padrão monta o próprio h1 (ex.: renomear inline). O slot padrão vai abaixo do h1
+(subtítulo, metadados); o slot `acoes` vira a coluna de ações e some quando vem vazio.
   <c-pagina-cab titulo="Usuários"><p class="mudo">…</p><c-slot name="acoes">…</c-slot></c-pagina-cab>
 {% endcomment %}<c-vars titulo="" acoes="" />
 <header class="pagina-cab">
   <div>
-    <h1>{{ titulo }}</h1>
+    {% if titulo %}<h1>{{ titulo }}</h1>{% endif %}
     {{ slot }}
   </div>
   {% if acoes.strip %}<div class="acoes">{{ acoes }}</div>{% endif %}
