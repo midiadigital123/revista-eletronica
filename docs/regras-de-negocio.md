@@ -344,6 +344,9 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | Ao concluir, a foto passa a ser a base de agora: o que foi mantido não volta a ser perguntado. | D-280 |
 | "Manter o meu" em tudo devolve o Validado sozinho (o conteúdo não mudou); "usar o da base" muda a revista, que precisa ser validada de novo. | D-094 |
 | Não há revisão em cópia solta (sem base) nem em projeto arquivado. | D-282 |
+| Apontar é pela aba Matriz do projeto: uma linha por etapa não canônica com corte que a matriz não cobre, com a lista das etapas canônicas do mesmo componente (qualquer matriz, qualquer ano) e o botão "Apontar". Grava sob o bloqueio da ficha, por `servicos.etapa_projeto.criar`. | D-276, D-286 |
+| Apontar muda a revista: se alguma revista validada perde o "Validado", nada é gravado antes de a pessoa confirmar no modal de impacto; depois da gravação, o aviso lista quem perdeu. | D-202, D-286 |
+| A etapa do projeto é editada no editor da matriz (mesma tela, mesmo bloqueio, mesma permissão de "editar matriz"); o voltar leva à aba Matriz do projeto. Etapa de projeto arquivado é só leitura. | D-093, D-286 |
 
 Quando a matriz do parceiro passa a ter a mesma etapa, a pendência é `etapa_em_dobro`; `escolher` grava "projeto" ou "matriz", e até a escolha vale a do projeto (D-281).
 
