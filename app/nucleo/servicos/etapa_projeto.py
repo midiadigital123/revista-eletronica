@@ -11,6 +11,7 @@ from django.db.models import Q
 from nucleo.models import Descritor, Matriz, MatrizEtapaCC, Tarefa
 from nucleo.models.cadastro import ETAPAS_CANONICAS
 from nucleo.servicos.abrir_ano import clonar
+from nucleo.servicos.arquivos import apagar_item_orfao
 from nucleo.servicos.matriz import CAMPOS_DESCRITOR
 from nucleo.servicos.resolver import sha256
 
@@ -19,33 +20,62 @@ class CriacaoRecusada(ValueError):
     pass
 
 
+class RevisaoRecusada(ValueError):
+    pass
+
+
+class RevisaoMudou(ValueError):
+    """O `visto` não é mais a classificação de agora: base, local ou foto mudaram."""
+
+
+class RevisaoIncompleta(ValueError):
+    """Há conflito sem escolha."""
+
+
 def _norm(texto):
     return " ".join(texto.split())
 
 
-def foto(mec):
-    """Conteúdo canônico da etapa, só valores JSON: {"passo", "descritores": {codigo: {"ordem",
-    <CAMPOS_DESCRITOR>, "tarefas": {"inicio-fim#n": {texto, arquivo, texto_alternativo, ordem}}}}}.
-    Texto com os espaços normalizados."""
-    descritores, por_pk = {}, {}
-    for d in Descritor.objects.filter(matriz_etapa_cc=mec):
-        dados = {c: _norm(getattr(d, c)) for c in CAMPOS_DESCRITOR if c != "prerequisitos"}
-        dados["prerequisitos"] = [_norm(p) for p in d.prerequisitos]
-        dados["ordem"], dados["tarefas"] = d.ordem, {}
-        descritores[d.codigo] = por_pk[d.pk] = dados
+def _objetos(mec):
+    """{codigo: (descritor, {"inicio-fim#n": tarefa})}: os objetos do banco que a `foto` descreve, na
+    mesma chave. É a única origem do `#n` (ordinal da tarefa dentro da faixa, por ordem e pk)."""
+    saida = {d.codigo: (d, {}) for d in Descritor.objects.filter(matriz_etapa_cc=mec)}
+    por_pk = {d.pk: tarefas for d, tarefas in saida.values()}
     contagem = {}
     for t in Tarefa.objects.filter(descritor__matriz_etapa_cc=mec).order_by("ordem", "pk"):
         faixa = (t.descritor_id, t.inicio, t.fim)
         contagem[faixa] = n = contagem.get(faixa, 0) + 1
         # ponytail: identidade pela faixa; corrigir a faixa aparece como remover + criar.
         # Parear por (inicio, fim) se incomodar.
-        por_pk[t.descritor_id]["tarefas"][f"{t.inicio}-{t.fim}#{n}"] = {
-            "texto": _norm(t.texto),
-            "arquivo": t.arquivo or None,
-            "texto_alternativo": _norm(t.texto_alternativo),
-            "ordem": t.ordem,
+        por_pk[t.descritor_id][f"{t.inicio}-{t.fim}#{n}"] = t
+    return saida
+
+
+def foto(mec):
+    """Conteúdo canônico da etapa, só valores JSON: {"passo", "descritores": {codigo: {"ordem",
+    <CAMPOS_DESCRITOR>, "tarefas": {"inicio-fim#n": {texto, arquivo, texto_alternativo, ordem}}}}}.
+    Texto com os espaços normalizados."""
+    return _foto(mec.passo, _objetos(mec))
+
+
+def _foto(passo, objetos):
+    """A `foto` a partir de `_objetos` já lidos: quem precisa da foto e dos objetos lê o banco uma vez só."""
+    descritores = {}
+    for codigo, (d, tarefas) in objetos.items():
+        dados = {c: _norm(getattr(d, c)) for c in CAMPOS_DESCRITOR if c != "prerequisitos"}
+        dados["prerequisitos"] = [_norm(p) for p in d.prerequisitos]
+        dados["ordem"] = d.ordem
+        dados["tarefas"] = {
+            chave: {
+                "texto": _norm(t.texto),
+                "arquivo": t.arquivo or None,
+                "texto_alternativo": _norm(t.texto_alternativo),
+                "ordem": t.ordem,
+            }
+            for chave, t in tarefas.items()
         }
-    return {"passo": mec.passo, "descritores": descritores}
+        descritores[codigo] = dados
+    return {"passo": passo, "descritores": descritores}
 
 
 def hash_foto(f):
@@ -146,6 +176,131 @@ def criar(projeto, etapa, componente, usuario, base):
         mapa = clonar(Descritor.objects.filter(matriz_etapa_cc=base), usuario, motivo, matriz_etapa_cc_id=mec.pk)
         clonar(Tarefa.objects.filter(descritor__in=list(mapa)), usuario, motivo, descritor_id=mapa)
     return mec
+
+
+def revisao(mec):
+    """O que a base mudou desde o clone: `(itens, visto)`. `visto` é o hash dos itens (base, local e foto
+    de uma vez): quem conclui devolve o que viu, e `concluir` recusa se algo mudou."""
+    itens = classificar(mec.base_foto, foto(mec.base), foto(mec))
+    return itens, sha256(itens)
+
+
+# Campos em que a escolha ("texto", s) vale: os de texto livre do descritor e da tarefa.
+CAMPOS_TEXTO = {
+    "descricao", "praticas", "conhecimento", "habilidades_relacionadas", "habilidade_correspondente",
+    "texto", "texto_alternativo",
+}  # fmt: skip
+MOTIVO = "revisão da base"
+
+
+def _objeto(objetos, chave):
+    """O descritor ou a tarefa que a chave ("D01" ou "D01/100-150#1") nomeia em `_objetos`, ou None."""
+    codigo, _, tarefa = chave.partition("/")
+    if codigo not in objetos:
+        return None
+    return objetos[codigo][1].get(tarefa) if tarefa else objetos[codigo][0]
+
+
+def concluir(mec, escolhas, visto, usuario):
+    """Grava a decisão da revisão em 3 vias e avança `base_foto`. `escolhas` é
+    {(chave, campo): "base" | "local" | ("texto", s)}; "entra" sem escolha vale "base", "conflito" sem
+    escolha é `RevisaoIncompleta`. Escolha de chave que não está nos itens é ignorada. `visto` é o de
+    `revisao()`: outro valor é `RevisaoMudou`. Tudo numa transação; devolve quantas células aplicou.
+    Quem chama relê a MEC do banco antes de outra `revisao()` (a instância recebida não é atualizada)
+    e, pela tela, chama sob o bloqueio de escrita (`servicos/bloqueio.py`)."""
+    with transaction.atomic():
+        mec = MatrizEtapaCC.objects.select_for_update().get(pk=mec.pk)
+        if mec.projeto_id is None:
+            raise RevisaoRecusada("só a etapa do projeto tem revisão")
+        if mec.base_id is None:
+            raise RevisaoRecusada("etapa sem base")
+        if mec.projeto.arquivado_em is not None:
+            raise RevisaoRecusada("projeto arquivado")
+        base = mec.base
+        # Trava a matriz da base (como o `criar`): uma reimportação recriaria descritores no meio.
+        Matriz.objects.select_for_update(no_key=True).filter(pk=base.matriz_id).first()
+        base.refresh_from_db()
+        # Base e local lidos uma vez só: a edição da matriz não toma a trava acima, e uma segunda
+        # leitura poderia pôr em `base_foto` uma mudança que ninguém viu.
+        locais, da_base = _objetos(mec), _objetos(base)
+        foto_base = _foto(base.passo, da_base)
+        itens = classificar(mec.base_foto, foto_base, _foto(mec.passo, locais))
+        if visto != sha256(itens):
+            raise RevisaoMudou("a base ou a etapa mudou desde que a revisão foi aberta")
+        decididas = []
+        for item in itens:
+            escolha = escolhas.get((item.chave, item.campo), "base" if item.situacao == "entra" else None)
+            if escolha is None:
+                raise RevisaoIncompleta(f"escolha {item.chave} · {item.campo}")
+            if escolha not in ("base", "local"):
+                if not (isinstance(escolha, tuple) and len(escolha) == 2 and escolha[0] == "texto" and isinstance(escolha[1], str)):
+                    raise RevisaoRecusada(f"escolha inválida: {escolha!r}")
+                if item.campo not in CAMPOS_TEXTO:
+                    raise RevisaoRecusada(f"{item.campo} não é campo de texto")
+                if item.campo == "texto_alternativo" and len(escolha[1]) > 1000:  # o max_len do banco
+                    raise RevisaoRecusada("texto alternativo com mais de 1000 caracteres")
+            decididas.append((item, escolha))
+
+        # `locais` e `da_base` vêm de antes de aplicar: apagar uma tarefa mudaria o `#n` das seguintes.
+        sujos, aplicadas = {}, 0
+        for item, escolha in decididas:
+            if escolha == "local":
+                continue
+            aplicadas += 1
+            if item.chave == "passo":
+                mec.passo = base.passo
+            elif item.campo == "existe":
+                _aplicar_existe(mec, item.chave, locais, da_base, usuario)
+            else:
+                alvo = _objeto(locais, item.chave)
+                antigo = getattr(alvo, item.campo)
+                setattr(alvo, item.campo, getattr(_objeto(da_base, item.chave), item.campo) if escolha == "base" else escolha[1])
+                sujos.setdefault(id(alvo), (alvo, []))[1].append(item.campo)
+                if item.campo == "arquivo":
+                    apagar_item_orfao(antigo)
+        for alvo, campos in sujos.values():
+            alvo._history_user, alvo._change_reason = usuario, MOTIVO
+            alvo.save(update_fields=campos)
+
+        mec.base_foto = foto_base
+        mec._history_user = usuario
+        mec._change_reason = f"{MOTIVO}: aplicou {aplicadas}, manteve {len(decididas) - aplicadas}"
+        mec.save(update_fields=["passo", "base_foto"])  # sem `base`: o trigger recusa mudá-la
+    return aplicadas
+
+
+def _aplicar_existe(mec, chave, locais, da_base, usuario):
+    """O descritor ou a tarefa inteira passa a ser o da base: apaga o local, se houver, e copia o da base."""
+    local, nova = _objeto(locais, chave), _objeto(da_base, chave)
+    motivo = f"{MOTIVO}: cópia de {mec.base}"[:100]
+    codigo, _, tarefa = chave.partition("/")
+    if local is not None:
+        # As tarefas do descritor saem antes, uma a uma: em cascata ficariam sem usuário no histórico.
+        for obj in (*([] if tarefa else locais[codigo][1].values()), local):
+            obj._history_user, obj._change_reason = usuario, MOTIVO
+            obj.delete()  # o arquivo órfão sai pelo post_delete da Tarefa
+    if nova is None:
+        return
+    if tarefa:  # o descritor existe nos dois lados
+        clonar(Tarefa.objects.filter(pk=nova.pk), usuario, motivo, descritor_id=locais[codigo][0].pk)
+    else:
+        mapa = clonar(Descritor.objects.filter(pk=nova.pk), usuario, motivo, matriz_etapa_cc_id=mec.pk)
+        clonar(Tarefa.objects.filter(descritor__in=list(mapa)), usuario, motivo, descritor_id=mapa)
+
+
+def escolher(mec, preferida, usuario):
+    """Grava qual etapa a revista usa quando a matriz ganha a mesma etapa (D-281): "projeto" ou "matriz"."""
+    with transaction.atomic():
+        mec = MatrizEtapaCC.objects.select_for_update().get(pk=mec.pk)
+        if mec.projeto_id is None:
+            raise RevisaoRecusada("só a etapa do projeto tem revisão")
+        if mec.projeto.arquivado_em is not None:
+            raise RevisaoRecusada("projeto arquivado")
+        if preferida not in ("projeto", "matriz"):
+            raise RevisaoRecusada("preferida inválida")
+        mec.preferida = preferida
+        mec._history_user, mec._change_reason = usuario, f"etapa preferida: {preferida}"
+        mec.save(update_fields=["preferida"])
 
 
 def derivadas(*mecs):

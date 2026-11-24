@@ -1,11 +1,13 @@
 """Etapa do projeto (D-280): foto canônica e criação em branco ou por clone."""
 
+import threading
 import unittest
 
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from django.test import SimpleTestCase, TestCase
+from django.db import connection, transaction
+from django.test import SimpleTestCase, TestCase, TransactionTestCase
 from django.urls import reverse
 
 from nucleo.management.commands.criar_demo import PNG
@@ -14,7 +16,10 @@ from nucleo.models import (
 )  # fmt: skip
 from nucleo.servicos.cascata import gravar_cortes
 from nucleo.servicos.empacotar import _itens
-from nucleo.servicos.etapa_projeto import CriacaoRecusada, Item, classificar, criar, derivadas, foto, hash_foto
+from nucleo.servicos.etapa_projeto import (
+    CriacaoRecusada, Item, RevisaoIncompleta, RevisaoMudou, RevisaoRecusada, classificar, concluir, criar, derivadas,
+    escolher, foto, hash_foto, revisao,
+)  # fmt: skip
 from nucleo.servicos.matriz import CAMPOS_DESCRITOR, impacto
 from nucleo.servicos.planilhas import passos
 from nucleo.servicos.pendencias import pendencias
@@ -41,6 +46,21 @@ class Base(TestCase):
             ],
             cls.usuario,
         )
+        cls.mec5 = MatrizEtapaCC.objects.get(matriz=cls.matriz, etapa=cls.e5, componente=cls.lp)
+        cls.lp_go = cls.go["LP"]
+
+    def _outra_base(self):
+        """Base 5EF LP de uma matriz que o GO não usa: mexer nela só muda a revista pela derivada."""
+        outra = Matriz.objects.create(ano=self.ano, nome="Outra")
+        base = MatrizEtapaCC.objects.create(matriz=outra, etapa=self.e5, componente=self.lp, ano=self.ano, passo=25)
+        d = Descritor.objects.create(matriz_etapa_cc=base, codigo="D05", descricao="Da outra", ordem=1)
+        Tarefa.objects.create(descritor=d, inicio=100, fim=150, texto="Compara.", ordem=1)
+        return base
+
+    def _pronta(self):
+        preencher_infograficos(self.lp_go)  # o F2 sai dos infográficos (D-237), não de um SVG
+        Revista.objects.filter(pk=self.lp_go.pk).update(capa="capas/x.png", capa_sha256="c" * 64)
+        return recarregar(self.lp_go)
 
 
 class FotoTest(Base):
@@ -157,25 +177,6 @@ class CriarTest(Base):
 
 class RevistaTest(Base):
     """A revista com a etapa do projeto (GO LP 4EF): resolver, pendências e impacto."""
-
-    @classmethod
-    def setUpTestData(cls):
-        super().setUpTestData()
-        cls.mec5 = MatrizEtapaCC.objects.get(matriz=cls.matriz, etapa=cls.e5, componente=cls.lp)
-        cls.lp_go = cls.go["LP"]
-
-    def _outra_base(self):
-        """Base 5EF LP de uma matriz que o GO não usa: mexer nela só muda a revista pela derivada."""
-        outra = Matriz.objects.create(ano=self.ano, nome="Outra")
-        base = MatrizEtapaCC.objects.create(matriz=outra, etapa=self.e5, componente=self.lp, ano=self.ano, passo=25)
-        d = Descritor.objects.create(matriz_etapa_cc=base, codigo="D05", descricao="Da outra", ordem=1)
-        Tarefa.objects.create(descritor=d, inicio=100, fim=150, texto="Compara.", ordem=1)
-        return base
-
-    def _pronta(self):
-        preencher_infograficos(self.lp_go)  # o F2 sai dos infográficos (D-237), não de um SVG
-        Revista.objects.filter(pk=self.lp_go.pk).update(capa="capas/x.png", capa_sha256="c" * 64)
-        return recarregar(self.lp_go)
 
     def test_revista_usa_a_etapa_do_projeto(self):
         self.assertNotIn("D01", resolver(recarregar(self.lp_go))["f1"]["dados"]["4ef"])  # ainda sem MEC
@@ -344,6 +345,369 @@ class RestoDoSistemaTest(MediaTemporaria, Base):
 
     def test_impacto_da_etapa_do_projeto_e_so_a_revista_do_projeto(self):
         self.assertEqual([r for r, _ in impacto(self.mec)], [self.lp_go])
+
+
+class ConcluirTest(MediaTemporaria, Base):
+    """Concluir a revisão em 3 vias e escolher a etapa preferida (D-284): a base mudou, o projeto decide."""
+
+    def _derivada(self, base=None):
+        base = base or self._outra_base()
+        return base, criar(self.projeto, self.e4, self.lp, self.usuario, base=base)
+
+    def _d05(self, mec):
+        return Descritor.objects.get(matriz_etapa_cc=mec, codigo="D05")
+
+    def _t05(self, mec):
+        return Tarefa.objects.get(descritor__matriz_etapa_cc=mec, descritor__codigo="D05", inicio=100)
+
+    def _validada(self):
+        lp = recarregar(self.lp_go)
+        return validada(lp, hash_validado(lp))
+
+    def test_concluir_aplica_o_que_entra_e_avanca_a_foto(self):
+        base, mec = self._derivada()
+        lp = self._pronta()
+        self.assertIsNone(validar(lp.pk, hash_validado(lp), self.usuario))
+        self.assertTrue(self._validada())
+        # a foto junta espaços e quebras; o projeto recebe o texto bruto da base
+        Descritor.objects.filter(matriz_etapa_cc=base, codigo="D05").update(descricao="  Da base,   nova\n")
+        Tarefa.objects.filter(descritor__matriz_etapa_cc=base).update(texto="Compara melhor.")
+        MatrizEtapaCC.objects.filter(pk=base.pk).update(passo=30)
+        self.assertIn({"tipo": "base", "etapa": "4ef"}, resolver(recarregar(self.lp_go))["lacunas"])
+
+        mec.refresh_from_db()  # `revisao` usa a base em cache do `mec`: leia o mec de novo
+        itens, visto = revisao(mec)
+        self.assertEqual(
+            [(i.chave, i.campo, i.situacao) for i in itens],
+            [("passo", "passo", "entra"), ("D05", "descricao", "entra"), ("D05/100-150#1", "texto", "entra")],
+        )
+        self.assertEqual(concluir(mec, {}, visto, self.usuario), 3)
+
+        mec.refresh_from_db()
+        base.refresh_from_db()
+        self.assertEqual(mec.passo, 30)
+        self.assertEqual(self._d05(mec).descricao, "  Da base,   nova\n")
+        self.assertEqual(self._t05(mec).texto, "Compara melhor.")
+        self.assertEqual(mec.base_foto, foto(base))
+        self.assertEqual(revisao(mec)[0], [])
+        self.assertNotIn("base", [lc["tipo"] for lc in resolver(recarregar(self.lp_go))["lacunas"]])
+        self.assertFalse(self._validada())  # o conteúdo mudou: a revista tem de ser revalidada
+        h = mec.history.first()
+        self.assertEqual(
+            (h.history_user, h.history_change_reason), (self.usuario, "revisão da base: aplicou 3, manteve 0")
+        )
+        self.assertEqual(self._d05(mec).history.first().history_change_reason, "revisão da base")
+        self.assertEqual(self._d05(mec).history.first().history_user, self.usuario)
+
+    def test_manter_o_meu_nao_grava_e_nao_volta_a_perguntar(self):
+        base, mec = self._derivada()
+        Descritor.objects.filter(matriz_etapa_cc=mec, codigo="D05").update(descricao="Do projeto")
+        lp = self._pronta()
+        self.assertIsNone(validar(lp.pk, hash_validado(lp), self.usuario))
+        Descritor.objects.filter(matriz_etapa_cc=base, codigo="D05").update(descricao="Da base, nova")  # conflito
+        Tarefa.objects.filter(descritor__matriz_etapa_cc=base).update(texto="Compara melhor.")  # entra
+        self.assertFalse(self._validada())  # a lacuna `base` tira o validado
+
+        itens, visto = revisao(mec)
+        self.assertEqual([i.situacao for i in itens], ["conflito", "entra"])
+        escolhas = {(i.chave, i.campo): "local" for i in itens}
+        self.assertEqual(concluir(mec, escolhas, visto, self.usuario), 0)
+
+        mec.refresh_from_db()
+        self.assertEqual(self._d05(mec).descricao, "Do projeto")
+        self.assertEqual(self._t05(mec).texto, "Compara.")
+        self.assertEqual(mec.base_foto, foto(base))
+        self.assertEqual(revisao(mec)[0], [])
+        self.assertTrue(self._validada())  # o conteúdo voltou a ser o validado (D-094)
+        self.assertEqual(mec.history.first().history_change_reason, "revisão da base: aplicou 0, manteve 2")
+
+    def test_texto_editado_a_mao(self):
+        base, mec = self._derivada()
+        Descritor.objects.filter(matriz_etapa_cc=base, codigo="D05").update(descricao="Da base, nova")
+        Descritor.objects.filter(matriz_etapa_cc=mec, codigo="D05").update(descricao="Do projeto")
+        itens, visto = revisao(mec)
+        self.assertEqual([(i.campo, i.situacao) for i in itens], [("descricao", "conflito")])
+        self.assertEqual(concluir(mec, {("D05", "descricao"): ("texto", "  Meu\ntexto ")}, visto, self.usuario), 1)
+        self.assertEqual(self._d05(mec).descricao, "  Meu\ntexto ")  # como digitado
+        mec.refresh_from_db()
+        self.assertEqual(revisao(mec)[0], [])
+
+    def test_texto_so_vale_em_campo_de_texto(self):
+        base, mec = self._derivada()
+        Descritor.objects.filter(matriz_etapa_cc=base, codigo="D05").update(ordem=3)
+        antes = MatrizEtapaCC.objects.get(pk=mec.pk).base_foto
+        _, visto = revisao(mec)
+        with self.assertRaisesMessage(RevisaoRecusada, "ordem não é campo de texto"):
+            concluir(mec, {("D05", "ordem"): ("texto", "3")}, visto, self.usuario)
+        self.assertEqual(self._d05(mec).ordem, 1)
+        self.assertEqual(MatrizEtapaCC.objects.get(pk=mec.pk).base_foto, antes)
+
+    def test_escolha_malformada_e_recusada_sem_gravar(self):
+        base, mec = self._derivada()
+        Descritor.objects.filter(matriz_etapa_cc=base, codigo="D05").update(descricao="Da base, nova")
+        Tarefa.objects.filter(descritor__matriz_etapa_cc=base, inicio=100).update(texto_alternativo="Alt da base")
+        _, visto = revisao(mec)
+        for chave, escolha in [
+            (("D05", "descricao"), ("texto",)),
+            (("D05", "descricao"), ("texto", None)),
+            (("D05", "descricao"), "outra"),
+            (("D05/100-150#1", "texto_alternativo"), ("texto", "x" * 1001)),
+        ]:
+            with self.subTest(escolha=escolha), self.assertRaises(RevisaoRecusada):
+                concluir(mec, {chave: escolha}, visto, self.usuario)
+        self.assertEqual(self._d05(mec).descricao, "Da outra")
+
+    def test_descritor_apagado_leva_o_usuario_no_historico_das_tarefas(self):
+        base, mec = self._derivada()
+        tarefa = self._t05(mec)
+        self._d05(base).delete()
+        _, visto = revisao(mec)
+        self.assertEqual(concluir(mec, {}, visto, self.usuario), 1)
+        apagada = Tarefa.history.filter(id=tarefa.pk, history_type="-").get()
+        self.assertEqual(apagada.history_user, self.usuario)
+
+    def test_conflito_sem_escolha_e_recusado(self):
+        base, mec = self._derivada()
+        Descritor.objects.filter(matriz_etapa_cc=base, codigo="D05").update(descricao="Da base, nova")  # conflito
+        Descritor.objects.filter(matriz_etapa_cc=mec, codigo="D05").update(descricao="Do projeto")
+        Tarefa.objects.filter(descritor__matriz_etapa_cc=base).update(texto="Compara melhor.")  # entra
+        antes = MatrizEtapaCC.objects.get(pk=mec.pk).base_foto
+        _, visto = revisao(mec)
+        with self.assertRaises(RevisaoIncompleta):
+            concluir(mec, {}, visto, self.usuario)
+        self.assertEqual(self._d05(mec).descricao, "Do projeto")
+        self.assertEqual(self._t05(mec).texto, "Compara.")  # nem o que entra foi gravado
+        self.assertEqual(MatrizEtapaCC.objects.get(pk=mec.pk).base_foto, antes)
+
+    def test_visto_velho_e_recusado_base_mudou(self):
+        base, mec = self._derivada()
+        Descritor.objects.filter(matriz_etapa_cc=base, codigo="D05").update(descricao="Da base, nova")
+        _, visto = revisao(mec)
+        Descritor.objects.filter(matriz_etapa_cc=base, codigo="D05").update(descricao="Da base, outra vez")
+        with self.assertRaises(RevisaoMudou):
+            concluir(mec, {}, visto, self.usuario)
+        with self.assertRaises(RevisaoMudou):
+            concluir(mec, {}, "", self.usuario)
+        self.assertEqual(self._d05(mec).descricao, "Da outra")
+
+    def test_visto_velho_e_recusado_local_mudou(self):
+        base, mec = self._derivada()
+        Descritor.objects.filter(matriz_etapa_cc=base, codigo="D05").update(descricao="Da base, nova")
+        _, visto = revisao(mec)
+        Descritor.objects.filter(matriz_etapa_cc=mec, codigo="D05").update(descricao="Editado no meio")
+        with self.assertRaises(RevisaoMudou):  # "usar o da base" apagaria um texto que ninguém viu
+            concluir(mec, {}, visto, self.usuario)
+        self.assertEqual(self._d05(mec).descricao, "Editado no meio")
+
+    def test_escolha_de_chave_que_nao_esta_nos_itens_e_ignorada(self):
+        base, mec = self._derivada()
+        Descritor.objects.filter(matriz_etapa_cc=base, codigo="D05").update(descricao="Da base, nova")
+        _, visto = revisao(mec)
+        escolhas = {("D99", "descricao"): "local", ("D05", "ordem"): ("texto", "x")}
+        self.assertEqual(concluir(mec, escolhas, visto, self.usuario), 1)
+        self.assertEqual(self._d05(mec).descricao, "Da base, nova")
+
+    def test_base_acrescentou_e_apagou_descritor_e_tarefa(self):
+        base = self._outra_base()
+        d05 = self._d05(base)
+        Tarefa.objects.create(descritor=d05, inicio=300, fim=350, texto="Terceira.", ordem=2)
+        d06 = Descritor.objects.create(matriz_etapa_cc=base, codigo="D06", descricao="Seis", ordem=2)
+        Tarefa.objects.create(descritor=d06, inicio=100, fim=150, texto="Seis.", ordem=1)
+        _, mec = self._derivada(base)
+        # a base apaga D06 e a tarefa 300-350 do D05, e acrescenta o D07 e a tarefa 400-450 do D05
+        d06.delete()
+        Tarefa.objects.get(descritor=d05, inicio=300).delete()
+        Tarefa.objects.create(descritor=d05, inicio=400, fim=450, texto="Quarta.", ordem=3)
+        d07 = Descritor.objects.create(matriz_etapa_cc=base, codigo="D07", descricao="Sete", ordem=3)
+        Tarefa.objects.create(descritor=d07, inicio=110, fim=160, texto="Sete.", ordem=1)
+
+        itens, visto = revisao(mec)
+        self.assertEqual(
+            [(i.chave, i.campo, i.situacao) for i in itens],
+            [
+                ("D05/300-350#1", "existe", "entra"),
+                ("D05/400-450#1", "existe", "entra"),
+                ("D07", "existe", "entra"),
+                ("D06", "existe", "entra"),
+            ],
+        )
+        self.assertEqual(concluir(mec, {}, visto, self.usuario), 4)
+
+        mec.refresh_from_db()
+        self.assertEqual(foto(mec), foto(base))
+        self.assertEqual(sorted(Descritor.objects.filter(matriz_etapa_cc=mec).values_list("codigo", flat=True)), ["D05", "D07"])
+        self.assertEqual(Tarefa.objects.filter(descritor__matriz_etapa_cc=mec, descritor__codigo="D07").count(), 1)
+        self.assertEqual(Tarefa.objects.filter(descritor__matriz_etapa_cc=base).count(), 3)  # a base não mexe
+        self.assertEqual(mec.base_foto, foto(base))
+        self.assertEqual(revisao(mec)[0], [])
+        self.assertEqual(self._d05(mec).tarefa_set.get(inicio=400).history.get().history_user, self.usuario)
+
+    def test_existe_em_conflito_vale_a_escolha(self):
+        base = self._outra_base()
+        d06 = Descritor.objects.create(matriz_etapa_cc=base, codigo="D06", descricao="Seis", ordem=2)
+        _, mec = self._derivada(base)
+        d06.delete()  # a base apaga o D06 que o projeto editou
+        Descritor.objects.filter(matriz_etapa_cc=mec, codigo="D06").update(descricao="Seis editado")
+        d07 = Descritor.objects.create(matriz_etapa_cc=base, codigo="D07", descricao="Sete da base", ordem=3)
+        Tarefa.objects.create(descritor=d07, inicio=110, fim=160, texto="Da base.", ordem=1)
+        d07p = Descritor.objects.create(matriz_etapa_cc=mec, codigo="D07", descricao="Sete do projeto", ordem=3)
+        Tarefa.objects.create(descritor=d07p, inicio=120, fim=170, texto="Do projeto.", ordem=1)
+
+        itens, visto = revisao(mec)
+        self.assertEqual([(i.chave, i.situacao) for i in itens], [("D07", "conflito"), ("D06", "conflito")])
+        with self.assertRaises(RevisaoIncompleta):
+            concluir(mec, {("D07", "existe"): "base"}, visto, self.usuario)
+        escolhas = {("D07", "existe"): "base", ("D06", "existe"): "local"}
+        self.assertEqual(concluir(mec, escolhas, visto, self.usuario), 1)
+
+        self.assertEqual(Descritor.objects.get(matriz_etapa_cc=mec, codigo="D06").descricao, "Seis editado")
+        self.assertEqual(Descritor.objects.get(matriz_etapa_cc=mec, codigo="D07").descricao, "Sete da base")
+        self.assertEqual(
+            list(Tarefa.objects.filter(descritor__matriz_etapa_cc=mec, descritor__codigo="D07").values_list("texto", flat=True)),
+            ["Da base."],
+        )
+        mec.refresh_from_db()
+        self.assertEqual(revisao(mec)[0], [])
+
+    def test_usar_o_da_base_troca_o_arquivo_e_apaga_o_orfao(self):
+        velho = default_storage.save("itens/velho.png", ContentFile(PNG))
+        novo = default_storage.save("itens/novo.png", ContentFile(PNG))
+        sumiu = default_storage.save("itens/sumiu.png", ContentFile(PNG))
+        base = self._outra_base()
+        Tarefa.objects.filter(descritor__matriz_etapa_cc=base).update(arquivo=velho)
+        Tarefa.objects.create(descritor=self._d05(base), inicio=300, fim=350, texto="Outra.", ordem=2, arquivo=sumiu)
+        _, mec = self._derivada(base)  # o clone copia os caminhos: arquivo compartilhado (D-150)
+        Tarefa.objects.filter(descritor__matriz_etapa_cc=base, inicio=100).update(arquivo=novo)
+        Tarefa.objects.get(descritor__matriz_etapa_cc=base, inicio=300).delete()
+
+        itens, visto = revisao(mec)
+        self.assertEqual([(i.chave, i.campo) for i in itens], [("D05/100-150#1", "arquivo"), ("D05/300-350#1", "existe")])
+        with self.captureOnCommitCallbacks(execute=True):
+            self.assertEqual(concluir(mec, {}, visto, self.usuario), 2)
+
+        self.assertEqual(self._t05(mec).arquivo, novo)
+        self.assertFalse(default_storage.exists(velho))  # ninguém mais aponta para ele
+        self.assertFalse(default_storage.exists(sumiu))  # saiu com a tarefa apagada
+        self.assertTrue(default_storage.exists(novo))
+
+    def test_manter_o_arquivo_do_projeto_nao_apaga_nada(self):
+        velho = default_storage.save("itens/velho.png", ContentFile(PNG))
+        novo = default_storage.save("itens/novo.png", ContentFile(PNG))
+        base = self._outra_base()
+        Tarefa.objects.filter(descritor__matriz_etapa_cc=base).update(arquivo=velho)
+        _, mec = self._derivada(base)
+        Tarefa.objects.filter(descritor__matriz_etapa_cc=base).update(arquivo=novo)
+        _, visto = revisao(mec)
+        with self.captureOnCommitCallbacks(execute=True):
+            concluir(mec, {("D05/100-150#1", "arquivo"): "local"}, visto, self.usuario)
+        self.assertEqual(self._t05(mec).arquivo, velho)
+        self.assertTrue(default_storage.exists(velho))
+
+    def test_recusa_copia_solta_e_projeto_arquivado(self):
+        with self.assertRaisesMessage(RevisaoRecusada, "só a etapa do projeto tem revisão"):
+            concluir(self.mec5, {}, "x", self.usuario)
+        base, solta = self._derivada()
+        e6 = Etapa.objects.create(ano=self.ano, codigo="6EF", escala_max=500, ordem=5)
+        _, visto = revisao(solta)
+        MatrizEtapaCC.objects.filter(pk=solta.pk).update(base=None)  # a base saiu (SET NULL)
+        with self.assertRaisesMessage(RevisaoRecusada, "etapa sem base"):
+            concluir(solta, {}, visto, self.usuario)
+
+        mec = criar(self.projeto, e6, self.lp, self.usuario, base=base)
+        Descritor.objects.filter(matriz_etapa_cc=base, codigo="D05").update(descricao="Da base, nova")
+        _, visto = revisao(mec)
+        Projeto.objects.filter(pk=self.projeto.pk).update(arquivado_em="2026-01-01T00:00:00Z")
+        with self.assertRaisesMessage(RevisaoRecusada, "projeto arquivado"):
+            concluir(mec, {}, visto, self.usuario)
+        self.assertEqual(self._d05(mec).descricao, "Da outra")
+
+    def test_escolher_grava_e_recusa_valor_invalido(self):
+        base, mec = self._derivada()
+        escolher(mec, "matriz", self.usuario)
+        mec.refresh_from_db()
+        self.assertEqual(mec.preferida, "matriz")
+        h = mec.history.first()
+        self.assertEqual(h.history_user, self.usuario)
+        self.assertEqual(h.history_change_reason, "etapa preferida: matriz")
+        escolher(mec, "projeto", self.usuario)
+        mec.refresh_from_db()
+        self.assertEqual(mec.preferida, "projeto")
+        with self.assertRaisesMessage(RevisaoRecusada, "preferida inválida"):
+            escolher(mec, "base", self.usuario)
+        with self.assertRaisesMessage(RevisaoRecusada, "só a etapa do projeto tem revisão"):
+            escolher(self.mec5, "matriz", self.usuario)
+        Projeto.objects.filter(pk=self.projeto.pk).update(arquivado_em="2026-01-01T00:00:00Z")
+        with self.assertRaisesMessage(RevisaoRecusada, "projeto arquivado"):
+            escolher(mec, "matriz", self.usuario)
+        mec.refresh_from_db()
+        self.assertEqual(mec.preferida, "projeto")
+
+
+class ConcluirConcorrenteTest(TransactionTestCase):
+    """A trava da MEC do projeto faz o `concluir` esperar quem está gravando nela e recalcular."""
+
+    def test_espera_a_edicao_local_em_andamento_e_recusa(self):
+        Mundo.montar(self)
+        e4 = Etapa.objects.create(ano=self.ano, codigo="4EF", escala_max=500, ordem=4)
+        projeto = Projeto.objects.get(parceiro_ano__parceiro__nome="GO", arquivado_em__isnull=True)
+        outra = Matriz.objects.create(ano=self.ano, nome="Outra")
+        base = MatrizEtapaCC.objects.create(matriz=outra, etapa=self.e5, componente=self.lp, ano=self.ano, passo=25)
+        Descritor.objects.create(matriz_etapa_cc=base, codigo="D05", descricao="Da outra", ordem=1)
+        mec = criar(projeto, e4, self.lp, self.usuario, base=base)
+        Descritor.objects.filter(matriz_etapa_cc=base, codigo="D05").update(descricao="Da base, nova")
+        _, visto = revisao(mec)  # a tela mostrou 1 item "entra"
+        travou, solta = threading.Event(), threading.Event()
+
+        def outra_aba():  # trava só a MEC do projeto e edita o mesmo texto, sem commit ainda
+            try:
+                with transaction.atomic():
+                    MatrizEtapaCC.objects.select_for_update().get(pk=mec.pk)
+                    Descritor.objects.filter(matriz_etapa_cc=mec, codigo="D05").update(descricao="Do projeto")
+                    travou.set()
+                    solta.wait(10)
+            finally:
+                connection.close()
+
+        t = threading.Thread(target=outra_aba)
+        t.start()
+        self.assertTrue(travou.wait(10))
+        threading.Timer(0.5, solta.set).start()
+        # Sem a trava, o concluir leria o texto antigo (a outra aba não commitou) e gravaria por cima.
+        with self.assertRaises(RevisaoMudou):
+            concluir(MatrizEtapaCC.objects.get(pk=mec.pk), {}, visto, self.usuario)
+        t.join()
+        self.assertEqual(Descritor.objects.get(matriz_etapa_cc=mec, codigo="D05").descricao, "Do projeto")
+
+    def test_so_uma_aplica_e_a_outra_leva_revisao_mudou(self):
+        Mundo.montar(self)
+        e4 = Etapa.objects.create(ano=self.ano, codigo="4EF", escala_max=500, ordem=4)
+        projeto = Projeto.objects.get(parceiro_ano__parceiro__nome="GO", arquivado_em__isnull=True)
+        outra = Matriz.objects.create(ano=self.ano, nome="Outra")
+        base = MatrizEtapaCC.objects.create(matriz=outra, etapa=self.e5, componente=self.lp, ano=self.ano, passo=25)
+        Descritor.objects.create(matriz_etapa_cc=base, codigo="D05", descricao="Da outra", ordem=1)
+        mec = criar(projeto, e4, self.lp, self.usuario, base=base)
+        Descritor.objects.filter(matriz_etapa_cc=base, codigo="D05").update(descricao="Da base, nova")
+        _, visto = revisao(mec)
+        largada, resultados = threading.Event(), []
+
+        def conclui():
+            try:
+                largada.wait(10)
+                resultados.append(concluir(MatrizEtapaCC.objects.get(pk=mec.pk), {}, visto, self.usuario))
+            except Exception as e:  # noqa: BLE001 - o teste confere o tipo
+                resultados.append(e)
+            finally:
+                connection.close()
+
+        threads = [threading.Thread(target=conclui) for _ in range(2)]
+        for t in threads:
+            t.start()
+        largada.set()
+        for t in threads:
+            t.join()
+        self.assertEqual(sorted(type(r).__name__ for r in resultados), ["RevisaoMudou", "int"])
+        self.assertIn(1, resultados)
+        self.assertEqual(Descritor.objects.get(matriz_etapa_cc=mec, codigo="D05").descricao, "Da base, nova")
 
 
 def _tarefa(texto="t", arquivo=None, alt="", ordem=1):
