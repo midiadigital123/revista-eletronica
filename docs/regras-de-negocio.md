@@ -170,7 +170,8 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | De 1 a 4 cortes por parceiro_ano × etapa × componente (2 a 5 padrões). | D-050, D-055, `app/nucleo/servicos/cascata.py:31`, CHECK `corte_valores_1a4` em `app/nucleo/models/projeto.py:53` |
 | Inteiros, estritamente crescentes. | D-055, `app/nucleo/servicos/cascata.py:33-37` |
 | Cada corte estritamente dentro da escala: `0 < corte < escala_max` da etapa. Corte igual a 0 ou ao máximo é recusado. | D-153, `app/nucleo/servicos/cascata.py:38` |
-| Escala de 2026: 2EF vai a 1000; 5EF, 9EF e 3EM vão a 500 (valor da etapa, editável no ano). | D-055, D-141, `app/nucleo/management/commands/carregar_cadastros.py:6` |
+| Escala de 2026: 1EF e 2EF vão a 1000; as demais vão a 500 (valor da etapa, editável no ano). As 4 etapas canônicas (2EF, 5EF, 9EF, 3EM) nascem em `carregar_cadastros`; as outras (1EF, 3EF, 4EF, 6EF, 7EF, 8EF, 2EM) são criadas pela carga quando a planilha Somativas pede. | D-055, D-141, D-278, `app/nucleo/management/commands/carregar_cadastros.py:6`, `app/nucleo/management/commands/importar_cortes.py` |
+| Carga de 2026: o corte que falta na planilha de cortes entra como "100, 200, 300" (o relatório do comando lista cada um) e a Pedagógica corrige pela tela; todo parceiro recebe a matriz Comunitária, e o superusuário troca depois. | D-278, `app/nucleo/management/commands/importar_cortes.py` |
 | `escala_max` fica só leitura quando a etapa já tem corte ou MEC. | D-168, D-193 |
 | Etapa e componente precisam ser do ano do parceiro_ano; linha repetida é recusada. | D-090, `app/nucleo/servicos/cascata.py:26-30` |
 | Todos os erros de uma gravação aparecem juntos; um erro, nada grava. | D-135, `app/nucleo/cortes.py:1-7` |

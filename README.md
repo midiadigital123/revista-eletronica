@@ -62,7 +62,7 @@ usuário `admin`).
 |---|---|---|
 | Ano 2026, 4 etapas (2EF, 5EF, 9EF, 3EM), 2 componentes (LP, MT), 5 cores de padrão | 1 + 4 + 2 + 5 | `carregar_cadastros` |
 | Usuário `admin` (superusuário) | 1 | `createsuperuser`, senha de `ADMIN_SENHA` |
-| Parceiros, cortes de LP e MT, projetos e revistas (pela cascata) | 33, 148, 26, 52 | `docs/fontes/2026/Somativas 2026.xlsx` e `docs/fontes/2025/planilhas importantes/Cortes dos Padrões por Etapa e Parceiro.xlsx` (`importar_cortes`) |
+| Parceiros, etapas criadas (1EF, 3EF, 4EF, 6EF, 7EF, 8EF, 2EM), cortes de LP e MT, projetos e revistas (pela cascata). Corte que falta na planilha entra como "100, 200, 300" e sai no relatório do comando (D-278); todo parceiro recebe a matriz Comunitária | 33, 7, 232 (148 da planilha + 84 arbitrários), 33, 66 | `docs/fontes/2026/Somativas 2026.xlsx` e `docs/fontes/2025/planilhas importantes/Cortes dos Padrões por Etapa e Parceiro.xlsx` (`importar_cortes`) |
 | Templates de texto "Padrão" (F1 e F2 × LP e MT) | 4 | `app/templates_seed/2026/` |
 | Matriz "Comunitária" | 198 descritores, 1093 tarefas | 3 PDFs em `docs/fontes/2025/PDFs Matriz Comunitária/` |
 
