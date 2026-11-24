@@ -99,7 +99,7 @@ Demo K-042: escrita com componentes django-cotton (templates/cotton/: pagina_cab
           </div>
           {% if pode_gravar %}
           <c-input type="number" min="1" step="1" inputmode="numeric" id="passo-{{ chave }}" name="passo-{{ chave }}" value="{{ c.passo|default_if_none:'' }}" placeholder="{{ c.matriz|default_if_none:'—' }}" data-valor aria-describedby="passo-{{ chave }}-matriz" editavel="{% if not c.sem_vazias %}1{% endif %}" />
-          <p class="ajuda" id="passo-{{ chave }}-matriz">Matriz: {{ c.da_matriz }}</p>
+          <p class="ajuda" id="passo-{{ chave }}-matriz">{% if c.do_projeto %}Etapa do projeto{% else %}Matriz{% endif %}: {{ c.da_matriz }}</p>
           <label class="marcar"><input type="checkbox" name="sem-{{ chave }}" data-sem{% if c.sem_vazias %} checked{% endif %}> Sem linhas vazias<span class="sr-only"> em {{ b.etapa.codigo }} {{ c.componente.codigo }}</span></label>
           <button type="button" class="link pj-voltar" @click="voltar" x-show="sobrescrito"{% if not c.sobrescrito %} x-cloak{% endif %}>Voltar ao passo da matriz<span class="sr-only"> em {{ b.etapa.codigo }} {{ c.componente.codigo }}</span></button>
           {% else %}
@@ -144,6 +144,43 @@ Demo K-042: escrita com componentes django-cotton (templates/cotton/: pagina_cab
   </p>
   {% endif %}
 </c-card>
+
+{% if etapas_projeto %}
+<c-card titulo="Etapas não canônicas" titulo_id="etapas-titulo" class="pj-secao">
+  <c-slot name="descricao">Etapa fora de 2EF, 5EF, 9EF e 3EM parte de uma etapa canônica de qualquer matriz: apontar copia os descritores e as tarefas da base para o projeto, que edita a cópia. Se a base mudar depois, o projeto revisa as mudanças.</c-slot>
+  <ul class="pj-etapas-projeto">
+    {% for l in etapas_projeto %}
+    <li>
+      <strong>{{ l.etapa.codigo }} {{ l.componente.codigo }}</strong>
+      {% if l.mec %}
+      <span>· {% if l.base %}base: {{ l.base.etapa.codigo }} {{ l.base.componente.codigo }} da {{ l.base.matriz }}{% else %}sem base (a base foi apagada){% endif %}</span>
+      <a class="link" href="{% url 'ui_matriz_mec' l.mec.pk %}">{% if pode_gravar %}Editar{% else %}Ver{% endif %}<span class="sr-only"> {{ l.etapa.codigo }} {{ l.componente.codigo }}</span></a>
+      {% elif request.bloqueio and pode_gravar and l.bases %}
+      {# Form próprio, com a mesma sessão de bloqueio da ficha; a regra fica em servicos.etapa_projeto.criar. #}
+      <form method="post" action="{% url 'ui_projeto_etapa_apontar' projeto.pk %}" class="pj-apontar" id="{{ l.form_id }}">{% csrf_token %}
+        <input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">
+        <input type="hidden" name="etapa" value="{{ l.etapa.pk }}">
+        <input type="hidden" name="componente" value="{{ l.componente.pk }}">
+        <label class="sr-only" for="base-{{ l.etapa.pk }}-{{ l.componente.pk }}">Base de {{ l.etapa.codigo }} {{ l.componente.codigo }}</label>
+        <c-select id="base-{{ l.etapa.pk }}-{{ l.componente.pk }}" name="base" required>
+          <option value="">Escolha a etapa canônica</option>
+          {% regroup l.bases by matriz as grupos %}
+          {% for g in grupos %}<optgroup label="{{ g.grouper }}">{% for b in g.list %}<option value="{{ b.pk }}"{% if b.pk == l.escolhida %} selected{% endif %}>{{ b.etapa.codigo }}</option>{% endfor %}</optgroup>{% endfor %}
+        </c-select>
+        <c-botao type="submit" tamanho="sm">Apontar</c-botao>
+      </form>
+      {# D-202: o POST sem confirmação voltou para cá; confirmar no modal reenvia este form com confirmar_impacto. #}
+      {% if l.perdem %}{% include "ui/_componentes/impacto.html" with form_id=l.form_id acao="Apontar" perdem=l.perdem %}{% endif %}
+      {% elif l.bases %}
+      <span class="mudo">· sem base</span>
+      {% else %}
+      <span class="mudo">· sem base: nenhuma matriz tem etapa canônica de {{ l.componente.codigo }}</span>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</c-card>
+{% endif %}
 
 {% elif aba == "cortes" %}
 <c-card titulo="Cortes de {{ projeto.parceiro_ano.parceiro.nome }} em {{ projeto.ano.ano }}" titulo_id="cortes-titulo" class="pj-secao">

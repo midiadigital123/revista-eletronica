@@ -25,12 +25,14 @@ from nucleo import lotes, planilha_variaveis
 from nucleo.contexto import ano_da_sessao
 from nucleo.lotes import escrever_travado
 from nucleo.models import (
-    Ano, Componente, CorPadrao, Etapa, Fasciculo, Matriz, MatrizEtapaCC, ParceiroAno, Projeto, ProjetoCor, ProjetoPasso, Revista,
-    Template,
+    Ano, Componente, CorPadrao, Corte, Etapa, Fasciculo, Matriz, MatrizEtapaCC, ParceiroAno, Projeto, ProjetoCor,
+    ProjetoPasso, Revista, Template,
 )  # fmt: skip
+from nucleo.models.cadastro import ETAPAS_CANONICAS
 from nucleo.projeto import MAX_CORES, ProjetoForm
 from nucleo.servicos import matriz as matrizes
-from nucleo.servicos.etapa_projeto import mecs_por_etapa, vigente
+from nucleo.servicos.etapa_projeto import CriacaoRecusada, criar, mecs_por_etapa, vigente
+from nucleo.servicos.impacto import avisar_perdidos, perdem_validado
 from nucleo.servicos.resolver import valores_das_variaveis
 from nucleo.ui_autosave import Conflito, form_de_um_campo, responder_campo
 from nucleo.ui_autosave import erros as erros_campo
@@ -231,7 +233,9 @@ def projeto(request, pk):
         "abas": ABAS,
         "aba": aba,
     }
-    if aba == "passos":
+    if aba == "matriz":
+        contexto["etapas_projeto"] = _etapas_do_projeto(projeto, request.GET.get("apontar", "") if pode else "", request.user)
+    elif aba == "passos":
         contexto["etapas_passo"] = _passos(projeto)
         contexto["amostras"] = _amostras(projeto)
     elif aba == "cortes":
@@ -249,7 +253,7 @@ def _passos(projeto):
     etapas = list(Etapa.objects.filter(ano_id=projeto.ano_id).order_by("ordem"))
     componentes = list(Componente.objects.filter(ano_id=projeto.ano_id).order_by("codigo"))
     matriz = {
-        (e, c.pk): vigente(*par).passo
+        (e, c.pk): vigente(*par)
         for c in componentes
         for e, par in mecs_por_etapa(projeto, c.pk, [e.pk for e in etapas]).items()
     }
@@ -257,9 +261,11 @@ def _passos(projeto):
 
     def celula(e, c):
         k = (e.pk, c.pk)
-        da_matriz = "fora da matriz" if k not in matriz else matriz[k] or "sem linhas vazias"
+        mec = matriz.get(k)
+        da_matriz = "fora da matriz" if mec is None else mec.passo or "sem linhas vazias"
         return {
-            "chave": f"{e.pk}-{c.pk}", "componente": c, "matriz": matriz.get(k), "da_matriz": da_matriz,
+            "chave": f"{e.pk}-{c.pk}", "componente": c, "matriz": mec and mec.passo, "da_matriz": da_matriz,
+            "do_projeto": mec is not None and mec.projeto_id is not None,
             "sobrescrito": k in proprios, "passo": proprios.get(k), "sem_vazias": k in proprios and proprios[k] is None,
         }  # fmt: skip
 
@@ -344,6 +350,93 @@ def _gravar_matriz(request, pk):
     pa = projeto.parceiro_ano
     gravar = lambda dados: matrizes.atribuir_matriz(pa, dados["matriz"], request.user)  # noqa: E731
     return responder_campo(request, form=form, gravar=gravar, revistas=lambda: _revistas(projeto), titulo="Trocar a matriz")
+
+
+def _etapas_do_projeto(projeto, pedido="", usuario=None):
+    """Aba Matriz: uma linha por corte do parceiro em etapa não canônica (D-276) que a matriz não
+    cobre, nos componentes das revistas ativas. `mec` é a etapa do projeto, se já apontada; sem ela,
+    `bases` traz as etapas canônicas de matriz do mesmo componente (qualquer matriz, qualquer ano).
+    `pedido` ("etapa-componente-base", vindo do POST sem confirmação): a linha ganha `escolhida` e
+    `perdem`, as revistas que o apontamento tira do "Validado", para o modal de impacto (D-202)."""
+    componentes = _revistas(projeto).values_list("componente_id", flat=True)
+    cortes = (
+        Corte.objects.filter(parceiro_ano_id=projeto.parceiro_ano_id, componente_id__in=componentes)
+        .exclude(etapa__codigo__in=ETAPAS_CANONICAS)
+        .select_related("etapa", "componente").order_by("etapa__ordem", "componente__codigo")
+    )  # fmt: skip
+    linhas, bases = [], {}
+    for c in cortes:
+        da_matriz, do_projeto = mecs_por_etapa(projeto, c.componente_id, [c.etapa_id]).get(c.etapa_id, (None, None))
+        if do_projeto is None and da_matriz is not None:
+            continue
+        if do_projeto is None and c.componente.codigo not in bases:
+            bases[c.componente.codigo] = list(
+                MatrizEtapaCC.objects.filter(
+                    matriz__isnull=False, etapa__codigo__in=ETAPAS_CANONICAS, componente__codigo=c.componente.codigo
+                ).select_related("matriz__ano", "etapa").order_by("-ano__ano", "matriz__nome", "matriz_id", "etapa__ordem")
+            )  # fmt: skip
+        linhas.append({
+            "etapa": c.etapa, "componente": c.componente, "mec": do_projeto, "bases": bases.get(c.componente.codigo),
+            "form_id": f"apontar-{c.etapa_id}-{c.componente_id}",
+        })  # fmt: skip
+    alvo = [_pk(x) for x in pedido.split("-")] if pedido.count("-") == 2 else None
+    for linha in linhas:
+        if alvo and linha["mec"] is None and [linha["etapa"].pk, linha["componente"].pk] == alvo[:2]:
+            base = next((b for b in linha["bases"] or () if b.pk == alvo[2]), None)
+            if base is not None:
+                linha["escolhida"] = base.pk
+                linha["perdem"] = _perdem_ao_apontar(projeto, linha["etapa"], linha["componente"], usuario, base)
+    for linha in linhas:  # a base da etapa já apontada, com a matriz dela, numa consulta só por linha
+        if linha["mec"] and linha["mec"].base_id:
+            linha["base"] = MatrizEtapaCC.objects.select_related("matriz__ano", "etapa", "componente").get(pk=linha["mec"].base_id)
+    return linhas
+
+
+def _perdem_ao_apontar(projeto, etapa, componente, usuario, base):
+    """Revistas validadas que o apontamento tira do "Validado": simula o `criar` e desfaz."""
+    try:
+        return perdem_validado(lambda: criar(projeto, etapa, componente, usuario, base), _revistas(projeto))
+    except CriacaoRecusada:
+        return []  # o POST de verdade mostra o motivo
+
+
+@require_http_methods(["GET", "POST"])
+@login_required
+def apontar(request, pk):
+    """GET volta à aba Matriz: é para onde o com_bloqueio manda quem perdeu o bloqueio (o caminho do POST)."""
+    if request.method == "GET":
+        return redirect(reverse("ui_projeto", args=[pk]) + "?aba=matriz")
+    return _apontar(request, pk)
+
+
+@com_bloqueio(_alvo, pode_gravar)
+def _apontar(request, pk):
+    """Aba Matriz: aponta a etapa não canônica do projeto para uma etapa canônica de matriz (D-276),
+    sob a sessão de bloqueio da ficha. Toda a regra fica em `servicos.etapa_projeto.criar`. Apontar
+    muda a revista: se alguma validada perde o "Validado", nada é gravado e a aba reabre com o modal
+    de impacto (D-202); o reenvio confirmado grava e avisa quem perdeu."""
+    projeto = get_object_or_404(Projeto.objects.select_related("parceiro_ano", "ano"), pk=pk)
+    if projeto.arquivado_em:
+        raise PermissionDenied  # arquivado é congelado (D-093)
+    aba = reverse("ui_projeto", args=[pk]) + "?aba=matriz"
+    etapa = Etapa.objects.filter(pk=_pk(request.POST.get("etapa")), ano_id=projeto.ano_id).first()
+    componente = Componente.objects.filter(pk=_pk(request.POST.get("componente")), ano_id=projeto.ano_id).first()
+    base = MatrizEtapaCC.objects.select_related("matriz__ano", "etapa", "componente").filter(pk=_pk(request.POST.get("base"))).first()
+    if etapa is None or componente is None or base is None:
+        messages.error(request, "Não apontado: escolha a base.")
+        return redirect(aba)
+    try:
+        perdem = perdem_validado(lambda: criar(projeto, etapa, componente, request.user, base), _revistas(projeto))
+        if perdem and not request.POST.get("confirmar_impacto"):
+            return redirect(f"{aba}&apontar={etapa.pk}-{componente.pk}-{base.pk}")
+        criar(projeto, etapa, componente, request.user, base)
+    except CriacaoRecusada as e:
+        messages.error(request, f"Não apontado: {e}.")
+        return redirect(aba)
+    messages.success(request, f"{etapa.codigo} {componente.codigo} apontada para {base.etapa.codigo} de {base.matriz}.")
+    if perdem:
+        avisar_perdidos(request, perdem, projeto.ano.ano)
+    return redirect(aba)
 
 
 PASSO = re.compile(r"^(passo|sem)-(\d{1,9})-(\d{1,9})$")  # célula etapa × componente da aba Passos e cores
@@ -490,4 +583,5 @@ urlpatterns = [
     path("<int:pk>/", projeto, name="ui_projeto"),
     path("<int:pk>/campo/", campo, name="ui_projeto_campo"),
     path("<int:pk>/matriz/", matriz, name="ui_projeto_matriz"),
+    path("<int:pk>/etapa/apontar/", apontar, name="ui_projeto_etapa_apontar"),
 ]

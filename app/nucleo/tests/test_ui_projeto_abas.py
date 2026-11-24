@@ -9,7 +9,11 @@ from unittest import mock
 from django.urls import reverse
 
 from nucleo.admin.bloqueio import CAMPO_SESSAO
-from nucleo.models import Matriz, ParceiroAno, ProjetoCor, ProjetoPasso
+from nucleo.models import Descritor, Etapa, Matriz, MatrizEtapaCC, ParceiroAno, ProjetoCor, ProjetoPasso
+from nucleo.servicos.cascata import gravar_cortes
+from nucleo.servicos.etapa_projeto import criar
+from nucleo.servicos.pendencias import pendencias
+from nucleo.servicos.resolver import carregar
 from nucleo.tests.test_admin_padrao import esta_validada, validar
 from nucleo.tests.test_admin_projeto import Base
 
@@ -224,3 +228,103 @@ class AtribuirMatrizUnicoServicoTest(Base):
         atribuir_matriz(pa, nova, self.ped)
         self.assertEqual(ParceiroAno.objects.get(pk=pa.pk).matriz, nova)
         self.assertEqual(pa.history.first().history_user, self.ped)
+
+
+class ApontarEtapaTest(Base):
+    """Etapa 7 (D-276): a etapa não canônica do projeto aponta para uma canônica pela aba Matriz."""
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.e4 = Etapa.objects.create(ano=cls.ano, codigo="4EF", escala_max=500, ordem=1)
+        c = [100, 200, 250, 300]
+        gravar_cortes(
+            cls.projeto_go.parceiro_ano,
+            [(cls.e5, cls.lp, c), (cls.e9, cls.lp, c), (cls.e5, cls.mt, c), (cls.e4, cls.lp, c)],
+            cls.usuario,
+        )
+        cls.mec5 = MatrizEtapaCC.objects.get(matriz=cls.matriz, etapa=cls.e5, componente=cls.lp)
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse("ui_projeto", args=[self.projeto_go.pk]) + "?aba=matriz"
+        self.url_apontar = reverse("ui_projeto_etapa_apontar", args=[self.projeto_go.pk])
+
+    def apontar(self, base, **extra):
+        sessao = self.client.get(self.url).wsgi_request.bloqueio["sessao"]
+        dados = {"etapa": self.e4.pk, "componente": self.lp.pk, "base": getattr(base, "pk", base), CAMPO_SESSAO: sessao, **extra}
+        return self.client.post(self.url_apontar, dados, follow=True)
+
+    def do_projeto(self):
+        return MatrizEtapaCC.objects.filter(projeto=self.projeto_go)
+
+    def test_aba_matriz_mostra_o_form_de_apontar(self):
+        mt5 = MatrizEtapaCC.objects.get(matriz=self.matriz, etapa=self.e5, componente=self.mt)
+        r = self.client.get(self.url)
+        self.assertContains(r, "Etapas não canônicas")
+        self.assertContains(r, f'action="{self.url_apontar}"', count=1)  # só 4EF LP; canônica não ganha linha
+        self.assertContains(r, '<optgroup label="Comunitária (2026)">')
+        self.assertContains(r, f'<option value="{self.mec5.pk}">5EF</option>')
+        self.assertNotContains(r, f'<option value="{mt5.pk}">')  # outro componente
+
+    def test_apontar_pela_tela(self):
+        r = self.apontar(self.mec5)
+        self.assertRedirects(r, self.url)
+        mec = self.do_projeto().get()
+        self.assertEqual((mec.etapa, mec.componente, mec.base), (self.e4, self.lp, self.mec5))
+        self.assertTrue(mec.base_foto)
+        self.assertTrue(Descritor.objects.filter(matriz_etapa_cc=mec).exists())
+        self.assertNotIn("etapa_sem_base", [p.codigo for p in pendencias(carregar(self.go["LP"].pk))])
+        self.assertContains(r, "base: 5EF LP da Comunitária (2026)")
+        self.assertContains(r, reverse("ui_matriz_mec", args=[mec.pk]))
+        self.assertNotContains(r, f'action="{self.url_apontar}"')
+
+    def test_apontar_recusa_sem_bloqueio_e_sem_permissao(self):
+        self.client.get(self.url)
+        dados = {"etapa": self.e4.pk, "componente": self.lp.pk, "base": self.mec5.pk}
+        self.client.post(self.url_apontar, {**dados, CAMPO_SESSAO: "outra-aba"})
+        self.assertFalse(self.do_projeto().exists())
+        self.client.force_login(self.imp)
+        self.assertNotContains(self.client.get(self.url), f'action="{self.url_apontar}"')
+        self.assertEqual(self.client.post(self.url_apontar, dados).status_code, 403)
+        self.assertFalse(self.do_projeto().exists())
+
+    def test_recusa_do_servico_vira_mensagem(self):
+        e3 = Etapa.objects.create(ano=self.ano, codigo="3EF", escala_max=500, ordem=0)
+        nao_canonica = MatrizEtapaCC.objects.create(matriz=self.matriz, etapa=e3, componente=self.lp, ano=self.ano, passo=25)
+        r = self.apontar(nao_canonica)
+        self.assertContains(r, "Não apontado: a base precisa ser etapa canônica")
+        self.assertContains(self.apontar("x"), "Não apontado: escolha a base.")
+        self.assertFalse(self.do_projeto().exists())
+
+    def test_get_volta_a_aba(self):
+        self.assertRedirects(self.client.get(self.url_apontar), self.url, fetch_redirect_response=False)
+
+    def test_revista_validada_abre_o_modal_e_so_grava_confirmado(self):
+        """Apontar muda a revista: passa pelo modal de impacto, como toda gravação que tira o Validado (D-202)."""
+        validar(self.go["LP"])
+        r = self.apontar(self.mec5)
+        self.assertRedirects(r, f"{self.url}&apontar={self.e4.pk}-{self.lp.pk}-{self.mec5.pk}")
+        self.assertFalse(self.do_projeto().exists())
+        self.assertTrue(esta_validada(self.go["LP"]))
+        self.assertContains(r, f'data-form="apontar-{self.e4.pk}-{self.lp.pk}"')  # o modal, ligado ao form da linha
+        self.assertContains(r, f"<li>{self.go['LP']}</li>")
+        self.assertContains(r, f'<option value="{self.mec5.pk}" selected>5EF</option>')
+        r = self.apontar(self.mec5, confirmar_impacto="on")
+        self.assertRedirects(r, self.url)
+        self.assertTrue(self.do_projeto().exists())
+        self.assertFalse(esta_validada(self.go["LP"]))
+        self.assertContains(r, "1 revista(s) perderam o “Validado”")
+
+    def test_sem_revista_validada_grava_direto(self):
+        validar(self.go["MT"])  # outro componente: apontar 4EF LP não muda a revista MT
+        self.assertRedirects(self.apontar(self.mec5), self.url)
+        self.assertTrue(self.do_projeto().exists())
+        self.assertTrue(esta_validada(self.go["MT"]))
+
+    def test_aba_passos_rotula_etapa_do_projeto(self):
+        criar(self.projeto_go, self.e4, self.lp, self.ped, self.mec5)
+        r = self.client.get(reverse("ui_projeto", args=[self.projeto_go.pk]) + "?aba=passos")
+        chave = f"{self.e4.pk}-{self.lp.pk}"
+        self.assertContains(r, f'id="passo-{chave}-matriz">Etapa do projeto: 25</p>')
+        self.assertContains(r, f'id="passo-{self.e5.pk}-{self.lp.pk}-matriz">Matriz: 25</p>')

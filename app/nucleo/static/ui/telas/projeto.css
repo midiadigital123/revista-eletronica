@@ -14,6 +14,10 @@
 .pj-cartao-cab { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
 .pj-cartao-cab .mudo { font-size: 0.875rem; font-weight: 400; }
 .pj-matriz .select { max-width: 24rem; }
+/* aba Matriz: etapas não canônicas, uma linha por etapa × componente, com o form de apontar */
+.pj-etapas-projeto { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; font-size: 0.875rem; }
+.pj-etapas-projeto li, .pj-apontar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.pj-apontar .select { width: auto; max-width: 20rem; }
 .pj-cartao-dados { display: grid; grid-template-columns: auto 1fr; gap: 0.375rem 1rem; margin: 0; font-size: 0.875rem; }
 .pj-cartao-dados dt { color: var(--muted-foreground); }
 .pj-cartao-dados dd { margin: 0; }
