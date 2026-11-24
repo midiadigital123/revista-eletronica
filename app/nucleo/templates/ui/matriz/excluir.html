@@ -8,7 +8,7 @@
 {% block conteudo %}
 <c-voltar href="{{ voltar }}">Voltar sem excluir</c-voltar>
 <c-pagina-cab titulo="Excluir {{ rotulo }} {{ obj.codigo }}">
-  <p class="mudo">De {{ mec.matriz.nome }} {{ mec.etapa.codigo }} {{ mec.componente.codigo }}{% if rotulo == "descritor" %}, com as tarefas dele{% endif %}. A exclusão vale para toda revista que usa esta matriz e não se desfaz pela tela.</p>
+  <p class="mudo">De {{ dono }} {{ mec.etapa.codigo }} {{ mec.componente.codigo }}{% if rotulo == "descritor" %}, com as tarefas dele{% endif %}. A exclusão vale para {% if mec.matriz_id %}toda revista que usa esta matriz{% else %}a revista deste projeto{% endif %} e não se desfaz pela tela.</p>
 </c-pagina-cab>
 
 {% if revistas %}

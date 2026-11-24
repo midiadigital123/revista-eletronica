@@ -11,8 +11,10 @@ from django.test import Client
 from django.urls import reverse
 
 from nucleo.admin.bloqueio import CAMPO_SESSAO
-from nucleo.models import Descritor, Matriz, MatrizEtapaCC, Tarefa
+from nucleo.models import Descritor, Etapa, Matriz, MatrizEtapaCC, Projeto, Tarefa
 from nucleo.servicos import bloqueio
+from nucleo.servicos.cascata import gravar_cortes
+from nucleo.servicos.etapa_projeto import criar
 from nucleo.tests.test_admin_cadastro import Base as BaseCadastro
 from nucleo.tests.test_admin_padrao import esta_validada, validar
 from nucleo.tests.test_importacao import cadastrar, planilha
@@ -661,3 +663,49 @@ class MecHierarquiaTest(BaseMundo):
         self.assertNotContains(resp, 'data-abrir="dlg-novo"')
         self.assertNotContains(resp, "zona-perigo")
         self.assertNotContains(resp, 'x-data="campoAuto" data-url="' + self.intervalo)
+
+
+class MecDeProjetoTest(BaseMundo):
+    """Etapa 7: a etapa do projeto (sem matriz, D-280) abre no mesmo editor."""
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.e4 = Etapa.objects.create(ano=cls.ano, codigo="4EF", escala_max=500, ordem=1)
+        cls.projeto = Projeto.objects.get(parceiro_ano__parceiro__nome="GO", arquivado_em__isnull=True)
+        c = [100, 200, 250, 300]
+        gravar_cortes(cls.projeto.parceiro_ano, [(cls.e5, cls.lp, c), (cls.e4, cls.lp, c)], cls.usuario)
+        base = MatrizEtapaCC.objects.get(matriz=cls.matriz, etapa=cls.e5, componente=cls.lp)
+        cls.mec = criar(cls.projeto, cls.e4, cls.lp, cls.usuario, base)
+        cls.d = Descritor.objects.filter(matriz_etapa_cc=cls.mec).order_by("ordem").first()
+        cls.url_projeto = reverse("ui_projeto", args=[cls.projeto.pk]) + "?aba=matriz"
+
+    def test_editor_abre_etapa_de_projeto(self):
+        for url in (reverse("ui_matriz_mec", args=[self.mec.pk]), reverse("ui_matriz_descritor", args=[self.mec.pk, self.d.pk])):
+            resp = self.client.get(url)
+            self.assertContains(resp, f'href="{self.url_projeto}"')
+            self.assertContains(resp, "Projeto GO")
+            self.assertContains(resp, "afeta 1 revista(s) ativa(s)")
+            self.assertEqual(resp.context["ano_ctx"]().ano, 2026)  # o seletor de ano acha o ano sem a matriz
+
+    def test_campo_do_descritor_grava(self):
+        sessao = self.client.get(reverse("ui_matriz_descritor", args=[self.mec.pk, self.d.pk])).wsgi_request.bloqueio["sessao"]
+        url = reverse("ui_matriz_campo", args=[self.mec.pk, self.d.pk])
+        dados = {"campo": "descricao", "valor": "Do projeto", CAMPO_SESSAO: sessao, "confirmar_impacto": "on"}
+        resp = self.client.post(url, dados, HTTP_ACCEPT="application/json")
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(Descritor.objects.get(pk=self.d.pk).descricao, "Do projeto")
+
+    def test_excluir_descritor_de_etapa_de_projeto_abre(self):
+        resp = self.client.get(reverse("ui_matriz_excluir_descritor", args=[self.mec.pk, self.d.pk]))
+        self.assertContains(resp, "De Projeto GO 4EF LP")
+        self.assertContains(resp, "vale para a revista deste projeto")
+
+    def test_arquivado_e_so_leitura(self):
+        gravar_cortes(self.projeto.parceiro_ano, [], self.usuario)  # sem corte, a cascata arquiva o projeto
+        url = reverse("ui_matriz_descritor", args=[self.mec.pk, self.d.pk])
+        resp = self.client.get(url)
+        self.assertContains(resp, "<fieldset disabled>")
+        self.assertNotContains(resp, "Incluir tarefa")
+        self.assertEqual(self.client.post(url, {}).status_code, 403)
+        self.assertEqual(self.client.post(reverse("ui_matriz_novo", args=[self.mec.pk]), {}).status_code, 403)

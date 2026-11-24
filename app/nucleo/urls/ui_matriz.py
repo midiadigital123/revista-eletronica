@@ -239,10 +239,37 @@ def diferencas_view(request, pk):
 
 
 def _mec(request, pk, **kwargs):
-    """Alvo do `com_bloqueio`: confere a permissão de ver antes, para não travar a MEC à toa."""
+    """Confere a permissão de ver e devolve a MEC, de matriz ou de projeto (D-280). Etapa de projeto
+    arquivado é congelada (D-093): POST é 403 e a página fica só leitura."""
     if not (request.user.has_perm("nucleo.view_matrizetapacc") or request.user.has_perm("nucleo.change_matrizetapacc")):
         raise PermissionDenied
-    return get_object_or_404(MatrizEtapaCC.objects.select_related("ano", "matriz__ano", "etapa", "componente"), pk=pk)
+    m = get_object_or_404(
+        MatrizEtapaCC.objects.select_related("ano", "matriz__ano", "projeto__parceiro_ano__parceiro", "etapa", "componente"), pk=pk
+    )
+    if _congelada(m):
+        if request.method == "POST":
+            raise PermissionDenied
+        request.pode_gravar = False  # vale na chamada de dentro da view, depois do `com_bloqueio`
+    return m
+
+
+def _congelada(mec):
+    return mec.projeto_id is not None and mec.projeto.arquivado_em is not None
+
+
+def _alvo_mec(request, pk, **kwargs):
+    """Alvo do `com_bloqueio`: confere a permissão de ver antes, para não travar a MEC à toa; a
+    congelada não trava."""
+    m = _mec(request, pk)
+    return None if _congelada(m) else m
+
+
+def _dono(mec):
+    """Rótulo e link de quem tem a etapa: a matriz ou, na etapa do projeto (D-280), o projeto."""
+    if mec.matriz_id:
+        return {"dono": mec.matriz.nome, "voltar_dono": reverse("ui_matriz_detalhe", args=[mec.matriz_id]), "voltar_rotulo": str(mec.matriz)}
+    nome = mec.projeto.nome
+    return {"dono": nome, "voltar_dono": reverse("ui_projeto", args=[mec.projeto_id]) + "?aba=matriz", "voltar_rotulo": nome}
 
 
 class IntervaloForm(ImpactoForm):
@@ -300,7 +327,7 @@ def _perdem(mec):
 
 def _avisar(request, mec, form):
     if form.perdem:
-        avisar_perdidos(request, form.perdem, mec.matriz.ano.ano)
+        avisar_perdidos(request, form.perdem, mec.ano.ano)
 
 
 class _TarefasFormSet(forms.BaseInlineFormSet):
@@ -342,7 +369,7 @@ def _pagina_mec(request, mec, descritor, form=None, tarefas=None, item_pendente=
     q = request.GET.get("q", "").strip()
     visiveis, total = _descritores(mec, q)
     contexto = {
-        **_contexto_ano(mec.matriz.ano), "mec": mec, "descritor": descritor, "q": q,
+        **_contexto_ano(mec.ano), **_dono(mec), "mec": mec, "descritor": descritor, "q": q,
         "visiveis": visiveis, "total": total, "pode_gravar": request.pode_gravar,
         "ativo": descritor.pk if descritor else None, "oob": e_htmx(request), "item_pendente": item_pendente,
     }  # fmt: skip
@@ -383,7 +410,7 @@ def _pagina_mec(request, mec, descritor, form=None, tarefas=None, item_pendente=
 
 @require_http_methods(["GET", "POST"])
 @login_required
-@com_bloqueio(_mec, pode_editar)
+@com_bloqueio(_alvo_mec, pode_editar)
 def mec(request, pk, dpk=None):
     m = _mec(request, pk)
     if dpk is None:
@@ -412,7 +439,7 @@ def mec(request, pk, dpk=None):
 
 @require_http_methods(["POST"])
 @login_required
-@com_bloqueio(_mec, pode_editar)
+@com_bloqueio(_alvo_mec, pode_editar)
 def intervalo(request, pk):
     """Intervalo mínimo. U9: no popover "Configurações" salva sozinho (campoAuto, protocolo do
     autosave, com impacto); o POST da página (HTMX ou sem JS) segue valendo."""
@@ -443,7 +470,7 @@ def intervalo(request, pk):
 
 @require_http_methods(["POST"])
 @login_required
-@com_bloqueio(_mec, pode_editar)
+@com_bloqueio(_alvo_mec, pode_editar)
 def novo_descritor(request, pk):
     m = _mec(request, pk)
     ordem = proxima_ordem(Descritor.objects.filter(matriz_etapa_cc=m))
@@ -475,7 +502,7 @@ def item_baixar(request, pk, dpk, tpk):
 
 @require_http_methods(["POST"])
 @login_required
-@com_bloqueio(_mec, pode_editar)
+@com_bloqueio(_alvo_mec, pode_editar)
 def item(request, pk, dpk, tpk):
     """Arquivo do item da tarefa (D-180): envia, troca ou remove. O download é `item_baixar`."""
     m = _mec(request, pk)
@@ -507,7 +534,7 @@ TAREFA = re.compile(r"^tarefas-(\d{1,4})-")
 
 @require_POST
 @login_required
-@com_bloqueio(_mec, pode_editar)
+@com_bloqueio(_alvo_mec, pode_editar)
 def campo(request, pk, dpk):
     """Autosave (U3) de um campo do descritor ou de uma tarefa já gravada (a linha inteira vem no
     POST, com o prefixo do formset do painel), sob o bloqueio da MEC. A tarefa nova ainda entra
@@ -539,7 +566,7 @@ def campo(request, pk, dpk):
 
 @require_POST
 @login_required
-@com_bloqueio(_mec, pode_editar)
+@com_bloqueio(_alvo_mec, pode_editar)
 def reordenar_view(request, pk, dpk=None):
     """U4: ordem dos descritores da MEC (sem `dpk`) ou das tarefas de um descritor, pela alça
     (arrastar ou ↑/↓ com o foco nela, componente `ordenavel`). A ordem entra na revista: impacto."""
@@ -564,7 +591,7 @@ def _excluir(request, mec, obj, rotulo, voltar):
     revistas = impacto(mec)
     _estilo(form)
     return TemplateResponse(request, "ui/matriz/excluir.html", {
-        **_contexto_ano(mec.matriz.ano), "mec": mec, "obj": obj, "rotulo": rotulo, "form": form, "voltar": voltar,
+        **_contexto_ano(mec.ano), **_dono(mec), "mec": mec, "obj": obj, "rotulo": rotulo, "form": form, "voltar": voltar,
         "revistas": revistas, "validadas": sum(v for _, v in revistas), "pode_gravar": request.pode_gravar,
     })  # fmt: skip
 
@@ -572,7 +599,7 @@ def _excluir(request, mec, obj, rotulo, voltar):
 @require_http_methods(["GET", "POST"])
 @login_required
 @permission_required("nucleo.delete_descritor", raise_exception=True)  # sem poder excluir, nem a página (GET 403, como o Reimportar)
-@com_bloqueio(_mec, lambda u: u.has_perm("nucleo.delete_descritor"))
+@com_bloqueio(_alvo_mec, lambda u: u.has_perm("nucleo.delete_descritor"))
 def excluir_descritor(request, pk, dpk):
     m = _mec(request, pk)
     d = get_object_or_404(Descritor, pk=dpk, matriz_etapa_cc=m)
@@ -582,7 +609,7 @@ def excluir_descritor(request, pk, dpk):
 @require_http_methods(["GET", "POST"])
 @login_required
 @permission_required("nucleo.delete_tarefa", raise_exception=True)  # sem poder excluir, nem a página (GET 403, como o Reimportar)
-@com_bloqueio(_mec, lambda u: u.has_perm("nucleo.delete_tarefa"))
+@com_bloqueio(_alvo_mec, lambda u: u.has_perm("nucleo.delete_tarefa"))
 def excluir_tarefa(request, pk, dpk, tpk):
     m = _mec(request, pk)
     d = get_object_or_404(Descritor, pk=dpk, matriz_etapa_cc=m)

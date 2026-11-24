@@ -19,8 +19,8 @@ from nucleo.models import Ano, Matriz, MatrizEtapaCC, Projeto, Revista, Template
 OBJETO = {
     "ui_projeto": (Projeto, "ano__ano"),
     "ui_matriz_detalhe": (Matriz, "ano__ano"),
-    "ui_matriz_mec": (MatrizEtapaCC, "matriz__ano__ano"),
-    "ui_matriz_descritor": (MatrizEtapaCC, "matriz__ano__ano"),
+    "ui_matriz_mec": (MatrizEtapaCC, "ano__ano"),
+    "ui_matriz_descritor": (MatrizEtapaCC, "ano__ano"),
     "ui_templates_editar": (Template, "ano__ano"),
 }
 # Prefixo da rota → lista do outro ano, quando a rota não serve para ele. O resto cai no Painel.
