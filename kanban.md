@@ -10,10 +10,9 @@
 ## Doing
 
 ## Review
-- **K-047** Etapa 1 de 11 — Carga com etapas não canônicas: `importar_cortes` cria as 7 etapas que a Somativas pede, grava "100, 200, 300" onde falta corte e atribui a Comunitária (33 parceiros, 232 cortes, 84 arbitrários na simulação); na `integ/carga-nao-canonica`, falta o "ok" para a `main` · D-278
-  nota: depois do merge, refazer os bancos pelo `scripts/povoar-banco-2026.sh`
-
 ## Done
+- **K-047** Etapa 1 de 11 — Carga com etapas não canônicas: `importar_cortes` cria as 7 etapas que a Somativas pede, grava "100, 200, 300" onde falta corte e atribui a Comunitária; banco da 8002 refeito (33 parceiros, 232 cortes, 84 arbitrários, 66 revistas); mesclada na `main` (suíte 922 OK) · 2026-11-24 · D-278
+  nota: o banco do dev (8000) ainda tem a carga antiga
 - **K-046** `ano.spec` cria o próprio parceiro e o helper do painel espera o HTMX ligar; E2E inteiro 170 passaram, 0 falhas; mesclado na `main` · 2026-11-18 · D-275
 - **K-045** Controles `<c-input>`, `<c-select>`, `<c-textarea>` (45 convertidos, 3 crus) e `classe_css` nos widgets; mesclados na `main` (suíte 918 OK, E2E 169 passaram, 1 falha conhecida do `ano.spec`) · 2026-11-18 · D-274
 - **K-044** Componentes `<c-icone>` (68 svgs, 26 desenhos), `<c-modal>` (7), `<c-botao-icone>` (11) e `<c-voltar>` (13) nas telas B; mesclados na `main` (suíte 916 OK, E2E 147 passaram) · 2026-11-18 · D-272 · D-273

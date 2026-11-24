@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Etapa 1 de 11 (K-047, D-278): carga com etapas não canônicas pronta na `integ/carga-nao-canonica`, aguardando o "ok" para a `main`. Plano de 11 etapas combinado em 24/11 (D-276, D-277): carga; etapa do projeto no servidor (2 a 6); telas de apontar e de revisão no layout atual (7 a 10); redesenho pelo Figma (11).
-Funcionando: `importar_cortes` cria as etapas que a Somativas pede, grava "100, 200, 300" onde falta corte e atribui a matriz com `--matriz`. Simulação com as planilhas reais: 33 parceiros, 7 etapas criadas, 232 cortes, 84 arbitrários.
-Quebrado/pendente: nenhum banco foi refeito ainda com a carga nova; a etapa não canônica fica com a pendência `corte_sem_matriz` sem saída até a etapa 7; usuários de teste `e2e` e `imp-e2e` no banco da 8002.
+Etapa 1 de 11 concluída (K-047, D-278): carga com etapas não canônicas mesclada na `main` com o "ok" do usuário. Plano de 11 etapas (D-276, D-277): etapa do projeto no servidor (2 a 6); telas de apontar e de revisão no layout atual (7 a 10); redesenho pelo Figma (11).
+Funcionando: banco da 8002 refeito do zero pelo `scripts/povoar-banco-2026.sh`: 33 parceiros, 11 etapas, 232 cortes (84 arbitrários), 33 projetos, 66 revistas, todos com a matriz Comunitária. Suíte Django 922 OK (8 pulados) em 8 min 35 s.
+Quebrado/pendente: a etapa não canônica fica com a pendência `corte_sem_matriz` sem saída até a etapa 7; o banco do dev (8000) ainda tem a carga antiga; a carga não escolhe template (toda revista nasce com "Falta escolher o template").
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Dar o "ok" para mesclar a `integ/carga-nao-canonica` na `main`; depois refazer o banco pelo `scripts/povoar-banco-2026.sh` e planejar a etapa 2 (preparar a branch `feat/etapa-do-projeto`).
+Planejar a etapa 2: preparar a branch `feat/etapa-do-projeto` (mesclar a `main` e renumerar a migration `0020` para `0026`).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2924,3 +2924,4 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - Levantamento da `feat/etapa-do-projeto` (4 de 12 tarefas, 160 commits atrás da `main`, migration 0020 em colisão). Regra nova da Pedagógica: etapa não canônica nasce apontando para canônica (D-276).
 - Redesenho do Figma (página "Testes") visto por capturas; decisão de papéis e de ordem (D-277). Plano de 11 etapas apresentado e aceito.
 - Etapa 1 (K-047, D-278) na `feat/carga-nao-canonica`: 6 testes da carga OK; simulação com as planilhas reais na stack da 8002: 33 parceiros, 232 cortes, 84 arbitrários, 7 etapas criadas.
+- "ok para a main" e "pode refazer o banco da 8002" (usuário): banco da 8002 apagado e refeito pelo script (33 parceiros, 232 cortes, 84 arbitrários, 33 projetos, 66 revistas, nenhum parceiro sem matriz; MS LP com "A matriz não tem a etapa: 4EF, 8EF"); `integ/carga-nao-canonica` mesclada na `main`; K-047 em Done. A demonstração e os usuários de teste da 8002 saíram com o banco; a senha do `admin` da 8002 está só no scratchpad da sessão.
