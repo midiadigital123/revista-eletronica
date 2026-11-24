@@ -50,7 +50,9 @@ function rotuloAnoLongo(ano) {
     ? `${m[1]}º Ano do Ensino Fundamental`
     : `${m[1]}ª Série do Ensino Médio`;
 }
-const CHAVE_DESCRITOR = /^D\d{2}$/;
+// Chaves da etapa que não são descritor (servicos/resolver.py::_f1_escalas); o resto é código de descritor,
+// em qualquer formato (D01, D011, H05): o código é texto livre na matriz.
+const CHAVES_DA_ETAPA = new Set(["scaleRange", "cortes", "padroes"]);
 
 /** Escapa texto dos dados antes de ir para innerHTML. */
 function escapeHtml(valor) {
@@ -63,10 +65,10 @@ function escapeHtml(valor) {
   );
 }
 
-/** Códigos de descritor de um ano (ignora scaleRange, cortes e demais chaves). */
+/** Códigos de descritor de um ano (ignora scaleRange, cortes e padroes). */
 function descriptorKeys(filterData) {
   return Object.keys(filterData || {})
-    .filter((k) => CHAVE_DESCRITOR.test(k))
+    .filter((k) => !CHAVES_DA_ETAPA.has(k))
     .sort();
 }
 
@@ -255,7 +257,7 @@ function alturaLinhaColapsada() {
 }
 
 // Exporta para o teste em Node; no navegador (script clássico) `module` não existe.
-if (typeof module !== "undefined") module.exports = { montarFaixasRegua, padroesDeCima, problemaDaEtapa, rotuloAno, rotuloAnoLongo, corTextoSobre, tipoDoItem, urlDoItem, rotuloNiveis };
+if (typeof module !== "undefined") module.exports = { montarFaixasRegua, padroesDeCima, problemaDaEtapa, rotuloAno, rotuloAnoLongo, corTextoSobre, tipoDoItem, urlDoItem, rotuloNiveis, descriptorKeys };
 
 // ==========================================
 // ESTADO DA APLICAÇÃO

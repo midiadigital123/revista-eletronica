@@ -342,4 +342,12 @@ assert.equal(rotuloNiveis(300, undefined), "nível 300");
   assert.equal(problemaDaEtapa(etapa({ "padrao-1": 250 }, pad(2).reverse())), "padroes[0].chave deve ser padrao-1");
 }
 
+{
+  // O código do descritor é texto livre: todo código aparece, só as chaves da própria etapa ficam de fora.
+  const { descriptorKeys } = createRequire(import.meta.url)("./script.js");
+  const etapa = { scaleRange: {}, cortes: {}, padroes: [], D02: {}, D011: {}, H05: {}, D1: {} };
+  assert.deepEqual(descriptorKeys(etapa), ["D011", "D02", "D1", "H05"]);
+  assert.deepEqual(descriptorKeys(undefined), []);
+}
+
 console.log("regua.test.mjs: ok");

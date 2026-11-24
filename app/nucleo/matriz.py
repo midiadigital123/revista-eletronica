@@ -176,9 +176,15 @@ class LinhasField(forms.CharField):
         return [linha.strip() for linha in (value or "").splitlines() if linha.strip()]
 
 
+# As chaves que `servicos/resolver.py::_f1_escalas` põe em cada etapa do F1, ao lado dos descritores.
+CHAVES_DA_ETAPA = ("scaleRange", "cortes", "padroes")
+
+
 class DescritorForm(ImpactoForm):
     def clean_codigo(self):
         codigo = self.cleaned_data["codigo"]
+        if codigo in CHAVES_DA_ETAPA:  # no JSON da revista, o descritor é uma chave ao lado destas
+            raise ValidationError(f"“{codigo}” é nome reservado da revista: use outro código.")
         # A MEC é readonly aqui: o Django pula o UNIQUE (mec, código).
         if Descritor.objects.filter(matriz_etapa_cc_id=self.instance.matriz_etapa_cc_id, codigo=codigo).exclude(
             pk=self.instance.pk

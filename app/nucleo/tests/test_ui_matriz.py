@@ -696,6 +696,15 @@ class MecDeProjetoTest(BaseMundo):
         self.assertEqual(resp.status_code, 200, resp.content)
         self.assertEqual(Descritor.objects.get(pk=self.d.pk).descricao, "Do projeto")
 
+    def test_codigo_reservado_da_revista_e_recusado(self):
+        """O descritor vira chave do JSON da etapa, ao lado de scaleRange, cortes e padroes."""
+        sessao = self.client.get(reverse("ui_matriz_descritor", args=[self.mec.pk, self.d.pk])).wsgi_request.bloqueio["sessao"]
+        url = reverse("ui_matriz_campo", args=[self.mec.pk, self.d.pk])
+        for codigo, status in (("cortes", 422), ("D011", 200)):
+            dados = {"campo": "codigo", "valor": codigo, CAMPO_SESSAO: sessao, "confirmar_impacto": "on"}
+            self.assertEqual(self.client.post(url, dados, HTTP_ACCEPT="application/json").status_code, status, codigo)
+        self.assertEqual(Descritor.objects.get(pk=self.d.pk).codigo, "D011")
+
     def test_excluir_descritor_de_etapa_de_projeto_abre(self):
         resp = self.client.get(reverse("ui_matriz_excluir_descritor", args=[self.mec.pk, self.d.pk]))
         self.assertContains(resp, "De Projeto GO 4EF LP")
