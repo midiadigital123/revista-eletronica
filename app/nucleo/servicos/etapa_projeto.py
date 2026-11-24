@@ -197,9 +197,18 @@ CAMPOS_TEXTO = {
 MOTIVO = "revisão da base"
 
 
+def _partir(chave, *objetos):
+    """(código, tarefa) da chave; tarefa "" se a chave é de descritor. O código é livre e pode ter
+    barra: primeiro a chave inteira como código; a da tarefa ("inicio-fim#n") nunca tem barra."""
+    if any(chave in o for o in objetos):
+        return chave, ""
+    codigo, _, tarefa = chave.rpartition("/")
+    return codigo, tarefa
+
+
 def _objeto(objetos, chave):
     """O descritor ou a tarefa que a chave ("D01" ou "D01/100-150#1") nomeia em `_objetos`, ou None."""
-    codigo, _, tarefa = chave.partition("/")
+    codigo, tarefa = _partir(chave, objetos)
     if codigo not in objetos:
         return None
     return objetos[codigo][1].get(tarefa) if tarefa else objetos[codigo][0]
@@ -251,7 +260,7 @@ def concluir(mec, escolhas, visto, usuario):
             if escolha == "local":
                 continue
             aplicadas += 1
-            if item.chave == "passo":
+            if item.campo == "passo":
                 mec.passo = base.passo
             elif item.campo == "existe":
                 _aplicar_existe(mec, item.chave, locais, da_base, usuario)
@@ -277,7 +286,7 @@ def _aplicar_existe(mec, chave, locais, da_base, usuario):
     """O descritor ou a tarefa inteira passa a ser o da base: apaga o local, se houver, e copia o da base."""
     local, nova = _objeto(locais, chave), _objeto(da_base, chave)
     motivo = f"{MOTIVO}: cópia de {mec.base}"[:100]
-    codigo, _, tarefa = chave.partition("/")
+    codigo, tarefa = _partir(chave, locais, da_base)
     if local is not None:
         # As tarefas do descritor saem antes, uma a uma: em cascata ficariam sem usuário no histórico.
         for obj in (*([] if tarefa else locais[codigo][1].values()), local):

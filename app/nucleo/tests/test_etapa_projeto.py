@@ -574,6 +574,49 @@ class ConcluirTest(MediaTemporaria, Base):
         self.assertEqual(concluir(mec, escolhas, visto, self.usuario), 1)
         self.assertEqual(self._d05(mec).descricao, "Da base, nova")
 
+    def test_descritor_com_codigo_passo_aplica_o_campo_e_nao_o_passo(self):  # o código é livre (D-290)
+        base = self._outra_base()
+        Descritor.objects.create(matriz_etapa_cc=base, codigo="passo", descricao="Antes", ordem=2)
+        _, mec = self._derivada(base)
+        MatrizEtapaCC.objects.filter(pk=mec.pk).update(passo=40)  # só o projeto mudou o passo: não é item
+        Descritor.objects.filter(matriz_etapa_cc=base, codigo="passo").update(descricao="Da base, nova")
+        mec.refresh_from_db()
+        itens, visto = revisao(mec)
+        self.assertEqual([(i.chave, i.campo) for i in itens], [("passo", "descricao")])
+        self.assertEqual(concluir(mec, {}, visto, self.usuario), 1)
+        mec.refresh_from_db()
+        self.assertEqual(Descritor.objects.get(matriz_etapa_cc=mec, codigo="passo").descricao, "Da base, nova")
+        self.assertEqual(mec.passo, 40)
+
+    def test_descritor_com_barra_no_codigo_conclui(self):  # campo de descritor, campo de tarefa e "existe"
+        base = self._outra_base()
+        d = Descritor.objects.create(matriz_etapa_cc=base, codigo="EF05/LP", descricao="Antes", ordem=2)
+        Tarefa.objects.create(descritor=d, inicio=100, fim=150, texto="Um.", ordem=1)
+        sai = Tarefa.objects.create(descritor=d, inicio=200, fim=250, texto="Dois.", ordem=2)
+        _, mec = self._derivada(base)
+        Descritor.objects.filter(pk=d.pk).update(descricao="Da base, nova")
+        Tarefa.objects.filter(descritor=d, inicio=100).update(texto="Um, novo.")
+        sai.delete()
+        Tarefa.objects.create(descritor=d, inicio=300, fim=350, texto="Três.", ordem=3)
+        novo = Descritor.objects.create(matriz_etapa_cc=base, codigo="EF06/LP", descricao="Novo", ordem=3)
+        Tarefa.objects.create(descritor=novo, inicio=100, fim=150, texto="Do novo.", ordem=1)
+
+        itens, visto = revisao(mec)
+        self.assertEqual(
+            [(i.chave, i.campo) for i in itens],
+            [
+                ("EF05/LP", "descricao"),
+                ("EF05/LP/100-150#1", "texto"),
+                ("EF05/LP/200-250#1", "existe"),
+                ("EF05/LP/300-350#1", "existe"),
+                ("EF06/LP", "existe"),
+            ],
+        )
+        self.assertEqual(concluir(mec, {}, visto, self.usuario), 5)
+        mec.refresh_from_db()
+        self.assertEqual(foto(mec), foto(base))
+        self.assertEqual(revisao(mec)[0], [])
+
     def test_base_acrescentou_e_apagou_descritor_e_tarefa(self):
         base = self._outra_base()
         d05 = self._d05(base)
