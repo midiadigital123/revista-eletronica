@@ -6,7 +6,7 @@
 - **K-033** S18 — E2E da temporada
 
 ## Doing
-- **K-034** Etapa do projeto (`feat/etapa-do-projeto`): etapas 2 a 10 do plano de 24/11 (D-276) · etapa 2 de 11 feita em 24/11: `main` mesclada na branch, migration `0026`, decisões D-279 a D-281, suíte 968 OK · etapa 3 de 11 feita em 24/11: `criar()` só aponta para canônica e pendência `etapa_sem_base` (D-282), suíte 971 OK; próxima: etapa 4 (terminar a tarefa 5, `matriz_id` nulo)
+- **K-034** Etapa do projeto (`feat/etapa-do-projeto`): etapas 2 a 10 do plano de 24/11 (D-276) · etapa 2 de 11 feita em 24/11: `main` mesclada na branch, migration `0026`, decisões D-279 a D-281, suíte 968 OK · etapa 3 de 11 feita em 24/11: `criar()` só aponta para canônica e pendência `etapa_sem_base` (D-282), suíte 971 OK · etapa 4 de 11 feita em 24/11: tarefa 5 (`matriz_id` nulo) revisada e fechada (D-283), suíte 974 OK; para a etapa 7: editor da matriz e link do impedimento de exclusão com etapa de projeto, rótulo "Matriz:" na aba Passos; próxima: etapa 5
 
 ## Review
 ## Done
