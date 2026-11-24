@@ -10,7 +10,7 @@ from nucleo.servicos import bloqueio
 from nucleo.servicos.foto import fotografar
 from nucleo.servicos.resolver import carregar
 from nucleo.tests.test_admin_projeto import Base, mensagens
-from nucleo.tests.test_painel import SVG_B, completar, trocar_svg
+from nucleo.tests.test_painel import SVG_B, completar, trocar_imagem
 from nucleo.tests.test_resolver import usuario
 
 URL = reverse("ui_validar", args=[2026])
@@ -52,10 +52,10 @@ class ValidarUiTest(Base):
         self.assertContains(r, reverse("painel", args=[2026]))  # sem Painel B, volta ao do admin
 
     def test_pendencia_desabilita_e_aponta_onde_resolver(self):
-        pe = self.pe["LP"]  # sem SVG nem capa
+        pe = self.pe["LP"]  # sem infográfico preenchido nem capa
         r = self.abrir(pe)
         self.assertContains(r, "pendência(s)")
-        self.assertContains(r, "Falta o SVG do F2.")
+        self.assertContains(r, "Avaliação e Currículo – Outras Etapas: falta a habilidade destacada.")
         self.assertContains(r, reverse("ui_revista_editar", args=[2026, pe.pk]))
         self.assertRegex(r.content.decode(), r'name="par" value="[^"]+" disabled')
         self.assertContains(r, "validar-pendente")
@@ -85,7 +85,7 @@ class ValidarUiTest(Base):
 
     def test_revista_que_mudou_e_recusada_com_motivo(self):
         aberta = self.abrir(self.lp, self.mt)
-        trocar_svg(self.mt, SVG_B)  # mudou entre ver e enviar
+        trocar_imagem(self.mt, SVG_B)  # mudou entre ver e enviar
         r = self.client.post(URL, {"par": self.pares(aberta), "revista": [self.lp.pk, self.mt.pk]}, follow=True)
         msgs = mensagens(r)
         self.assertIn("Validadas 1 revista(s).", msgs)
@@ -133,7 +133,7 @@ class ValidarUiTest(Base):
     def test_diff_contra_a_ultima_impressa(self):
         fotografar(carregar(self.lp.pk), Motivo.IMPRESSO, self.ped)
         self.assertContains(self.abrir(self.lp), "Sem mudanças desde a última impressa.")
-        trocar_svg(self.lp, SVG_B)
+        trocar_imagem(self.lp, SVG_B)
         r = self.abrir(self.lp)
         self.assertContains(r, "Mudanças desde a última impressa")
         self.assertContains(r, 'class="diff"')

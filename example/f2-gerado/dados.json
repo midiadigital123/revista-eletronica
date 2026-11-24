@@ -1,0 +1,78 @@
+{
+  "componente": "Língua Portuguesa",
+  "abertura": {
+    "titulo": "Avaliação e Currículo",
+    "texto": "Siga o tour pelos blocos da página ou use Explorar para navegar livremente."
+  },
+  "descritor": {
+    "codigo": "D05",
+    "descricao": "Interpretar texto com auxílio de material gráfico diverso (propagandas, quadrinhos, foto etc.)."
+  },
+  "habilidades": [
+    {"etapa": "1EF", "marca": "I", "codigo": "EF15LP18", "texto": "Relacionar texto com ilustrações e outros recursos gráficos. Nesse momento, o trabalho pedagógico favorece a compreensão das relações entre a linguagem verbal e a visual, levando os estudantes a observar ilustrações, imagens e outros elementos gráficos como recursos que contribuem para a compreensão do texto, e não apenas como elementos decorativos que acompanham o escrito."},
+    {"etapa": "2EF", "marca": "I", "codigo": "EF15LP18", "texto": "Relacionar texto com ilustrações e outros recursos gráficos. O objetivo é desenvolver a percepção de que as imagens participam da construção dos sentidos e podem complementar ou esclarecer as informações apresentadas verbalmente, ampliando o repertório de leitura de textos que combinam palavras e imagens em diferentes suportes e gêneros."},
+    {"etapa": "3EF", "marca": "A", "codigo": "EF15LP04", "texto": "Identificar o efeito de sentido produzido pelo uso de recursos expressivos gráfico-visuais em textos multissemióticos."},
+    {"etapa": "4EF", "marca": "A", "codigo": "EF15LP04", "texto": "Identificar o efeito de sentido produzido pelo uso de recursos expressivos gráfico-visuais em textos multissemióticos. Além de relacionar as imagens às informações verbais, espera-se que os estudantes avancem na compreensão dos efeitos produzidos por recursos como cores, tipos de letras, disposição dos elementos, expressões faciais e outros aspectos visuais."},
+    {"etapa": "5EF", "marca": "C", "codigo": "EF15LP18 / EF15LP04", "texto": "Articular, de maneira integrada, a relação entre texto e ilustrações e a identificação dos efeitos de sentido produzidos pelos recursos gráfico-visuais em textos multissemióticos, compreendendo como esses recursos contribuem para a construção e a ampliação dos sentidos."},
+    {"etapa": "6EF", "marca": "A", "codigo": "EF69LP03", "texto": "Identificar, em notícias, o fato central, suas principais circunstâncias e eventuais decorrências; em reportagens e fotorreportagens o fato ou a temática retratada e a perspectiva de abordagem, em entrevistas os principais temas/subtemas abordados, explicações dadas ou teses defendidas em relação a esses subtemas; em tirinhas, memes, charge, a crítica, ironia ou humor presente."},
+    {"etapa": "7EF", "marca": "A", "codigo": "EF69LP03", "texto": "Identificar, em notícias, o fato central, suas principais circunstâncias e eventuais decorrências; em reportagens e fotorreportagens o fato ou a temática retratada e a perspectiva de abordagem, em entrevistas os principais temas/subtemas abordados, explicações dadas ou teses defendidas em relação a esses subtemas; em tirinhas, memes, charge, a crítica, ironia ou humor presente."},
+    {"etapa": "8EF", "marca": "A", "codigo": "EF69LP05", "texto": "Inferir e justificar, em textos multissemióticos – tirinhas, charges, memes, gifs etc. –, o efeito de humor, ironia e/ou crítica pelo uso ambíguo de palavras, expressões ou imagens ambíguas, de clichês, de recursos iconográficos, de pontuação etc."},
+    {"etapa": "9EF", "marca": "A", "codigo": "EF69LP05", "texto": "Inferir e justificar, em textos multissemióticos – tirinhas, charges, memes, gifs etc. –, o efeito de humor, ironia e/ou crítica pelo uso ambíguo de palavras, expressões ou imagens ambíguas, de clichês, de recursos iconográficos, de pontuação etc. Espera-se que os estudantes ultrapassem a identificação de informações explícitas e avancem na interpretação de sentidos implícitos."},
+    {"etapa": "1EM", "marca": "A", "codigo": "EM13LP44", "texto": "Analisar formas contemporâneas de publicidade em contexto digital (advergame, anúncios em vídeos, social advertising, unboxing, narrativa mercadológica, entre outras), e peças de campanhas publicitárias e políticas (cartazes, folhetos, anúncios, propagandas em diferentes mídias, spots, jingles etc.), identificando valores e representações de situações, grupos e configurações sociais veiculadas, desconstruindo estereótipos, destacando estratégias de engajamento e viralização e explicando os mecanismos de persuasão utilizados e os efeitos de sentido provocados pelas escolhas feitas em termos de elementos e recursos linguístico-discursivos, imagéticos, sonoros, gestuais e espaciais, entre outros."},
+    {"etapa": "2EM", "marca": "A", "codigo": "EM13LP44", "texto": "Analisar formas contemporâneas de publicidade em contexto digital e peças de campanhas publicitárias e políticas, identificando valores e representações de situações, grupos e configurações sociais veiculadas, desconstruindo estereótipos, destacando estratégias de engajamento e viralização e explicando os mecanismos de persuasão utilizados e os efeitos de sentido provocados pelas escolhas feitas em termos de elementos e recursos linguístico-discursivos, imagéticos, sonoros, gestuais e espaciais."},
+    {"etapa": "3EM", "marca": "R", "codigo": "EM13LP44", "texto": "Retomar a análise crítica de textos multissemióticos de ampla circulação, articulando a leitura dos recursos gráficos e visuais à compreensão dos discursos e das representações sociais que neles circulam, com atenção às intencionalidades, aos valores e às estratégias discursivas presentes, especialmente nos contextos de comunicação digital e de circulação acelerada de informações."}
+  ],
+  "tarefas": [
+    {"etapa": "2EF", "descritor": "D05", "rotulo": "Item 1"},
+    {"etapa": "5EF", "descritor": "D09", "rotulo": "Item 2"},
+    {"etapa": "9EF", "descritor": "D12", "rotulo": "Item 3"},
+    {"etapa": "3EM", "descritor": "D12", "rotulo": "Item 4"}
+  ],
+  "passos": {
+    "descritor": {
+      "titulo": "Descritor avaliado",
+      "texto": "Código e descrição da habilidade avaliada na Matriz de Referência. Os demais blocos mostram como ela aparece no referencial curricular do estado e nos itens do teste."
+    },
+    "habilidades": {
+      "titulo": "Habilidades no referencial curricular",
+      "texto": "Descrição das habilidades no referencial curricular do estado, do 1º ano do EF à 3ª série do EM, e legenda: I — Introduzir, A — Aprofundar, C — Consolidar, R — Retomar. Clique no botão amarelo para ver o detalhamento."
+    },
+    "progressao": {
+      "titulo": "Progressão da habilidade",
+      "texto": "Como a habilidade avança do 1º ano do EF à 3ª série do EM no referencial curricular. Clique no botão amarelo para ver o detalhamento."
+    },
+    "tarefas": {
+      "titulo": "Itens por nível de dificuldade",
+      "texto": "De muito fácil a muito difícil. Clique nos botões amarelos para ver cada item."
+    }
+  },
+  "modais": {
+    "habilidades": {
+      "titulo": "Descrição das habilidades no referencial curricular do estado",
+      "paragrafos": [
+        "Este quadro traz as habilidades relacionadas a essa aprendizagem para cada ano de escolaridade, desde sua introdução até sua consolidação.",
+        "**1º e 2º anos do Ensino Fundamental**",
+        "Nos 1º e 2º anos do Ensino Fundamental, essa habilidade é introduzida, podendo ser relacionada à habilidade **(EF15LP18) Relacionar texto com ilustrações e outros recursos gráficos**, prevista no referencial curricular do estado. Nesse momento, o trabalho pedagógico deve favorecer a compreensão das relações entre a linguagem verbal e a visual, levando os estudantes a observar ilustrações, imagens e outros elementos gráficos como recursos que contribuem para a compreensão do texto. O objetivo é desenvolver a percepção de que as imagens participam da construção dos sentidos e podem complementar ou esclarecer as informações apresentadas verbalmente, não sendo apenas elementos decorativos.",
+        "**3º e 4º anos do Ensino Fundamental**",
+        "Entre o 3º e o 4º ano do Ensino Fundamental, a habilidade é aprofundada, ampliando-se as possibilidades de interpretação e as relações que os estudantes estabelecem entre os diferentes elementos que compõem os textos. Nesse processo, ganha relevância a habilidade **(EF15LP04) Identificar o efeito de sentido produzido pelo uso de recursos expressivos gráfico-visuais em textos multissemióticos**. Além de relacionar as imagens às informações verbais, espera-se que os estudantes avancem na compreensão dos efeitos produzidos por recursos como cores, tipos de letras, disposição dos elementos, expressões faciais e outros aspectos visuais.",
+        "**5º ano do Ensino Fundamental**",
+        "A consolidação dessa habilidade, prevista para o 5º ano do Ensino Fundamental, pressupõe que os estudantes sejam capazes de articular os conhecimentos desenvolvidos por meio das habilidades **(EF15LP18)** e **(EF15LP04)**. Espera-se que, além de relacionar o texto às ilustrações e aos demais recursos gráficos, eles consigam identificar os efeitos de sentido produzidos por esses elementos em textos multissemióticos. Dessa forma, eles devem mobilizar esses conhecimentos de maneira integrada para interpretar textos que combinam diferentes linguagens, compreendendo como os recursos gráfico-visuais contribuem para a construção e a ampliação dos sentidos.",
+        "**6º e 7º anos do Ensino Fundamental**",
+        "Nos anos finais do Ensino Fundamental, o aprofundamento da habilidade passa a estar mais diretamente associado à formação de um leitor autônomo e proficiente, capaz de interpretar textos multissemióticos de maior complexidade e reconhecer os diferentes propósitos e efeitos de sentido decorrentes da articulação entre linguagens. Nos 6º e 7º anos, é possível estabelecer relações com a habilidade **(EF69LP03) Identificar, em notícias, o fato central, suas principais circunstâncias e eventuais decorrências; em reportagens e fotorreportagens o fato ou a temática retratada e a perspectiva de abordagem, em entrevistas os principais temas/subtemas abordados, explicações dadas ou teses defendidas em relação a esses subtemas; em tirinhas, memes, charge, a crítica, ironia ou humor presente**. Nesse momento, a interpretação dos recursos gráficos e visuais passa a exigir maior articulação com o contexto de produção e com os sentidos construídos pelo texto como um todo.",
+        "**8º e 9º anos do Ensino Fundamental**",
+        "Nos 8º e 9º anos do Ensino Fundamental, o trabalho com essa habilidade pode ser aprofundado a partir da relação com a **(EF69LP05) Inferir e justificar, em textos multissemióticos – tirinhas, charges, memes, gifs etc. –, o efeito de humor, ironia e/ou crítica pelo uso ambíguo de palavras, expressões ou imagens ambíguas, de clichês, de recursos iconográficos, de pontuação etc**. Nesses anos de escolaridade, espera-se que os estudantes ultrapassem a identificação de informações explícitas e avancem na interpretação de sentidos implícitos, reconhecendo ambiguidades, relações entre elementos verbais e não verbais e estratégias utilizadas na construção de determinados efeitos.",
+        "**Ensino Médio**",
+        "No Ensino Médio, a habilidade destacada alcança um nível mais elaborado de aprofundamento, podendo ser relacionada à **(EM13LP44) Analisar formas contemporâneas de publicidade em contexto digital e peças de campanhas publicitárias e políticas, identificando valores e representações de situações, grupos e configurações sociais veiculadas, desconstruindo estereótipos, destacando estratégias de engajamento e viralização e explicando os mecanismos de persuasão utilizados e os efeitos de sentido provocados pelas escolhas feitas**. Nessa etapa, a interpretação de textos que integram diferentes linguagens articula-se à leitura crítica dos discursos e das representações que circulam socialmente.",
+        "É importante destacar que as habilidades do referencial curricular apresentadas não esgotam as possibilidades de articulação com o descritor da Matriz de Referência. Outras habilidades também podem contribuir para seu desenvolvimento, considerando a diversidade de gêneros textuais, os diferentes recursos semióticos e os objetivos de aprendizagem previstos para cada ano de escolaridade."
+      ]
+    },
+    "progressao": {
+      "titulo": "Progressão da habilidade",
+      "paragrafos": [
+        "Este quadro permite visualizar como essa habilidade se desenvolve ao longo da trajetória escolar, conforme as orientações do referencial curricular do estado. No 1º e no 2º ano do Ensino Fundamental, seu trabalho tem caráter introdutório, possibilitando aos estudantes os primeiros contatos com os conhecimentos envolvidos. Entre o 3º e o 4º ano, espera-se que esses conhecimentos sejam retomados e ampliados, favorecendo o desenvolvimento da habilidade em situações progressivamente mais complexas. Ao final do 5º ano, a expectativa é de que ela esteja consolidada.",
+        "Nos anos finais do Ensino Fundamental, do 6º ao 9º ano, a habilidade continua sendo mobilizada e aprofundada em diferentes situações de leitura e em uma variedade de gêneros textuais. No Ensino Médio, esse processo prossegue, incorporando novos desafios e contextos de uso, o que amplia o nível de complexidade esperado.",
+        "A compreensão desse percurso curricular é essencial para identificar como uma mesma habilidade se transforma ao longo da educação básica. A análise de cada ano de escolaridade permite observar os diferentes contextos, conhecimentos e elementos mobilizados progressivamente, evidenciando como se amplia a complexidade das aprendizagens esperadas em cada ano escolar."
+      ]
+    }
+  }
+}

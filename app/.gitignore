@@ -1,5 +1,6 @@
 media/
-node_modules/
+# sem a barra: cobre também um link simbólico chamado node_modules
+node_modules
 test-results/
 playwright-report/
 e2e/screenshots/

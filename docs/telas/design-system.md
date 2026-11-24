@@ -1,6 +1,6 @@
 # Design system das telas B (referência obrigatória do time)
 
-Telas do dia a dia como páginas próprias no Django, com o visual do editor React (D-183), HTMX servido localmente (D-186). Branch de referência: `feat/telas-b-ux` (telas integradas, reforma de UX U0–U10 e exclusão E0–E5; lista e status em `docs/telas/telas-b.md`). Protótipo de referência: grade de cortes (`app/nucleo/cortes.py`, `urls/cortes.py`, `templates/ui/cortes.html`, `tests/test_ui_cortes.py`).
+Telas do dia a dia como páginas próprias no Django, com o visual do editor React (D-183), HTMX servido localmente (D-186). Código de referência: a `main` (telas integradas, reforma de UX U0–U10, exclusão E0–E5 e S6–S9; lista e status em `docs/telas/telas-b.md`). Protótipo de referência: grade de cortes (`app/nucleo/cortes.py`, `urls/cortes.py`, `templates/ui/cortes.html`, `tests/test_ui_cortes.py`).
 
 Caminhos abaixo relativos a `app/nucleo/`, salvo `editor/` (só leitura).
 
@@ -8,7 +8,7 @@ Caminhos abaixo relativos a `app/nucleo/`, salvo `editor/` (só leitura).
 
 | O quê | Onde |
 |---|---|
-| Rotas | `urls/ui_<tela>.py` (já existe, vazio, já incluído em `urls/__init__.py` sob `/ui/<tela>/`). **Não edite `urls/__init__.py`.** |
+| Rotas | `urls/ui_<tela>.py`, incluído em `urls/__init__.py` sob `/ui/<tela>/` (uma linha `include` por tela, como `ui_usuarios`). |
 | Regra reaproveitada | módulo comum fora do admin (ex.: `cortes.py`) ou `servicos/`; o admin passa a importar dele. Nunca copie a regra. |
 | Templates | `templates/ui/<tela>/*.html` (página) e `templates/ui/parciais/<tela>_*.html` (fragmentos HTMX) |
 | Testes | `tests/test_ui_<tela>.py` |
@@ -30,6 +30,8 @@ Telas e rotas (nomes `ui_<tela>`; ações `ui_<tela>_<acao>`):
 | Lotes (T18/T19), hoje "Atribuir matriz…" e "Atribuir template…" da aba Lista | `ui_lotes` e `ui_projeto` (`ui_projeto_massa`) | `/ui/lotes/<ano>/matriz/`, `.../template/` (só redirecionam; o POST antigo ainda grava) | `ui_lotes_matriz`, `ui_lotes_template` |
 | Anos e Abrir ano (T03), Configurar o ano (T05–T07) | `ui_anos` | `/ui/anos/`, `/ui/anos/<ano>/` | `ui_anos`, `ui_ano` |
 | Excluir e desativar (D-205) | `ui_excluir` | `/ui/excluir/<modelo>/<pk>/` | `ui_excluir`, `ui_parceiro_ativo` |
+| Usuários (S9, D-216 a D-218) | `ui_usuarios` | `/ui/usuarios/` | `ui_usuarios` |
+| Entrar, sair, criar senha (D-212, D-216) | `conta` | `/conta/entrar/`, `/conta/sair/`, `/conta/senha/<uid>/<token>/` | `entrar`, `sair`, `password_reset_confirm` |
 
 - Cortes é a aba Cortes do hub Projetos: `/ui/projeto/ano/<ano>/cortes/` (rota `cortes`, montada em `urls/ui_projeto.py`). `/cortes/<ano>/` (`cortes_antiga`) só redireciona; as rotas de gravação da grade ficam em `urls/cortes.py` (`cortes_celula`, `cortes_novo_parceiro`, `cortes_renomear_parceiro`).
 - O Painel B ocupa `/painel/<ano>/` (rota `painel`; `urls/ui_painel.py` é incluído em `painel/` antes de `urls/painel.py`). O painel no estilo do admin saiu; `/painel/<ano>/validar/` (`painel_validar`) continua para quem chega pelo admin. O lote do painel B vai a `ui_validar`.
@@ -38,12 +40,12 @@ Telas e rotas (nomes `ui_<tela>`; ações `ui_<tela>_<acao>`):
 ## 2. Casca e contexto
 
 - `{% extends "ui/base.html" %}`, blocos `titulo`, `cabeca`, `conteudo`.
-- Menu de até 5 itens (U6): Painel, Projetos, Matrizes, Templates e Impresso. O item Impresso só aparece para quem tem `marcar_impressa` (perfil Impresso); os outros perfis chegam à tela pelo Painel ou pelo link "Tela do impresso" da revista (`templates/ui/base.html:39`). O botão "Admin" do cabeçalho só aparece para superusuário (`base.html:44`); os wireframes das fichas mostram o cabeçalho de um perfil comum. `secao` marca o item: Validar marca Painel; `cortes`, `variaveis`, `revistas` e `lotes` marcam Projetos; `anos` não marca nenhum e destaca o seletor.
+- Menu de até 5 itens (U6): Painel, Projetos, Matrizes, Templates e Impresso. O item Impresso só aparece para quem tem `marcar_impressa` (perfis Impresso e Admin, D-220); os outros perfis chegam à tela pelo Painel ou pelo link "Tela do impresso" da revista (`templates/ui/base.html:39`). O botão "Admin" do cabeçalho só aparece para superusuário (`base.html:44`); o link "Usuários", ao lado de "Sair", só com `auth.change_user` (`base.html:45`, D-210); os wireframes das fichas mostram o cabeçalho de um perfil comum. `secao` marca o item: Validar marca Painel; `cortes`, `variaveis`, `revistas` e `lotes` marcam Projetos; `anos` não marca nenhum e destaca o seletor; `usuarios` marca o link "Usuários" do cabeçalho.
 - Ano: o context processor `nucleo/contexto.py:ano_atual` dá `ano_ctx` (kwarg `ano`, objeto da página, sessão ou o mais recente) e `trocas_ano` (mesma rota e query no outro ano; em detalhe, o equivalente do mesmo parceiro ou a lista do ano). Grava `request.session["ano"]`; as rotas `_inicio` usam `ano_da_sessao`.
 - Cabeçalho de página: `<header class="pagina-cab"><div><h1>…</h1><p class="mudo">…</p></div><div class="acoes">…</div></header>` (`editor/src/projetos/ListaProjetos.tsx:31-34`).
 - Página de detalhe (um item de uma lista): o caminho de volta é `<a class="mudo voltar" href="…">‹ Lista</a>` logo acima do cabeçalho, não um botão nas ações (matriz, MEC, revista, projeto, editor de template).
 - Ações do cabeçalho: ir a outra tela = `.btn-ghost` ("Ver painel de 2026"); ação desta tela = `.btn-outline`; a principal = `.btn`.
-- Já carregados pela base, nesta ordem e todos com `defer`: `ui/ui.css`, `ui/htmx.min.js` (2.0.4, local), `ui/ui.js`, SortableJS 1.15.6 (jsDelivr), `ui/componentes.js`, `ui/componentes/seletor-ano.js` (U9), `ui/componentes/autosave.js` (U3), `ui/componentes/tabela-rolavel.js` (U10a) e Alpine.js `@alpinejs/csp` 3.14.9 (jsDelivr). Fonte Inter local.
+- Já carregados pela base, nesta ordem e todos com `defer`: `ui/ui.css`, `ui/htmx.min.js` (2.0.4, local), `ui/ui.js`, SortableJS 1.15.6 (jsDelivr), `ui/componentes.js`, `ui/componentes/seletor-ano.js` (U9), `ui/componentes/autosave.js` (U3), `ui/componentes/tabela-rolavel.js` (U10a) e Alpine.js `@alpinejs/csp` 3.14.9 (jsDelivr). Fonte Inter local. Favicon: `ui/favicon.png` (a árvore amarela, fundo transparente, D-215), ligado nas cascas com `<head>` próprio: `base.html`, `entrar.html`, `senha_definir.html` e `senha_pronto.html`.
 - **CDN (D-199):** liberada para libs novas, sempre com versão exata, `integrity` (SRI sha384) e `crossorigin="anonymous"`. Hash: `curl -sL URL | openssl dgst -sha384 -binary | openssl base64 -A`.
   - `sortablejs@1.15.6/Sortable.min.js`: `sha384-HZZ/fukV+9G8gwTNjN7zQDG0Sp7MsZy5DDN6VfY3Be7V9dvQpEpR2jF2HlyFUUjU`
   - `@alpinejs/csp@3.14.9/dist/cdn.min.js`: `sha384-zaqGaLZBjCeXCLnYyKyAJrDaZcsW8AqZN7iDmFDw3TzHJvhjMckT1H52jWWza0w8`
@@ -107,6 +109,76 @@ Cores fora dos tokens só onde o admin/preview já fixou: faixa vermelha `#b0002
 | Só leitura nativo | form inteiro sem permissão | `<fieldset disabled>`: os campos ganham o fundo de só leitura |
 | Modal com form | o HTMX troca o form inteiro do modal | `<dialog class="dialogo"><form>…</form></dialog>` (o `form` vira a coluna do modal) |
 
+### Componentes de template (django-cotton, D-270 e D-271)
+
+Os componentes mais usados são arquivos em `app/nucleo/templates/cotton/` e entram na tela como tag
+`<c-nome>`. Cada um gera exatamente as classes do `ui.css`; o CSS não mudou. Tela nova usa a tag, não a
+classe: `nucleo/tests/test_componentes_cotton.py` falha se a marcação crua voltar (as exceções ficam
+nomeadas no teste, com o motivo) e trava o HTML de cada componente.
+
+| Tag | Gera | Props | Slots |
+|---|---|---|---|
+| `<c-pagina-cab>` | `header.pagina-cab` | `titulo`, `acoes_class` | padrão (abaixo do h1), `titulo` (com marcação), `acoes` |
+| `<c-card>` | `section.card` | `titulo`, `titulo_id`, `tag`, `class`, `oculto` | padrão, `descricao`, `lateral` |
+| `<c-campo>` | `div.campo` + `label` | `rotulo`, `para`, `:erros`, `dica`, `class` | padrão (o controle), `rotulo`, `ajuda` |
+| `<c-badge>` | `span.badge` | `variante` (secundario, contorno, alerta, erro), `class` | padrão |
+| `<c-aviso>` | `div.aviso` ou `p.aviso` | `variante` (erro, alerta), `tag`, `class` | padrão |
+| `<c-botao>` | `button.btn` ou `a.btn` (com `href`) | `variante` (outline, ghost, destrutivo), `tamanho` (sm, lg), `href`, `type`, `class` | padrão |
+| `<c-abas>` + `<c-aba>` | `nav.abas` + links | `rotulo`; `href`, `atual` | padrão |
+| `<c-icone>` | `svg` de traço 24 × 24 | `nome`, `espessura` (padrão 2) | — |
+| `<c-modal>` | `dialog.dialogo` | `id`, `titulo`, `titulo_id`, `class` | padrão, `titulo`, `descricao`, `rodape` |
+| `<c-botao-icone>` | `a.btn-icone` ou `button.btn-icone` com o ícone dentro | `icone`, `rotulo` (obrigatório: vira `aria-label`), `dica`, `href`, `type`, `class` | — |
+| `<c-voltar>` | `a.mudo.voltar` com o sinal ‹ | `href` | padrão (o texto) |
+| `<c-input>` | `input.input` | `:erros`, `erro_id`, `:editavel`, `trava`, `class` | — |
+| `<c-select>` | `select.select` | as mesmas do `<c-input>` | padrão (as `<option>`) |
+| `<c-textarea>` | `textarea.textarea` | as mesmas do `<c-input>` | padrão (o texto) |
+
+```html
+<c-pagina-cab titulo="Usuários">
+  <p class="mudo">Quem entra no sistema e em qual grupo.</p>
+  <c-slot name="acoes"><c-botao href="{% url 'ui_usuarios_novo' %}">Novo usuário</c-botao></c-slot>
+</c-pagina-cab>
+<c-campo rotulo="Nome" para="id_nome" :erros="form.nome.errors">{{ form.nome }}</c-campo>
+```
+
+Ícones (`<c-icone nome="…" />`, D-272). O tamanho vem do CSS de quem contém (`.btn svg`, `.aviso svg`…);
+ícone novo é mais um ramo em `cotton/icone.html` e uma linha aqui. Um teste falha se a tela usar nome que não existe.
+
+| Nome | Uso | Nome | Uso |
+|---|---|---|---|
+| `abrir-fora` | abre em nova aba | `imagem` | arquivo de imagem |
+| `ajustes` | configurações | `info` | recado neutro |
+| `alerta` | aviso (triângulo) | `lapis` | renomear |
+| `alerta-circulo` | erro ou atenção | `link` | link de acesso |
+| `baixar` | download | `lista` | lista (editor) |
+| `busca` | procurar | `lixeira` | excluir |
+| `cadeado` | só leitura, bloqueio | `mais` | adicionar |
+| `chave` | senha | `ok-circulo` | sucesso, validada |
+| `check` | feito, em dia | `pasta` | estado vazio |
+| `circulo` | passo ainda aberto | `relogio` | aguardando |
+| `clipe` | arquivo anexado | `usuario-ok` | reativar usuário |
+| `copiar` | copiar, duplicar | `usuario-x` | desativar usuário |
+| `enviar` | upload, reimportar | `fechar` | remover, fechar |
+
+Controles (`<c-input>`, `<c-select>`, `<c-textarea>`, D-274): o estado vai em props, não em `{% if %}` na tag.
+`:erros="form.nome.errors"` não vazio põe `aria-invalid="true"` e, com `erro_id="nome-erro"`, o `aria-describedby`;
+condição composta vai como texto (`erros="{% if a or b %}1{% endif %}"`). `:editavel="pode_gravar"` falso trava com
+`disabled`, ou com `readonly` se `trava="readonly"`. A prop é positiva porque `:editavel="not x"` não funciona no
+cotton; variável ausente do contexto deixa o campo editável, então a view tem de mandar a permissão.
+Widget de form do Django leva a classe por `nucleo.widgets.classe_css(widget)`, nunca escrita à mão na view.
+
+Modal (`<c-modal>`): abre com `data-abrir="id"` num botão e fecha com `data-fechar` (`static/ui/ui.js`). Sem
+`titulo` é só a casca, para o form que o HTMX troca inteiro e traz o próprio cabeçalho (`parciais/matriz_form.html`).
+
+Regras ao escrever ou mudar um componente:
+
+- Toda prop tem valor padrão no `<c-vars>` (`titulo=""`): prop sem padrão herda a variável de mesmo nome da página.
+- Atributo condicional não entra na tag do componente (`{% if x %} disabled{% endif %}`): vira prop, ou a marcação fica crua, como exceção nomeada no teste.
+- `<c-botao>` sem `type` é `type="button"`; para enviar o form, `type="submit"`.
+- Atributo do Alpine com dois-pontos leva dois (`::disabled="ocupado"`); `@click` e `x-*` passam direto.
+- Cada tag `{% … %}` fica inteira numa linha. Formatador automático quebra a tag e o Django deixa de lê-la (`.prettierignore` cobre `app/nucleo/templates/`).
+- Custo: 40 a 50 µs a mais por uso em relação à classe crua (medido em laço de 1.000).
+
 ### Estados dos controles (U10b)
 
 | Estado | Como |
@@ -167,7 +239,7 @@ Sair com campo sujo (D-223): clicar num link, num gatilho HTMX ou num botão de 
 
 ```python
 @require_http_methods(["GET", "POST"])
-@login_required(login_url="admin:login")
+@login_required
 @com_bloqueio(lambda request, pk: get_object_or_404(Projeto, pk=pk), lambda u: u.has_perm("nucleo.change_projeto"))
 def projeto(request, pk): ...   # usa request.pode_gravar
 ```
@@ -177,7 +249,8 @@ def projeto(request, pk): ...   # usa request.pode_gravar
 - GET HTMX: não adquire; vale a sessão que o `bloqueio.js` manda em todo pedido HTMX.
 - POST: sem permissão → 403; confere com `conferir_na_transacao` e roda a view na mesma transação; perdeu → "Não salvo: você perdeu o bloqueio…" e recarrega. Redirect (ou `HX-Redirect`) libera.
 - Template: `{% include "ui/_componentes/bloqueio.html" %}` dentro do `<form>` que grava, depois do `{% csrf_token %}`, fora de qualquer `hx-target`.
-- Lotes (várias entidades por POST) não usam o decorador: pulam os travados com `bloqueio.quem_bloqueia` e listam os pulados (D-121), como `admin/lote.py`.
+- Página restaurada do bfcache (Voltar/Avançar) recarrega (`bloqueio.js`, `pageshow` com `persisted`, D-222): o `pagehide` já liberou o bloqueio daquela sessão e o `renovar` nunca readquire. O GET novo adquire outro (o mesmo usuário assume, D-191). Teste: `e2e/tests/bfcache.spec.ts`.
+- Lotes (várias entidades por POST) não usam o decorador: pulam os travados com `bloqueio.quem_bloqueia` e listam os pulados (D-121), como `admin/lote.py`. O selo "Em edição por …" vem de `lotes.em_edicao(projetos, usuario)`, que ignora o bloqueio do próprio usuário (D-221).
 - Teste com `TransactionTestCase` e dois `Client` (ver `tests/test_ui_base.py`).
 
 ## 7. Permissões e mensagens
@@ -191,3 +264,6 @@ def projeto(request, pk): ...   # usa request.pode_gravar
 
 - `app/e2e/playwright.config.ts` roda todo spec em dois projetos: `chromium` (1280×720, o padrão) e `desktop-1440` (1440×900, U10d). Um `npx playwright test` cobre as duas larguras; a regra é 0 pulados (sem as `E2E_*` os specs pulam em silêncio).
 - Antes de mexer num campo, `alpinePronto(page)` (`tests/helpers.ts`): espera o `DOMContentLoaded` (o Alpine e o Sortable vêm do jsDelivr, com o cache vazio a cada contexto) e depois o `data-estado=""` do status. Gravou: espere `Salvo às \d` visível, não só presente.
+- Painel B: filtro e contador trocam o corpo por HTMX; use `filtrarPainel`/`filtrarFalta`, que esperam o form velho sair antes da próxima ação.
+- Fim de spec que abriu página com bloqueio: `liberarBloqueio(page)` (o mesmo POST do `sendBeacon`; fechar o contexto não dispara o `pagehide`, e a próxima execução abriria só leitura por até 30 s).
+- Spec só grava no que criou (D-225): `parceiroComProjeto`, `revistaPropria` e `matrizPropria` criam o dado "E2E …"; o `limpar_e2e` o apaga no fim (D-224). Detalhes em [`docs/e2e.md`](../e2e.md).

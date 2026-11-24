@@ -1,0 +1,4 @@
+{% comment %}
+Lista de escolha. Props de estado iguais às do <c-input> (ver cotton/input.html); as <option> vêm pelo slot.
+  <c-select id="id_etapa" name="etapa" :erros="form.etapa.errors" erro_id="etapa-erro" :editavel="pode_gravar"><option>…</option></c-select>
+{% endcomment %}<c-vars erros="" erro_id="" editavel="sim" trava="disabled" class="" /><select class="select{% if class %} {{ class }}{% endif %}"{% if attrs.attrs_dict %} {{ attrs }}{% endif %}{% if erros %} aria-invalid="true"{% if erro_id %} aria-describedby="{{ erro_id }}"{% endif %}{% endif %}{% if not editavel %} {{ trava }}{% endif %}>{{ slot }}</select>

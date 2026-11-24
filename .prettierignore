@@ -1,0 +1,2 @@
+# Templates do Django: o Prettier quebra as tags {% … %} em várias linhas e o Django deixa de lê-las.
+app/nucleo/templates/

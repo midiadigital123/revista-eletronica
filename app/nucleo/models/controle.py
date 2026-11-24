@@ -15,7 +15,8 @@ ALVOS = ("matriz_etapa_cc", "projeto", "template")
 class Bloqueio(models.Model):
     """Trava de escrita com exatamente um alvo; expira em 30 s (D-081, D-109).
 
-    Sem histórico. Apagar o alvo apaga a trava (CASCADE): trava é efêmera.
+    Sem histórico. Apagar o alvo pelo ORM apaga a trava (CASCADE do Django): trava é efêmera.
+    No banco a FK é NO ACTION: um DELETE direto no banco é recusado se há trava (D-133).
     """
 
     matriz_etapa_cc = models.ForeignKey(MatrizEtapaCC, on_delete=models.CASCADE, null=True, blank=True)

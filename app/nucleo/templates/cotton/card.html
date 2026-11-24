@@ -1,0 +1,21 @@
+{% comment %}
+Card de seção. `titulo` (atributo ou slot) vira o h2 e liga o aria-labelledby pelo `titulo_id`.
+Slots opcionais: `descricao` (parágrafo cinza abaixo do título) e `lateral` (link à direita do título).
+O slot `lateral` declarado, mesmo vazio, mantém o cabeçalho em duas colunas.
+Sem `titulo`, é só a caixa: o conteúdo monta o próprio cabeçalho. Os outros atributos vão para a caixa.
+`tag` troca a section por main, div, article ou aside.
+  <c-card titulo="Nome" titulo_id="nome-titulo" id="nome">…</c-card>
+{% endcomment %}<c-vars titulo="" titulo_id="" descricao="" lateral="" oculto="" class="" tag="section" />
+<{{ tag }} class="card{% if class %} {{ class }}{% endif %}"{% if attrs.attrs_dict %} {{ attrs }}{% endif %}{% if titulo_id %} aria-labelledby="{{ titulo_id }}"{% endif %}{% if oculto %} hidden{% endif %}>
+  {% if titulo %}{% if lateral %}<div class="card-cab">
+    <div>
+      <h2 class="secao-titulo" id="{{ titulo_id }}">{{ titulo }}</h2>
+      {% if descricao.strip %}<p class="mudo">{{ descricao }}</p>{% endif %}
+    </div>
+    {{ lateral }}
+  </div>{% elif descricao.strip %}<div>
+    <h2 class="secao-titulo" id="{{ titulo_id }}">{{ titulo }}</h2>
+    <p class="mudo">{{ descricao }}</p>
+  </div>{% else %}<h2 class="secao-titulo" id="{{ titulo_id }}">{{ titulo }}</h2>{% endif %}{% endif %}
+  {{ slot }}
+</{{ tag }}>

@@ -2,38 +2,17 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Duas frentes em 06/11. (1) F2 na interface: direção aprovada (D-227); fase 0 (protótipo de 1 dia) ainda não disparada. (2) Etapa do projeto (D-229 a D-231): PAUSADA a pedido do usuário. Branch `feat/etapa-do-projeto` (worktree `/home/otavio.peres/dev/revista-express-etapa`), sem merge na `main` nem na `integ/etapa-do-projeto`. Tarefas 1 a 4 de 12 concluídas e revisadas; tarefa 5 interrompida no meio (commit WIP, sem revisão).
-Funcionando: tudo da `main` 4e91d33. Na branch: `MatrizEtapaCC` com dono projeto, vínculo à base e foto no banco; `servicos/etapa_projeto.py` com `foto`, `hash_foto`, `criar`.
-Quebrado/pendente: S17 (ação D e preenchimento) e S18 como antes; F1 e F2 separados (mesmo zip ou dois) sem decisão; decisão sobre restringir o dev aos 3 IPs.
+Etapa 1 de 11 concluída (K-047, D-278): carga com etapas não canônicas mesclada na `main` com o "ok" do usuário. Plano de 11 etapas (D-276, D-277): etapa do projeto no servidor (2 a 6); telas de apontar e de revisão no layout atual (7 a 10); redesenho pelo Figma (11).
+Funcionando: banco da 8002 refeito do zero pelo `scripts/povoar-banco-2026.sh`: 33 parceiros, 11 etapas, 232 cortes (84 arbitrários), 33 projetos, 66 revistas, todos com a matriz Comunitária. Suíte Django 922 OK (8 pulados) em 8 min 35 s.
+Quebrado/pendente: a etapa não canônica fica com a pendência `corte_sem_matriz` sem saída até a etapa 7; o banco do dev (8000) ainda tem a carga antiga; a carga não escolhe template (toda revista nasce com "Falta escolher o template").
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Etapa do projeto: ao retomar, abrir o commit WIP da tarefa 5 em `feat/etapa-do-projeto`, rodar a suíte inteira na stack `etapa-projeto` e terminar a tarefa 5 pelo plano. F2: decidir se a fase 0 é disparada.
+Planejar a etapa 2: preparar a branch `feat/etapa-do-projeto` (mesclar a `main` e renumerar a migration `0020` para `0026`).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
-1. [x] S01 — Esqueleto Django + PostgreSQL + Playwright
-2. [x] S02 — Modelos de cadastro e matriz + FK composta
-3. [x] S03 — Parceiro_ano, corte, projeto, revista, texto, controle
-4. [x] S03b — Revista JS/CSS para 2 a 5 padrões
-5. [x] S04 — Cadastros iniciais + importador de matriz
-6. [x] S05 — Templates: formato, validação, seed
-7. [x] S06 — Cascata dos cortes
-8. [x] S09 — Serviço de SVG e capa
-9. [x] S10 — Bloqueio
-10. [x] S14 — Perfis e permissões
-11. [x] S07 — Resolver, foto, hash, pendências
-12. [x] S08 — Página única F1 + F2
-13. [x] S15 — Zip por revista
-14. [x] S11a — Admin: cadastros, cortes, matriz
-15. [x] S11b1 — Admin: templates
-16. [x] S11b2 — Admin: cópia por seção
-17. [x] S11c — Admin: projeto, variáveis, arquivos, lote
-18. [x] S12 — Painel + Validado
-19. [x] S13 — Impresso + planilhas
-20. [x] S16 — Abrir ano
-21. [ ] S17 — Carga 2026 + desligar o antigo  ← agora
-22. [ ] S18 — E2E da temporada
+Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 10/11, D-253).
 
 ## Decisões
 
@@ -1225,7 +1204,7 @@ Etapa do projeto: ao retomar, abrir o commit WIP da tarefa 5 em `feat/etapa-do-p
 - **Motivo:** a virada é sempre a partir do ano anterior; o diff da D-113 mostra o que mudou desde o ano passado.
 - **Descartadas:** `--de` opcional (sem caso de uso); conferir permissão no serviço (o comando de ops não tem usuário); `TransactionTestCase` (não há teste de concorrência).
 - **Arquivos afetados:** `app/nucleo/servicos/abrir_ano.py`, `app/nucleo/management/commands/abrir_ano.py`, `app/nucleo/tests/test_abrir_ano.py`, `app/nucleo/models/texto.py` (só comentário)
-- **Status:** ativa. Verificado por mim: 162 testes OK (8 de PDF pulados), `makemigrations --check` limpo. Revisão (django-reviewer) em andamento. Limite `ponytail:`: leitura da origem sem trava (edição concorrente pode entrar pela metade). A confirmar com o usuário: `Tarefa.arquivo` compartilhado entre anos.
+- **Status:** ativa; ~~sem ano anterior, `AnoRecusado`~~ substituída por D-246 (banco vazio: o 1º ano nasce vazio). Verificado por mim: 162 testes OK (8 de PDF pulados), `makemigrations --check` limpo. Revisão (django-reviewer) em andamento. Limite `ponytail:`: leitura da origem sem trava (edição concorrente pode entrar pela metade). A confirmar com o usuário: `Tarefa.arquivo` compartilhado entre anos.
 
 ### D-149 — Correções da revisão do S16 (2026-10-29 19:35)
 - **Contexto:** revisão (django-reviewer) do S16: 0 críticos, 3 importantes. Uma substituição de matriz concorrente recria descritores e tarefas com ids novos, e a cópia em READ COMMITTED quebrava com `KeyError` (500). Um ano digitado errado (`20277`) criava milhares de linhas que nada apaga (FKs PROTECT). Nenhum teste provava que uma falha no meio desfaz tudo.
@@ -1513,7 +1492,7 @@ Etapa do projeto: ao retomar, abrir o commit WIP da tarefa 5 em `feat/etapa-do-p
 - **Motivo:** respostas do usuário.
 - **Descartadas:** comando `importar_cortes` a partir da planilha de 2025; planilhas de níveis como fonte; `--passo 25` na importação (valeria também para o 2EF).
 - **Arquivos afetados:** `docs/s17-carga-2026.md` (em `feat/s17-preparo`)
-- **Status:** ativa.
+- **Status:** ativa; o item (1) ~~substituído por D-261~~
 
 ### D-185 — Correções da revisão de segurança do upload do item e da exclusão (2026-10-30 14:30)
 - **Contexto:** revisão (security-reviewer) de e93babb e 299de99: 0 críticos, 1 importante, 6 menores. Sem path traversal, sem IDOR entre revistas, sem XSS no `alt`; polyglot e SVG-como-PNG barrados; CSRF, código conferido no servidor e permissões OK.
@@ -1731,7 +1710,7 @@ Etapa do projeto: ao retomar, abrir o commit WIP da tarefa 5 em `feat/etapa-do-p
 - **Motivo:** decisão do usuário ("fecha o furo"). Uma regra num lugar só fecha as duas telas.
 - **Descartadas:** bloquear só a senha — dados e "Desativar" continuariam abertos a um perfil que não pode dar o grupo Impresso; manter (o furo anula a regra do Impresso).
 - **Arquivos afetados:** `app/nucleo/usuarios.py`, `nucleo/tests/test_ui_usuarios.py`, `nucleo/tests/test_admin_cadastro.py`, `docs/regras-de-negocio.md`
-- **Status:** ativa
+- **Status:** ativa em parte: ~~Admin não atribui o Impresso nem marca impressa~~ substituído pela D-220 (o título não vale mais; hoje o Admin altera Pedagógica, Mídias e Impresso e só vê outro Admin)
 
 ### D-212 — Login e logout próprios das telas B; o login do admin some (2026-11-05)
 - **Contexto:** o usuário viu o "Administração do Django" ao sair e ao trocar de perfil: o "Sair" ia ao logout do admin, todas as views mandavam o anônimo para `admin:login`, e o `next=/admin/` deixava a pessoa no índice do admin depois de entrar.
@@ -1861,38 +1840,458 @@ Etapa do projeto: ao retomar, abrir o commit WIP da tarefa 5 em `feat/etapa-do-p
 - **Arquivos afetados:** futuro: `servicos/f2.py`, `templates/revista/f2.svg`, modelos `DescritorProgressao`/`RevistaF2Descritor`, coluna `Projeto.f2_passos_desligados`; remoção do upload/sanitizador de SVG.
 - **Status:** ativa (fase 0 ainda não disparada)
 
-### D-229 — Etapa clonada mantém vínculo vivo com a etapa base (2026-11-06)
-- **Contexto:** brainstorming de 06/11. Parceiros avaliam etapas fora do comum (4EF, 6EF, 8EF); a Pedagógica costuma partir de uma etapa vizinha (3EF → 4EF) e acrescentar itens. As notas do usuário diziam ao mesmo tempo "clonar e editar o clone" e "se o 3EF mudar, a revista muda".
-- **Decisão:** a etapa criada no projeto (em branco ou clone de qualquer etapa de qualquer matriz) guarda a base de onde veio. Mudança na base vira **pendência** no projeto derivado, com comparação antes × depois no estilo git. A pendência é obrigatória, não um aviso. Quem edita a base vê, no modal de impacto, que a ação tira o Validado e também abre pendência nos projetos derivados.
-- **Motivo:** cópia solta perde as correções da base em silêncio; herança automática sobrescreveria o que o projeto acrescentou.
-- **Descartadas:** cópia solta, sem vínculo — correção no 3EF não chega ao 4EF; herança viva sem revisão — apaga edições locais sem ninguém ver.
-- **Arquivos afetados:** nenhum ainda (fase de desenho). Em aberto: o que a pendência bloqueia e se o projeto pode recusar uma mudança da base.
-- **Status:** ativa (desenho em andamento)
-
-### D-230 — Etapa do projeto: 3 vias com foto da base, dono = projeto (2026-11-06)
-- **Contexto:** como a mudança da base chega à etapa clonada (D-229). 3 agentes analisaram (dados, produto, versionamento); a soma com descarte de duplicatas proposta pelo usuário foi descartada pelos 3.
-- **Decisão:** (1) comparação em 3 vias: foto da base (jsonb, por código do descritor e faixa da tarefa) × base atual × local; (2) a etapa pertence ao **projeto** (escolha do usuário, contra a recomendação de parceiro_ano dos agentes 1 e 3); (3) item que o projeto não tocou vem pré-marcado "aplicar" e só grava ao "Concluir revisão"; (4) clone de clone proibido na 1ª versão: a base é sempre etapa de matriz; (5) só etapa que a matriz do parceiro não tem (4EF, 6EF, 8EF), sem sobrepor etapa da matriz; (6) a pendência entra no hash e bloqueia o Validado; recusa item a item; sem fusão dentro do texto (D-115); base apagada = cópia solta (SET NULL); a virada de ano não leva a etapa sozinha.
-- **Motivo:** só o ancestral comum separa "a base mudou" de "o projeto mudou"; nada muda no conteúdo do projeto sem uma pessoa ver; sem cadeia e sem sobrepor, não surgem versões paralelas da Comunitária.
-- **Descartadas:** soma + dedup — não propaga remoção nem correção; ancestral pelo simple-history — a reimportação recria ids; camada de sobrescrita — editor novo e propagação sem revisão; versões imutáveis da matriz — reescreve editor e reimportação; aplicar sozinho ao gravar a base — escreve no conteúdo de outro projeto sem revisão; dono parceiro_ano — escolha do usuário.
-- **Arquivos afetados:** nenhum ainda. Substitui em parte a D-051 (projeto passa a ter conteúdo próprio, só nesse caso).
-- **Status:** ativa (desenho em andamento)
-
-### D-231 — Etapa do projeto: projeto recriado herda; matriz que ganha a etapa vira pendência (2026-11-06)
-- **Contexto:** revisão do documento `docs/superpowers/specs/2026-11-06-etapa-do-projeto-design.md`. Só há 1 projeto ativo por parceiro_ano, e a cascata arquiva o projeto e cria outro (D-068).
-- **Decisão:** (1) o projeto novo da cascata herda as etapas do projeto arquivado (com foto e base); (2) se a matriz do parceiro passar a ter a etapa, abre-se uma pendência de escolha que bloqueia o Validado, com "manter a do projeto" ou "usar a da matriz"; até a escolha, vale a do projeto. Decisões do Claude no documento: a base tem o mesmo componente da revista; a imagem da tarefa entra na revisão em 3 vias; o Validado volta sozinho se o conteúdo voltar ao validado (D-094).
-- **Motivo:** nunca perder o que foi digitado; pendência não é enfeite.
-- **Descartadas:** projeto novo começa sem a etapa — o texto fica preso no arquivado; botão "trazer" — depende de alguém lembrar; a etapa do projeto vale sem aviso — versão paralela sem decisão; a da matriz passa a valer sozinha — muda a revista sem ninguém ver.
-- **Arquivos afetados:** documento de desenho (seções 5 e 10).
+### D-228 — Fase 0 aprovada: F2 em SVG gerado pelo servidor, svg-tour intocado (2026-11-06 17:10)
+- **Contexto:** protótipo `example/f2-gerado/` (fase 0 da D-227) com os 5 critérios do plano passando no Chromium; o usuário abriu e disse que a navegação funciona e que só falta caprichar nos estilos.
+- **Decisão:** as fases 1 a 5 do mapeamento seguem com SVG gerado pelo servidor (template com `<text>` e `<foreignObject>`, posições calculadas em Python), `svg-tour.js` sem alteração. O visual do protótipo não é referência: o estilo final vem do design (fase 2, com referência de layout por bloco ligado/desligado).
+- **Motivo:** zoom/pan, minimapa, texto longo com clamp, passo desligado com reflow e acessibilidade mínima funcionam sem mexer no tour nem adicionar dependência.
+- **Descartadas:** plano B (HTML por blocos com tour leve) — não foi preciso; perderia minimapa, zoom e a animação por passo já aprovada em demo.
+- **Arquivos afetados:** `example/f2-gerado/` (referência de implementação para `servicos/f2.py` e `templates/revista/f2.svg`).
 - **Status:** ativa
 
+### D-229 — Passos do F2 desligados por revista, não por projeto (2026-11-06 17:30)
+- **Contexto:** o mapeamento propunha a escolha no projeto (LP e MT juntos); pergunta aberta na D-228.
+- **Decisão:** a lista de passos desligados fica na revista (parceiro × ano × componente), não no projeto. Ex.: coluna `Revista.f2_passos_desligados` (lista com CHECK nos nomes canônicos), gravada com o modal de impacto (D-202) e incluída no resolvido (hash, foto, planilha do impresso seguem sozinhos).
+- **Motivo:** decisão do usuário em 06/11; LP e MT podem precisar de composições diferentes.
+- **Descartadas:** coluna no projeto (proposta do mapeamento) — obrigaria LP e MT à mesma composição.
+- **Arquivos afetados:** futuro: `models/revista.py`, migração, tela da revista (ficha), `resolver.py`, `servicos/f2.py`.
+- **Status:** ativa
+
+### D-230 — Até dois infográficos F2 por revista (Alfa e Outras Etapas), derivados dos cortes (2026-11-06 18:00)
+- **Contexto:** pergunta 1 do levantamento dos campos do docx (`docs/superpowers/specs/2026-11-06-f2-campos-do-docx.md`): o arquivo recebido chama-se "AF_EM" e o mapeamento supunha um infográfico por revista.
+- **Decisão:** cada revista (projeto × componente) tem até 2 infográficos no F2: "Avaliação e Currículo – Alfa" e "Avaliação e Currículo – Outras Etapas". Até 4 por projeto (2 LP + 2 MT). A existência é derivada dos cortes, não escolhida: o Alfa existe se e só se o parceiro tem cortes para o 2EF naquele componente (o Alfa é o 2EF); o Outras Etapas existe se e só se há cortes para alguma etapa diferente do 2EF, todas aglutinadas num só. A interface mostra só os que existem. A derivação entra na cascata (`servicos/cascata.py:gravar_cortes`, onde hoje nascem e se arquivam as revistas por componente). Refina a D-229: os passos desligados ficam por infográfico (revista × tipo), não por revista.
+- **Motivo:** regra do usuário em 06/11; a composição dos infográficos acompanha as etapas avaliadas.
+- **Descartadas:** um infográfico por revista (mapeamento de 06/11) — não cobre o Alfa; escolha manual de quais infográficos a revista tem — a regra é determinística pelos cortes e a escolha abriria incoerência.
+- **Arquivos afetados:** futuro: `servicos/cascata.py`, modelo novo (`revista_f2_infografico` com `tipo` CHECK alfa/outras e os passos desligados), `resolver.py`, `html.py`/`empacotar.py` (navegação do F2 com até 2 infográficos), `planilhas.py`, `validacao.py`, seeds do template F2 (um por tipo × componente?).
+- **Status:** ativa
+
+### D-231 — Merge na main feito por mim, só depois do "ok" explícito do usuário (2026-11-06 18:20)
+- **Contexto:** a D-226 deixava o merge de `integ/<tema>` na `main` exclusivamente com o usuário.
+- **Decisão:** posso fazer o merge de `integ/<tema>` na `main` (fast-forward quando possível), mas só depois de confirmar com o usuário e receber o "ok" dele naquela leva; sem "ok", o merge fica com ele. O resto da D-226 continua: trabalho em worktree própria, merge na intermediária só com testes verdes, nada editado direto na `main`.
+- **Motivo:** pedido do usuário em 06/11 ("Você tem autorização pra fazer o merge na main. É só confirmar comigo e esperar meu ok").
+- **Descartadas:** merge automático ao fim de cada leva — o usuário quer dar o ok a cada vez.
+- **Arquivos afetados:** nenhum código; fluxo de trabalho (ajusta a D-226).
+- **Status:** ativa
+
+### D-232 — Abertura na web, um modal por item, imagem única do item, fechamento só texto (2026-11-06 18:40)
+- **Contexto:** perguntas 2 a 5 de `docs/superpowers/specs/2026-11-06-f2-campos-do-docx.md` §5.
+- **Decisão:** (2) os 4 parágrafos da abertura do docx aparecem também na web, como texto corrido antes do infográfico. (3) Tarefas: um item em cada modal, 4 itens, 4 modais (`dlg-tarefa-1..4`), cada um com a imagem do item e os 2 parágrafos de análise daquele item. (4) Item e suporte chegam como uma única imagem montada pelo design: `Tarefa.arquivo` continua com um arquivo só, sem campo de suporte. (5) "Agora é com você" entra só como texto (seção `fechamento`); o link "Acesse aqui" para o template do infográfico fica de fora por enquanto, sem campo de arquivo/URL.
+- **Motivo:** respostas do usuário em 06/11.
+- **Descartadas:** modal único com os 4 itens — o usuário quer um por item; segundo arquivo de suporte na tarefa — o design monta a imagem; campo para o template do infográfico — ninguém sabe ainda o que é o arquivo.
+- **Arquivos afetados:** futuro: seeds do template F2 (`abertura` com os 4 parágrafos, `fechamento`, `dlg-tarefa-N`), `servicos/f2.py`, página do F2.
+- **Status:** ativa. Pendência pequena: a abertura (1 parágrafo) e o fechamento (2 parágrafos) comuns do bloco ❹ ficam fora dos modais; proposta: abertura vai no texto do passo `tarefas` do painel do tour, fechamento só no impresso.
+
+### D-233 — Uma página por fascículo e por infográfico, dados do F2 digitados na tela B, animação por último (2026-11-06 19:00)
+- **Contexto:** conversa de 06/11 que fechou o plano das fases 1 a 5 do F2 gerado (`~/.claude/plans/planeje-antes-de-fazer-eager-snowflake.md`); fecha a pergunta em aberto "F1 e F2 deixam de ficar na mesma página".
+- **Decisão:** (1) cada fascículo e cada infográfico é uma página própria (`f1.html`, `f2-alfa.html`, `f2-outras-etapas.html`); a página inicial (`index.html`) traz capa + sumário com um link por página existente; tudo no mesmo zip. (2) Os dados específicos de cada infográfico (habilidade destacada, textos dos cliques ❶ a ❸, tabela por etapa 1EF–3EM, 4 itens com análise) são digitados na tela B da revista, sem importador. (3) Abertura do bloco de tarefas vai no painel do tour; o fechamento dele, só no impresso (fecha a pendência da D-232). (4) Animação por passo é a última fase (5). Modelo de dados: tabelas `revista_infografico`, `revista_infografico_etapa`, `revista_infografico_item`, com as etapas do referencial numa lista fixa no código (como `Fasciculo`, D-122).
+- **Motivo:** uma página por infográfico evita colisão dos ids globais (`#revista`, `#dados-tour`, `dlg-*`) e deixa `f2-init.js` e `svg-tour.js` como estão; digitar na tela segue a regra "toda função do back tem controle na tela B" (D-189); a animação depende do SVG final.
+- **Descartadas:** F1 e F2 na mesma página com os dois infográficos (ids colidem); importador de planilha do referencial (não há planilha estruturada; a Pedagógica digita); etapas do referencial na tabela `Etapa` do ano (o ano letivo só cadastra as etapas avaliadas, o referencial cobre 12).
+- **Arquivos afetados:** fase 1: `models/revista.py`, migrações 0020+, `servicos/cascata.py`, `permissoes.py`, `servicos/exclusao.py`; fases 2 a 5: ver o plano.
+- **Status:** ativa
+
+### ~~D-234 — Tarefa usada por item de infográfico impede a exclusão e a reimportação da matriz (2026-11-06 19:10)~~ ~~substituída por D-235~~
+- **Contexto:** o item do infográfico aponta para `Tarefa` com `PROTECT` (plano, fase 1). A reimportação da matriz (`servicos/importar_matriz.py`) apaga todos os descritores das MECs reimportadas, e com eles as tarefas; a exclusão com confirmação forte (D-181, `matriz.excluir`) chama `delete()` direto. Os dois quebrariam com `ProtectedError` (erro 500) assim que um item fosse preenchido.
+- **Decisão:** manter `PROTECT` e transformar o uso em recusa explicada: a reimportação levanta `ImportacaoRecusada` listando os infográficos que usam tarefas das MECs reimportadas; a exclusão de tarefa ou descritor (tela B e admin) recusa com mensagem, sem apagar nada. A exclusão de matriz (D-205) mostra os itens como "revistas" em uso (`exclusao.GRUPO`).
+- **Motivo:** mesmo princípio da D-205 ("exclui só o que nada usa"); trocar a tarefa de um item muda o conteúdo da revista, e isso tem de ser um ato de quem edita o infográfico, não efeito colateral da matriz.
+- **Descartadas:** `SET_NULL` no item — a reimportação esvaziaria itens em silêncio (o hash mudaria e o "Validado" cairia sem explicação); remapear o item para a tarefa nova de mesmo código e faixa — código a mais sem pedido; fica como evolução se a recusa atrapalhar a equipe.
+- **Arquivos afetados:** `servicos/importar_matriz.py`, `matriz.py`, `urls/ui_matriz.py`, `admin/matriz.py`, `servicos/exclusao.py`.
+- **Status:** ~~substituída por D-235~~ (premissa errada: o item não usa tarefa da matriz)
+
+### D-235 — Item do infográfico não é tarefa da matriz: tem descritor, etapa, imagem e análise próprios (2026-11-06 20:00)
+- **Contexto:** o plano e a D-234 supunham `RevistaInfograficoItem.tarefa` → `Tarefa` da matriz (a imagem viria de `Tarefa.arquivo`). O usuário corrigiu em 06/11: "Nenhum item do infográfico usa a matriz de tarefas". O docx mostra cada item como "(4,1) D05 – 2º ano do Ensino Fundamental", com imagem `P00208914` (item + suporte numa imagem só, D-232) e 2 parágrafos de análise.
+- **Decisão:** o item guarda o que é dele: `etapa` (lista fixa `EtapaReferencial`, vazio permitido), `descritor` (código na matriz de referência, texto, ex. `D05`), `imagem` + `imagem_sha256` (caminho no storage, juntos como a capa, D-118), `texto_alternativo` (até 1000, como a tarefa, D-180) e `analise`. Sai a FK para `Tarefa`. Substitui D-234: sem FK, exclusão e reimportação da matriz não são afetadas. Como a branch não foi mergeada e nenhum banco aplicou a 0020, a própria 0020 é corrigida (sem migração de ida e volta). As etapas ganham rótulos por extenso ("2º ano do Ensino Fundamental", "3ª série do Ensino Médio").
+- **Motivo:** correção do usuário; o rótulo do item no docx é exatamente descritor + etapa.
+- **Descartadas:** FK para `Tarefa` (premissa errada); guardar o código do item (`P00208914`) — o nome do arquivo já o traz e ninguém o exibe; entra quando alguém pedir.
+- **Arquivos afetados:** `models/revista.py`, `migrations/0020_infograficos.py`, `servicos/exclusao.py` (GRUPO), testes de constraints e exclusão.
+- **Status:** ativa
+
+### ~~D-236 — A fase 1 do F2 entra na main só junto com a fase 2 (2026-11-06 21:00)~~ ~~substituída por D-237~~
+- **Contexto:** fase 1 (dados e cascata dos infográficos) pronta e mergeada em `integ/f2-gerado` (`70989fc`, 833 OK); pela D-231 o merge na `main` espera o ok do usuário.
+- **Decisão:** `integ/f2-gerado` só entra na `main` junto com a fase 2 (render e páginas separadas). As fases seguintes continuam saindo de `integ/f2-gerado`.
+- **Motivo:** decisão do usuário em 06/11; a fase 1 sozinha não muda nada visível, e a fase 2 derruba o "Validado" de toda revista uma vez — melhor um deploy só, combinado com a validação da carga 2026.
+- **Descartadas:** merge na `main` agora — duas entregas sem ganho visível na primeira.
+- **Arquivos afetados:** nenhum código; fluxo de trabalho.
+- **Status:** ~~substituída por D-237~~ (premissa errada: a fase 2 sozinha trava o "Validado" e o zip)
+
+### D-237 — `integ/f2-gerado` entra na main só com as fases 1 a 3 (2026-11-09 10:30)
+- **Contexto:** a D-236 supunha que a fase 2 sozinha podia ir para produção. A fase 2 cria pendências por infográfico (habilidade vazia, passo ligado sem dado, item sem imagem); `servicos/validacao.py:43` recusa o "Validado" e `servicos/empacotar.py:101` recusa o zip com pendência, e a tela que as resolve só chega na fase 3.
+- **Decisão:** a `integ/f2-gerado` só entra na `main` junto com as fases 1, 2 e 3. Substitui a D-236.
+- **Motivo:** com só a fase 2 em produção, nenhuma revista poderia ser validada nem baixada. Opção A escolhida pelo usuário em 09/11; não pede código e mantém um único dia em que o "Validado" cai.
+- **Descartadas:** (B) a fase 2 sem pendências novas, que entrariam na fase 3 — revistas com infográfico vazio poderiam ser validadas.
+- **Arquivos afetados:** nenhum código; fluxo de trabalho.
+- **Status:** ~~ativa~~ substituída por D-249 no escopo do merge (deploy das fases 1 a 4 juntas); as citações "D-237" no código continuam marcando a entrada do infográfico no resolvido e no hash.
+
+### D-238 — Troca dos ids do template F2 sai da fase 3 e entra na fase 2 (2026-11-09 10:40)
+- **Contexto:** o render da fase 2 precisa saber qual seção alimenta cada passo; o template tinha ids antigos (`passo1..4`, `dlg-p2`, `dlg-p3`, `dlg-p4-iN`, com títulos trocados), e o plano deixava a troca para a fase 3.
+- **Decisão:** a fase 2 troca o F2 para 8 seções fixas e obrigatórias, como o F1: `abertura`, `passo-descritor`, `passo-habilidades`, `passo-progressao`, `passo-tarefas`, `dlg-descritor`, `tarefas-fechamento`, `fechamento`. Seeds reescritos a partir do docx; migração 0023 grava uma versão nova de cada template F2 (só inserção, D-207) e leva as cópias `dlg-p2`/`dlg-p3` para `texto_progressao`/`texto_habilidades` do infográfico.
+- **Motivo:** escolha do usuário em 09/11; como as fases 1 a 3 vão juntas para a `main` (D-237), não há por que escrever um mapa provisório dos ids antigos e apagá-lo na fase 3.
+- **Descartadas:** manter a troca na fase 3 com um mapa provisório `passo1→descritor … passo4→tarefas` — código e testes jogados fora.
+- **Arquivos afetados:** `texto.py`, `templates_texto.py`, `templates_seed/2026/f2-*.hbs`, `migrations/0023_template_f2_secoes.py`.
+- **Status:** ativa
+
+### D-239 — O desenho do F2 é o SVG em uso; Alfa e Outras Etapas têm a mesma estrutura (2026-11-09 10:50)
+- **Contexto:** a D-228 dizia que o visual do protótipo não era referência e que o estilo final viria do design; havia ainda a pergunta "o Alfa tem a mesma estrutura do Outras Etapas?".
+- **Decisão:** o desenho final é o do SVG em uso (`app/nucleo/tests/fixtures/f2-lp.svg`, Illustrator, viewBox `0 0 1190.6 793.7`). A fase 2 o porta bloco a bloco para `templates/revista/f2.svg` (formas, cores e traços como estão; texto em curva vira `<text>`/`foreignObject`). Alfa e Outras Etapas usam o mesmo desenho; mudam só os textos e os itens do último passo.
+- **Motivo:** o usuário conferiu com a equipe em 09/11.
+- **Descartadas:** esperar uma referência nova do design — não virá; um layout por tipo de infográfico — a estrutura é a mesma.
+- **Arquivos afetados:** futuro: `templates/revista/f2.svg`, `servicos/f2.py`.
+- **Status:** ativa
+
+### D-240 — Fechamento do bloco de tarefas no template só com o texto genérico (2026-11-09 12:30)
+- **Contexto:** o plano da fase 2 mandava as linhas 150-158 do docx para a seção `tarefas-fechamento`; as linhas 150-154 falam do item (4,4) da 3ª série do EM (P121137H6).
+- **Decisão:** `tarefas-fechamento` leva só os 2 parágrafos genéricos (md 156 e 158). O texto sobre cada item é da revista: vai na `analise` do item (tela da fase 3).
+- **Motivo:** confirmado pelo usuário em 09/11 — o conjunto de itens muda com o descritor de cada revista.
+- **Descartadas:** as linhas 150-158 inteiras no template — o trecho do item (4,4) apareceria igual em toda revista.
+- **Arquivos afetados:** `templates_seed/2026/f2-*.hbs`, `migrations/0023_template_f2_secoes.py`.
+- **Status:** ativa
+
+### D-241 — Clique ❹ abre só a abertura do bloco de tarefas, num botão próprio (2026-11-09 14:00)
+- **Contexto:** o usuário viu o PNG da tarefa 2 e pediu o botão amarelo + sob "Tarefas por nível de complexidade", como nos passos anteriores. O texto do clique ❹ no docx é só o parágrafo "Aqui, apresentamos alguns itens exemplares…" (md 112); cada item é a imagem montada + o texto que a segue.
+- **Decisão:** nova seção fixa `dlg-tarefas` no template F2 (9 seções) com a abertura do ❹, aberta pelo botão `f2-btn-action-tarefas` sob o título do bloco. `passo-tarefas` fica só com o texto curto do tour. Os + de cada item continuam abrindo imagem + análise (D-232, D-235). Não há botão sob "Itens". Substitui a parte da D-233 que punha a abertura do bloco de tarefas no painel do tour.
+- **Motivo:** decisão do usuário em 09/11; segue o padrão dos outros passos (botão sob o título abre o texto do clique).
+- **Descartadas:** abertura no painel do tour (D-233) — o usuário quer o botão; botão sob "Itens" — confusão do usuário, desfeita por ele; um modal único com abertura + 4 itens + fechamento (como no docx) — mantido um modal por item (D-232).
+- **Arquivos afetados:** `texto.py`, `templates_seed/2026/f2-*.hbs`, `migrations/0023_template_f2_secoes.py`, `templates/revista/f2.svg`, `servicos/f2.py`.
+- **Status:** ativa
+
+### D-242 — Lacunas do brief da tarefa 3 fechadas antes de implementar (2026-11-10 10:00)
+- **Contexto:** ao planejar a tarefa 3 (gerador `servicos/f2.py`), o brief não batia com o código: o `f2.svg` usa `componente`, que o infográfico da T4 não traz; `html.py` importaria `f2` e vice-versa; os conectores (`linhas`) não tinham regra; a "progressão sem linha" do protótipo não existe no `f2.svg`; o resolvido só traz as etapas gravadas, e o desenho tem 12.
+- **Decisão:** `gerar(infografico, secoes, base_imagens, componente)`; `ROTULO_TOUR` e `_texto` passam de `html.py` para `f2.py` (`texto_puro`); `CONECTORES` com os 3 pontos do desenho, e os pontos iniciais com o y do 1º andam com o bloco; tabela e progressão sempre com as 12 etapas de `EtapaReferencial`, completando as vazias em cinza; linha vazia do topo vira célula vazia própria; título do modal do item por `format_html`; `analise` chega renderizada (T4).
+- **Motivo:** menor diff que fecha cada lacuna sem mexer no `f2.svg` aprovado; o import em uma direção só evita ciclo quando a T5 importar `f2`.
+- **Descartadas:** `componente` dentro do dict do infográfico (repetiria o mesmo valor em todo infográfico e mexeria no hash); conectores recalculados por geometria (só a progressão se move); manter a regra "menos de 2 marcas" (não há polilinha no desenho).
+- **Arquivos afetados:** `servicos/f2.py`, `servicos/html.py`, `tests/test_f2.py`, briefs das tarefas 3, 4 e 5.
+- **Status:** ativa
+
+### D-243 — Conselho da tarefa 4: passo Tarefas desligado tira os itens do resolvido (2026-11-10 12:30)
+- **Contexto:** depois da revisão da tarefa 4 (texto de passo desligado não conta variável, 4e16fae), o /conselho (5 analistas + debate) achou o mesmo defeito na análise dos itens: com o passo Tarefas desligado, `renderizado(i.analise)` ainda contava variáveis e uma variável vazia num item invisível travava o "Validado".
+- **Decisão:** com `tarefas` em `passos_desligados`, `itens` sai `[]` do resolvido (O3). Veredito unânime na rodada final (5×0); na rodada 1 o placar foi O2 3 × O3 2.
+- **Motivo:** a regra "passo desligado é invisível" fica num lugar só (o resolver), igual ao que `f2.gerar` mostra; pelo plano da T6 o zip copia e exige as imagens dos itens do resolvido, então com a O2 uma imagem invisível sumida barraria o zip ou a T6 repetiria o filtro. O banco continua guardando os itens.
+- **Descartadas:** O1 manter (deixa o Validado travar por texto invisível); O2 só esvaziar a análise (imagem invisível continuaria no hash e no zip); O4 como opção de voto (sem voto). A O4 entrou como acréscimo, a pedido do usuário em 10/11: `docs/regras-de-negocio.md` (pendência `infografico`), `docs/modelo-er.md` (hash com `imagem_sha256`) e marca `ponytail:` na ponte de `empacotar.py`.
+- **Pendência registrada para a T6:** `empacotar.py:110` faz `default_storage.exists(revista.svg_f2)` com `svg_f2=None` desde que a pendência `svg` saiu → 500 no zip entre T4 e T6.
+- **Arquivos afetados:** `servicos/resolver.py`, `servicos/empacotar.py` (comentário), `tests/test_resolver.py`, `docs/regras-de-negocio.md`, `docs/modelo-er.md`; dossiê, mesa, análises e réplicas em `.superpowers/sdd/2026-11-09-f2-fase-2/conselho-t4-*.md`.
+- **Status:** ativa
+
+### D-244 — Tarefa 5 também ajusta os chamadores de contexto_pagina (2026-11-10 14:00)
+- **Contexto:** a tarefa 5 muda a assinatura de `contexto_pagina` e divide o `index.html`, mas os únicos chamadores (preview e zip) só mudariam na tarefa 6: a tarefa 5 fecharia com a suíte vermelha.
+- **Decisão:** a tarefa 5 inclui as rotas `preview`, `preview_f1`, `preview_f2`, a gravação das páginas no zip e os gabaritos da pasta `e2e/fixtures/pagina/`. A tarefa 6 fica com as imagens dos itens (rota e cópia), o `zip_foto` por item e a remoção das checagens de SVG. Junto: `f2.gerar` usa só o nome do arquivo da imagem no `src` (no banco é `infograficos/<x>`).
+- **Motivo:** escolha do usuário em 10/11; todo chamador da função que muda, muda junto, e cada tarefa fecha com a suíte verde.
+- **Descartadas:** juntar T5 e T6 numa tarefa só (um ciclo de revisão de ~2 dias); seguir o plano (suíte vermelha entre T5 e T6).
+- **Arquivos afetados:** `servicos/html.py`, `templates/revista/*`, `urls/preview.py`, `servicos/empacotar.py`, `servicos/f2.py`, briefs das tarefas 5 e 6.
+- **Status:** ativa
+
+### D-245 — Tarefa 6: imagens do zip vêm do caminho atual, conferidas pelo sha da foto (2026-11-10 15:30)
+- **Contexto:** o zip da revista arquivada sai da foto, mas os arquivos são os atuais; o brief não dizia de onde copiar a imagem do item nem como tratar dois itens com o mesmo nome de arquivo.
+- **Decisão:** o `src` usa o nome da foto; os bytes vêm do caminho atual do item, achado por (tipo, posição); sha da foto ≠ atual (ou item sumido) = `zip_foto` por item, com mensagem própria; a capa ganha mensagem própria. Mesmo nome com caminhos diferentes = `zip_arquivo`. A rota `preview_imagem_infografico` serve só imagem de item da própria revista (png/jpg/webp). O zip deixa de ler o SVG.
+- **Motivo:** mesmo padrão da capa (compara o sha, copia o atual); reenviar a mesma imagem (caminho novo com uuid) não quebra o zip; a colisão evitaria uma imagem cobrindo outra.
+- **Descartadas:** copiar do caminho da foto (o arquivo antigo é apagado ao trocar, e o zip quebraria mesmo com conteúdo igual); validar o nome por regex como nos itens do F1 (o `src` já sai escapado por `format_html` e o upload da fase 3 grava com uuid).
+- **Arquivos afetados:** `servicos/empacotar.py`, `urls/preview.py`, `tests/test_empacotar.py`, `tests/test_preview.py`, `e2e/fixtures/revista.zip`, brief da tarefa 6.
+- **Status:** ativa
+
+### D-247 — Tarefa 7: specs E2E por página e situação "5 de 6" até a fase 3 (2026-11-10 18:00)
+- **Contexto:** desde a T5 a revista tem 4 páginas e os specs `pagina`, `zip` e `item` procuram F1 e F2 numa página só; desde a T4 a pendência `infografico` deixa a situação em "5 de 6 prontos", e `helpers.ts:revistaPropria` espera "6 de 6".
+- **Decisão:** `pagina.spec.ts` serve a pasta `fixtures/pagina/` por `page.route` e cobre sumário, F1 e o F2 Outras Etapas (tour completo, `dlg-habilidades`, `dlg-tarefa-1` com imagem, sem erro de console); `zip.spec.ts` faz o mesmo percurso por `file://` a partir do `index.html`; `item.spec.ts` abre `/preview/<id>/f1/`; `revistaPropria` espera "5 de 6" com `ponytail:` até a fase 3; sai o teste "Ctrl+→ dentro do F2". O Playwright inteiro roda numa stack isolada e a lista dos vermelhos esperados vai para este arquivo.
+- **Motivo:** cada página tem seu percurso; o zip é o que o usuário final abre, então ele repete o percurso por `file://`.
+- **Descartadas:** manter o teste "Ctrl+→" (F1 e F2 não dividem mais a página); preencher o infográfico no `revistaPropria` (a tela de edição só existe na fase 3).
+- **Arquivos afetados:** `app/e2e/tests/pagina.spec.ts`, `zip.spec.ts`, `item.spec.ts`, `helpers.ts`, brief da tarefa 7.
+- **Status:** ativa
+
+### D-248 — Gabaritos da revista com os dados reais do docx do infográfico (2026-11-10 19:30)
+- **Contexto:** na conferência no Firefox, o usuário achou as tabelas do F2 com pouca informação: o helper `dois_infograficos` usava dados curtos (só 5EF "I" e 9EF "A"), decididos na T5 porque o container só monta `./app`.
+- **Decisão:** os dados do docx real "AVALIAÇÃO E CURRÍCULO_LP_2026_AF_EM" (descritor D05, 12 marcas I I A A C A A A A A A A, 5 habilidades com as mesclagens 1-2EF, 3-5EF, 6-7EF, 8-9EF e 1-3EM, textos de clique ❶ a ❸, 4 itens com as análises do ❹) ficam em `app/nucleo/tests/dados/infografico-docx.json`; `dois_infograficos` lê dele; gabaritos (páginas e zip) regerados. Fora, sem campo no modelo: abertura, códigos dos itens, abertura e fechamento do ❹, legenda e "Agora é com você".
+- **Motivo:** escolha do usuário em 10/11; a conferência visual com dado real mostra a tabela como a revista vai sair.
+- **Descartadas:** `example/f2-gerado/dados.json` (diverge do docx: 3EM "R" e textos das habilidades com explicação pedagógica misturada); deixar os dados curtos até a fase 3.
+- **Arquivos afetados:** `app/nucleo/tests/dados/infografico-docx.json`, `app/nucleo/tests/test_preview.py`, `app/e2e/tests/pagina.spec.ts`, `zip.spec.ts`, `app/e2e/fixtures/pagina/*.html`, `revista.zip`.
+- **Status:** ativa. Limite: todo texto real cabe na caixa, então o gabarito não prova o corte com reticências do `foreignObject` (falta um caso de texto maior que a caixa).
+
+### D-249 — `integ/f2-gerado` entra na main só com as fases 1 a 4 (2026-11-10 21:00)
+- **Contexto:** a D-237 levava as fases 1 a 3 juntas para a `main`, mas a planilha e o "o que mudou" do impresso só ganham os infográficos na fase 4; sem ela, o time do impresso não vê o conteúdo novo do F2.
+- **Decisão:** a `integ/f2-gerado` só entra na `main` depois da fase 4 (fases 1 a 4 juntas). Substitui a D-237 só no escopo do merge: as citações "D-237" no código (`resolver.py`, `html.py`, `admin/revista.py`, `regras-de-negocio.md`) continuam marcando a entrada do infográfico no resolvido e no hash, no lugar do SVG.
+- **Motivo:** escolha do usuário em 10/11 (pergunta do planejamento da fase 3).
+- **Descartadas:** puxar a parte do impresso da fase 4 para a 3 (fase 3 maior, deploy mais cedo).
+- **Arquivos afetados:** `state.md`, `docs/superpowers/plans/2026-11-09-f2-fase-2.md`.
+- **Status:** ativa
+
+### D-250 — Conselho da fase 2: pendência do texto do clique e registro do deploy (2026-11-10 21:10)
+- **Contexto:** conselho de 5 analistas (Mínimo, Justificativa, Alternativas, Falha, Futuro leitor) sobre as decisões D-237 a D-248, pedido pelo usuário.
+- **Decisão:** veredito O4, unânime na rodada final (5×0; 3×2 O4×O5 na 1ª): registrar a D-249; nova falta da pendência `infografico` "o passo Habilidades/Progressão está ligado e falta o texto do clique" (`resolver.pendencias`), porque o `+` abriria um modal só com o título e passaria no "Validado" (o plano mestre pede "passo ligado sem dado" e a D-233 conta os textos ❶ a ❸ como dado); registrar a D-251.
+- **Motivo:** o modal vazio sai na web e no zip no deploy; a 0023 deixa ❷ e ❸ vazios nas revistas sem cópia dlg-p2/dlg-p3.
+- **Descartadas:** O5 (tirar já o parágrafo 156 de `tarefas-fechamento` e apagar as redundâncias `empacotar.py` `zip_pagina` e `f2.py:110/:118`) — só pesam no impresso (fase 4) ou são limpeza; ficaram como pergunta e pendência. O7 (preview com as URLs do zip) — recomendação para a fase 3.
+- **Arquivos afetados:** `servicos/resolver.py`, `tests/test_resolver.py` (`test_passo_ligado_sem_texto_do_clique`; `preencher_infograficos` com os textos), `docs/regras-de-negocio.md`.
+- **Status:** ativa
+
+### D-251 — Revista arquivada com foto antiga sai sem F2 no preview e no zip (2026-11-10 21:15)
+- **Contexto:** a foto de arquivamento de antes da D-237 não tem `infograficos`; a regra antiga (D-117) dizia que a arquivada "congela, mantendo SVG, capa, cópias e fotos". Levantado pela lente Falha do conselho da fase 2.
+- **Decisão:** essa revista sai só com sumário e F1 no preview e no zip, sem página F2 (`html.paginas`, `empacotar._imagens` com `.get("infograficos", [])`). Decisão registrada do que a fase 2 já fazia (plano da fase 2, linha 51).
+- **Motivo:** a foto não guarda o infográfico, e montar o F2 da foto antiga exigiria manter o render do SVG enviado, que sai na fase 4.
+- **Descartadas:** manter o SVG antigo até a fase 4 para essas revistas (dois renders do F2 em paralelo).
+- **Arquivos afetados:** `servicos/html.py`, `servicos/empacotar.py`.
+- **Status:** ativa
+
+### D-252 — Achados da auditoria: o que entra na fase 3 e o que fica para depois (2026-11-10 22:00)
+- **Contexto:** auditoria do código de 10/11 (só leitura) com 11 achados, consolidada com a revisão e o conselho da fase 2 num relatório de 40 achados por parte do código (https://claude.ai/artifact/2uF1hAkiZ5phNy1eqEaHYj).
+- **Decisão:** a T1 da fase 3 separa `pendencias_f1`/`pendencias_f2` (`servicos/pendencias.py`, `ids_faltando` fora do ciclo) e leva junto os itens rápidos: falha explícita em `planilhas.py:97`, `EtapaReferencial.EF2` em `cascata.py`, `assert` das 12 etapas em `f2.py:98` e os comentários de `empacotar.py:150`, `cortes.py:132` e `settings.py:105`. Ficam para depois: constante `ANO_DEMO` no E2E, helper `pode(user, modelo, acao)`, hash do resolvido persistido e painel paginado (antes de ~50 revistas ativas).
+- **Motivo:** recomendação aceita pelo usuário em 10/11 ("Gostei da sua recomendação"); a fase 3 vai mexer nas pendências, e os itens rápidos custam ~1 h.
+- **Descartadas:** fazer tudo do "fazer agora" antes da fase 3 (~8 h fora do caminho da fase).
+- **Arquivos afetados:** plano da fase 3; na T1, `servicos/resolver.py`, `servicos/pendencias.py` (novo), `planilhas.py`, `cascata.py`, `f2.py`, `empacotar.py`, `cortes.py`, `sistema/settings.py`.
+### D-233 — Docs alinhados ao código de 06/11, F2 novo registrado como planejado (2026-11-09 10:00)
+- **Contexto:** pedido do usuário: atualizar toda a documentação para a versão atual. Os docs foram alinhados em 05/11 11:30; depois entraram S6–S9 das telas B e D-209 a D-232, várias sem menção em doc nenhum.
+- **Decisão:** worktree `revista-express-docs`, branch `docs/atualizacao-2026-11-09` a partir de `integ/docs-atualizacao`; 3 subagentes com arquivos separados (raiz + docker/e2e; telas e fichas; regras, ER e variáveis). O F2 gerado (D-227 a D-232) entra nos docs só como "decidido, não implementado", com link para as specs. `DESIGN.md` ganha o aviso de "editor antigo", como o `PRODUCT.md`. `inventario.md`, `rascunho-ui.md`, `contrato.md` e `s17-*.proposto.md` ficam como estão: já são marcados como históricos.
+- **Motivo:** o código é a fonte da verdade; descrever como vigente o F2 novo enganaria quem lê.
+- **Descartadas:** reescrever os docs históricos — perde o retrato da época; apagar `DESIGN.md` — a skill impeccable o lê, e o aviso basta.
+- **Arquivos afetados:** `CLAUDE.md`, `README.md`, `INFRA.md`, `DESIGN.md`, `docs/docker.md`, `docs/e2e.md`, `docs/telas/**`, `docs/regras-de-negocio.md`, `docs/modelo-er.md`, `docs/variaveis.md`
+- **Status:** ativa
+
+### D-234 — Respostas às 5 perguntas da D-233: `workers: 1` fica, `.env.example` completo, comentários corrigidos (2026-11-09 11:00)
+- **Contexto:** 5 perguntas abertas na revisão dos docs (D-233).
+- **Decisão:** (1) `workers: 1` fica, com o motivo atual no `playwright.config.ts`: mesmo usuário em todos os specs (D-191) e o `anos.spec` abre e apaga 2027, o ano mais recente que as rotas `_inicio` e `/` mostrariam a outro spec no meio. (2) `app/.env.example` ganha `APP_PORT`, `APP_BIND` e `COMPOSE_PROJECT_NAME`. (3) Sai do `CLAUDE.md` a seção "Who is you?" (texto da skill frontend-design colado). (4) Comentários do login do admin (`usuarios.py`, `helpers.ts::entrar`) e do `limpar_e2e` (`playwright.config.ts`) atualizados. (5) Comentário do `Bloqueio` diz CASCADE do Django e NO ACTION no banco.
+- **Motivo:** respostas do usuário (2 a 5); a 1 foi recomendação minha, pedida por ele.
+- **Descartadas:** `workers: 2` — o ano 2027 do `anos.spec` vaza para os outros specs e a suíte fica instável sem ganho medido.
+- **Arquivos afetados:** `CLAUDE.md`, `app/.env.example`, `app/e2e/playwright.config.ts`, `app/e2e/tests/helpers.ts`, `app/nucleo/usuarios.py`, `app/nucleo/models/controle.py`, `docs/e2e.md`, `docs/regras-de-negocio.md`
+- **Status:** ativa. Achado à parte: `entrar()` confere o sucesso com `not.toHaveURL(/\/admin\/login\//)`, mas depois da D-212 o login falho fica em `/conta/entrar/`, então a conferência sempre passa.
+
+### D-246 — Banco sem ano: "Abrir ano" cria o primeiro ano vazio (2026-11-10 17:00)
+- **Contexto:** com o banco vazio, `abrir_ano` recusava ("nenhum ano anterior a X para copiar"), e a tela de anos nem mostrava o formulário; o 1º ano só nascia pela linha de comando (`carregar_cadastros`). O usuário apontou que não dá para abrir o primeiro ano.
+- **Decisão:** sem ano nenhum, `abrir_ano(ano)` cria só a linha do ano, sem cópia, e devolve `(novo, None)`; qualquer número de ano é aceito (não há "seguinte" sem anterior). A tela de anos mostra o formulário também sem ano; mensagem comum `VAZIO` ("Ano X aberto vazio: cadastre etapas, componentes e cores.") na tela, no admin e no comando. O ano seguinte copia desse normalmente. `carregar_cadastros` continua valendo. Substitui, em parte, D-148.
+- **Motivo:** escolha do usuário em 10/11 ("Vazio").
+- **Descartadas:** nascer com os cadastros padrão do `carregar_cadastros` (4 etapas, LP/MT, 5 cores; recomendada, recusada pelo usuário); manter a recusa (o 1º ano só pela linha de comando).
+- **Arquivos afetados:** `servicos/abrir_ano.py`, `urls/ui_anos.py`, `admin/cadastro.py`, `management/commands/abrir_ano.py`, `templates/ui/anos/anos.html`, `tests/test_abrir_ano.py`, `tests/test_ui_anos.py`, `docs/regras-de-negocio.md`.
+- **Status:** ativa. Limite: a tela B só edita cores existentes (`ui_anos.py`, paleta); as 5 cores do 1º ano vazio só se criam pelo admin ou pelo `carregar_cadastros`. Ano digitado errado no 1º ano (ex.: 20266) sai pela exclusão de ano.
+
+### D-253 — Tarefas num kanban.md, fora do state.md (2026-11-10 15:30)
+- **Contexto:** o usuário pediu uma skill que mantenha, em toda conversa, um quadro Backlog · Doing · Review · Done de todas as tarefas. O "Plano" do `state.md` duplicaria a lista e estava parado em S17 "← agora", sem as fases do F2.
+- **Decisão:** `kanban.md` na raiz é a lista única; o "Plano" do `state.md` só aponta para ele. Skill global `~/.claude/skills/kanban` (regras) + `kanban.py` (stdlib) que gera o `kanban.html` (fora do git) + hooks globais `SessionStart` (põe o quadro no contexto) e `PostToolUse` Write/Edit (regera o HTML). Doing com no máximo 1 card; Review = espera o usuário; Done = aprovado ou mergeado. Número D-253 porque D-247 a D-252 já estão em uso na `integ/f2-gerado`.
+- **Motivo:** escolhas do usuário (markdown + HTML, todos os projetos, kanban vira a lista). Skill sozinha não roda em toda sessão; o hook garante. Vai para a `main` por PR próprio, saído da `main`, para não carregar o F2 (D-249).
+- **Descartadas:** Artifact no claude.ai com banco (fora do repositório, depende do claude.ai); manter Plano e kanban juntos (as duas listas divergiriam); arrastar cards no HTML (exigiria servidor gravando o `.md`).
+- **Arquivos afetados:** `kanban.md`, `.gitignore`, `state.md`; fora do repo: `~/.claude/skills/kanban/`, `~/.claude/settings.json`, `~/.claude/CLAUDE.md`.
+- **Status:** ativa
+
+### D-254 — Plano da fase 3 do F2: tela dos infográficos em 6 tarefas (2026-11-10 23:00)
+- **Contexto:** pedido do usuário ("escreva o plano da fase 3"); fontes: mapa da fase 3 no plano da fase 2, D-250 a D-252 e o relatório da auditoria.
+- **Decisão:** plano `docs/superpowers/plans/2026-11-10-f2-fase-3.md`, aprovado pelo usuário: T0 suíte + plano; T1 `servicos/pendencias.py` (`pendencias_f1`/`pendencias_f2`) + itens rápidos da D-252; T2 regra de gravação em `nucleo/infografico.py` (`form_do_campo`, um campo por envio, nomes `inf-<pk>-…`) + `arquivos.receber_imagem_item`; T3 passo "Infográficos" na ficha da revista (um cartão por infográfico ativo, autosave + modal de impacto, grade fixa de 12 linhas, 4 itens) e a UI do SVG sai do passo Arquivos; T4 `criar_demo` com o JSON do docx (movido para `nucleo/dados/`), `revistaPropria` volta a "6 de 6" desligando os 3 passos e preenchendo a habilidade, `infografico.spec.ts` novo; T5 editor de templates F2, docs, revisão, merge na `integ/f2-gerado` com o ok. Cerca de 3 dias úteis.
+- **Motivo:** a pendência `infografico` só se resolve com a tela; a regra fica fora da view, como `nucleo/revista.py`, e toda gravação usa o protocolo `ui_autosave` que já trata bloqueio, conflito e impacto.
+- **Descartadas:** `quote()` no `src` da imagem (`f2.py:126`) — o upload grava com nome uuid, o gatilho "nome livre" não acontece; preview com as URLs do zip (O7) — a tela não cria chamador novo de `contexto_pagina`; imagem nomeada pelo sha256 (`preview.py:128`) — revista arquivada recusa POST, linha e foto não divergem (o `ponytail:` fica); `revistaPropria` preenchendo o infográfico inteiro — o spec novo cobre o preenchimento completo, o helper só precisa do mínimo para "6 de 6".
+- **Arquivos afetados:** `docs/superpowers/plans/2026-11-10-f2-fase-3.md`, `state.md`, `kanban.md`.
+- **Status:** ativa
+
+### D-255 — Fase 3 do F2 executada: decisões tomadas na execução (2026-11-11 00:30)
+- **Contexto:** execução do plano da D-254 com subagentes em paralelo (T1 e T2 juntas; demo e editor junto com a T3; E2E depois da T3), cada um numa worktree irmã com stack própria, mergeados na `feat/f2-f3`.
+- **Decisão:** (1) os chamadores importam `servicos/pendencias.py` direto, sem reexportar pelo `resolver` (a reexportação fecha um ciclo de import); (2) no passo "Infográficos", salvar um campo troca só a Situação e o upload da imagem troca também o passo (redesenhar o cartão a cada campo apagaria o campo seguinte); o bloco do passo desligado some por CSS `:has()` (o Alpine CSP não aceita objeto inline no `x-data`); a grade de 12 etapas é de Habilidades e Progressão juntas; (3) ordem dos passos da ficha: 1 Templates · 2 Infográficos · 3 Capa (`#arquivos`) · 4 Textos; o link "Baixar gabarito de ids" saiu da tela (a rota fica até a fase 4); (4) `criar_demo.preencher_infograficos` grava a imagem direto no storage com nome fixo (idempotente), não por `receber_imagem_item` (nome uuid deixaria cópia a cada execução), e o JSON do docx foi para `nucleo/dados/`; (5) achados da revisão aplicados: simulação do impacto sem render da página, permissão pela família do regex (`infografico.familia`), passo relê o infográfico, demo grava por `save()` (histórico), 3 testes do modal; (6) `infografico.spec.ts` para em "5 de 6": a matriz Demonstração não tem 2EF e nenhuma tela inclui etapa na matriz; o "6 de 6" com infográfico é coberto pelo `revistaPropria`.
+- **Motivo:** menor diff que mantém regra fora da view, autosave sem perder digitação e demo reexecutável.
+- **Descartadas:** trocar o cartão inteiro a cada campo (apaga o campo seguinte); `x-show` com objeto no `x-data` (build CSP recusa); post_delete para a imagem do infográfico na exclusão (fica como `ponytail:` em `exclusao.py`); trocar só o item no upload da imagem (fica como `ponytail:` em `ui_revista._infografico`).
+- **Arquivos afetados:** `servicos/pendencias.py`, `nucleo/infografico.py`, `servicos/arquivos.py`, `urls/ui_revista.py`, `templates/ui/parciais/revista_infograficos.html`, `static/ui/telas/revista.css`, `urls/painel.py`, `management/commands/criar_demo.py`, `nucleo/dados/infografico-docx.json`, `e2e/tests/helpers.ts`, `e2e/tests/infografico.spec.ts`, docs da ficha da revista, regras e `CLAUDE.md`.
+- **Status:** ativa
+
+### D-256 — Plano da fase 4 do F2: sai o SVG enviado, o impresso vê os textos dos infográficos (2026-11-11 10:00)
+- **Contexto:** a fase 3 tirou o upload do SVG da tela, mas colunas, sanitizador, gabarito e fixture continuam; o impresso ("o que mudou" e planilha F2) não vê os infográficos. Pela D-249 a `integ/f2-gerado` só vai para a `main` com esta fase.
+- **Decisão:** plano em `docs/superpowers/plans/2026-11-11-f2-fase-4.md` (T0 a T4; T1 e T2 em paralelo, T3 depois da T1). (1) o impresso vê só os textos dos infográficos: trocar a imagem de uma tarefa não deixa o impresso pendente (escolha do usuário em 11/11, mesma regra da D-118); (2) `f2.textos_impresso(inf)` é a fonte única dos textos do infográfico para o diff e a planilha; (3) toda revista já impressa com infográfico preenchido fica "pendente" uma vez (a foto antiga não tem `infograficos`): aviso no K-030; (4) a fixture `f2-lp.svg` vai por `git mv` para `example/f2-gerado/desenho-original.svg`; (5) a migração só tira colunas e constraints, os `f2/*.svg` órfãos do storage saem à mão no deploy (nota no K-030); (6) o 1º parágrafo do `tarefas-fechamento` (itens do D05 de LP) sai do seed e das cópias iguais ao seed; texto editado fica (escolha do usuário em 11/11).
+- **Motivo:** o merge na `main` depende do impresso ver o F2; manter dois caminhos do F2 dobra testes e telas; D-118 já separava arquivo (hash) de texto (impresso).
+- **Descartadas:** imagens dos itens no impresso ("Imagem trocada" no diff + imagens no zip das planilhas: ~2 h a mais, contra a D-118, recusada pelo usuário); fixture convertida em PNG (perde as medidas exatas citadas em `f2.py` e `f2.svg`); apagar os SVGs do storage dentro da migração (sem volta); deixar o parágrafo para a Pedagógica corrigir revista por revista.
+- **Arquivos afetados:** plano da fase 4; na execução, `models/revista.py`, migrações 0024 e 0025, `servicos/arquivos.py`, `nucleo/revista.py`, `admin/revista.py`, `urls/ui_revista.py`, `servicos/f2.py`, `servicos/resolver.py`, `urls/impresso.py`, `servicos/planilhas.py`, seeds F2, docs.
+- **Status:** ativa
+
+### D-257 — Fase 4 do F2 executada: decisões tomadas na execução (2026-11-11 12:30)
+- **Contexto:** T1 a T4 da fase 4 (D-256) executadas com subagentes em paralelo (worktrees `-t1`, `-t2`, `-t3`, `-t4a`); surgiram escolhas que o plano não fixava.
+- **Decisão:** (1) no "o que mudou" o grupo do infográfico é o título completo do `TipoInfografico` ("Avaliação e Currículo – Outras Etapas"); a aba da planilha é a parte depois de " – " ("Alfa", "Outras Etapas"), porque o título completo passa dos 31 caracteres do Excel; (2) os textos HTML do infográfico vão ao impresso por `texto.html_para_texto` (como as seções), não por `texto_puro`, para mudança de formatação aparecer no diff; (3) a 0025 passa o `template_versao` da cópia limpa para a versão nova só quando a cópia saiu da versão substituída: ela já tem a única mudança, e o aviso de seção desatualizada seria ruído; cópia de versão mais antiga continua apontando para ela (faltam outras mudanças); revista arquivada fica de fora (D-117); (4) o `defusedxml` fica no `requirements.txt` (comentado): o openpyxl o usa ao ler a planilha enviada; (5) as regras do `revista.css` com prefixo `f2-` ficam: o `f2.svg` gerado ainda as usa; (6) a falha do `ano.spec` no Playwright inteiro é ambiente: rodando só os specs de ano numa stack nova, as duas primeiras navegações depois de o servidor subir falham (`ERR_EMPTY_RESPONSE`/`ERR_CONNECTION_RESET`), seja qual for o spec.
+- **Motivo:** nomes curtos e únicos na planilha; uma regra só de texto puro no impresso; pendência sem falso positivo; segurança na leitura de xlsx.
+- **Descartadas:** grupo do diff só "Outras Etapas" (troca de 1 linha, fica para o usuário decidir); tirar o `defusedxml` (enfraquece a leitura do xlsx); manter o `template_versao` de toda cópia limpa (aviso falso em toda revista com cópia).
+- **Arquivos afetados:** `servicos/f2.py`, `servicos/resolver.py`, `urls/impresso.py`, `servicos/planilhas.py`, `migrations/0024_revista_sem_svg.py`, `migrations/0025_tarefas_fechamento_sem_lp.py`, `servicos/arquivos.py`, `requirements.txt`, testes, docs, learning `l-1ce96774` (substitui `l-705761ad`).
+- **Status:** ativa
+
+### D-258 — Ajustes do F2 depois da Demonstração (2026-11-11 15:30)
+- **Contexto:** o usuário abriu a Demonstração (stack `demo-f2`, `integ/f2-gerado` `b8a4563`) e apontou 7 problemas: (1) o cartão do tour repete o 1º parágrafo da abertura (`f2.py:159-162`; a regra do `intro` é de quando a abertura tinha uma frase, e a D-232 pôs os 4 parágrafos na página); (2) o modal ❶ mostra 7 parágrafos: a soma seção + campo é a regra, mas `nucleo/dados/infografico-docx.json` grava no `texto_descritor` os 4 parágrafos do docx em vez de só o 4º; (3) as caixas do cartão abrem na altura do texto todo (`field-sizing: content` em `ui.css`); (4) ❷ e ❸ trocados na tela e no impresso (copiados do docx; o tour gerado usa ❷ Habilidades, ❸ Progressão); (5) a tabela do referencial fica longe do texto das Habilidades; (6) o cartão não mostra quais textos do template entram em cada clique; (7) o `tarefas-fechamento` não aparece na web (plano da fase 2, linha 107: "só para o impresso").
+- **Decisão:** (escolhas do usuário em 11/11) o cartão do tour mostra só o título da abertura (substitui a regra do `intro` do plano da fase 2, linha 196); o `tarefas-fechamento` vai para a página, depois do infográfico, sem título, e some com o passo Tarefas desligado (substitui o "só para o impresso" da fase 2 e da D-232 nesse ponto); o cartão do infográfico mostra, por passo, os textos do template em uso (só leitura) com o link "Editar nesta revista" para o painel da seção; as caixas do cartão começam com 4 linhas e mostram o texto todo enquanto têm foco (só CSS). Além disso: o dado da demo fica só com o 4º parágrafo; rótulos ❷ Habilidades e ❸ Progressão na tela e no `textos_impresso`; a tabela do referencial passa para logo depois do ❷.
+- **Motivo:** tirar a repetição sem seção nova nem migração; o fechamento das tarefas compara os itens e por isso vem depois deles, como no docx; as seções valem para os 2 infográficos da revista, então editar no cartão confundiria; foco como "clique para aumentar" não pede JS.
+- **Descartadas:** seção nova "Cartão do tour" (seed, migração e impresso, ~meio dia); página sem o 1º parágrafo (leitura fora de ordem); fechamento das tarefas dentro do modal ❹ (vem antes de o leitor ver os itens); editar as seções dentro do cartão (a mudança vale para os 2 infográficos); só um aviso no passo; botão "Expandir" (JS) e só arrastar a borda.
+- **Arquivos afetados:** `servicos/f2.py`, `servicos/html.py`, `templates/revista/f2.html`, `nucleo/dados/infografico-docx.json`, `templates/ui/parciais/revista_infograficos.html`, parcial nova `revista_inf_template.html`, `urls/ui_revista.py`, `static/ui/telas/revista.css`, testes, gabaritos `e2e/fixtures/pagina/f2-*.html` e `revista.zip`, docs.
+- **Status:** ativa
+
+### D-259 — Ajustes do F2 executados: decisões tomadas na execução (2026-11-11 16:40)
+- **Contexto:** execução da D-258 (K-038) na `feat/f2-ajustes`, com revisão do `ecc:django-reviewer` (nenhum achado bloqueante nem importante, 9 menores).
+- **Decisão:** (1) o `svg-tour.js` fica intocado (D-227): o parágrafo vazio do cartão já some pela regra `.svg-tour__text:empty` que o próprio JS injeta; (2) o fechamento das tarefas usa a classe da abertura mais `f2-tarefas-fechamento` (margem em cima, no `_base.html`) e só aparece com corpo não vazio; (3) "Do template" mostra o Markdown cru com autoescape, numa região rolável com `tabindex="0"`, `role="region"` e `aria-label`; (4) o link "Editar nesta revista" é um link comum (recarrega a página com `?secao=`), sem `hx-get`; (5) o "Do template" só se atualiza ao recarregar a página: salvar uma seção troca só a lista e a Situação; (6) o texto de exemplo do `tarefas-fechamento` nos testes e no E2E passa de "Só no impresso." para "Compare os itens."; (7) as 2 falhas do Playwright inteiro (`ano.spec` e `anos.spec`, os primeiros specs depois de o servidor subir) são ambiente: repetidos com o servidor aquecido, os 14 testes de ano passam.
+- **Motivo:** contrato do `svg-tour.js` (D-227); acessibilidade por teclado; o painel `#secao` é trocado por HTMX de um jeito que o link do cartão não precisa repetir; re-renderizar o cartão ao salvar seção tiraria o foco e a edição em andamento.
+- **Descartadas:** esconder o texto no JS (contra a D-227); `hx-get` no link (swap do painel incerto, ganho pequeno); pôr `infograficos` nos pedaços do salvar seção (perde foco e edição no cartão).
+- **Arquivos afetados:** `templates/revista/_base.html`, `templates/revista/f2.html`, `templates/ui/parciais/revista_inf_template.html`, `tests/test_preview.py`, `tests/test_ui_revista.py`, `e2e/tests/templates.ts`.
+- **Status:** ativa
+
+### D-260 — K-030 por PR; bancos locais descartados e dev do zero (2026-11-11 17:10)
+- **Contexto:** antes de levar a `integ/f2-gerado` à `main`, o inventário dos bancos locais mostrou o dev na 0022 com dados de teste reais (PAEBES, SAEGO, SAESE; 7 revistas), os demais vazios, de teste ou já na 0025, e o volume Mongo do sistema antigo. O plano de migrar o dev (pg_dump + migrate) foi escrito e recusado pelo usuário.
+- **Decisão:** (escolhas do usuário em 11/11) a `integ/f2-gerado` entra na `main` por PR no GitHub com merge commit (ok explícito da D-231/D-249); nenhum dado dos bancos locais é necessário: saem todos os volumes Postgres deste sistema (dev, `demo-f2`, `f2-aj`, `f2-f2`, `revista-express-f2-f2`, `revista-express-f2-f3`, `etapa-projeto`) e o `revista-eletronica_mongo-dados`; o dev novo nasce no checkout `revista-express` na `main`, só com `migrate` + superusuário `admin` (sem `criar_demo`); as worktrees mergeadas `revista-express-f2-aj` e `revista-express-f2-f2` saem.
+- **Motivo:** os dados locais eram de teste; recomeçar do zero é mais simples que migrar e já exercita as migrações 0001 a 0025 num banco limpo.
+- **Descartadas:** migrar o dev 0022 → 0025 com backup (dados não fazem falta); manter o Mongo para a carga 2026 (o usuário preferiu apagar); dev com `criar_demo` (o usuário quer o banco vazio); merge direto na `main` (sem registro de PR).
+- **Arquivos afetados:** nenhum arquivo do código; volumes e containers docker locais; worktrees `revista-express-f2-aj` e `revista-express-f2-f2`.
+- **Status:** ativa
+
+### D-261 — Carga 2026: parceiros e cortes importados das planilhas (2026-11-12 11:00)
+- **Contexto:** o usuário pediu para cruzar `Somativas 2026.xlsx` (abas REDES_ESTADUAIS e REDES_MUNICIPAIS; colunas Subprograma, Disciplinas, Etapas para revista eletrônica) com `Cortes dos Padrões por Etapa e Parceiro.xlsx` e popular o banco de 2026. A planilha de cortes é idêntica à de 2025 do repositório (mesmo sha256).
+- **Decisão:** (1) novo comando `importar_cortes`, que cria os parceiros e grava os cortes que existem na planilha pela `gravar_cortes` (cascata, D-061): projeto, revistas e infográficos saem dela. (2) Linhas ALFA e regular do mesmo parceiro são **uma** revista por componente: o parceiro soma as etapas das linhas; só muda o F2 (Alfa se há corte no 2EF, Outras Etapas se há em outra, D-230). (3) Só entram as etapas cadastradas no ano (2EF, 5EF, 9EF, 3EM) e só LP e MT; as outras (4EF, 8EF, 2EM…) ficam para o K-034. (4) Nome do parceiro: sigla de UF para estado (GO, SC) e o nome da planilha de cortes para cidade (Florianópolis, JOINVILLE, PORTO ALEGRE, SALVADOR); cidades novas: Anchieta, Angra dos Reis, Belo Horizonte, Niterói, "Rio (município)". (5) Parceiro sem etapa padrão (Anchieta, Belo Horizonte, Niterói) nasce sem cortes. (6) Parceiro que já tem corte é pulado, porque `gravar_cortes` substitui todos: reexecutar não apaga o que a Pedagógica digitou. (7) Lacuna fica vazia, sem chute. (8) Subprograma não entra nas variáveis do projeto. (9) Substitui o item (1) da D-184.
+- **Motivo:** adiantar o trabalho da Pedagógica com o dado que já existe; a cascata já valida (D-055) e cria tudo, então o comando só lê e casa nomes.
+- **Descartadas:** digitar tudo na grade (D-184: o usuário agora quer o adiantamento); nome completo do estado (foge da planilha de cortes e dos 29 de 2025); preencher `nome_programa`/`sigla_programa` pelo Subprograma (fora do pedido, e ALFA e regular dividem o projeto); criar AM, BA e DF (só existem na planilha de 2025); gravar cortes de etapa que o parceiro não avalia em 2026 (MS 5EF e 9EF, RO 3EM).
+- **Arquivos afetados:** `app/nucleo/management/commands/importar_cortes.py`, `app/nucleo/tests/test_importar_cortes.py`
+- **Status:** ativa
+
+### D-262 — Bancos Docker das worktrees apagados (2026-11-12 13:10)
+- **Contexto:** depois da carga 2026 (K-032), o usuário pediu para eliminar as outras instâncias de banco das worktrees. Inventário: a `.env` da raiz fixa `COMPOSE_PROJECT_NAME=revista-eletronica`, então `revista-eletronica_pg-dados` é o dev da porta 8000; `carga2026_pg-dados` (122 MB, 33 parceiros e 148 cortes, usado na conferência) e `revista-express-carga-2026_pg-dados` (53 MB, 0 linhas, subiu sem querer porque o compose usou o nome da pasta) eram os únicos outros; 95 volumes anônimos e 30 imagens antigas.
+- **Decisão:** (escolhas do usuário) apagar as duas stacks com volumes (`down -v`) e as imagens `agent-*-app` (20), `revista-express-f2-f1/f2/f3-app`, `revista-prod-teste-app`, `revista-base-app`, `revista-e2e-app`, `revista-eletronica-api/editor` e as das duas stacks. Ficam o volume e a imagem do dev.
+- **Motivo:** a carga já está na `main` e se refaz em ~1 minuto; o resto era lixo de worktrees removidas.
+- **Descartadas:** apagar `revista-eletronica_pg-dados` (é o dev atual, com dados criados à mão; o usuário não marcou); `docker volume prune` nos 95 anônimos (nenhum dá para atribuir ao projeto, e há volumes de outros projetos no mesmo Docker).
+- **Arquivos afetados:** nenhum arquivo do código; containers, volumes e imagens locais.
+- **Status:** ativa
+
+### D-263 — Uma worktree fixa de trabalho, em vez de uma pasta por tarefa (2026-11-12 13:40)
+- **Contexto:** o usuário reclamou de uma pasta nova a cada worktree. Cada pasta sem `.env` subia o próprio projeto Docker: hoje isso criou um banco vazio e disputou a porta 8000 com o dev (D-262).
+- **Decisão:** (escolha do usuário, opção 1) existe uma worktree fixa, `../revista-express-trabalho`, com `.env` próprio (`COMPOSE_PROJECT_NAME=revista-express-trabalho`, `APP_PORT=8001`); a cada tarefa troca-se de branch nela, `git switch -c feat/<tema> integ/<tema>`; uma tarefa por vez; pasta extra só para trabalho paralelo com subagentes, apagada ao mesclar. A `main` continua intocada (D-226, D-231) e o merge nela só com o ok do usuário.
+- **Motivo:** uma pasta, um projeto Docker e um banco só; sem bancos soltos nem conflito de porta.
+- **Descartadas:** trabalhar com `git switch` na própria pasta da `main` (contraria a D-226 e põe a stack do dev sobre a branch da tarefa); worktree temporária por tarefa (continua criando e apagando pastas a cada vez); worktrees organizadas em `.claude/worktrees/` (as pastas continuam existindo).
+- **Arquivos afetados:** `CLAUDE.md`, pasta `revista-express-carga-2026` renomeada para `revista-express-trabalho`.
+- **Status:** ativa. Substitui a parte "uma worktree irmã por trabalho" da D-226 e da D-231.
+
+### D-264 — Dev da 8000 recriado do zero com a carga 2026 (2026-11-12 14:30)
+- **Contexto:** depois da carga no dev, o usuário viu que o banco misturava os dados antigos (parceiro SAESE com projeto, "Acre - Avalia Acre 2026") com a carga, e pediu para começar do zero.
+- **Decisão:** `docker compose down -v` na pasta da `main` (apaga o volume `revista-eletronica_pg-dados`), depois `migrate`, `carregar_cadastros --ano 2026`, `createsuperuser admin` e `importar_cortes`; nada além disso (sem usuários de papel, matrizes ou templates). Backup do estado anterior fora do repositório.
+- **Motivo:** pedido do usuário, "apenas" a carga 2026 no banco limpo; mesmo caminho da D-260 (só `migrate` + admin).
+- **Descartadas:** apagar só o projeto e os cortes do SAESE (o usuário recusou a exclusão parcial e pediu o zero); manter os usuários `root` e `admin` antigos (o zero os apaga; fica só o `admin` novo).
+- **Arquivos afetados:** nenhum arquivo do código; volume do dev e conteúdo de `app/media/` (ignorada pelo git; apagada pelo container, os arquivos eram do root).
+- **Status:** ativa
+
+### D-265 — Script que povoa o banco com a carga 2026 (2026-11-12 16:30)
+- **Contexto:** o usuário vai abrir a aplicação em outro computador e pediu um script para trazer "exatamente" o banco de agora (33 parceiros, 148 cortes, matriz Comunitária, 4 templates, `admin`).
+- **Decisão:** `scripts/povoar-banco-2026.sh` (bash + Docker) refaz o banco vazio pelos comandos já existentes (`migrate`, `carregar_cadastros`, `createsuperuser`, `importar_cortes`, `carregar_templates`, `importar_matriz`), com as fontes no repositório: `docs/fontes/2026/Somativas 2026.xlsx` (nova), a planilha de cortes e os 3 PDFs de `docs/fontes/2025`. A senha do `admin` vem de `ADMIN_SENHA` ou de prompt. Recusa banco que já tenha dados. Provado: rodado num projeto Docker descartável, o hash por tabela (ids e valores, sem datas) ficou igual ao do dev.
+- **Motivo:** a D-260/regra do projeto proíbe dump e segredo no git (o banco não é versionado); os dados da carga são todos reproduzíveis das fontes.
+- **Descartadas:** `pg_dump` commitado (leva o hash da senha do `admin`, histórico e usuários; contraria "nenhum segredo no repositório"); dump copiado à mão por pen drive (não fica no repositório e não se repete); script que lê o dev atual (dependeria do outro computador alcançar este banco).
+- **Arquivos afetados:** `scripts/povoar-banco-2026.sh`, `docs/fontes/2026/Somativas 2026.xlsx`, `README.md` (seção 1)
+- **Status:** ativa
+
+### D-266 — "Copiar de <ano>" só aparece se o ano anterior existe (2026-11-12 16:30)
+- **Contexto:** o usuário viu "Copiar de 2025" na aba Variáveis de um banco sem o ano 2025.
+- **Decisão:** a view manda `tem_anterior` (`planilha_variaveis.tem_ano_anterior`: existe `Ano` com ano-1); sem ele somem o botão e os forms escondidos do modo sem JS. Parceiro sem projeto no ano anterior, em banco que tem o ano anterior, continua com o botão e a mensagem "não há projeto do parceiro em <ano-1>".
+- **Motivo:** sem o ano anterior não há de onde copiar; o botão era ação que nunca funcionaria.
+- **Descartadas:** esconder o botão por parceiro sem projeto no ano anterior (uma consulta a mais por linha e esconde a mensagem que explica o motivo; o pedido era sobre o ano).
+- **Arquivos afetados:** `app/nucleo/planilha_variaveis.py`, `app/nucleo/urls/ui_variaveis.py`, `templates/ui/parciais/variaveis_linha.html`, `templates/ui/variaveis/pagina.html`, `tests/test_ui_variaveis.py`
+- **Status:** ativa
+
+### D-267 — DEBUG desligado no servidor da porta 8000 (2026-11-17)
+- **Contexto:** a usuária viu a página de erro detalhada do Django (CSRF, página velha no navegador; recarregar resolveu). O servidor da 8000 é aberto para a rede (`APP_BIND=0.0.0.0`) e mostrava configuração e rastros de erro para qualquer pessoa.
+- **Decisão:** `DJANGO_DEBUG=0` no `.env` da raiz (não versionado) e `collectstatic` para encher `app/staticfiles/`, que o `sistema/urls.py` serve sem DEBUG (D-214).
+- **Motivo:** muda só o `.env`, sem código; a chave própria já estava no `.env`, então o settings não recusa subir.
+- **Descartadas:** `runserver --insecure` — muda o Dockerfile/compose; trocar para Gunicorn (compose de produção) — maior que o pedido.
+- **Atenção:** CSS/JS alterado no checkout da 8000 só aparece depois de `docker compose run --rm app python manage.py collectstatic --noinput`. Para voltar: `DJANGO_DEBUG=1` no `.env` e `docker compose up -d app`.
+- **Arquivos afetados:** `.env` (fora do git), `app/staticfiles/` (ignorado)
+- **Status:** ~~substituída por D-268~~
+
+### D-268 — DEBUG religado no servidor da porta 8000 (2026-11-17), substitui D-267
+- **Contexto:** logo depois da D-267, o usuário pediu para voltar com o DEBUG.
+- **Decisão:** `DJANGO_DEBUG=1` no `.env` da raiz e app reiniciado. A pasta `app/staticfiles/` fica no disco, ignorada e sem uso com DEBUG.
+- **Motivo:** pedido do usuário; o servidor da 8000 é o dev e continua mostrando a página de erro detalhada para a rede.
+- **Descartadas:** manter DEBUG desligado — o usuário pediu para voltar.
+- **Arquivos afetados:** `.env` (fora do git)
+- **Status:** ativa
+
+### D-269 — Proposta de nova UI/UX (`feat/ux-proposta`) abandonada (2026-11-18)
+- **Contexto:** a demo da esteira de 5 fases (`example/ux-proposta/`, 12/11) foi enviada ao GitHub sem merge e esperava aprovação. Na branch ela levou os números D-267 e K-041, que na `main` já são outros (D-267 = DEBUG).
+- **Decisão:** a proposta não vira código. A branch `feat/ux-proposta` fica no GitHub como arquivo, sem merge e sem ser apagada.
+- **Motivo:** decisão do usuário em 18/11 ("vamos abandonar essa ideia"); o incômodo dele é a falta de componentização das telas atuais, não a navegação.
+- **Descartadas:** apagar a branch local e remota — o usuário escolheu manter; implementar as 5 fatias no Django — abandonado.
+- **Arquivos afetados:** nenhum na `main`
+- **Status:** ativa
+
+### D-270 — DaisyUI descartado; demo de componentização com django-cotton na página Projeto (2026-11-18)
+- **Contexto:** o usuário sente que "tudo parece solto" nas telas B. Medição: os componentes existem só como classes CSS (`class="btn` 117×, `card` 28×, `campo` 39×, `pagina-cab` 24× escritos à mão), sem unidade de template.
+- **Decisão:** demo na worktree de trabalho (`feat/cotton-demo`, saída de `integ/cotton`, porta 8001): `django-cotton` 2.9.0 no `requirements.txt` e no `INSTALLED_APPS`; 7 componentes em `app/nucleo/templates/cotton/` (`pagina_cab`, `card`, `campo`, `badge`, `botao`, `abas`, `aba`); `ui/projeto/projeto.html` reescrito com eles. Mesmo CSS, mesmas views, nenhum teste editado. É demo: nada commitado nem mesclado; adotar no sistema todo é decisão à parte.
+- **Motivo:** componente de template dá uma peça por componente sem build e sem trocar o visual; o cotton aceita conteúdo dentro da tag (slots), o que o `{% include %}` não faz.
+- **Descartadas:** DaisyUI — é classe CSS (não resolve o "solto"), exige Tailwind 4 e passo de build que o projeto não tem, e 7 nomes colidem com o `ui.css`; só `{% include %}` — sem slots, modal, card e campo ficam desajeitados; rota paralela ou cópia da página para a demo — a página real convertida na branch deixa os testes existentes provarem a equivalência; página Projetos · Lista (recomendada por mim) e Usuários · Lista — o usuário escolheu Projeto (detalhe).
+- **Achados técnicos:** props sem valor padrão no `<c-vars>` herdariam variável de mesmo nome do contexto da página, então toda prop tem padrão `""`; atributo condicional não vai solto na tag do componente: vira prop (`oculto="{% if … %}1{% endif %}"`); `{{ attrs }}` vazio deixava um espaço antes do `>` e quebrava 3 testes, resolvido com `{% if attrs.attrs_dict %}`; a ordem dos atributos da `<section>` segue a que o teste espera (`id`, `aria-labelledby`, `hidden`). O `card` usa a classe `pj-secao-cab`, que ainda mora em `telas/projeto.css`: ao adotar, ela sobe para o `ui.css`.
+- **Arquivos afetados:** (worktree de trabalho) `app/requirements.txt`, `app/sistema/settings.py`, `app/nucleo/templates/cotton/*.html`, `app/nucleo/templates/ui/projeto/projeto.html`
+- **Status:** ativa
+
+### D-271 — django-cotton adotado nas telas B: 6 componentes migrados em levas (2026-11-18)
+- **Contexto:** a demo da página Projeto (D-270, K-042) passou em tudo (suíte 901, E2E 2/2, capturas) e o usuário aprovou ("Deu certinho!"), pedindo o plano de migração dos componentes mais usados. Medição nos 75 templates de `templates/ui/`, fora a página Projeto: `btn` 115 usos em 45 arquivos, `badge` 47/23, `campo` 36/17, `pagina-cab` 23/23, `card` 21/19, `aviso` 19/15.
+- **Decisão:** migrar em 7 levas na `integ/cotton`, cada uma em `feat/cotton-<componente>`, com saída HTML idêntica e sem editar teste: 0 base (commit da demo, `.pj-secao-cab` sobe para o `ui.css` como `card-cab`, teste-catraca `test_componentes_cotton.py` que falha com marcação crua de componente já migrado), 1 `<c-pagina-cab>`, 2 `<c-campo>`, 3 `<c-badge>`, 4 `<c-aviso>` (novo), 5 `<c-card>` (prop `tag`), 6 `<c-botao>` (prop `icone`). Suíte Django inteira por leva; E2E inteiro depois das levas 2 e 6, rodado pelo usuário (credenciais). Medir o tempo da lista de projetos e do painel antes da leva 3 e depois das levas 3 e 6: piora acima de 20% devolve a classe crua dentro do laço.
+- **Motivo:** ordem do maior ganho e menor risco (cabeçalho e campo) para o maior volume (botão, que ganha pouco por uso); a catraca impede a marcação solta de voltar; cada leva é mesclável, dá para parar em qualquer uma.
+- **Descartadas:** migrar os 18 includes de `ui/_componentes/` — já são unidade de template, trocar `{% include %}` por `<c-…>` não muda nada; componentizar `mudo`, `link`, `acoes`, `tabela` — são utilitárias ou estrutura própria; migrar `templates/nucleo/`, `admin/` e `revista/` — admin do Django e revista publicada, fora das telas B; começar pelo botão por ser o mais usado — é o de menor ganho por uso e o de mais atributos dinâmicos (41 com tag Django).
+- **Arquivos afetados:** `app/nucleo/templates/ui/**` (≈60), `app/nucleo/templates/cotton/*.html`, `app/nucleo/static/ui/ui.css`, `app/nucleo/static/ui/telas/projeto.css`, `app/nucleo/tests/test_componentes_cotton.py`, `docs/telas/design-system.md`
+- **Status:** ativa
+
+### D-272 — Ícone e modal viram componentes cotton: `<c-icone>` e `<c-modal>` (2026-11-18)
+- **Contexto:** depois da D-271, o usuário pediu o plano dos dois candidatos seguintes. Medido em `templates/ui/`: 70 `<svg>` colados em 37 arquivos (30 desenhos distintos; 58 com a mesma tag, 7 só com traço 2.5), todos numa linha; 9 `<dialog class="dialogo">` em 7 arquivos, com abrir e fechar já genéricos em `static/ui/ui.js` (`data-abrir`, `data-fechar`).
+- **Decisão:** `<c-icone nome="…">` num arquivo só (`cotton/icone.html`: a tag `<svg>` uma vez e uma cadeia `{% if nome == … %}` com o miolo de cada desenho, dentro de `{% spaceless %}`; props `nome`, `espessura`, `class`). `<c-modal>` (`cotton/modal.html`: `<dialog class="dialogo">` com `id`, `aria-labelledby`, cabeçalho opcional por `titulo` e slot `descricao`, rodapé opcional pelo slot `rodape`). Duas unificações de desenho: a lixeira (dois desenhos quase iguais viram o de cantos em arco; muda o HTML de 5 ícones, diferença não visível a 16 px) e o alerta em círculo (`<line>` × `<path>` do mesmo desenho). Catraca para `<svg` e `<dialog class="dialogo` crus; teste de que todo `nome` usado existe.
+- **Motivo:** o ícone é a maior repetição das telas (linha de 200 caracteres copiada); o modal fixa a ligação `id` ↔ `aria-labelledby` e a ordem cabeçalho/rodapé. O tamanho do ícone já vem do CSS de quem contém, então não há prop de tamanho.
+- **Descartadas:** um arquivo por ícone (`cotton/icone/<nome>.html`) — 28 arquivos com a mesma tag `<svg>` repetida; sprite SVG com `<use>` — muda o HTML e o carregamento, fora do "mesma saída"; tirar o cabeçalho e o rodapé de `parciais/matriz_form.html` para o modal — o HTMX troca o `<form>` inteiro, eles precisam ficar dentro dele (esses 3 modais usam só a casca); converter o spinner `girando.html`, a alça de arrastar e o modal do item da tarefa — atributos condicionais ou desenho preenchido, ficam crus com motivo.
+- **Arquivos afetados:** `app/nucleo/templates/cotton/icone.html`, `app/nucleo/templates/cotton/modal.html`, `app/nucleo/templates/ui/**` (≈40), `app/nucleo/tests/test_componentes_cotton.py`, `docs/telas/design-system.md`
+- **Status:** ativa
+
+### D-273 — Botão só de ícone e link de voltar viram componentes: `<c-botao-icone>` e `<c-voltar>` (2026-11-18)
+- **Contexto:** itens 3 e 4 da lista de candidatos, pedidos pelo usuário enquanto a suíte do K-044 rodava. Medido já com os ícones convertidos: 11 `class="btn-icone"` sozinhos em 5 arquivos (7 links e 4 botões de envio, todos com `aria-label`, `data-dica` e um ícone dentro) e 15 `class="mudo voltar"` (13 links simples "‹ Texto" e 2 trilhas em `<nav>`).
+- **Decisão:** `<c-botao-icone icone rotulo dica href type class>` (usa o `<c-icone>` por dentro; `rotulo` vira `aria-label` e é cobrado por teste; os outros atributos saem entre o `href`/`type` e o `aria-label`, a ordem que os 11 já tinham) e `<c-voltar href>` (o sinal ‹ e as classes ficam no componente). Uma suíte Django só para as levas A a D e um E2E só para as quatro, por pedido do usuário.
+- **Motivo:** com o ícone já componente, o botão de ícone vira uma tag curta; o voltar é o mesmo link copiado em 11 telas.
+- **Descartadas:** converter os 2 botões de `parciais/matriz_tarefa.html` — são `<c-botao variante="ghost" class="btn-icone">`, outro visual (botão fantasma quadrado), já componente; componente para as 2 trilhas em `<nav>` (projeto e revista) — um ou dois níveis, sinais escondidos do leitor de tela e sublinhado próprio: 2 usos de formas diferentes não pagam um componente; unificar todos os "voltar" na trilha em `<nav>` — mudaria o visual de 13 telas, fica como pergunta em aberto.
+- **Arquivos afetados:** `app/nucleo/templates/cotton/botao_icone.html`, `app/nucleo/templates/cotton/voltar.html`, 16 templates de `app/nucleo/templates/ui/`, `app/nucleo/tests/test_componentes_cotton.py`, `docs/telas/design-system.md`
+- **Status:** ativa
+
+### D-274 — Controles de formulário viram componentes com o estado em props; classe dos widgets numa função (2026-11-18)
+- **Contexto:** item 5 da lista de componentes. 48 controles `input`/`select`/`textarea` escritos à mão; 30 deles com `{% if %}` na tag para erro (`aria-invalid`/`aria-describedby`) ou trava por permissão (`readonly`/`disabled`). Nas views, a regra "qual classe vai em qual widget" estava copiada em 4 laços e 5 pontos.
+- **Decisão:** `<c-input>`, `<c-select>` e `<c-textarea>` com as props `:erros`, `erro_id`, `:editavel` e `trava` (padrão `disabled`); 45 controles convertidos, 3 crus com motivo na catraca (`senha_definir`: autofocus só no 1º do laço; `cortes_grade` e `anos/ano`: aria-invalid e aria-describedby com condições diferentes). Views: `nucleo.widgets.classe_css(widget)` nos 9 pontos.
+- **Motivo:** o ganho está no estado: esquecer `aria-invalid` tira a borda vermelha e o anúncio; esquecer a trava deixa digitar o que o servidor recusa.
+- **Descartadas:** prop negativa (`:travado="not x"`) — o cotton não avalia `not` na prop dinâmica (fica sempre verdadeiro); por isso `editavel`, positiva. Função que recebe o form (o plano) — a função por widget serve também aos 5 pontos de um campo só; nome `classe` — colide com a variável local `classe` (modelo) de `ui_excluir.py`. Renderizar todo campo pelo form do Django — mexe em views e 16 telas, fora do escopo.
+- **Cuidado:** variável ausente do contexto em `:editavel` deixa o campo editável (o `{% if not x %}` antigo travava). Conferido: toda view que usa `pode_gravar`, `pode_textos`, `pode_infograficos` e `grade.pode_gravar` os manda. Variável ausente em `:erros` não acende o erro (certo).
+- **Arquivos afetados:** `app/nucleo/templates/cotton/input.html`, `select.html`, `textarea.html`, 20 templates de `app/nucleo/templates/ui/`, `app/nucleo/widgets.py`, `app/nucleo/urls/ui_{anos,excluir,matriz,projeto,revista,usuarios,variaveis}.py`, `app/nucleo/tests/test_componentes_cotton.py`, `app/nucleo/tests/test_widgets.py`, `docs/telas/design-system.md`
+- **Status:** ativa
+
+### D-275 — `ano.spec` cria o próprio parceiro; helper do painel espera o HTMX ligar (2026-11-18)
+- **Contexto:** o `ano.spec` falhava em 1280 px em quase toda rodada inteira e, sozinho, falhava sempre na 8002. Duas causas: (1) dependia de alguma revista de 2026 sem "Validado" para o contador existir, e a LP da demonstração estava validada (sozinho: o clique estourava 30 s); (2) o `entrar` volta assim que a URL muda, antes de o HTMX (`defer`) ligar a página, e o primeiro clique no painel não disparava a troca (rodada inteira: o form novo não aparecia em 5 s, só no primeiro projeto, com o cache vazio).
+- **Decisão:** o spec cria o parceiro "E2E Ano …" com `parceiroComProjeto` (a revista nasce sem "Validado") e abre o painel depois; `trocarCorpoPainel` (helper de `filtrarPainel` e `filtrarFalta`) espera o `domcontentloaded` antes de agir.
+- **Motivo:** spec não depende de dado que não criou (D-225); a espera no helper corrige todos os chamadores de uma vez.
+- **Descartadas:** desvalidar a revista da demonstração — dado que o spec não criou, e volta a quebrar quando alguém validar; espera dentro do `entrar` — muda o tempo de todos os specs, e o problema só aparece onde se clica em HTMX logo depois de entrar.
+- **Arquivos afetados:** `app/e2e/tests/ano.spec.ts`, `app/e2e/tests/helpers.ts`
+- **Status:** ativa
+
+### D-276 — Etapa não canônica nasce só apontando para uma canônica (2026-11-24 13:21)
+- **Contexto:** a equipe pedagógica explicou que há projetos que avaliam etapas não canônicas (tudo fora de 2EF, 5EF, 9EF e 3EM: 4EF, 6EF, 8EF…). Hoje não há tela para ligar essa etapa a um conteúdo. A branch `feat/etapa-do-projeto` (D-229 a D-231, K-034) permitia criar a etapa do projeto em branco ou por clone.
+- **Decisão:** (1) toda etapa não canônica de um projeto nasce obrigatoriamente apontando para uma etapa canônica já existente em alguma matriz; não existe mais etapa em branco. (2) Apontar é clonar com vínculo: a Pedagógica edita a cópia, e mudança na base abre a revisão em 3 vias, que bloqueia o Validado (como na D-229). (3) A base pode ser de qualquer matriz e de qualquer ano, mas só uma das 4 canônicas, do mesmo componente. (4) O botão de apontar aparece só para etapa não canônica; canônica que falta na matriz do parceiro segue como `corte_sem_matriz`, sem botão (a correção é trocar de matriz). (5) Quem aponta é a Pedagógica, pela tela. (6) "Canônica" vira uma constante com os 4 códigos, sem campo no banco.
+- **Motivo:** toda não canônica tem uma canônica de origem; em branco, a revista ficaria sem conteúdo e sem vínculo com a matriz.
+- **Descartadas:** etapa em branco — sem origem; só usar a canônica, sem cópia — a Pedagógica precisa acrescentar e tirar itens; limitar à matriz do parceiro — a base pode vir de outra; botão também para canônica faltando — criaria versão paralela de etapa da Comunitária; apontar pela planilha, na carga — o usuário quer a Pedagógica decidindo na tela.
+- **Arquivos afetados:** nenhum ainda (implementação nas etapas 2 a 10 do plano de 24/11); `.trail/learnings/2026-11-24-etapa-na-o-cano-nica-nasce-otavio.md`, `.trail/learnings/2026-11-24-etapa-cano-nica-que-falta-na-otavio.md`
+- **Status:** ativa (substitui em parte D-229 e D-230: sai o "em branco" e a base passa a ser só canônica)
+
+### D-277 — Superusuário cria, usuários editam; redesenho das telas fica por último (2026-11-24 13:21)
+- **Contexto:** o prazo de entrega está muito apertado, e o usuário já tem as planilhas com todos os parceiros, etapas e cortes. O redesenho no Figma (página "Testes") não tem os botões de criar projeto, matriz e template nem a atribuição de matriz.
+- **Decisão:** (1) criar matriz, criar template de texto, atribuir matriz e criar parceiro/projeto ficam com o superusuário (admin ou comando), fora da UI do dia a dia. (2) Os usuários editam: matriz, template, cortes do projeto, variáveis, textos, capa e infográficos. (3) Ordem do trabalho: carga, etapa do projeto no servidor, telas de apontar e de revisão no layout atual e, por último, o redesenho pelo Figma (menu Projetos · Modelos · Impresso).
+- **Motivo:** quanto menos os usuários tiverem de fazer, maior a chance de entregar no prazo.
+- **Descartadas:** redesenho antes da etapa do projeto — atrasa o que é imprescindível (apontar); desenhar o apontar direto no layout novo — só ficaria disponível depois do redesenho.
+- **Arquivos afetados:** nenhum ainda (a retirada dos botões é da etapa 11)
+- **Status:** ativa (substitui em parte D-189 e D-210: nem toda função do servidor tem controle na tela B)
+
+### D-278 — Carga 2026 cria as etapas não canônicas, preenche corte arbitrário e atribui a Comunitária (2026-11-24 13:21)
+- **Contexto:** a D-261 ignorava as etapas fora das 4 cadastradas, deixava vazio o corte sem dado e não atribuía matriz. Com a D-277, a carga deve deixar o máximo pronto.
+- **Decisão:** no `importar_cortes`: (1) a etapa que a Somativas pede e o ano não tem é criada (1EF e 2EF com escala 1000; as demais 500); (2) o corte que falta na planilha de cortes, canônica ou não, entra como "100, 200, 300", e o relatório lista cada um ("arbitrários …"); (3) `--matriz NOME` atribui a matriz a todo `parceiro_ano` sem matriz (o script usa Comunitária, inclusive para CE, Joinville e ES; o superusuário troca quando receber as matrizes deles); (4) a planilha de cortes de 2025 vale para 2026; (5) os bancos são refeitos do zero pelo script, então o comando continua pulando quem já tem corte. Com as planilhas reais: 33 parceiros, 7 etapas criadas, 232 cortes (148 da planilha, 84 arbitrários: 40 em etapa canônica e 44 em não canônica).
+- **Motivo:** o corte é o que diz ao sistema que o parceiro avalia a etapa; sem ele não nasce projeto nem revista. O valor é editável pela tela.
+- **Descartadas:** as 7 etapas no `carregar_cadastros` — `cadastrar()` dos testes é usado por boa parte da suíte, que conta com 4 etapas, e o importador cria só o que a planilha pede; projeto com etapa marcada e corte vazio — mudaria a cascata; completar cortes de parceiro que já tem corte — desnecessário com o banco refeito do zero.
+- **Arquivos afetados:** `app/nucleo/management/commands/importar_cortes.py`, `app/nucleo/tests/test_importar_cortes.py`, `scripts/povoar-banco-2026.sh`, `README.md`, `docs/regras-de-negocio.md`
+- **Status:** ativa (substitui os itens 3, 5 e 7 da D-261)
+
 ## Perguntas em aberto
-- [x] (D-229→D-230/D-231) Análise dos 3 agentes (06/11), consenso: comparação em 3 vias com foto da base em jsonb chaveada por código (o simple-history não serve: a reimportação recria ids); a soma foi descartada pelos 3; a pendência entra nas lacunas/hash e bloqueia o Validado; o modal de impacto lista os derivados via `_afetadas`; recusa item a item; sem fusão dentro do texto (D-115); base apagada vira cópia solta (SET NULL); a virada de ano não leva a etapa sozinha. Divergências para o Otavio: (1) dono = parceiro_ano × projeto; (2) o não tocado entra sozinho × pré-marcado e gravado só ao concluir; (3) clone de clone proibido × permitido; (4) só etapa que a matriz não tem × também sobrescrever etapa da matriz. Custo v1: 6 a 11 dias. Contraria em parte a D-051 (projeto não tem conteúdo próprio): exige decisão nova.
-- [x] (D-229→D-230/D-231) Como a mudança da base entra no clone: proposta do usuário em 06/11 = somar base nova + local e descartar duplicatas. Limite visto: soma não propaga remoção nem correção de texto (a versão velha fica ao lado da nova). Alternativa em discussão: comparação em 3 vias (base antiga × base nova × local); o que o local não tocou entra sozinho, só o que os dois mexeram vira pendência — depende de: Otavio
+- [x] (18/11, D-270) A demo do django-cotton convence? Se sim, adotar tela por tela (ordem sugerida: ícones, botão, campo, cabeçalho, card, modal) ou parar na demo — depende de: Otavio — respondida em 18/11: convence, adotar (D-271)
+- [x] (18/11, respondida pela D-270: DaisyUI descartado, demo com django-cotton) Adotar DaisyUI nas telas B? Análise: exige Tailwind 4 + passo de build (hoje não há nenhum), 7 classes do `ui.css` colidem de nome (`btn`, `badge`, `card`, `input`, `select`, `textarea`, `link`), 75 templates e 1.525 linhas de CSS a reescrever, e o `DESIGN.md` fixa a forma do preset shadcn. Recomendação: não adotar; se a queixa for visual, polir telas específicas no `ui.css` atual. Complemento (18/11): a queixa do usuário é componentização ("tudo parece solto"), e a medição confirma: os componentes são classes CSS, não unidades de template (`class="btn` 117×, `<svg` inline 70×, `campo` 39×, `card` 28×, `pagina-cab` 24×, `<dialog` 10× escritos à mão; 253 classes em `telas/*.css` contra 135 no `ui.css`; 209 de 337 classes usadas uma vez só). DaisyUI não resolve isso (também é classe CSS); o caminho proposto é componente de template (django-cotton ou `{% include %}`), piloto no `<dialog>` — depende de: Otavio
+- [x] (12/11, conferido: 0 de 95 são dados de Postgres, nada é banco deste projeto; seguem intocados por serem possivelmente de outros projetos) (D-262) Os 95 volumes anônimos do Docker podem ser apagados? — depende de: Otavio
+- [x] (D-264: dev recriado do zero, os dois parceiros saíram) (12/11) No dev da 8000: "SAESE" (8 cortes, 1 projeto) é o mesmo que "SE" da carga, e "Acre - Avalia Acre 2026" (0 cortes) o mesmo que "AC". Apagar/renomear? — depende de: Otavio
+- [x] (respondida em 24/11, D-278: valem para 2026; o que falta entra como "100, 200, 300"; Cód_Bizagi não importa) (D-261, 12/11) Os valores de `Cortes dos Padrões…xlsx` são os de 2025: valem para 2026? E os 40 cortes que faltam (RS, Angra dos Reis, Rio (município), SP, AL, RJ, TO, JOINVILLE 5EF, MG 3EM, PR 3EM)? Também: Cód_Bizagi 2332 repetido em Anchieta e Angra dos Reis, e SC listada nas duas abas — depende de: Pedagógica
+- [x] (D-260: nenhum dado é necessário; bancos apagados e dev do zero) (11/11, inventário dos bancos antes do K-030) Banco de dev `revista-eletronica_pg-dados` está na 0022 com dado real (PAEBES, SAEGO, SAESE; 7 revistas, 6 validadas; 10 infográficos; 6 SVGs enviados; 2 cópias F1). Ir para a 0025 pede pg_dump antes (0023 e 0025 não voltam; 0024 apaga as colunas do SVG). Depois do migrate: as 6 validadas mudam de hash e os 10 infográficos ficam com pendência até serem preenchidos. Os outros bancos locais são vazios ou de teste (f2-f2, f2-f3, etapa-projeto, revista-express-f2-f2 órfão) ou já estão na 0025 (demo-f2, f2-aj). A `feat/etapa-do-projeto` tem `0020_etapa_do_projeto`, que colide com a `0020_infograficos`: renumerar ao retomar o K-034. Migrar o dev agora ou recriá-lo? — depende de: Otavio
+- [x] (D-252) (10/11, auditoria do código) Quais itens do "fazer agora" entram e onde: `planilhas.py:97` falha explícita para componente sem layout; enum no lugar de "2EF" em `cascata.py` e assert nas 12 etapas de `f2.py`; constante `ANO_DEMO` no E2E (138 ocorrências de 2026); separar `pendencias_f1`/`pendencias_f2`; helper `pode(user, modelo, acao)` (48 checagens fora de `permissoes.py`). Depois: hash do resolvido persistido (o resolver roda por revista no painel, impacto, matriz, paleta e impresso; teto ~50 revistas) e painel paginado com poda de fotos — depende de: Otavio
+- [x] (D-256: sai do seed e das cópias iguais, migração 0025) (10/11, conselho da fase 2) O 1º parágrafo de `tarefas-fechamento` (seed `f2-lp.hbs`/`f2-mt.hbs` e migração 0023) fala dos itens do D05 de LP (tirinha, charge), contra o motivo da D-240. Tirar do seed e da 0023 antes da fase 4 (quando o impresso lê a seção)? — depende de: Otavio
+- [x] (D-249: deploy das fases 1 a 4 juntas) (09/11, plano da fase 2) A planilha e o "o que mudou" do impresso só ganham os infográficos na fase 4. Se as fases 1 a 3 forem para a `main` sem a 4, o impresso não vê o conteúdo novo do F2. Puxar a parte do impresso da fase 4 para a 3, ou deployar 1 a 4 juntas? Decidir antes da fase 3 — depende de: Otavio
+- [x] (D-237: opção A) (09/11, contra a D-236) Fase 2 sozinha na `main` trava o "Validado" e o zip de toda revista: as pendências novas do infográfico (habilidade vazia, passo ligado sem dado, item sem imagem) só se resolvem na tela da fase 3. Opções: (A) `integ/f2-gerado` entra na `main` só com as fases 1 a 3; (B) a fase 2 não cria pendência nova, e elas entram na fase 3 — depende de: Otavio
+- [ ] No banco de dev, SAESE LP (revista 3) e SAEGO LP (revista 13) estão com o "Validado" desatualizado: o hash gravado não bate com a revista resolvida, já com o código da `main` (visto em 06/11 ao testar a fase 1; não é efeito dela). Revalidar ou investigar o que mudou — depende de: Otavio
+- [x] (09/11: D-236 mantida; PR #7 fechado sem merge — fase 1 só vai à `main` com a fase 2, testadas juntas) PR #7 (`feat/f2-f1` → `main`) em conflito só no `state.md`: Estado atual, Próxima ação, D-233/D-234 (números usados nas duas branches), Perguntas em aberto e Sessões. Resolver na worktree `revista-express-f2-f1`, renumerando D-233/D-234 da F2 para D-237/D-238 (o código cita D-233 em 4 arquivos). E a D-236 diz que a fase 1 só entra na `main` junto com a fase 2: o PR #7 a substitui? — depende de: Otavio.
+- [ ] Migração 0020 existe nas duas frentes: `0020_infograficos` (`feat/f2-f1`, seguida de 0021 e 0022) e `0020_etapa_do_projeto` (`feat/etapa-do-projeto`). A frente que entrar na `main` depois renumera a sua e refaz a dependência — depende de: ordem dos merges (usuário).
+- [ ] Numeração de decisões colide entre branches: D-233 é "Docs alinhados" nesta branch (PR #6) e "Uma página por fascículo" em `feat/f2-f1`; D-229 a D-231 de `feat/etapa-do-projeto` são outras decisões na `main`. Renumerar na branch que entrar depois na `main` — depende de: ordem dos merges (usuário).
+- [ ] (D-234) `entrar()` em `e2e/tests/helpers.ts` não detecta login falho (confere `/admin/login/`, mas o login falho fica em `/conta/entrar/`). Trocar para ir direto a `/conta/entrar/` e conferir que saiu dela? Muda teste: rodar a suíte E2E — depende de: Otavio
+- [x] (D-234: sim) (D-233, 09/11) Comentários de código ainda falam do login do admin depois da D-212: `nucleo/usuarios.py` ("todo perfil entra pelo login do admin") e `e2e/tests/helpers.ts::entrar` ("Entra no admin", passa por `/admin/login/`, que redireciona). Corrigir? — depende de: Otavio
+- [x] (D-234: fica 1, motivo novo no comentário) (D-233, 09/11) Playwright: `workers: 1` ainda é preciso? O motivo escrito (D-191: painel, impresso e revista gravam a mesma revista DEMONSTRAÇÃO) caiu com a D-225, em que cada spec grava na própria revista — depende de: Otavio (medir a suíte com 2 workers?)
+- [x] (D-234: sim) (D-233, 09/11) `app/.env.example` não lista `APP_BIND`, `APP_PORT` nem `COMPOSE_PROJECT_NAME`. Acrescentar? — depende de: Otavio
+- [x] (D-234: sai) (D-233, 09/11) O `CLAUDE.md` do projeto termina com "### Who is you?" (texto da skill frontend-design colado). Fica ou sai? — depende de: Otavio
+- [x] (D-234: sim) (D-233, 09/11) A D-224 e o comentário de `playwright.config.ts` dizem que o `limpar_e2e` apaga parceiros e templates; ele apaga também matrizes "E2E …" (D-225). `docs/e2e.md` já segue o código; corrigir o comentário? — depende de: Otavio
 - [ ] F2 animado (pasta `example/infografico-animado`, analisado em 05/11): viável sem mudar banco nem SVG. Escolher a integração: (A) abertura animada que termina no estado do svg-tour atual, ou (B) substituir o svg-tour pelo player do exemplo (perde minimapa, zoom e modais prontos). Risco: o roteiro acha as peças pela ordem dos filhos no SVG; só existe 1 SVG real (os 80 em `media/f2` são cópias do fixture) — depende de: Otavio + design (o SVG de MT e de outros parceiros mantém a mesma árvore?)
 - [ ] Textos do tour do F2 (SAEGO LP, template "Padrão") trocados em relação ao desenho: o passo 3 do tour se chama "Progressão da habilidade", mas enquadra o bloco "Descrição das habilidades no referencial curricular"; o botão + desse bloco (`btn-action-p3`) abre o modal "Progressão…". O passo 2 ("Itens por ano/série", "percentual de acerto") enquadra a linha de progressão. Visto na demo de 05/11; vale também no sistema hoje — depende de: Pedagógica (corrigir o template ou os ids do SVG?)
 - [x] F2 animado, ideia corrigida em 05/11: a animação não é só abertura; cada passo do svg-tour toca a animação do seu bloco (a câmera é a do tour, e o conector "viaja" do descritor até o bloco durante o movimento). A demo `example/f2-animado-tour/` ainda é a versão "só abertura". Sem mudar o `svg-tour.js`: basta o evento `svgtour:change`. Decidido em 05/11: (a) passo já visto aparece pronto, sem tocar de novo; ~~(b) antes da visita o bloco fica esmaecido, e a visão geral mostra o desenho inteiro~~ (substituída em 05/11: o usuário viu o bloco esmaecido sumir e reaparecer ao entrar no passo, e o passo 3 esmaecido acima do passo 2; agora (b) o bloco não visitado fica escondido e a visão geral mostra só fundo e título).
-- [ ] F2 preenchido todo na interface (mapeamento de 06/11, agente; substitui a avaliação de 05/11): documento em `docs/superpowers/specs/2026-11-06-f2-na-interface-mapeamento.md`. Recomendação: SVG gerado pelo servidor (`revista/f2.svg` + `servicos/f2.py`, `<text>`/`<foreignObject>`), svg-tour mantido sem alteração; passos canônicos `abertura`, `descritor` (fixos), `habilidades`, `progressao`, `tarefas` (desligáveis por `Projeto.f2_passos_desligados`, gravado com o modal de impacto); dados novos `DescritorProgressao` e `RevistaF2Descritor`; sai o upload/sanitizador de SVG. Estimativa: 8 a 12 dias úteis (7 a 10 sem a animação por passo), fase 0 = protótipo de 1 dia. Riscos: referencial curricular sem planilha estruturada; texto longo não reflui no SVG; minimapa com `foreignObject`. Perguntas: lista final de passos (Pedagógica + Otavio); desligar por projeto ou por revista (Otavio); planilha do referencial 1EF–3EM LP/MT (Pedagógica); webfont (design); acertos/série histórica no web algum dia (Pedagógica) — depende de: Otavio decidir se faz a fase 0
-- [ ] F1 e F2 deixam de ficar na mesma página (vão ficar separados; aviso de 05/11, conversa em 06/11). Afeta: página única `revista/index.html` (D-156), o zip (D-159) e o início do F2 animado (deixa de precisar do `IntersectionObserver`) — depende de: conversa de 06/11
+- [ ] (09/11, D-239: a estrutura do Alfa é a mesma; resta só "o docx AF_EM é o Outras Etapas?", que decide qual infográfico recebe o conteúdo, não o código) F2 preenchido todo na interface (mapeamento de 06/11, agente; substitui a avaliação de 05/11): documento em `docs/superpowers/specs/2026-11-06-f2-na-interface-mapeamento.md`. Recomendação: SVG gerado pelo servidor (`revista/f2.svg` + `servicos/f2.py`, `<text>`/`<foreignObject>`), svg-tour mantido sem alteração; passos canônicos `abertura`, `descritor` (fixos), `habilidades`, `progressao`, `tarefas` (desligáveis por `Projeto.f2_passos_desligados`, gravado com o modal de impacto); dados novos `DescritorProgressao` e `RevistaF2Descritor`; sai o upload/sanitizador de SVG. Estimativa: 8 a 12 dias úteis (7 a 10 sem a animação por passo), fase 0 = protótipo de 1 dia. Riscos: referencial curricular sem planilha estruturada; texto longo não reflui no SVG; minimapa com `foreignObject`. Perguntas: lista final de passos (Pedagógica + Otavio); desligar por projeto ou por revista (Otavio); planilha do referencial 1EF–3EM LP/MT (Pedagógica); webfont (design); acertos/série histórica no web algum dia (Pedagógica) — depende de: Otavio decidir se faz a fase 0 · Atualização 06/11 17:40: D-228 (fase 0 aprovada) e D-229 (desligar por revista); campos do docx levantados em `2026-11-06-f2-campos-do-docx.md` com 5 perguntas novas (AI × AF_EM; abertura na web; modal das tarefas; arquivo de suporte; template do infográfico) — depende de: Otavio (2 e 3), Pedagógica (1 e 5), design (4) · 18:00: D-230 responde a pergunta 1 (Alfa × Outras Etapas). Novas: a estrutura do Alfa é a mesma (progressão 1EF–3EM, itens só do 2EF?); o docx "AF_EM" recebido traz um item do 2EF — é o "Outras Etapas"?; template F2 por tipo × componente? — depende de: Pedagógica · 18:40: D-232 responde 2 a 5; restam só as da Pedagógica (estrutura do Alfa; o docx AF_EM é o Outras Etapas?) e, minha, onde vão abertura e fechamento comuns do bloco ❹ — depende de: Pedagógica; Otavio (bloco ❹)
+- [x] (D-233) F1 e F2 deixam de ficar na mesma página (vão ficar separados; aviso de 05/11, conversa em 06/11). Afeta: página única `revista/index.html` (D-156), o zip (D-159) e o início do F2 animado (deixa de precisar do `IntersectionObserver`) — depende de: conversa de 06/11
 - [x] (D-225, 05/11) Specs que gravavam na matriz/revista DEMONSTRAÇÃO passaram a usar `matrizPropria` (cópia "E2E …" da Demonstração) e `revistaPropria` (parceiro com revista 6 de 6); `limpar_e2e` apaga também matrizes "E2E …". Suíte inteira 164/164 numa stack isolada, sem sobra.
 - [ ] Versões 2 a 8 do template "Padrão (F1)" LP 2026 (texto "Atualizado E2E…", de 03 e 04/11) continuam no banco de dev. A v9 já tem o texto limpo; a v8 é a base das cópias da introdução de SAESE LP e SAEGO LP. Versão só sai com o template (D-207). Apagar as v2–v7 por fora da tela, ou deixar como histórico? — depende de: Otavio
 - [ ] Editor de templates (`editor-secoes.js`, Salvar explícito) ainda usa o aviso nativo ao sair com alteração; levar o diálogo do D-223 para ele? — depende de: Otavio
@@ -1905,7 +2304,7 @@ Etapa do projeto: ao retomar, abrir o commit WIP da tarefa 5 em `feat/etapa-do-p
 - [x] (05/11: usuário mandou corrigir; Agente D) (regras de negócio, seção 10.1) `docs/modelo-er.md` está desatualizado em dois pontos: o bloqueio é tomado pelo mesmo usuário, não pela mesma sessão (D-191); a foto guarda a revista resolvida inteira e roda em READ COMMITTED (D-151/D-153/D-178). Corrigir? — depende de: usuário
 - [ ] (regras de negócio) O admin ainda pede o checkbox "afeta N revistas" sempre que há revista afetada; as telas B só avisam quando alguma perde o Validado (D-202). Igualar? — depende de: usuário
 - [ ] (regras de negócio 10.1, divergência 4, D-055) O limite do corte é o `Etapa.escala_max` de cada etapa (código: `models/cadastro.py:60`, `servicos/cascata.py:38`) ou os valores fixos 1000/500 da D-055? Se for o `escala_max`, reescrever a D-055 — depende de: usuário
-- [ ] (regras de negócio 10.1, divergências 8–10) Corrigir 3 comentários de código desatualizados (`permissoes.py:14`, `permissoes.py:17`, `models/controle.py:18`), sem mudar comportamento? — depende de: usuário
+- [x] (D-234: sim) (regras de negócio 10.1, divergência 10) Corrigir o comentário de `models/controle.py:18` ("CASCADE"; no banco a FK é NO ACTION), sem mudar comportamento? Os 2 de `permissoes.py` já foram trocados na D-218/D-220 (conferido em 09/11) — depende de: usuário
 - [ ] `.env.example` da raiz ainda é do sistema antigo (`SESSION_SECRET`, `ADMIN_EMAIL`); o certo é `app/.env.example`. Apagar ou substituir? — depende de: usuário
 - [x] (D-211, fechado) (S9) O perfil Admin pode redefinir a senha de um usuário Impresso e entrar como ele, ganhando `marcar_impressa` (anula `ADMIN_MARCA_IMPRESSA = False`). Furo já existia no admin. Fechar com `pode_editar` em `nucleo/usuarios.py` exigindo alvo sem grupo fora dos permitidos? — depende de: usuário
 - [x] (D-213; apagados em 05/11 a pedido do usuário) `api/.env`, `contrato/`, `escala.html`, `script.js`, `styles.css`, `descritores.json`, `saida/` e o `.env.example` da raiz
@@ -1960,7 +2359,7 @@ Etapa do projeto: ao retomar, abrir o commit WIP da tarefa 5 em `feat/etapa-do-p
 - [x] (D-088 a D-094) Revisão do ER, negócio: valor revertido faz o "Validado" voltar sozinho (hash) — aceitável?; projeto readicionado (D-068) herda a última foto do arquivado?; reimportar matriz (D-071) recria ids e perde auditoria por registro — depende de: usuário
 - [x] (D-088 a D-094) Escolha de matriz/texto-modelo mora no Projeto (D-084), mas projetos não são clonados (D-085): em 2027 o CE renasceria sem a matriz CE. Onde guardar a escolha por parceiro × ano para sobreviver ao clone? — depende de: sessão de modelagem (é o desafio do PDF v2)
 - [ ] Intervalo mínimo e cor sobrescritos não têm `versao_base`: mudança no padrão não avisa o projeto que sobrescreveu. Precisa? — depende de: usuário
-- [ ] Admin pode clicar "Revista Impressa Atualizada"? (D-083 dá ao admin as permissões da Pedagógica, não as do Impresso) — depende de: usuário
+- [x] (D-220: sim) Admin pode clicar "Revista Impressa Atualizada"? (D-083 dá ao admin as permissões da Pedagógica, não as do Impresso) — depende de: usuário
 - [x] (D-062) Textos da revista: modelo comum + edição por projeto com "diff tipo git". Proposta do Claude: sobrescrita por bloco, guardando a versão do modelo usada; se o modelo mudar, avisar e mostrar o diff, sem fusão automática — depende de: usuário
 - [x] Propostas 1, 2, 5, 6 da revisão `make-interfaces-feel-better` aplicadas (D-040). Pendentes: 3 (`:active` do botão), 4 (feedback de toque), 7–10 — depende de: usuário
 - [ ] Alternativa de exibição (régua proporcional ou lista por padrão) — só se a equipe pedagógica quiser; recomendação foi manter a régua.
@@ -1971,11 +2370,63 @@ Etapa do projeto: ao retomar, abrir o commit WIP da tarefa 5 em `feat/etapa-do-p
 - [ ] Lista real de perfis e matriz papel × ação (tabela da seção 9 do PDF de modelagem) — depende de: usuário
 - [ ] Onde guardar o status "aplicado no impresso" (cada modelo terá a própria tabela de histórico) e o formato do marcador de padrão sobrescrito — depende de: sessão de modelagem
 - [ ] Migrar `api/` (Express + Mongo) para Django + PostgreSQL, mantendo o React de `editor/`? Motivos do usuário (2026-10-26): herança entre projetos, templates de escala por parceiro (com parentesco entre si), auth/perfis mais fortes (uso amplo todo ano), auditoria de mudanças de texto para avisar a equipe do impresso; equipe já sabe Django. Proposta de modelo apresentada, sem decisão — herança viva decidida (D-045); depende de: usuário confirmar a regra de conflito (sobrescrita local do filho vence ou o pai vence?)
+- [ ] (18/11, D-271) Quais componentes cotton vêm depois? Candidatos medidos: ícone SVG (70 usos, 30 desenhos distintos, o mais repetido 10 vezes), botão de ícone `btn-icone` (13), modal `dialogo` (10), trilha/voltar (15), controles `input`/`select`/`textarea` (48), tabela (43), título de seção (19) — depende de: Otavio — itens 1 a 4 feitos (D-272, D-273); resta o item 5 (controles) e as avaliações de tabela e título de seção
+- [ ] (18/11, D-273) Unificar os dois jeitos de "voltar" (link simples em 13 telas × trilha em `<nav>` em 2, a mais acessível)? Muda o visual das 13 — depende de: Otavio
 
 ## Sessões
+### 2026-11-12
+- Análise das duas planilhas: 33 parceiros únicos, 148 cortes casam, 40 faltam; a de cortes é a de 2025 (D-261).
+- Worktree `revista-express-carga-2026` (`feat/carga-2026` ← `integ/carga-2026` ← `main`); comando `importar_cortes` e teste (2 OK); carga real conferida num banco isolado.
+- Usuário conferiu na porta 8001 e autorizou o merge direto na `main` (K-032 em Done). Pediu a limpeza dos bancos das outras worktrees (K-039).
+- K-039 feito: duas stacks e 30 imagens antigas apagadas; dev intacto (D-262).
+- D-263: uma worktree fixa de trabalho (opção 1 do usuário); `CLAUDE.md` atualizado.
+- Botão "Copiar de <ano>" some sem ano anterior (D-266, commit `1282dd3`); script `scripts/povoar-banco-2026.sh` escrito e provado idêntico ao dev (D-265).
+- README: seção "Povoar um banco novo com a carga de 2026" (o que o script cria, atributos `ADMIN_SENHA`, `COMPOSE_PROJECT_NAME`, `APP_PORT`/`APP_BIND`, regras e limites).
+- D-264: dev da 8000 apagado e recriado só com a carga 2026 (33 parceiros, 148 cortes); `app/media/` esvaziada (168 arquivos órfãos).
+- Dev: `carregar_templates --ano 2026` (4 templates) e `importar_matriz --ano 2026 --nome Comunitária` com os 3 PDFs de `docs/fontes/2025` (198 descritores, como no roteiro S17).
+- Carga 2026 rodada no dev da 8000 (`importar_cortes --usuario root`, simulação antes): 35 parceiros, 156 cortes. Volumes: só o do dev é banco; os 95 anônimos não são Postgres (critério: `PG_VERSION` + tabela `parceiro_ano` no catálogo, validado no volume do dev).
+
+### 2026-11-10
+- Tarefa 3 planejada: 8 lacunas do brief fechadas (D-242); briefs 3, 4 e 5 ajustados.
+- Tarefa 3 implementada (6b6685a), revisada (aprovada com 7 Minor) e corrigida (906b427); prova visual conferida.
+- Tarefa 4 implementada (bf9cdd7), revisada (1 Important + 5 Minor) e corrigida (4e16fae).
+- Conselho da tarefa 4: O3 unânime (D-243); mudança e O4 (docs, ponytail) aplicadas; suíte 862 OK.
+- Tarefa 5 planejada com os chamadores (D-244), implementada (e5d8805), revisada (2 Important + 5 Minor) e corrigida (15740f2); prova visual conferida.
+
+### 2026-11-09
+- Retomada da fase 2 do F2. Antes: relatório da fase 1 julgado pela doutrina dos agentes (degraus, análise sóbria, meta-análise). Nada apagável no código da fase 1.
+- Achado: a premissa da D-236 cai. A fase 2 cria pendências por infográfico (habilidade vazia etc.), e `servicos/validacao.py:43` recusa o "Validado" e `empacotar.py:101` recusa o zip com pendência; sem a tela da fase 3, ninguém as resolve. Usuário escolheu A: D-237.
+- Suíte da fase 1 rodada de novo: 833 OK, 8 pulados; `makemigrations --check` limpo.
+- Plano da fase 2 escrito e aprovado (`docs/superpowers/plans/2026-11-09-f2-fase-2.md`, 7 tarefas, 4 a 5 dias), com o mapa do que fica para a fase 3. D-238 (ids do template F2 na fase 2) e D-239 (desenho = SVG em uso; Alfa = mesma estrutura).
+- Worktree `/home/otavio.peres/dev/revista-express-f2-f2` (`feat/f2-f2`, saída de `feat/f2-f1`) e stack `f2-f2` criadas; tarefa 0 concluída.
+- Tarefa 1 concluída e revisada (434c4cd..3fb2dda; 843 OK). D-240 (fechamento das tarefas só genérico), confirmada pelo usuário.
+- Tarefa 2 concluída e revisada (36232e7..03403f0): `f2.svg` fiel ao desenho; PNGs aprovados (letra por etapa, botão ❶ laranja). D-241: botão + e modal `dlg-tarefas` para o clique ❹. Tarefa 3 interrompida para encaixar a D-241.
+- Ajuste da D-241 (2aa1ecc): seção `dlg-tarefas` e botão `f2-btn-action-tarefas`; 846 OK; re-revisão aprovada. Tarefa 3 retomada e parada de novo a pedido do usuário, sem deixar código. Sessão encerrada aqui; o usuário segue depois.
+- Learnings da sessão commitados com o ok do usuário: deploy só com as fases 1 a 3 e template F2 com seções fixas; botões dos cliques ❶–❹ e `localize off` no `f2.svg`.
+### 2026-11-06 19:00
+- Fase 1 do plano do F2 gerado iniciada com subagentes (superpowers:subagent-driven-development): branch `integ/f2-gerado` saída da `main`, worktree `/home/otavio.peres/dev/revista-express-f2-f1` (`feat/f2-f1`), stack docker `-p f2-f1`.
+- D-233 registrada (páginas separadas, dados na tela B, animação por último). D-234: tarefa usada por item impede exclusão e reimportação (achado na leitura: a reimportação apaga os descritores e quebraria com `PROTECT`).
+- Tarefas 1 e 2 da fase 1 concluídas e revisadas (esquema; cascata + 0022). Tarefa 3 (D-234) parada: o usuário corrigiu que o item do infográfico não usa tarefa da matriz. D-235 substitui a D-234; o item ganha descritor, etapa, imagem e análise próprios.
+- Revisão final da fase 1 (`ecc:django-reviewer`): 0 críticos; correções aplicadas numa leva (teste do hash agora prova algo, teste da revista arquivada que volta, `2EF` sem diferenciar maiúsculas, comentários) e re-revisadas.
+- Verificação final: 833 OK, 8 pulados; régua ok. Cópia do banco de dev migrada até a 0022 na stack `f2-f1`: cada revista ativa ganhou os infográficos que os cortes pedem; nenhum hash mudou (SAESE LP e SAEGO LP já estavam fora do "Validado" antes).
+- Commits da leva: 23d00d0, 660c806 (esquema, permissões), bf27df1 (cascata + 0022), 79a4e19 (item, D-235), f942878 (correções da revisão), bd41a90 (learning), e este `state.md`.
+- Usuário escolheu o merge local: `feat/f2-f1` → `integ/f2-gerado` por fast-forward; suíte rodada de novo na `integ/f2-gerado`.
+- D-236: a fase 1 entra na `main` só junto com a fase 2 (decisão do usuário).
+### 2026-11-09 10:00
+- D-234: respostas às 5 perguntas aplicadas (comentários, `.env.example`, `CLAUDE.md`); achado: `entrar()` do E2E não detecta login falho.
+- D-233: atualização dos docs em `../revista-express-docs` (branch `docs/atualizacao-2026-11-09`, intermediária `integ/docs-atualizacao`); 3 subagentes em paralelo; `DESIGN.md` marcado como do editor antigo.
+
 ### 2026-11-06 14:30
 - Agente de mapeamento disparado: F2 preenchido todo na interface sobre um template único de passos fixos, com passos desligáveis por projeto (tempo e tecnologia). Saída em `docs/superpowers/specs/2026-11-06-f2-na-interface-mapeamento.md`.
 - D-227: usuário aprovou a direção do mapeamento.
+- Fase 0 disparada: plano escrito em modo de plano e aprovado (protótipo estático em `example/f2-gerado/`, sem Django; tour reaproveitado de `example/f2-animado-tour/f2/` por caminho relativo; Playwright do checkout principal via `NODE_PATH`; 5 critérios de "serve": zoom/pan, minimapa, texto longo, passo desligado, acessibilidade mínima). Branch `feat/f2-fase0`.
+- Fase 0 entregue (subagente + verificação minha): `example/f2-gerado/` com `dados.json`, `gerar.py` (`--check`, `--desligar`), `verificar.cjs` (17/17 OK), `LEIA-ME.md` com veredito proposto "SVG gerado serve". Ajustes que o protótipo revelou: o minimapa remove `class` do `<svg>` clonado (`svg-tour.js:559`), então o CSS interno não pode depender de classe na raiz; o stage do svg-tour tem `user-select:none`, e `user-select:text` nos divs do `foreignObject` libera a seleção sem atrapalhar o arrasto. Pendente de olho humano: bloco de habilidades mais alto que o stage em `minScale` 1,6 (ancora e pede arrasto); minimapa pequeno; Safari/Firefox. Título do modal de habilidades corrigido (o seed trazia "Progressão…").
+- D-228: usuário aprovou a fase 0 ("a navegação em si está funcionando"; estilos a caprichar depois, com o design).
+- D-229: desligar passos do F2 é por revista. Recebido o docx "AVALIAÇÃO E CURRÍCULO_LP_2026_AF_EM" que a Pedagógica manda ao impresso; convertido com anydoc para levantar os campos que o F2 precisa.
+- Levantamento dos campos do docx em `docs/superpowers/specs/2026-11-06-f2-campos-do-docx.md` (13 campos; 6 diferenças em relação ao mapeamento: o descritor tem modal, abertura de 4 parágrafos, marca vem da tabela ❷, habilidade destacada não é um Descritor do banco, tarefas com 2 arquivos e análise por item, fechamento com link para o template do infográfico); fonte convertida em `docs/fontes/2026/`. Ponto estrutural: no F2 o conteúdo específico é da revista, não do template.
+- D-230: até 2 infográficos F2 por revista (Alfa ⇔ cortes no 2EF; Outras Etapas ⇔ cortes em outra etapa), derivados pela cascata; passos desligados passam a ser por infográfico.
+- D-231: usuário autorizou o merge na `main` por mim, mediante "ok" explícito a cada leva; primeiro ok dado às 18:20 e `integ/f2-interface` mergeada.
+- D-232: abertura também na web; 4 modais (um por item); imagem única do item montada pelo design; "Agora é com você" só texto, sem link.
 - Mapeamento concluído e commitado em `docs/f2-mapeamento`; pergunta em aberto do F2 reescrita com o resultado; branch mergeada em `integ/f2-interface` (merge na `main` é do usuário).
 - Regra nova do usuário (D-226): toda modificação em worktree própria com branch própria; merge em `integ/<tema>` só depois de testado; o merge na `main` é do usuário. Worktree desta sessão: `/home/otavio.peres/dev/revista-express-f2` (`docs/f2-mapeamento` ← `integ/f2-interface` ← `main`).
 ### 2026-10-07
@@ -2385,21 +2836,92 @@ Etapa do projeto: ao retomar, abrir o commit WIP da tarefa 5 em `feat/etapa-do-p
 - Decisão (b) revista: bloco não visitado fica escondido, não esmaecido. Demo ajustada (sem o estado "fantasma"); conferido no navegador: na visão geral os 4 blocos estão escondidos; no passo 2, o bloco do passo 3 continua escondido.
 - Bug de enquadramento na demo do F2 corrigido: com os blocos escondidos desde o início, os passos 2 e 3 enquadravam o título e o descritor (219%). Causa: o tour mede a caixa do alvo (`getBBox`) ao trocar de passo, e as peças escondidas com escala 0 contavam como um ponto perto da origem, esticando a caixa até o canto superior esquerdo. Correção: em repouso a peça fica escondida só por opacidade; o deslocamento e a escala entram no 1º quadro da animação. Conferido: enquadramento dos 4 passos igual ao da versão sem animação.
 - Usuário aprovou a demo ("ficou bom pra caramba"). Commit e push da pasta `example/` (exemplo original + demo) e de 2 aprendizados do trail (opacity !important do tour; esconder só por opacidade por causa do enquadramento).
+- Tarefa 6 do F2 gerado: imagens dos itens no preview e no zip, zip sem SVG, arquivada conferida pelo sha da foto por item (D-245; fdfecd3); revisão aprovada com 4 minors corrigidos (NUL → 404, testes de login/403/nome parcial; 0e6918a); prova: 8 imagens carregam no revista.zip por file://. Suíte 883 OK, 8 pulados.
+- Tarefa 7: Playwright inteiro na stack isolada `e2e-f2`: 155 OK; vermelhos esperados até a fase 3 (travam no "Validado" pela pendência `infografico`): `impacto.spec.ts`, `impresso.spec.ts`, `painel.spec.ts`, `revista-textos.spec.ts` (nos 2 projetos); `templates-admin` e `templates-editor` corrigidos para o F2 de 9 seções (8598596); `ano.spec.ts` instável no chromium (3/3 OK ao repetir). Gabaritos com os dados do docx real (D-248, 12b0b72). Conferência à mão no Firefox (zoom, minimapa, textos do `foreignObject`, tabela cheia): OK pelo usuário; Safari não conferido (sem Mac).
+- Revisão da fase 2: Aprovado com ressalvas (2 Important, 7 Minor); correção em andamento. Usuário aprovou ("ok"): migração 0023 fica como está (apaga as cópias fora das 9 seções também em arquivada; só ganha comentário no cabeçalho); stack `e2e-f2` fica de pé até rodar de novo os specs com app depois da correção.
+- Fase 2 do F2 gerado concluída: correção da revisão da fase (c33ae68: hash sem código/texto de etapa com Habilidades desligado, docs da main, código morto, teste da página F2 de arquivada); 0023 comentada (da8ac04); merge fast-forward de `feat/f2-f2` na `integ/f2-gerado` com o ok do usuário; stack `e2e-f2` derrubada com o volume.
+- Conselho da fase 2 (5 analistas): O4 unânime — D-249 (deploy 1 a 4), D-250 (pendência do texto do clique), D-251 (arquivada antiga sem F2); T0 da fase 3 aplicada e mergeada (fast-forward) na `integ/f2-gerado`; suíte 885 OK. Auditoria do código (só leitura): 11 achados, riscos de escala no resolver por revista e no painel; itens "fazer agora" aguardam decisão.
+- D-252 commitada na `integ/f2-gerado` (fast-forward da `feat/f2-f2`). Fora desta branch, já na `main` (PRs #8 a #11): kanban (D-253), limpeza de worktrees e Docker; a worktree `f2-f1` foi apagada.
 
-### 2026-11-06
-- Retomada das pendências: decisão aberta sobre F1 e F2 separados (mesmo zip ou dois zips).
-- Acesso ao app de dev (192.168.5.39:8000) para 3 máquinas da 192.168.4.x (.163, .166, .172): o Django não filtra por IP de quem acessa; o filtro é o firewall. Porta publicada pelo Docker passa por fora do ufw, então a regra vai na cadeia `DOCKER-USER` (libera os 3 IPs, descarta o resto que chega pela `eno1`), e só depois `APP_BIND=0.0.0.0` no `.env`. Pendente: o usuário rodar os comandos com sudo e testar de uma das máquinas.
-- Acesso pelos 3 IPs revertido a pedido do usuário: as 3 regras de ACCEPT na `DOCKER-USER` saem com `iptables -F DOCKER-USER` (a cadeia só tinha elas; o DROP nunca foi aplicado). Com `APP_BIND=0.0.0.0` no `.env` e sem DROP, a rede inteira alcança o dev com DEBUG: recomendado comentar o `APP_BIND` de novo.
-- Usuário confirmou acesso funcionando ("Agora sim!") com `DOCKER-USER` vazia e `APP_BIND=0.0.0.0` (conferido: 302 em 127.0.0.1 e em 192.168.5.39). Estado: o dev com DEBUG está aberto à rede inteira, não só aos 3 IPs. Pendente: decidir entre restringir aos 3 (DROP + ACCEPT na `DOCKER-USER`) ou manter aberto.
-- Brainstorming das anotações do usuário (texto + 4 páginas do caderno): fascículos variáveis por parceiro, etapa clonada no projeto, F2 editável, usabilidade por perfil, regras de negócio em texto, e-mail ao validar. Agrupadas em 5 blocos; aguardando prioridade.
-- D-229: etapa clonada mantém vínculo com a base; mudança na base vira pendência obrigatória com comparação estilo git.
-- 3 agentes disparados para analisar a etapa clonada (dados Django/PostgreSQL, produto e regras de negócio, versionamento de conteúdo); cada um propõe arquitetura e regras, só leitura.
-- 3 agentes concluíram: consenso em 3 vias + foto da base; 4 divergências levadas ao usuário.
-- D-230: usuário escolheu dono = projeto, não tocado pré-marcado, sem cadeia, só etapa que a matriz não tem.
-- Documento do bloco 2 escrito em docs/superpowers/specs/2026-11-06-etapa-do-projeto-design.md; revisor (builder check) rodando. Correção: só existe 1 projeto ativo por parceiro_ano (UNIQUE projeto_um_ativo_por_parceiro_ano), então dono=projeto quase equivale a parceiro_ano; a diferença aparece quando a cascata arquiva e recria o projeto.
-- D-231: projeto recriado herda a etapa; matriz que ganha a etapa vira pendência de escolha. Documento pronto para aprovação.
-- Documento da etapa do projeto aprovado pelo usuário; próximo: plano de implementação (writing-plans).
-- Plano de implementação escrito: docs/superpowers/plans/2026-11-06-etapa-do-projeto.md (12 tarefas, TDD, commit por tarefa). Aguarda escolha do modo de execução.
-- Merge da `main` (4e91d33, F2) nesta branch: D-226/227/228 desta frente renumeradas para D-229/230/231 (a main já usava D-226 para o fluxo git e D-227 para o F2). Branch intermediária `integ/etapa-do-projeto` criada. Tarefa 2 de 12 (foto e criar, commit be332fa) aprovada na revisão.
-- Tarefas 3 e 4 de 12 concluídas e revisadas (motor de 3 vias; resolver, pendências e impacto, com correção para base de outro ano). Decisão na tarefa 4: tarefa fora da escala da etapa nova só recebe marca no editor (a pendência `corte_invalido` não confere tarefas); a spec §4.1 será corrigida na tarefa 12.
-- Execução interrompida a pedido do usuário durante a tarefa 5: trabalho parcial commitado como WIP em `feat/etapa-do-projeto`; nada mergeado na `main`.
+### 2026-11-09 19:20
+- Fora do repositório: agente `minimalista`, agente `conselheiro` e skill `/conselho` criados em `~/.claude` (mantidos como estão, sem comandante via Workflow).
+- Diagnóstico do travamento da máquina às 11:05: sem OOM nem carga; suspeita sem prova no driver NVIDIA; SysRq sugerido para o próximo travamento.
+- PR #6 aberto: `integ/docs-atualizacao` → `main`; conflitos do `trail check` justificados como falsos positivos.
+- Inventário de branches: além da `main`, só 3 frentes vivas (`integ/docs-atualizacao`, `feat/f2-f1` só local, `feat/etapa-do-projeto` com WIP); colisão de numeração D-xxx registrada nas Perguntas em aberto.
+- PR #6 mergeado na `main` (`0622996`) sem os 3 últimos commits da branch; `feat/f2-f1` confirmada no remoto.
+- PR #7 (fase 1 do F2) fechado sem merge: D-236 mantida pelo usuário (fase 1 e 2 testadas juntas antes da `main`).
+- D-246: banco sem ano — "Abrir ano" cria o 1º ano vazio (tela, admin e comando), na `fix/abrir-ano-vazio` a partir da `main`.
+- `fix/abrir-ano-vazio` mergeada (fast-forward) na `integ/abrir-ano`, criada a partir da `main`; suíte 806 OK, 8 pulados.
+
+### 2026-11-10 15:30
+- D-253: skill `kanban` (global) e `kanban.md`; "Plano" migrado para cards. Branch `chore/kanban` saída da `main` para o PR não levar o F2.
+- Raio-x das worktrees (87): 78 mergeadas e limpas apagadas (44 com arquivos do root, apagadas por container); `.env` do Express antigo guardados fora do repo; checkout da `main` mantido. Sobram 9: `main`, `f2-f1`, `f2-f2`, `ano-vazio`, `docs`, `etapa` (14 commits fora de tudo), `s7` (só `graft/` solto), `revista-eletronica` (`django`, 07/10) e um destacado do S07.
+- PRs mergeados na `main` com o ok do usuário: #8 (`integ/abrir-ano`, D-246) e #9 (`integ/docs-atualizacao`, conflito do `state.md` resolvido mantendo as duas sessões). Em seguida, o PR da `chore/kanban`.
+- `feat/etapa-do-projeto` fica parada por decisão do usuário (K-034 volta ao Backlog como pausada); branch e worktree `revista-express-etapa` intocadas.
+- Pastas sobressalentes apagadas: `revista-express-ano-vazio`, `revista-express-docs` e as 2 últimas worktrees de agente (s7; S07 solto, guardado na branch local `arquivo/s07-agente`). Ficam 5 worktrees: `revista-eletronica` (tem o `.git`), `main`, `etapa` (pausada), `f2-f1`, `f2-f2`. Stacks Docker das worktrees apagadas continuam de pé (ano-vazio rodando; agent-*, uibchk, revista-e2e paradas).
+- Docker: 15 stacks das worktrees apagadas derrubadas (agent-*, ano-vazio, uibchk, revista-e2e) com 20 volumes de banco; ficam as stacks/volumes de `revista-eletronica` (dev), `f2-f1`, `f2-f2`, `revista-express-f2-*` e `etapa-projeto`. 94 volumes anônimos soltos (sem dono identificável) não foram tocados.
+- PR com a pausa da etapa do projeto (K-034), a limpeza de worktrees e Docker e o learning "branch que vai sozinha para a main sai da main".
+- Learning: limpeza de worktree com arquivos do root termina por container; stacks Docker saem à parte (PR #11).
+
+### 2026-11-10 23:00
+- Plano da fase 3 escrito e aprovado (D-254): 6 tarefas, ~3 dias úteis; 3 itens da auditoria ficam fora (quote, URLs do zip no preview, imagem por sha256).
+
+### 2026-11-11 00:30
+- Fase 3 executada com subagentes em paralelo (worktrees `-t1`, `-t2`, `-t4a`, `-t3`, `-t4b`, cada uma com stack própria): T1 `b6347c4`, T2 `a38c1f4`, demo `4675875`, editor `6352867`, T3 `96c37d8`, docs `6784825`, revisão `9b2406d`, E2E `2e69443`. D-255.
+- Revisão `ecc:django-reviewer`: nenhum achado bloqueante; 7 de 8 aplicados, 1 virou `ponytail:`.
+- Verificação final: Django 910 OK; Playwright 169/170 (`ano.spec` chromium: conexão recusada no servidor recém-subido, não código).
+- Learnings: pendências em módulo próprio (`42c1fdd`); autosave do cartão do infográfico (`ad14cb3`).
+- Com o ok do usuário: `feat/f2-f3` mergeada na `integ/f2-gerado` por fast-forward; worktree `revista-express-f2-f3` e stack `f2-f3` apagadas; K-028 em Done.
+
+### 2026-11-11 10:00
+- Plano da fase 4 escrito e aprovado (D-256); worktree `revista-express-f2-f4` criada a partir da `integ/f2-gerado`.
+- Fase 4 executada: T1 `23f2236`, T2 `9328d04`, T3 `3a5e734` + `bfff9d5`, docs `de4a67e`, achados da revisão `97ed363`. D-257.
+- Revisão `ecc:django-reviewer`: nenhum achado bloqueante nem importante; 2 menores aplicados.
+- Verificação final: Django 894 OK; Playwright 169/170 (`ano.spec`, ambiente, confirmado numa stack nova).
+- Com o ok do usuário: `feat/f2-f4` mergeada na `integ/f2-gerado` por fast-forward; worktree `revista-express-f2-f4` e stack `f2-f4` apagadas; K-029 em Done.
+
+### 2026-11-11 15:30
+- Demonstração no ar na stack `demo-f2` (só app + db; os outros bancos parados, volumes mantidos). O usuário apontou 7 problemas do F2; plano aprovado (D-258, K-038); worktree `revista-express-f2-aj` (`feat/f2-ajustes`) criada.
+- K-038 executado: T1 preview, T2 cartão, T3 docs; revisão `ecc:django-reviewer` sem achado bloqueante (4 menores aplicados, D-259); Playwright 170/170 (2 specs de ano repetidos com o servidor aquecido). Usuário pediu levar tudo à `main` depois (K-030) e deu o ok para commitar e mergear na `integ/f2-gerado`.
+- Inventário dos bancos locais (antes do K-030): só o de dev tem dado real e está na 0022; demais vazios, de teste ou já na 0025. O `revista-eletronica-db-1` foi recriado e ligado às 15:31 a partir da worktree `f2-aj`, por comando não identificado; continua na 0022, sem parceiro E2E.
+- Usuário decidiu descartar todos os bancos locais e recomeçar o dev do zero; K-030 por PR (D-260).
+- PR #12 (`integ/f2-gerado` → `main`) aberto e mergeado com o ok do usuário; K-030 em Done.
+- Limpeza com o ok do usuário: worktrees `f2-aj`, `f2-f2` e `revista-express-etapa` removidas (branch da etapa preservada), pastas `revista-express-f2-f1`, `revista-express-f2-f3` e `revista-django` apagadas; todos os bancos locais apagados; dev novo do zero (`migrate` até a 0025 + `admin`) no checkout `revista-express` na `main`. Commit do kanban na `main` autorizado pelo usuário.
+
+### 2026-11-17
+- Erro CSRF de uma usuária no login: página de login velha no navegador; recarregar resolveu, sem mudança de código.
+- DEBUG desligado no servidor da 8000 (D-267): login 200, CSS 200, 404 sem detalhe.
+- DEBUG religado a pedido do usuário (D-268): login 200 e o 404 volta a mostrar a página de debug.
+- Stack da 8000 derrubada (`docker compose down`, sem `-v`) e subida de novo a pedido do usuário: login 200, banco preservado (34 parceiros).
+
+### 2026-11-18
+- Análise de viabilidade do DaisyUI nas telas B (sem código): recomendação de não adotar; pergunta em aberto registrada.
+- Proposta de nova UI/UX (`feat/ux-proposta`) abandonada pelo usuário; branch mantida sem merge (D-269).
+- Demo do django-cotton na página Projeto (D-270, K-042): 7 componentes, template reescrito, 52 testes de projeto e suíte inteira (901) OK na worktree de trabalho; E2E e capturas esperam um usuário com perfil na 8001.
+- K-042 verificado: E2E `projeto.spec.ts` 2/2 na 8001 e capturas das 5 abas, rodados pelo usuário (a criação do usuário de teste `e2e` por mim foi negada pela permissão do ambiente; não contornei). Card em Review.
+- Demo aprovada pelo usuário; K-042 em Done. Plano da migração aprovado (D-271, K-043): 7 levas na `integ/cotton`.
+- K-043, levas 0 a 4 na `integ/cotton` (suíte 910 OK). Achado: `cotton/aba.html` e `cotton/botao.html` tinham sido quebrados por um formatador depois do E2E da demo e entraram assim no commit `ed5349e`; corrigidos na leva 0 (`060fbd8`), com teste que trava a saída de cada componente. Desvios do plano: uma suíte só para as levas 3 e 4; E2E inteiro movido para depois da leva 4; custo de render medido em laço de 1.000 no container (o banco da 8001 só tem a demonstração). Ano 2025 vazio criado na 8001 para o E2E.
+- K-043, levas 5 e 6 e a doc na `integ/cotton` (`7bd03af` e seguinte; suíte 910 OK): card 15 convertidos e 6 crus (o card é o próprio form); botão 88 convertidos e 16 crus em 12 arquivos. Botão sem `type` ganhou `type="submit"` explícito e a ordem `type`/`class` mudou em alguns; nenhum teste Django dependia disso. Falha do `ano.spec` no E2E das levas 1 a 4 é de dado (revista LP da demonstração validada pelo usuário às 14h23), não da migração. K-043 em Review.
+- K-043: E2E inteiro final rodado pelo usuário (149 passaram, 20 pulados, 1 falha de dado conhecida) e capturas de 8 telas conferidas. Falta o "ok" para a `main`.
+- "ok" do usuário: `integ/cotton` mesclada na `main` por fast-forward (`7011933`); imagem do app da 8000 reconstruída; K-043 em Done. Lista de próximos componentes entregue (pergunta em aberto).
+- Plano de `<c-icone>` e `<c-modal>` aprovado (D-272, K-044); execução na `integ/cotton-2`.
+- K-044: levas A a D commitadas (`feat/cotton-voltar`); plano dos itens 3 e 4 aprovado (D-273). 403 de CSRF no login da 8001 relatado pelo usuário: causa é o cookie de `localhost` dividido entre as portas 8000 e 8001 (aba com token antigo); o login com página recém-carregada funciona; orientação: 8001 por `127.0.0.1`. Modais reais são 8, não 9 (uma ocorrência era comentário).
+- K-044: suíte 916 OK e levas A a D na `integ/cotton-2` (`72f76cf`). Máquina reiniciada às 15h44: scratchpad apagado e stacks paradas antes de o E2E rodar; scripts do E2E recriados e stack da 8001 no ar de novo (banco de demonstração intacto). A stack da 8000 segue parada.
+- Causa de bug achada (erro meu): o `rodar-e2e.sh` criava um link `app/e2e/node_modules` na worktree; `git add -A` da leva 5 o commitou (`7ec3a37`), porque a regra `node_modules/` do `app/.gitignore` só cobre pasta; o merge na `main` trocou a pasta real por um link para ele mesmo e o E2E parou de achar o Playwright. Correção `735564d` na `integ/cotton-2`: link fora do índice, regra sem a barra, `npm ci` na worktree de trabalho; os scripts do E2E não criam mais link.
+- E2E inteiro das levas A a D (16h15): 147 passaram, 20 pulados, 3 falharam: `ano.spec` 1280 (dado, conhecida) e duas novas no `painel.spec`, cada uma numa largura só e passando na outra (`:150` em 1280, `:126` em 1440). As duas param no helper `trocarCorpoPainel`, na segunda ação seguida a uma troca do HTMX (o form novo não aparece em 5 s). Sem erro 500 no log; custo do `<c-icone>` medido em 50 a 75 µs por uso. Hipótese, ainda não provada: corrida do helper (clique antes de o HTMX ligar o conteúdo recém-trocado). Capturas das 8 telas conferidas (ícones e botões de ícone no lugar).
+- A pedido do usuário, a worktree de trabalho mudou de porta: `APP_PORT=8002` no `.env` dela (arquivo local, fora do git). O banco não tem porta no host (o compose não publica o Postgres), então não havia o que mudar nele. Scripts do E2E apontados para a 8002.
+- Os dois ambientes no ar (8000 e 8002). O app da 8000 não subia por uma edição sem commit no `docker-compose.yml` da main (`@db:5532`, das 16h19): a porta interna do Postgres é sempre 5432; desfeita. Repetição do `painel.spec` (`--repeat-each=3`): 20 execuções, 20 passaram, incluindo 5 de cada um dos dois testes que tinham falhado; a rodada parou antes das 4 últimas e sem o resumo. Conclusão: as duas falhas do E2E inteiro são intermitentes (rodada feita logo depois de reiniciar a máquina), não regressão das levas A a D. K-044 em Review.
+- "Aprovado, pode mergear": `integ/cotton-2` mesclada na `main` por fast-forward (`735564d`); `npm ci` em `app/e2e` da main (o link quebrado saiu com o merge); K-044 em Done.
+- Porta da worktree de trabalho corrigida na documentação a pedido do usuário: `CLAUDE.md` e `docs/docker.md` passam de `APP_PORT=8001` para `8002` (mesclado direto na `main`; o `.env` da worktree já estava em 8002). Decisões antigas do `state.md` que citam a 8001 ficam como estão (histórico).
+- Plano do item 5 aprovado (D-274, K-045). Leva E (`e1c8eb6`, 45 controles em `<c-input>`/`<c-select>`/`<c-textarea>`, 3 crus) e leva F (`9f8b742`, `classe_css`) mescladas na `integ/cotton-3` (`1f53d75`) antes da suíte inteira (desvio da regra "merge só com testes verdes": rodei só os testes dos componentes e de usuários antes).
+- Suíte 918 OK. E2E inteiro na 8002 (rodado por mim, com o `root`): 169 passaram, 0 pulados, 1 falha no `ano.spec` 1280 (`trocarCorpoPainel`, o form novo não apareceu em 5 s). Sozinho, ele falha 6 de 6 por dado (LP da demonstração validada às 17h23, sem o contador "Validado"). HTML do painel com o template da `main` e com o da `integ/cotton-3`: idêntico. Criados no banco da 8002 os usuários de teste `e2e` e `imp-e2e` (senhas só no scratchpad).
+- "Junte tudo e commite na main" (usuário): `integ/cotton-3` mesclada na `main` por fast-forward; K-045 em Done. Capturas das 3 telas do plano não feitas.
+- Push da `main` (`e4dfd3a`) a pedido do usuário. Correção do `ano.spec` (D-275, K-046) na `feat/ano-spec`: `ano.spec` + `painel.spec` ×3 nas duas larguras, 30/30 (antes 6 falhas em 6 sozinho).
+- E2E inteiro com a correção: 170 passaram, 0 falhas, 0 pulados. "Após os testes darem certo pode mergear na main e fazer o push" (usuário): `integ/ano-spec` mesclada na `main` e enviada; K-046 em Done.
+- Capturas das 3 telas do D-274 na 8002 (form com erro, ficha da revista sem permissão, editor de template em leitura): borda vermelha nos campos com erro, 57 de 57 controles travados na ficha, editor todo em leitura. Vistas pelo usuário.
+
+### 2026-11-24 10:00
+- Levantamento da `feat/etapa-do-projeto` (4 de 12 tarefas, 160 commits atrás da `main`, migration 0020 em colisão). Regra nova da Pedagógica: etapa não canônica nasce apontando para canônica (D-276).
+- Redesenho do Figma (página "Testes") visto por capturas; decisão de papéis e de ordem (D-277). Plano de 11 etapas apresentado e aceito.
+- Etapa 1 (K-047, D-278) na `feat/carga-nao-canonica`: 6 testes da carga OK; simulação com as planilhas reais na stack da 8002: 33 parceiros, 232 cortes, 84 arbitrários, 7 etapas criadas.
+- "ok para a main" e "pode refazer o banco da 8002" (usuário): banco da 8002 apagado e refeito pelo script (33 parceiros, 232 cortes, 84 arbitrários, 33 projetos, 66 revistas, nenhum parceiro sem matriz; MS LP com "A matriz não tem a etapa: 4EF, 8EF"); `integ/carga-nao-canonica` mesclada na `main`; K-047 em Done. A demonstração e os usuários de teste da 8002 saíram com o banco; a senha do `admin` da 8002 está só no scratchpad da sessão.

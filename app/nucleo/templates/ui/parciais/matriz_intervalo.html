@@ -6,12 +6,10 @@ Contexto: mec, intervalo (IntervaloForm), pode_gravar; oob=True na resposta do P
 {% endcomment %}{% url 'ui_matriz_intervalo' mec.pk as url %}<form method="post" action="{{ url }}" class="matriz-intervalo" id="form-intervalo" novalidate{% if pode_gravar %} x-data="campoAuto" data-url="{{ url }}"{% endif %}>{% csrf_token %}
   {% if request.bloqueio %}<input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">{% endif %}
   <fieldset{% if not pode_gravar %} disabled{% endif %}>
-    <div class="campo">
-      <label for="{{ intervalo.passo.id_for_label }}">{{ intervalo.passo.label }}</label>
+    <c-campo rotulo="{{ intervalo.passo.label }}" para="{{ intervalo.passo.id_for_label }}" :erros="intervalo.passo.errors">
       {{ intervalo.passo }}
       <p class="ajuda" id="{{ intervalo.passo.id_for_label }}_helptext">{{ intervalo.passo.help_text }}</p>
-      {% for e in intervalo.passo.errors %}<p class="erro">{{ e }}</p>{% endfor %}
-    </div>
+    </c-campo>
     {{ intervalo.confirmar_impacto }}
     {% for e in intervalo.non_field_errors %}<p class="erro" role="alert">{{ e }}</p>{% endfor %}
   </fieldset>

@@ -1,0 +1,6 @@
+{% comment %}
+Botão só de ícone (ações de linha de tabela). `icone` é o nome do c-icone; `rotulo` é obrigatório e vira
+o aria-label (o nome do botão para leitor de tela); `dica` é o texto que aparece ao passar o mouse.
+Com `href` vira link; sem, é button (type="button" se nada for dito). Os outros atributos são repassados.
+  <c-botao-icone icone="lixeira" href="{% url 'x' %}" rotulo="Excluir ano 2026" dica="Excluir ano" />
+{% endcomment %}<c-vars icone="" rotulo="" dica="" href="" type="button" class="" />{% if href %}<a class="btn-icone{% if class %} {{ class }}{% endif %}" href="{{ href }}"{% if attrs.attrs_dict %} {{ attrs }}{% endif %}{% if rotulo %} aria-label="{{ rotulo }}"{% endif %}{% if dica %} data-dica="{{ dica }}"{% endif %}><c-icone :nome="icone" /></a>{% else %}<button class="btn-icone{% if class %} {{ class }}{% endif %}" type="{{ type }}"{% if attrs.attrs_dict %} {{ attrs }}{% endif %}{% if rotulo %} aria-label="{{ rotulo }}"{% endif %}{% if dica %} data-dica="{{ dica }}"{% endif %}><c-icone :nome="icone" /></button>{% endif %}

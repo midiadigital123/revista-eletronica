@@ -24,7 +24,7 @@ from django.views.decorators.http import require_POST
 from nucleo import texto
 from nucleo.admin import lote
 from nucleo.models import Revista
-from nucleo.servicos import resolver, validacao
+from nucleo.servicos import f2, resolver, validacao
 from nucleo.servicos.planilhas import descritores, zip_planilhas
 from nucleo.urls.painel import contexto, impresso_pendente, ultima_impressa
 from nucleo.urls.preview import protegida
@@ -60,7 +60,8 @@ def _linha(n, x):
 
 def textos(conteudo):
     """{(fascículo, grupo, item): texto puro} de `impresso_de(...)`, na ordem das páginas:
-    introdução, cores, etapas (escala e descritores), demais seções do F1; seções do F2."""
+    introdução, cores, etapas (escala e descritores), demais seções do F1; seções do F2 e, por
+    infográfico, os textos de `f2.textos_impresso` (grupo = título do infográfico)."""
     f1, saida = conteudo["f1"], {}
     secoes = f1["secoes"] or []
     for s in secoes:
@@ -79,6 +80,9 @@ def textos(conteudo):
             saida["F1", s["id"], s["id"]] = _secao(s)
     for s in conteudo["f2"]["secoes"] or []:
         saida["F2", s["id"], s["id"]] = _secao(s)
+    for inf in conteudo["f2"].get("infograficos", []):
+        for rotulo, txt in f2.textos_impresso(inf):
+            saida["F2", inf["titulo"], rotulo] = txt
     return saida
 
 

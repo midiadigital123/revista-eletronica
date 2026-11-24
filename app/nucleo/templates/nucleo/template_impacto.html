@@ -26,14 +26,13 @@ nos hidden; o bloqueio segue com a mesma sessão (bloqueio.js renova).{% endcomm
   <table>
     <caption>Revistas ativas afetadas: {{ revistas|length }}</caption>
     <thead><tr><th scope="col">Revista</th><th scope="col">Seções com cópia (não mudam)</th>
-      <th scope="col">Impresso</th><th scope="col">Ids que faltariam no SVG</th></tr></thead>
+      <th scope="col">Impresso</th></tr></thead>
     <tbody>
     {% for r in revistas %}
       <tr>
         <td>{{ r.revista.projeto }} · {{ r.revista.componente.codigo }}</td>
         <td>{{ r.copias|join:", "|default:"—" }}</td>
         <td>{% if r.impresso %}<strong class="impacto-alerta">Já tem foto do impresso</strong>{% else %}—{% endif %}</td>
-        <td>{% if r.ids_faltando %}<strong class="impacto-alerta">SVG incompleto: {{ r.ids_faltando|join:", " }}</strong>{% else %}—{% endif %}</td>
       </tr>
     {% endfor %}
     </tbody>

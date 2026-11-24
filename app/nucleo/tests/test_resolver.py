@@ -27,6 +27,9 @@ from nucleo.models import (
     ProjetoPasso,
     Revista,
     RevistaFasciculo,
+    RevistaInfografico,
+    RevistaInfograficoEtapa,
+    RevistaInfograficoItem,
     RevistaSecao,
     Tarefa,
     Template,
@@ -35,13 +38,13 @@ from nucleo.models import (
 from nucleo.models.revista import Motivo
 from nucleo.servicos.cascata import gravar_cortes
 from nucleo.servicos.foto import fotografar
+from nucleo.servicos.pendencias import pendencias
 from nucleo.servicos.resolver import (
     FAIXA_SEM_TEMPLATE,
     conteudo_impresso,
     carregar,
     escala,
     hash_validado,
-    pendencias,
     resolver,
     secoes_desatualizadas,
     sha256,
@@ -85,7 +88,7 @@ class Mundo:
     """Ano 2026, LP e MT, 5EF e 9EF, Comunitária com passo 25, templates e GO + PE com 4 cortes."""
 
     @classmethod
-    def montar(cls, alvo):
+    def montar(cls, alvo, f2_lp=F2_LP):
         alvo.usuario = get_user_model().objects.create(username="admin")
         ano = alvo.ano = Ano.objects.create(ano=2026)
         alvo.lp = Componente.objects.create(ano=ano, codigo="LP", nome="Língua Portuguesa")
@@ -116,7 +119,7 @@ class Mundo:
                 if alvo.tarefa is None:
                     alvo.tarefa = t  # LP 5EF D01
         alvo.templates = {}
-        for comp, f2 in ((alvo.lp, F2_LP), (alvo.mt, F2_MT)):
+        for comp, f2 in ((alvo.lp, f2_lp), (alvo.mt, F2_MT)):
             for fasc, txt in (("F1", F1), ("F2", f2)):
                 t = Template.objects.create(ano=ano, componente=comp, fasciculo=fasc, nome="Padrão")
                 TemplateVersao.objects.create(template=t, numero=1, texto=txt)
@@ -144,6 +147,24 @@ class Mundo:
 
 def recarregar(revista):
     return Revista.objects.get(pk=revista.pk)
+
+
+def preencher_infograficos(revista, sha="a" * 64):
+    """Infográficos ativos da revista sem pendência: habilidade, 2 etapas com código e marca, 4 itens com imagem."""
+    for inf in RevistaInfografico.objects.filter(revista=revista, arquivado_em__isnull=True):
+        RevistaInfografico.objects.filter(pk=inf.pk).update(
+            habilidade="Inferir informação.", texto_habilidades="As habilidades.", texto_progressao="A progressão."
+        )
+        for etapa, marca in (("9EF", "A"), ("5EF", "I")):
+            RevistaInfograficoEtapa.objects.update_or_create(
+                infografico=inf, etapa=etapa, defaults={"ano_id": inf.ano_id, "marca": marca, "codigo": "EF15LP18", "texto": "Relacionar."}
+            )
+        for posicao in range(1, 5):
+            RevistaInfograficoItem.objects.update_or_create(
+                infografico=inf, posicao=posicao,
+                defaults={"ano_id": inf.ano_id, "etapa": "5EF", "descritor": "D05",
+                          "imagem": f"infograficos/{inf.pk}-{posicao}.png", "imagem_sha256": sha},
+            )
 
 
 class EscalaTest(TestCase):
@@ -290,11 +311,11 @@ class ResolverTest(TestCase):
         self.assertNotEqual(antes[0], depois[0])
         self.assertEqual(antes[1], depois[1])
 
-    def test_trocar_svg_muda_o_hash_e_nao_o_impresso(self):
+    def test_trocar_imagem_do_item_muda_o_hash_e_nao_o_impresso(self):
         lp = self.go["LP"]
+        preencher_infograficos(lp)
         hash_antes, impresso_antes = hash_validado(lp), conteudo_impresso(lp)
-        Revista.objects.filter(pk=lp.pk).update(svg_f2="f2/novo.svg", svg_sha256="b" * 64, svg_ids=["passo1"])
-        lp = recarregar(lp)
+        RevistaInfograficoItem.objects.filter(infografico__revista=lp, posicao=2).update(imagem_sha256="b" * 64)
         self.assertNotEqual(hash_validado(lp), hash_antes)
         self.assertEqual(conteudo_impresso(lp), impresso_antes)
 
@@ -336,15 +357,11 @@ class ResolverTest(TestCase):
 
     def test_pendencias(self):
         lp = self.go["LP"]
-        self.assertEqual([p.codigo for p in pendencias(lp)], ["svg", "capa"])
-        Revista.objects.filter(pk=lp.pk).update(
-            svg_f2="f2/x.svg", svg_sha256="a" * 64, svg_ids=["passo1"], capa="capas/x.png", capa_sha256="c" * 64
-        )
+        self.assertEqual([p.codigo for p in pendencias(lp)], ["infografico"] * 6 + ["capa"])
+        preencher_infograficos(lp)
+        Revista.objects.filter(pk=lp.pk).update(capa="capas/x.png", capa_sha256="c" * 64)
+        self.assertEqual(pendencias(recarregar(lp)), [])  # sem SVG: o F2 sai dos infográficos (D-237)
         lp = recarregar(lp)
-        ids = [p for p in pendencias(lp) if p.codigo == "ids_svg"]
-        self.assertEqual(ids[0].mensagem, "Ids que faltam no SVG: btn-action-p2.")
-        Revista.objects.filter(pk=lp.pk).update(svg_ids=["passo1", "btn-action-p2"])
-        self.assertEqual(pendencias(recarregar(lp)), [])
 
         pa = lp.projeto.parceiro_ano
         Projeto.objects.filter(pk=lp.projeto_id).update(nome="GO - NOME DO PROJETO")
@@ -388,7 +405,7 @@ class ResolverTest(TestCase):
         with CaptureQueriesContext(connection) as resto:
             pendencias(lp, resolvido)
             hash_validado(lp, resolvido)
-        self.assertLessEqual(len(so_resolver), 13, "\n".join(q["sql"][:120] for q in so_resolver))  # +1: nomes do ano (D-175)
+        self.assertLessEqual(len(so_resolver), 16, "\n".join(q["sql"][:120] for q in so_resolver))  # +1: nomes do ano (D-175); +3: infográficos, etapas e itens (D-237)
         self.assertLessEqual(len(resto), 2)  # só a conferência de MEC por etapa
         self.assertEqual(hash_validado(lp, resolvido), hash_validado(lp))
 
@@ -410,6 +427,141 @@ class ResolverTest(TestCase):
         self.assertEqual(resolver(recarregar(mt)), foto.conteudo)
         self.assertEqual(hash_validado(recarregar(mt)), foto.hash)
 
+    # --- Infográficos do F2 (tarefa 4 da fase 2) ---------------------------------------------
+
+    def test_infograficos_no_resolvido(self):
+        lp = self.go["LP"]
+        preencher_infograficos(lp)
+        inf = RevistaInfografico.objects.get(revista=lp, tipo="outras")
+        RevistaInfografico.objects.filter(pk=inf.pk).update(
+            habilidade="Ler <b> & ver", texto_descritor="Os {{adjetivo_patrio_plural_masculino}}.",
+            texto_habilidades="**Hab**", passos_desligados=["progressao"],
+        )
+        RevistaInfograficoEtapa.objects.create(infografico=inf, ano=self.ano, etapa="1EF", codigo="EF<1>")
+        RevistaInfograficoItem.objects.filter(infografico=inf, posicao=3).update(
+            etapa="", imagem=None, imagem_sha256=None, texto_alternativo="Alt <x>", analise="Para {{nome_parceiro}}."
+        )
+        f2 = resolver(lp)["f2"]
+        self.assertEqual(set(f2), {"secoes", "infograficos"})
+        [r] = f2["infograficos"]
+        self.assertEqual(
+            {k: r[k] for k in ("tipo", "titulo", "passos", "habilidade", "textos")},
+            {"tipo": "outras", "titulo": "Avaliação e Currículo – Outras Etapas",
+             "passos": ["descritor", "habilidades", "tarefas"], "habilidade": "Ler <b> & ver",
+             "textos": {"descritor": "<p>Os goianos.</p>\n", "progressao": "", "habilidades": "<p><strong>Hab</strong></p>\n"}},
+        )
+        self.assertEqual(r["etapas"], [  # ordem do referencial, só as gravadas, texto cru
+            {"etapa": "1EF", "rotulo": "1º ano do Ensino Fundamental", "marca": "", "codigo": "EF<1>", "texto": ""},
+            {"etapa": "5EF", "rotulo": "5º ano do Ensino Fundamental", "marca": "I", "codigo": "EF15LP18", "texto": "Relacionar."},
+            {"etapa": "9EF", "rotulo": "9º ano do Ensino Fundamental", "marca": "A", "codigo": "EF15LP18", "texto": "Relacionar."},
+        ])
+        self.assertEqual([i["posicao"] for i in r["itens"]], [1, 2, 3, 4])
+        self.assertEqual(r["itens"][0], {
+            "posicao": 1, "etapa": "5EF", "rotulo": "5º ano do Ensino Fundamental", "descritor": "D05",
+            "imagem": f"infograficos/{inf.pk}-1.png", "imagem_sha256": "a" * 64, "texto_alternativo": "", "analise": "",
+        })
+        self.assertEqual(r["itens"][2], {
+            "posicao": 3, "etapa": "", "rotulo": "", "descritor": "D05", "imagem": "", "imagem_sha256": "",
+            "texto_alternativo": "Alt <x>", "analise": "<p>Para GO.</p>\n",
+        })
+
+    def test_variavel_vazia_do_infografico_vira_lacuna(self):
+        lp = self.go["LP"]
+        RevistaInfografico.objects.filter(revista=lp).update(texto_progressao="{{pd05}} e {{nome_secretaria}}")
+        Projeto.objects.filter(pk=lp.projeto_id).update(nome_secretaria="")
+        self.assertIn({"tipo": "variavel", "nome": "nome_secretaria"}, resolver(recarregar(lp))["lacunas"])
+
+    def test_texto_de_passo_desligado_nao_conta_variavel(self):  # invisível: nem lacuna, nem hash
+        lp = self.go["LP"]
+        RevistaInfografico.objects.filter(revista=lp).update(
+            texto_progressao="{{nome_secretaria}}", passos_desligados=["progressao"]
+        )
+        Projeto.objects.filter(pk=lp.projeto_id).update(nome_secretaria="")
+        lp = recarregar(lp)
+        r = resolver(lp)
+        self.assertNotIn({"tipo": "variavel", "nome": "nome_secretaria"}, r["lacunas"])
+        self.assertEqual(r["f2"]["infograficos"][0]["textos"]["progressao"], "")
+        self.assertNotIn("variaveis", [p.codigo for p in pendencias(lp)])
+
+    def test_tarefas_desligado_tira_os_itens(self):  # conselho da T4 (D-243): item invisível sai do resolvido
+        lp = self.go["LP"]
+        preencher_infograficos(lp)
+        inf = RevistaInfografico.objects.filter(revista=lp).first()
+        self.assertEqual(inf.revistainfograficoitem_set.update(analise="{{nome_secretaria}}"), 4)
+        RevistaInfografico.objects.filter(pk=inf.pk).update(passos_desligados=["tarefas"])
+        Projeto.objects.filter(pk=lp.projeto_id).update(nome_secretaria="")
+        lp = recarregar(lp)
+        r = resolver(lp)
+        self.assertEqual(r["f2"]["infograficos"][0]["itens"], [])
+        self.assertNotIn({"tipo": "variavel", "nome": "nome_secretaria"}, r["lacunas"])
+        self.assertNotIn("variaveis", [p.codigo for p in pendencias(lp)])
+
+    def test_habilidades_desligado_tira_codigo_e_texto(self):  # D-243: passo desligado é invisível
+        lp = self.go["LP"]
+        preencher_infograficos(lp)
+        inf = RevistaInfografico.objects.filter(revista=lp).first()
+        RevistaInfografico.objects.filter(pk=inf.pk).update(passos_desligados=["habilidades"])
+        antes = hash_validado(recarregar(lp))
+        inf.revistainfograficoetapa_set.update(codigo="EF99LP99", texto="Outro texto.")
+        lp = recarregar(lp)
+        self.assertEqual(hash_validado(lp), antes)  # código invisível não derruba o "Validado"
+        etapas = resolver(lp)["f2"]["infograficos"][0]["etapas"]
+        self.assertEqual([(e["marca"], e["codigo"], e["texto"]) for e in etapas], [("I", "", ""), ("A", "", "")])
+        RevistaInfografico.objects.filter(pk=inf.pk).update(passos_desligados=["habilidades", "progressao"])
+        self.assertEqual(resolver(recarregar(lp))["f2"]["infograficos"][0]["etapas"], [])
+
+    def test_infografico_arquivado_fica_de_fora(self):
+        lp = self.go["LP"]
+        RevistaInfografico.objects.create(revista=lp, componente=self.lp, ano=self.ano, tipo="alfa", arquivado_em="2026-10-29T12:00:00Z")
+        self.assertEqual([i["tipo"] for i in resolver(lp)["f2"]["infograficos"]], ["outras"])
+        RevistaInfografico.objects.filter(revista=lp, tipo="alfa").update(arquivado_em=None)
+        self.assertEqual([i["tipo"] for i in resolver(lp)["f2"]["infograficos"]], ["alfa", "outras"])
+
+    def infografico(self):
+        lp = self.go["LP"]
+        preencher_infograficos(lp)
+        return lp, RevistaInfografico.objects.get(revista=lp)
+
+    def mensagens(self, lp):
+        return [p.mensagem for p in pendencias(lp) if p.codigo == "infografico"]
+
+    def test_pendencias_dos_infograficos(self):
+        lp, inf = self.infografico()
+        self.assertEqual(self.mensagens(lp), [])
+        titulo = "Avaliação e Currículo – Outras Etapas"
+        RevistaInfografico.objects.filter(pk=inf.pk).update(habilidade=" ")
+        RevistaInfograficoEtapa.objects.filter(infografico=inf).update(codigo="", texto=" ")
+        RevistaInfograficoEtapa.objects.filter(infografico=inf, etapa="9EF").update(marca="")
+        RevistaInfograficoItem.objects.filter(infografico=inf, posicao=4).update(imagem=None, imagem_sha256=None)
+        self.assertEqual(self.mensagens(lp), [
+            f"{titulo}: falta a habilidade destacada.",
+            f"{titulo}: o passo Habilidades está ligado e nenhuma etapa tem código ou texto.",
+            f"{titulo}: o passo Progressão precisa de pelo menos 2 etapas com marca.",
+            f"{titulo}: o passo Tarefas precisa dos 4 itens com imagem.",
+        ])
+        RevistaInfograficoEtapa.objects.filter(infografico=inf, etapa="9EF").update(texto="Só o texto.")
+        self.assertNotIn(f"{titulo}: o passo Habilidades está ligado e nenhuma etapa tem código ou texto.", self.mensagens(lp))
+
+    def test_passo_ligado_sem_texto_do_clique(self):
+        """Conselho da fase 2 (D-250): passo ligado com o texto do clique vazio abriria um modal só com o título."""
+        lp, inf = self.infografico()
+        titulo = "Avaliação e Currículo – Outras Etapas"
+        RevistaInfografico.objects.filter(pk=inf.pk).update(texto_habilidades="", texto_progressao=" ")
+        self.assertEqual(self.mensagens(lp), [
+            f"{titulo}: o passo Habilidades está ligado e falta o texto do clique.",
+            f"{titulo}: o passo Progressão está ligado e falta o texto do clique.",
+        ])
+        RevistaInfografico.objects.filter(pk=inf.pk).update(passos_desligados=["habilidades", "progressao"])
+        self.assertEqual(self.mensagens(lp), [])
+
+    def test_passo_desligado_nao_gera_pendencia(self):
+        lp, inf = self.infografico()
+        RevistaInfograficoEtapa.objects.filter(infografico=inf).delete()
+        RevistaInfograficoItem.objects.filter(infografico=inf).delete()
+        self.assertEqual(len(self.mensagens(lp)), 3)
+        RevistaInfografico.objects.filter(pk=inf.pk).update(passos_desligados=["habilidades", "progressao", "tarefas"])
+        self.assertEqual(self.mensagens(lp), [])
+
 
 class FotoRepeatableReadTest(TransactionTestCase):
     def setUp(self):
@@ -424,7 +576,7 @@ class FotoRepeatableReadTest(TransactionTestCase):
         self.assertEqual(FotoRevista.objects.get().conteudo, resolver(self.go["LP"]))
 
     def test_fora_de_atomic_relê_a_revista(self):
-        velha = self.go["LP"]  # instância de antes da troca do SVG
-        Revista.objects.filter(pk=velha.pk).update(svg_f2="f2/x.svg", svg_sha256="d" * 64)
+        velha = self.go["LP"]  # instância de antes da troca da capa
+        Revista.objects.filter(pk=velha.pk).update(capa="capas/x.png", capa_sha256="d" * 64)
         foto = fotografar(velha, Motivo.IMPRESSO, self.usuario)
-        self.assertEqual(foto.conteudo["f2"]["svg_sha256"], "d" * 64)
+        self.assertEqual(foto.conteudo["capa_sha256"], "d" * 64)

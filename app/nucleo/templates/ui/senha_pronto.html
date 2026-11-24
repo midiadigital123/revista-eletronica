@@ -10,13 +10,13 @@
   <link rel="stylesheet" href="{% static 'ui/ui.css' %}">
 </head>
 <body class="entrar">
-  <main class="card entrar-card">
+  <c-card tag="main" class="entrar-card">
     <header class="entrar-cab">
       <p class="marca">Revista Eletrônica</p>
       <h1 class="secao-titulo">Senha criada</h1>
     </header>
     <p>Pronto. Entre com seu usuário e a senha nova.</p>
-    <a class="btn" href="{% url 'entrar' %}">Entrar</a>
-  </main>
+    <c-botao href="{% url 'entrar' %}">Entrar</c-botao>
+  </c-card>
 </body>
 </html>

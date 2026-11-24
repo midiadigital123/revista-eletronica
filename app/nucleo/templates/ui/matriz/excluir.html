@@ -6,13 +6,10 @@
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/matriz.css' %}">{% endblock %}
 
 {% block conteudo %}
-<a class="mudo voltar" href="{{ voltar }}">‹ Voltar sem excluir</a>
-<header class="pagina-cab">
-  <div>
-    <h1>Excluir {{ rotulo }} {{ obj.codigo }}</h1>
-    <p class="mudo">De {{ mec.matriz.nome }} {{ mec.etapa.codigo }} {{ mec.componente.codigo }}{% if rotulo == "descritor" %}, com as tarefas dele{% endif %}. A exclusão vale para toda revista que usa esta matriz e não se desfaz pela tela.</p>
-  </div>
-</header>
+<c-voltar href="{{ voltar }}">Voltar sem excluir</c-voltar>
+<c-pagina-cab titulo="Excluir {{ rotulo }} {{ obj.codigo }}">
+  <p class="mudo">De {{ mec.matriz.nome }} {{ mec.etapa.codigo }} {{ mec.componente.codigo }}{% if rotulo == "descritor" %}, com as tarefas dele{% endif %}. A exclusão vale para toda revista que usa esta matriz e não se desfaz pela tela.</p>
+</c-pagina-cab>
 
 {% if revistas %}
 <div class="tabela-caixa card matriz-tabela">
@@ -21,13 +18,13 @@
     <thead><tr><th scope="col">Revista</th><th scope="col">Validado</th></tr></thead>
     <tbody>
     {% for revista, validada in revistas %}
-      <tr><th scope="row">{{ revista }}</th><td>{% if validada %}<span class="badge badge-erro">Perde o “Validado”</span>{% else %}<span class="mudo">—</span>{% endif %}</td></tr>
+      <tr><th scope="row">{{ revista }}</th><td>{% if validada %}<c-badge variante="erro">Perde o “Validado”</c-badge>{% else %}<span class="mudo">—</span>{% endif %}</td></tr>
     {% endfor %}
     </tbody>
   </table>
 </div>
 {% else %}
-<p class="aviso">Nenhuma revista ativa usa esta etapa × componente.</p>
+<c-aviso tag="p">Nenhuma revista ativa usa esta etapa × componente.</c-aviso>
 {% endif %}
 
 {% if pode_gravar %}
@@ -35,8 +32,8 @@
   {% include "ui/_componentes/bloqueio.html" %}
   {% include "ui/_componentes/confirmar.html" with nome="confirmacao" codigo=obj.codigo texto="Confira a lista acima: a exclusão não se desfaz pela tela." erro=form.confirmacao.errors.0 %}
   <div class="acoes matriz-fim">
-    <a class="btn btn-outline" href="{{ voltar }}">Voltar sem excluir</a>
-    <button type="submit" class="btn btn-destrutivo" data-confirmado>Excluir {{ rotulo }}</button>
+    <c-botao variante="outline" href="{{ voltar }}">Voltar sem excluir</c-botao>
+    <c-botao variante="destrutivo" type="submit" data-confirmado>Excluir {{ rotulo }}</c-botao>
   </div>
 </form>
 {% endif %}

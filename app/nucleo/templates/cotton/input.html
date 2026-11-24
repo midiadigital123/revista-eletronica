@@ -1,0 +1,7 @@
+{% comment %}
+Campo de texto (design-system.md §4). Estado em props, iguais em <c-input>, <c-select> e <c-textarea>:
+`:erros` (lista do form) não vazia → aria-invalid="true"; com `erro_id`, também aria-describedby.
+`:editavel` falso trava com `disabled`; trava="readonly" troca. Prop positiva: `:editavel="not x"` não funciona no cotton.
+`class` acrescenta classes da tela; os outros atributos são repassados.
+  <c-input id="id_nome" name="nome" value="{{ form.nome.value|default:'' }}" :erros="form.nome.errors" erro_id="nome-erro" :editavel="pode_gravar" trava="readonly" />
+{% endcomment %}<c-vars erros="" erro_id="" editavel="sim" trava="disabled" class="" /><input class="input{% if class %} {{ class }}{% endif %}"{% if attrs.attrs_dict %} {{ attrs }}{% endif %}{% if erros %} aria-invalid="true"{% if erro_id %} aria-describedby="{{ erro_id }}"{% endif %}{% endif %}{% if not editavel %} {{ trava }}{% endif %}>

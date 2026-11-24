@@ -1,6 +1,8 @@
+import importlib
 import threading
 from unittest import mock
 
+from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import connection
@@ -17,8 +19,9 @@ from nucleo.models import (
     Projeto,
     Revista,
     RevistaFasciculo,
+    RevistaInfografico,
 )
-from nucleo.models.revista import Motivo
+from nucleo.models.revista import Motivo, TipoInfografico
 from nucleo.servicos.cascata import gravar_cortes
 from nucleo.servicos.foto import fotografar
 from nucleo.servicos.resolver import resolver, sha256
@@ -31,6 +34,7 @@ class CascataTest(TransactionTestCase):
         ano = Ano.objects.create(ano=2026)
         self.lp = Componente.objects.create(ano=ano, codigo="LP", nome="Língua Portuguesa")
         self.mt = Componente.objects.create(ano=ano, codigo="MT", nome="Matemática")
+        self.e2 = Etapa.objects.create(ano=ano, codigo="2EF", escala_max=500, ordem=1)
         self.e5 = Etapa.objects.create(ano=ano, codigo="5EF", escala_max=500, ordem=2)
         self.e9 = Etapa.objects.create(ano=ano, codigo="9EF", escala_max=500, ordem=3)
         self.pa = ParceiroAno.objects.create(parceiro=Parceiro.objects.create(nome="GO"), ano=ano)
@@ -241,3 +245,107 @@ class CascataTest(TransactionTestCase):
         self.gravar((self.e5, self.lp, [125, 175]))
         lp_go = Revista.objects.get(projeto__parceiro_ano=self.pa)
         self.assertFalse(FotoRevista.objects.filter(revista=lp_go).exists())
+
+    # Infográficos do F2 (D-230): alfa <=> corte no 2EF; outras <=> corte em etapa != 2EF.
+
+    def infograficos(self, componente):
+        """{tipo: arquivado?} dos infográficos da revista do componente."""
+        qs = RevistaInfografico.objects.filter(revista__componente=componente)
+        return {i.tipo: i.arquivado_em is not None for i in qs}
+
+    def test_so_2ef_gera_so_alfa(self):
+        self.gravar((self.e2, self.lp, [200, 300]))
+        self.assertEqual(self.infograficos(self.lp), {"alfa": False})
+
+    def test_so_5ef_gera_so_outras(self):
+        self.gravar((self.e5, self.lp, [200, 300]))
+        self.assertEqual(self.infograficos(self.lp), {"outras": False})
+
+    def test_2ef_e_5ef_geram_os_dois(self):
+        self.gravar((self.e2, self.lp, [200, 300]), (self.e5, self.lp, [200, 300]))
+        self.assertEqual(self.infograficos(self.lp), {"alfa": False, "outras": False})
+        for inf in RevistaInfografico.objects.all():
+            self.assertEqual((inf.componente_id, inf.ano_id), (self.lp.pk, self.pa.ano_id))
+
+    def test_tirar_2ef_arquiva_alfa_e_mantem_outras(self):
+        self.gravar((self.e2, self.lp, [200, 300]), (self.e5, self.lp, [200, 300]))
+        self.gravar((self.e5, self.lp, [200, 300]))
+        self.assertEqual(self.infograficos(self.lp), {"alfa": True, "outras": False})
+
+    def test_voltar_2ef_desarquiva_o_mesmo_alfa(self):
+        self.gravar((self.e2, self.lp, [200, 300]), (self.e5, self.lp, [200, 300]))
+        alfa = RevistaInfografico.objects.get(tipo=TipoInfografico.ALFA)
+        self.gravar((self.e5, self.lp, [200, 300]))
+        self.gravar((self.e2, self.lp, [200, 300]), (self.e5, self.lp, [200, 300]))
+        alfa_depois = RevistaInfografico.objects.get(tipo=TipoInfografico.ALFA)
+        self.assertEqual(alfa_depois.pk, alfa.pk)
+        self.assertIsNone(alfa_depois.arquivado_em)
+        self.assertEqual(RevistaInfografico.objects.count(), 2)
+
+    def test_infograficos_por_componente(self):
+        self.gravar((self.e2, self.lp, [200, 300]), (self.e9, self.mt, [200, 300]))
+        self.assertEqual(self.infograficos(self.lp), {"alfa": False})
+        self.assertEqual(self.infograficos(self.mt), {"outras": False})
+
+    def test_mesmo_conjunto_duas_vezes_nao_cria_historico_de_infografico(self):
+        linhas = ((self.e2, self.lp, [200, 300]), (self.e5, self.lp, [200, 300]))
+        self.gravar(*linhas)
+        antes = RevistaInfografico.history.count()
+        self.gravar(*linhas)
+        self.assertEqual(RevistaInfografico.history.count(), antes)
+        self.assertEqual(RevistaInfografico.history.first().history_user, self.usuario)
+
+    def test_tirar_o_componente_nao_mexe_nos_infograficos_da_revista_arquivada(self):
+        self.gravar((self.e2, self.lp, [200, 300]), (self.e5, self.mt, [200, 300]))
+        self.gravar((self.e2, self.lp, [200, 300]))
+        self.assertIsNotNone(Revista.objects.get(componente=self.mt).arquivada_em)
+        self.assertEqual(self.infograficos(self.mt), {"outras": False})
+        self.assertEqual(self.infograficos(self.lp), {"alfa": False})
+
+    def test_revista_arquivada_que_volta_com_outros_cortes_sincroniza_depois_de_voltar(self):
+        self.gravar((self.e2, self.lp, [200, 300]), (self.e5, self.mt, [200, 300]))
+        self.gravar((self.e2, self.lp, [200, 300]))  # MT arquivada
+        self.gravar((self.e2, self.lp, [200, 300]), (self.e2, self.mt, [200, 300]))  # MT volta só com 2EF
+        self.assertIsNone(Revista.objects.get(componente=self.mt).arquivada_em)
+        self.assertEqual(self.infograficos(self.mt), {"alfa": False, "outras": True})
+
+    def test_codigo_da_etapa_nao_diferencia_maiusculas(self):
+        e2 = Etapa.objects.create(ano=self.pa.ano, codigo="2ef", escala_max=500, ordem=4)
+        self.gravar((e2, self.lp, [200, 300]))
+        self.assertEqual(self.infograficos(self.lp), {"alfa": False})
+
+    # Migração de dados 0022: revistas que já existiam ganham os infográficos.
+
+    def migrar(self):
+        mod = importlib.import_module("nucleo.migrations.0022_infograficos_existentes")
+        mod.criar(apps, None)
+
+    def test_migracao_cria_os_infograficos_que_faltam_sem_tocar_nas_revistas(self):
+        # Desde a tarefa 4 da fase 2 o infográfico entra no resolvido (o hash muda uma vez, D-237):
+        # fora `f2.infograficos`, o resolvido fica igual, e a migração não grava nada na revista.
+        def sem_infograficos(r):
+            x = resolver(r)
+            x["f2"] = {**x["f2"], "infograficos": None}
+            return x
+
+        self.gravar(
+            (self.e2, self.lp, [200, 300]), (self.e5, self.lp, [200, 300]), (self.e9, self.mt, [200, 300])
+        )
+        RevistaInfografico.objects.all().delete()
+        antes = {r.pk: sem_infograficos(r) for r in Revista.objects.all()}
+        revistas = list(Revista.objects.values_list("pk", "hash_validado", "validado_em"))
+        self.migrar()
+        self.assertEqual(self.infograficos(self.lp), {"alfa": False, "outras": False})
+        self.assertEqual(self.infograficos(self.mt), {"outras": False})
+        self.migrar()  # idempotente
+        self.assertEqual(RevistaInfografico.objects.count(), 3)
+        self.assertEqual({r.pk: sem_infograficos(r) for r in Revista.objects.all()}, antes)
+        self.assertEqual(list(Revista.objects.values_list("pk", "hash_validado", "validado_em")), revistas)
+
+    def test_migracao_ignora_revista_arquivada(self):
+        self.gravar((self.e2, self.lp, [200, 300]), (self.e5, self.mt, [200, 300]))
+        self.gravar((self.e2, self.lp, [200, 300]))
+        RevistaInfografico.objects.all().delete()
+        self.migrar()
+        self.assertEqual(self.infograficos(self.lp), {"alfa": False})
+        self.assertEqual(self.infograficos(self.mt), {})

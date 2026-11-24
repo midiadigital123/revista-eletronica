@@ -69,7 +69,7 @@ class SemAnoTest(TestCase):
     def test_raiz_vai_aos_anos_e_indice_avisa(self):
         self.client.force_login(usuario("ped", "Pedagógica"))
         self.assertRedirects(self.client.get("/"), "/ui/anos/")
-        self.assertContains(self.client.get("/ui/anos/"), "O primeiro ano entra pela carga inicial")
+        self.assertContains(self.client.get("/ui/anos/"), "O primeiro ano nasce vazio")
         r = self.client.get("/admin/")
         self.assertContains(r, "Nenhum ano aberto. Abra o primeiro ano em")
         self.assertNotContains(r, ">Painel ")

@@ -1,6 +1,6 @@
 # Docker — Revista Express
 
-O `docker-compose.yml` da raiz sobe dois serviços: `db` (PostgreSQL 17) e `app` (Django, porta 8000 só em `127.0.0.1`). Mongo, API e editor React saíram do compose (D-187). Variáveis: `app/.env.example`; o compose lê o `.env` da **raiz**, e todas têm default de desenvolvimento.
+O `docker-compose.yml` da raiz sobe dois serviços: `db` (PostgreSQL 17) e `app` (Django, porta 8000, por padrão só em `127.0.0.1`; ver [Abrir na rede](#abrir-na-rede)). Mongo, API e editor React saíram do compose (D-187). Variáveis: `app/.env.example`; o compose lê o `.env` da **raiz**, e todas têm default de desenvolvimento.
 
 ## Subir
 
@@ -42,7 +42,17 @@ docker compose -f docker-compose.prod.yml exec app python manage.py createsuperu
 | parar | `docker compose down` |
 | parar e **apagar o banco** | `docker compose down -v` |
 
-Cada worktree usa o próprio banco com `docker compose -p <nome> …` (o compose não fixa `container_name` nem expõe a porta do Postgres).
+Cada worktree usa o próprio banco com `docker compose -p <nome> …` (o compose não fixa `container_name` nem expõe a porta do Postgres). Se o `.env` da raiz fixa `COMPOSE_PROJECT_NAME`, defina também `COMPOSE_PROJECT_NAME=<nome>` no ambiente do comando, senão a stack sobe em cima do dev. Suíte E2E numa stack isolada: [`e2e.md`](e2e.md#stack-isolada).
+
+## Abrir na rede
+
+Por padrão o `app` escuta só em `127.0.0.1`. Para acessar o dev de outro computador da rede (D-209):
+
+```bash
+APP_BIND=0.0.0.0 DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,<ip da máquina> docker compose up -d app
+```
+
+A porta publicada é `${APP_BIND:-127.0.0.1}:${APP_PORT:-8000}`. Sem `APP_BIND`, volta a ficar fechada: abrir é escolha a cada subida, porque o dev roda com DEBUG. O compose de produção não lê `APP_BIND` (sempre `127.0.0.1`).
 
 ## PostgreSQL: backup e restore
 
@@ -56,7 +66,7 @@ docker compose exec -T db psql -U revista revista < backup-AAAA-MM-DD.sql
 
 ## Troubleshooting
 
-- **Porta 8000 já em uso:** `APP_PORT=8001 docker compose up -d app`, ou outro nome de projeto com `-p`.
+- **Porta 8000 já em uso:** `APP_PORT=8002 docker compose up -d app`, ou outro nome de projeto com `-p`.
 - **`app` não sobe:** `docker compose logs app`. Sem `DJANGO_DEBUG=1`, a `DJANGO_SECRET_KEY` é obrigatória.
 - **Tela quebrada depois de trocar de branch:** falta aplicar migração. `docker compose run --rm app python manage.py migrate`.
 - **Banco não conecta:** `docker compose ps` deve mostrar `db` como `healthy`.

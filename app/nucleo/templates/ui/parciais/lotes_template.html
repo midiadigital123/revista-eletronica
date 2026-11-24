@@ -24,11 +24,11 @@ pode_gravar, componente. rf.tem_copias = o fascículo tem texto próprio (trocar
           {% for f, rf in l.fasciculos %}
           <td data-atual="{{ f }}" data-valor="{{ rf.template_id|default:'' }}"{% if rf.tem_copias %} data-copias{% endif %}>
             {% if rf.template %}{{ rf.template.nome }}{% else %}<span class="mudo">sem template</span>{% endif %}
-            {% if rf.tem_copias %}<span class="badge badge-contorno" title="O projeto editou o texto deste fascículo: o lote não troca o template dele. Troque pela revista.">texto próprio</span>{% endif %}
+            {% if rf.tem_copias %}<c-badge variante="contorno" title="O projeto editou o texto deste fascículo: o lote não troca o template dele. Troque pela revista.">texto próprio</c-badge>{% endif %}
             <span class="lote-novo" data-novo hidden></span>
           </td>
           {% endfor %}
-          <td>{% if l.editando %}<span class="badge badge-alerta" title="O projeto está aberto; o lote não grava nele.">Em edição por {{ l.editando }}: será pulado</span>{% endif %}</td>
+          <td>{% if l.editando %}<c-badge variante="alerta" title="O projeto está aberto; o lote não grava nele.">Em edição por {{ l.editando }}: será pulado</c-badge>{% endif %}</td>
         </tr>
       {% endfor %}
       </tbody>
@@ -43,16 +43,16 @@ pode_gravar, componente. rf.tem_copias = o fascículo tem texto próprio (trocar
     {% for campo in form %}{% if campo.name != "alvos" %}
     <div class="lote-campo">
       <label class="rotulo" for="lote-{{ campo.name }}">{{ campo.label|cut:"Template " }}</label>
-      <select class="select" name="{{ campo.name }}" id="lote-{{ campo.name }}" data-previa="{{ campo.label|cut:'Template ' }}"{% if campo.errors or form.non_field_errors %} aria-invalid="true" aria-describedby="erro-templates"{% endif %}>
+      <c-select name="{{ campo.name }}" id="lote-{{ campo.name }}" data-previa="{{ campo.label|cut:'Template ' }}" erros="{% if campo.errors or form.non_field_errors %}1{% endif %}" erro_id="erro-templates">
         <option value="">Não mudar</option>
         {% for t in campo.field.queryset %}<option value="{{ t.pk }}"{% if campo.value|stringformat:"s" == t.pk|stringformat:"s" %} selected{% endif %}>{{ t.nome }}</option>{% endfor %}
-      </select>
+      </c-select>
     </div>
     {% endif %}{% endfor %}
-    <button class="btn" type="submit">
+    <c-botao type="submit">
       {% include "ui/_componentes/girando.html" with id="lote-girando" %}
       Aplicar aos selecionados
-    </button>
+    </c-botao>
     {% for campo in form %}{% if campo.name != "alvos" and campo.errors %}<p class="erro lote-erro" role="alert">{{ campo.label }}: {{ campo.errors.0 }}</p>{% endif %}{% endfor %}
   </div>
   {% endif %}

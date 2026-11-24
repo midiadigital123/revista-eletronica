@@ -10,9 +10,10 @@ from django.test import SimpleTestCase, TestCase
 
 from nucleo.management.commands.carregar_templates import AVISO
 from nucleo.models import Ano, Componente, Template, TemplateVersao
-from nucleo.texto import renderizar, renderizar_texto_puro, secoes, validar, variaveis_usadas
+from nucleo.texto import SECOES_F2, renderizar, renderizar_texto_puro, secoes, validar, variaveis_usadas
 
 F1 = "## introducao\nTítulo\n\nCorpo da {{nome_parceiro}}.\n\n## fechamento\nFim\n\n- um\n- dois\n"
+F2_NOVO = "".join(f"## {i}\n{'F' if i == 'fechamento' else 'T'}\n\nx\n\n" for i in SECOES_F2).rstrip("\n") + "\n"
 ORIGINAL = Path.read_text
 SEED = settings.BASE_DIR / "templates_seed" / "2026"
 
@@ -25,7 +26,7 @@ class ValidarTest(SimpleTestCase):
 
     def test_valido(self):
         validar(F1, "F1")
-        validar("## abertura\nA\n\nx\n\n## passo1\nP\n\ny\n\n## dlg-p4-i1\nI\n\nz\n", "F2")
+        validar(F2_NOVO, "F2")
 
     def test_secoes_titulo_e_corpo(self):
         self.assertEqual(secoes(F1)["fechamento"], ("Fim", "- um\n- dois"))
@@ -33,7 +34,12 @@ class ValidarTest(SimpleTestCase):
 
     def test_secao_faltando(self):
         self.assertIn("fechamento", self.erros("## introducao\nT\n\nx\n"))
-        self.assertIn("passo1", self.erros("## abertura\nA\n\nx\n", "F2"))
+        sem = F2_NOVO.replace("## fechamento\nF\n\nx\n", "")
+        self.assertIn("Seções obrigatórias faltando: fechamento.", self.erros(sem, "F2"))
+
+    def test_f2_recusa_ids_antigos(self):
+        antigo = F2_NOVO + "\n## passo1\nP\n\nx\n"
+        self.assertIn("Seções não previstas no F2: passo1.", self.erros(antigo, "F2"))
 
     def test_secao_estranha_repetida_e_texto_solto(self):
         e = self.erros("solto\n" + F1 + "## extra\nT\n\nx\n## extra\nT\n\ny\n")

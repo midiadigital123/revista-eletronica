@@ -1,10 +1,11 @@
-// Downloads pela tela B (S8): as planilhas F1/F2 e o gabarito de ids na ficha da revista, a planilha de
-// grupos na aba Cortes. Cada botão tem que baixar de verdade (evento download), sem passar pelo admin.
+// Downloads pela tela B (S8): as planilhas F1/F2 na ficha da revista (o gabarito de ids saiu com o SVG
+// do F2, fase 3), a planilha de grupos na aba Cortes. Cada botão tem que baixar de verdade (evento
+// download), sem passar pelo admin.
 // Só lê: não grava nada. Preparo de painel.spec.ts (criar_demo --ano 2026 e o superusuário e2e).
 import { expect, test } from "@playwright/test";
 import { entrar, revistaDemo } from "./helpers";
 
-test("Revista: Baixar planilhas e Baixar gabarito de ids baixam pela tela B", async ({ page }) => {
+test("Revista: Baixar planilhas baixa pela tela B", async ({ page }) => {
   await entrar(page, "/ui/projeto/ano/2026/");
   const revista = await revistaDemo(page);
   await page.goto(`/ui/revista/2026/${revista}/`);
@@ -13,11 +14,6 @@ test("Revista: Baixar planilhas e Baixar gabarito de ids baixam pela tela B", as
   await expect(planilhas).toHaveAttribute("href", new RegExp(`/impresso/${revista}/planilhas/$`));
   const [zip] = await Promise.all([page.waitForEvent("download"), planilhas.click()]);
   expect(zip.suggestedFilename()).toMatch(/\.zip$/);
-
-  const gabarito = page.getByRole("link", { name: "Baixar gabarito de ids" });
-  await expect(gabarito).toHaveAttribute("href", `/ui/revista/2026/${revista}/gabarito-ids/`);
-  const [csv] = await Promise.all([page.waitForEvent("download"), gabarito.click()]);
-  expect(csv.suggestedFilename()).toBe(`gabarito-ids-revista-${revista}.csv`);
 });
 
 test("Cortes: Baixar planilha de grupos baixa o xlsx pela tela B", async ({ page }) => {

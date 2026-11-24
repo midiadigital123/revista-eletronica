@@ -4,19 +4,16 @@
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/validar.css' %}">{% endblock %}
 
 {% block conteudo %}
-<header class="pagina-cab">
-  <div>
-    <h1>Validar revistas</h1>
-    <p class="mudo">{{ ano.ano }}: {{ itens|length }} revista(s). Cada uma é validada na versão mostrada aqui; se mudar antes do envio, é recusada.</p>
-  </div>
-  <div class="acoes"><a class="btn btn-ghost" href="{{ url_painel }}">Voltar ao painel</a></div>
-</header>
+<c-pagina-cab titulo="Validar revistas">
+  <p class="mudo">{{ ano.ano }}: {{ itens|length }} revista(s). Cada uma é validada na versão mostrada aqui; se mudar antes do envio, é recusada.</p>
+  <c-slot name="acoes"><c-botao variante="ghost" href="{{ url_painel }}">Voltar ao painel</c-botao></c-slot>
+</c-pagina-cab>
 
 {% if fora > 0 %}
-<div class="aviso aviso-alerta" role="status">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+<c-aviso variante="alerta" role="status">
+  <c-icone nome="info" />
   <span>{{ fora }} revista(s) pedida(s) não aparecem: arquivadas ou de outro ano.</span>
-</div>
+</c-aviso>
 {% endif %}
 
 {% if not itens %}
@@ -32,7 +29,7 @@
   {% if pode_validar %}
   <div class="barra-salvar">
     <span class="mudo" aria-live="polite"><span data-marcadas></span>Projetos em edição por outra sessão são pulados.</span>
-    <button class="btn" type="submit" data-enviar>Validar marcadas</button>
+    <c-botao type="submit" data-enviar>Validar marcadas</c-botao>
   </div>
   {% endif %}
 </form>

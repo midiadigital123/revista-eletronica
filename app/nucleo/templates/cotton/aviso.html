@@ -1,0 +1,5 @@
+{% comment %}
+Aviso (faixa de recado na página). `variante`: erro, alerta; sem variante, o neutro.
+`tag`: div (padrão, para conteúdo em bloco) ou p (uma frase). Os outros atributos são repassados (role…).
+  <c-aviso tag="p" variante="erro" role="alert">Usuário ou senha incorretos.</c-aviso>
+{% endcomment %}<c-vars variante="" tag="div" class="" /><{{ tag }} class="aviso{% if variante %} aviso-{{ variante }}{% endif %}{% if class %} {{ class }}{% endif %}"{% if attrs.attrs_dict %} {{ attrs }}{% endif %}>{{ slot }}</{{ tag }}>

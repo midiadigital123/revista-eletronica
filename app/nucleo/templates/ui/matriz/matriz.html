@@ -6,33 +6,31 @@ no fim, a zona de perigo "Excluir matriz…" (E3, D-205) leva a ui_excluir.{% en
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/matriz.css' %}">{% endblock %}
 
 {% block conteudo %}
-<a class="mudo voltar" href="{% url 'ui_matriz' matriz.ano.ano %}">‹ Matrizes de {{ matriz.ano.ano }}</a>
-<header class="pagina-cab">
-  <div>
-    {% if pode_alterar %}{# U5: renomear inline, pelo autosave (campoAuto + nomeInline) #}
-    <form id="matriz-nome" x-data="campoAuto" novalidate>{% csrf_token %}{% url 'ui_matriz_renomear' matriz.pk as url %}
-      <h1>{% include "ui/_componentes/nome_inline.html" with nome=matriz.nome %}</h1>
-    </form>
-    {% else %}<h1>{{ matriz.nome }}</h1>{% endif %}
-    <p class="mudo">Matriz de {{ matriz.ano.ano }}{% if matriz.duplicada_de %} · cópia de {{ matriz.duplicada_de.nome }} ({{ matriz.duplicada_de.ano.ano }}){% endif %}</p>
-  </div>
-  <div class="acoes">
-    {% if matriz.duplicada_de %}<a class="btn btn-ghost" href="{% url 'ui_matriz_diferencas' matriz.pk %}">Diferenças da origem</a>{% endif %}
+<c-voltar href="{% url 'ui_matriz' matriz.ano.ano %}">Matrizes de {{ matriz.ano.ano }}</c-voltar>
+<c-pagina-cab>
+  {% if pode_alterar %}{# U5: renomear inline, pelo autosave (campoAuto + nomeInline) #}
+  <form id="matriz-nome" x-data="campoAuto" novalidate>{% csrf_token %}{% url 'ui_matriz_renomear' matriz.pk as url %}
+    <h1>{% include "ui/_componentes/nome_inline.html" with nome=matriz.nome %}</h1>
+  </form>
+  {% else %}<h1>{{ matriz.nome }}</h1>{% endif %}
+  <p class="mudo">Matriz de {{ matriz.ano.ano }}{% if matriz.duplicada_de %} · cópia de {{ matriz.duplicada_de.nome }} ({{ matriz.duplicada_de.ano.ano }}){% endif %}</p>
+  <c-slot name="acoes">
+    {% if matriz.duplicada_de %}<c-botao variante="ghost" href="{% url 'ui_matriz_diferencas' matriz.pk %}">Diferenças da origem</c-botao>{% endif %}
     {% if pode_alterar %}
     {% include "ui/_componentes/status_salvo.html" %}
-    <a class="btn btn-outline" href="{% url 'ui_matriz_reimportar' matriz.pk %}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
+    <c-botao variante="outline" href="{% url 'ui_matriz_reimportar' matriz.pk %}">
+      <c-icone nome="enviar" />
       Reimportar
-    </a>
+    </c-botao>
     {% endif %}
     {% if pode_duplicar %}
-    <button type="button" class="btn" data-abrir="dlg-duplicar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+    <c-botao data-abrir="dlg-duplicar">
+      <c-icone nome="copiar" />
       Duplicar
-    </button>
+    </c-botao>
     {% endif %}
-  </div>
-</header>
+  </c-slot>
+</c-pagina-cab>
 
 {% if not pode_alterar and not pode_duplicar %}
 {% include "ui/_componentes/so_leitura.html" with texto="Só leitura: seu perfil vê a matriz, mas não altera. Para editar, peça a permissão de matriz a um administrador." %}
@@ -70,16 +68,16 @@ no fim, a zona de perigo "Excluir matriz…" (E3, D-205) leva a ui_excluir.{% en
     <p class="mudo">Só sai se nenhum parceiro a usa. Sai com as etapas × componente, os descritores e as tarefas dela. Na próxima tela, digite o nome para confirmar.</p>
   </div>
   {% url 'ui_matriz' matriz.ano.ano as lista %}
-  <a class="btn btn-destrutivo btn-sm" href="{% url 'ui_excluir' 'matriz' matriz.pk %}?voltar={{ lista|urlencode }}">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-    Excluir matriz…</a>
+  <c-botao variante="destrutivo" tamanho="sm" href="{% url 'ui_excluir' 'matriz' matriz.pk %}?voltar={{ lista|urlencode }}">
+    <c-icone nome="lixeira" />
+    Excluir matriz…</c-botao>
 </section>
 {% endif %}
 
 {% if pode_duplicar %}
-<dialog class="dialogo" id="dlg-duplicar" aria-labelledby="dlg-duplicar-titulo">
+<c-modal id="dlg-duplicar">
   {% url 'ui_matriz_duplicar' matriz.pk as url %}
   {% with titulo="Duplicar "|add:matriz.nome %}{% include "ui/parciais/matriz_form.html" with form=duplicar chave="duplicar" %}{% endwith %}
-</dialog>
+</c-modal>
 {% endif %}
 {% endblock %}

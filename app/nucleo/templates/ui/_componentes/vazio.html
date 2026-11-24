@@ -7,9 +7,9 @@ não vira botão vazio. `mais=True` põe o "+" de criar antes do rótulo. `url2`
   {% include "ui/_componentes/vazio.html" with titulo="Nenhuma revista" texto="Lance os cortes do ano para criar as revistas." url=u rotulo="Abrir cortes" %}
   {% include "ui/_componentes/vazio.html" with titulo="Nenhum descritor" texto="…" abrir="dlg-novo" rotulo="Novo descritor" mais=True %}
 {% endcomment %}<div class="vazio" role="status">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2z"/></svg>
+  <c-icone nome="pasta" />
   <h2>{{ titulo }}</h2>
   {% if texto %}<p>{{ texto }}</p>{% endif %}
-  {% if rotulo %}{% if abrir %}<button type="button" class="btn btn-outline" data-abrir="{{ abrir }}">{% elif url %}<a class="btn btn-outline" href="{{ url }}">{% endif %}{% if abrir or url %}{% if mais %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>{% endif %}{{ rotulo }}{% if abrir %}</button>{% else %}</a>{% endif %}{% endif %}{% endif %}
-  {% if rotulo2 and url2 %}<a class="btn btn-outline" href="{{ url2 }}">{{ rotulo2 }}</a>{% endif %}
+  {% if rotulo %}{% if abrir %}<button type="button" class="btn btn-outline" data-abrir="{{ abrir }}">{% elif url %}<a class="btn btn-outline" href="{{ url }}">{% endif %}{% if abrir or url %}{% if mais %}<c-icone nome="mais" />{% endif %}{{ rotulo }}{% if abrir %}</button>{% else %}</a>{% endif %}{% endif %}{% endif %}
+  {% if rotulo2 and url2 %}<c-botao variante="outline" href="{{ url2 }}">{{ rotulo2 }}</c-botao>{% endif %}
 </div>

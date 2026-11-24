@@ -129,7 +129,7 @@ def grade(request, ano, ler_post=True):
     for p in parceiros:
         atual = atuais.get(p.pk, [""] * len(colunas))
         # Um "o-" por parceiro (a linha inteira como estava na página): 1 campo a menos por
-        # célula, para caber no DATA_UPLOAD_MAX_NUMBER_FIELDS (1000) com ~100 parceiros.
+        # célula, para caber no DATA_UPLOAD_MAX_NUMBER_FIELDS (10 000, ver settings.py).
         original = None if post is None else post.get(f"o-{p.pk}")
         erros, celulas, valores = [], [], []
         for (e, c), texto_atual in zip(colunas, atual):

@@ -1,0 +1,4 @@
+{% comment %}
+Texto longo. Props de estado iguais às do <c-input> (ver cotton/input.html); o texto vem pelo slot, sem espaço a mais.
+  <c-textarea id="id_texto" name="texto" rows="4" :erros="form.texto.errors" :editavel="pode_gravar" trava="readonly">{{ form.texto.value|default:'' }}</c-textarea>
+{% endcomment %}<c-vars erros="" erro_id="" editavel="sim" trava="disabled" class="" /><textarea class="textarea{% if class %} {{ class }}{% endif %}"{% if attrs.attrs_dict %} {{ attrs }}{% endif %}{% if erros %} aria-invalid="true"{% if erro_id %} aria-describedby="{{ erro_id }}"{% endif %}{% endif %}{% if not editavel %} {{ trava }}{% endif %}>{{ slot }}</textarea>

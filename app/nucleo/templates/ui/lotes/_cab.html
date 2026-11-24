@@ -1,15 +1,10 @@
 {% comment %}
 Cabeçalho comum das duas abas de Lotes: título, ano, abas e aviso de só leitura.
 Contexto: ano, anos, aba ("matriz" | "template"), pode_gravar.
-{% endcomment %}<header class="pagina-cab">
-  <div>
-    <h1>Lotes</h1>
-    <p class="mudo">Atribua a mesma matriz ou o mesmo template a vários de uma vez.</p>
-  </div>
-  <div class="acoes">
-    <a class="btn btn-ghost" href="{% url 'painel' ano.ano %}">Ver painel de {{ ano.ano }}</a>
-  </div>
-</header>
+{% endcomment %}<c-pagina-cab titulo="Lotes">
+  <p class="mudo">Atribua a mesma matriz ou o mesmo template a vários de uma vez.</p>
+  <c-slot name="acoes"><c-botao variante="ghost" href="{% url 'painel' ano.ano %}">Ver painel de {{ ano.ano }}</c-botao></c-slot>
+</c-pagina-cab>
 
 
 <nav class="abas" aria-label="Lotes">

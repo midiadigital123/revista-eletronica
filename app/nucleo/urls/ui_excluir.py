@@ -25,6 +25,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 from nucleo.matriz import ExcluirForm
 from nucleo.models import Ano, Componente, Etapa, Matriz, Parceiro, Template
 from nucleo.servicos import exclusao
+from nucleo.widgets import classe_css
 
 
 def _ano(o):
@@ -68,7 +69,8 @@ def excluir(request, modelo, pk):
     obj = get_object_or_404(classe, **{campo: pk})
     voltar = _voltar(request)
     form = ExcluirForm(request.POST or None, codigo=codigo(obj))
-    form.fields["confirmacao"].widget.attrs["class"] = "input"
+    w = form.fields["confirmacao"].widget
+    w.attrs["class"] = classe_css(w)
     e_ano = classe is Ano
     impedimentos = [] if e_ano else exclusao.impedimentos(obj, request.user)
     titulo = nome(obj)  # antes de excluir: o objeto some

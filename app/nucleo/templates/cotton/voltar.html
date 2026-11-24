@@ -1,0 +1,5 @@
+{% comment %}
+Link de voltar, acima do título da página: "‹ Usuários". O sinal ‹ e as classes ficam aqui.
+Trilha de mais de um nível (Projetos › Projeto) é um <nav> próprio, nas telas de projeto e de revista.
+  <c-voltar href="{% url 'ui_usuarios' %}">Usuários</c-voltar>
+{% endcomment %}<c-vars href="" /><a class="mudo voltar" href="{{ href }}"{% if attrs.attrs_dict %} {{ attrs }}{% endif %}>‹ {{ slot }}</a>

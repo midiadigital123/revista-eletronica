@@ -24,8 +24,8 @@ Contexto: form (nucleo.lotes.MatrizLoteForm), linhas [{pa, marcado, projeto, edi
             <span class="lote-novo" data-novo hidden></span>
           </td>
           <td>
-            {% if l.editando %}<span class="badge badge-alerta" title="O projeto está aberto; o lote não grava nele.">Em edição por {{ l.editando }}: será pulado</span>
-            {% elif not l.projeto %}<span class="badge badge-secundario" title="Grava a matriz do parceiro mesmo sem projeto ativo.">Sem projeto ativo</span>{% endif %}
+            {% if l.editando %}<c-badge variante="alerta" title="O projeto está aberto; o lote não grava nele.">Em edição por {{ l.editando }}: será pulado</c-badge>
+            {% elif not l.projeto %}<c-badge variante="secundario" title="Grava a matriz do parceiro mesmo sem projeto ativo.">Sem projeto ativo</c-badge>{% endif %}
           </td>
         </tr>
       {% endfor %}
@@ -39,15 +39,15 @@ Contexto: form (nucleo.lotes.MatrizLoteForm), linhas [{pa, marcado, projeto, edi
     <span class="mudo" data-contador aria-live="polite">{{ form.alvos.value|length|default:0 }} selecionado(s)</span>
     <div class="lote-campo">
       <label class="rotulo" for="lote-matriz">Matriz</label>
-      <select class="select" name="matriz" id="lote-matriz" data-previa="matriz"{% if form.matriz.errors %} aria-invalid="true" aria-describedby="erro-matriz"{% endif %}>
+      <c-select name="matriz" id="lote-matriz" data-previa="matriz" :erros="form.matriz.errors" erro_id="erro-matriz">
         <option value="">Escolha a matriz</option>
         {% for m in form.fields.matriz.queryset %}<option value="{{ m.pk }}"{% if form.matriz.value|stringformat:"s" == m.pk|stringformat:"s" %} selected{% endif %}>{{ m.nome }}</option>{% endfor %}
-      </select>
+      </c-select>
     </div>
-    <button class="btn" type="submit">
+    <c-botao type="submit">
       {% include "ui/_componentes/girando.html" with id="lote-girando" %}
       Aplicar aos selecionados
-    </button>
+    </c-botao>
     {% if form.matriz.errors %}<p class="erro lote-erro" id="erro-matriz" role="alert">{{ form.matriz.errors.0 }}</p>{% endif %}
     {% if not form.fields.matriz.queryset.exists %}<p class="ajuda mudo lote-erro">Nenhuma matriz em {{ ano.ano }}: cadastre em Matrizes.</p>{% endif %}
   </div>

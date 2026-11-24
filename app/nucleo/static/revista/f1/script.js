@@ -948,8 +948,8 @@ class NavigationManager {
     if (this.nextBtn)
       this.nextBtn.addEventListener("click", () => this.navigate(1));
     document.addEventListener("keydown", (e) => {
-      // Página única (S08): no F2 as setas são do tour; com modal aberto, de ninguém.
-      if (e.target.closest?.("#f2") || document.querySelector("dialog[open]") || !document.getElementById("itemModal")?.hidden)
+      // Com o modal do item aberto, as setas não navegam.
+      if (!document.getElementById("itemModal")?.hidden)
         return;
       if (e.ctrlKey && e.key === "ArrowLeft") this.navigate(-1);
       if (e.ctrlKey && e.key === "ArrowRight") this.navigate(1);

@@ -3,7 +3,9 @@
 F1: porte de `api/src/modules/planilhas/{layout,service}.ts` para openpyxl, generalizado para
 N padrões; lê o `f1.dados[etapa]` do resolvido (o mesmo JSON do JS, D-130), então os rótulos dos
 padrões já vêm resolvidos (`pdNN` do projeto ou nome do ano, D-175).
-F2: uma linha por seção (seção, título, texto), com o texto puro.
+F2: aba "F2" com uma linha por seção (seção, título, texto), com o texto puro; mais uma aba por
+infográfico (o fim do título, ex. "Outras Etapas") com uma linha por campo de `f2.textos_impresso`
+(o mesmo que o diff do impresso confere; a imagem do item não entra).
 """
 
 import io
@@ -19,6 +21,7 @@ from nucleo import texto
 from nucleo.models import Etapa, ProjetoPasso
 from nucleo.servicos.empacotar import nome_zip
 from nucleo.servicos.etapa_projeto import mecs_por_etapa, vigente
+from nucleo.servicos.f2 import textos_impresso
 from nucleo.servicos.resolver import VAZIO, resolver
 
 # Colunas fixas por componente, copiadas dos modelos do núcleo de impressão (layout.ts).
@@ -95,7 +98,9 @@ def _larguras(ws, larguras):
 
 def planilha_f1(dados, etapa, componente, cores, passo=None):
     """xlsx de uma etapa: abas "Níveis" (descritor × nível) e "Escala" (padrões, limites e cor)."""
-    layout = LAYOUTS.get(componente, LAYOUTS["LP"])
+    if componente not in LAYOUTS:
+        raise ValueError(f"Sem layout de planilha para o componente {componente}.")
+    layout = LAYOUTS[componente]
     ns = niveis(dados)
     padroes = [p["chave"] for p in dados["padroes"]]
     wb = Workbook()
@@ -141,8 +146,8 @@ def planilha_f1(dados, etapa, componente, cores, passo=None):
     return _bytes(wb)
 
 
-def planilha_f2(secoes):
-    """xlsx do F2: uma linha por seção, com título e texto puros."""
+def planilha_f2(secoes, infograficos=()):
+    """xlsx do F2: aba "F2" com uma linha por seção (título e texto puros) e uma aba por infográfico."""
     wb = Workbook()
     ws = wb.active
     ws.title = "F2"
@@ -155,6 +160,18 @@ def planilha_f2(secoes):
         for c in ws[ws.max_row]:
             c.alignment = TOPO
     _larguras(ws, [16, 40, 100])
+    for inf in infograficos:
+        # "Avaliação e Currículo – Outras Etapas" passa dos 31 caracteres do Excel: só o tipo.
+        ws = wb.create_sheet(inf["titulo"].split(" – ")[-1][:31])
+        ws.freeze_panes = "A2"
+        _append(ws, ["Campo", "Texto"])
+        for c in ws[1]:
+            c.font = NEGRITO
+        for rotulo, txt in textos_impresso(inf):
+            _append(ws, [rotulo, txt])
+            for c in ws[ws.max_row]:
+                c.alignment = TOPO
+        _larguras(ws, [16, 100])
     return _bytes(wb)
 
 
@@ -178,5 +195,5 @@ def zip_planilhas(revista):
     with zipfile.ZipFile(saida, "w", zipfile.ZIP_DEFLATED) as z:
         for etapa in f1["etapas"]:
             z.writestr(nome_planilha(nome, cc, etapa), planilha_f1(f1["dados"][etapa], etapa, cc, f1["cores"], por_etapa.get(etapa)))
-        z.writestr(nome_planilha(nome, cc, "F2"), planilha_f2(f2["secoes"]))
+        z.writestr(nome_planilha(nome, cc, "F2"), planilha_f2(f2["secoes"], f2.get("infograficos", [])))
     return f"planilhas-{nome_zip(revista)}", saida.getvalue()

@@ -11,16 +11,29 @@ from django.utils import timezone
 from django.test import SimpleTestCase
 from django.urls import reverse
 
-from nucleo.models import Corte, Descritor, FotoRevista, Projeto, ProjetoPasso, Revista, Tarefa, TemplateVersao
-from nucleo.models.revista import Motivo
-from nucleo.servicos import bloqueio, planilhas, validacao
+from nucleo.management.commands import criar_demo
+from nucleo.models import (
+    Corte,
+    Descritor,
+    FotoRevista,
+    Projeto,
+    ProjetoPasso,
+    Revista,
+    RevistaInfografico,
+    RevistaInfograficoItem,
+    Tarefa,
+    TemplateVersao,
+)
+from nucleo.models.revista import Motivo, TipoInfografico
+from nucleo.servicos import bloqueio, f2, planilhas, validacao
 from nucleo.servicos.foto import fotografar
 from nucleo import texto
 from nucleo.servicos.resolver import carregar, hash_validado, resolver
 from nucleo.tests.test_admin_projeto import Base, mensagens
-from nucleo.tests.test_painel import SVG_B, completar, trocar_svg
+from nucleo.tests.test_painel import SVG_B, completar, trocar_imagem
 from nucleo.tests.test_resolver import F1
 
+OUTRAS = "Avaliação e Currículo – Outras Etapas"  # grupo do diff: o título do infográfico
 FIXTURES = Path(__file__).parent / "fixtures"
 CORES_ANTIGAS = {"padrao-1": "#f72628", "padrao-2": "#ff8d43", "padrao-3": "#b3ccff", "padrao-4": "#0ed3ff"}  # CORES_PADRAO do TS
 
@@ -59,7 +72,7 @@ class ImpressoTest(Base):
         self.client.force_login(self.imp)
         r = self.abrir()
         self.assertContains(r, "Primeira entrega")
-        self.assertEqual(self.grupos(), {"F1": ["introducao", "Cores", "5EF", "9EF", "fechamento"], "F2": ["abertura", "passo1", "dlg-p2"]})
+        self.assertEqual(self.grupos(), {"F1": ["introducao", "Cores", "5EF", "9EF", "fechamento"], "F2": ["abertura", "passo1", "dlg-p2", OUTRAS]})
         itens = [i for g in r.context["mudancas"].values() for lista in g.values() for i in lista]
         self.assertTrue(all(i["antes"] is None for i in itens))
         cinco = [i["item"] for i in r.context["mudancas"]["F1"]["5EF"]]
@@ -116,7 +129,7 @@ class ImpressoTest(Base):
         self.client.force_login(self.imp)
         aberta = self.abrir()
         self.assertContains(aberta, 'id="botao-impressa"')
-        trocar_svg(self.rev, SVG_B)  # mudou depois que a página abriu e a pedagógica validou a nova versão
+        trocar_imagem(self.rev, SVG_B)  # mudou depois que a página abriu e a pedagógica validou a nova versão
         self.validar()
         r = self.marcar(aberta.context["hash"])
         self.assertIn("Impresso não atualizado: a revista não está “Validado” na versão que a página mostrou; recarregue.", mensagens(r))
@@ -126,7 +139,7 @@ class ImpressoTest(Base):
         self.validar()
         self.client.force_login(self.imp)
         visto = self.abrir().context["hash"]
-        trocar_svg(self.rev, SVG_B)  # hash_validado continua = visto, mas a revista atual é outra
+        trocar_imagem(self.rev, SVG_B)  # hash_validado continua = visto, mas a revista atual é outra
         self.assertIn("Impresso não atualizado: a revista mudou depois que a página abriu; confira de novo.", mensagens(self.marcar(visto)))
         self.assertFalse(FotoRevista.objects.exists())
 
@@ -268,6 +281,76 @@ class ImpressoTest(Base):
         r = self.client.post(reverse("admin:nucleo_revista_changelist"), {"action": "baixar_planilhas", "_selected_action": [self.rev.pk]})
         self.assertRedirects(r, reverse("impresso_planilhas", args=[self.rev.pk]), fetch_redirect_response=False)
 
+    # --- Textos dos infográficos no impresso (fase 4 do F2); a imagem do item não entra (D-118) ---
+
+    def infografico(self):
+        return resolver(carregar(self.rev.pk))["f2"]["infograficos"][0]
+
+    def test_textos_impresso_do_infografico(self):
+        criar_demo.preencher_infograficos(self.rev)  # dados do docx de LP 2026
+        textos = dict(f2.textos_impresso(self.infografico()))
+        self.assertEqual(list(textos)[:6], ["Habilidade", "❶ Descritor", "❷ Habilidades", "❸ Progressão", "Referencial", "Tarefa 1"])
+        self.assertTrue(textos["Habilidade"].startswith("Interpretar texto com auxílio"))
+        self.assertIn("**1º e 2º anos do Ensino Fundamental**", textos["❷ Habilidades"])  # HTML volta a Markdown
+        referencial = textos["Referencial"].splitlines()
+        self.assertEqual(len(referencial), 12)  # uma linha por etapa
+        self.assertEqual(referencial[0], "1º ano do Ensino Fundamental · I · EF15LP18 · Relacionar texto com ilustrações e outros recursos gráficos.")
+        self.assertEqual(referencial[1], "2º ano do Ensino Fundamental · I")  # código e texto vazios saem
+        tarefa = textos["Tarefa 1"].splitlines()
+        self.assertEqual(tarefa[:2], ["D05 – 2º ano do Ensino Fundamental", "Tirinha de quatro quadrinhos em que um passarinho observa um tigre construindo uma casa com tijolos."])
+        self.assertTrue(tarefa[2].startswith("Esse é um item exemplar"))
+
+    def test_passo_tarefas_desligado_sem_tarefas(self):
+        RevistaInfografico.objects.filter(revista=self.rev).update(passos_desligados=["tarefas"])
+        self.assertFalse([r for r, _ in f2.textos_impresso(self.infografico()) if r.startswith("Tarefa")])
+
+    def test_habilidade_trocada_aparece_no_impresso(self):
+        self.imprimir()
+        RevistaInfografico.objects.filter(revista=self.rev).update(habilidade="Nova habilidade.")
+        r = self.abrir()
+        self.assertTrue(r.context["pendente"])
+        itens = r.context["mudancas"]["F2"][OUTRAS]
+        self.assertEqual([i["item"] for i in itens], ["Habilidade"])
+        self.assertEqual(itens[0]["depois"], "Nova habilidade.")
+        self.assertEqual(list(r.context["mudancas"]), ["F2"])
+
+    def test_so_a_imagem_do_item_nao_deixa_o_impresso_pendente(self):
+        self.imprimir()
+        RevistaInfograficoItem.objects.filter(infografico__revista=self.rev).update(imagem="infograficos/outra.png", imagem_sha256="d" * 64)
+        r = self.abrir()
+        self.assertFalse(r.context["pendente"])
+        self.assertEqual(r.context["mudancas"], {})
+
+    def test_foto_antiga_sem_infograficos_lista_como_novo(self):
+        self.imprimir()
+        foto = FotoRevista.objects.get(revista=self.rev)
+        del foto.conteudo["f2"]["infograficos"]
+        FotoRevista.objects.filter(pk=foto.pk).update(conteudo=foto.conteudo)
+        r = self.abrir()
+        self.assertTrue(r.context["pendente"])
+        itens = r.context["mudancas"]["F2"][OUTRAS]
+        self.assertEqual(itens[0]["rotulo"], f"{OUTRAS} · Habilidade")
+        self.assertTrue(all(i["antes"] is None for i in itens))
+
+    def test_planilha_f2_tem_aba_por_infografico(self):
+        wb = self.planilha("Projeto GO - LP F2.xlsx")
+        self.assertEqual(wb.sheetnames, ["F2", "Outras Etapas"])
+        aba = wb["Outras Etapas"]
+        self.assertEqual([c.value for c in aba[1]], ["Campo", "Texto"])
+        self.assertIn("Referencial", [c.value for c in aba["A"]])
+
+    def test_alfa_e_outras_juntos_no_diff_e_na_planilha(self):
+        """Dois infográficos ativos: uma aba e um grupo do diff para cada, sem nome truncado nem repetido."""
+        RevistaInfografico.objects.get_or_create(
+            revista=self.rev, tipo="alfa", defaults={"componente_id": self.rev.componente_id, "ano_id": self.rev.ano_id}
+        )
+        criar_demo.preencher_infograficos(self.rev)
+        self.imprimir()
+        RevistaInfografico.objects.filter(revista=self.rev).update(habilidade="Nova habilidade.")
+        alfa = TipoInfografico("alfa").label
+        self.assertEqual(list(self.abrir().context["mudancas"]["F2"]), [alfa, OUTRAS])
+        self.assertEqual(self.planilha("Projeto GO - LP F2.xlsx").sheetnames, ["F2", "Alfa", "Outras Etapas"])
+
 
 def celulas(ws):
     """Valor, negrito, preenchimento, quebra e alinhamento de cada célula; larguras e congelamento."""
@@ -312,6 +395,10 @@ class GabaritoPlanilhaTest(SimpleTestCase):
         dados["D01"]["description"] = '=HYPERLINK("http://exemplo.invalid","x")'
         c = openpyxl.load_workbook(io.BytesIO(planilhas.planilha_f1(dados, "9ef", "MT", {})))["Níveis"]["C2"]
         self.assertEqual((c.value, c.data_type), ('=HYPERLINK("http://exemplo.invalid","x")', "s"))
+
+    def test_componente_sem_layout_falha(self):  # antes caía no layout do LP sem avisar
+        with self.assertRaisesMessage(ValueError, "Sem layout de planilha para o componente CN."):
+            planilhas.planilha_f1({}, "5ef", "CN", {})
 
 
 class DiffTextoTest(SimpleTestCase):

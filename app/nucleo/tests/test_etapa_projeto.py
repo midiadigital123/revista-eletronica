@@ -17,7 +17,8 @@ from nucleo.servicos.empacotar import _itens
 from nucleo.servicos.etapa_projeto import CriacaoRecusada, Item, classificar, criar, derivadas, foto, hash_foto
 from nucleo.servicos.matriz import CAMPOS_DESCRITOR, impacto
 from nucleo.servicos.planilhas import passos
-from nucleo.servicos.resolver import carregar, hash_validado, pendencias, resolver
+from nucleo.servicos.pendencias import pendencias
+from nucleo.servicos.resolver import carregar, hash_validado, resolver
 from nucleo.servicos.validacao import validada, validar
 from nucleo.tests.test_resolver import MediaTemporaria, Mundo, recarregar, usuario
 

@@ -1,0 +1,148 @@
+{% extends "revista/_base.html" %}
+{% comment %}
+F1 (escalas de proficiência), portado de revista/escala.hbs (S08). Contexto:
+nucleo.servicos.html.contexto_pagina(revista, "f1", ...): as chaves comuns do _base.html, mais
+`etapas`, `dados` (JSON do F1, inline), `fechamento` e as faixas `sem_template_f1` e `sem_matriz`.
+Títulos e corpos das seções vêm prontos e escapados do resolver (|safe só neles).
+{% endcomment %}
+{% block titulo %}Escalas de proficiência – {{ block.super }}{% endblock %}
+{% block conteudo %}
+    <main id="conteudo">
+    <section id="f1" class="capitulo" aria-labelledby="f1-titulo">
+        <h1 id="f1-titulo" class="rv-sr-only">Escalas de proficiência</h1>
+        {% if preview and sem_template_f1 %}<div class="faixa-vermelha" role="status">Falta escolher o template do F1.</div>{% endif %}
+        {% if preview and sem_matriz %}<div class="faixa-vermelha" role="status">Falta escolher a matriz ({{ sem_matriz|join:", " }}).</div>{% endif %}
+        {% if introducao %}
+        <section class="intro-section">
+            <div class="intro-content">{{ introducao.corpo|safe }}</div>
+        </section>
+        {% endif %}
+
+        <section class="interactive-section">
+            <div class="interactive-container">
+                <div class="descriptors-area">
+                    <div class="descritores-menu" id="filtro">
+                        <div class="tab-bar" role="group" aria-label="Etapa de ensino">
+                            {% for etapa in etapas %}
+                            <button class="filtro-btn tab{% if forloop.first %} active{% endif %}" data-filter="{{ etapa }}" aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}">{{ etapa }}</button>
+                            {% endfor %}
+                        </div>
+
+                        <div class="descritores-card" id="descritoresCard">
+                            <div class="controls-row">
+                                <button class="dropdown-toggle" id="dropdownToggle" type="button" aria-controls="tagPanel" aria-expanded="false">
+                                    <span class="rv-sr-only">Descritor: </span><span class="dropdown-label" id="dropdownLabel"></span>
+                                    <svg class="chevron" id="chevronIcon" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                        <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div class="tag-panel" id="tagPanel" hidden>
+                                <div class="descritores-grid tag-grid"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rv-sr-only" role="status" id="anuncio"></div>
+
+                <div class="titulo-topico">
+                        <h3></h3>
+                    </div>
+
+                    <div class="content-wrapper">
+                        <div class="descritor-detalhado">
+                            <span class="descritor-badge"></span>
+                            <p></p>
+                        </div>
+                    </div>
+
+                    <div class="prerequisitos-box">
+                        <div class="prerequisitos-content">
+                            <p class="prerequisitos-title"><strong>Pré-requisitos necessários para o desenvolvimento desta habilidade:</strong></p>
+                            <ul></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="escala-proficiencia">
+                    <p class="escala-legenda">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="m6 13 6 6 6-6"/></svg>
+                        <span>Quem alcança uma tarefa <strong>já domina todas as que estão abaixo dela</strong>.</span>
+                    </p>
+                    <div class="escala-header">
+                        <p class="escala-label-top"></p>
+                    </div>
+                    <div class="escala-content"></div>
+                    <div class="escala-footer">
+                        <p class="escala-label-bottom"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bncc-section">
+                <div class="bncc-header">
+                    <div class="bncc-icon"></div>
+                    <h2>BNCC</h2>
+                </div>
+                <div class="bncc-content">
+                    <div class="bncc-row">
+                        <div class="bncc-label">Práticas de linguagem:</div>
+                        <div class="bncc-value"></div>
+                    </div>
+                    <div class="bncc-row">
+                        <div class="bncc-label">Objeto de conhecimento:</div>
+                        <div class="bncc-value"></div>
+                    </div>
+                    <div class="bncc-row">
+                        <div class="bncc-label">Habilidades relacionadas:</div>
+                        <div class="bncc-value"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="navigation-buttons">
+                <button class="nav-btn prev-btn">
+                    <img src="{{ estaticos }}f1/assets/seta-anterior.svg" alt="">
+                    <span>Descritor anterior</span>
+                </button>
+                <a class="nav-btn top-btn" href="#filtro">
+                    <svg width="16" height="16" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M3.5 8.75L7 5.25L10.5 8.75" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>Voltar ao filtro</span>
+                </a>
+                <button class="nav-btn next-btn">
+                    <span>Próximo descritor</span>
+                    <img src="{{ estaticos }}f1/assets/seta-proxima.svg" alt="">
+                </button>
+            </div>
+        </section>
+
+        {% if fechamento %}
+        <section class="fechamento-section" aria-labelledby="fechamento-titulo">
+            <h2 id="fechamento-titulo">{{ fechamento.titulo|safe }}</h2>
+            {{ fechamento.corpo|safe }}
+        </section>
+        {% endif %}
+    </section>
+    </main>
+
+    <aside class="menu-lateral" aria-label="Descritores">
+        <p class="menu-lateral-title">Descritores</p>
+        <div class="menu-lateral-grid"></div>
+    </aside>
+
+    <div class="modal-overlay" id="itemModal" hidden>
+        <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="itemModalTitle">
+            <button type="button" class="modal-close" id="itemModalClose" aria-label="Fechar">&times;</button>
+            <h3 class="modal-title" id="itemModalTitle"></h3>
+            <iframe class="modal-pdf" id="itemModalFrame" title="PDF do item"></iframe>
+            <img class="modal-imagem" id="itemModalImagem" alt="" hidden>
+        </div>
+    </div>
+{% endblock %}
+{% block scripts %}
+    {{ dados|json_script:"dados-revista" }}
+    <script src="{{ estaticos }}f1/script.js"></script>
+{% endblock %}

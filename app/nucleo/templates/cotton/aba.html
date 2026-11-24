@@ -1,0 +1,4 @@
+{% comment %}
+Uma aba de c-abas. `atual` não vazio marca a página corrente.
+  <c-aba href="?aba=dados" atual="1">Dados</c-aba>
+{% endcomment %}<c-vars href="" atual="" /><a href="{{ href }}"{% if atual %} aria-current="page"{% endif %}{% if attrs.attrs_dict %} {{ attrs }}{% endif %}>{{ slot }}</a>

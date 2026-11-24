@@ -5,16 +5,13 @@
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/matriz.css' %}">{% endblock %}
 
 {% block conteudo %}
-<a class="mudo voltar" href="{% url 'ui_matriz_detalhe' matriz.pk %}">‹ {{ matriz.nome }}</a>
-<header class="pagina-cab">
-  <div>
-    <h1>Reimportar {{ matriz.nome }}</h1>
-    <p class="mudo">Só as etapas × componente do arquivo são tocadas. Nelas, descritores e tarefas são apagados e recriados a partir do arquivo; edições feitas no sistema se perdem.</p>
-  </div>
-</header>
+<c-voltar href="{% url 'ui_matriz_detalhe' matriz.pk %}">{{ matriz.nome }}</c-voltar>
+<c-pagina-cab titulo="Reimportar {{ matriz.nome }}">
+  <p class="mudo">Só as etapas × componente do arquivo são tocadas. Nelas, descritores e tarefas são apagados e recriados a partir do arquivo; edições feitas no sistema se perdem.</p>
+</c-pagina-cab>
 
 <form method="post" enctype="multipart/form-data" class="card matriz-cartao-form" novalidate>{% csrf_token %}
-  {% for e in form.non_field_errors %}<p class="aviso aviso-erro" role="alert">{{ e }}</p>{% endfor %}
+  {% for e in form.non_field_errors %}<c-aviso tag="p" variante="erro" role="alert">{{ e }}</c-aviso>{% endfor %}
   {% include "ui/_componentes/matriz_campo.html" with campo=form.arquivo %}
   {% include "ui/_componentes/matriz_campo.html" with campo=form.passo %}
   {% if tem_mec %}
@@ -23,8 +20,8 @@
     {% include "ui/_componentes/matriz_campo.html" with campo=form.confirmacao %}
   {% endif %}
   <div class="acoes matriz-fim">
-    <a class="btn btn-outline" href="{% url 'ui_matriz_detalhe' matriz.pk %}">Voltar sem importar</a>
-    <button type="submit" class="btn btn-destrutivo">Importar e substituir</button>
+    <c-botao variante="outline" href="{% url 'ui_matriz_detalhe' matriz.pk %}">Voltar sem importar</c-botao>
+    <c-botao variante="destrutivo" type="submit">Importar e substituir</c-botao>
   </div>
 </form>
 {% endblock %}

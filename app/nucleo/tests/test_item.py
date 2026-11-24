@@ -85,7 +85,7 @@ class ReceberItemTest(Base):
         ]
         self.assertEqual(len(linhas), 1)
         self.assertEqual(linhas[0]["item"]["alt"], "Grafico de barras com 4 colunas")
-        resp = self.client.get(reverse("preview", args=[rev.pk]))
+        resp = self.client.get(reverse("preview_f1", args=[rev.pk]))
         self.assertContains(resp, "Grafico de barras com 4 colunas")
         nome = self.tarefa.arquivo.split("/")[-1]
         item = self.client.get(reverse("preview_item", args=[rev.pk, nome]))

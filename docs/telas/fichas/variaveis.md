@@ -54,10 +54,10 @@ Preencher, numa só tela, os valores que os textos dos templates usam por projet
 - **Ano sem projeto ativo:** estado vazio "Nenhum projeto ativo neste ano" + "Os projetos nascem quando os cortes do parceiro são lançados." + botão "Abrir cortes".
 - **Erro de preenchimento (mais de 200 caracteres, 422):** a célula não grava; o erro aparece embaixo dela e o status diz "Não salvo: corrija o campo marcado". O que foi digitado continua na célula.
 - **Impacto:** o modal "Salvar “<variável>” tira o “Validado” de N revista(s)"; Cancelar ou Esc volta o valor gravado e o foco.
-- **Projeto em edição por outra pessoa ou arquivado (409):** a célula não grava e a mensagem diz quem está editando. Hoje a planilha inteira passa a só leitura até recarregar (o mesmo tratamento do bloqueio perdido).
+- **Projeto em edição por outra pessoa ou arquivado (409):** a célula não grava e a mensagem diz quem está editando. Só a linha daquele projeto fica só leitura (`data-trava-linha`, U10d); o resto da planilha segue editável e "Tentar de novo", quando grava, destrava a linha.
 - **Só leitura (sem permissão):** aviso de só leitura no topo; células travadas; sem "Copiar" e sem status.
 - **Arquivado:** fora da planilha.
-- **Sem conexão:** "Não salvo: sem conexão · Tentar de novo"; só aí (ou com envio pendente) o navegador avisa ao sair.
+- **Sem conexão:** "Não salvo: sem conexão · Tentar de novo"; só aí (ou com envio pendente) o navegador avisa ao fechar, recarregar ou voltar. Clicar num link ou botão que sai da página com campo alterado em foco, falha ou envio pendente abre o diálogo "Alterações não salvas" (Salvar e sair, Descartar e sair, Continuar editando; D-223, [`design-system.md`](../design-system.md) §5).
 - **Erro de rede/servidor ao copiar:** aviso flutuante (toast) com causa e correção; a linha não muda.
 
 ## Mensagens exatas

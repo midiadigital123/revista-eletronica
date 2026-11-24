@@ -322,3 +322,19 @@ class OrdemEscolarPorQualquerCaminhoTest(TestCase):
             Etapa.objects.create(ano=ano, codigo=codigo, escala_max=500, ordem=99)
         self.assertEqual(list(Etapa.objects.filter(ano=ano).order_by("ordem").values_list("codigo", flat=True)),
                          ["2EF", "5EF", "9EF", "3EM"])
+
+
+class PrimeiroAnoUiTest(TestCase):
+    """Banco sem ano: a tela mostra o formulário e o 1º ano nasce vazio (D-246)."""
+
+    def test_abre_o_primeiro_ano_pela_tela(self):
+        self.client.force_login(usuario("ped", "Pedagógica"))
+        url = reverse("ui_anos")
+        resp = self.client.get(url)
+        self.assertContains(resp, "Nenhum ano aberto")
+        self.assertContains(resp, 'name="ano"')
+        self.assertNotContains(resp, "None")
+        resp = self.client.post(url, {"ano": 2026}, follow=True)
+        self.assertRedirects(resp, url)
+        self.assertContains(resp, "Ano 2026 aberto vazio")
+        self.assertEqual(list(Ano.objects.values_list("ano", flat=True)), [2026])

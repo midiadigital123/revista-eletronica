@@ -1,0 +1,17 @@
+{% comment %}
+Modal: <dialog class="dialogo">. Abre com <c-botao data-abrir="id-do-modal"> e fecha com data-fechar
+num botão de dentro (static/ui/ui.js). `titulo` (atributo, ou slot quando leva marcação) monta o
+cabeçalho, com o slot `descricao` abaixo dele; o slot `rodape` vira o footer dos botões.
+Sem `titulo`, é só a casca: o conteúdo traz o próprio cabeçalho (form que o HTMX troca inteiro).
+O id do título é `<id>-titulo`, ou `titulo_id` quando precisa ser outro. `class` acrescenta classes
+(impacto, dialogo-largo); os outros atributos vão para o dialog (x-data, data-*, @cancel.prevent…).
+  <c-modal id="dlg-matriz" titulo="Atribuir matriz">…<c-slot name="rodape">…</c-slot></c-modal>
+{% endcomment %}<c-vars id="" titulo="" titulo_id="" descricao="" rodape="" class="" />
+<dialog class="dialogo{% if class %} {{ class }}{% endif %}"{% if id %} id="{{ id }}"{% endif %}{% if id or titulo_id %} aria-labelledby="{% if titulo_id %}{{ titulo_id }}{% else %}{{ id }}-titulo{% endif %}"{% endif %}{% if attrs.attrs_dict %} {{ attrs }}{% endif %}>
+  {% if titulo %}<header>
+    <h2 id="{% if titulo_id %}{{ titulo_id }}{% else %}{{ id }}-titulo{% endif %}">{{ titulo }}</h2>
+    {{ descricao }}
+  </header>{% endif %}
+  {{ slot }}
+  {% if rodape.strip %}<footer>{{ rodape }}</footer>{% endif %}
+</dialog>

@@ -16,7 +16,7 @@ Responder em uma tela "o que falta para cada revista do ano sair completa, e ond
 
 ## Na jornada
 
-- **Antes:** projeto (matriz, cortes, variáveis), revista (templates, SVG, capa, textos) e preview.
+- **Antes:** projeto (matriz, cortes, variáveis), revista (templates, infográficos, capa, textos) e preview.
 - **Depois:** validar em lote (T24), tela do impresso (T26), página do projeto e da revista.
 - É a primeira tela depois do login (o endereço `/` leva ao painel do maior ano).
 
@@ -28,9 +28,9 @@ Responder em uma tela "o que falta para cada revista do ano sair completa, e ond
 - Tabela, cabeçalho e coluna Revista fixos:
   - Uma linha de grupo por projeto: nome do projeto (link para o projeto), parceiro em cinza e "N de M revistas completas".
   - Abaixo, uma sublinha por revista, na ordem dos componentes: selo LP/MT com o nome do componente (link para a revista) e "Preview" (nova aba; abre mesmo com pendências).
-  - Colunas Matriz, Template F1, Template F2, Variáveis, SVG, Capa, Validado, Impresso. A coluna ativa fica destacada.
+  - Colunas Matriz, Template F1, Template F2, Variáveis, Infográficos, Capa, Validado, Impresso. A coluna ativa fica destacada.
   - Célula: ✓ ou "falta" com a explicação no `title` e o link de correção. Impresso com ✓ também é link (mostra a última versão impressa).
-- "Validado" e "Impresso" são calculados na hora: o "Validado" vale para a versão atual; o "Impresso" compara com a última foto impressa (só textos e escalas; SVG e capa não contam).
+- "Validado" e "Impresso" são calculados na hora: o "Validado" vale para a versão atual; o "Impresso" compara com a última foto impressa (só textos e escalas, inclusive os dos infográficos; capa e imagem dos itens não contam).
 - Revistas arquivadas ficam de fora.
 
 ## Dados gravados
@@ -82,10 +82,10 @@ As revistas ativas, por parceiro: o que falta para cada uma sair completa, e ond
 Parceiro [Todos ▾]  Componente [Todos ▾]  Template [Todos ▾]  Matriz [Todas ▾]  Situação [Todas ▾]  Limpar filtros
 
 3 de 12 revistas completas
-(✓ Matriz) (✓ Template F1) (2 Template F2) (✓ Variáveis) (6 SVG) (6 Capa) [10 Validado] (12 Impresso)   Limpar filtro
+(✓ Matriz) (✓ Template F1) (2 Template F2) (✓ Variáveis) (6 Infográficos) (6 Capa) [10 Validado] (12 Impresso)   Limpar filtro
 
 ┌ tabela-densa (cabeçalho fixo, coluna Revista fixa) ───────────────────────────────────────────────────┐
-│ [■] Revista                  │ Matriz │ Templ.F1 │ Templ.F2 │ Variáveis │ SVG │ Capa │ Validado │ Impresso │
+│ [■] Revista                  │ Matriz │ Templ.F1 │ Templ.F2 │ Variáveis │ Infogr. │ Capa │ Validado │ Impresso │
 │ [■] Projeto GO  GO  1 de 2 revistas completas                                                        │
 │   [ ] LP Língua Portuguesa ↗Preview │ ✓ │ ✓ │ ✓ │ ✓ │ ✓ │ ✓ │ ✓ │ falta │
 │   [x] MT Matemática ↗Preview         │ ✓ │ ✓ │ ✓ │ ✓ │falta│falta│ falta │ falta │

@@ -6,15 +6,10 @@ Lista + detalhe: a lista é só links (?revista=pk); o HTMX troca o #detalhe e p
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/impresso.css' %}">{% endblock %}
 
 {% block conteudo %}
-<header class="pagina-cab">
-  <div>
-    <h1>Impresso</h1>
-    <p class="mudo">O que mudou em cada revista desde a última “Revista Impressa Atualizada”, para levar ao InDesign.</p>
-  </div>
-  <div class="acoes">
-    <a class="btn btn-ghost" href="{% url 'painel' ano.ano %}?falta=impresso">Ver no painel</a>
-  </div>
-</header>
+<c-pagina-cab titulo="Impresso">
+  <p class="mudo">O que mudou em cada revista desde a última “Revista Impressa Atualizada”, para levar ao InDesign.</p>
+  <c-slot name="acoes"><c-botao variante="ghost" href="{% url 'painel' ano.ano %}?falta=impresso">Ver no painel</c-botao></c-slot>
+</c-pagina-cab>
 
 
 {% if not itens %}
@@ -25,8 +20,8 @@ Lista + detalhe: a lista é só links (?revista=pk); o HTMX troca o #detalhe e p
 {% endif %}
 {% else %}
 <p class="impresso-resumo" role="status">
-  <span class="badge {% if para_marcar %}badge-alerta{% else %}badge-contorno{% endif %}">{{ para_marcar }} para atualizar</span>
-  <span class="badge badge-secundario">{{ aguardando }} aguardando “Validado”</span>
+  <c-badge variante="{% if para_marcar %}alerta{% else %}contorno{% endif %}">{{ para_marcar }} para atualizar</c-badge>
+  <c-badge variante="secundario">{{ aguardando }} aguardando “Validado”</c-badge>
   <span class="mudo">{{ itens|length }} revista(s) ativa(s) em {{ ano.ano }}</span>
 </p>
 
@@ -34,7 +29,7 @@ Lista + detalhe: a lista é só links (?revista=pk); o HTMX troca o #detalhe e p
   <nav class="lista" aria-label="Revistas do ano" data-lista>
     {% for i in itens %}
     <a href="?revista={{ i.revista.pk }}" hx-get="?revista={{ i.revista.pk }}" hx-target="#detalhe" hx-push-url="true" hx-indicator="#detalhe"{% if i.revista.pk == detalhe.revista.pk %} aria-current="page"{% endif %}>
-      <span class="impresso-rotulo"><span class="impresso-nome" title="{{ i.revista }}"><span class="impresso-projeto">{{ i.revista.projeto.nome }}</span><span class="badge badge-contorno">{{ i.revista.componente.codigo }}</span></span><span class="impresso-parceiro" title="Parceiro"><span class="sr-only">Parceiro </span>{{ i.revista.projeto.parceiro_ano.parceiro.nome }}</span></span>
+      <span class="impresso-rotulo"><span class="impresso-nome" title="{{ i.revista }}"><span class="impresso-projeto">{{ i.revista.projeto.nome }}</span><c-badge variante="contorno">{{ i.revista.componente.codigo }}</c-badge></span><span class="impresso-parceiro" title="Parceiro"><span class="sr-only">Parceiro </span>{{ i.revista.projeto.parceiro_ano.parceiro.nome }}</span></span>
       {% include "ui/_componentes/impresso_situacao.html" with s=i %}
     </a>
     {% endfor %}

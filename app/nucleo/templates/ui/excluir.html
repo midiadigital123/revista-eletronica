@@ -5,18 +5,16 @@ sai junto (resumo_ano) e só o Admin chega aqui (D-206). Parceiro em uso: Desati
 {% block titulo %}{% if resumo is not None %}Apagar o ano {{ obj.ano }}{% else %}Excluir {{ titulo }}{% endif %}{% endblock %}
 
 {% block conteudo %}
-<a class="mudo voltar" href="{{ voltar }}">‹ Voltar sem excluir</a>
-<header class="pagina-cab">
-  <div>
-    {% if resumo is not None %}
-    <h1>Apagar o ano {{ obj.ano }}</h1>
-    <p class="mudo">Sai o ano inteiro, com tudo o que é dele. Parceiros e usuários ficam, porque são de todos os anos. Não se desfaz pela tela.</p>
-    {% else %}
-    <h1>Excluir {{ titulo }}</h1>
-    {% if impedimentos %}<p class="mudo">Não dá para excluir: isto está em uso. Nada foi apagado.</p>{% else %}<p class="mudo">Nada usa isto. A exclusão não se desfaz pela tela.</p>{% endif %}
-    {% endif %}
-  </div>
-</header>
+<c-voltar href="{{ voltar }}">Voltar sem excluir</c-voltar>
+<c-pagina-cab>
+  {% if resumo is not None %}
+  <h1>Apagar o ano {{ obj.ano }}</h1>
+  <p class="mudo">Sai o ano inteiro, com tudo o que é dele. Parceiros e usuários ficam, porque são de todos os anos. Não se desfaz pela tela.</p>
+  {% else %}
+  <h1>Excluir {{ titulo }}</h1>
+  {% if impedimentos %}<p class="mudo">Não dá para excluir: isto está em uso. Nada foi apagado.</p>{% else %}<p class="mudo">Nada usa isto. A exclusão não se desfaz pela tela.</p>{% endif %}
+  {% endif %}
+</c-pagina-cab>
 
 {% if impedimentos %}
 <div class="tabela-caixa card">
@@ -34,14 +32,14 @@ sai junto (resumo_ano) e só o Admin chega aqui (D-206). Parceiro em uso: Desati
     </tbody>
   </table>
 </div>
-{% if dica %}<p class="aviso aviso-alerta">{{ dica }}</p>{% endif %}
+{% if dica %}<c-aviso tag="p" variante="alerta">{{ dica }}</c-aviso>{% endif %}
 {% if pode_desativar %}
 <form method="post" action="{% url 'ui_parceiro_ativo' obj.pk %}{% if voltar_query %}?voltar={{ voltar_query|urlencode }}{% endif %}" class="acoes">{% csrf_token %}
   {% if obj.desativado_em %}
   <p class="mudo">Desativado em {{ obj.desativado_em|date:"d/m/Y" }}: só aparece nos anos em que tem cortes ou projeto.</p>
-  <button type="submit" name="acao" value="reativar" class="btn btn-outline">Reativar o parceiro</button>
+  <c-botao variante="outline" type="submit" name="acao" value="reativar">Reativar o parceiro</c-botao>
   {% else %}
-  <button type="submit" name="acao" value="desativar" class="btn btn-outline">Desativar o parceiro</button>
+  <c-botao variante="outline" type="submit" name="acao" value="desativar">Desativar o parceiro</c-botao>
   <p class="mudo">Desativado, ele sai da grade dos anos em que não tem cortes. Os anos com dados dele continuam iguais.</p>
   {% endif %}
 </form>
@@ -56,7 +54,7 @@ sai junto (resumo_ano) e só o Admin chega aqui (D-206). Parceiro em uso: Desati
   </table>
 </div>
 {% elif resumo is not None %}
-<p class="aviso">O ano {{ obj.ano }} está vazio.</p>
+<c-aviso tag="p">O ano {{ obj.ano }} está vazio.</c-aviso>
 {% endif %}
 <form method="post" class="card card-estreito" novalidate>{% csrf_token %}
   {% if resumo is not None %}
@@ -65,8 +63,8 @@ sai junto (resumo_ano) e só o Admin chega aqui (D-206). Parceiro em uso: Desati
   {% include "ui/_componentes/confirmar.html" with nome="confirmacao" codigo=codigo texto="A exclusão não se desfaz pela tela." erro=form.confirmacao.errors.0 %}
   {% endif %}
   <div class="acoes">
-    <a class="btn btn-outline" href="{{ voltar }}">Voltar sem excluir</a>
-    <button type="submit" class="btn btn-destrutivo" data-confirmado>{% if resumo is not None %}Apagar o ano {{ obj.ano }}{% else %}Excluir{% endif %}</button>
+    <c-botao variante="outline" href="{{ voltar }}">Voltar sem excluir</c-botao>
+    <c-botao variante="destrutivo" type="submit" data-confirmado>{% if resumo is not None %}Apagar o ano {{ obj.ano }}{% else %}Excluir{% endif %}</c-botao>
   </div>
 </form>
 {% endif %}

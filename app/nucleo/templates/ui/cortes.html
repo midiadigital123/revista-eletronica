@@ -7,10 +7,10 @@
 <div class="acoes aba-acoes">
   <p class="mudo">Cortes dos padrões de cada parceiro, por etapa e componente.</p>
   {% if pode_gravar or perms.nucleo.change_parceiro %}{% include "ui/_componentes/status_salvo.html" %}{% endif %}
-  <a class="btn btn-outline" href="{% url 'cortes_exportar' ano.ano %}">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>
+  <c-botao variante="outline" href="{% url 'cortes_exportar' ano.ano %}">
+    <c-icone nome="baixar" />
     Baixar planilha de grupos
-  </a>
+  </c-botao>
 </div>
 
 {% if not pode_gravar %}
@@ -28,13 +28,13 @@
   <div data-linhas></div>
   <template data-molde><form method="post" action="{% url 'cortes_novo_parceiro' ano.ano %}" class="acoes linha-nova-form">{% csrf_token %}
     <label class="sr-only" for="novo-parceiro">Nome do parceiro novo</label>
-    <input class="input" id="novo-parceiro" name="nome" required maxlength="200" placeholder="Nome do parceiro (ex.: SAEGO)">
-    <button class="btn btn-sm" type="submit">Incluir parceiro</button>
-    <button class="btn btn-ghost btn-sm" type="button" @click="descartar">Descartar</button>
+    <c-input id="novo-parceiro" name="nome" required maxlength="200" placeholder="Nome do parceiro (ex.: SAEGO)" />
+    <c-botao tamanho="sm" type="submit">Incluir parceiro</c-botao>
+    <c-botao variante="ghost" tamanho="sm" @click="descartar">Descartar</c-botao>
   </form></template>
-  <button class="btn btn-outline btn-sm adicionar-linha" type="button" data-abrir-linha @click="abrir">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-    Adicionar parceiro</button>
+  <c-botao variante="outline" tamanho="sm" class="adicionar-linha" data-abrir-linha @click="abrir">
+    <c-icone nome="mais" />
+    Adicionar parceiro</c-botao>
 </div>
 {% endif %}
 

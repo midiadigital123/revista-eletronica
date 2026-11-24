@@ -10,7 +10,6 @@ document.addEventListener("alpine:init", () => {
   "use strict";
 
   const MARCAS = { negrito: "**", italico: "*" };
-  const PASSO = /^passo(\d+)$/;
 
   Alpine.data("editorSecoes", () => {
     // Fora do estado reativo: elementos do DOM dentro do proxy do Alpine quebram setRangeText.
@@ -76,8 +75,6 @@ document.addEventListener("alpine:init", () => {
         if (tipo in MARCAS) this.marcar(botao, MARCAS[tipo]);
         else if (tipo === "lista") this.lista(botao);
         else if (tipo === "variavel") this.variavel(botao);
-        else if (tipo === "passo") this.adicionarPasso(botao);
-        else if (tipo === "dialogo") this.adicionarDialogo();
         else if (tipo === "remover") this.remover(botao);
       },
 
@@ -111,57 +108,19 @@ document.addEventListener("alpine:init", () => {
         this.trocar(c, "{" + "{" + nome + "}" + "}", c.selectionStart, c.selectionEnd);
       },
 
-      // --- estrutura (só F2): passoN e dlg-pN; a ordem segue a do fascículo ---
+      // --- estrutura: só remover (seção que sobrou de um texto antigo); a ordem segue a do fascículo ---
       secoes() {
         return [...this.$root.querySelectorAll("[data-secao]")];
-      },
-      nova(id, rotulo) {
-        const modelo = this.$root.querySelector("template[data-modelo]").innerHTML;
-        const caixa = document.createElement("div");
-        caixa.innerHTML = modelo.replaceAll("__ID__", id).replaceAll("__ROTULO__", rotulo);
-        return caixa.querySelector("[data-secao]");
-      },
-      inserir(secao, depoisDe) {
-        if (depoisDe) depoisDe.after(secao);
-        else this.$root.querySelector("[data-secoes]").append(secao);
-        this.renumerar();
-        this.ativar(secao.dataset.secao);
-        secao.querySelector("[data-campo=titulo]").focus();
-        this.$root.dispatchEvent(new Event("input", { bubbles: true }));
-      },
-      adicionarPasso(botao) {
-        const n = Number(botao.dataset.proximo);
-        botao.dataset.proximo = n + 1;
-        const id = "passo" + n;
-        const secoes = this.secoes();
-        const ultimo = secoes.filter((s) => PASSO.test(s.dataset.secao)).pop() || secoes.find((s) => s.dataset.secao === "abertura");
-        this.$root.querySelector("[data-dlg-passo]").append(new Option("Passo " + n, id));
-        this.inserir(this.nova(id, "Passo " + n), ultimo);
-      },
-      adicionarDialogo() {
-        const passo = this.$root.querySelector("[data-dlg-passo]").value;
-        if (!passo) return;
-        const n = PASSO.exec(passo)[1];
-        const id = "dlg-p" + n;
-        const existe = this.$root.querySelector(`[data-secao="${id}"]`);
-        if (existe) {
-          this.ativar(existe.dataset.secao);
-          existe.querySelector("[data-campo=titulo]").focus(); // um diálogo por passo
-          return;
-        }
-        const ultimo = this.secoes().filter((s) => s.dataset.secao.startsWith("dlg-")).pop();
-        this.inserir(this.nova(id, "Diálogo do passo " + n), ultimo);
       },
       remover(botao) {
         // Nada é gravado aqui: o Salvar leva à tela de impacto, e recarregar a página desfaz.
         const secao = botao.closest("[data-secao]");
         const vizinha = secao.previousElementSibling || secao.nextElementSibling;
-        this.$root.querySelector(`[data-dlg-passo] option[value="${secao.dataset.secao}"]`)?.remove();
         if (alvo && secao.contains(alvo)) alvo = null;
         secao.remove();
         this.renumerar();
         if (vizinha) this.ativar(vizinha.dataset.secao);
-        (vizinha?.querySelector("[data-campo=titulo]") || this.$root.querySelector("[data-acao=passo]"))?.focus();
+        vizinha?.querySelector("[data-campo=titulo]")?.focus();
         this.$root.dispatchEvent(new Event("input", { bubbles: true }));
       },
       renumerar() {

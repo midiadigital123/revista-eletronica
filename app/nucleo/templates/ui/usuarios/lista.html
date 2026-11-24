@@ -7,13 +7,10 @@ quando o seletor sai do grupo atual (`option[selected]`, CSS em telas/usuarios.c
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/usuarios.css' %}">{% endblock %}
 
 {% block conteudo %}
-<header class="pagina-cab">
-  <div>
-    <h1>Usuários</h1>
-    <p class="mudo">Quem entra no sistema e em qual grupo. O grupo decide o que a pessoa pode fazer. Quem sai é desativado; só se exclui quem nunca registrou nada no sistema.</p>
-  </div>
-  {% if perms.auth.add_user %}<div class="acoes"><a class="btn" href="{% url 'ui_usuarios_novo' %}">Novo usuário</a></div>{% endif %}
-</header>
+<c-pagina-cab titulo="Usuários">
+  <p class="mudo">Quem entra no sistema e em qual grupo. O grupo decide o que a pessoa pode fazer. Quem sai é desativado; só se exclui quem nunca registrou nada no sistema.</p>
+  <c-slot name="acoes">{% if perms.auth.add_user %}<c-botao href="{% url 'ui_usuarios_novo' %}">Novo usuário</c-botao>{% endif %}</c-slot>
+</c-pagina-cab>
 
 <div class="tabela-caixa">
   <table class="tabela">
@@ -21,37 +18,37 @@ quando o seletor sai do grupo atual (`option[selected]`, CSS em telas/usuarios.c
     <tbody>
     {% for linha in linhas %}{% with u=linha.u %}
       <tr{% if not u.is_active %} class="usuarios-inativo"{% endif %}>
-        <th scope="row">{{ u.username }}{% if u == request.user %} <span class="badge badge-contorno">você</span>{% endif %}</th>
+        <th scope="row">{{ u.username }}{% if u == request.user %} <c-badge variante="contorno">você</c-badge>{% endif %}</th>
         <td>{{ u.get_full_name|default:"—" }}</td>
         <td>
           {% if linha.mudar_grupo %}
           <form method="post" action="{% url 'ui_usuarios_grupo' u.pk %}" class="acoes usuarios-grupo">{% csrf_token %}
             <label class="sr-only" for="grupo-{{ u.pk }}">Grupo de {{ u.username }}</label>
-            <select class="select" id="grupo-{{ u.pk }}" name="grupo" required>
+            <c-select id="grupo-{{ u.pk }}" name="grupo" required>
               {% if not linha.grupo_atual %}<option value="" selected>Sem grupo</option>{% endif %}
               {% for g in grupos %}<option value="{{ g.pk }}"{% if g == linha.grupo_atual %} selected{% endif %}>{{ g.name }}</option>{% endfor %}
-            </select>
-            <button class="btn btn-outline btn-sm" type="submit" aria-label="Mudar grupo de {{ u.username }}">Mudar</button>
+            </c-select>
+            <c-botao variante="outline" tamanho="sm" type="submit" aria-label="Mudar grupo de {{ u.username }}">Mudar</c-botao>
           </form>
           {% else %}{{ linha.grupos|default:"Sem grupo" }}{% endif %}
         </td>
-        <td>{% if u.is_active %}<span class="badge badge-secundario">Ativo</span>{% else %}<span class="badge badge-alerta">Desativado</span>{% endif %}</td>
+        <td>{% if u.is_active %}<c-badge variante="secundario">Ativo</c-badge>{% else %}<c-badge variante="alerta">Desativado</c-badge>{% endif %}</td>
         <td>{% if u.last_login %}{{ u.last_login|date:"d/m/Y H:i" }}{% else %}<span class="mudo">Nunca entrou</span>{% endif %}</td>
         <td class="usuarios-acoes">
           {% if linha.editar or linha.mudar_ativo %}
           <div class="acoes">
             {% if linha.editar and u.is_active %}
             <form method="post" action="{% url 'ui_usuarios_link' u.pk %}">{% csrf_token %}
-              <button class="btn-icone" type="submit" aria-label="Link de acesso de {{ u.username }}" data-dica="Link de acesso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
+              <c-botao-icone icone="link" type="submit" rotulo="Link de acesso de {{ u.username }}" dica="Link de acesso" />
             </form>
             {% endif %}
-            {% if linha.editar %}<a class="btn-icone" href="{% url 'ui_usuarios_senha' u.pk %}" aria-label="Redefinir senha de {{ u.username }}" data-dica="Redefinir senha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg></a>{% endif %}
+            {% if linha.editar %}<c-botao-icone icone="chave" href="{% url 'ui_usuarios_senha' u.pk %}" rotulo="Redefinir senha de {{ u.username }}" dica="Redefinir senha" />{% endif %}
             {% if linha.mudar_ativo %}
             <form method="post" action="{% url 'ui_usuarios_ativo' u.pk %}">{% csrf_token %}
-              {% if u.is_active %}<button class="btn-icone" type="submit" name="acao" value="desativar" aria-label="Desativar {{ u.username }}" data-dica="Desativar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" x2="22" y1="8" y2="13"/><line x1="22" x2="17" y1="8" y2="13"/></svg></button>
-              {% else %}<button class="btn-icone" type="submit" name="acao" value="ativar" aria-label="Ativar {{ u.username }}" data-dica="Ativar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg></button>{% endif %}
+              {% if u.is_active %}<c-botao-icone icone="usuario-x" type="submit" name="acao" value="desativar" rotulo="Desativar {{ u.username }}" dica="Desativar" />
+              {% else %}<c-botao-icone icone="usuario-ok" type="submit" name="acao" value="ativar" rotulo="Ativar {{ u.username }}" dica="Ativar" />{% endif %}
             </form>
-            <a class="btn-icone" href="{% url 'ui_usuarios_excluir' u.pk %}" aria-label="Excluir {{ u.username }}" data-dica="Excluir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></a>
+            <c-botao-icone icone="lixeira" href="{% url 'ui_usuarios_excluir' u.pk %}" rotulo="Excluir {{ u.username }}" dica="Excluir" />
             {% endif %}
           </div>
           {% else %}<span class="mudo">Só o superusuário altera</span>{% endif %}

@@ -38,6 +38,7 @@ from nucleo.urls import cortes as aba_cortes
 from nucleo.urls import painel, ui_lotes
 from nucleo.urls import ui_variaveis as aba_variaveis
 from nucleo.variaveis import EDITAVEIS, VARIAVEIS
+from nucleo.widgets import classe_css
 
 # ponytail: exige também add/change/delete de passo e cor (os perfis dão tudo junto); o admin
 # deixaria quem só tem change_projeto editar nome e variáveis. Separar se surgir esse perfil.
@@ -182,7 +183,7 @@ def _pk(valor):
 def _vestir(form, desabilitar=False):
     """Classe do design system nos widgets, `aria-invalid` no campo com erro; só leitura: disabled."""
     for nome, campo in form.fields.items():
-        campo.widget.attrs["class"] = "input"
+        campo.widget.attrs["class"] = classe_css(campo.widget)
         if form.is_bound and nome in form.errors:
             campo.widget.attrs["aria-invalid"] = "true"
         campo.disabled |= desabilitar

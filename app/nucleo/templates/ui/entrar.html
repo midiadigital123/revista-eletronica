@@ -13,27 +13,25 @@ redireciona para cá (sistema/urls.py), então é a única porta de entrada. Pá
   <link rel="stylesheet" href="{% static 'ui/ui.css' %}">
 </head>
 <body class="entrar">
-  <main class="card entrar-card">
+  <c-card tag="main" class="entrar-card">
     <header class="entrar-cab">
       <p class="marca">Revista Eletrônica</p>
       <h1 class="secao-titulo">Entrar</h1>
     </header>
     {% if form.non_field_errors %}
-    <p class="aviso aviso-erro" role="alert">Usuário ou senha incorretos. Confira os dois e tente de novo. As maiúsculas contam.</p>
+    <c-aviso tag="p" variante="erro" role="alert">Usuário ou senha incorretos. Confira os dois e tente de novo. As maiúsculas contam.</c-aviso>
     {% endif %}
     <form method="post" action="{% url 'entrar' %}" class="entrar-form">
       {% csrf_token %}
       <input type="hidden" name="next" value="{{ next }}">
-      <div class="campo">
-        <label for="id_username">Usuário</label>
-        <input class="input" type="text" name="username" id="id_username" value="{{ form.username.value|default:'' }}" autocomplete="username" autocapitalize="none" required autofocus{% if form.non_field_errors %} aria-invalid="true"{% endif %}>
-      </div>
-      <div class="campo">
-        <label for="id_password">Senha</label>
-        <input class="input" type="password" name="password" id="id_password" autocomplete="current-password" required{% if form.non_field_errors %} aria-invalid="true"{% endif %}>
-      </div>
+      <c-campo rotulo="Usuário" para="id_username">
+        <c-input type="text" name="username" id="id_username" value="{{ form.username.value|default:'' }}" autocomplete="username" autocapitalize="none" required autofocus :erros="form.non_field_errors" />
+      </c-campo>
+      <c-campo rotulo="Senha" para="id_password">
+        <c-input type="password" name="password" id="id_password" autocomplete="current-password" required :erros="form.non_field_errors" />
+      </c-campo>
       <input class="btn" type="submit" value="Entrar">
     </form>
-  </main>
+  </c-card>
 </body>
 </html>

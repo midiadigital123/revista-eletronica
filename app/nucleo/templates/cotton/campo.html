@@ -1,0 +1,11 @@
+{% comment %}
+Campo de formulário: rótulo + controle (slot padrão) + ajuda + erros (design-system.md §4).
+`rotulo` e `ajuda` aceitam atributo ou slot (para marcação dentro); `:erros` recebe a lista do form.
+  <c-campo rotulo="Nome do projeto" :para="form.nome.id_for_label" :erros="form.nome.errors">{{ form.nome }}</c-campo>
+{% endcomment %}<c-vars rotulo="" para="" ajuda="" erros="" dica="" class="" />
+<div class="campo{% if class %} {{ class }}{% endif %}"{% if attrs.attrs_dict %} {{ attrs }}{% endif %}>
+  <label for="{{ para }}"{% if dica %} title="{{ dica }}"{% endif %}>{{ rotulo }}</label>
+  {{ slot }}
+  {% if ajuda.strip %}<p class="ajuda">{{ ajuda }}</p>{% endif %}
+  {% for e in erros %}<p class="erro">{{ e }}</p>{% endfor %}
+</div>

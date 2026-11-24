@@ -8,7 +8,7 @@ from nucleo.models.revista import Motivo
 from nucleo.servicos import validacao
 from nucleo.servicos.resolver import carregar, hash_validado
 from nucleo.tests.test_admin_projeto import Base, mensagens
-from nucleo.tests.test_painel import SVG_B, completar, trocar_svg
+from nucleo.tests.test_painel import SVG_B, completar, trocar_imagem
 from nucleo.tests.test_resolver import F1, usuario
 
 HTMX = {"HTTP_HX_REQUEST": "true"}
@@ -109,7 +109,7 @@ class ImpressoUiTest(Base):
         self.validar()
         self.client.force_login(self.imp)
         visto = self.abrir().context["detalhe"]["hash"]
-        trocar_svg(self.rev, SVG_B)
+        trocar_imagem(self.rev, SVG_B)
         r = self.marcar(visto)
         self.assertIn("Impresso não atualizado: a revista mudou depois que a página abriu; confira de novo.", mensagens(r))
         self.assertFalse(FotoRevista.objects.exists())
