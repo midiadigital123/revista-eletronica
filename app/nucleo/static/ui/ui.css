@@ -501,6 +501,15 @@ table.diff .diff_next { display: none; }
 .diff-lado > div + div { border-left-width: 1px; }
 .diff-lado h3 { margin: 0 0 0.5rem; color: var(--muted-foreground); font-size: 0.875rem; font-weight: 500; }
 .texto-md { white-space: pre-wrap; font-size: 0.875rem; line-height: 1.5; margin: 0; }
+/* diff por palavra (impresso e revisão da base): texto corrido em Inter, sem rolagem lateral;
+   removido riscado em vermelho, inserido em verde. */
+.diff-palavras { display: flex; flex-direction: column; gap: 0.5rem; max-width: 72ch; font-size: 0.875rem; line-height: 1.6; }
+.diff-palavras p { margin: 0; white-space: pre-line; overflow-wrap: break-word; }
+.diff-palavras del, .diff-palavras ins {
+  border-radius: 3px; padding: 0.0625rem 0.125rem; -webkit-box-decoration-break: clone; box-decoration-break: clone;
+}
+.diff-palavras del { background: #fee2e2; color: #7f1d1d; text-decoration: line-through; text-decoration-color: color-mix(in oklch, #7f1d1d 55%, transparent); }
+.diff-palavras ins { background: #dcfce7; color: #14532d; text-decoration: none; }
 
 /* --- lacuna: faixa vermelha (D-116) e variável vazia (mesmas cores do preview e do editor) --- */
 .faixa-vermelha {

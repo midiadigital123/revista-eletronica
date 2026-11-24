@@ -29,18 +29,11 @@
 .impresso-item-cab { display: flex; align-items: center; gap: 0.5rem; }
 .impresso-item-cab h5 { font-size: 0.875rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 
-/* diff por palavra (_componentes/impresso_diff.html): texto corrido em Inter, sem rolagem lateral.
-   Contexto apagado, o parágrafo que mudou em cor plena; removido riscado em vermelho, inserido em verde. */
-.diff-palavras { display: flex; flex-direction: column; gap: 0.5rem; max-width: 72ch; font-size: 0.875rem; line-height: 1.6; }
-.diff-palavras p { margin: 0; white-space: pre-line; overflow-wrap: break-word; }
+/* diff por palavra (_componentes/impresso_diff.html): o .diff-palavras e o <del>/<ins> estão no ui.css.
+   Aqui, o contexto apagado e o parágrafo que mudou em cor plena. */
 .diff-contexto { color: var(--muted-foreground); }
 .diff-pulo { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--muted-foreground); }
 .diff-pulo::after { content: ""; flex: 1; border-top: 1px dashed var(--border); }
-.diff-palavras del, .diff-palavras ins {
-  border-radius: 3px; padding: 0.0625rem 0.125rem; -webkit-box-decoration-break: clone; box-decoration-break: clone;
-}
-.diff-palavras del { background: #fee2e2; color: #7f1d1d; text-decoration: line-through; text-decoration-color: color-mix(in oklch, #7f1d1d 55%, transparent); }
-.diff-palavras ins { background: #dcfce7; color: #14532d; text-decoration: none; }
 /* linha da escala: a antiga e a nova, uma sobre a outra, com o trecho trocado mais forte */
 .diff-par { display: flex; flex-direction: column; border-radius: var(--radius-md); overflow: hidden; }
 .diff-par p { padding: 0.3125rem 0.625rem; }

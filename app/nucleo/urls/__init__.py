@@ -26,6 +26,7 @@ urlpatterns = [
     path("ui/projeto/", include("nucleo.urls.ui_projeto")),
     path("ui/templates/", include("nucleo.urls.ui_templates")),
     path("ui/matriz/", include("nucleo.urls.ui_matriz")),
+    path("ui/revisao/", include("nucleo.urls.ui_revisao")),  # D-292: revisar mudanças da base
     path("ui/revista/", include("nucleo.urls.ui_revista")),
     path("ui/impresso/", include("nucleo.urls.ui_impresso")),
     path("ui/lotes/", include("nucleo.urls.ui_lotes")),

@@ -1,0 +1,56 @@
+{% extends "ui/base.html" %}
+{% load static %}
+{% comment %}Revisar mudanças da base (D-292): a etapa do projeto contra a base dela, um cartão por mudança.
+Bloqueio: o da própria etapa do projeto (o mesmo do editor da cópia). Nada grava antes do "Concluir revisão".{% endcomment %}
+{% block titulo %}Revisar mudanças da base · {{ codigo }}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/revisao.css' %}">{% endblock %}
+
+{% block conteudo %}
+<c-voltar href="{{ voltar_dono }}">{{ voltar_rotulo }}</c-voltar>
+<c-pagina-cab titulo="Revisar mudanças da base · {{ codigo }}">
+  {% if pendente %}
+  <p class="mudo">A base desta etapa, {{ mec.base.etapa.codigo }} {{ mec.base.componente.codigo }} da {{ mec.base.matriz.nome }} {{ mec.base.matriz.ano.ano }}, mudou. Nada muda no projeto até você clicar em Concluir revisão.</p>
+  {% if cartoes %}<p class="mudo">{{ decisoes|length }} precisa{{ decisoes|length|pluralize:"m" }} da sua decisão · {{ entram|length }} entra{{ entram|length|pluralize:"m" }} da base sem conflito</p>{% endif %}
+  {% endif %}
+</c-pagina-cab>
+
+{% if so_leitura %}{% include "ui/_componentes/so_leitura.html" with texto=so_leitura %}{% endif %}
+
+{% if not pendente %}
+{% include "ui/_componentes/vazio.html" with titulo="Esta etapa está em dia com a base" texto="A base não mudou desde a cópia ou desde a última revisão: não há o que revisar." url=voltar_dono rotulo="Voltar ao projeto" %}
+{% else %}
+<form method="post" action="{% url 'ui_revisao' mec.pk %}" class="rev-form">
+  {% if pode_gravar %}{% csrf_token %}{% endif %}
+  {% if pode_gravar %}{% include "ui/_componentes/bloqueio.html" %}{% endif %}
+  {% if pode_gravar %}<input type="hidden" name="visto" value="{{ visto }}">{% endif %}
+  <fieldset{% if not pode_gravar %} disabled{% endif %}>
+    {% if not cartoes %}
+    <c-aviso tag="p" role="status">A base mudou e o projeto já tem o mesmo conteúdo: não há o que escolher{% if pode_gravar %}; clique em Concluir revisão para fechar a pendência{% endif %}.</c-aviso>
+    {% endif %}
+    {% if decisoes %}
+    <c-card titulo="Precisa da sua decisão" titulo_id="rev-decisoes" class="rev-grupo">
+      {% for c in decisoes %}
+      {% include "ui/parciais/revisao_cartao.html" %}
+      {% endfor %}
+    </c-card>
+    {% endif %}
+    {% if entram %}
+    <details class="recolhivel rev-grupo">
+      <summary>Entram da base sem conflito ({{ entram|length }})</summary>
+      <p class="mudo">Só a base mudou aqui. Já vêm em “Usar o da base”; troque o que quiser manter.</p>
+      {% for c in entram %}
+      {% include "ui/parciais/revisao_cartao.html" %}
+      {% endfor %}
+    </details>
+    {% endif %}
+  </fieldset>
+  {% if pode_gravar %}
+  <div class="acoes rev-fim">
+    <c-botao variante="outline" href="{{ voltar_dono }}">Voltar sem concluir</c-botao>
+    <c-botao type="submit">Concluir revisão</c-botao>
+    <p class="mudo">As escolhas só são gravadas ao concluir.</p>
+  </div>
+  {% endif %}
+</form>
+{% endif %}
+{% endblock %}

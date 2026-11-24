@@ -1,0 +1,26 @@
+{% comment %}
+Um cartão da revisão (urls/ui_revisao.py::cartoes): o que o projeto tem ao lado do que a base tem agora, o
+"antes" recolhido e a escolha. Rádio cru: o grupo é o <fieldset> e o nome leva o índice do cartão.
+O campo de "Escrever outro texto" só aparece com esse rádio marcado (CSS :has(), telas/revisao.css).
+{% endcomment %}<fieldset class="rev-cartao">
+  <legend>{{ c.titulo }}</legend>
+  {% if c.nota %}<p class="mudo">{{ c.nota }}</p>{% endif %}
+  <div class="diff-lado">
+    {% for l in c.colunas %}
+    <div>
+      <h3>{{ l.titulo }}</h3>
+      {% include "ui/parciais/revisao_lado.html" %}
+    </div>
+    {% endfor %}
+  </div>
+  <details class="recolhivel">
+    <summary>Como era quando o projeto copiou</summary>
+    {% include "ui/parciais/revisao_lado.html" with l=c.antes %}
+  </details>
+  <div class="rev-opcoes">
+    {% for valor, rotulo in c.opcoes %}
+    <label><input type="radio" name="escolha-{{ c.i }}" value="{{ valor }}"{% if c.marcada == valor %} checked{% elif c.decisao %} required{% endif %}> {{ rotulo }}</label>
+    {% endfor %}
+    {% if c.editavel %}<c-textarea name="texto-{{ c.i }}" rows="3" class="rev-outro" aria-label="Outro texto para {{ c.titulo }}">{{ c.texto }}</c-textarea>{% endif %}
+  </div>
+</fieldset>

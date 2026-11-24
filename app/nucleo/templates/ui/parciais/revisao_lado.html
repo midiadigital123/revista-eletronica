@@ -1,0 +1,9 @@
+{% comment %}
+Um lado do cartão da revisão (No projeto, Na base agora ou como era): texto com o que saiu e o que entrou
+marcados, e a imagem do item pela rota ui_revisao_arquivo (nenhum caminho do storage vem para a página).
+{% endcomment %}{% if l.texto %}<div class="diff-palavras"><p>{% for tipo, x in l.partes %}{% if tipo == "del" %}<del><span class="sr-only">saiu: </span>{{ x }}</del>{% elif tipo == "ins" %}<ins><span class="sr-only">entrou: </span>{{ x }}</ins>{% else %}{{ x }}{% endif %}{% endfor %}</p></div>{% endif %}
+{% if l.nota %}<p class="mudo">{{ l.nota }}</p>{% endif %}
+{% if l.falta %}<p class="mudo">A imagem de antes não existe mais.</p>
+{% elif l.imagem %}<img src="{% url 'ui_revisao_arquivo' mec.pk c.i l.nome %}" alt="">
+{% elif l.caminho %}<a href="{% url 'ui_revisao_arquivo' mec.pk c.i l.nome %}">Baixar o PDF</a>
+{% elif not l.texto %}<p class="mudo">{{ l.vazio }}</p>{% endif %}
