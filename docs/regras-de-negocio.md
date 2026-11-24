@@ -332,6 +332,20 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 
 **Modal de impacto (D-202)**: nas telas B, a gravação que tira o Validado de alguma revista **não grava**; o servidor devolve a lista e a tela abre o modal. Gravação que só afeta revistas não validadas grava direto, sem modal. O cálculo simula a gravação num savepoint desfeito e compara o hash (`app/nucleo/servicos/impacto.py:23`, D-196, D-202). O admin mantém o checkbox "Confirmo: afeta N revista(s)" (`app/nucleo/matriz.py:130-155`).
 
+**Revisão da base da etapa do projeto (D-280, D-284)**: quando a etapa de matriz de onde a etapa do projeto foi clonada muda, a revista ganha a pendência `base` e perde o Validado. A saída é concluir a revisão (`app/nucleo/servicos/etapa_projeto.py`: `revisao`, `concluir`; a tela é a etapa 8 do plano de 24/11).
+
+| Regra | Fonte |
+|---|---|
+| A revisão compara 3 fotos, célula por célula (passo, cada campo do descritor e da tarefa, ou o item inteiro): a base no clone, a base agora e o projeto. "Entra" = só a base mudou; "conflito" = os dois mudaram. | D-280 |
+| Cada item recebe "usar o da base", "manter o meu" ou um texto editado à mão (só em campo de texto). "Entra" sem escolha vale "usar o da base"; conflito sem escolha recusa a conclusão inteira. | D-284 |
+| "Usar o da base" grava o valor da base como está (com as quebras de linha); item inteiro é apagar o do projeto e copiar o da base. Arquivo de item trocado sai do disco só se nenhuma tarefa o usa. | D-150, D-284 |
+| Quem conclui devolve o `visto` (hash dos itens que a tela mostrou). Se a base ou o projeto mudaram desde então, nada é gravado e a pessoa reabre a revisão. | D-284 |
+| Ao concluir, a foto passa a ser a base de agora: o que foi mantido não volta a ser perguntado. | D-280 |
+| "Manter o meu" em tudo devolve o Validado sozinho (o conteúdo não mudou); "usar o da base" muda a revista, que precisa ser validada de novo. | D-094 |
+| Não há revisão em cópia solta (sem base) nem em projeto arquivado. | D-282 |
+
+Quando a matriz do parceiro passa a ter a mesma etapa, a pendência é `etapa_em_dobro`; `escolher` grava "projeto" ou "matriz", e até a escolha vale a do projeto (D-281).
+
 ### 6.4 Foto e impresso
 
 | Regra | Fonte |
