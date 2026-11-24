@@ -141,8 +141,14 @@ class PartesTest(SimpleTestCase):
     def test_diff_por_palavra_com_o_espaco_que_a_segue(self):
         self.assertEqual(
             partes("o gato comeu tudo", "o cão comeu tudo hoje"),
-            [("igual", "o "), ("del", "gato "), ("ins", "cão "), ("igual", "comeu "), ("del", "tudo"), ("ins", "tudo hoje")],
+            [("igual", "o "), ("del", "gato "), ("ins", "cão "), ("igual", "comeu tudo "), ("ins", "hoje")],
         )
+
+    def test_acrescimo_no_fim_nao_marca_a_ultima_palavra(self):
+        self.assertEqual(partes("em um texto.", "em um texto. TESTE"), [("igual", "em um texto. "), ("ins", "TESTE")])
+
+    def test_corte_no_fim_nao_marca_a_palavra_que_ficou(self):
+        self.assertEqual(partes("em um texto. TESTE", "em um texto."), [("igual", "em um texto. "), ("del", "TESTE")])
 
 
 class CarregarTemplatesTest(TestCase):

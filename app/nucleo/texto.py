@@ -205,12 +205,13 @@ def html_para_texto(html):
 
 
 def partes(velho, novo):
-    """[(igual|del|ins, texto)] por palavra; cada palavra leva o espaço que a segue."""
+    """[(igual|del|ins, texto)] por palavra; cada palavra leva o espaço que a segue. A comparação ignora
+    esse espaço (a última palavra não tem), e o trecho igual sai com o espaço do texto novo (no fim do trecho, do lado que tiver)."""
     a, b = re.findall(r"\S+\s*", velho), re.findall(r"\S+\s*", novo)
     saida = []
-    for op, i0, i1, j0, j1 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
+    for op, i0, i1, j0, j1 in difflib.SequenceMatcher(None, [p.strip() for p in a], [p.strip() for p in b], autojunk=False).get_opcodes():
         if op == "equal":
-            saida.append(("igual", "".join(a[i0:i1])))
+            saida.append(("igual", "".join(b[j0 : j1 - 1]) + max(a[i1 - 1], b[j1 - 1], key=len)))  # o espaço de quem tem
             continue
         if i1 > i0:
             saida.append(("del", "".join(a[i0:i1])))
