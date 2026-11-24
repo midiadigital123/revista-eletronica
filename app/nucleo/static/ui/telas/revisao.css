@@ -1,8 +1,9 @@
 /* Revisar mudanças da base (D-292): templates/ui/projeto/revisar_etapa.html. */
 .rev-form, .rev-form > fieldset, .rev-grupo { display: flex; flex-direction: column; gap: 1rem; }
 .rev-grupo > summary { font-size: 1rem; font-weight: 600; }
-/* position: relative contém o .sr-only do <del>/<ins> (absolute), que senão cria rolagem na página */
-.rev-cartao { position: relative; display: flex; flex-direction: column; gap: 0.75rem; padding-top: 1rem; border-top-width: 1px; }
+/* border-top inteiro: o `fieldset { border: 0 }` do ui.css zera o estilo, e só a largura não desenha a linha.
+   position: relative contém o .sr-only do <del>/<ins> (absolute), que senão cria rolagem na página */
+.rev-cartao { position: relative; display: flex; flex-direction: column; gap: 0.75rem; padding-top: 1rem; border-top: 1px solid var(--border); }
 .rev-cartao legend { float: left; width: 100%; font-weight: 600; font-size: 0.9375rem; }
 .rev-cartao img { display: block; max-width: 100%; max-height: 16rem; border: 1px solid var(--border); border-radius: var(--radius-md); }
 /* o que entrou não depende só da cor */

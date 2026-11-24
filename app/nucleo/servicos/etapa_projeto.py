@@ -265,6 +265,11 @@ def concluir(mec, escolhas, visto, usuario):
                     raise RevisaoRecusada(f"{item.campo} não é campo de texto")
                 if item.campo == "texto_alternativo" and len(escolha[1]) > 1000:  # o max_len do banco
                     raise RevisaoRecusada("texto alternativo com mais de 1000 caracteres")
+                # O `save(update_fields=...)` não valida: aqui fica o que o form do editor da cópia recusaria.
+                if "\x00" in escolha[1]:  # o PostgreSQL recusa NUL em texto (DataError, erro 500)
+                    raise RevisaoRecusada(f"texto com caractere inválido em {item.chave} · {item.campo}")
+                if item.campo in ("descricao", "texto") and not escolha[1].strip():  # os dois sem `blank` no modelo
+                    raise RevisaoRecusada(f"o texto de {item.chave} · {item.campo} não pode ficar vazio")
             decididas.append((item, escolha))
 
         # `locais` e `da_base` vêm de antes de aplicar: apagar uma tarefa mudaria o `#n` das seguintes.

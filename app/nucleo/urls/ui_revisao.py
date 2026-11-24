@@ -139,6 +139,8 @@ def cartoes(itens, textos):
                 _lado(nome, titulo, ", ".join(n for n, _ in sorted(grupo, key=lambda g: getattr(g[1], nome))), "ordem", "")
                 for nome, titulo in LADOS
             ]
+            if cartao["lados"][0]["texto"] == cartao["lados"][1]["texto"]:  # renumerou sem trocar ninguém de lugar
+                cartao["nota"] = f"{cartao['nota']} A sequência é a mesma dos dois lados: só a numeração mudou na base.".strip()
         antes = cartao["lados"][2]
         antes["falta"] = bool(antes["caminho"]) and not default_storage.exists(antes["caminho"])
         cartao.update(i=i, marcada="" if cartao["decisao"] else "base", antes=antes, colunas=cartao["lados"][:2])

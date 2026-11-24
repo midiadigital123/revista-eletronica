@@ -128,6 +128,16 @@ class RevisaoTelaTest(EtapaNaoCanonica):
         self.assertContains(r, "D02, D01")  # na base agora
         self.assertContains(r, "Não muda a revista", count=1)  # só no cartão das tarefas
 
+    def test_ordem_so_renumerada_avisa_que_a_sequencia_e_a_mesma(self):
+        self.copiar()
+        self.desc(self.mec5, "D01").update(ordem=5)
+        self.desc(self.mec5, "D02").update(ordem=6)
+        r = self.client.get(self.url_rev)
+        self.assertContains(r, "D01, D02", count=3)  # os três lados iguais
+        self.assertContains(r, "A sequência é a mesma dos dois lados: só a numeração mudou na base.", count=1)
+        self.desc(self.mec5, "D01").update(ordem=7)  # agora troca de lugar
+        self.assertNotContains(self.client.get(self.url_rev), "A sequência é a mesma")
+
     def test_item_inteiro_com_as_opcoes_certas(self):
         self.copiar()
         d3 = Descritor.objects.create(matriz_etapa_cc=self.mec5, codigo="D03", descricao="Descritor novo", ordem=3)
@@ -194,10 +204,10 @@ class RevisaoTelaTest(EtapaNaoCanonica):
         Tarefa.objects.create(descritor=self.desc(self.mec5, "D02").get(), inicio=400, fim=450, texto="Com imagem.", ordem=2, arquivo=novo)  # cartão 2
         r = self.client.get(self.url_rev)
         self.assertContains(r, "<legend>D01 · tarefa 100–150 · Imagem</legend>")
-        self.assertContains(r, f'<img src="{self.arquivo(1, "base")}" alt="">')
+        self.assertContains(r, f'<img src="{self.arquivo(1, "base")}" alt="Imagem: Na base agora">')
         self.assertContains(r, f'<a href="{self.arquivo(1, "local")}">Baixar o PDF</a>')
         self.assertContains(r, "Sem imagem.")  # o "antes"
-        self.assertContains(r, f'<img src="{self.arquivo(2, "base")}" alt="">')  # a tarefa inteira leva a imagem
+        self.assertContains(r, f'<img src="{self.arquivo(2, "base")}" alt="Imagem: Na base agora">')  # a tarefa inteira leva a imagem
         self.assertNotContains(r, "itens/novo.png")  # nenhum caminho do storage na página
         resp = self.client.get(self.arquivo(1, "base"))
         self.assertEqual((resp.status_code, resp["Content-Type"]), (200, "image/png"))
@@ -216,7 +226,7 @@ class RevisaoTelaTest(EtapaNaoCanonica):
         mec = self.copiar()
         self.tar(self.mec5, 100).update(arquivo=novo)
         r = self.client.get(self.url_rev)
-        self.assertContains(r, f'<img src="{self.arquivo(0, "antes")}" alt="">')
+        self.assertContains(r, f'<img src="{self.arquivo(0, "antes")}" alt="Imagem: Como era quando o projeto copiou">')
         self.assertNotContains(r, "A imagem de antes não existe mais.")
         self.tar(mec, 100).update(arquivo=novo)
         default_storage.delete(velho)
@@ -399,6 +409,19 @@ class RevisaoTelaTest(EtapaNaoCanonica):
         self.intacta(mec)
         self.assertContains(r, '<input type="radio" name="escolha-0" value="texto" checked>')
         self.assertContains(r, '<input type="radio" name="escolha-1" value="local" checked>')
+
+    def test_texto_vazio_em_campo_obrigatorio_nao_grava(self):
+        mec = self.conflito_em_d01()
+        r = self.concluir(e0="texto", t0=" \n ", e1="local")
+        self.assertContains(r, "Não salvo: o texto de D01 · descricao não pode ficar vazio.")
+        self.intacta(mec)
+        self.assertContains(r, '<input type="radio" name="escolha-0" value="texto" checked>')
+
+    def test_texto_com_nul_nao_grava_nem_quebra(self):
+        mec = self.conflito_em_d01()
+        r = self.concluir(e0="texto", t0="a\x00b", e1="local")
+        self.assertContains(r, "Não salvo: texto com caractere inválido em D01 · descricao.")
+        self.intacta(mec)
 
     def test_texto_digitado_volta_no_campo_quando_nao_grava(self):
         mec = self.conflito_em_d01()
