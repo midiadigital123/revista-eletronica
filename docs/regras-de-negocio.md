@@ -139,7 +139,8 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | Arquivar é sempre efeito da cascata; não há botão "arquivar projeto". | `app/nucleo/admin/projeto.py:67` |
 | Projeto arquivado não volta: se o parceiro recebe cortes de novo no mesmo ano, nasce outro projeto com o nome inicial. | D-068, `app/nucleo/servicos/cascata.py:81` |
 | As revistas do projeto novo herdam a última foto `impresso` do mesmo componente nos projetos arquivados do mesmo parceiro_ano (`herdada = true`). | D-094, D-135, `app/nucleo/servicos/cascata.py:135-149` |
-| Projeto ou revista arquivados ficam congelados: lotes, planilha de variáveis e "Copiar" pulam; o admin abre só leitura. | D-093, D-167, `app/nucleo/lotes.py:39-56`, `app/nucleo/admin/projeto.py:70` |
+| O projeto novo herda as etapas do projeto (as não canônicas apontadas) dos projetos arquivados do mesmo parceiro_ano: a mesma linha muda de projeto, com descritores, tarefas, base e foto. Se a base mudou enquanto o projeto esteve arquivado, a revisão em 3 vias abre na revista nova. | D-281, D-285, `app/nucleo/servicos/cascata.py:88-93` |
+| Projeto ou revista arquivados ficam congelados: lotes, planilha de variáveis e "Copiar" pulam; o admin abre só leitura. Única exceção: a cascata tira do projeto arquivado as etapas do projeto e as entrega ao projeto novo (D-281). | D-093, D-167, `app/nucleo/lotes.py:39-56`, `app/nucleo/admin/projeto.py:70` |
 
 ### 3.4 Matriz
 
