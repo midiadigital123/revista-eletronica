@@ -20,7 +20,7 @@ from nucleo.servicos.planilhas import passos
 from nucleo.servicos.pendencias import pendencias
 from nucleo.servicos.resolver import carregar, hash_validado, resolver
 from nucleo.servicos.validacao import validada, validar
-from nucleo.tests.test_resolver import MediaTemporaria, Mundo, recarregar, usuario
+from nucleo.tests.test_resolver import MediaTemporaria, Mundo, preencher_infograficos, recarregar, usuario
 
 
 class Base(TestCase):
@@ -161,10 +161,8 @@ class RevistaTest(Base):
         return base
 
     def _pronta(self):
-        Revista.objects.filter(pk=self.lp_go.pk).update(
-            svg_f2="f2/x.svg", svg_sha256="a" * 64, svg_ids=["passo1", "btn-action-p2"],
-            capa="capas/x.png", capa_sha256="c" * 64,
-        )  # fmt: skip
+        preencher_infograficos(self.lp_go)  # o F2 sai dos infográficos (D-237), não de um SVG
+        Revista.objects.filter(pk=self.lp_go.pk).update(capa="capas/x.png", capa_sha256="c" * 64)
         return recarregar(self.lp_go)
 
     def test_revista_usa_a_etapa_do_projeto(self):
