@@ -96,6 +96,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 - Parceiro é global: não precisa ser recriado no ano novo (`app/nucleo/models/cadastro.py:23`).
 - No ano novo, nenhuma revista pode ser validada até alguém escolher matriz e templates; nada é atribuído automaticamente (D-106, learning "No ano novo, matriz e template de texto nascem sem escolha").
 - Os cortes do ano novo são digitados de novo na grade, sem sugestão do ano anterior (D-119, D-184).
+- A etapa do projeto (etapa não canônica apontada para uma canônica, D-276) não passa de ano: o ano novo copia só as etapas das matrizes (D-280, `app/nucleo/servicos/abrir_ano.py:86-92`).
 - Variáveis: o botão "Copiar valores do ano anterior" é manual, por projeto, e só preenche as variáveis **vazias** com as do projeto do mesmo parceiro no ano anterior, mesmo arquivado (D-107, `app/nucleo/planilha_variaveis.py:40-62`).
 
 ### 2.3 Histórico: nada se perde entre anos
@@ -472,7 +473,7 @@ Regra geral (D-205): uma entidade pode ser excluída quando nada depende dela. Q
 | Parceiro | Tem Corte ou Projeto em algum ano (ParceiroAno vazio sai junto) | Oferece **Desativar** (`desativado_em`): some dos anos em que não tem dados; Reativar desfaz | Pedagógica, Mídias, Admin | Grade de Cortes (lixeira no nome) | D-205, D-208 |
 | Etapa | Tem Corte, MEC ou passo do projeto | Explica | Pedagógica, Mídias, Admin | Página do ano (por linha) | D-205 |
 | Componente | Tem revista, MEC, corte, passo do projeto ou template | Explica | Pedagógica, Mídias, Admin | Página do ano (por linha) | D-205 |
-| Matriz | Algum parceiro usa (`ParceiroAno.matriz`) ou outra pessoa edita uma MEC dela (MEC, descritor e tarefa saem junto) | Explica, com link para Lotes | Pedagógica, Mídias, Admin | Fim da página da matriz | D-205 |
+| Matriz | Algum parceiro usa (`ParceiroAno.matriz`), outra pessoa edita uma MEC dela ou uma etapa dela é base de etapa de projeto ativo (MEC, descritor e tarefa saem junto) | Explica, com link para Lotes e para os projetos com etapa derivada | Pedagógica, Mídias, Admin | Fim da página da matriz | D-205, D-280 |
 | Template | Alguma revista usa o template ou uma versão dele, ou outra pessoa o edita | Explica, com links para as revistas. Sem uso, sai **com as versões** | Pedagógica, Mídias, Admin | Lista (lixeira) e fim do editor | D-207 |
 | Corte | Nunca | Esvaziar a célula apaga e arquiva a revista | Quem preenche cortes | Grade | D-188, `servicos/cascata.py:121-122` |
 | Descritor, Tarefa | Regra própria, com impacto no Validado | — | Pedagógica, Mídias, Admin | Tela da MEC | D-181 |
@@ -485,6 +486,10 @@ Travas que continuam:
 - **Versões de template:** o trigger recusa sempre o UPDATE. O DELETE só passa quando a transação liga `SET LOCAL revista.apagar_versoes = 'on'`, e só fazem isso a exclusão de template sem uso e o apagar do ano (migração `0017_versao_apagavel`, D-206/D-207).
 - **Admin do Django:** o "Excluir" leva à mesma página da tela B, e não existe exclusão em massa (`ExclusaoAdminMixin`, `admin/cadastro.py`).
 - **Teste-trava:** `tests/test_exclusao.py` lista toda FK que não é PROTECT contra uma lista permitida, para nenhuma cascata nova apagar histórico.
+
+Etapa do projeto na exclusão (D-280, D-282):
+- Apagar o ano e o `limpar_e2e` levam a etapa do projeto junto, antes do projeto (`ORDEM_ANO` em `servicos/exclusao.py`, `dependentes` em `management/commands/limpar_e2e.py`).
+- A base que some sem passar pela tela (ano da base apagado, ou base excluída quando o projeto derivado já está arquivado) deixa a etapa do projeto como **cópia solta**: fica com o conteúdo e com a foto, sem base e sem pendência de revisão (`ON DELETE SET NULL`).
 
 ---
 
