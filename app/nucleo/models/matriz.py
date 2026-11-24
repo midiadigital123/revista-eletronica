@@ -41,7 +41,7 @@ class Matriz(models.Model):
 
 class MatrizEtapaCC(models.Model):
     # Mesmo ano em matriz/projeto, etapa e componente: FKs compostas nas migrações 0002 e 0020 (D-090).
-    # Dono é a matriz OU o projeto (etapa do projeto, D-227): CHECK matriz_etapa_cc_um_dono.
+    # Dono é a matriz OU o projeto (etapa do projeto, D-280): CHECK matriz_etapa_cc_um_dono.
     matriz = models.ForeignKey(Matriz, on_delete=models.PROTECT, null=True, blank=True)
     projeto = models.ForeignKey("nucleo.Projeto", on_delete=models.PROTECT, null=True, blank=True)
     # Etapa de matriz de onde a do projeto foi clonada, e a foto dela no clone. A FK do banco
@@ -56,7 +56,7 @@ class MatrizEtapaCC(models.Model):
         related_name="derivadas",
     )
     base_foto = models.JSONField(null=True, blank=True)
-    # "projeto" | "matriz"; nulo = ainda não escolheu (D-228).
+    # "projeto" | "matriz"; nulo = ainda não escolheu (D-281).
     preferida = models.TextField(null=True, blank=True)
     etapa = models.ForeignKey(Etapa, on_delete=models.PROTECT)
     componente = models.ForeignKey(Componente, on_delete=models.PROTECT)

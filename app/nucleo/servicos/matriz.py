@@ -146,10 +146,10 @@ def impacto(*mecs):
 def _afetadas(mecs):
     """Revistas ativas que mudam com uma edição destas MECs: o ParceiroAno usa a matriz, a
     revista é do componente e há corte nessa etapa × componente; ou o projeto tem uma etapa
-    clonada da MEC, no mesmo componente (D-227)."""
+    clonada da MEC, no mesmo componente (D-280)."""
     q = Q()
     for m in mecs:  # num filter() só: as condições sobre o corte usam o mesmo JOIN
-        # Etapa do projeto (D-230): só a revista do próprio projeto; matriz_id=None casaria os sem matriz.
+        # Etapa do projeto (D-280): só a revista do próprio projeto; matriz_id=None casaria os sem matriz.
         dono = {"projeto__parceiro_ano__matriz_id": m.matriz_id} if m.matriz_id else {"projeto_id": m.projeto_id}
         q |= Q(
             **dono,

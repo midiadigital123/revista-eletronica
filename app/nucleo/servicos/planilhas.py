@@ -177,7 +177,7 @@ def planilha_f2(secoes, infograficos=()):
 
 def passos(revista):
     """{etapa: passo} como no resolver (D-053, D-091): a linha de ProjetoPasso sobrescreve a MEC que a
-    revista usa, da matriz ou do projeto (D-230)."""
+    revista usa, da matriz ou do projeto (D-280)."""
     projeto, filtro = revista.projeto, {"componente_id": revista.componente_id}
     codigos = dict(Etapa.objects.filter(ano_id=projeto.ano_id).values_list("pk", "codigo"))
     saida = {codigos[e]: vigente(*par).passo for e, par in mecs_por_etapa(projeto, revista.componente_id, codigos).items()}

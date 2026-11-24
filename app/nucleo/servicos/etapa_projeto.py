@@ -1,4 +1,4 @@
-"""Etapa do projeto (D-227): cópia própria de uma etapa de matriz, com vínculo à base.
+"""Etapa do projeto (D-280): cópia própria de uma etapa de matriz, com vínculo à base.
 
 A foto é o conteúdo canônico de uma etapa de matriz (por código de descritor, não por id),
 guardada em `base_foto` ao clonar para saber depois o que a base mudou desde então.
@@ -175,7 +175,7 @@ def tarefas_da_revista(revista):
 
 def vigente(da_matriz, do_projeto):
     """A MEC que a revista usa: a única que existe; as duas, a do projeto até escolher a da
-    matriz (D-228, D-231)."""
+    matriz (D-281)."""
     if do_projeto is None or (da_matriz is not None and do_projeto.preferida == "matriz"):
         return da_matriz
     return do_projeto

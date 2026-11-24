@@ -38,7 +38,7 @@ def pendencias_f1(revista, resolvido):
     if pa.matriz_id is None:
         saida.append(Pendencia("matriz", "Falta escolher a matriz do parceiro no ano."))
     else:
-        com_mec = set(  # a etapa do projeto também conta (D-230)
+        com_mec = set(  # a etapa do projeto também conta (D-280)
             MatrizEtapaCC.objects.filter(Q(matriz_id=pa.matriz_id) | Q(projeto=revista.projeto), componente_id=revista.componente_id)
             .values_list("etapa_id", flat=True)
         )

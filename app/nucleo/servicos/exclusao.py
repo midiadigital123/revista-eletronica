@@ -121,7 +121,7 @@ def _impedimento(rotulo, alvo, ids):
 
 
 def _derivadas(obj):
-    """Base com etapa de projeto derivada ativa não sai pela tela (D-230, regra 6). O `base` é SET_NULL:
+    """Base com etapa de projeto derivada ativa não sai pela tela (D-280, regra 6). O `base` é SET_NULL:
     o Collector não a acusa."""
     mecs = obj.matrizetapacc_set.all() if isinstance(obj, Matriz) else [obj] if isinstance(obj, MatrizEtapaCC) else []
     ids = set(derivadas(*mecs).values_list("projeto_id", flat=True))  # sem mecs: base__in vazio, sem SELECT
@@ -208,7 +208,7 @@ def excluir(obj, usuario):
 # --- Ano inteiro (D-206) -----------------------------------------------------------------------
 
 # Ordem das dependências (folhas primeiro). Fascículos, seções e infográficos saem com a revista; descritores e
-# tarefas com a MEC; bloqueios com o alvo (CASCADE). A etapa do projeto (D-230) sai antes do projeto (PROTECT).
+# tarefas com a MEC; bloqueios com o alvo (CASCADE). A etapa do projeto (D-280) sai antes do projeto (PROTECT).
 ORDEM_ANO = (
     (FotoRevista, "revista__ano"), (Revista, "ano"),
     (ProjetoPasso, "ano"), (ProjetoCor, "projeto__ano"), (MatrizEtapaCC, "projeto__ano"), (Projeto, "ano"),

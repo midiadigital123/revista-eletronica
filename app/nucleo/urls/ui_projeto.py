@@ -222,7 +222,7 @@ def projeto(request, pk):
         "revistas_ativas": _revistas(projeto).select_related("componente").order_by("componente__codigo"),
         "matrizes": Matriz.objects.filter(ano_id=projeto.ano_id).order_by("nome")
         if request.bloqueio and pode_matriz(request.user) else None,
-        # matriz__isnull: sem matriz no parceiro, matriz_id=None casaria toda etapa de projeto (D-230).
+        # matriz__isnull: sem matriz no parceiro, matriz_id=None casaria toda etapa de projeto (D-280).
         "passos_matriz": MatrizEtapaCC.objects.filter(matriz_id=projeto.parceiro_ano.matriz_id, matriz__isnull=False)
         .select_related("etapa", "componente").order_by("etapa__ordem", "componente__codigo"),
         "ano": projeto.ano,

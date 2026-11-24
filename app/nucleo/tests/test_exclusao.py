@@ -25,7 +25,7 @@ from nucleo.tests.test_resolver import Mundo, usuario
 
 # FKs de nucleo que não são PROTECT, de propósito (D-205): trava efêmera, partes da matriz e da revista, e a
 # origem só de consulta da matriz duplicada (D-113) e a base da etapa do projeto, que sobrevive à base apagada
-# porque guarda a foto (D-227).
+# porque guarda a foto (D-280).
 NAO_PROTECT = {
     "Bloqueio.matriz_etapa_cc", "Bloqueio.projeto", "Bloqueio.template", "Bloqueio.usuario",
     "Descritor.matriz_etapa_cc", "Tarefa.descritor", "RevistaFasciculo.revista", "RevistaSecao.revista_fasciculo",
@@ -142,7 +142,7 @@ class ImpedimentosTest(Base):
         excluir(m, self.mid)
         self.assertFalse(Bloqueio.objects.exists())
 
-    def test_base_com_derivada_nao_e_excluida(self):  # regra 6 (D-227): a tela lista os projetos derivados
+    def test_base_com_derivada_nao_e_excluida(self):  # regra 6 (D-280): a tela lista os projetos derivados
         base = Matriz.objects.create(ano=self.ano, nome="Base")
         mec = MatrizEtapaCC.objects.create(matriz=base, etapa=self.e9, componente=self.lp, ano=self.ano)
         e4 = Etapa.objects.create(ano=self.ano, codigo="4EF", escala_max=500, ordem=4)

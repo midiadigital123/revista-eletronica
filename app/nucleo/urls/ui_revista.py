@@ -148,7 +148,7 @@ def _situacao(revista, pendencias):
     links = {
         "matriz": f"{projeto}?aba=matriz", "corte_sem_matriz": link_pendencia("corte_sem_matriz", revista),  # U7b; a etapa que falta: a matriz
         "corte_invalido": f"{projeto}?aba=cortes",
-        "base": f"{projeto}?aba=matriz", "etapa_em_dobro": f"{projeto}?aba=matriz",  # etapa do projeto (D-227)
+        "base": f"{projeto}?aba=matriz", "etapa_em_dobro": f"{projeto}?aba=matriz",  # etapa do projeto (D-280)
         "template_f1": "#templates", "template_f2": "#templates",
         "infografico": "#infograficos", "capa": "#arquivos",
         "variaveis": f"{projeto}#variaveis", "nome_projeto": f"{projeto}#nome",

@@ -2,7 +2,7 @@
 
 Copia etapas, componentes, cores, matrizes (MEC, descritores e tarefas) e templates
 (a última versão vira a versão 1). Não copia parceiro_ano, cortes, projetos, etapas do
-projeto (D-230) nem escolhas de matriz/template: o ano nasce em branco e os projetos vêm
+projeto (D-280) nem escolhas de matriz/template: o ano nasce em branco e os projetos vêm
 da cascata dos cortes novos (D-106, D-119). Tudo numa transação (D-125): falhou, nada fica.
 Banco sem ano nenhum: o 1º ano nasce vazio, sem cópia (D-246).
 """
@@ -84,7 +84,7 @@ def abrir_ano(ano, usuario=None):
             return novo, None
 
         def copiar(modelo, **trocas):
-            # Pelo ano da matriz: a etapa do projeto (sem matriz) não passa de ano (D-230).
+            # Pelo ano da matriz: a etapa do projeto (sem matriz) não passa de ano (D-280).
             filtro = {
                 MatrizEtapaCC: "matriz__ano", Descritor: "matriz_etapa_cc__matriz__ano",
                 Tarefa: "descritor__matriz_etapa_cc__matriz__ano",

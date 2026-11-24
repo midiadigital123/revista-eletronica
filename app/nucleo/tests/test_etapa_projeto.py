@@ -1,4 +1,4 @@
-"""Etapa do projeto (D-227): foto canônica e criação em branco ou por clone."""
+"""Etapa do projeto (D-280): foto canônica e criação em branco ou por clone."""
 
 import unittest
 

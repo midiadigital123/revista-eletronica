@@ -33,7 +33,7 @@ def dependentes(parceiros):
     return [
         (FotoRevista, {"revista__projeto__parceiro_ano__in": pas}), (Revista, {"projeto__parceiro_ano__in": pas}),
         (ProjetoPasso, {"projeto__parceiro_ano__in": pas}), (ProjetoCor, {"projeto__parceiro_ano__in": pas}),
-        (MatrizEtapaCC, {"projeto__parceiro_ano__in": pas}),  # etapa do projeto (D-230): PROTECT no projeto
+        (MatrizEtapaCC, {"projeto__parceiro_ano__in": pas}),  # etapa do projeto (D-280): PROTECT no projeto
         (Projeto, {"parceiro_ano__in": pas}), (Corte, {"parceiro_ano__in": pas}), (ParceiroAno, {"pk__in": pas}),
     ]  # fmt: skip
 

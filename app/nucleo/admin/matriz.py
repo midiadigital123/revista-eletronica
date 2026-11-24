@@ -280,7 +280,7 @@ class DescritorAdmin(MatrizEditAdmin):
     @admin.display(description="Etapa × CC")
     def matriz_etapa_cc_rotulo(self, obj):
         m = obj.matriz_etapa_cc
-        return f"{(m.matriz or m.projeto).nome} · {m.etapa.codigo} {m.componente.codigo}"  # projeto: D-230
+        return f"{(m.matriz or m.projeto).nome} · {m.etapa.codigo} {m.componente.codigo}"  # projeto: D-280
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         if db_field.name == "prerequisitos":

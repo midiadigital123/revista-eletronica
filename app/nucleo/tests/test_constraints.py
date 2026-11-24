@@ -44,7 +44,7 @@ FKS_COMPOSTAS = {
 ANULAVEIS = {
     ("parceiro_ano", "matriz_id"),
     ("revista_fasciculo", "template_id"),
-    # Etapa de matriz ou de projeto: o CHECK matriz_etapa_cc_um_dono exige exatamente uma (D-227).
+    # Etapa de matriz ou de projeto: o CHECK matriz_etapa_cc_um_dono exige exatamente uma (D-280).
     ("matriz_etapa_cc", "matriz_id"),
     ("matriz_etapa_cc", "projeto_id"),
 }
