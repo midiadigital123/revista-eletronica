@@ -1,14 +1,17 @@
 # Kanban — revista-express
 
 ## Backlog
-- **K-034** Etapa do projeto (`feat/etapa-do-projeto`): 14 commits fora da `main`, tarefa 5 em WIP · pausada
+- **K-034** Etapa do projeto (`feat/etapa-do-projeto`): 14 commits fora da `main`, tarefa 5 em WIP · retomada em 24/11 com escopo novo (D-276): não canônica só nasce apontando para canônica; etapas 2 a 10 do plano de 24/11
   nota: parada por decisão do usuário em 10/11; worktree `revista-express-etapa` removida em 11/11 (limpa; a branch `feat/etapa-do-projeto` `d0a1954` fica no git e no GitHub: recriar com `git worktree add`); ao retomar, renumerar a `0020_etapa_do_projeto` para depois da 0025
+- **K-048** Etapa 11 — Redesenho das telas pelo Figma (menu Projetos · Modelos · Impresso) e retirada dos botões de criar matriz, template e parceiro · D-277
 - **K-031** Fase 5 do F2: animação por passo (desejável)
 - **K-033** S18 — E2E da temporada
 
 ## Doing
 
 ## Review
+- **K-047** Etapa 1 de 11 — Carga com etapas não canônicas: `importar_cortes` cria as 7 etapas que a Somativas pede, grava "100, 200, 300" onde falta corte e atribui a Comunitária (33 parceiros, 232 cortes, 84 arbitrários na simulação); na `integ/carga-nao-canonica`, falta o "ok" para a `main` · D-278
+  nota: depois do merge, refazer os bancos pelo `scripts/povoar-banco-2026.sh`
 
 ## Done
 - **K-046** `ano.spec` cria o próprio parceiro e o helper do painel espera o HTMX ligar; E2E inteiro 170 passaram, 0 falhas; mesclado na `main` · 2026-11-18 · D-275

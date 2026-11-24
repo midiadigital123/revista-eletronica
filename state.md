@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Passo 5 de 5 concluído (K-046, D-275): `ano.spec` independente da demonstração e helper do painel esperando o HTMX; mesclado na `main` e enviado ao GitHub.
-Funcionando: E2E inteiro na 8002 com 170 passaram, 0 falhas, 0 pulados (primeira rodada sem a falha conhecida do `ano.spec`); suíte Django 918 OK (8 pulados); 15 componentes cotton nas telas B.
-Quebrado/pendente: usuários de teste `e2e` e `imp-e2e` no banco da 8002; pendências antigas da D-261.
+Etapa 1 de 11 (K-047, D-278): carga com etapas não canônicas pronta na `integ/carga-nao-canonica`, aguardando o "ok" para a `main`. Plano de 11 etapas combinado em 24/11 (D-276, D-277): carga; etapa do projeto no servidor (2 a 6); telas de apontar e de revisão no layout atual (7 a 10); redesenho pelo Figma (11).
+Funcionando: `importar_cortes` cria as etapas que a Somativas pede, grava "100, 200, 300" onde falta corte e atribui a matriz com `--matriz`. Simulação com as planilhas reais: 33 parceiros, 7 etapas criadas, 232 cortes, 84 arbitrários.
+Quebrado/pendente: nenhum banco foi refeito ainda com a carga nova; a etapa não canônica fica com a pendência `corte_sem_matriz` sem saída até a etapa 7; usuários de teste `e2e` e `imp-e2e` no banco da 8002.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Escolher o próximo trabalho no `kanban.md` (Backlog: K-034, K-031, K-033) ou apagar os usuários de teste `e2e` e `imp-e2e` da 8002 se não forem mais usados.
+Dar o "ok" para mesclar a `integ/carga-nao-canonica` na `main`; depois refazer o banco pelo `scripts/povoar-banco-2026.sh` e planejar a etapa 2 (preparar a branch `feat/etapa-do-projeto`).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2242,12 +2242,36 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Arquivos afetados:** `app/e2e/tests/ano.spec.ts`, `app/e2e/tests/helpers.ts`
 - **Status:** ativa
 
+### D-276 — Etapa não canônica nasce só apontando para uma canônica (2026-11-24 13:21)
+- **Contexto:** a equipe pedagógica explicou que há projetos que avaliam etapas não canônicas (tudo fora de 2EF, 5EF, 9EF e 3EM: 4EF, 6EF, 8EF…). Hoje não há tela para ligar essa etapa a um conteúdo. A branch `feat/etapa-do-projeto` (D-229 a D-231, K-034) permitia criar a etapa do projeto em branco ou por clone.
+- **Decisão:** (1) toda etapa não canônica de um projeto nasce obrigatoriamente apontando para uma etapa canônica já existente em alguma matriz; não existe mais etapa em branco. (2) Apontar é clonar com vínculo: a Pedagógica edita a cópia, e mudança na base abre a revisão em 3 vias, que bloqueia o Validado (como na D-229). (3) A base pode ser de qualquer matriz e de qualquer ano, mas só uma das 4 canônicas, do mesmo componente. (4) O botão de apontar aparece só para etapa não canônica; canônica que falta na matriz do parceiro segue como `corte_sem_matriz`, sem botão (a correção é trocar de matriz). (5) Quem aponta é a Pedagógica, pela tela. (6) "Canônica" vira uma constante com os 4 códigos, sem campo no banco.
+- **Motivo:** toda não canônica tem uma canônica de origem; em branco, a revista ficaria sem conteúdo e sem vínculo com a matriz.
+- **Descartadas:** etapa em branco — sem origem; só usar a canônica, sem cópia — a Pedagógica precisa acrescentar e tirar itens; limitar à matriz do parceiro — a base pode vir de outra; botão também para canônica faltando — criaria versão paralela de etapa da Comunitária; apontar pela planilha, na carga — o usuário quer a Pedagógica decidindo na tela.
+- **Arquivos afetados:** nenhum ainda (implementação nas etapas 2 a 10 do plano de 24/11); `.trail/learnings/2026-11-24-etapa-na-o-cano-nica-nasce-otavio.md`, `.trail/learnings/2026-11-24-etapa-cano-nica-que-falta-na-otavio.md`
+- **Status:** ativa (substitui em parte D-229 e D-230: sai o "em branco" e a base passa a ser só canônica)
+
+### D-277 — Superusuário cria, usuários editam; redesenho das telas fica por último (2026-11-24 13:21)
+- **Contexto:** o prazo de entrega está muito apertado, e o usuário já tem as planilhas com todos os parceiros, etapas e cortes. O redesenho no Figma (página "Testes") não tem os botões de criar projeto, matriz e template nem a atribuição de matriz.
+- **Decisão:** (1) criar matriz, criar template de texto, atribuir matriz e criar parceiro/projeto ficam com o superusuário (admin ou comando), fora da UI do dia a dia. (2) Os usuários editam: matriz, template, cortes do projeto, variáveis, textos, capa e infográficos. (3) Ordem do trabalho: carga, etapa do projeto no servidor, telas de apontar e de revisão no layout atual e, por último, o redesenho pelo Figma (menu Projetos · Modelos · Impresso).
+- **Motivo:** quanto menos os usuários tiverem de fazer, maior a chance de entregar no prazo.
+- **Descartadas:** redesenho antes da etapa do projeto — atrasa o que é imprescindível (apontar); desenhar o apontar direto no layout novo — só ficaria disponível depois do redesenho.
+- **Arquivos afetados:** nenhum ainda (a retirada dos botões é da etapa 11)
+- **Status:** ativa (substitui em parte D-189 e D-210: nem toda função do servidor tem controle na tela B)
+
+### D-278 — Carga 2026 cria as etapas não canônicas, preenche corte arbitrário e atribui a Comunitária (2026-11-24 13:21)
+- **Contexto:** a D-261 ignorava as etapas fora das 4 cadastradas, deixava vazio o corte sem dado e não atribuía matriz. Com a D-277, a carga deve deixar o máximo pronto.
+- **Decisão:** no `importar_cortes`: (1) a etapa que a Somativas pede e o ano não tem é criada (1EF e 2EF com escala 1000; as demais 500); (2) o corte que falta na planilha de cortes, canônica ou não, entra como "100, 200, 300", e o relatório lista cada um ("arbitrários …"); (3) `--matriz NOME` atribui a matriz a todo `parceiro_ano` sem matriz (o script usa Comunitária, inclusive para CE, Joinville e ES; o superusuário troca quando receber as matrizes deles); (4) a planilha de cortes de 2025 vale para 2026; (5) os bancos são refeitos do zero pelo script, então o comando continua pulando quem já tem corte. Com as planilhas reais: 33 parceiros, 7 etapas criadas, 232 cortes (148 da planilha, 84 arbitrários: 40 em etapa canônica e 44 em não canônica).
+- **Motivo:** o corte é o que diz ao sistema que o parceiro avalia a etapa; sem ele não nasce projeto nem revista. O valor é editável pela tela.
+- **Descartadas:** as 7 etapas no `carregar_cadastros` — `cadastrar()` dos testes é usado por boa parte da suíte, que conta com 4 etapas, e o importador cria só o que a planilha pede; projeto com etapa marcada e corte vazio — mudaria a cascata; completar cortes de parceiro que já tem corte — desnecessário com o banco refeito do zero.
+- **Arquivos afetados:** `app/nucleo/management/commands/importar_cortes.py`, `app/nucleo/tests/test_importar_cortes.py`, `scripts/povoar-banco-2026.sh`, `README.md`, `docs/regras-de-negocio.md`
+- **Status:** ativa (substitui os itens 3, 5 e 7 da D-261)
+
 ## Perguntas em aberto
 - [x] (18/11, D-270) A demo do django-cotton convence? Se sim, adotar tela por tela (ordem sugerida: ícones, botão, campo, cabeçalho, card, modal) ou parar na demo — depende de: Otavio — respondida em 18/11: convence, adotar (D-271)
 - [x] (18/11, respondida pela D-270: DaisyUI descartado, demo com django-cotton) Adotar DaisyUI nas telas B? Análise: exige Tailwind 4 + passo de build (hoje não há nenhum), 7 classes do `ui.css` colidem de nome (`btn`, `badge`, `card`, `input`, `select`, `textarea`, `link`), 75 templates e 1.525 linhas de CSS a reescrever, e o `DESIGN.md` fixa a forma do preset shadcn. Recomendação: não adotar; se a queixa for visual, polir telas específicas no `ui.css` atual. Complemento (18/11): a queixa do usuário é componentização ("tudo parece solto"), e a medição confirma: os componentes são classes CSS, não unidades de template (`class="btn` 117×, `<svg` inline 70×, `campo` 39×, `card` 28×, `pagina-cab` 24×, `<dialog` 10× escritos à mão; 253 classes em `telas/*.css` contra 135 no `ui.css`; 209 de 337 classes usadas uma vez só). DaisyUI não resolve isso (também é classe CSS); o caminho proposto é componente de template (django-cotton ou `{% include %}`), piloto no `<dialog>` — depende de: Otavio
 - [x] (12/11, conferido: 0 de 95 são dados de Postgres, nada é banco deste projeto; seguem intocados por serem possivelmente de outros projetos) (D-262) Os 95 volumes anônimos do Docker podem ser apagados? — depende de: Otavio
 - [x] (D-264: dev recriado do zero, os dois parceiros saíram) (12/11) No dev da 8000: "SAESE" (8 cortes, 1 projeto) é o mesmo que "SE" da carga, e "Acre - Avalia Acre 2026" (0 cortes) o mesmo que "AC". Apagar/renomear? — depende de: Otavio
-- [ ] (D-261, 12/11) Os valores de `Cortes dos Padrões…xlsx` são os de 2025: valem para 2026? E os 40 cortes que faltam (RS, Angra dos Reis, Rio (município), SP, AL, RJ, TO, JOINVILLE 5EF, MG 3EM, PR 3EM)? Também: Cód_Bizagi 2332 repetido em Anchieta e Angra dos Reis, e SC listada nas duas abas — depende de: Pedagógica
+- [x] (respondida em 24/11, D-278: valem para 2026; o que falta entra como "100, 200, 300"; Cód_Bizagi não importa) (D-261, 12/11) Os valores de `Cortes dos Padrões…xlsx` são os de 2025: valem para 2026? E os 40 cortes que faltam (RS, Angra dos Reis, Rio (município), SP, AL, RJ, TO, JOINVILLE 5EF, MG 3EM, PR 3EM)? Também: Cód_Bizagi 2332 repetido em Anchieta e Angra dos Reis, e SC listada nas duas abas — depende de: Pedagógica
 - [x] (D-260: nenhum dado é necessário; bancos apagados e dev do zero) (11/11, inventário dos bancos antes do K-030) Banco de dev `revista-eletronica_pg-dados` está na 0022 com dado real (PAEBES, SAEGO, SAESE; 7 revistas, 6 validadas; 10 infográficos; 6 SVGs enviados; 2 cópias F1). Ir para a 0025 pede pg_dump antes (0023 e 0025 não voltam; 0024 apaga as colunas do SVG). Depois do migrate: as 6 validadas mudam de hash e os 10 infográficos ficam com pendência até serem preenchidos. Os outros bancos locais são vazios ou de teste (f2-f2, f2-f3, etapa-projeto, revista-express-f2-f2 órfão) ou já estão na 0025 (demo-f2, f2-aj). A `feat/etapa-do-projeto` tem `0020_etapa_do_projeto`, que colide com a `0020_infograficos`: renumerar ao retomar o K-034. Migrar o dev agora ou recriá-lo? — depende de: Otavio
 - [x] (D-252) (10/11, auditoria do código) Quais itens do "fazer agora" entram e onde: `planilhas.py:97` falha explícita para componente sem layout; enum no lugar de "2EF" em `cascata.py` e assert nas 12 etapas de `f2.py`; constante `ANO_DEMO` no E2E (138 ocorrências de 2026); separar `pendencias_f1`/`pendencias_f2`; helper `pode(user, modelo, acao)` (48 checagens fora de `permissoes.py`). Depois: hash do resolvido persistido (o resolver roda por revista no painel, impacto, matriz, paleta e impresso; teto ~50 revistas) e painel paginado com poda de fotos — depende de: Otavio
 - [x] (D-256: sai do seed e das cópias iguais, migração 0025) (10/11, conselho da fase 2) O 1º parágrafo de `tarefas-fechamento` (seed `f2-lp.hbs`/`f2-mt.hbs` e migração 0023) fala dos itens do D05 de LP (tirinha, charge), contra o motivo da D-240. Tirar do seed e da 0023 antes da fase 4 (quando o impresso lê a seção)? — depende de: Otavio
@@ -2895,3 +2919,8 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - Push da `main` (`e4dfd3a`) a pedido do usuário. Correção do `ano.spec` (D-275, K-046) na `feat/ano-spec`: `ano.spec` + `painel.spec` ×3 nas duas larguras, 30/30 (antes 6 falhas em 6 sozinho).
 - E2E inteiro com a correção: 170 passaram, 0 falhas, 0 pulados. "Após os testes darem certo pode mergear na main e fazer o push" (usuário): `integ/ano-spec` mesclada na `main` e enviada; K-046 em Done.
 - Capturas das 3 telas do D-274 na 8002 (form com erro, ficha da revista sem permissão, editor de template em leitura): borda vermelha nos campos com erro, 57 de 57 controles travados na ficha, editor todo em leitura. Vistas pelo usuário.
+
+### 2026-11-24 10:00
+- Levantamento da `feat/etapa-do-projeto` (4 de 12 tarefas, 160 commits atrás da `main`, migration 0020 em colisão). Regra nova da Pedagógica: etapa não canônica nasce apontando para canônica (D-276).
+- Redesenho do Figma (página "Testes") visto por capturas; decisão de papéis e de ordem (D-277). Plano de 11 etapas apresentado e aceito.
+- Etapa 1 (K-047, D-278) na `feat/carga-nao-canonica`: 6 testes da carga OK; simulação com as planilhas reais na stack da 8002: 33 parceiros, 232 cortes, 84 arbitrários, 7 etapas criadas.
