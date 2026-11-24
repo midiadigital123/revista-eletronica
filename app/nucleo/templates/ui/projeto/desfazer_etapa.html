@@ -8,7 +8,7 @@ descritor (D-181), com as revistas que perdem o "Validado". Bloqueio: o da ficha
 {% block conteudo %}
 <c-voltar href="{{ voltar }}">Voltar sem desfazer</c-voltar>
 <c-pagina-cab titulo="Desfazer o apontamento de {{ codigo }}">
-  <p class="mudo">{{ projeto.nome }}{% if mec.base %} · base: {{ mec.base.etapa.codigo }} da {{ mec.base.matriz }}{% endif %}. Desfazer apaga a cópia do projeto: {{ descritores }} descritor(es) e {{ tarefas }} tarefa(s), com tudo o que foi editado nela. A base não muda, e a etapa volta a ficar sem base, pronta para ser apontada de novo.</p>
+  <p class="mudo">{{ projeto.nome }}{% if mec.base %} · base: {{ mec.base.etapa.codigo }} da {{ mec.base.matriz }}{% endif %}. Desfazer apaga a cópia do projeto: {{ descritores }} descritor(es) e {{ tarefas }} tarefa(s), com tudo o que foi editado nela. A base não muda, e {% if volta_matriz %}a revista volta a usar a etapa da matriz{% else %}a etapa volta a ficar sem base, pronta para ser apontada de novo{% endif %}.</p>
 </c-pagina-cab>
 
 {% if revistas %}

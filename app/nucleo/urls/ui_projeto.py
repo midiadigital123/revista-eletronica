@@ -355,38 +355,38 @@ def _gravar_matriz(request, pk):
 
 
 def _etapas_do_projeto(projeto, pedido="", usuario=None):
-    """Aba Matriz: uma linha por corte do parceiro em etapa não canônica (D-276) que a matriz não
-    cobre, nos componentes das revistas ativas. `mec` é a etapa do projeto, se já apontada; sem ela,
-    `bases` traz as etapas canônicas de matriz do mesmo componente (qualquer matriz, qualquer ano).
-    `pedido` ("etapa-componente-base", vindo do POST sem confirmação): a linha ganha `escolhida` e
-    `perdem`, as revistas que o apontamento tira do "Validado", para o modal de impacto (D-202)."""
+    """Aba Matriz: uma linha por corte do parceiro (etapa × componente das revistas ativas).
+    `mec` é a cópia do projeto, se existe (D-288: ela sempre vale); `da_matriz`, a etapa da matriz do
+    parceiro, que o botão "Editar só neste projeto" copia. Sem nenhuma das duas e etapa não canônica
+    (D-276), `bases` traz as etapas canônicas de matriz do mesmo componente (qualquer matriz, qualquer
+    ano). `pedido` ("etapa-componente-base", vindo do POST sem confirmação; base 0 = a da matriz): a
+    linha ganha `escolhida` e `perdem`, as revistas que perdem o "Validado", para o modal de impacto (D-202)."""
     componentes = _revistas(projeto).values_list("componente_id", flat=True)
     cortes = (
         Corte.objects.filter(parceiro_ano_id=projeto.parceiro_ano_id, componente_id__in=componentes)
-        .exclude(etapa__codigo__in=ETAPAS_CANONICAS)
         .select_related("etapa", "componente").order_by("etapa__ordem", "componente__codigo")
     )  # fmt: skip
     linhas, bases = [], {}
     for c in cortes:
         da_matriz, do_projeto = mecs_por_etapa(projeto, c.componente_id, [c.etapa_id]).get(c.etapa_id, (None, None))
-        if do_projeto is None and da_matriz is not None:
-            continue
-        if do_projeto is None and c.componente.codigo not in bases:
+        canonica = c.etapa.codigo in ETAPAS_CANONICAS
+        if do_projeto is None and da_matriz is None and not canonica and c.componente.codigo not in bases:
             bases[c.componente.codigo] = list(
                 MatrizEtapaCC.objects.filter(
                     matriz__isnull=False, etapa__codigo__in=ETAPAS_CANONICAS, componente__codigo=c.componente.codigo
                 ).select_related("matriz__ano", "etapa").order_by("-ano__ano", "matriz__nome", "matriz_id", "etapa__ordem")
             )  # fmt: skip
         linhas.append({
-            "etapa": c.etapa, "componente": c.componente, "mec": do_projeto, "bases": bases.get(c.componente.codigo),
+            "etapa": c.etapa, "componente": c.componente, "mec": do_projeto, "da_matriz": da_matriz, "canonica": canonica,
+            "bases": None if da_matriz or canonica else bases.get(c.componente.codigo),
             "form_id": f"apontar-{c.etapa_id}-{c.componente_id}",
         })  # fmt: skip
     alvo = [_pk(x) for x in pedido.split("-")] if pedido.count("-") == 2 else None
     for linha in linhas:
         if alvo and linha["mec"] is None and [linha["etapa"].pk, linha["componente"].pk] == alvo[:2]:
             base = next((b for b in linha["bases"] or () if b.pk == alvo[2]), None)
-            if base is not None:
-                linha["escolhida"] = base.pk
+            if base is not None or linha["da_matriz"]:
+                linha["escolhida"] = base and base.pk
                 linha["perdem"] = _perdem_ao_apontar(projeto, linha["etapa"], linha["componente"], usuario, base)
     for linha in linhas:  # a base da etapa já apontada, com a matriz dela, numa consulta só por linha
         if linha["mec"] and linha["mec"].base_id:
@@ -413,8 +413,9 @@ def apontar(request, pk):
 
 @com_bloqueio(_alvo, pode_gravar)
 def _apontar(request, pk):
-    """Aba Matriz: aponta a etapa não canônica do projeto para uma etapa canônica de matriz (D-276),
-    sob a sessão de bloqueio da ficha. Toda a regra fica em `servicos.etapa_projeto.criar`. Apontar
+    """Aba Matriz: cria a cópia do projeto de uma etapa × componente, sob a sessão de bloqueio da
+    ficha. Sem `base`, é "Editar só neste projeto" (D-288): copia a etapa da matriz do parceiro e abre
+    o editor na cópia. Com `base`, aponta a etapa não canônica para uma canônica de matriz (D-276). Toda a regra fica em `servicos.etapa_projeto.criar`. Apontar
     muda a revista: se alguma validada perde o "Validado", nada é gravado e a aba reabre com o modal
     de impacto (D-202); o reenvio confirmado grava e avisa quem perdeu."""
     projeto = get_object_or_404(Projeto.objects.select_related("parceiro_ano", "ano"), pk=pk)
@@ -423,21 +424,25 @@ def _apontar(request, pk):
     aba = reverse("ui_projeto", args=[pk]) + "?aba=matriz"
     etapa = Etapa.objects.filter(pk=_pk(request.POST.get("etapa")), ano_id=projeto.ano_id).first()
     componente = Componente.objects.filter(pk=_pk(request.POST.get("componente")), ano_id=projeto.ano_id).first()
-    base = MatrizEtapaCC.objects.select_related("matriz__ano", "etapa", "componente").filter(pk=_pk(request.POST.get("base"))).first()
-    if etapa is None or componente is None or base is None:
+    pedida = request.POST.get("base", "")
+    base = MatrizEtapaCC.objects.select_related("matriz__ano", "etapa", "componente").filter(pk=_pk(pedida)).first()
+    if etapa is None or componente is None or (pedida and base is None):
         messages.error(request, "Não apontado: escolha a base.")
         return redirect(aba)
     try:
         perdem = perdem_validado(lambda: criar(projeto, etapa, componente, request.user, base), _revistas(projeto))
         if perdem and not request.POST.get("confirmar_impacto"):
-            return redirect(f"{aba}&apontar={etapa.pk}-{componente.pk}-{base.pk}")
-        criar(projeto, etapa, componente, request.user, base)
+            return redirect(f"{aba}&apontar={etapa.pk}-{componente.pk}-{base.pk if base else 0}")
+        mec = criar(projeto, etapa, componente, request.user, base)
     except CriacaoRecusada as e:
         messages.error(request, f"Não apontado: {e}.")
         return redirect(aba)
-    messages.success(request, f"{etapa.codigo} {componente.codigo} apontada para {base.etapa.codigo} de {base.matriz}.")
     if perdem:
         avisar_perdidos(request, perdem, projeto.ano.ano)
+    if mec.base.etapa_id == mec.etapa_id:  # cópia local da etapa da matriz: segue para o editor da cópia
+        messages.success(request, f"{etapa.codigo} {componente.codigo}: cópia criada. O que for editado aqui vale só para {projeto.nome}.")
+        return redirect("ui_matriz_mec", mec.pk)
+    messages.success(request, f"{etapa.codigo} {componente.codigo} apontada para {mec.base.etapa.codigo} de {mec.base.matriz}.")
     return redirect(aba)
 
 
@@ -473,6 +478,7 @@ def desfazer_etapa(request, pk, mec):
     return TemplateResponse(request, "ui/projeto/desfazer_etapa.html", {
         "projeto": projeto, "mec": m, "codigo": codigo, "form": form, "voltar": aba, "ano": projeto.ano, "secao": "projetos",
         "revistas": [(r, r in perdem) for r in revistas], "validadas": len(perdem), "pode_gravar": request.pode_gravar,
+        "volta_matriz": mecs_por_etapa(projeto, m.componente_id, [m.etapa_id])[m.etapa_id][0],
         "descritores": m.descritor_set.count(), "tarefas": Tarefa.objects.filter(descritor__matriz_etapa_cc=m).count(),
     })  # fmt: skip
 

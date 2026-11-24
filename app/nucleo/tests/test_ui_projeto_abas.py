@@ -266,8 +266,8 @@ class ApontarEtapaTest(EtapaNaoCanonica):
     def test_aba_matriz_mostra_o_form_de_apontar(self):
         mt5 = MatrizEtapaCC.objects.get(matriz=self.matriz, etapa=self.e5, componente=self.mt)
         r = self.client.get(self.url)
-        self.assertContains(r, "Etapas não canônicas")
-        self.assertContains(r, f'action="{self.url_apontar}"', count=1)  # só 4EF LP; canônica não ganha linha
+        self.assertContains(r, "Etapas do projeto")
+        self.assertContains(r, 'name="base"', count=1)  # só 4EF LP escolhe a base; as outras têm a da matriz
         self.assertContains(r, '<optgroup label="Comunitária (2026)">')
         self.assertContains(r, f'<option value="{self.mec5.pk}">5EF</option>')
         self.assertNotContains(r, f'<option value="{mt5.pk}">')  # outro componente
@@ -282,7 +282,7 @@ class ApontarEtapaTest(EtapaNaoCanonica):
         self.assertNotIn("etapa_sem_base", [p.codigo for p in pendencias(carregar(self.go["LP"].pk))])
         self.assertContains(r, "base: 5EF LP da Comunitária (2026)")
         self.assertContains(r, reverse("ui_matriz_mec", args=[mec.pk]))
-        self.assertNotContains(r, f'action="{self.url_apontar}"')
+        self.assertNotContains(r, 'name="base"')
 
     def test_apontar_recusa_sem_bloqueio_e_sem_permissao(self):
         self.client.get(self.url)
@@ -368,7 +368,7 @@ class DesfazerApontamentoTest(EtapaNaoCanonica):
         self.assertTrue(Descritor.objects.filter(matriz_etapa_cc=self.mec5).exists())  # a base fica
         self.assertIn("etapa_sem_base", [p.codigo for p in pendencias(carregar(self.go["LP"].pk))])
         self.assertContains(r, "Apontamento de 4EF LP desfeito")
-        self.assertContains(r, f'action="{self.url_apontar}"')  # pode apontar de novo
+        self.assertContains(r, 'name="base"')  # pode apontar de novo
         h = MatrizEtapaCC.history.filter(id=self.mec.pk).first()
         self.assertEqual((h.history_type, h.history_user), ("-", self.ped))
 
@@ -393,3 +393,51 @@ class DesfazerApontamentoTest(EtapaNaoCanonica):
         self.assertNotContains(self.client.get(self.url), f'href="{self.url_desfazer}"')
         self.assertEqual(self.client.post(self.url_desfazer, {"confirmacao": "4EF LP"}).status_code, 403)
         self.assertTrue(self.do_projeto().exists())
+
+
+class EditarSoNesteProjetoTest(EtapaNaoCanonica):
+    """Etapa 7b (D-288): a etapa que a matriz tem ganha cópia do projeto pelo botão, e a cópia sempre vale."""
+
+    def copiar(self, **extra):
+        sessao = self.client.get(self.url).wsgi_request.bloqueio["sessao"]
+        dados = {"etapa": self.e5.pk, "componente": self.lp.pk, CAMPO_SESSAO: sessao, **extra}
+        return self.client.post(self.url_apontar, dados, follow=True)
+
+    def test_linha_de_etapa_da_matriz_tem_editar_so_neste_projeto(self):
+        r = self.client.get(self.url)
+        self.assertContains(r, "usa a matriz Comunitária", count=3)  # 5EF LP, 9EF LP e 5EF MT
+        self.assertContains(r, "Editar só neste projeto<span", count=3)
+        self.client.force_login(self.imp)
+        self.assertNotContains(self.client.get(self.url), "Editar só neste projeto<span")
+
+    def test_editar_so_neste_projeto_cria_a_copia_e_abre_o_editor(self):
+        antes = pendencias(carregar(self.go["LP"].pk))
+        r = self.copiar()
+        mec = self.do_projeto().get()
+        self.assertEqual((mec.etapa, mec.componente, mec.base), (self.e5, self.lp, self.mec5))
+        self.assertRedirects(r, reverse("ui_matriz_mec", args=[mec.pk]))
+        self.assertContains(r, "5EF LP: cópia criada")
+        self.assertEqual(pendencias(carregar(self.go["LP"].pk)), antes)  # nenhuma pendência nova
+        r = self.client.get(self.url)
+        self.assertContains(r, "cópia do projeto · base: 5EF LP da Comunitária (2026)")
+        self.assertContains(r, "Desfazer a cópia")
+
+    def test_copia_local_com_revista_validada_passa_pela_simulacao(self):
+        """A cópia nasce igual à matriz: a simulação roda e ninguém perde o Validado, então grava direto."""
+        gravar_cortes(self.projeto_go.parceiro_ano, [(self.e5, self.lp, [100, 200, 250, 300])], self.usuario)
+        validar(self.go["LP"])
+        self.copiar()
+        self.assertTrue(self.do_projeto().exists())
+        self.assertTrue(esta_validada(self.go["LP"]))
+
+    def test_desfazer_copia_local_volta_a_usar_a_matriz(self):
+        mec = criar(self.projeto_go, self.e5, self.lp, self.ped)
+        Descritor.objects.filter(matriz_etapa_cc=mec, codigo="D01").update(descricao="Só do GO")
+        url = reverse("ui_projeto_etapa_desfazer", args=[self.projeto_go.pk, mec.pk])
+        r = self.client.get(url)
+        self.assertContains(r, "a revista volta a usar a etapa da matriz")
+        self.client.post(url, {"confirmacao": "5EF LP", CAMPO_SESSAO: r.wsgi_request.bloqueio["sessao"]})
+        self.assertFalse(self.do_projeto().exists())
+        from nucleo.servicos.resolver import resolver
+
+        self.assertEqual(resolver(carregar(self.go["LP"].pk))["f1"]["dados"]["5ef"]["D01"]["description"], "Descritor 1 LP")

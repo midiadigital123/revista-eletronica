@@ -146,16 +146,30 @@ Demo K-042: escrita com componentes django-cotton (templates/cotton/: pagina_cab
 </c-card>
 
 {% if etapas_projeto %}
-<c-card titulo="Etapas não canônicas" titulo_id="etapas-titulo" class="pj-secao">
-  <c-slot name="descricao">Etapa fora de 2EF, 5EF, 9EF e 3EM parte de uma etapa canônica de qualquer matriz: apontar copia os descritores e as tarefas da base para o projeto, que edita a cópia. Se a base mudar depois, o projeto revisa as mudanças.</c-slot>
+<c-card titulo="Etapas do projeto" titulo_id="etapas-titulo" class="pj-secao">
+  <c-slot name="descricao">Cada etapa usa a matriz até alguém escolher “Editar só neste projeto”: aí o projeto ganha uma cópia, e o que for editado nela não muda a matriz nem os outros projetos. Se a matriz mudar depois, o projeto revisa as mudanças. Etapa fora de 2EF, 5EF, 9EF e 3EM parte de uma etapa canônica de qualquer matriz.</c-slot>
   <ul class="pj-etapas-projeto">
     {% for l in etapas_projeto %}
     <li>
       <strong>{{ l.etapa.codigo }} {{ l.componente.codigo }}</strong>
       {% if l.mec %}
-      <span>· {% if l.base %}base: {{ l.base.etapa.codigo }} {{ l.base.componente.codigo }} da {{ l.base.matriz }}{% else %}sem base (a base foi apagada){% endif %}</span>
+      <span>· cópia do projeto · {% if l.base %}base: {{ l.base.etapa.codigo }} {{ l.base.componente.codigo }} da {{ l.base.matriz }}{% else %}sem base (a base foi apagada){% endif %}</span>
       <a class="link" href="{% url 'ui_matriz_mec' l.mec.pk %}">{% if pode_gravar %}Editar{% else %}Ver{% endif %}<span class="sr-only"> {{ l.etapa.codigo }} {{ l.componente.codigo }}</span></a>
-      {% if request.bloqueio and pode_gravar %}<a class="link" href="{% url 'ui_projeto_etapa_desfazer' projeto.pk l.mec.pk %}">Desfazer apontamento<span class="sr-only"> de {{ l.etapa.codigo }} {{ l.componente.codigo }}</span></a>{% endif %}
+      {% if request.bloqueio and pode_gravar %}<a class="link" href="{% url 'ui_projeto_etapa_desfazer' projeto.pk l.mec.pk %}">Desfazer{% if l.da_matriz %} a cópia{% else %} apontamento{% endif %}<span class="sr-only"> de {{ l.etapa.codigo }} {{ l.componente.codigo }}</span></a>{% endif %}
+      {% elif l.da_matriz %}
+      <span class="mudo">· usa a matriz {{ projeto.parceiro_ano.matriz.nome }}</span>
+      {% if request.bloqueio and pode_gravar %}
+      {# D-288: copia a etapa da matriz para o projeto e abre o editor na cópia; a regra fica em servicos.etapa_projeto.criar. #}
+      <form method="post" action="{% url 'ui_projeto_etapa_apontar' projeto.pk %}" class="pj-apontar" id="{{ l.form_id }}">{% csrf_token %}
+        <input type="hidden" name="{{ request.bloqueio.campo }}" value="{{ request.bloqueio.sessao }}">
+        <input type="hidden" name="etapa" value="{{ l.etapa.pk }}">
+        <input type="hidden" name="componente" value="{{ l.componente.pk }}">
+        <c-botao type="submit" variante="outline" tamanho="sm">Editar só neste projeto<span class="sr-only"> {{ l.etapa.codigo }} {{ l.componente.codigo }}</span></c-botao>
+      </form>
+      {% if l.perdem %}{% include "ui/_componentes/impacto.html" with form_id=l.form_id acao="Editar só neste projeto" perdem=l.perdem %}{% endif %}
+      {% endif %}
+      {% elif l.canonica %}
+      <span class="mudo">· a matriz não tem esta etapa</span>
       {% elif request.bloqueio and pode_gravar and l.bases %}
       {# Form próprio, com a mesma sessão de bloqueio da ficha; a regra fica em servicos.etapa_projeto.criar. #}
       <form method="post" action="{% url 'ui_projeto_etapa_apontar' projeto.pk %}" class="pj-apontar" id="{{ l.form_id }}">{% csrf_token %}
