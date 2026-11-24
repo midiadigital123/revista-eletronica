@@ -5,14 +5,20 @@ o da própria etapa do projeto, o mesmo do editor da cópia (`ui_matriz`): os do
 import re
 from pathlib import PurePosixPath
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
 from django.http import Http404
+from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import path
 from django.views.decorators.http import require_GET, require_http_methods
 
-from nucleo.servicos.etapa_projeto import CAMPOS_TEXTO, pendente, revisao, textos_locais
+from nucleo.models import Revista
+from nucleo.servicos.etapa_projeto import (
+    CAMPOS_TEXTO, RevisaoIncompleta, RevisaoMudou, RevisaoRecusada, concluir, pendente, revisao, textos_locais,
+)  # fmt: skip
+from nucleo.servicos.impacto import avisar_perdidos, perdem_validado
 from nucleo.texto import partes
 from nucleo.ui_bloqueio import com_bloqueio
 from nucleo.urls.preview import TIPOS_ITEM, servir
@@ -139,24 +145,81 @@ def cartoes(itens, textos):
     return saida
 
 
-@require_http_methods(["GET"])  # o POST (concluir) entra no próximo passo da D-292
+def _lista(request, pk):
+    """(etapa, cartões, visto) lidos do banco agora: a etapa é sempre relida antes da `revisao`, que usa
+    a base e a foto em cache da instância (D-284)."""
+    m = _etapa(request, pk)
+    itens, visto = revisao(m)
+    return m, cartoes(itens, textos_locais(m, itens)), visto
+
+
+def _escolhas(lista, post):
+    """As escolhas do form no formato do `concluir`: {(chave, campo): "base" | "local" | ("texto", s)}.
+    A do cartão vale para todas as células dele; cartão sem `escolha-<i>` fica de fora e valor estranho
+    passa cru (o serviço decide os dois). Os cartões ficam marcados com o que veio, para a página que
+    volta sem gravar."""
+    escolhas, sem_texto = {}, None
+    for c in lista:
+        valor, texto = post.get(f"escolha-{c['i']}"), post.get(f"texto-{c['i']}")
+        if c["editavel"] and texto is not None:
+            c["texto"] = texto
+        if valor is None:
+            continue
+        c["marcada"] = valor
+        if valor == "texto":
+            if texto is None:
+                sem_texto = sem_texto or c["titulo"]
+            valor = ("texto", texto)
+        escolhas.update(dict.fromkeys(c["celulas"], valor))
+    if sem_texto:
+        raise RevisaoRecusada(f"faltou o texto de {sem_texto}")
+    return escolhas
+
+
+MUDOU = "Não salvo: a base ou a etapa mudou depois que você abriu a revisão. Confira a lista de agora e conclua de novo."
+
+
+@require_http_methods(["GET", "POST"])
 @login_required
 @com_bloqueio(_alvo_revisao, pode_editar)
 def revisar(request, pk):
-    m = _etapa(request, pk)  # leitura nova: `revisao` usa a base em cache da instância
-    itens, visto = revisao(m)
-    lista = cartoes(itens, textos_locais(m, itens))
+    """GET: a lista. POST (sob o bloqueio da etapa, na transação do `com_bloqueio`): conclui com as
+    escolhas. `visto` diferente do de agora é 409 com a lista nova e sem as escolhas (o índice do cartão
+    pode ser de outra célula); revista validada que perderia o "Validado" volta com o modal de impacto
+    (D-202) e só grava confirmada; recusa do serviço volta com "Não salvo" e as escolhas."""
+    m, lista, visto = _lista(request, pk)
+    codigo, status, perdem = f"{m.etapa.codigo} {m.componente.codigo}", 200, []
+    if request.method == "POST":
+        try:
+            if request.POST.get("visto") != visto:
+                raise RevisaoMudou
+            escolhas = _escolhas(lista, request.POST)
+            revistas = Revista.objects.filter(projeto=m.projeto, componente=m.componente, arquivada_em__isnull=True)
+            perdem = perdem_validado(lambda: concluir(m, escolhas, visto, request.user), revistas)
+            if not perdem or request.POST.get("confirmar_impacto"):
+                aplicadas = concluir(m, escolhas, visto, request.user)
+                feito = f"{aplicadas} mudança(s) da base aplicada(s)" if aplicadas else "nada mudou no projeto"
+                messages.success(request, f"Revisão de {codigo} concluída: {feito}.")
+                if perdem:
+                    avisar_perdidos(request, perdem, m.ano.ano)
+                return redirect(_dono(m)["voltar_dono"])  # o 302 libera o bloqueio
+        except RevisaoMudou:
+            (m, lista, visto), status, perdem = _lista(request, pk), 409, []
+            messages.error(request, MUDOU)
+        except (RevisaoIncompleta, RevisaoRecusada) as e:
+            perdem = []
+            messages.error(request, f"Não salvo: {e}.")
     so_leitura = ""
     if not pode_editar(request.user):
         so_leitura = "Só leitura: seu perfil vê a revisão, mas não conclui. Para concluir, peça a permissão de matriz a um administrador."
     elif _congelada(m):
         so_leitura = "Só leitura: o projeto desta etapa está arquivado."
     return TemplateResponse(request, "ui/projeto/revisar_etapa.html", {
-        **_contexto_ano(m.ano), **_dono(m), "secao": "projetos", "mec": m, "codigo": f"{m.etapa.codigo} {m.componente.codigo}",
+        **_contexto_ano(m.ano), **_dono(m), "secao": "projetos", "mec": m, "codigo": codigo,
         "pendente": pendente(m), "visto": visto, "cartoes": lista, "so_leitura": so_leitura,
         "decisoes": [c for c in lista if c["decisao"]], "entram": [c for c in lista if not c["decisao"]],
-        "pode_gravar": request.pode_gravar,
-    })  # fmt: skip
+        "pode_gravar": request.pode_gravar, "perdem": perdem,
+    }, status=status)  # fmt: skip
 
 
 @require_GET

@@ -19,7 +19,7 @@ Bloqueio: o da própria etapa do projeto (o mesmo do editor da cópia). Nada gra
 {% if not pendente %}
 {% include "ui/_componentes/vazio.html" with titulo="Esta etapa está em dia com a base" texto="A base não mudou desde a cópia ou desde a última revisão: não há o que revisar." url=voltar_dono rotulo="Voltar ao projeto" %}
 {% else %}
-<form method="post" action="{% url 'ui_revisao' mec.pk %}" class="rev-form">
+<form method="post" action="{% url 'ui_revisao' mec.pk %}" class="rev-form" id="revisao">
   {% if pode_gravar %}{% csrf_token %}{% endif %}
   {% if pode_gravar %}{% include "ui/_componentes/bloqueio.html" %}{% endif %}
   {% if pode_gravar %}<input type="hidden" name="visto" value="{{ visto }}">{% endif %}
@@ -52,5 +52,7 @@ Bloqueio: o da própria etapa do projeto (o mesmo do editor da cópia). Nada gra
   </div>
   {% endif %}
 </form>
+{# D-202: o POST sem confirmação voltou para cá com as escolhas; confirmar no modal reenvia este form com confirmar_impacto. #}
+{% if perdem %}{% include "ui/_componentes/impacto.html" with form_id="revisao" acao="Concluir revisão" perdem=perdem %}{% endif %}
 {% endif %}
 {% endblock %}
