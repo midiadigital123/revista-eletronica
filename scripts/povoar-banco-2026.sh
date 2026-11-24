@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Povoa um banco VAZIO com a carga de 2026 (D-265): ano e cadastros, 33 parceiros, 148 cortes (com projetos e
-# revistas pela cascata), matriz Comunitária (198 descritores, 1093 tarefas), 4 templates e o usuário `admin`.
+# Povoa um banco VAZIO com a carga de 2026 (D-265, D-278): ano e cadastros, 33 parceiros, 11 etapas (as 4 do
+# cadastro e as 7 que a Somativas pede), 232 cortes (148 da planilha e 84 arbitrários "100, 200, 300", com projetos
+# e revistas pela cascata), matriz Comunitária (198 descritores, 1093 tarefas) atribuída a todos os parceiros,
+# 4 templates e o usuário `admin`.
 # Tudo vem do repositório (docs/fontes, templates_seed); não há dump nem senha versionados.
 #
 # Uso (raiz do repositório, com Docker):
@@ -32,7 +34,7 @@ fi
 dj carregar_cadastros --ano 2026
 docker compose run --rm -T -e DJANGO_SUPERUSER_PASSWORD="$ADMIN_SENHA" app \
   python manage.py createsuperuser --noinput --username admin --email admin@example.com
-dj importar_cortes "/fontes/$SOMATIVAS" "/fontes/$CORTES" --ano 2026 --usuario admin
+dj importar_cortes "/fontes/$SOMATIVAS" "/fontes/$CORTES" --ano 2026 --usuario admin --matriz Comunitária
 dj carregar_templates --ano 2026
 for pdf in "SAEGO_2025_RE_Alfa_2EF_5EF Web.pdf" "SAEGO_2025_RE_LP Web.pdf" "SAEGO_2025_RE_MT Web.pdf"; do
   dj importar_matriz --ano 2026 --nome Comunitária "/fontes/$MATRIZ/$pdf"

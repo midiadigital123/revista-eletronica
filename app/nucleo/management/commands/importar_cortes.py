@@ -3,8 +3,9 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from openpyxl import load_workbook
 
-from nucleo.models import Ano, Componente, Corte, Etapa, Parceiro, ParceiroAno
+from nucleo.models import Ano, Componente, Corte, Etapa, Matriz, Parceiro, ParceiroAno
 from nucleo.servicos.cascata import gravar_cortes
+from nucleo.servicos.matriz import atribuir_matriz
 
 # Nome na planilha Somativas -> Parceiro.nome (D-261): sigla para estado; cidade com o nome da planilha de cortes.
 # ponytail: carga única de 2026; se virar rotina anual, o mapa sai do comando.
@@ -18,6 +19,11 @@ NOMES = {
     "Salvador": "SALVADOR", "Anchieta": "Anchieta", "Angra dos Reis": "Angra dos Reis",
     "Belo Horizonte": "Belo Horizonte", "Niterói": "Niterói", "Rio de Janeiro (município)": "Rio (município)",
 }
+
+# D-278: a carga cria a etapa que a Somativas pede e o ano não tem, e preenche o corte que falta.
+# ponytail: valores fixos da carga única de 2026; a Pedagógica corrige o corte pela tela.
+ESCALA_1000 = {"1EF", "2EF"}  # as demais vão a 500
+ARBITRARIO = [100, 200, 300]  # cabe em toda escala (0 < corte < escala_max)
 
 
 def ler_somativas(caminho):
@@ -50,8 +56,9 @@ def ler_cortes(caminho):
 
 class Command(BaseCommand):
     help = (
-        "Cria os parceiros do ano (planilha Somativas) e grava os cortes de LP e MT que existem na planilha "
-        "de cortes, pela cascata. Parceiro que já tem corte é pulado. Só as etapas cadastradas no ano entram."
+        "Cria os parceiros do ano e as etapas que faltam (planilha Somativas) e grava os cortes de LP e MT pela "
+        "cascata: o valor da planilha de cortes ou, se faltar, 100, 200, 300 (listado no relatório). "
+        "Parceiro que já tem corte é pulado. --matriz atribui a matriz a quem ainda não tem."
     )
 
     def add_arguments(self, parser):
@@ -59,9 +66,10 @@ class Command(BaseCommand):
         parser.add_argument("cortes")
         parser.add_argument("--ano", type=int, required=True)
         parser.add_argument("--usuario", required=True, help="username do autor no histórico")
+        parser.add_argument("--matriz", help='nome da matriz dos parceiros sem matriz, ex.: "Comunitária" (criada se faltar)')
         parser.add_argument("--simular", action="store_true", help="roda tudo e desfaz: só mostra o relatório")
 
-    def handle(self, *args, somativas, cortes, ano, usuario, simular, **opcoes):
+    def handle(self, *args, somativas, cortes, ano, usuario, matriz, simular, **opcoes):
         ano_obj = Ano.objects.filter(ano=ano).first()
         if not ano_obj:
             raise CommandError(f"ano {ano} não cadastrado (rode carregar_cadastros --ano {ano})")
@@ -69,38 +77,49 @@ class Command(BaseCommand):
         if not autor:
             raise CommandError(f"usuário {usuario!r} não existe")
         parceiros, tabela = ler_somativas(somativas), ler_cortes(cortes)
-        etapas = {e.codigo: e for e in Etapa.objects.filter(ano=ano_obj)}
         componentes = {c.codigo: c for c in Componente.objects.filter(ano=ano_obj)}
 
-        gravados = 0
+        gravados = arbitrarios = 0
         with transaction.atomic():
+            existentes = set(Etapa.objects.filter(ano=ano_obj).values_list("codigo", flat=True))
+            criadas = sorted(set().union(*parceiros.values()) - existentes)
+            for codigo in criadas:
+                etapa = Etapa(ano=ano_obj, codigo=codigo, escala_max=1000 if codigo in ESCALA_1000 else 500)
+                etapa._history_user = autor
+                etapa.save()  # a ordem escolar sai do save
+            etapas = {e.codigo: e for e in Etapa.objects.filter(ano=ano_obj).order_by("ordem")}
+            matriz_obj = Matriz.objects.get_or_create(ano=ano_obj, nome=matriz)[0] if matriz else None
+
             for nome, pedidas in sorted(parceiros.items()):
-                linhas, faltam = [], []
+                linhas, sem_valor = [], []
                 for etapa in (e for e in etapas if e in pedidas):
                     for comp, componente in componentes.items():
                         valores = tabela.get((nome, etapa, comp))
-                        if valores:
-                            linhas.append((etapas[etapa], componente, valores))
-                        else:
-                            faltam.append(f"{etapa}-{comp}")
+                        if not valores:
+                            valores = ARBITRARIO
+                            sem_valor.append(f"{etapa}-{comp}")
+                        linhas.append((etapas[etapa], componente, valores))
                 pa = ParceiroAno.objects.get_or_create(
                     parceiro=Parceiro.objects.get_or_create(nome=nome)[0], ano=ano_obj
                 )[0]
+                if matriz_obj and pa.matriz_id is None:
+                    atribuir_matriz(pa, matriz_obj, autor)
                 if Corte.objects.filter(parceiro_ano=pa).exists():
-                    estado = "pulado (já tem cortes)"
-                elif linhas:
+                    self.stdout.write(f"{nome}: pulado (já tem cortes)")
+                    continue
+                if linhas:
                     gravar_cortes(pa, linhas, autor)
                     gravados += len(linhas)
-                    estado = f"{len(linhas)} corte(s)"
-                else:
-                    estado = "sem cortes"
-                ignoradas = sorted(pedidas - set(etapas))
+                    arbitrarios += len(sem_valor)
                 self.stdout.write(
-                    f"{nome}: {estado}"
-                    + (f"; faltam {', '.join(faltam)}" if faltam else "")
-                    + (f"; etapas ignoradas {', '.join(ignoradas)}" if ignoradas else "")
+                    f"{nome}: " + (f"{len(linhas)} corte(s)" if linhas else "sem cortes")
+                    + (f"; arbitrários {', '.join(sem_valor)}" if sem_valor else "")
                 )
-            self.stdout.write(f"{len(parceiros)} parceiro(s), {gravados} corte(s) gravado(s).")
+            if criadas:
+                self.stdout.write(f"etapas criadas: {', '.join(criadas)}")
+            self.stdout.write(
+                f"{len(parceiros)} parceiro(s), {gravados} corte(s) gravado(s), {arbitrarios} arbitrário(s)."
+            )
             if simular:
                 transaction.set_rollback(True)
                 self.stdout.write("Simulação: nada foi gravado.")
