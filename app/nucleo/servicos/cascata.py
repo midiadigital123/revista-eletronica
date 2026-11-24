@@ -8,6 +8,7 @@ from nucleo.models import (
     Corte,
     Fasciculo,
     FotoRevista,
+    MatrizEtapaCC,
     ParceiroAno,
     Projeto,
     Revista,
@@ -84,6 +85,12 @@ def gravar_cortes(parceiro_ano, linhas, usuario):
                 Projeto(parceiro_ano=pa, ano_id=pa.ano_id, nome=f"{pa.parceiro.nome} - NOME DO PROJETO"),
                 usuario,
             )
+            # D-281: as etapas dos projetos arquivados do parceiro passam para o projeto novo
+            # (a mesma linha, com base e foto: nunca se perde o que foi digitado).
+            for mec in MatrizEtapaCC.objects.filter(projeto__parceiro_ano=pa, projeto__arquivado_em__isnull=False):
+                mec.projeto = projeto
+                mec._change_reason = "projeto recriado pela cascata"
+                _salvar(mec, usuario, update_fields=["projeto"])
         if not componentes:  # toda revista do projeto está arquivada
             projeto.arquivado_em = agora
             _salvar(projeto, usuario, update_fields=["arquivado_em"])

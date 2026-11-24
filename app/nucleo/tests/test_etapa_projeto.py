@@ -290,6 +290,37 @@ class RevistaTest(Base):
         self.assertNotIn("etapa_em_dobro", [p.codigo for p in pendencias(lp)])
 
 
+class CascataTest(Base):
+    """D-281: o projeto que a cascata recria herda as etapas do projeto arquivado."""
+
+    def _arquiva_e_volta(self, no_meio=lambda: None):
+        pa, cortes = self.projeto.parceiro_ano, [100, 200, 250, 300]
+        gravar_cortes(pa, [], self.usuario)  # sem corte nenhum, o projeto é arquivado
+        no_meio()
+        gravar_cortes(pa, [(self.e4, self.lp, cortes), (self.e5, self.lp, cortes)], self.usuario)
+        novo = Projeto.objects.get(parceiro_ano=pa, arquivado_em__isnull=True)
+        return novo, Revista.objects.get(projeto=novo, componente=self.lp)
+
+    def test_projeto_recriado_herda_a_etapa_do_projeto(self):
+        mec = criar(self.projeto, self.e4, self.lp, self.usuario, base=self.mec5)
+        foto_antes = mec.base_foto
+        novo, lp = self._arquiva_e_volta()
+        self.assertNotEqual(novo.pk, self.projeto.pk)
+        mec.refresh_from_db()  # a mesma linha: transfere, não copia
+        self.assertEqual((mec.projeto_id, mec.base_id, mec.base_foto), (novo.pk, self.mec5.pk, foto_antes))
+        self.assertIn("D01", resolver(lp)["f1"]["dados"]["4ef"])
+        self.assertNotIn("etapa_sem_base", [p.codigo for p in pendencias(lp)])
+        h = mec.history.first()
+        self.assertEqual((h.history_user, h.history_change_reason), (self.usuario, "projeto recriado pela cascata"))
+
+    def test_base_editada_com_o_projeto_arquivado_abre_a_revisao_ao_herdar(self):
+        criar(self.projeto, self.e4, self.lp, self.usuario, base=self.mec5)
+        _, lp = self._arquiva_e_volta(
+            lambda: Descritor.objects.filter(matriz_etapa_cc=self.mec5, codigo="D01").update(descricao="Mudou")
+        )
+        self.assertIn({"tipo": "base", "etapa": "4ef"}, resolver(lp)["lacunas"])
+
+
 class RestoDoSistemaTest(MediaTemporaria, Base):
     """Fluxos antigos com a etapa do projeto (GO LP 4EF) e um parceiro sem matriz com corte 4EF LP:
     `filter(matriz_id=None)` casaria a etapa do projeto do GO."""
