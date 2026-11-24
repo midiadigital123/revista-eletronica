@@ -52,7 +52,7 @@ function rotuloAnoLongo(ano) {
 }
 // Chaves da etapa que não são descritor (servicos/resolver.py::_f1_escalas); o resto é código de descritor,
 // em qualquer formato (D01, D011, H05): o código é texto livre na matriz.
-const CHAVES_DA_ETAPA = new Set(["scaleRange", "cortes", "padroes"]);
+const CHAVES_DA_ETAPA = new Set(["scaleRange", "cortes", "padroes", "ordem"]);
 
 /** Escapa texto dos dados antes de ir para innerHTML. */
 function escapeHtml(valor) {
@@ -65,9 +65,12 @@ function escapeHtml(valor) {
   );
 }
 
-/** Códigos de descritor de um ano (ignora scaleRange, cortes e padroes). */
+/** Códigos de descritor de um ano, na ordem do editor (`ordem`). Revista arquivada antes da D-291 não
+ * traz `ordem`: aí vale a ordem alfabética de antes. */
 function descriptorKeys(filterData) {
-  return Object.keys(filterData || {})
+  const dados = filterData || {};
+  if (Array.isArray(dados.ordem)) return dados.ordem.filter((k) => k in dados);
+  return Object.keys(dados)
     .filter((k) => !CHAVES_DA_ETAPA.has(k))
     .sort();
 }

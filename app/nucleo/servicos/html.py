@@ -60,7 +60,7 @@ def template(slug):
     return f"revista/{slug}.html" if slug in ("index", "f1") else "revista/f2.html"
 
 
-CHAVES_DA_ETAPA = {"scaleRange", "cortes", "padroes"}  # o resto das chaves são descritores
+CHAVES_DA_ETAPA = {"scaleRange", "cortes", "padroes", "ordem"}  # o resto das chaves são descritores
 
 
 def contexto_pagina(revista, pagina, *, preview, estaticos, capa, link, base_imagens, resolvido=None):

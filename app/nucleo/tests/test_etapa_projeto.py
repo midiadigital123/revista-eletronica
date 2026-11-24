@@ -309,6 +309,15 @@ class EdicaoLocalTest(Base):
         self.assertIn({"tipo": "base", "etapa": "5ef"}, resolver(go)["lacunas"])
         self.assertIn("base", [p.codigo for p in pendencias(go)])
 
+    def test_ordem_do_editor_vai_para_a_revista_e_muda_o_hash(self):  # D-291
+        lp = recarregar(self.lp_go)
+        self.assertEqual(resolver(lp)["f1"]["dados"]["5ef"]["ordem"], ["D01", "D02"])
+        antes = hash_validado(lp)
+        Descritor.objects.filter(matriz_etapa_cc=self.copia, codigo="D01").update(ordem=3)
+        lp = recarregar(self.lp_go)
+        self.assertEqual(resolver(lp)["f1"]["dados"]["5ef"]["ordem"], ["D02", "D01"])
+        self.assertNotEqual(hash_validado(lp), antes)
+
     def test_bloqueio_da_copia_nao_trava_a_matriz(self):  # 6
         from nucleo.servicos import bloqueio
 

@@ -196,6 +196,8 @@ def _f1_escalas(revista, projeto, variaveis):
                 },
                 "scale": escala(tarefas, valores, 0, etapa.escala_max, passo),
             }
+        # A ordem do editor (D-291): lista própria, porque o hash ordena as chaves e a perderia.
+        dados[chave]["ordem"] = [d.codigo for d in descritores.get(mec.pk if mec else None, [])]
     return etapas, dados, lacunas
 
 

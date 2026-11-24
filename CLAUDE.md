@@ -89,7 +89,7 @@ ficha da revista (regra em `nucleo/infografico.py`, D-254). O SVG enviado pelo d
 fases em `docs/superpowers/plans/`. `example/` guarda
 protótipos estáticos fora do sistema (`f2-gerado/` é a fase 0, D-228), cada um com `LEIA-ME.md`.
 
-Formato do F1 por etapa: `{scaleRange, cortes, Dxx: {topic, description, prerequisites[],
+Formato do F1 por etapa: `{scaleRange, cortes, padroes, ordem: [códigos na ordem do editor], <código>: {topic, description, prerequisites[],
 bncc: {practices, knowledge, skills[]}, scale: {padrao-1..N: [{level, fim, content}]}}}`.
 
 ## Conventions

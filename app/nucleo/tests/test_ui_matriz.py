@@ -533,8 +533,8 @@ class MecLinhasTest(BaseMundo):
         self.assertEqual((self.descritores(), self.tarefas()), (d, t))
 
     def test_reordenar_com_validada_simula_e_grava_direto(self):
-        """A revista mostra descritores e tarefas pela própria regra, não pela `ordem`: a simulação
-        não acha quem perca o "Validado" e grava sem modal."""
+        """A revista põe as tarefas na escala pela faixa, não pela `ordem`: a simulação não acha quem
+        perca o "Validado" e grava sem modal. A ordem dos descritores entra na revista (D-291)."""
         rev = self.go["LP"]
         validar(rev)
         sessao = self.abrir()
@@ -542,6 +542,18 @@ class MecLinhasTest(BaseMundo):
         self.assertTrue(self.postar(self.reordenar_t, sessao, invertida).json()["ok"])
         self.assertEqual(self.tarefas(), invertida)
         self.assertTrue(esta_validada(rev))
+
+    def test_reordenar_descritores_com_validada_pede_confirmacao(self):
+        """D-291: a revista segue a ordem do editor, então reordenar descritores tira o "Validado"."""
+        rev = self.go["LP"]
+        validar(rev)
+        sessao = self.abrir()
+        antes = self.descritores()
+        r = self.postar(self.reordenar_d, sessao, antes[::-1])
+        self.assertIn(str(rev), r.json()["impacto"]["perdem"])
+        self.assertEqual(self.descritores(), antes)
+        self.assertTrue(self.postar(self.reordenar_d, sessao, antes[::-1], confirmar_impacto="on").json()["ok"])
+        self.assertFalse(esta_validada(rev))
 
     def test_reordenar_impacto_e_bloqueio(self):
         """Se a ordem tirasse o "Validado" (simulado aqui), o reordenar segue o protocolo do autosave."""

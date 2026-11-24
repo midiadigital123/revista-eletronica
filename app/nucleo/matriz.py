@@ -177,7 +177,7 @@ class LinhasField(forms.CharField):
 
 
 # As chaves que `servicos/resolver.py::_f1_escalas` põe em cada etapa do F1, ao lado dos descritores.
-CHAVES_DA_ETAPA = ("scaleRange", "cortes", "padroes")
+CHAVES_DA_ETAPA = ("scaleRange", "cortes", "padroes", "ordem")
 
 
 class DescritorForm(ImpactoForm):

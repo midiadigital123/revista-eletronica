@@ -348,6 +348,8 @@ assert.equal(rotuloNiveis(300, undefined), "nível 300");
   const etapa = { scaleRange: {}, cortes: {}, padroes: [], D02: {}, D011: {}, H05: {}, D1: {} };
   assert.deepEqual(descriptorKeys(etapa), ["D011", "D02", "D1", "H05"]);
   assert.deepEqual(descriptorKeys(undefined), []);
+  // Com `ordem`, vale a ordem do editor, não a alfabética.
+  assert.deepEqual(descriptorKeys({ ...etapa, ordem: ["D02", "H05", "D011", "D1"] }), ["D02", "H05", "D011", "D1"]);
 }
 
 console.log("regua.test.mjs: ok");
