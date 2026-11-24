@@ -39,7 +39,7 @@ Deixar cada projeto do ano pronto para gerar as revistas: o nome que sai na capa
 - Cabeçalho: nome do projeto e a lista Parceiro, Ano, Matriz ("ainda não escolhida"), Revistas (LP, MT), Situação (Ativo ou o selo "Arquivado"). O status do salvamento fica à direita, para quem grava.
 - Abas (a aba é a URL, `?aba=`; aba desconhecida vira Dados):
   - **Dados:** "Nome do projeto" (aparece na capa e em `{{nome_projeto}}`) e as 24 variáveis manuais, nos grupos Coleção, Adjetivo pátrio, Parceiro, Programa, Regional e secretaria, Padrões de desempenho. Cada campo tem o rótulo, a descrição e o marcador (`{{issn}}`). As 3 automáticas (nome do parceiro, nome do projeto, ano) não aparecem. Link "Ver a planilha de variáveis de <ano>".
-  - **Matriz:** select "Matriz de <parceiro> em <ano>" com as matrizes do ano, a dica para usar "Atribuir matriz…" na Lista e o passo de cada etapa × componente na matriz ("5EF LP: 25").
+  - **Matriz:** select "Matriz de <parceiro> em <ano>" com as matrizes do ano, a dica para usar "Atribuir matriz…" na Lista e o passo de cada etapa × componente na matriz ("5EF LP: 25"). Abaixo, "Etapas do projeto": uma linha por corte do parceiro, dizendo se a etapa usa a matriz ou é cópia do projeto (com a base). Na linha da cópia cuja base mudou, o selo "A base mudou" e o link "Revisar mudanças da base" (D-292), para todo perfil.
   - **Cortes:** a linha deste parceiro da grade de Cortes, um bloco por etapa ("5EF até 500") com os componentes lado a lado, e o link "Ver a grade de cortes de <ano>".
   - **Passos e cores:** as amostras dos padrões (cor e nome efetivos, selo "do ano" ou "sobrescrita") e, por etapa, uma célula por componente com o passo ("Matriz: 25", "fora da matriz" ou "sem linhas vazias") e o selo "da matriz" ou "sobrescrito". Link "Editar as cores do ano" (com `change_corpadrao`). O nome do padrão se troca nas variáveis pd01 a pd05, na aba Dados.
   - **Revistas:** um cartão por componente com Template F1 e F2 (ou "sem template") e Capa (✓ ou falta), o selo "Validada", "Sem “Validado”" ou "Arquivada", e os botões "Abrir revista" e "Preview".
@@ -61,6 +61,7 @@ Deixar cada projeto do ano pronto para gerar as revistas: o nome que sai na capa
 | Escolher a matriz / uma cor | quem edita, com o bloqueio | grava ao escolher |
 | "Voltar ao passo da matriz" / "Voltar à cor do ano" | quem edita | apaga a sobrescrita daquela célula ou padrão |
 | "Sem linhas vazias" | quem edita | marca a célula como sem linhas vazias (desliga o número) |
+| "Revisar mudanças da base" (aba Matriz, só com a base mudada) | todos abrem; conclui quem edita matriz, com o bloqueio da etapa | abre `/ui/revisao/<pk>/`; "Concluir revisão" grava as escolhas e volta à aba Matriz com "Revisão de <etapa> concluída: …" |
 | Abrir revista / Preview | todos | página da revista / preview em nova aba |
 | Projetos de <ano> / planilha de variáveis / grade de cortes | todos | navegação |
 
@@ -150,12 +151,14 @@ Em 390 px: uma coluna; abas quebram em linha; a tabela da Lista rola dentro da c
 8. Impresso vê tudo desligado; enviar é recusado (403). Sem perfil: 403 ao abrir. Anônimo: login das telas B (`/conta/entrar/`).
 9. Arquivado: aviso, sem gravar, sem travar; envio recusado mesmo com permissão.
 10. Outra pessoa editando: aviso de quem edita; envio com a sessão de outra aba dá 409 e o form vira só leitura.
+11. A aba Matriz mostra "A base mudou" e "Revisar mudanças da base" só na cópia cuja base mudou; depois de concluir a revisão, os dois somem.
+12. Revisão (regras em [`regras-de-negocio.md`](../../regras-de-negocio.md), "Revisão da base da etapa do projeto"): decisões abertas e sem marca, o resto recolhido com "Usar o da base"; concluir grava e volta à aba Matriz; base mudada com a tela aberta dá 409 e nada grava; Impresso e projeto arquivado veem só leitura (POST 403); etapa da matriz e cópia solta dão 404.
 
 ## Referências técnicas
 
 - Regra: `app/nucleo/projeto.py` (`ProjetoForm`, `MAX_CORES`), usada também por `app/nucleo/admin/projeto.py`; `EDITAVEIS` em `nucleo/variaveis.py`; `servicos/matriz.py` (`atribuir_matriz`); `nucleo/lotes.py` (forms e gravação das ações em massa).
 - Cores e nomes efetivos: `servicos/resolver.py` (`valores_das_variaveis`).
-- View: `app/nucleo/urls/ui_projeto.py` (rotas `ui_projeto_inicio`, `ui_projeto_lista`, `ui_projeto_massa`, `ui_projeto`, `ui_projeto_campo`, `ui_projeto_matriz`; também monta as rotas `cortes` e `ui_variaveis`).
+- View: `app/nucleo/urls/ui_projeto.py` (rotas `ui_projeto_inicio`, `ui_projeto_lista`, `ui_projeto_massa`, `ui_projeto`, `ui_projeto_campo`, `ui_projeto_matriz`; também monta as rotas `cortes` e `ui_variaveis`). Revisão: `app/nucleo/urls/ui_revisao.py` (rotas `ui_revisao`, `ui_revisao_arquivo`), `templates/ui/projeto/revisar_etapa.html` e `parciais/revisao_{cartao,lado}.html`, CSS `static/ui/telas/revisao.css`, testes em `test_ui_revisao.py`.
 - Templates: `templates/ui/projeto/{lista,projeto}.html`, `_componentes/projetos_abas.html`, `_componentes/selo_sobrescrita.html`; JS `static/ui/componentes/sobrescrita.js`, `static/ui/telas/lotes.js`; CSS `static/ui/telas/projeto.css`.
 - Testes: `app/nucleo/tests/test_ui_projeto.py`, `test_ui_projeto_abas.py`, `test_ui_projetos.py`; `app/e2e/tests/projeto.spec.ts`.
 - Decisões: D-053, D-060, D-081, D-091, D-093, D-100, D-102, D-121, D-166, D-167, D-172, D-173, D-175, D-183, D-186, as do plano de UX (D-195 em diante) e D-221.

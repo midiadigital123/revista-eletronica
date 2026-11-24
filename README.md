@@ -130,6 +130,9 @@ Fichas de cada tela: [`docs/telas/telas-b.md`](docs/telas/telas-b.md).
    em branco. O primeiro ano (2026) foi carregado por comandos: [`docs/s17-carga-2026.md`](docs/s17-carga-2026.md).
 2. **Conferir o ano** (`/ui/anos/<ano>/`, "Configurar <ano>"): etapas, componentes e padrões do ano.
 3. **Matrizes** (`/ui/matriz/<ano>/`): editar, duplicar, reimportar de PDF ou planilha.
+   Se a matriz muda depois que um projeto copiou a etapa ("Editar só neste projeto"), a revista dele
+   ganha a pendência "base": na aba Matriz do projeto, a linha mostra "A base mudou" → **Revisar
+   mudanças da base** (`/ui/revisao/<pk>/`) → **Concluir revisão** → validar a revista de novo.
 4. **Cortes** (hub **Projetos**, aba Cortes): digitar os cortes de cada parceiro cria o projeto e as
    revistas dele.
 5. **Em massa** (hub Projetos, aba Lista): "Atribuir matriz…" e "Atribuir template…".
