@@ -154,6 +154,9 @@ Demo K-042: escrita com componentes django-cotton (templates/cotton/: pagina_cab
       <strong>{{ l.etapa.codigo }} {{ l.componente.codigo }}</strong>
       {% if l.mec %}
       <span>· cópia do projeto · {% if l.base %}base: {{ l.base.etapa.codigo }} {{ l.base.componente.codigo }} da {{ l.base.matriz }}{% else %}sem base (a base foi apagada){% endif %}</span>
+      {# D-292: a base mudou desde a cópia; a revisão é só leitura para quem não edita, então o link vale para todo perfil. #}
+      {% if l.revisar %}<c-badge variante="alerta">A base mudou</c-badge>{% endif %}
+      {% if l.revisar %}<a class="link" href="{% url 'ui_revisao' l.mec.pk %}">Revisar mudanças da base<span class="sr-only"> de {{ l.etapa.codigo }} {{ l.componente.codigo }}</span></a>{% endif %}
       <a class="link" href="{% url 'ui_matriz_mec' l.mec.pk %}">{% if pode_gravar %}Editar{% else %}Ver{% endif %}<span class="sr-only"> {{ l.etapa.codigo }} {{ l.componente.codigo }}</span></a>
       {% if request.bloqueio and pode_gravar %}<a class="link" href="{% url 'ui_projeto_etapa_desfazer' projeto.pk l.mec.pk %}">Desfazer{% if l.da_matriz %} a cópia{% else %} apontamento{% endif %}<span class="sr-only"> de {{ l.etapa.codigo }} {{ l.componente.codigo }}</span></a>{% endif %}
       {% elif l.da_matriz %}

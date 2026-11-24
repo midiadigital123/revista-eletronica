@@ -33,7 +33,7 @@ from nucleo.models.cadastro import ETAPAS_CANONICAS
 from nucleo.projeto import MAX_CORES, ProjetoForm
 from nucleo.servicos import bloqueio
 from nucleo.servicos import matriz as matrizes
-from nucleo.servicos.etapa_projeto import CriacaoRecusada, criar, desfazer, mecs_por_etapa, vigente
+from nucleo.servicos.etapa_projeto import CriacaoRecusada, criar, desfazer, mecs_por_etapa, pendente, vigente
 from nucleo.servicos.impacto import avisar_perdidos, perdem_validado
 from nucleo.servicos.resolver import valores_das_variaveis
 from nucleo.ui_autosave import Conflito, form_de_um_campo, responder_campo
@@ -380,6 +380,7 @@ def _etapas_do_projeto(projeto, pedido="", usuario=None):
             "etapa": c.etapa, "componente": c.componente, "mec": do_projeto, "da_matriz": da_matriz, "canonica": canonica,
             "bases": None if da_matriz or canonica else bases.get(c.componente.codigo),
             "form_id": f"apontar-{c.etapa_id}-{c.componente_id}",
+            "revisar": do_projeto is not None and pendente(do_projeto),  # D-292: a base mudou e ninguém revisou
         })  # fmt: skip
     alvo = [_pk(x) for x in pedido.split("-")] if pedido.count("-") == 2 else None
     for linha in linhas:

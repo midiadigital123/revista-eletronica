@@ -44,6 +44,7 @@ from nucleo.servicos.matriz import (
     impacto,
     revistas_afetadas,
 )
+from nucleo.servicos.etapa_projeto import pendente
 from nucleo.servicos.impacto import avisar_perdidos
 from nucleo.ui_autosave import erros, form_de_um_campo, proxima_ordem, quer_json, reordenar, responder_campo
 from nucleo.ui_bloqueio import com_bloqueio, e_htmx
@@ -401,7 +402,7 @@ def _pagina_mec(request, mec, descritor, form=None, tarefas=None, item_pendente=
     if e_htmx(request):
         return TemplateResponse(request, "ui/parciais/matriz_painel.html", contexto)
     contexto.update(
-        afetadas=afetadas, perfil_edita=pode_editar(request.user),
+        afetadas=afetadas, perfil_edita=pode_editar(request.user), revisar=pendente(mec),
         intervalo=_estilo(IntervaloForm(instance=mec)),
         novo=_estilo(NovoDescritorForm(auto_id="novo_%s")),
     )  # fmt: skip

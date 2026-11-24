@@ -272,6 +272,20 @@ class ApontarEtapaTest(EtapaNaoCanonica):
         self.assertContains(r, f'<option value="{self.mec5.pk}">5EF</option>')
         self.assertNotContains(r, f'<option value="{mt5.pk}">')  # outro componente
 
+    def test_aba_matriz_mostra_revisar_so_quando_a_base_mudou(self):
+        """D-292: o selo e o link para a revisão aparecem na linha da cópia quando a base mudou, para todo perfil."""
+        mec = criar(self.projeto_go, self.e4, self.lp, self.usuario, base=self.mec5)
+        revisar = reverse("ui_revisao", args=[mec.pk])
+        r = self.client.get(self.url)
+        self.assertNotContains(r, "A base mudou")
+        self.assertNotContains(r, revisar)
+        Descritor.objects.filter(matriz_etapa_cc=self.mec5).update(descricao="Mudou na base")
+        for quem in (self.ped, self.imp):
+            self.client.force_login(quem)
+            r = self.client.get(self.url)
+            self.assertContains(r, "A base mudou", count=1)
+            self.assertContains(r, f'<a class="link" href="{revisar}">Revisar mudanças da base<span class="sr-only"> de 4EF LP</span></a>', html=True)
+
     def test_apontar_pela_tela(self):
         r = self.apontar(self.mec5)
         self.assertRedirects(r, self.url)

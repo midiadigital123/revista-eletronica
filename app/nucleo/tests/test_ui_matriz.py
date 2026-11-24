@@ -700,6 +700,18 @@ class MecDeProjetoTest(BaseMundo):
             self.assertContains(resp, "afeta 1 revista(s) ativa(s)")
             self.assertEqual(resp.context["ano_ctx"]().ano, 2026)  # o seletor de ano acha o ano sem a matriz
 
+    def test_editor_da_copia_avisa_que_a_base_mudou(self):
+        """D-292: com a base mudada, o editor da cópia leva à revisão; em dia, não avisa."""
+        url = reverse("ui_matriz_mec", args=[self.mec.pk])
+        revisar = reverse("ui_revisao", args=[self.mec.pk])
+        self.assertNotContains(self.client.get(url), revisar)
+        Descritor.objects.filter(matriz_etapa_cc=self.mec.base).update(descricao="Mudou na base")
+        resp = self.client.get(url)
+        self.assertContains(resp, "A base desta etapa mudou")
+        self.assertContains(resp, f'<a class="link" href="{revisar}">Revisar mudanças da base</a>', html=True)
+        # Etapa da matriz não tem base: sem aviso (e sem quebrar).
+        self.assertNotContains(self.client.get(reverse("ui_matriz_mec", args=[self.mec.base_id])), "A base desta etapa mudou")
+
     def test_campo_do_descritor_grava(self):
         sessao = self.client.get(reverse("ui_matriz_descritor", args=[self.mec.pk, self.d.pk])).wsgi_request.bloqueio["sessao"]
         url = reverse("ui_matriz_campo", args=[self.mec.pk, self.d.pk])
