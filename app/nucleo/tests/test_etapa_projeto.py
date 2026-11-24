@@ -20,6 +20,7 @@ from nucleo.servicos.planilhas import passos
 from nucleo.servicos.pendencias import pendencias
 from nucleo.servicos.resolver import carregar, hash_validado, resolver
 from nucleo.servicos.validacao import validada, validar
+from nucleo.urls.painel import link as link_painel
 from nucleo.tests.test_resolver import MediaTemporaria, Mundo, preencher_infograficos, recarregar, usuario
 
 
@@ -78,11 +79,21 @@ class FotoTest(Base):
 
 
 class CriarTest(Base):
-    def test_criar_em_branco(self):
-        mec = criar(self.projeto, self.e4, self.lp, self.usuario)
-        self.assertEqual((mec.projeto, mec.matriz, mec.base, mec.base_foto), (self.projeto, None, None, None))
-        self.assertEqual((mec.etapa, mec.componente, mec.ano_id), (self.e4, self.lp, self.projeto.ano_id))
-        self.assertEqual(Descritor.objects.filter(matriz_etapa_cc=mec).count(), 0)
+    def test_recusa_sem_base(self):  # D-276: não existe etapa em branco
+        with self.assertRaisesMessage(CriacaoRecusada, "a etapa do projeto precisa de uma base"):
+            criar(self.projeto, self.e4, self.lp, self.usuario, base=None)
+        self.assertFalse(MatrizEtapaCC.objects.filter(projeto=self.projeto).exists())
+
+    def test_recusa_etapa_canonica(self):  # D-276: canônica que falta se corrige na matriz
+        with self.assertRaisesMessage(CriacaoRecusada, "5EF é etapa canônica: corrija na matriz"):
+            criar(self.projeto, self.e5, self.lp, self.usuario, base=self.mec9)
+
+    def test_recusa_base_nao_canonica(self):  # D-276: a base é uma das 4 canônicas
+        outra = Matriz.objects.create(ano=self.ano, nome="Outra")
+        base = MatrizEtapaCC.objects.create(matriz=outra, etapa=self.e4, componente=self.lp, ano=self.ano, passo=25)
+        e6 = Etapa.objects.create(ano=self.ano, codigo="6EF", escala_max=500, ordem=5)
+        with self.assertRaisesMessage(CriacaoRecusada, "a base precisa ser etapa canônica (2EF, 5EF, 9EF ou 3EM)"):
+            criar(self.projeto, e6, self.lp, self.usuario, base=base)
 
     def test_criar_clone_copia_e_guarda_foto(self):
         mec = criar(self.projeto, self.e4, self.lp, self.usuario, base=self.mec9)
@@ -98,12 +109,13 @@ class CriarTest(Base):
         self.assertEqual(Descritor.objects.filter(matriz_etapa_cc=self.mec9).count(), 2)
 
     def test_recusa_se_matriz_ja_tem_a_etapa(self):
-        with self.assertRaisesMessage(CriacaoRecusada, "a matriz do parceiro já tem 5EF LP"):
-            criar(self.projeto, self.e5, self.lp, self.usuario)
+        MatrizEtapaCC.objects.create(matriz=self.matriz, etapa=self.e4, componente=self.lp, ano=self.ano, passo=25)
+        with self.assertRaisesMessage(CriacaoRecusada, "a matriz do parceiro já tem 4EF LP"):
+            criar(self.projeto, self.e4, self.lp, self.usuario, base=self.mec9)
 
     def test_recusa_base_de_projeto_e_componente_diferente(self):
         propria = criar(self.projeto, self.e4, self.lp, self.usuario, base=self.mec9)
-        outra = Etapa.objects.create(ano=self.ano, codigo="3EM", escala_max=500, ordem=5)
+        outra = Etapa.objects.create(ano=self.ano, codigo="6EF", escala_max=500, ordem=5)
         with self.assertRaisesMessage(CriacaoRecusada, "a base precisa ser etapa de matriz"):
             criar(self.projeto, outra, self.lp, self.usuario, base=propria)
         mec_mt = MatrizEtapaCC.objects.get(matriz=self.matriz, etapa=self.e5, componente=self.mt)
@@ -111,15 +123,15 @@ class CriarTest(Base):
             criar(self.projeto, outra, self.lp, self.usuario, base=mec_mt)
 
     def test_recusa_se_o_projeto_ja_tem_a_etapa(self):
-        criar(self.projeto, self.e4, self.lp, self.usuario)
+        criar(self.projeto, self.e4, self.lp, self.usuario, base=self.mec9)
         with self.assertRaisesMessage(CriacaoRecusada, "o projeto já tem 4EF LP"):
-            criar(self.projeto, self.e4, self.lp, self.usuario)
+            criar(self.projeto, self.e4, self.lp, self.usuario, base=self.mec9)
 
     def test_recusa_projeto_arquivado(self):
         Projeto.objects.filter(pk=self.projeto.pk).update(arquivado_em="2026-01-01T00:00:00Z")
         self.projeto.refresh_from_db()
         with self.assertRaisesMessage(CriacaoRecusada, "projeto arquivado"):
-            criar(self.projeto, self.e4, self.lp, self.usuario)
+            criar(self.projeto, self.e4, self.lp, self.usuario, base=self.mec9)
 
     @unittest.skip(
         "premissa a decidir: corte_invalido só olha os cortes (problema_dos_cortes espelha o JS, D-131); "
@@ -153,9 +165,9 @@ class RevistaTest(Base):
         cls.lp_go = cls.go["LP"]
 
     def _outra_base(self):
-        """Base 4EF LP de uma matriz que o GO não usa: mexer nela só muda a revista pela derivada."""
+        """Base 5EF LP de uma matriz que o GO não usa: mexer nela só muda a revista pela derivada."""
         outra = Matriz.objects.create(ano=self.ano, nome="Outra")
-        base = MatrizEtapaCC.objects.create(matriz=outra, etapa=self.e4, componente=self.lp, ano=self.ano, passo=25)
+        base = MatrizEtapaCC.objects.create(matriz=outra, etapa=self.e5, componente=self.lp, ano=self.ano, passo=25)
         d = Descritor.objects.create(matriz_etapa_cc=base, codigo="D05", descricao="Da outra", ordem=1)
         Tarefa.objects.create(descritor=d, inicio=100, fim=150, texto="Compara.", ordem=1)
         return base
@@ -175,10 +187,27 @@ class RevistaTest(Base):
         self.assertEqual([lc for lc in r["lacunas"] if lc["tipo"] in ("base", "etapa_em_dobro")], [])
 
     def test_corte_sem_matriz_some_com_a_etapa_do_projeto(self):
-        p = [x for x in pendencias(recarregar(self.lp_go)) if x.codigo == "corte_sem_matriz"]
-        self.assertEqual(p[0].mensagem, "A matriz não tem a etapa: 4EF.")
+        codigos = lambda: [x.codigo for x in pendencias(recarregar(self.lp_go))]  # noqa: E731
+        p = [x for x in pendencias(recarregar(self.lp_go)) if x.codigo == "etapa_sem_base"]
+        self.assertEqual(p[0].mensagem, "Etapa não canônica sem base: 4EF. Aponte cada uma para uma etapa canônica.")
+        self.assertNotIn("corte_sem_matriz", codigos())  # a não canônica não é falta da matriz (D-276)
+        # o link leva à aba Matriz do projeto (onde se aponta), não ao editor da matriz
+        self.assertEqual(link_painel("etapa_sem_base", self.lp_go), reverse("ui_projeto", args=[self.projeto.pk]) + "?aba=matriz")
+        self.client.force_login(usuario("ped-link", "Pedagógica"))
+        r = self.client.get(reverse("ui_revista_editar", args=[2026, self.lp_go.pk]))
+        self.assertContains(r, "Etapa não canônica sem base: 4EF.")
         criar(self.projeto, self.e4, self.lp, self.usuario, base=self.mec5)
-        self.assertNotIn("corte_sem_matriz", [x.codigo for x in pendencias(recarregar(self.lp_go))])
+        self.assertNotIn("etapa_sem_base", codigos())
+
+    def test_etapa_sem_base_separa_da_canonica(self):
+        MatrizEtapaCC.objects.filter(pk=self.mec9.pk).delete()  # a matriz perde o 9EF LP (canônica)
+        self.assertEqual(
+            [(x.codigo, x.mensagem) for x in pendencias(recarregar(self.lp_go)) if "sem" in x.codigo],
+            [
+                ("corte_sem_matriz", "A matriz não tem a etapa: 9EF."),
+                ("etapa_sem_base", "Etapa não canônica sem base: 4EF. Aponte cada uma para uma etapa canônica."),
+            ],
+        )
 
     def test_editar_a_base_abre_lacuna_e_tira_o_validado(self):
         base = self._outra_base()

@@ -8,6 +8,7 @@ from typing import NamedTuple
 from django.db.models import Q
 
 from nucleo.models import Corte, MatrizEtapaCC
+from nucleo.models.cadastro import ETAPAS_CANONICAS
 from nucleo.servicos.f2 import texto_puro
 from nucleo.servicos.resolver import resolver
 
@@ -49,8 +50,18 @@ def pendencias_f1(revista, resolvido):
             .order_by("etapa__ordem")
             if c.etapa_id not in com_mec
         ]
-        if sem_mec:
-            saida.append(Pendencia("corte_sem_matriz", f"A matriz não tem a etapa: {', '.join(sem_mec)}."))
+        # D-276: canônica que falta se corrige na matriz; não canônica, apontando para uma canônica.
+        canonicas = [e for e in sem_mec if e in ETAPAS_CANONICAS]
+        sem_base = [e for e in sem_mec if e not in ETAPAS_CANONICAS]
+        if canonicas:
+            saida.append(Pendencia("corte_sem_matriz", f"A matriz não tem a etapa: {', '.join(canonicas)}."))
+        if sem_base:
+            saida.append(
+                Pendencia(
+                    "etapa_sem_base",
+                    f"Etapa não canônica sem base: {', '.join(sem_base)}. Aponte cada uma para uma etapa canônica.",
+                )
+            )
     dados = resolvido["f1"]["dados"]
     invalidas = [e.upper() for e in resolvido["f1"]["etapas"] if problema_dos_cortes(dados[e])]
     if invalidas:

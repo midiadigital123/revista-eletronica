@@ -303,7 +303,8 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | Código | Condição | Fonte |
 |---|---|---|
 | `matriz` | parceiro_ano sem matriz | D-088, D-106 |
-| `corte_sem_matriz` | etapa com corte que a matriz escolhida não tem | D-093 |
+| `corte_sem_matriz` | etapa **canônica** (2EF, 5EF, 9EF, 3EM) com corte que a matriz escolhida não tem; corrige-se na matriz | D-093, D-276 |
+| `etapa_sem_base` | etapa **não canônica** com corte e sem etapa do projeto; corrige-se apontando para uma etapa canônica (aba Matriz do projeto) | D-276 |
 | `corte_invalido` | cortes fora de ordem ou da escala (defensivo) | D-154 |
 | `template_f1`, `template_f2` | fascículo sem template | D-112 |
 | `infografico` | habilidade vazia; passo ligado sem dado (Habilidades: código ou texto e o texto do clique; Progressão: 2 marcas e o texto do clique; Tarefas: 4 imagens); passo desligado não gera pendência. Resolve-se no passo "Infográficos" da ficha da revista | D-237, D-243, D-250, D-254 |

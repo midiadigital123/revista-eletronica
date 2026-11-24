@@ -191,11 +191,11 @@ class AbrirAnoTest(TestCase):
             ano=a26, matriz__nome="Comunitária", etapa__codigo="5EF", componente__codigo="LP"
         )
         do_projeto = criar(
-            Projeto.objects.get(ano=a26), Etapa.objects.get(ano=a26, codigo="9EF"), base.componente,
+            Projeto.objects.get(ano=a26), Etapa.objects.create(ano=a26, codigo="4EF", escala_max=500, ordem=4), base.componente,
             self.usuario, base=base,
         )  # fmt: skip
         abrir_ano(2027)
-        self.assertEqual(mecs(2027), mecs(2026) - {(None, "9EF", "LP", 25)})
+        self.assertEqual(mecs(2027), mecs(2026) - {(None, "4EF", "LP", 25)})
         self.assertEqual((do_ano(Descritor, 2027).count(), do_ano(Tarefa, 2027).count()), (8, 16))
         self.assertTrue(MatrizEtapaCC.objects.filter(pk=do_projeto.pk, ano=a26).exists())
 

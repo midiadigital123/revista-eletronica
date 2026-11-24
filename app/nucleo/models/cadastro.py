@@ -54,6 +54,12 @@ def renumerar_etapas(ano_id, etapas=None):
             type(etapa).objects.filter(pk=etapa.pk).update(ordem=n)
 
 
+# Etapas canônicas (D-276): as que têm conteúdo em matriz. As outras (4EF, 6EF, 8EF…) nascem no
+# projeto, apontando para uma destas (servicos/etapa_projeto.py). Sem campo no banco.
+# ponytail: lista fixa; se a Pedagógica mudar as canônicas, edita-se aqui.
+ETAPAS_CANONICAS = ("2EF", "5EF", "9EF", "3EM")
+
+
 class Etapa(models.Model):
     ano = models.ForeignKey(Ano, on_delete=models.PROTECT)
     codigo = models.TextField()
