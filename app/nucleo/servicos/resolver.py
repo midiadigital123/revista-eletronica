@@ -174,9 +174,6 @@ def _f1_escalas(revista, projeto, variaveis):
         n = len(valores) + 1
         chave = etapa.codigo.lower()
         etapas.append(chave)
-        da_matriz, do_projeto = pares.get(etapa.pk, (None, None))
-        if da_matriz and do_projeto and do_projeto.preferida is None:
-            lacunas.append({"tipo": "etapa_em_dobro", "etapa": chave})
         # ponytail: uma foto da base por etapa do projeto a cada resolver; cache se a página ficar lenta.
         if mec and mec.projeto_id and mec.base_id and (
             etapa_projeto.hash_foto(etapa_projeto.foto(mec.base)) != etapa_projeto.hash_foto(mec.base_foto)
@@ -347,7 +344,7 @@ def resolver(revista):
         return texto.renderizar(corpo, valores)
 
     etapas, dados, lacunas_f1 = _f1_escalas(revista, projeto, valores)
-    lacunas += lacunas_f1  # base e etapa_em_dobro (etapa do projeto)
+    lacunas += lacunas_f1  # base (etapa do projeto)
     padroes = max((len(d["padroes"]) for d in dados.values()), default=0)
     usadas.update(f"pd{k:02d}" for k in range(1, padroes + 1))  # rótulos da escala: só os padrões que a revista tem
     f1 = {"etapas": etapas, "dados": dados, "cores": cores_efetivas(revista, projeto, padroes), **textos("F1")}

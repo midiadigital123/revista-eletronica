@@ -65,7 +65,6 @@ CHECKS = {
     "matriz_duplicada_de_outra",
     "matriz_etapa_cc_base_outra",
     "matriz_etapa_cc_base_tem_foto",
-    "matriz_etapa_cc_preferida",
     "matriz_etapa_cc_um_dono",
     "matriz_nome_tamanho",
     "parceiro_nome_tamanho",

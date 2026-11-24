@@ -136,27 +136,31 @@ def classificar(antes, base, local):
     return itens
 
 
-def criar(projeto, etapa, componente, usuario, base):
-    """Cria a etapa × componente do projeto, clonada de `base` com `base_foto` (D-276): a etapa é
-    não canônica e a base é etapa canônica de uma matriz (qualquer matriz, qualquer ano), do mesmo
-    componente. Recusa com `CriacaoRecusada`; tudo numa transação."""
+def criar(projeto, etapa, componente, usuario, base=None):
+    """Cria a etapa × componente do projeto, clonada de `base` com `base_foto`. Se a matriz do
+    parceiro tem a etapa, é a cópia local dela (D-288): a base é essa etapa (`base=None` a usa). Se
+    não tem, a etapa é não canônica e a base é etapa canônica de uma matriz (qualquer matriz,
+    qualquer ano), do mesmo componente (D-276). Recusa com `CriacaoRecusada`; tudo numa transação."""
     with transaction.atomic():
         if projeto.arquivado_em is not None:
             raise CriacaoRecusada("projeto arquivado")
-        if base is None:
-            raise CriacaoRecusada("a etapa do projeto precisa de uma base")
-        if etapa.codigo in ETAPAS_CANONICAS:
+        nome = f"{etapa.codigo} {componente.codigo}"
+        matriz_id = projeto.parceiro_ano.matriz_id
+        da_matriz = matriz_id and MatrizEtapaCC.objects.filter(matriz_id=matriz_id, etapa=etapa, componente=componente).first()
+        if da_matriz:
+            if base is not None and base.pk != da_matriz.pk:
+                raise CriacaoRecusada("a base da cópia local é a etapa da matriz do parceiro")
+            base = da_matriz
+        elif etapa.codigo in ETAPAS_CANONICAS:
             raise CriacaoRecusada(f"{etapa.codigo} é etapa canônica: corrija na matriz")
-        if base.matriz_id is None:
+        elif base is None:
+            raise CriacaoRecusada("a etapa do projeto precisa de uma base")
+        elif base.matriz_id is None:
             raise CriacaoRecusada("a base precisa ser etapa de matriz")
-        if base.etapa.codigo not in ETAPAS_CANONICAS:
+        elif base.etapa.codigo not in ETAPAS_CANONICAS:
             raise CriacaoRecusada("a base precisa ser etapa canônica (2EF, 5EF, 9EF ou 3EM)")
         if base.componente.codigo != componente.codigo:
             raise CriacaoRecusada("a base precisa ser do mesmo componente")
-        nome = f"{etapa.codigo} {componente.codigo}"
-        matriz_id = projeto.parceiro_ano.matriz_id
-        if matriz_id and MatrizEtapaCC.objects.filter(matriz_id=matriz_id, etapa=etapa, componente=componente).exists():
-            raise CriacaoRecusada(f"a matriz do parceiro já tem {nome}")
         if MatrizEtapaCC.objects.filter(projeto=projeto, etapa=etapa, componente=componente).exists():
             raise CriacaoRecusada(f"o projeto já tem {nome}")
 
@@ -288,21 +292,6 @@ def _aplicar_existe(mec, chave, locais, da_base, usuario):
         clonar(Tarefa.objects.filter(descritor__in=list(mapa)), usuario, motivo, descritor_id=mapa)
 
 
-def escolher(mec, preferida, usuario):
-    """Grava qual etapa a revista usa quando a matriz ganha a mesma etapa (D-281): "projeto" ou "matriz"."""
-    with transaction.atomic():
-        mec = MatrizEtapaCC.objects.select_for_update().get(pk=mec.pk)
-        if mec.projeto_id is None:
-            raise RevisaoRecusada("só a etapa do projeto tem revisão")
-        if mec.projeto.arquivado_em is not None:
-            raise RevisaoRecusada("projeto arquivado")
-        if preferida not in ("projeto", "matriz"):
-            raise RevisaoRecusada("preferida inválida")
-        mec.preferida = preferida
-        mec._history_user, mec._change_reason = usuario, f"etapa preferida: {preferida}"
-        mec.save(update_fields=["preferida"])
-
-
 def desfazer(mec, usuario):
     """Desfaz o apontamento (D-287): apaga a etapa do projeto com os descritores e as tarefas dela.
     Um a um, para o histórico levar o usuário; o arquivo de item órfão sai pelo sinal da Tarefa."""
@@ -348,11 +337,8 @@ def tarefas_da_revista(revista):
 
 
 def vigente(da_matriz, do_projeto):
-    """A MEC que a revista usa: a única que existe; as duas, a do projeto até escolher a da
-    matriz (D-281)."""
-    if do_projeto is None or (da_matriz is not None and do_projeto.preferida == "matriz"):
-        return da_matriz
-    return do_projeto
+    """A MEC que a revista usa: a cópia do projeto sempre vale sobre a da matriz (D-288)."""
+    return do_projeto or da_matriz
 
 
 def mec_vigente(projeto, etapa_id, componente_id):

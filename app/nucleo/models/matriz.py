@@ -56,8 +56,6 @@ class MatrizEtapaCC(models.Model):
         related_name="derivadas",
     )
     base_foto = models.JSONField(null=True, blank=True)
-    # "projeto" | "matriz"; nulo = ainda não escolheu (D-281).
-    preferida = models.TextField(null=True, blank=True)
     etapa = models.ForeignKey(Etapa, on_delete=models.PROTECT)
     componente = models.ForeignKey(Componente, on_delete=models.PROTECT)
     ano = models.ForeignKey(Ano, on_delete=models.PROTECT)
@@ -79,9 +77,6 @@ class MatrizEtapaCC(models.Model):
             models.CheckConstraint(
                 condition=Q(base__isnull=True) | Q(base_foto__isnull=False),
                 name="matriz_etapa_cc_base_tem_foto",
-            ),
-            models.CheckConstraint(
-                condition=Q(preferida__in=["projeto", "matriz"]), name="matriz_etapa_cc_preferida"
             ),
             # matriz_etapa_cc_um_dono vem por RunSQL na 0020: num_nonnulls não é lookup do ORM.
         ]

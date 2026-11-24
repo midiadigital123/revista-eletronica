@@ -75,8 +75,6 @@ def pendencias_f1(revista, resolvido):
             )
         elif lacuna["tipo"] == "base":
             saida.append(Pendencia("base", f"A etapa {lacuna['etapa'].upper()} tem mudanças da base para revisar."))
-        elif lacuna["tipo"] == "etapa_em_dobro":
-            saida.append(Pendencia("etapa_em_dobro", f"A matriz agora tem {lacuna['etapa'].upper()}: escolha qual usar."))
     return saida
 
 

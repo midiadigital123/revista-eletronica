@@ -18,7 +18,7 @@ from nucleo.servicos.cascata import gravar_cortes
 from nucleo.servicos.empacotar import _itens
 from nucleo.servicos.etapa_projeto import (
     CriacaoRecusada, Item, RevisaoIncompleta, RevisaoMudou, RevisaoRecusada, classificar, concluir, criar, derivadas,
-    escolher, foto, hash_foto, revisao,
+    foto, hash_foto, revisao,
 )  # fmt: skip
 from nucleo.servicos.matriz import CAMPOS_DESCRITOR, impacto
 from nucleo.servicos.planilhas import passos
@@ -104,9 +104,23 @@ class CriarTest(Base):
             criar(self.projeto, self.e4, self.lp, self.usuario, base=None)
         self.assertFalse(MatrizEtapaCC.objects.filter(projeto=self.projeto).exists())
 
-    def test_recusa_etapa_canonica(self):  # D-276: canônica que falta se corrige na matriz
-        with self.assertRaisesMessage(CriacaoRecusada, "5EF é etapa canônica: corrija na matriz"):
+    def test_canonica_que_a_matriz_nao_tem_continua_recusada(self):  # D-276: corrige-se na matriz
+        MatrizEtapaCC.objects.filter(matriz=self.matriz, etapa=self.e9, componente=self.mt).delete()
+        mt5 = MatrizEtapaCC.objects.get(matriz=self.matriz, etapa=self.e5, componente=self.mt)
+        with self.assertRaisesMessage(CriacaoRecusada, "9EF é etapa canônica: corrija na matriz"):
+            criar(self.projeto, self.e9, self.mt, self.usuario, base=mt5)
+
+    def test_copia_local_usa_a_etapa_da_matriz_como_base(self):  # D-288: qualquer etapa da matriz
+        mec = criar(self.projeto, self.e5, self.lp, self.usuario)
+        self.assertEqual((mec.projeto, mec.base, mec.matriz), (self.projeto, self.mec5, None))
+        self.assertEqual(mec.base_foto, foto(self.mec5))
+        self.assertEqual(foto(mec), foto(self.mec5))
+        self.assertEqual(criar(self.projeto, self.e9, self.lp, self.usuario, base=self.mec9).base, self.mec9)
+
+    def test_copia_local_recusa_outra_base(self):
+        with self.assertRaisesMessage(CriacaoRecusada, "a base da cópia local é a etapa da matriz do parceiro"):
             criar(self.projeto, self.e5, self.lp, self.usuario, base=self.mec9)
+        self.assertFalse(MatrizEtapaCC.objects.filter(projeto=self.projeto).exists())
 
     def test_recusa_base_nao_canonica(self):  # D-276: a base é uma das 4 canônicas
         outra = Matriz.objects.create(ano=self.ano, nome="Outra")
@@ -127,11 +141,6 @@ class CriarTest(Base):
         self.assertEqual(Descritor.objects.get(matriz_etapa_cc=mec, codigo="D01").history.get().history_type, "+")
         # A base de matriz não muda.
         self.assertEqual(Descritor.objects.filter(matriz_etapa_cc=self.mec9).count(), 2)
-
-    def test_recusa_se_matriz_ja_tem_a_etapa(self):
-        MatrizEtapaCC.objects.create(matriz=self.matriz, etapa=self.e4, componente=self.lp, ano=self.ano, passo=25)
-        with self.assertRaisesMessage(CriacaoRecusada, "a matriz do parceiro já tem 4EF LP"):
-            criar(self.projeto, self.e4, self.lp, self.usuario, base=self.mec9)
 
     def test_recusa_base_de_projeto_e_componente_diferente(self):
         propria = criar(self.projeto, self.e4, self.lp, self.usuario, base=self.mec9)
@@ -185,7 +194,7 @@ class RevistaTest(Base):
         self.assertEqual(r["f1"]["etapas"], ["4ef", "5ef", "9ef"])
         self.assertEqual(r["f1"]["dados"]["4ef"]["D01"], r["f1"]["dados"]["5ef"]["D01"])
         self.assertEqual(r["f1"]["dados"]["4ef"]["D01"]["description"], "Descritor 1 LP")
-        self.assertEqual([lc for lc in r["lacunas"] if lc["tipo"] in ("base", "etapa_em_dobro")], [])
+        self.assertEqual([lc for lc in r["lacunas"] if lc["tipo"] == "base"], [])
 
     def test_corte_sem_matriz_some_com_a_etapa_do_projeto(self):
         codigos = lambda: [x.codigo for x in pendencias(recarregar(self.lp_go))]  # noqa: E731
@@ -238,24 +247,15 @@ class RevistaTest(Base):
         self.assertNotIn("base", [lc["tipo"] for lc in resolver(lp)["lacunas"]])
         self.assertNotIn("base", [p.codigo for p in pendencias(lp)])
 
-    def test_matriz_ganha_a_etapa_vira_pendencia_de_escolha(self):
-        mec = criar(self.projeto, self.e4, self.lp, self.usuario, base=self.mec5)
+    def test_copia_vale_sobre_a_matriz_sem_pendencia(self):  # D-288: sai a pendência de escolha
+        criar(self.projeto, self.e4, self.lp, self.usuario, base=self.mec5)
         da_matriz = MatrizEtapaCC.objects.create(matriz=self.matriz, etapa=self.e4, componente=self.lp, ano=self.ano, passo=25)
         Descritor.objects.create(matriz_etapa_cc=da_matriz, codigo="D09", descricao="Da matriz", ordem=1)
         lp = recarregar(self.lp_go)
         r = resolver(lp)
-        self.assertIn({"tipo": "etapa_em_dobro", "etapa": "4ef"}, r["lacunas"])
-        self.assertIn("D01", r["f1"]["dados"]["4ef"])  # até escolher, vale a do projeto
-        self.assertIn(
-            ("etapa_em_dobro", "A matriz agora tem 4EF: escolha qual usar."),
-            [(p.codigo, p.mensagem) for p in pendencias(lp)],
-        )
-
-        MatrizEtapaCC.objects.filter(pk=mec.pk).update(preferida="matriz")
-        r = resolver(lp)
-        self.assertEqual([k for k in r["f1"]["dados"]["4ef"] if k.startswith("D")], ["D09"])
-        self.assertNotIn("etapa_em_dobro", [lc["tipo"] for lc in r["lacunas"]])
-        self.assertNotIn("etapa_em_dobro", [p.codigo for p in pendencias(lp)])
+        self.assertEqual([k for k in r["f1"]["dados"]["4ef"] if k.startswith("D")], ["D01", "D02"])
+        self.assertEqual(r["lacunas"], resolver(recarregar(self.pe["LP"]))["lacunas"])  # nenhuma lacuna a mais
+        self.assertEqual(pendencias(lp), pendencias(recarregar(self.pe["LP"])))
 
     def test_afetadas_inclui_a_revista_derivada(self):
         base = self._outra_base()
@@ -278,16 +278,43 @@ class RevistaTest(Base):
         self.assertIn(self.lp_go, afetadas)
         self.assertNotIn(self.go["MT"], afetadas)
 
-    def test_preferida_projeto_mantem_a_do_projeto_e_tira_a_lacuna(self):
-        mec = criar(self.projeto, self.e4, self.lp, self.usuario, base=self.mec5)
-        da_matriz = MatrizEtapaCC.objects.create(matriz=self.matriz, etapa=self.e4, componente=self.lp, ano=self.ano, passo=25)
-        Descritor.objects.create(matriz_etapa_cc=da_matriz, codigo="D09", descricao="Da matriz", ordem=1)
-        MatrizEtapaCC.objects.filter(pk=mec.pk).update(preferida="projeto")
-        lp = recarregar(self.lp_go)
-        r = resolver(lp)
-        self.assertEqual([k for k in r["f1"]["dados"]["4ef"] if k.startswith("D")], ["D01", "D02"])
-        self.assertNotIn("etapa_em_dobro", [lc["tipo"] for lc in r["lacunas"]])
-        self.assertNotIn("etapa_em_dobro", [p.codigo for p in pendencias(lp)])
+
+class EdicaoLocalTest(Base):
+    """Critérios de aceite de docs/edicao-local-por-projeto.md (§10, D-288): GO edita a cópia do 5EF LP."""
+
+    def setUp(self):
+        self.copia = criar(self.projeto, self.e5, self.lp, self.usuario)
+        self.pe_lp = self.pe["LP"]
+
+    def _d01(self, revista):
+        return resolver(recarregar(revista))["f1"]["dados"]["5ef"]["D01"]["description"]
+
+    def test_edicao_local_so_muda_o_proprio_projeto(self):
+        antes = foto(self.mec5)
+        Descritor.objects.filter(matriz_etapa_cc=self.copia, codigo="D01").update(descricao="Só do GO")
+        Descritor.objects.filter(matriz_etapa_cc=self.copia, codigo="D02").delete()
+        self.assertEqual(self._d01(self.lp_go), "Só do GO")
+        self.assertNotIn("D02", resolver(recarregar(self.lp_go))["f1"]["dados"]["5ef"])
+        self.assertEqual(self._d01(self.pe_lp), "Descritor 1 LP")  # 1: o outro projeto vê o original
+        self.assertEqual(foto(self.mec5), antes)  # 2: nenhuma linha da Comunitária muda
+        self.assertEqual(Descritor.objects.filter(matriz_etapa_cc=self.mec5).count(), 2)
+
+    def test_mudar_a_matriz_abre_revisao_so_em_quem_tem_copia(self):
+        sem_copia = resolver(recarregar(self.pe_lp))["lacunas"]  # 3: PE segue pela matriz, sem pendência nova
+        Descritor.objects.filter(matriz_etapa_cc=self.mec5, codigo="D01").update(descricao="Mudou na Comunitária")
+        self.assertEqual(self._d01(self.pe_lp), "Mudou na Comunitária")
+        self.assertEqual(resolver(recarregar(self.pe_lp))["lacunas"], sem_copia)
+        self.assertEqual(self._d01(self.lp_go), "Descritor 1 LP")  # 4: o GO fica com a cópia até revisar
+        go = recarregar(self.lp_go)
+        self.assertIn({"tipo": "base", "etapa": "5ef"}, resolver(go)["lacunas"])
+        self.assertIn("base", [p.codigo for p in pendencias(go)])
+
+    def test_bloqueio_da_copia_nao_trava_a_matriz(self):  # 6
+        from nucleo.servicos import bloqueio
+
+        outro = get_user_model().objects.create(username="outro")
+        self.assertTrue(bloqueio.adquirir(self.mec5, self.usuario, "aba-da-matriz"))
+        self.assertTrue(bloqueio.adquirir(self.copia, outro, "aba-da-copia"))
 
 
 class CascataTest(Base):
@@ -651,27 +678,6 @@ class ConcluirTest(MediaTemporaria, Base):
         with self.assertRaisesMessage(RevisaoRecusada, "projeto arquivado"):
             concluir(mec, {}, visto, self.usuario)
         self.assertEqual(self._d05(mec).descricao, "Da outra")
-
-    def test_escolher_grava_e_recusa_valor_invalido(self):
-        base, mec = self._derivada()
-        escolher(mec, "matriz", self.usuario)
-        mec.refresh_from_db()
-        self.assertEqual(mec.preferida, "matriz")
-        h = mec.history.first()
-        self.assertEqual(h.history_user, self.usuario)
-        self.assertEqual(h.history_change_reason, "etapa preferida: matriz")
-        escolher(mec, "projeto", self.usuario)
-        mec.refresh_from_db()
-        self.assertEqual(mec.preferida, "projeto")
-        with self.assertRaisesMessage(RevisaoRecusada, "preferida inválida"):
-            escolher(mec, "base", self.usuario)
-        with self.assertRaisesMessage(RevisaoRecusada, "só a etapa do projeto tem revisão"):
-            escolher(self.mec5, "matriz", self.usuario)
-        Projeto.objects.filter(pk=self.projeto.pk).update(arquivado_em="2026-01-01T00:00:00Z")
-        with self.assertRaisesMessage(RevisaoRecusada, "projeto arquivado"):
-            escolher(mec, "matriz", self.usuario)
-        mec.refresh_from_db()
-        self.assertEqual(mec.preferida, "projeto")
 
 
 class ConcluirConcorrenteTest(TransactionTestCase):

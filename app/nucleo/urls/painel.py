@@ -30,7 +30,7 @@ from nucleo.servicos.pendencias import pendencias
 
 # Coluna → códigos de `pendencias` que ela mostra (ordem das colunas da tela).
 COLUNAS = {
-    "matriz": ("Matriz", ("matriz", "corte_sem_matriz", "etapa_sem_base", "corte_invalido", "base", "etapa_em_dobro")),
+    "matriz": ("Matriz", ("matriz", "corte_sem_matriz", "etapa_sem_base", "corte_invalido", "base")),
     "template_f1": ("Template F1", ("template_f1",)),
     "template_f2": ("Template F2", ("template_f2",)),
     "variaveis": ("Variáveis", ("variaveis", "nome_projeto")),
@@ -47,7 +47,7 @@ def link(codigo, revista):
     matriz = revista.projeto.parceiro_ano.matriz_id
     if codigo == "corte_sem_matriz" and matriz:  # falta a etapa × componente: corrige-se na própria matriz
         return reverse("ui_matriz_detalhe", args=[matriz])
-    if codigo in ("matriz", "corte_sem_matriz", "etapa_sem_base", "base", "etapa_em_dobro"):  # U7b; etapa do projeto: D-280
+    if codigo in ("matriz", "corte_sem_matriz", "etapa_sem_base", "base"):  # U7b; etapa do projeto: D-280
         return reverse("ui_projeto", args=[revista.projeto_id]) + "?aba=matriz"
     if codigo in ("variaveis", "nome_projeto"):
         return reverse("ui_projeto", args=[revista.projeto_id])
