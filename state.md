@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Etapa 1 de 11 concluída (K-047, D-278): carga com etapas não canônicas mesclada na `main` com o "ok" do usuário. Plano de 11 etapas (D-276, D-277): etapa do projeto no servidor (2 a 6); telas de apontar e de revisão no layout atual (7 a 10); redesenho pelo Figma (11).
-Funcionando: banco da 8002 refeito do zero pelo `scripts/povoar-banco-2026.sh`: 33 parceiros, 11 etapas, 232 cortes (84 arbitrários), 33 projetos, 66 revistas, todos com a matriz Comunitária. Suíte Django 922 OK (8 pulados) em 8 min 35 s.
-Quebrado/pendente: a etapa não canônica fica com a pendência `corte_sem_matriz` sem saída até a etapa 7; o banco do dev (8000) ainda tem a carga antiga; a carga não escolhe template (toda revista nasce com "Falta escolher o template").
+Etapa 2 de 11 concluída (K-034 em Doing): a `feat/etapa-do-projeto` recebeu a `main` (merge `bbb0aec`), a migration virou `0026_etapa_do_projeto` e as decisões da branch viraram D-279 a D-281. Plano de 11 etapas (D-276, D-277): etapa do projeto no servidor (2 a 6); telas de apontar e de revisão no layout atual (7 a 10); redesenho pelo Figma (11).
+Funcionando: suíte Django inteira na branch: 968 OK (9 pulados) em 8 min 38 s; `makemigrations --check` limpo; régua do F1 OK. Banco da 8002 com a 0026 aplicada; painel e página do projeto abrem (200). Na branch: `MatrizEtapaCC` com dono projeto, base e foto; `servicos/etapa_projeto.py` (`foto`, `criar`, classificação em 3 vias); resolver com as lacunas `base` e `etapa_em_dobro`; pendências portadas para `servicos/pendencias.py`. `integ/etapa-do-projeto` avançada até a branch (suíte verde).
+Quebrado/pendente: `criar` ainda aceita etapa em branco e base não canônica (a D-276 entra na etapa 3); a tarefa 5 (`matriz_id` nulo no resto do sistema) está no commit WIP, sem revisão, embora a suíte passe; não há tela de apontar nem de revisão (etapas 7 a 10); os 2 learnings de 06/11 da branch citam D-229 a D-231 (hoje D-279 a D-281; learning não se edita); a stack da 8002 está com a 0026: para voltar à `main` nela, `migrate nucleo 0025` antes de trocar de branch; o banco do dev (8000) ainda tem a carga antiga.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Planejar a etapa 2: preparar a branch `feat/etapa-do-projeto` (mesclar a `main` e renumerar a migration `0020` para `0026`).
+Planejar a etapa 3: aplicar a D-276 às tarefas 1 a 4 (base obrigatória no `criar` e no trigger de INSERT; recusar etapa canônica e base não canônica; mensagem da pendência para etapa não canônica).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2243,7 +2243,7 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Status:** ativa
 
 ### D-276 — Etapa não canônica nasce só apontando para uma canônica (2026-11-24 13:21)
-- **Contexto:** a equipe pedagógica explicou que há projetos que avaliam etapas não canônicas (tudo fora de 2EF, 5EF, 9EF e 3EM: 4EF, 6EF, 8EF…). Hoje não há tela para ligar essa etapa a um conteúdo. A branch `feat/etapa-do-projeto` (D-229 a D-231, K-034) permitia criar a etapa do projeto em branco ou por clone.
+- **Contexto:** a equipe pedagógica explicou que há projetos que avaliam etapas não canônicas (tudo fora de 2EF, 5EF, 9EF e 3EM: 4EF, 6EF, 8EF…). Hoje não há tela para ligar essa etapa a um conteúdo. A branch `feat/etapa-do-projeto` (D-229 a D-231 na numeração da branch, hoje D-279 a D-281; K-034) permitia criar a etapa do projeto em branco ou por clone.
 - **Decisão:** (1) toda etapa não canônica de um projeto nasce obrigatoriamente apontando para uma etapa canônica já existente em alguma matriz; não existe mais etapa em branco. (2) Apontar é clonar com vínculo: a Pedagógica edita a cópia, e mudança na base abre a revisão em 3 vias, que bloqueia o Validado (como na D-229). (3) A base pode ser de qualquer matriz e de qualquer ano, mas só uma das 4 canônicas, do mesmo componente. (4) O botão de apontar aparece só para etapa não canônica; canônica que falta na matriz do parceiro segue como `corte_sem_matriz`, sem botão (a correção é trocar de matriz). (5) Quem aponta é a Pedagógica, pela tela. (6) "Canônica" vira uma constante com os 4 códigos, sem campo no banco.
 - **Motivo:** toda não canônica tem uma canônica de origem; em branco, a revista ficaria sem conteúdo e sem vínculo com a matriz.
 - **Descartadas:** etapa em branco — sem origem; só usar a canônica, sem cópia — a Pedagógica precisa acrescentar e tirar itens; limitar à matriz do parceiro — a base pode vir de outra; botão também para canônica faltando — criaria versão paralela de etapa da Comunitária; apontar pela planilha, na carga — o usuário quer a Pedagógica decidindo na tela.
@@ -2265,6 +2265,30 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Descartadas:** as 7 etapas no `carregar_cadastros` — `cadastrar()` dos testes é usado por boa parte da suíte, que conta com 4 etapas, e o importador cria só o que a planilha pede; projeto com etapa marcada e corte vazio — mudaria a cascata; completar cortes de parceiro que já tem corte — desnecessário com o banco refeito do zero.
 - **Arquivos afetados:** `app/nucleo/management/commands/importar_cortes.py`, `app/nucleo/tests/test_importar_cortes.py`, `scripts/povoar-banco-2026.sh`, `README.md`, `docs/regras-de-negocio.md`
 - **Status:** ativa (substitui os itens 3, 5 e 7 da D-261)
+
+### D-279 — Etapa clonada mantém vínculo vivo com a etapa base (2026-11-06)
+- **Contexto:** brainstorming de 06/11. Parceiros avaliam etapas fora do comum (4EF, 6EF, 8EF); a Pedagógica costuma partir de uma etapa vizinha (3EF → 4EF) e acrescentar itens. As notas do usuário diziam ao mesmo tempo "clonar e editar o clone" e "se o 3EF mudar, a revista muda".
+- **Decisão:** a etapa criada no projeto (em branco ou clone de qualquer etapa de qualquer matriz) guarda a base de onde veio. Mudança na base vira **pendência** no projeto derivado, com comparação antes × depois no estilo git. A pendência é obrigatória, não um aviso. Quem edita a base vê, no modal de impacto, que a ação tira o Validado e também abre pendência nos projetos derivados.
+- **Motivo:** cópia solta perde as correções da base em silêncio; herança automática sobrescreveria o que o projeto acrescentou.
+- **Descartadas:** cópia solta, sem vínculo — correção no 3EF não chega ao 4EF; herança viva sem revisão — apaga edições locais sem ninguém ver.
+- **Arquivos afetados:** nenhum ainda (fase de desenho). Em aberto: o que a pendência bloqueia e se o projeto pode recusar uma mudança da base.
+- **Status:** ativa, alterada em parte pela D-276 (sai o "em branco"; a base é só etapa canônica). Numerada D-226 e depois D-229 na branch `feat/etapa-do-projeto`; renumerada em 24/11 ao mesclar a `main`, que já usava esses números para outras decisões.
+
+### D-280 — Etapa do projeto: 3 vias com foto da base, dono = projeto (2026-11-06)
+- **Contexto:** como a mudança da base chega à etapa clonada (D-279). 3 agentes analisaram (dados, produto, versionamento); a soma com descarte de duplicatas proposta pelo usuário foi descartada pelos 3.
+- **Decisão:** (1) comparação em 3 vias: foto da base (jsonb, por código do descritor e faixa da tarefa) × base atual × local; (2) a etapa pertence ao **projeto** (escolha do usuário, contra a recomendação de parceiro_ano dos agentes 1 e 3); (3) item que o projeto não tocou vem pré-marcado "aplicar" e só grava ao "Concluir revisão"; (4) clone de clone proibido na 1ª versão: a base é sempre etapa de matriz; (5) só etapa que a matriz do parceiro não tem (4EF, 6EF, 8EF), sem sobrepor etapa da matriz; (6) a pendência entra no hash e bloqueia o Validado; recusa item a item; sem fusão dentro do texto (D-115); base apagada = cópia solta (SET NULL); a virada de ano não leva a etapa sozinha.
+- **Motivo:** só o ancestral comum separa "a base mudou" de "o projeto mudou"; nada muda no conteúdo do projeto sem uma pessoa ver; sem cadeia e sem sobrepor, não surgem versões paralelas da Comunitária.
+- **Descartadas:** soma + dedup — não propaga remoção nem correção; ancestral pelo simple-history — a reimportação recria ids; camada de sobrescrita — editor novo e propagação sem revisão; versões imutáveis da matriz — reescreve editor e reimportação; aplicar sozinho ao gravar a base — escreve no conteúdo de outro projeto sem revisão; dono parceiro_ano — escolha do usuário.
+- **Arquivos afetados:** nenhum ainda. Substitui em parte a D-051 (projeto passa a ter conteúdo próprio, só nesse caso).
+- **Status:** ativa, alterada em parte pela D-276 (a etapa do projeto é só para etapa não canônica). Numerada D-227 e depois D-230 na branch `feat/etapa-do-projeto`; renumerada em 24/11 ao mesclar a `main`, que já usava esses números para outras decisões.
+
+### D-281 — Etapa do projeto: projeto recriado herda; matriz que ganha a etapa vira pendência (2026-11-06)
+- **Contexto:** revisão do documento `docs/superpowers/specs/2026-11-06-etapa-do-projeto-design.md`. Só há 1 projeto ativo por parceiro_ano, e a cascata arquiva o projeto e cria outro (D-068).
+- **Decisão:** (1) o projeto novo da cascata herda as etapas do projeto arquivado (com foto e base); (2) se a matriz do parceiro passar a ter a etapa, abre-se uma pendência de escolha que bloqueia o Validado, com "manter a do projeto" ou "usar a da matriz"; até a escolha, vale a do projeto. Decisões do Claude no documento: a base tem o mesmo componente da revista; a imagem da tarefa entra na revisão em 3 vias; o Validado volta sozinho se o conteúdo voltar ao validado (D-094).
+- **Motivo:** nunca perder o que foi digitado; pendência não é enfeite.
+- **Descartadas:** projeto novo começa sem a etapa — o texto fica preso no arquivado; botão "trazer" — depende de alguém lembrar; a etapa do projeto vale sem aviso — versão paralela sem decisão; a da matriz passa a valer sozinha — muda a revista sem ninguém ver.
+- **Arquivos afetados:** documento de desenho (seções 5 e 10).
+- **Status:** ativa. Numerada D-228 e depois D-231 na branch `feat/etapa-do-projeto`; renumerada em 24/11 ao mesclar a `main`, que já usava esses números para outras decisões.
 
 ## Perguntas em aberto
 - [x] (18/11, D-270) A demo do django-cotton convence? Se sim, adotar tela por tela (ordem sugerida: ícones, botão, campo, cabeçalho, card, modal) ou parar na demo — depende de: Otavio — respondida em 18/11: convence, adotar (D-271)
@@ -2925,3 +2949,4 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - Redesenho do Figma (página "Testes") visto por capturas; decisão de papéis e de ordem (D-277). Plano de 11 etapas apresentado e aceito.
 - Etapa 1 (K-047, D-278) na `feat/carga-nao-canonica`: 6 testes da carga OK; simulação com as planilhas reais na stack da 8002: 33 parceiros, 232 cortes, 84 arbitrários, 7 etapas criadas.
 - "ok para a main" e "pode refazer o banco da 8002" (usuário): banco da 8002 apagado e refeito pelo script (33 parceiros, 232 cortes, 84 arbitrários, 33 projetos, 66 revistas, nenhum parceiro sem matriz; MS LP com "A matriz não tem a etapa: 4EF, 8EF"); `integ/carga-nao-canonica` mesclada na `main`; K-047 em Done. A demonstração e os usuários de teste da 8002 saíram com o banco; a senha do `admin` da 8002 está só no scratchpad da sessão.
+- Etapa 2 (K-034): plano aprovado. Merge da `main` na `feat/etapa-do-projeto` com 9 arquivos em conflito; as mudanças da branch em `pendencias()` portadas à mão para `servicos/pendencias.py`. Migration `0020` → `0026`. Decisões da branch anexadas como D-279 a D-281 (34 linhas de código e documentos renumeradas, só as que a branch acrescentou). Uma falha do merge corrigida (`_pronta` usava `svg_f2`, removido na 0024). Suíte 968 OK (9 pulados). `integ/etapa-do-projeto` avançada por fast-forward. Sem push.

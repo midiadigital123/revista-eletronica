@@ -1,13 +1,12 @@
 # Kanban — revista-express
 
 ## Backlog
-- **K-034** Etapa do projeto (`feat/etapa-do-projeto`): 14 commits fora da `main`, tarefa 5 em WIP · retomada em 24/11 com escopo novo (D-276): não canônica só nasce apontando para canônica; etapas 2 a 10 do plano de 24/11
-  nota: parada por decisão do usuário em 10/11; worktree `revista-express-etapa` removida em 11/11 (limpa; a branch `feat/etapa-do-projeto` `d0a1954` fica no git e no GitHub: recriar com `git worktree add`); ao retomar, renumerar a `0020_etapa_do_projeto` para depois da 0025
 - **K-048** Etapa 11 — Redesenho das telas pelo Figma (menu Projetos · Modelos · Impresso) e retirada dos botões de criar matriz, template e parceiro · D-277
 - **K-031** Fase 5 do F2: animação por passo (desejável)
 - **K-033** S18 — E2E da temporada
 
 ## Doing
+- **K-034** Etapa do projeto (`feat/etapa-do-projeto`): etapas 2 a 10 do plano de 24/11 (D-276) · etapa 2 de 11 feita em 24/11: `main` mesclada na branch, migration `0026`, decisões D-279 a D-281, suíte 968 OK; próxima: etapa 3 (D-276 nas tarefas 1 a 4)
 
 ## Review
 ## Done
