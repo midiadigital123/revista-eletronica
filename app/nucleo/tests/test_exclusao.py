@@ -307,6 +307,16 @@ class ApagarAnoTest(Base):
         self.assertFalse(Ano.objects.filter(ano=2027).exists())
         self.assertFalse(MatrizEtapaCC.objects.filter(pk=mec.pk).exists())
 
+    def test_apagar_ano_solta_a_derivada_de_outro_ano(self):  # a base pode ser de qualquer ano (D-276)
+        e4 = Etapa.objects.create(ano=self.ano, codigo="4EF", escala_max=500, ordem=4)
+        base = MatrizEtapaCC.objects.get(ano=self.a27, etapa__codigo="9EF", componente__codigo="LP")
+        mec = criar(self.go["LP"].projeto, e4, self.lp, self.ped, base=base)
+        apagar_ano(self.a27, self.adm)
+        mec.refresh_from_db()  # cópia solta (D-282): fica com o conteúdo e com a foto, sem a base
+        self.assertEqual((mec.base_id, mec.ano_id), (None, self.ano.pk))
+        self.assertTrue(mec.base_foto)
+        self.assertEqual(Descritor.objects.filter(matriz_etapa_cc=mec).count(), 2)
+
 
 class ParceiroAtivoTest(Base):
     def test_desativar_e_reativar_com_historico(self):

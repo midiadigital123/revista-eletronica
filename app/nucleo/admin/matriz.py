@@ -200,15 +200,15 @@ class DescritorInline(admin.TabularInline):
 
 @admin.register(MatrizEtapaCC)
 class MatrizEtapaCCAdmin(MatrizEditAdmin):
-    list_display = ("matriz", "etapa", "componente", "passo")
+    list_display = ("matriz", "projeto", "etapa", "componente", "passo")  # dono: matriz ou projeto (D-280)
     list_filter = ("ano", "matriz", "componente")
-    list_select_related = ("matriz__ano", "etapa__ano", "componente__ano")
-    fields = ("matriz", "etapa", "componente", "passo", "confirmar_impacto")
-    readonly_fields = ("matriz", "etapa", "componente")
+    list_select_related = ("matriz__ano", "projeto", "etapa__ano", "componente__ano")
+    fields = ("matriz", "projeto", "etapa", "componente", "passo", "confirmar_impacto")
+    readonly_fields = ("matriz", "projeto", "etapa", "componente")
     inlines = [DescritorInline]
 
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related("matriz__ano", "etapa", "componente")
+        return super().get_queryset(request).select_related("matriz__ano", "projeto", "etapa", "componente")
 
     def mec(self, obj):
         return obj

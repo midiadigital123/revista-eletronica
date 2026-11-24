@@ -30,6 +30,7 @@ from nucleo.models import (
 )  # fmt: skip
 from nucleo.projeto import MAX_CORES, ProjetoForm
 from nucleo.servicos import matriz as matrizes
+from nucleo.servicos.etapa_projeto import mecs_por_etapa, vigente
 from nucleo.servicos.resolver import valores_das_variaveis
 from nucleo.ui_autosave import Conflito, form_de_um_campo, responder_campo
 from nucleo.ui_autosave import erros as erros_campo
@@ -242,14 +243,17 @@ def projeto(request, pk):
 
 def _passos(projeto):
     """Aba Passos e cores: um bloco por etapa do ano, com uma célula por componente. Cada célula traz
-    o passo da matriz (o herdado) e a sobrescrita do projeto, se houver (D-053, D-091): sem linha =
-    herda; linha com passo nulo = sem linhas vazias, de propósito."""
+    o passo herdado (o da etapa que a revista usa, da matriz ou do projeto: D-280) e a sobrescrita do
+    projeto, se houver (D-053, D-091): sem linha = herda; linha com passo nulo = sem linhas vazias,
+    de propósito."""
+    etapas = list(Etapa.objects.filter(ano_id=projeto.ano_id).order_by("ordem"))
+    componentes = list(Componente.objects.filter(ano_id=projeto.ano_id).order_by("codigo"))
     matriz = {
-        (m.etapa_id, m.componente_id): m.passo
-        for m in MatrizEtapaCC.objects.filter(matriz_id=projeto.parceiro_ano.matriz_id, matriz__isnull=False)
+        (e, c.pk): vigente(*par).passo
+        for c in componentes
+        for e, par in mecs_por_etapa(projeto, c.pk, [e.pk for e in etapas]).items()
     }
     proprios = {(p.etapa_id, p.componente_id): p.passo for p in ProjetoPasso.objects.filter(projeto=projeto)}
-    componentes = list(Componente.objects.filter(ano_id=projeto.ano_id).order_by("codigo"))
 
     def celula(e, c):
         k = (e.pk, c.pk)
@@ -259,7 +263,6 @@ def _passos(projeto):
             "sobrescrito": k in proprios, "passo": proprios.get(k), "sem_vazias": k in proprios and proprios[k] is None,
         }  # fmt: skip
 
-    etapas = Etapa.objects.filter(ano_id=projeto.ano_id).order_by("ordem")
     return [{"etapa": e, "celulas": [celula(e, c) for c in componentes]} for e in etapas]
 
 

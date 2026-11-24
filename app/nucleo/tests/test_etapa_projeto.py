@@ -306,6 +306,11 @@ class RestoDoSistemaTest(MediaTemporaria, Base):
         self.client.force_login(get_user_model().objects.create_superuser("su", password="x"))
         self.assertContains(self.client.get(reverse("admin:nucleo_descritor_changelist")), "Projeto GO · 4EF LP")
 
+    def test_admin_abre_a_etapa_do_projeto(self):  # o admin diz de quem é a etapa sem matriz (D-277)
+        self.client.force_login(get_user_model().objects.create_superuser("su", password="x"))
+        self.assertContains(self.client.get(reverse("admin:nucleo_matrizetapacc_changelist")), "Projeto GO")
+        self.assertContains(self.client.get(reverse("admin:nucleo_matrizetapacc_change", args=[self.mec.pk])), "Projeto GO")
+
     def test_item_da_etapa_do_projeto_no_zip_e_no_preview(self):
         caminho = default_storage.save("itens/do-projeto.png", ContentFile(PNG))
         Tarefa.objects.filter(descritor__matriz_etapa_cc=self.mec, inicio=100).update(arquivo=caminho)
@@ -328,6 +333,14 @@ class RestoDoSistemaTest(MediaTemporaria, Base):
         (bloco,) = [b for b in resp.context["etapas_passo"] if b["etapa"] == self.e4]
         (celula,) = [c for c in bloco["celulas"] if c["componente"] == self.lp]
         self.assertEqual(celula["da_matriz"], "fora da matriz")
+
+    def test_aba_passos_herda_o_passo_da_etapa_do_projeto(self):  # o mesmo passo que a revista usa
+        MatrizEtapaCC.objects.filter(pk=self.mec.pk).update(passo=10)
+        self.client.force_login(usuario("ped", "Pedagógica"))
+        resp = self.client.get(reverse("ui_projeto", args=[self.projeto.pk]) + "?aba=passos")
+        (bloco,) = [b for b in resp.context["etapas_passo"] if b["etapa"] == self.e4]
+        (celula,) = [c for c in bloco["celulas"] if c["componente"] == self.lp]
+        self.assertEqual((celula["da_matriz"], celula["matriz"]), (10, 10))
 
     def test_impacto_da_etapa_do_projeto_e_so_a_revista_do_projeto(self):
         self.assertEqual([r for r, _ in impacto(self.mec)], [self.lp_go])
