@@ -347,6 +347,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | Apontar é pela aba Matriz do projeto: uma linha por etapa não canônica com corte que a matriz não cobre, com a lista das etapas canônicas do mesmo componente (qualquer matriz, qualquer ano) e o botão "Apontar". Grava sob o bloqueio da ficha, por `servicos.etapa_projeto.criar`. | D-276, D-286 |
 | Apontar muda a revista: se alguma revista validada perde o "Validado", nada é gravado antes de a pessoa confirmar no modal de impacto; depois da gravação, o aviso lista quem perdeu. | D-202, D-286 |
 | A etapa do projeto é editada no editor da matriz (mesma tela, mesmo bloqueio, mesma permissão de "editar matriz"); o voltar leva à aba Matriz do projeto. Etapa de projeto arquivado é só leitura. | D-093, D-286 |
+| Desfazer o apontamento é pela aba Matriz do projeto, com confirmação forte (digitar a etapa e o componente, ex.: `4EF LP`): apaga a cópia do projeto (descritores, tarefas e arquivos de item que só ela usa) e a etapa volta à pendência `etapa_sem_base`. A página lista as revistas que perdem o "Validado"; recusa se outra pessoa está com a etapa aberta no editor. A base não muda. | D-181, D-287 |
 
 Quando a matriz do parceiro passa a ter a mesma etapa, a pendência é `etapa_em_dobro`; `escolher` grava "projeto" ou "matriz", e até a escolha vale a do projeto (D-281).
 

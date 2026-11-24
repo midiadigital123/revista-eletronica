@@ -155,6 +155,7 @@ Demo K-042: escrita com componentes django-cotton (templates/cotton/: pagina_cab
       {% if l.mec %}
       <span>· {% if l.base %}base: {{ l.base.etapa.codigo }} {{ l.base.componente.codigo }} da {{ l.base.matriz }}{% else %}sem base (a base foi apagada){% endif %}</span>
       <a class="link" href="{% url 'ui_matriz_mec' l.mec.pk %}">{% if pode_gravar %}Editar{% else %}Ver{% endif %}<span class="sr-only"> {{ l.etapa.codigo }} {{ l.componente.codigo }}</span></a>
+      {% if request.bloqueio and pode_gravar %}<a class="link" href="{% url 'ui_projeto_etapa_desfazer' projeto.pk l.mec.pk %}">Desfazer apontamento<span class="sr-only"> de {{ l.etapa.codigo }} {{ l.componente.codigo }}</span></a>{% endif %}
       {% elif request.bloqueio and pode_gravar and l.bases %}
       {# Form próprio, com a mesma sessão de bloqueio da ficha; a regra fica em servicos.etapa_projeto.criar. #}
       <form method="post" action="{% url 'ui_projeto_etapa_apontar' projeto.pk %}" class="pj-apontar" id="{{ l.form_id }}">{% csrf_token %}

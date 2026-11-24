@@ -1,0 +1,38 @@
+{% extends "ui/base.html" %}
+{% load static %}
+{% comment %}Desfazer o apontamento de uma etapa não canônica (D-287): confirmação forte como a da exclusão de
+descritor (D-181), com as revistas que perdem o "Validado". Bloqueio: o da ficha do projeto.{% endcomment %}
+{% block titulo %}Desfazer o apontamento de {{ codigo }}{% endblock %}
+{% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/matriz.css' %}">{% endblock %}
+
+{% block conteudo %}
+<c-voltar href="{{ voltar }}">Voltar sem desfazer</c-voltar>
+<c-pagina-cab titulo="Desfazer o apontamento de {{ codigo }}">
+  <p class="mudo">{{ projeto.nome }}{% if mec.base %} · base: {{ mec.base.etapa.codigo }} da {{ mec.base.matriz }}{% endif %}. Desfazer apaga a cópia do projeto: {{ descritores }} descritor(es) e {{ tarefas }} tarefa(s), com tudo o que foi editado nela. A base não muda, e a etapa volta a ficar sem base, pronta para ser apontada de novo.</p>
+</c-pagina-cab>
+
+{% if revistas %}
+<div class="tabela-caixa card matriz-tabela">
+  <table class="tabela">
+    <caption class="matriz-legenda">Revistas ativas afetadas: {{ revistas|length }}; perdem o “Validado”: {{ validadas }}</caption>
+    <thead><tr><th scope="col">Revista</th><th scope="col">Validado</th></tr></thead>
+    <tbody>
+    {% for revista, perde in revistas %}
+      <tr><th scope="row">{{ revista }}</th><td>{% if perde %}<c-badge variante="erro">Perde o “Validado”</c-badge>{% else %}<span class="mudo">—</span>{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if pode_gravar %}
+<form method="post" class="matriz-cartao-form" novalidate>{% csrf_token %}
+  {% include "ui/_componentes/bloqueio.html" %}
+  {% include "ui/_componentes/confirmar.html" with nome="confirmacao" codigo=codigo texto="Confira acima o que sai: desfazer não se desfaz pela tela." erro=form.confirmacao.errors.0 %}
+  <div class="acoes matriz-fim">
+    <c-botao variante="outline" href="{{ voltar }}">Voltar sem desfazer</c-botao>
+    <c-botao variante="destrutivo" type="submit" data-confirmado>Desfazer o apontamento</c-botao>
+  </div>
+</form>
+{% endif %}
+{% endblock %}

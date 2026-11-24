@@ -303,6 +303,22 @@ def escolher(mec, preferida, usuario):
         mec.save(update_fields=["preferida"])
 
 
+def desfazer(mec, usuario):
+    """Desfaz o apontamento (D-287): apaga a etapa do projeto com os descritores e as tarefas dela.
+    Um a um, para o histórico levar o usuário; o arquivo de item órfão sai pelo sinal da Tarefa."""
+    with transaction.atomic():
+        mec = MatrizEtapaCC.objects.select_for_update().get(pk=mec.pk)
+        if mec.projeto_id is None:
+            raise RevisaoRecusada("só a etapa do projeto tem apontamento")
+        if mec.projeto.arquivado_em is not None:
+            raise RevisaoRecusada("projeto arquivado")
+        motivo = "apontamento desfeito"
+        descritores = list(Descritor.objects.filter(matriz_etapa_cc=mec))
+        for obj in [*Tarefa.objects.filter(descritor__in=descritores), *descritores, mec]:
+            obj._history_user, obj._change_reason = usuario, motivo
+            obj.delete()
+
+
 def derivadas(*mecs):
     """MECs de projeto ativo clonadas de uma destas (etapas de matriz)."""
     return MatrizEtapaCC.objects.filter(base__in=mecs, projeto__arquivado_em__isnull=True)

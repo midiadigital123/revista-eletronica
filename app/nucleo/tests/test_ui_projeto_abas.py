@@ -10,6 +10,7 @@ from django.urls import reverse
 
 from nucleo.admin.bloqueio import CAMPO_SESSAO
 from nucleo.models import Descritor, Etapa, Matriz, MatrizEtapaCC, ParceiroAno, ProjetoCor, ProjetoPasso
+from nucleo.servicos import bloqueio
 from nucleo.servicos.cascata import gravar_cortes
 from nucleo.servicos.etapa_projeto import criar
 from nucleo.servicos.pendencias import pendencias
@@ -230,8 +231,8 @@ class AtribuirMatrizUnicoServicoTest(Base):
         self.assertEqual(pa.history.first().history_user, self.ped)
 
 
-class ApontarEtapaTest(Base):
-    """Etapa 7 (D-276): a etapa não canônica do projeto aponta para uma canônica pela aba Matriz."""
+class EtapaNaoCanonica(Base):
+    """GO com corte em 4EF LP, etapa que a Comunitária não tem."""
 
     @classmethod
     def setUpTestData(cls):
@@ -250,13 +251,17 @@ class ApontarEtapaTest(Base):
         self.url = reverse("ui_projeto", args=[self.projeto_go.pk]) + "?aba=matriz"
         self.url_apontar = reverse("ui_projeto_etapa_apontar", args=[self.projeto_go.pk])
 
+    def do_projeto(self):
+        return MatrizEtapaCC.objects.filter(projeto=self.projeto_go)
+
+
+class ApontarEtapaTest(EtapaNaoCanonica):
+    """Etapa 7 (D-276): a etapa não canônica do projeto aponta para uma canônica pela aba Matriz."""
+
     def apontar(self, base, **extra):
         sessao = self.client.get(self.url).wsgi_request.bloqueio["sessao"]
         dados = {"etapa": self.e4.pk, "componente": self.lp.pk, "base": getattr(base, "pk", base), CAMPO_SESSAO: sessao, **extra}
         return self.client.post(self.url_apontar, dados, follow=True)
-
-    def do_projeto(self):
-        return MatrizEtapaCC.objects.filter(projeto=self.projeto_go)
 
     def test_aba_matriz_mostra_o_form_de_apontar(self):
         mt5 = MatrizEtapaCC.objects.get(matriz=self.matriz, etapa=self.e5, componente=self.mt)
@@ -328,3 +333,63 @@ class ApontarEtapaTest(Base):
         chave = f"{self.e4.pk}-{self.lp.pk}"
         self.assertContains(r, f'id="passo-{chave}-matriz">Etapa do projeto: 25</p>')
         self.assertContains(r, f'id="passo-{self.e5.pk}-{self.lp.pk}-matriz">Matriz: 25</p>')
+
+
+class DesfazerApontamentoTest(EtapaNaoCanonica):
+    """Desfazer o apontamento pela aba Matriz: confirmação forte (D-181) e aviso do Validado (D-287)."""
+
+    def setUp(self):
+        super().setUp()
+        self.mec = criar(self.projeto_go, self.e4, self.lp, self.ped, self.mec5)
+        self.url_desfazer = reverse("ui_projeto_etapa_desfazer", args=[self.projeto_go.pk, self.mec.pk])
+
+    def desfazer(self, confirmacao="4EF LP"):
+        sessao = self.client.get(self.url_desfazer).wsgi_request.bloqueio["sessao"]
+        return self.client.post(self.url_desfazer, {"confirmacao": confirmacao, CAMPO_SESSAO: sessao}, follow=True)
+
+    def test_aba_matriz_tem_o_link_e_a_pagina_conta_o_que_sai(self):
+        self.assertContains(self.client.get(self.url), f'href="{self.url_desfazer}"')
+        r = self.client.get(self.url_desfazer)
+        self.assertContains(r, "Desfazer o apontamento de 4EF LP")
+        self.assertContains(r, "2 descritor(es) e 3 tarefa(s)")
+        self.assertContains(r, 'data-confirmar="4EF LP"')
+        self.assertNotContains(r, "Perde o “Validado”")
+
+    def test_codigo_errado_nao_apaga(self):
+        r = self.desfazer("4EF")
+        self.assertContains(r, "o código não confere")
+        self.assertTrue(self.do_projeto().exists())
+
+    def test_desfaz_e_a_etapa_volta_a_ficar_sem_base(self):
+        r = self.desfazer()
+        self.assertRedirects(r, self.url)
+        self.assertFalse(self.do_projeto().exists())
+        self.assertFalse(Descritor.objects.filter(matriz_etapa_cc_id=self.mec.pk).exists())
+        self.assertTrue(Descritor.objects.filter(matriz_etapa_cc=self.mec5).exists())  # a base fica
+        self.assertIn("etapa_sem_base", [p.codigo for p in pendencias(carregar(self.go["LP"].pk))])
+        self.assertContains(r, "Apontamento de 4EF LP desfeito")
+        self.assertContains(r, f'action="{self.url_apontar}"')  # pode apontar de novo
+        h = MatrizEtapaCC.history.filter(id=self.mec.pk).first()
+        self.assertEqual((h.history_type, h.history_user), ("-", self.ped))
+
+    def test_revista_validada_aparece_na_confirmacao_e_no_aviso(self):
+        validar(self.go["LP"])
+        self.assertContains(self.client.get(self.url_desfazer), "Perde o “Validado”", count=1)
+        r = self.desfazer()
+        self.assertFalse(esta_validada(self.go["LP"]))
+        self.assertContains(r, "1 revista(s) perderam o “Validado”")
+
+    def test_recusas(self):
+        self.client.post(self.url_desfazer, {"confirmacao": "4EF LP", CAMPO_SESSAO: "outra-aba"})
+        self.assertTrue(self.do_projeto().exists())  # sem o bloqueio da ficha
+        # outra pessoa com a etapa aberta no editor da matriz
+        self.assertTrue(bloqueio.adquirir(self.mec, self.outro, "editor-do-outro"))
+        self.assertContains(self.desfazer(), "Não desfeito: outro está editando esta etapa")
+        self.assertTrue(self.do_projeto().exists())
+        # etapa de matriz ou de outro projeto: 404
+        url = reverse("ui_projeto_etapa_desfazer", args=[self.projeto_go.pk, self.mec5.pk])
+        self.assertEqual(self.client.get(url).status_code, 404)
+        self.client.force_login(self.imp)
+        self.assertNotContains(self.client.get(self.url), f'href="{self.url_desfazer}"')
+        self.assertEqual(self.client.post(self.url_desfazer, {"confirmacao": "4EF LP"}).status_code, 403)
+        self.assertTrue(self.do_projeto().exists())

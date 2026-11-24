@@ -24,14 +24,16 @@ from nucleo import cortes as regra_cortes
 from nucleo import lotes, planilha_variaveis
 from nucleo.contexto import ano_da_sessao
 from nucleo.lotes import escrever_travado
+from nucleo.matriz import ExcluirForm
 from nucleo.models import (
     Ano, Componente, CorPadrao, Corte, Etapa, Fasciculo, Matriz, MatrizEtapaCC, ParceiroAno, Projeto, ProjetoCor,
-    ProjetoPasso, Revista, Template,
+    ProjetoPasso, Revista, Tarefa, Template,
 )  # fmt: skip
 from nucleo.models.cadastro import ETAPAS_CANONICAS
 from nucleo.projeto import MAX_CORES, ProjetoForm
+from nucleo.servicos import bloqueio
 from nucleo.servicos import matriz as matrizes
-from nucleo.servicos.etapa_projeto import CriacaoRecusada, criar, mecs_por_etapa, vigente
+from nucleo.servicos.etapa_projeto import CriacaoRecusada, criar, desfazer, mecs_por_etapa, vigente
 from nucleo.servicos.impacto import avisar_perdidos, perdem_validado
 from nucleo.servicos.resolver import valores_das_variaveis
 from nucleo.ui_autosave import Conflito, form_de_um_campo, responder_campo
@@ -439,6 +441,42 @@ def _apontar(request, pk):
     return redirect(aba)
 
 
+@require_http_methods(["GET", "POST"])
+@login_required
+@com_bloqueio(_alvo, pode_gravar)
+def desfazer_etapa(request, pk, mec):
+    """Desfaz o apontamento (D-287): página de confirmação forte (digitar "4EF LP", como a exclusão
+    de descritor, D-181) com as revistas que perdem o "Validado"; o POST apaga a etapa do projeto,
+    sob o bloqueio da ficha, e avisa quem perdeu. Recusa se outra pessoa edita a etapa no editor."""
+    if not pode_ver(request.user):
+        raise PermissionDenied
+    projeto = get_object_or_404(Projeto.objects.select_related("parceiro_ano__parceiro", "ano"), pk=pk)
+    m = get_object_or_404(MatrizEtapaCC.objects.select_related("etapa", "componente", "base__matriz__ano", "base__etapa"), pk=mec, projeto=projeto)
+    if projeto.arquivado_em:
+        raise PermissionDenied  # arquivado é congelado (D-093)
+    aba = reverse("ui_projeto", args=[pk]) + "?aba=matriz"
+    codigo = f"{m.etapa.codigo} {m.componente.codigo}"
+    form = ExcluirForm(request.POST or None, codigo=codigo)
+    revistas = list(_revistas(projeto).filter(componente_id=m.componente_id))
+    perdem = perdem_validado(lambda: desfazer(m, request.user), revistas)
+    if request.method == "POST" and form.is_valid():
+        outro = bloqueio.quem_bloqueia(m)
+        if outro is not None and outro.usuario_id != request.user.pk:
+            messages.error(request, f"Não desfeito: {outro.usuario} está editando esta etapa. Tente de novo quando a pessoa fechar o editor.")
+            return redirect(request.path)
+        desfazer(m, request.user)
+        messages.success(request, f"Apontamento de {codigo} desfeito.")
+        if perdem:
+            avisar_perdidos(request, perdem, projeto.ano.ano)
+        return redirect(aba)
+    form.fields["confirmacao"].widget.attrs["class"] = classe_css("input")
+    return TemplateResponse(request, "ui/projeto/desfazer_etapa.html", {
+        "projeto": projeto, "mec": m, "codigo": codigo, "form": form, "voltar": aba, "ano": projeto.ano, "secao": "projetos",
+        "revistas": [(r, r in perdem) for r in revistas], "validadas": len(perdem), "pode_gravar": request.pode_gravar,
+        "descritores": m.descritor_set.count(), "tarefas": Tarefa.objects.filter(descritor__matriz_etapa_cc=m).count(),
+    })  # fmt: skip
+
+
 PASSO = re.compile(r"^(passo|sem)-(\d{1,9})-(\d{1,9})$")  # célula etapa × componente da aba Passos e cores
 COR = re.compile(r"^cor-(\d)$")  # amostra do padrão
 
@@ -584,4 +622,5 @@ urlpatterns = [
     path("<int:pk>/campo/", campo, name="ui_projeto_campo"),
     path("<int:pk>/matriz/", matriz, name="ui_projeto_matriz"),
     path("<int:pk>/etapa/apontar/", apontar, name="ui_projeto_etapa_apontar"),
+    path("<int:pk>/etapa/<int:mec>/desfazer/", desfazer_etapa, name="ui_projeto_etapa_desfazer"),
 ]
