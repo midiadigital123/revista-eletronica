@@ -125,7 +125,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 
 | Regra | Fonte |
 |---|---|
-| Projeto não herda de outro projeto: só aponta para uma matriz (pelo parceiro_ano). | D-051, learning "Projeto não herda de outro projeto" |
+| Projeto não herda de outro projeto: aponta para uma matriz (pelo parceiro_ano) e pode ter **cópia local** de uma etapa × componente dela, que vale só para ele. | D-051, D-288, learning "Todo projeto parte da matriz Comunitária" |
 | Nasce sozinho quando o parceiro_ano recebe o primeiro corte; ninguém cria projeto à mão. | D-061, `app/nucleo/servicos/cascata.py:79-84`, `app/nucleo/admin/projeto.py:64` |
 | Nome inicial: `<nome do parceiro> - NOME DO PROJETO`. Enquanto o nome terminar assim, o Validado fica bloqueado. | D-065, D-093, `app/nucleo/servicos/cascata.py:83`, `app/nucleo/servicos/pendencias.py:99` |
 | Um projeto **ativo** por parceiro_ano (restrição do banco). | D-047, `app/nucleo/models/projeto.py:102-105` |
@@ -148,7 +148,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 |---|---|
 | A matriz é escolha do **parceiro_ano** e vale para todos os componentes dele. | D-088, D-101, `app/nucleo/models/projeto.py:19` |
 | Escolher matriz: aba Matriz do projeto ou "Atribuir matriz…" em massa na Lista (`change_parceiroano`). Modal se tirar o Validado. | D-102, D-197, `app/nucleo/servicos/matriz.py:18`, `app/nucleo/lotes.py:135` |
-| Projeto não edita conteúdo: todo ajuste de descritor ou tarefa é feito na matriz e vale para todos os parceiros que a usam. | D-048, D-051, D-099 |
+| Ajuste na matriz vale para todos os parceiros que a usam. Ajuste só de um projeto é feito na cópia local da etapa ("Editar só neste projeto", aba Matriz do projeto), sem mudar a matriz. Só há uma matriz em uso, a Comunitária. | D-048, D-099, D-288 |
 | Exceção nova (ex.: parceiro que mudou no ano): duplicar uma matriz, ajustar a cópia e apontar o parceiro para ela. | D-101, `app/nucleo/urls/ui_matriz.py:162` |
 | A cópia guarda a origem (`duplicada_de`, de qualquer ano) e mostra a tabela de diferenças; não herda nada. Apagar a origem só zera o vínculo. | D-113, D-124, `app/nucleo/models/matriz.py:17-24`, `app/nucleo/urls/ui_matriz.py:211` |
 | Matriz nova nasce vazia pela tela B ("Nova matriz": ano + nome, exige `add_matriz`) e recebe o conteúdo pelo Reimportar (PDF SAEGO ou XLSX); também nasce por duplicação ou pelo comando `importar_matriz`. MEC nova só nasce por importação ou duplicação. | D-141, D-165, D-210, `app/nucleo/urls/ui_matriz.py` (`nova`) |
@@ -344,12 +344,13 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | Ao concluir, a foto passa a ser a base de agora: o que foi mantido não volta a ser perguntado. | D-280 |
 | "Manter o meu" em tudo devolve o Validado sozinho (o conteúdo não mudou); "usar o da base" muda a revista, que precisa ser validada de novo. | D-094 |
 | Não há revisão em cópia solta (sem base) nem em projeto arquivado. | D-282 |
+| "Editar só neste projeto" (aba Matriz do projeto) cria a cópia local de qualquer etapa × componente que a matriz do parceiro tem: a base é a própria etapa da matriz, com foto e revisão em 3 vias. Sem o botão, o projeto lê a matriz e não entra em revisão. Depois de criar, abre o editor na cópia. Passa pela mesma simulação do "Validado" do apontar. | D-288, D-289 |
 | Apontar é pela aba Matriz do projeto: uma linha por etapa não canônica com corte que a matriz não cobre, com a lista das etapas canônicas do mesmo componente (qualquer matriz, qualquer ano) e o botão "Apontar". Grava sob o bloqueio da ficha, por `servicos.etapa_projeto.criar`. | D-276, D-286 |
 | Apontar muda a revista: se alguma revista validada perde o "Validado", nada é gravado antes de a pessoa confirmar no modal de impacto; depois da gravação, o aviso lista quem perdeu. | D-202, D-286 |
 | A etapa do projeto é editada no editor da matriz (mesma tela, mesmo bloqueio, mesma permissão de "editar matriz"); o voltar leva à aba Matriz do projeto. Etapa de projeto arquivado é só leitura. | D-093, D-286 |
 | Desfazer o apontamento é pela aba Matriz do projeto, com confirmação forte (digitar a etapa e o componente, ex.: `4EF LP`): apaga a cópia do projeto (descritores, tarefas e arquivos de item que só ela usa) e a etapa volta à pendência `etapa_sem_base`. A página lista as revistas que perdem o "Validado"; recusa se outra pessoa está com a etapa aberta no editor. A base não muda. | D-181, D-287 |
 
-Quando a matriz do parceiro passa a ter a mesma etapa, a pendência é `etapa_em_dobro`; `escolher` grava "projeto" ou "matriz", e até a escolha vale a do projeto (D-281).
+Quando existem a etapa da matriz e a cópia do projeto, **a cópia sempre vale**, sem pendência de escolha (D-288; a pendência `etapa_em_dobro` e o `escolher` saíram). Voltar à matriz é desfazer a cópia (D-287).
 
 ### 6.4 Foto e impresso
 
