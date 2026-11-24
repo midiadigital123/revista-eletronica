@@ -189,6 +189,12 @@ def revisao(mec):
     return itens, sha256(itens)
 
 
+def pendente(mec):
+    """A base mudou desde a cópia e ninguém revisou: a condição da lacuna "base" (o resolver pergunta aqui)."""
+    # ponytail: uma foto da base por chamada (o resolver chama por etapa do projeto); cache se a página ficar lenta.
+    return bool(mec.projeto_id and mec.base_id and hash_foto(foto(mec.base)) != hash_foto(mec.base_foto))
+
+
 # Campos em que a escolha ("texto", s) vale: os de texto livre do descritor e da tarefa.
 CAMPOS_TEXTO = {
     "descricao", "praticas", "conhecimento", "habilidades_relacionadas", "habilidade_correspondente",
@@ -212,6 +218,13 @@ def _objeto(objetos, chave):
     if codigo not in objetos:
         return None
     return objetos[codigo][1].get(tarefa) if tarefa else objetos[codigo][0]
+
+
+def textos_locais(mec, itens):
+    """{(chave, campo): texto} do projeto como está no banco, nos `CAMPOS_TEXTO`. `Item.local` vem da
+    foto, que junta espaços e quebras de linha: quem edita o texto na revisão parte deste."""
+    objetos = _objetos(mec)
+    return {(i.chave, i.campo): getattr(_objeto(objetos, i.chave), i.campo) for i in itens if i.campo in CAMPOS_TEXTO}
 
 
 def concluir(mec, escolhas, visto, usuario):

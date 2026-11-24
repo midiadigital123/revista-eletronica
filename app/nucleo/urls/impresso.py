@@ -11,7 +11,6 @@ por palavra (`diff_texto`), só os parágrafos ou linhas que mudaram, com 1 de c
 """
 
 import difflib
-import re
 from itertools import zip_longest
 
 from django.contrib import messages
@@ -86,21 +85,6 @@ def textos(conteudo):
     return saida
 
 
-def _partes(velho, novo):
-    """[(igual|del|ins, texto)] por palavra; cada palavra leva o espaço que a segue."""
-    a, b = re.findall(r"\S+\s*", velho), re.findall(r"\S+\s*", novo)
-    partes = []
-    for op, i0, i1, j0, j1 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
-        if op == "equal":
-            partes.append(("igual", "".join(a[i0:i1])))
-            continue
-        if i1 > i0:
-            partes.append(("del", "".join(a[i0:i1])))
-        if j1 > j0:
-            partes.append(("ins", "".join(b[j0:j1])))
-    return partes
-
-
 def diff_texto(velho, novo, prosa):
     """(blocos, trecho) do que mudou entre dois textos puros, para o InDesign.
 
@@ -127,7 +111,7 @@ def diff_texto(velho, novo, prosa):
             trecho += b[j0:j1]
             # ponytail: pareia na ordem; um parágrafo inserido no meio de uma troca sai como del + ins inteiros.
             for v, n in zip_longest(a[i0:i1], b[j0:j1]):
-                partes = _partes(v or "", n or "")
+                partes = texto.partes(v or "", n or "")
                 if prosa:
                     blocos.append({"tipo": "inline", "partes": partes})
                 else:

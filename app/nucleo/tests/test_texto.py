@@ -10,7 +10,7 @@ from django.test import SimpleTestCase, TestCase
 
 from nucleo.management.commands.carregar_templates import AVISO
 from nucleo.models import Ano, Componente, Template, TemplateVersao
-from nucleo.texto import SECOES_F2, renderizar, renderizar_texto_puro, secoes, validar, variaveis_usadas
+from nucleo.texto import SECOES_F2, partes, renderizar, renderizar_texto_puro, secoes, validar, variaveis_usadas
 
 F1 = "## introducao\nTítulo\n\nCorpo da {{nome_parceiro}}.\n\n## fechamento\nFim\n\n- um\n- dois\n"
 F2_NOVO = "".join(f"## {i}\n{'F' if i == 'fechamento' else 'T'}\n\nx\n\n" for i in SECOES_F2).rstrip("\n") + "\n"
@@ -135,6 +135,14 @@ class RenderizarTest(SimpleTestCase):
 
     def test_titulo_texto_puro(self):
         self.assertEqual(renderizar_texto_puro("**R&D** {{nome_parceiro}}", {"nome_parceiro": "<GO>"}), "**R&amp;D** &lt;GO&gt;")
+
+
+class PartesTest(SimpleTestCase):
+    def test_diff_por_palavra_com_o_espaco_que_a_segue(self):
+        self.assertEqual(
+            partes("o gato comeu tudo", "o cão comeu tudo hoje"),
+            [("igual", "o "), ("del", "gato "), ("ins", "cão "), ("igual", "comeu "), ("del", "tudo"), ("ins", "tudo hoje")],
+        )
 
 
 class CarregarTemplatesTest(TestCase):

@@ -174,10 +174,7 @@ def _f1_escalas(revista, projeto, variaveis):
         n = len(valores) + 1
         chave = etapa.codigo.lower()
         etapas.append(chave)
-        # ponytail: uma foto da base por etapa do projeto a cada resolver; cache se a página ficar lenta.
-        if mec and mec.projeto_id and mec.base_id and (
-            etapa_projeto.hash_foto(etapa_projeto.foto(mec.base)) != etapa_projeto.hash_foto(mec.base_foto)
-        ):
+        if mec and etapa_projeto.pendente(mec):
             lacunas.append({"tipo": "base", "etapa": chave})
         dados[chave] = {
             "scaleRange": {"min": 0, "max": etapa.escala_max},

@@ -8,6 +8,7 @@ O documento é uma sequência de seções `## id`. Em toda seção a 1ª linha �
 título (texto puro) e o resto é o corpo em Markdown.
 """
 
+import difflib
 import re
 from collections import Counter
 import secrets
@@ -201,3 +202,18 @@ def html_para_texto(html):
     html = re.sub(r"<(ol|ul)[^>]*>(.*?)</\1>", _lista, html, flags=re.S)
     html = re.sub(r"</p>|<br\s*/?>", "\n", html)
     return re.sub(r"\n{3,}", "\n\n", unescape(strip_tags(html))).strip()
+
+
+def partes(velho, novo):
+    """[(igual|del|ins, texto)] por palavra; cada palavra leva o espaço que a segue."""
+    a, b = re.findall(r"\S+\s*", velho), re.findall(r"\S+\s*", novo)
+    saida = []
+    for op, i0, i1, j0, j1 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
+        if op == "equal":
+            saida.append(("igual", "".join(a[i0:i1])))
+            continue
+        if i1 > i0:
+            saida.append(("del", "".join(a[i0:i1])))
+        if j1 > j0:
+            saida.append(("ins", "".join(b[j0:j1])))
+    return saida

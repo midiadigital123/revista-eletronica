@@ -2,6 +2,7 @@
 
 import threading
 import unittest
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
@@ -18,7 +19,7 @@ from nucleo.servicos.cascata import gravar_cortes
 from nucleo.servicos.empacotar import _itens
 from nucleo.servicos.etapa_projeto import (
     CriacaoRecusada, Item, RevisaoIncompleta, RevisaoMudou, RevisaoRecusada, classificar, concluir, criar, derivadas,
-    foto, hash_foto, revisao,
+    foto, hash_foto, pendente, revisao, textos_locais,
 )  # fmt: skip
 from nucleo.servicos.matriz import CAMPOS_DESCRITOR, impacto
 from nucleo.servicos.planilhas import passos
@@ -246,6 +247,23 @@ class RevistaTest(Base):
         lp = recarregar(self.lp_go)
         self.assertNotIn("base", [lc["tipo"] for lc in resolver(lp)["lacunas"]])
         self.assertNotIn("base", [p.codigo for p in pendencias(lp)])
+
+    def test_pendente_e_a_mesma_condicao_da_lacuna(self):
+        base = self._outra_base()
+        mec = criar(self.projeto, self.e4, self.lp, self.usuario, base=base)
+        lacuna = {"tipo": "base", "etapa": "4ef"}
+        self.assertFalse(pendente(mec))
+        self.assertFalse(pendente(base))  # etapa de matriz não tem revisão
+        self.assertNotIn(lacuna, resolver(recarregar(self.lp_go))["lacunas"])
+        with patch("nucleo.servicos.etapa_projeto.pendente", return_value=True):  # o resolver pergunta a ela
+            self.assertIn(lacuna, resolver(recarregar(self.lp_go))["lacunas"])
+
+        Descritor.objects.filter(matriz_etapa_cc=base, codigo="D05").update(descricao="Da outra, revista")
+        mec = MatrizEtapaCC.objects.get(pk=mec.pk)
+        self.assertTrue(pendente(mec))
+        self.assertIn(lacuna, resolver(recarregar(self.lp_go))["lacunas"])
+        MatrizEtapaCC.objects.filter(pk=mec.pk).update(base=None)
+        self.assertFalse(pendente(MatrizEtapaCC.objects.get(pk=mec.pk)))  # cópia solta
 
     def test_copia_vale_sobre_a_matriz_sem_pendencia(self):  # D-288: sai a pendência de escolha
         criar(self.projeto, self.e4, self.lp, self.usuario, base=self.mec5)
@@ -498,6 +516,20 @@ class ConcluirTest(MediaTemporaria, Base):
         self.assertEqual(self._d05(mec).descricao, "  Meu\ntexto ")  # como digitado
         mec.refresh_from_db()
         self.assertEqual(revisao(mec)[0], [])
+
+    def test_textos_locais_devolve_o_texto_com_as_quebras(self):  # a foto junta as quebras (`_norm`)
+        base, mec = self._derivada()
+        Descritor.objects.filter(matriz_etapa_cc=base, codigo="D05").update(descricao="Da base, nova", ordem=3)
+        Descritor.objects.filter(matriz_etapa_cc=mec, codigo="D05").update(descricao="Do projeto,\n\nem duas linhas ")
+        Tarefa.objects.filter(descritor__matriz_etapa_cc=base).update(texto="Compara melhor.")
+        MatrizEtapaCC.objects.filter(pk=base.pk).update(passo=30)
+        mec.refresh_from_db()
+        itens, _ = revisao(mec)
+        self.assertEqual([i.local for i in itens if i.campo == "descricao"], ["Do projeto, em duas linhas"])
+        self.assertEqual(
+            textos_locais(mec, itens),  # sem o passo e sem a ordem: só campo de texto
+            {("D05", "descricao"): "Do projeto,\n\nem duas linhas ", ("D05/100-150#1", "texto"): "Compara."},
+        )
 
     def test_texto_so_vale_em_campo_de_texto(self):
         base, mec = self._derivada()
