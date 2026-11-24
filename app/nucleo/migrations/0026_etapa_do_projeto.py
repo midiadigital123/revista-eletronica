@@ -10,7 +10,7 @@ from nucleo.db import fk_composta
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('nucleo', '0019_admin_marca_impressa'),
+        ('nucleo', '0025_tarefas_fechamento_sem_lp'),
     ]
 
     operations = [
