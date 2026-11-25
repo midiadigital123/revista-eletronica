@@ -14,7 +14,9 @@ from nucleo.models.revista import Motivo
 from nucleo.servicos.resolver import versao_atual
 from nucleo.templates_texto import form_para_corpo, secoes_para_form
 from nucleo.tests.test_admin_templates import F2_9, F2_NOVO, Base
-from nucleo.tests.test_resolver import F1 as F1_NOVO, usuario
+from nucleo.tests.test_resolver import F1, usuario
+
+F1_NOVO = F1.split("## fechamento")[0].rstrip("\n") + "\n"  # D-296: o F1 novo só tem a introdução
 from nucleo.texto import SECOES_F2
 
 

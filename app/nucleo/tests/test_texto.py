@@ -12,7 +12,7 @@ from nucleo.management.commands.carregar_templates import AVISO
 from nucleo.models import Ano, Componente, Template, TemplateVersao
 from nucleo.texto import SECOES_F2, partes, renderizar, renderizar_texto_puro, secoes, validar, variaveis_usadas
 
-F1 = "## introducao\nTítulo\n\nCorpo da {{nome_parceiro}}.\n\n## fechamento\nFim\n\n- um\n- dois\n"
+F1 = "## introducao\nTítulo\n\nCorpo da {{nome_parceiro}}.\n\n- um\n- dois\n"
 F2_NOVO = "".join(f"## {i}\n{'F' if i == 'fechamento' else 'T'}\n\nx\n\n" for i in SECOES_F2).rstrip("\n") + "\n"
 ORIGINAL = Path.read_text
 SEED = settings.BASE_DIR / "templates_seed" / "2026"
@@ -29,11 +29,12 @@ class ValidarTest(SimpleTestCase):
         validar(F2_NOVO, "F2")
 
     def test_secoes_titulo_e_corpo(self):
-        self.assertEqual(secoes(F1)["fechamento"], ("Fim", "- um\n- dois"))
+        self.assertEqual(secoes(F1)["introducao"], ("Título", "Corpo da {{nome_parceiro}}.\n\n- um\n- dois"))
         self.assertEqual(variaveis_usadas(F1), {"nome_parceiro"})
 
     def test_secao_faltando(self):
-        self.assertIn("fechamento", self.erros("## introducao\nT\n\nx\n"))
+        self.assertIn("Seções obrigatórias faltando: introducao.", self.erros("## fechamento\nT\n\nx\n"))
+        self.assertIn("Seções não previstas no F1: fechamento.", self.erros("## introducao\nT\n\nx\n\n## fechamento\nF\n\ny\n"))
         sem = F2_NOVO.replace("## fechamento\nF\n\nx\n", "")
         self.assertIn("Seções obrigatórias faltando: fechamento.", self.erros(sem, "F2"))
 
@@ -86,7 +87,7 @@ class ValidarTest(SimpleTestCase):
         self.assertLess(time.monotonic() - inicio, 1)
 
     def test_titulo_e_texto_puro(self):
-        self.assertIn("título é texto puro", self.erros(F1.replace("Fim", "**Fim**")))
+        self.assertIn("título é texto puro", self.erros(F1.replace("Título", "**Título**")))
 
     def test_seeds_validos(self):
         for nome in ["f1-lp", "f1-mt", "f2-lp", "f2-mt"]:

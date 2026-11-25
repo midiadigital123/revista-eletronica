@@ -86,7 +86,6 @@ def contexto_pagina(revista, pagina, *, preview, estaticos, capa, link, base_ima
             **comum,
             "etapas": f1["etapas"],
             "dados": f1["dados"],
-            "fechamento": f1_secoes.get("fechamento"),
             # Faixas vermelhas (D-116): o texto fica no template; nada do resolvido/foto vira HTML aqui.
             "sem_template_f1": f1["secoes"] is None,
             # Item 21 (D-190): etapa sem descritor = sem matriz (ou sem a etapa × CC na matriz). Sai dos

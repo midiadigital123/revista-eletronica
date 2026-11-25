@@ -56,6 +56,8 @@ from nucleo.texto import renderizar
 GABARITO = Path(__file__).parent / "fixtures" / "resolver-4cortes.json"
 GABARITO_PASSO_NULO = Path(__file__).parent / "fixtures" / "resolver-passo-nulo.json"
 
+# Forma de antes da D-296 (F1 com fechamento), de propósito: os testes usam a segunda seção para a mecânica
+# das seções (cópia, desatualizada, removida), e o Mundo grava a versão sem passar por texto.validar.
 F1 = "## introducao\nAnálise de {{nome_parceiro}}\n\nTexto **{{nome_projeto}}**.\n\n## fechamento\nUtilização\n\nFim.\n"
 F2_LP = (
     "## abertura\nAbertura\n\nBem-vindo.\n\n## passo1\nPasso um\n\nPara os {{adjetivo_patrio_plural_masculino}}.\n\n"

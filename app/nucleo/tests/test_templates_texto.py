@@ -181,3 +181,47 @@ class Migracao0025Test(TestCase):
         self.migrar()
         c.refresh_from_db()
         self.assertEqual(c.texto, self.corpo)
+
+
+class Migracao0028Test(TestCase):
+    """D-296: o F1 perde a seção fechamento no template e nas cópias. Importa a função da migração."""
+
+    COM = "## introducao\nTítulo\n\nIntro.\n\n## fechamento\nUtilização\n\nFim.\n\n- um\n"
+
+    def setUp(self):
+        self.mod = importlib.import_module("nucleo.migrations.0028_f1_sem_fechamento")
+        Mundo.montar(self)
+        self.tpl = self.templates["LP", "F1"]
+        self.v = TemplateVersao.objects.create(template=self.tpl, numero=2, texto=self.COM)
+
+    def copia(self, revista, secao):
+        rf = RevistaFasciculo.objects.get(revista=revista, fasciculo="F1")
+        return RevistaSecao.objects.create(
+            revista_fasciculo=rf, template=self.tpl, secao=secao, texto="Meu.", template_versao=self.v
+        )
+
+    def test_template_ganha_versao_sem_o_fechamento_e_a_anterior_fica(self):
+        self.mod.frente(apps, None)
+        self.mod.frente(apps, None)  # idempotente
+        v3 = versao_atual(self.tpl.pk)
+        self.assertEqual((v3.numero, v3.texto), (3, "## introducao\nTítulo\n\nIntro.\n"))
+        texto.validar(v3.texto, "F1")  # levanta se a versão nova for inválida
+        self.assertEqual(TemplateVersao.objects.get(pk=self.v.pk).texto, self.COM)
+        self.assertEqual(versao_atual(self.templates["MT", "F2"].pk).numero, 1)  # o F2 não muda
+
+    def test_fechamento_no_meio_sai_e_o_resto_fica(self):
+        meio = "## fechamento\nF\n\nFim.\n\n## introducao\nT\n\nIntro.\n"
+        self.assertEqual(self.mod.sem_fechamento(meio), "## introducao\nT\n\nIntro.\n")
+
+    def test_apaga_so_a_copia_do_fechamento_do_f1(self):
+        self.copia(self.go["LP"], "fechamento")
+        intro = self.copia(self.go["LP"], "introducao")
+        rf2 = RevistaFasciculo.objects.get(revista=self.go["LP"], fasciculo="F2")
+        f2 = RevistaSecao.objects.create(
+            revista_fasciculo=rf2, template=self.templates["LP", "F2"], secao="fechamento", texto="F2.",
+            template_versao=versao_atual(self.templates["LP", "F2"].pk),
+        )
+        self.mod.frente(apps, None)
+        self.assertEqual(
+            set(RevistaSecao.objects.values_list("pk", flat=True)), {intro.pk, f2.pk}
+        )

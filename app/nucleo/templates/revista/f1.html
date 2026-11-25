@@ -2,7 +2,7 @@
 {% comment %}
 F1 (escalas de proficiência), portado de revista/escala.hbs (S08). Contexto:
 nucleo.servicos.html.contexto_pagina(revista, "f1", ...): as chaves comuns do _base.html, mais
-`etapas`, `dados` (JSON do F1, inline), `fechamento` e as faixas `sem_template_f1` e `sem_matriz`.
+`etapas`, `dados` (JSON do F1, inline) e as faixas `sem_template_f1` e `sem_matriz`.
 Títulos e corpos das seções vêm prontos e escapados do resolver (|safe só neles).
 {% endcomment %}
 {% block titulo %}Escalas de proficiência – {{ block.super }}{% endblock %}
@@ -119,12 +119,6 @@ Títulos e corpos das seções vêm prontos e escapados do resolver (|safe só n
             </div>
         </section>
 
-        {% if fechamento %}
-        <section class="fechamento-section" aria-labelledby="fechamento-titulo">
-            <h2 id="fechamento-titulo">{{ fechamento.titulo|safe }}</h2>
-            {{ fechamento.corpo|safe }}
-        </section>
-        {% endif %}
     </section>
     </main>
 

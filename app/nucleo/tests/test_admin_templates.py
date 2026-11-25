@@ -187,7 +187,7 @@ class ImpactoTest(Base):
         self.tpl = self.templates["LP", "F1"]
         self.url = f"/admin/nucleo/template/{self.tpl.pk}/change/"
         sessao = self.abrir().context["bloqueio"]["sessao"]
-        novo = F1.replace("Fim.", "Fim de novo.")
+        novo = F1.split("## fechamento")[0].rstrip("\n") + "\n"  # D-296: a versão nova tira o fechamento
         r = self.ped.post(self.url, self.dados(sessao, novo))
         self.assertEqual({x["revista"].pk for x in r.context["revistas"]}, {self.go["LP"].pk, self.pe["LP"].pk})
         self.assertEqual(self.confirmar(r).status_code, 302)
@@ -273,7 +273,7 @@ class PerfisTest(Base):
         r = self.ped.post(
             "/admin/nucleo/template/add/",
             {"ano": self.ano.pk, "componente": self.lp.pk, "fasciculo": "F1", "nome": "Novo",
-             "texto": "## introducao\nI\n\nA.\n\n## fechamento\nF\n\nB.\n"},
+             "texto": "## introducao\nI\n\nA.\n\nB.\n"},
         )  # fmt: skip
         self.assertEqual(r.status_code, 302)
         v = TemplateVersao.objects.get(template__nome="Novo")

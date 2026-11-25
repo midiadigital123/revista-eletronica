@@ -32,7 +32,7 @@ REF_LINK = re.compile(r"^ {0,3}\[[^\]]+\]:", re.M)  # definição de referência
 # O maior seed de 2026 (f2-mt.hbs) tem ~9,6 mil: 100 mil dá folga de 10x.
 TEXTO_MAX = 100_000
 
-SECOES_F1 = ("introducao", "fechamento")
+SECOES_F1 = ("introducao",)
 SECOES_F2 = (
     "abertura", "passo-descritor", "passo-habilidades", "passo-progressao", "passo-tarefas",
     "dlg-descritor", "dlg-tarefas", "tarefas-fechamento", "fechamento",
