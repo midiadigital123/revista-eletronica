@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Etapa 8 de 11 concluída (K-034 em Doing), na `feat/revisao-3-vias`: tela "Revisar mudanças da base" (D-292). Plano: feitas 2 a 8; faltam o modal de quem edita a Comunitária com "abre revisão em" (9), E2E e documentação (10) e o redesenho pelo Figma (11).
+Etapa 9 de 11 concluída (K-034 em Doing), na `feat/abre-revisao`: quem edita a etapa da matriz vê em quais projetos a mudança abre revisão (D-294), conferido pelo usuário na 8002 em 25/11. Plano: feitas 2 a 9; faltam E2E e documentação (10) e o redesenho pelo Figma (11). Suíte inteira depois da etapa 9: 1065 OK (9 pulados).
 Funcionando: `/ui/revisao/<pk>/` lista o que a base mudou na cópia do projeto, em 2 colunas ("No projeto" × "Na base agora") com diff por palavra; decisões primeiro, o que entra da base recolhido e pré-marcado; ordem num cartão por grupo; "Escrever outro texto" com as quebras de linha; "Concluir revisão" grava sob o bloqueio da etapa, passa pelo modal de impacto e fecha a pendência "base"; lista mudou no meio = 409 sem gravar. Entradas: selo "A base mudou" + link na aba Matriz do projeto e aviso no editor da cópia. Corrigidos no `concluir`: descritor de código "passo" e código com "/". Suíte Django inteira: 1061 OK (9 pulados) em 9 min; `makemigrations --check` limpo. Revisão por 3 revisores: 5 achados, todos corrigidos. Conferido pelo usuário na 8002 em 24/11 (AC, 5EF LP): selo e link na aba Matriz, tela de revisão com o diff e a revista com o texto do projeto.
-Quebrado/pendente: o modal de impacto e o item com imagem trocada ainda não foram vistos no navegador; `.inf-item` em `telas/revista.css:88` tem o mesmo defeito de borda (outra tela, não corrigido); descritor de código literal "X/100-150#1" ao lado de um "X" com essa tarefa gera a mesma chave na revisão (improvável, sem tratamento); imagem de antes apagada só tem aviso (D-283 4a aceito); quem edita a Comunitária ainda não vê quais projetos têm cópia (etapa 9); critério de aceite 5 no E2E (etapa 10); `trail check` aponta conflitos da branch contra a `main`: explicar no merge para a `main`; a stack da 8002 está com a 0027: para voltar à `main` nela, `migrate nucleo 0025` antes de trocar de branch; o banco do dev (8000) ainda tem a carga antiga.
+Quebrado/pendente: o modal de impacto e o item com imagem trocada ainda não foram vistos no navegador; `.inf-item` em `telas/revista.css:88` tem o mesmo defeito de borda (outra tela, não corrigido); descritor de código literal "X/100-150#1" ao lado de um "X" com essa tarefa gera a mesma chave na revisão (improvável, sem tratamento); imagem de antes apagada só tem aviso (D-283 4a aceito); critério de aceite 5 no E2E (etapa 10); `trail check` aponta conflitos da branch contra a `main`: explicar no merge para a `main`; a stack da 8002 está com a 0027: para voltar à `main` nela, `migrate nucleo 0025` antes de trocar de branch; o banco do dev (8000) ainda tem a carga antiga.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Planejar a etapa 9: o modal de quem edita a Comunitária passa a dizer em quais projetos a mudança abre revisão.
+Planejar a etapa 10: E2E da etapa do projeto (apontar, editar só neste projeto, revisar, desfazer) e documentação.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2388,6 +2388,14 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Arquivos afetados:** `app/nucleo/texto.py`, `app/nucleo/tests/test_texto.py`
 - **Status:** ativa
 
+### D-294 — Quem edita a etapa da matriz vê os projetos com cópia: aviso fixo no editor e linha no modal de impacto (2026-11-25 09:30)
+- **Contexto:** etapa 9 de 11. A D-279 pede que quem edita a base saiba que a mudança abre pendência nos projetos derivados. O modal de impacto só abre quando alguma revista validada perde o "Validado"; projeto com cópia e revista não validada cairia em revisão sem aviso.
+- **Decisão:** (escolha do usuário em 25/11) (1) aviso fixo no editor da etapa da matriz: "N projeto(s) têm cópia a partir desta etapa: … Mudança aqui abre revisão neles."; (2) o modal de impacto, quando abre, ganha a linha "Abre revisão em N projeto(s) com cópia desta etapa: …". Um só cálculo, `ui_matriz._abre_revisao(mec)` sobre `etapa_projeto.derivadas`, vai para o contexto da página (`_dono`) e para o modal do autosave (`responder_campo(aviso=…)`, que não torna o modal obrigatório). Etapa de projeto não avisa (clone de clone é proibido).
+- **Motivo:** o aviso fixo informa sem clique a mais, mesmo sem revista validada; o editor grava campo a campo, então um modal em toda gravação apareceria a cada campo.
+- **Descartadas:** modal em toda gravação de etapa com cópias — um modal por campo alterado; só a linha no modal — sem revista validada ninguém é avisado; lista com limite de nomes ("e mais N") — hoje são poucos projetos com cópia.
+- **Arquivos afetados:** `app/nucleo/urls/ui_matriz.py`, `app/nucleo/ui_autosave.py`, `app/nucleo/templates/ui/matriz/mec.html`, `app/nucleo/templates/ui/_componentes/impacto.html`, `app/nucleo/tests/test_ui_matriz.py`, `docs/regras-de-negocio.md`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (24/11, D-290; respondida em 24/11: segue a ordem do editor, D-291) A ordem dos descritores na revista é alfabética pelo código (D011 vem antes de D02), não a ordem arrastada no editor. É o que a Pedagógica quer? — depende de: Otavio
 - [x] (18/11, D-270) A demo do django-cotton convence? Se sim, adotar tela por tela (ordem sugerida: ícones, botão, campo, cabeçalho, card, modal) ou parar na demo — depende de: Otavio — respondida em 18/11: convence, adotar (D-271)
@@ -3065,3 +3073,6 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - Etapa 8 (K-034, D-292) na `feat/revisao-3-vias`: "ok" do usuário; 4 passos por TDD (serviço, leitura, gravação, entradas e documentos) e revisão por 3 revisores (5 achados corrigidos: texto vazio, byte nulo, borda do cartão, ordem só renumerada, `alt` da imagem). Suíte 1061 OK (9 pulados). `integ/etapa-do-projeto` avançada por fast-forward. Sem push.
 - Usuário conferiu a etapa 8 na 8002 (AC, 5EF LP): "parece que deu certo".
 - Diff da última palavra corrigido a pedido do usuário (D-293), na `fix/diff-ultima-palavra`: 2 testes novos vistos falhando; 109 testes OK em texto, impresso e revisão (suíte inteira não rodada). Conferido pelo usuário na 8002 e commitado a pedido dele. Etapas 9 a 11 ficam para 25/11.
+
+### 2026-11-25 09:00
+- Stack da 8002 religada. Etapa 9 (K-034, D-294) na `feat/abre-revisao`: o usuário escolheu aviso fixo + linha no modal; 2 testes vistos falhando (página e modal, inclusive pelo autosave em JSON) e depois passando; 195 testes OK nas telas afetadas. Conferido pelo usuário na 8002 e commitado a pedido dele; suíte inteira 1065 OK (9 pulados); `integ/etapa-do-projeto` avançada por fast-forward. Sem push.
