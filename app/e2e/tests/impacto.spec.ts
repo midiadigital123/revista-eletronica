@@ -2,7 +2,7 @@
 // confirmação num modal que lista as revistas; Esc cancela, devolve o nome antigo e o foco ao campo;
 // confirmar grava.
 // Monta a própria revista (revistaPropria: parceiro "E2E Impacto <sufixo>" em 2026, pronta para validar),
-// põe um fechamento com {{nome_parceiro}} e valida; o limpar.ts apaga no fim (D-224).
+// põe uma introdução com {{nome_parceiro}} e valida; o limpar.ts apaga no fim (D-224).
 // Preparar como em painel.spec.ts (criar_demo --ano 2026 e o superusuário e2e).
 import { expect, test } from "@playwright/test";
 import { entrar, liberarBloqueio, revistaPropria } from "./helpers";
@@ -11,15 +11,15 @@ test("renomear parceiro validado pela grade abre o modal; Esc volta o nome e o f
   const erros: string[] = [];
   page.on("pageerror", (e) => erros.push(e.message));
 
-  // 1. Revista própria pronta (revistaPropria); no admin, um fechamento com o nome do parceiro e o "Validado".
+  // 1. Revista própria pronta (revistaPropria); no admin, uma introdução com o nome do parceiro e o "Validado".
   await entrar(page);
   const { nome, revista } = await revistaPropria(page, "Impacto");
   const novo = `${nome} Novo`;
   await page.goto(`/admin/nucleo/revista/${revista}/change/`);
-  // O nome do parceiro só entra no hash se algum texto usa a variável: o fechamento passa a usar.
-  await page.fill("#id_secao__F1__fechamento", "Fechamento de {{nome_parceiro}}.");
+  // O nome do parceiro só entra no hash se algum texto usa a variável: a introdução passa a usar.
+  await page.fill("#id_secao__F1__introducao", "Introdução de {{nome_parceiro}}.");
   await page.click("input[name=_continue]");
-  await expect(page.locator(".messagelist")).toContainText("Textos do F1 salvos: fechamento.");
+  await expect(page.locator(".messagelist")).toContainText("Textos do F1 salvos: introducao.");
   await page.click("#botao-validado");
   await expect(page.locator(".messagelist")).toContainText("Revista validada.");
   await liberarBloqueio(page);

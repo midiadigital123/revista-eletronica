@@ -16,7 +16,7 @@ import { alpinePronto, atribuirEmMassa, entrar, infograficoMinimo, liberarBloque
 import { criarTemplate, excluirTemplate } from "./templates";
 
 const INTRO = "#id_secao__F1__introducao";
-const F1 = "## introducao\nIntrodução\n\nTexto E2E da introdução.\n\n## fechamento\nFechamento\n\nTexto E2E do fechamento.\n";
+const F1 = "## introducao\nIntrodução\n\nTexto E2E da introdução.\n";
 const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mP4/5oBAATXAesdPD2pAAAAAElFTkSuQmCC", "base64");
 
 test("revista: cópia por seção, aviso com diff e descartar", async ({ page }) => {
@@ -50,13 +50,12 @@ test("revista: cópia por seção, aviso com diff e descartar", async ({ page })
   await page.click("input[name=_continue]");
   await expect(page.locator(".messagelist")).toContainText("Textos do F1 salvos: introducao.");
   await expect(page.locator(".field-secao__F1__introducao .help")).toContainText("Texto editado nesta revista (cópia)");
-  await expect(page.locator(".field-secao__F1__fechamento .help")).toContainText("Texto do template");
 
   // 2. Versão nova do template próprio mudando a introdução (tela de impacto → confirmar).
   await page.goto(`/admin/nucleo/template/${proprio}/change/`);
   const texto = page.locator("#id_texto");
   const atual = await texto.inputValue();
-  const novo = atual.replace(/(## introducao\n[^\n]*\n\n[\s\S]*?)(\n+## )/, `$1 Atualizado ${marca}.$2`);
+  const novo = atual.replace(/\n*$/, ` Atualizado ${marca}.\n`)  // D-296: a introdução é a única seção do F1;
   expect(novo).not.toBe(atual);
   await texto.fill(novo);
   await page.click("input[name=_save]");

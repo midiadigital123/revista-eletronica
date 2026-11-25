@@ -8,11 +8,11 @@
 //   cd app/e2e && E2E_BASE_URL=http://localhost:8014 E2E_ADMIN_USUARIO=e2e E2E_ADMIN_SENHA=<senha> \
 //     npx playwright test painel
 // Grava só na revista que o teste monta (revistaPropria: parceiro "E2E Painel …", D-225): cópia do
-// fechamento do F1, valida e descarta a cópia. O limpar.ts apaga tudo no fim (D-224).
+// introdução do F1, valida e descarta a cópia. O limpar.ts apaga tudo no fim (D-224).
 import { expect, test, type Page } from "@playwright/test";
 import { entrar, filtrarFalta, filtrarPainel, revistaPropria } from "./helpers";
 
-const FECHAMENTO = "#id_secao__F1__fechamento";
+const CAMPO = "#id_secao__F1__introducao";
 
 async function liberarBloqueio(page: Page) {
   // Mesmo POST do sendBeacon do pagehide: fechar o contexto não dispara o pagehide.
@@ -60,9 +60,9 @@ test("painel: filtrar e validar uma revista", async ({ page }) => {
   // O nome leva à revista B; o roteiro edita no admin (mesma revista).
   await page.goto(`/admin/nucleo/revista/${await linha.getAttribute("data-revista")}/change/`);
   const urlRevista = page.url();
-  await page.fill(FECHAMENTO, `Fechamento ${marca}.`);
+  await page.fill(CAMPO, `Introdução ${marca}.`);
   await page.click("input[name=_continue]");
-  await expect(page.locator(".messagelist")).toContainText("Textos do F1 salvos: fechamento.");
+  await expect(page.locator(".messagelist")).toContainText("Textos do F1 salvos: introducao.");
   await expect(page.locator("#validacao")).not.toContainText("✓ Validado");
   await page.click("#botao-validado");
   await expect(page.locator(".messagelist")).toContainText("Revista validada.");
@@ -77,9 +77,9 @@ test("painel: filtrar e validar uma revista", async ({ page }) => {
 
   // 5. Limpa: descarta a cópia (o hash muda e o "Validado" cai).
   await page.goto(urlRevista);
-  await page.check("#id_descartar__F1__fechamento");
+  await page.check("#id_descartar__F1__introducao");
   await page.click("input[name=_continue]");
-  await expect(page.locator(".messagelist")).toContainText("Textos do F1 salvos: fechamento.");
+  await expect(page.locator(".messagelist")).toContainText("Textos do F1 salvos: introducao.");
   await expect(page.locator("#validacao")).not.toContainText("✓ Validado");
   expect(erros).toEqual([]);
 
