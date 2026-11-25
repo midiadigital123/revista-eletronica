@@ -30,6 +30,7 @@ Responder em uma tela "o que falta para cada revista do ano sair completa, e ond
   - Abaixo, uma sublinha por revista, na ordem dos componentes: selo LP/MT com o nome do componente (link para a revista) e "Preview" (nova aba; abre mesmo com pendências).
   - Colunas Matriz, Template F1, Template F2, Variáveis, Infográficos, Capa, Validado, Impresso. A coluna ativa fica destacada.
   - Célula: ✓ ou "falta" com a explicação no `title` e o link de correção. Impresso com ✓ também é link (mostra a última versão impressa).
+  - A coluna Matriz junta também as pendências da etapa do projeto: `etapa_sem_base` ("Etapa não canônica sem base: 4EF, 8EF. Aponte cada uma para uma etapa canônica.") e `base` ("A etapa 5EF tem mudanças da base para revisar."). As duas bloqueiam o "Validado" e levam à aba Matriz do projeto, onde ficam "Apontar" e "Revisar mudanças da base" (D-282, D-292; `urls/painel.py`: `COLUNAS`, `link`).
 - "Validado" e "Impresso" são calculados na hora: o "Validado" vale para a versão atual; o "Impresso" compara com a última foto impressa (só textos e escalas, inclusive os dos infográficos; capa e imagem dos itens não contam).
 - Revistas arquivadas ficam de fora.
 

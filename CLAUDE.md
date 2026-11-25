@@ -71,7 +71,8 @@ de importação: montar em `/pdfs` (`-v "<pasta>:/pdfs:ro"`); sem eles, 8 testes
 - Exclusão só do que nada usa, por `/ui/excluir/<modelo>/<pk>/` (D-205).
 - Todo projeto parte da matriz Comunitária; ajuste só de um projeto vai na cópia local da etapa × componente
   (`servicos/etapa_projeto.py`, botão "Editar só neste projeto"), que sempre vale sobre a matriz e recebe as
-  mudanças da base por revisão em 3 vias (D-280, D-288).
+  mudanças da base por revisão em 3 vias (D-280, D-288). Etapa não canônica nasce por "Apontar" (D-276);
+  "Desfazer" apaga a cópia (D-287); o editor da etapa da matriz avisa quais projetos têm cópia (D-294).
 - Nenhum segredo no repositório: credenciais só no `.env`.
 
 ### Revista (F1 e F2)

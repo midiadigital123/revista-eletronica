@@ -28,7 +28,9 @@ erDiagram
     etapa ||--o{ corte : ""
     componente ||--o{ corte : ""
 
-    matriz ||--o{ matriz_etapa_cc : "dividida em"
+    matriz |o--o{ matriz_etapa_cc : "dividida em"
+    projeto |o--o{ matriz_etapa_cc : "etapa do projeto (cópia)"
+    matriz_etapa_cc |o--o{ matriz_etapa_cc : "base de"
     etapa ||--o{ matriz_etapa_cc : ""
     componente ||--o{ matriz_etapa_cc : ""
     matriz_etapa_cc ||--o{ descritor : tem
@@ -88,7 +90,10 @@ erDiagram
         bigint duplicada_de_id FK "qualquer ano; SET NULL"
     }
     matriz_etapa_cc {
-        bigint matriz_id FK
+        bigint matriz_id FK "nulo na etapa do projeto"
+        bigint projeto_id FK "nulo na etapa da matriz (D-280)"
+        bigint base_id FK "etapa de matriz copiada; SET NULL"
+        jsonb base_foto "foto da base na cópia ou na última revisão"
         bigint etapa_id FK
         bigint componente_id FK
         bigint ano_id FK "só para FK composta"
@@ -233,7 +238,7 @@ Fonte: `Meta.constraints` de cada modelo em `app/nucleo/models/` e `app/nucleo/d
 | cor_padrao | UNIQUE (ano_id, padrao); CHECK padrao BETWEEN 1 AND 5; CHECK cor ~ '^#[0-9A-Fa-f]{6}$'; nome <= 200 | D-064, D-086, D-175 |
 | matriz | UNIQUE (ano_id, nome); UNIQUE (id, ano_id); CHECK duplicada_de_id <> id; FK `fk_matriz_duplicada_de` ON DELETE SET NULL; nome <= 200 | D-057, D-113, D-124 |
 | parceiro_ano | UNIQUE (parceiro_id, ano_id); UNIQUE (id, ano_id); FK composta (matriz_id, ano_id) | D-088, D-090 |
-| matriz_etapa_cc | UNIQUE (matriz_id, etapa_id, componente_id); FKs compostas (matriz, ano), (etapa, ano), (componente, ano) | D-053, D-090 |
+| matriz_etapa_cc | UNIQUE (matriz_id, etapa_id, componente_id) `matriz_etapa_cc_uniq`; UNIQUE parcial (projeto_id, etapa_id, componente_id) WHERE projeto_id IS NOT NULL `matriz_etapa_cc_projeto_uniq`; CHECK `matriz_etapa_cc_um_dono`: num_nonnulls(matriz_id, projeto_id) = 1 (por `RunSQL`); CHECK `matriz_etapa_cc_base_outra`: base_id <> id; CHECK `matriz_etapa_cc_base_tem_foto`: base_id IS NULL OR base_foto IS NOT NULL; FK `fk_matriz_etapa_cc_base` (base_id) ON DELETE SET NULL; trigger `matriz_etapa_cc_base_de_matriz`; FKs compostas (matriz, ano), (projeto, ano), (etapa, ano), (componente, ano) | D-053, D-090, D-280, D-289 |
 | descritor | UNIQUE (matriz_etapa_cc_id, codigo); codigo <= 20 | — |
 | tarefa | CHECK inicio < fim; arquivo <= 500; texto_alternativo <= 1000 | D-180 |
 | corte | UNIQUE (parceiro_ano_id, etapa_id, componente_id); CHECK cardinality(valores) BETWEEN 1 AND 4; CHECK array_position(valores, NULL) IS NULL; FKs compostas (parceiro_ano, ano), (etapa, ano), (componente, ano) | D-050, D-055, D-090 |
@@ -254,11 +259,11 @@ Fonte: `Meta.constraints` de cada modelo em `app/nucleo/models/` e `app/nucleo/d
 
 ## FKs compostas
 
-O ORM não as declara. Cada uma entra por `migrations.RunSQL` com `reverse_sql`, pela função `fk_composta` (`app/nucleo/db.py:21`): constraint `fk_<tabela>_<alvo>_ano` mais um índice próprio `ix_<tabela>_<alvo>_ano`. Ficam NO ACTION e MATCH SIMPLE, por isso toda coluna delas é NOT NULL, exceto `parceiro_ano.matriz_id` e `revista_fasciculo.template_id` (D-106). `app/nucleo/tests/test_constraints.py:9` confere a lista em `pg_constraint` (D-124). As migrações `0002` (matriz), `0003` (SET NULL de `duplicada_de`) e `0005` (projeto, revista, template) criam todas. Em migrações futuras sobre tabelas com dados, use `ADD CONSTRAINT … NOT VALID` seguido de `VALIDATE CONSTRAINT`.
+O ORM não as declara. Cada uma entra por `migrations.RunSQL` com `reverse_sql`, pela função `fk_composta` (`app/nucleo/db.py:21`): constraint `fk_<tabela>_<alvo>_ano` mais um índice próprio `ix_<tabela>_<alvo>_ano`. Ficam NO ACTION e MATCH SIMPLE, por isso toda coluna delas é NOT NULL, exceto `parceiro_ano.matriz_id` e `revista_fasciculo.template_id` (D-106) e, em `matriz_etapa_cc`, `matriz_id` e `projeto_id`: o CHECK `matriz_etapa_cc_um_dono` exige exatamente um dos dois (D-280). `app/nucleo/tests/test_constraints.py:9` confere a lista em `pg_constraint` (D-124). As migrações `0002` (matriz), `0003` (SET NULL de `duplicada_de`), `0005` (projeto, revista, template) e `0026` (etapa do projeto) criam todas. Em migrações futuras sobre tabelas com dados, use `ADD CONSTRAINT … NOT VALID` seguido de `VALIDATE CONSTRAINT`.
 
 | Tabela | FKs compostas |
 |---|---|
-| matriz_etapa_cc | `fk_matriz_etapa_cc_matriz_ano`, `_etapa_ano`, `_componente_ano` |
+| matriz_etapa_cc | `fk_matriz_etapa_cc_matriz_ano`, `_projeto_ano`, `_etapa_ano`, `_componente_ano` |
 | parceiro_ano | `fk_parceiro_ano_matriz_ano` |
 | corte | `fk_corte_parceiro_ano_ano`, `_etapa_ano`, `_componente_ano` |
 | projeto | `fk_projeto_parceiro_ano_ano` |
@@ -270,7 +275,9 @@ O ORM não as declara. Cada uma entra por `migrations.RunSQL` com `reverse_sql`,
 
 ## Triggers
 
-Um só: `template_versao_so_insert`, `BEFORE UPDATE OR DELETE ON template_versao FOR EACH ROW`. Vale para qualquer caminho (`QuerySet.update`, `bulk_update`, `save` com pk, SQL direto) e dispara `restrict_violation` (23001), que o Django entrega como `IntegrityError`.
+Dois: `template_versao_so_insert` e `matriz_etapa_cc_base_de_matriz` (abaixo). Os dois disparam `restrict_violation` (23001), que o Django entrega como `IntegrityError`; `test_constraints.py` confere a lista.
+
+`template_versao_so_insert`, `BEFORE UPDATE OR DELETE ON template_versao FOR EACH ROW`. Vale para qualquer caminho (`QuerySet.update`, `bulk_update`, `save` com pk, SQL direto) e dispara `restrict_violation` (23001), que o Django entrega como `IntegrityError`.
 
 - **Migração `0006`** (`app/nucleo/migrations/0006_template_versao_so_insert.py`): recusa UPDATE e DELETE sempre (D-125).
 - **Migração `0017`** (`app/nucleo/migrations/0017_versao_apagavel.py`): a função passa a deixar o DELETE passar quando a transação ligou `SET LOCAL revista.apagar_versoes = 'on'`. UPDATE segue recusado sempre. Quem liga a chave é só `app/nucleo/servicos/exclusao.py:162` (excluir template sem uso e apagar o ano inteiro) (D-206, D-207).
@@ -284,6 +291,23 @@ RAISE EXCEPTION 'template_versao_so_insert: % recusado; salve uma versão nova',
 ```
 
 O `TemplateVersao.save` também recusa a edição em Python, só para dar mensagem amigável (`app/nucleo/models/texto.py:69`).
+
+`matriz_etapa_cc_base_de_matriz`, `BEFORE INSERT OR UPDATE ON matriz_etapa_cc FOR EACH ROW` (migração `0026`, `app/nucleo/migrations/0026_etapa_do_projeto.py`; D-280):
+
+- recusa `base_id` que aponta para etapa de projeto (linha com `matriz_id IS NULL`): a base é sempre etapa de matriz, sem cópia de cópia;
+- recusa UPDATE que troca o `base_id` por outro valor não nulo: a base só se define no INSERT. Voltar a nulo passa (é o que o `ON DELETE SET NULL` faz quando a base é apagada), e religar uma cópia solta é recusado, porque a `base_foto` seria de outra base.
+
+O trigger não exige base: etapa de projeto sem base é a cópia solta, e a regra "toda cópia nasce com base" fica só em `servicos/etapa_projeto.py::criar` (D-282). Por isso `concluir` grava com `update_fields=["passo", "base_foto"]`, sem `base`.
+
+## Etapa do projeto (`matriz_etapa_cc` com `projeto_id`)
+
+A mesma tabela guarda a etapa × componente da matriz (`matriz_id`) e a cópia dela num projeto (`projeto_id`); descritores e tarefas ficam nas mesmas tabelas, ligados à linha da cópia (D-280, D-288).
+
+- `base_id`: a etapa de matriz de onde a cópia saiu. Na cópia local ("Editar só neste projeto"), é a própria etapa da matriz do parceiro; na etapa não canônica ("Apontar"), uma etapa canônica (2EF, 5EF, 9EF, 3EM) de qualquer matriz, de qualquer ano, do mesmo componente. Quem confere é `criar`, não o banco (D-276, D-282, D-289).
+- `base_foto`: o conteúdo da base (passo, descritores por código, tarefas por faixa) no momento da cópia; "Concluir revisão" troca pela foto da base de agora. Base atual diferente da foto = pendência `base` (`etapa_projeto.pendente`, D-284, D-292).
+- Quando o projeto tem a cópia, a revista usa a cópia; senão, a etapa da matriz (`etapa_projeto.vigente`, D-288). Não há coluna de escolha (a migração `0027` tirou a que a `0026` criava, D-289).
+- `projeto_id` é PROTECT: a etapa do projeto sai antes do projeto (`servicos/exclusao.py`, `limpar_e2e`). Matriz ou etapa que é base de cópia de projeto ativo não sai pela tela (impedimento "projetos com etapa derivada").
+- A cascata passa as cópias do projeto arquivado para o projeto novo do mesmo parceiro_ano (troca só o `projeto_id`, D-285). O `abrir_ano` não leva a etapa do projeto.
 
 ## Permissões e grupos
 
@@ -310,7 +334,7 @@ O Impresso nunca recebe `delete_*`. A tabela papel × ação completa está em [
 **ON DELETE:**
 - `PROTECT` em quase tudo (ano, parceiro, etapa, componente, matriz, template, template_versao, projeto, revista, foto_revista e os usuários que assinam versão, validação ou foto), para que nada de anos anteriores seja apagado em cascata.
 - `CASCADE` só onde há composição real: matriz_etapa_cc → descritor → tarefa (reimportação, D-094), revista → revista_fasciculo → revista_secao, e `bloqueio` (a trava é efêmera: some com o alvo ou com o usuário).
-- `SET NULL` só em `matriz.duplicada_de` (D-124), e esse é o único que existe também no banco.
+- `SET NULL` só em `matriz.duplicada_de` (D-124) e em `matriz_etapa_cc.base` (D-280), e são os únicos que existem também no banco (`fk_matriz_duplicada_de`, `fk_matriz_etapa_cc_base`).
 - O Django emula `on_delete` em Python; no banco, todas as outras FKs ficam NO ACTION. Por isso o `DELETE` direto de um alvo com trava é recusado pelo banco.
 - Excluir pela tela segue a regra "só o que nada usa" (D-205, `app/nucleo/servicos/exclusao.py`). `app/nucleo/tests/test_exclusao.py` lista toda FK que não é PROTECT, para nenhuma cascata nova apagar histórico.
 
@@ -328,7 +352,9 @@ O Impresso nunca recebe `delete_*`. A tabela papel × ação completa está em [
 - **Clique com versão:** "Validado" e "Revista Impressa Atualizada" enviam o hash visto, e o servidor recusa se o atual for outro (D-089). Em lote, vale a mesma regra por revista: o lote envia pares (revista, hash) (D-120).
 - **"Validado" é recusado se:**
   - parceiro_ano não tiver matriz;
-  - algum corte não tiver matriz_etapa_cc na matriz escolhida;
+  - algum corte de etapa canônica não tiver matriz_etapa_cc na matriz escolhida nem cópia no projeto (`corte_sem_matriz`);
+  - algum corte de etapa não canônica não tiver cópia apontada para uma base (`etapa_sem_base`, D-282);
+  - a base de uma cópia do projeto tiver mudado sem revisão (`base`, D-292);
   - os cortes estiverem fora de ordem ou da escala (defensivo, `corte_invalido`);
   - faltar template no F1 ou no F2;
   - faltar dado num infográfico ativo (habilidade, ou passo ligado sem o que ele mostra);
@@ -336,7 +362,7 @@ O Impresso nunca recebe `delete_*`. A tabela papel × ação completa está em [
   - alguma variável usada estiver vazia;
   - o nome ainda terminar em " - NOME DO PROJETO".
 
-  As mesmas condições alimentam o Painel da temporada (`app/nucleo/servicos/pendencias.py:88`; D-093, D-106, D-112, D-120, D-237).
+  As mesmas condições alimentam o Painel da temporada (`app/nucleo/servicos/pendencias.py:103`; D-093, D-106, D-112, D-120, D-237).
 - **Preview:** abre sempre; texto sem template ou variável vazia aparece como faixa vermelha (D-116).
 - **Cascata num ponto só:** gravar cortes cria ou reativa revistas e projetos, ou arquiva os que ficaram sem cortes, num único serviço. A transação começa com `SELECT … FOR UPDATE` na linha de parceiro_ano (D-093, D-117).
 - **Arquivar a revista congela:** grava `foto_revista(motivo='arquivamento')` e a revista arquivada mostra essa foto. Quando os cortes voltam, a mesma linha é reativada. O projeto é arquivado quando todas as revistas dele estiverem arquivadas (D-117).
@@ -348,7 +374,7 @@ O Impresso nunca recebe `delete_*`. A tabela papel × ação completa está em [
   - O relógio é sempre o `now()` do banco. Toda rota de escrita confere o bloqueio na mesma transação, com `SELECT … FOR SHARE` (`bloqueio.py:83`). Ações em lote pulam alvos travados e listam os pulados (D-081, D-121).
 - **Template salvo:** cada salvamento insere uma template_versao; não há UPDATE de texto. Antes de salvar, a tela lista as revistas afetadas, com as seções que têm cópia e se já há foto do impresso (D-099, D-125).
 - **SVG do F2:** não há upload; o servidor gera o SVG a partir dos infográficos da revista (D-239). As colunas `svg_f2`, `svg_sha256` e `svg_ids` e o sanitizador saíram na migração 0024 (fase 4 do F2).
-- **Abrir ano:** serviço `abrir_ano` (`app/nucleo/servicos/abrir_ano.py:43`), chamado pela tela `/ui/anos/` (D-192) e pelo comando `manage.py abrir_ano N`. Só abre o ano seguinte ao maior existente. Roda numa única transação, começando pelo `INSERT` em ano, de modo que o UNIQUE barra o segundo clique. Copia só cadastros (etapa, componente, cor_padrao, matriz com matriz_etapa_cc, descritor e tarefa, template com a última versão) usando um mapa de ids antigo→novo. Cortes, parceiro_ano, projetos e escolhas **não** passam, e `duplicada_de` aponta para a origem no ano anterior (D-119, D-124).
+- **Abrir ano:** serviço `abrir_ano` (`app/nucleo/servicos/abrir_ano.py:43`), chamado pela tela `/ui/anos/` (D-192) e pelo comando `manage.py abrir_ano N`. Só abre o ano seguinte ao maior existente. Roda numa única transação, começando pelo `INSERT` em ano, de modo que o UNIQUE barra o segundo clique. Copia só cadastros (etapa, componente, cor_padrao, matriz com matriz_etapa_cc, descritor e tarefa, template com a última versão) usando um mapa de ids antigo→novo. Cortes, parceiro_ano, projetos, etapas do projeto e escolhas **não** passam, e `duplicada_de` aponta para a origem no ano anterior (D-119, D-124).
 - **Seed dos cadastros:** `manage.py carregar_cadastros --ano N` cria ano, etapas, componentes e cores/nomes dos padrões, sem alterar o que já existe. Os limites de escala (2EF = 1000; 5EF, 9EF e 3EM = 500) só existem aqui, como valor inicial de `Etapa.escala_max` (`app/nucleo/management/commands/carregar_cadastros.py:6`).
 - **Seed dos templates:** comando `carregar_templates --ano 2026` lê os `.hbs` do repositório, cria o template (`origem` = nome do arquivo) com a versão 1 e nunca sobrescreve. Daí em diante, a fonte é o banco (D-098).
 

@@ -2,6 +2,17 @@
 
 Data: 2026-11-06 · Decisões: D-279, D-280, D-281 (`state.md`) · Status: aprovado pelo usuário em 06/11
 
+> **Nota de 25/11/2026: substituído em parte por D-276, D-288, D-289, D-292 e D-294.** O texto abaixo fica como registro do desenho de 06/11. O que mudou:
+>
+> - Não existe mais etapa "em branco": toda cópia nasce de uma base (D-276).
+> - Qualquer etapa que a matriz do parceiro tem pode ganhar cópia local, pelo botão "Editar só neste projeto"; a base é a própria etapa da matriz (D-288, D-289).
+> - Quando o projeto tem cópia, ela sempre vale: saíram a pendência de escolha, os botões "manter a do projeto / usar a da matriz" e a coluna que guardava a escolha (D-288, D-289).
+> - Etapa não canônica (fora de 2EF, 5EF, 9EF, 3EM) só nasce apontada para uma etapa canônica de alguma matriz, do mesmo componente (D-276).
+> - A revisão em 3 vias é uma tela própria, `/ui/revisao/<pk>/`, com 2 colunas e diff por palavra; "Concluir revisão" fica sempre ativo (D-292).
+> - Quem edita a etapa da matriz vê um aviso fixo com os projetos que têm cópia, e o modal de impacto ganha a linha desses projetos (D-294).
+>
+> O que vale hoje: [`docs/regras-de-negocio.md`](../../regras-de-negocio.md), [`docs/modelo-er.md`](../../modelo-er.md) e [`docs/telas/fichas/projeto.md`](../../telas/fichas/projeto.md).
+
 ## 1. Intenção e porquê
 
 Alguns parceiros avaliam etapas que a matriz deles não tem, como 4EF, 6EF e 8EF. Para montar essas escalas,

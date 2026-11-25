@@ -25,6 +25,7 @@ Cuidar da matriz de referência do ano: ver quais matrizes existem, criar uma a 
 3. **Reimportar** — envio do arquivo com confirmação forte.
 4. **Diferenças** — o que a cópia tem de diferente da origem (só consulta).
 5. **Etapa × componente** — cabeçalho com o título ("5EF Língua Portuguesa"), a linha de contexto (matriz, escala, revistas afetadas), o status do salvamento e o botão "Configurações" (popover com o intervalo mínimo); lista de descritores com "+ Novo descritor" e busca à esquerda; painel do descritor à direita (campos, tarefas, arquivo do item e, no fim, a zona de perigo "Excluir descritor").
+   A mesma página abre a **etapa do projeto** (a cópia criada na aba Matriz do projeto, D-280, D-288), pelo mesmo endereço `/ui/matriz/mec/<pk>/`: a linha de contexto e o título da aba trazem o nome do projeto no lugar da matriz, e o link de voltar leva à aba Matriz do projeto. O que se grava ali vale só para aquele projeto.
 6. **Excluir tarefa / Excluir descritor** — confirmação forte com as revistas afetadas.
 7. **Excluir matriz** — a página comum de exclusão (`ui/excluir.html`, D-205): em uso, lista os parceiros que a usam e o bloqueio de outra pessoa, com links, e não apaga; livre, pede o nome da matriz.
 
@@ -35,6 +36,8 @@ Cuidar da matriz de referência do ano: ver quais matrizes existem, criar uma a 
 - Etapa × componente: intervalo mínimo; descritores (código, descrição); contagem "N de M descritores" na busca.
 - Descritor: código, descrição, pré-requisitos (um por linha), práticas, conhecimento, habilidades relacionadas e correspondente; tarefas (início, fim, texto) com a faixa da tarefa desenhada na escala da etapa e o tipo do arquivo do item quando houver. A ordem não é campo: descritores e tarefas se reordenam pela alça.
 - Impacto: "Afeta N revista(s) ativa(s)"; no arquivo do item e na exclusão, também quantas perdem o "Validado".
+- Etapa da matriz que algum projeto ativo copiou: o aviso fixo "N projeto(s) têm cópia a partir desta etapa: <projetos>. Mudança aqui abre revisão neles." (D-294), com ou sem revista validada. Não aparece na etapa do projeto.
+- Etapa do projeto cuja base mudou sem revisão: o aviso "A base desta etapa mudou depois que o projeto copiou." com o link "Revisar mudanças da base" (`/ui/revisao/<pk>/`, D-292).
 - Diferenças: onde, o quê, na origem, nesta matriz.
 
 ## Dados gravados (pela mesma regra do admin)
@@ -70,7 +73,8 @@ Cuidar da matriz de referência do ano: ver quais matrizes existem, criar uma a 
 
 - **Vazio:** ano sem matriz → "Nenhuma matriz em 2027" com "Nova matriz" e, se houver matriz em outro ano, o caminho para duplicá-la. Etapa × CC sem descritor → "Nenhum descritor" com "Novo descritor". Busca sem resultado → "Nenhum descritor com “<busca>” no código ou no texto." Sem ano aberto → aviso com o link "Abra um ano" (`/ui/anos/`, com `abrir_ano`).
 - **Erro de validação:** a página/painel volta com os erros no campo e a mensagem "Nada foi gravado: corrija os erros marcados."
-- **Impacto:** a gravação que tira o "Validado" não grava: abre o modal "<Ação> tira o “Validado” de N revista(s)" com a lista. Confirmar grava; Cancelar ou Esc volta o valor anterior e o foco. No arquivo do item, a lista aparece dentro do próprio modal do item, e o botão vira "Enviar e tirar Validado".
+- **Impacto:** a gravação que tira o "Validado" não grava: abre o modal "<Ação> tira o “Validado” de N revista(s)" com a lista. Confirmar grava; Cancelar ou Esc volta o valor anterior e o foco. No arquivo do item, a lista aparece dentro do próprio modal do item, e o botão vira "Enviar e tirar Validado". Na etapa da matriz com cópia em projeto, o modal ganha a linha "Abre revisão em N projeto(s) com cópia desta etapa: <projetos>." (D-294); a linha não abre o modal sozinha: sem revista validada que mude, a gravação segue direto e só o aviso fixo da página informa.
+- **Só leitura (projeto arquivado):** a etapa de projeto arquivado mostra "Só leitura: o projeto desta etapa está arquivado.", não toma o bloqueio e recusa POST (403).
 - **Só leitura (perfil):** "Só leitura: seu perfil vê a matriz, mas não altera. Para editar, peça a permissão de matriz a um administrador." Campos desabilitados, sem botões de gravar.
 - **Só leitura (bloqueio):** "Somente leitura: Ana está editando (bloqueio até 14:32:10, …). Recarregue para tentar editar." Perdeu o bloqueio no meio: o formulário para de enviar e avisa.
 - **Sucesso:** mensagem no topo (lista de mensagens), painel atualizado no lugar.
@@ -83,6 +87,8 @@ Cuidar da matriz de referência do ano: ver quais matrizes existem, criar uma a 
 - Tarefa nova pelo autosave: "Tarefa nova: preencha a linha e use Incluir tarefa."
 - Reordenar com a lista velha: "A lista mudou depois que a página abriu (linha criada ou excluída). Recarregue a página e reordene de novo."
 - "Nada foi excluído: o código não confere. Digite {código} exatamente." (da regra existente)
+- "{N} projeto(s) têm cópia a partir desta etapa: {projetos}. Mudança aqui abre revisão neles." · no modal de impacto: "Abre revisão em {N} projeto(s) com cópia desta etapa: {projetos}."
+- "A base desta etapa mudou depois que o projeto copiou. Revisar mudanças da base" · "Só leitura: o projeto desta etapa está arquivado."
 
 ## Regras de permissão
 
@@ -165,10 +171,13 @@ O elemento que marca a tela: a **faixa da tarefa na escala** (barra fina de 0 ao
 9. Excluir tarefa/descritor pede o código digitado; código errado não exclui; certo exclui e volta com a mensagem.
 10. Excluir matriz: a zona de perigo fica no fim da Matriz, só para quem tem `delete_matriz`; a matriz usada por algum parceiro mostra o que impede e não apaga; a livre sai digitando o nome e volta à lista do ano.
 11. Outra pessoa com a etapa × CC aberta: segunda pessoa vê "Somente leitura: … está editando" e não grava.
+12. A etapa do projeto abre no mesmo editor, com o nome do projeto no contexto e o voltar para a aba Matriz do projeto; gravar nela não muda a matriz. Em projeto arquivado: só leitura e POST 403.
+13. A etapa da matriz com cópia em projeto ativo mostra o aviso com os nomes dos projetos; quando o modal de impacto abre, traz a linha "Abre revisão em N projeto(s)…". A etapa do projeto não mostra o aviso.
 
 ## Referências técnicas
 
 - Regra: `app/nucleo/admin/matriz.py` (formulários, impacto, exclusão), `app/nucleo/matriz.py` (reimportar, arquivo do item, `com_afetadas` e `excluir`, extraídos do admin), `app/nucleo/servicos/matriz.py`, `app/nucleo/servicos/arquivos.py`.
 - Bloqueio: `app/nucleo/ui_bloqueio.py` (`com_bloqueio`, alvo = etapa × CC).
 - Visual: `editor/src/projetos/ano/TelaAno.tsx`, `ListaDescritores.tsx`, `TelaDescritor.tsx`.
-- Decisões: D-053, D-071, D-076, D-081, D-091, D-101, D-113, D-155, D-180, D-181, D-183, D-185, D-186, D-205.
+- Etapa do projeto no editor e aviso das cópias: `app/nucleo/urls/ui_matriz.py` (`_mec`, `_alvo_mec`, `_dono`, `_abre_revisao`), `servicos/etapa_projeto.py` (`derivadas`, `pendente`), `templates/ui/matriz/mec.html`, `templates/ui/_componentes/impacto.html`, `ui_autosave.py` (`responder_campo(aviso=…)`).
+- Decisões: D-053, D-071, D-076, D-081, D-091, D-101, D-113, D-155, D-180, D-181, D-183, D-185, D-186, D-205, D-280, D-286, D-292, D-294.

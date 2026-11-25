@@ -22,7 +22,7 @@ Dar o "Validado" a várias revistas de uma vez, depois de conferir o que mudou e
 
 - Nome da revista (projeto · componente).
 - Estado: **Pronta para validar**, **Validada nesta versão** (com quem e quando), **N pendência(s)** e, à parte, **Em edição por <nome>** (será pulada; o bloqueio do próprio usuário não conta: o lote o toma, D-191/D-221).
-- Pendências que impedem o "Validado", cada uma com o link para onde se resolve.
+- Pendências que impedem o "Validado", cada uma com o link para onde se resolve. Entre elas, as da etapa do projeto: etapa não canônica sem base (`etapa_sem_base`) e cópia cuja base mudou sem revisão (`base`); as duas levam à aba Matriz do projeto (D-282, D-292).
 - Seções desatualizadas em relação ao template (só aviso; não impede).
 - Mudanças desde a última versão impressa (diff "Última impressa" × "Agora", só os trechos alterados), recolhidas por padrão. Sem foto do impresso: "Primeira impressão: não há versão impressa para comparar." Sem diferença: "Sem mudanças desde a última impressa."
 

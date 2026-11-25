@@ -49,6 +49,8 @@ O `globalTeardown` (`app/e2e/limpar.ts`) roda `manage.py limpar_e2e --usuario <E
 
 - Apaga os parceiros "E2E …" (com parceiro-ano, cortes, projetos e revistas que a cascata criou), as matrizes "E2E …" e os templates "E2E …". Só os que o usuário de teste criou: o registro de criação no histórico é dele.
 - Matriz e template saem pela regra da tela (D-205, D-207). Em uso, ficam, e o comando avisa.
+- Cópias de etapa do projeto (D-280): as dos projetos dos parceiros "E2E …" saem com descritores e tarefas, antes do projeto e antes das matrizes; assim a matriz "E2E …" que serviu de base fica livre e sai em seguida.
+- Risco conhecido (D-283, item 4c): matriz "E2E …" usada de base por projeto que não é "E2E …". Com o projeto ativo, a matriz fica ("Em uso, ficaram: …"), mas a dica da mensagem só fala em template da revista e matriz do parceiro: a saída é desfazer a cópia naquele projeto. Com o projeto arquivado, a matriz sai e a cópia dele fica sem base (`ON DELETE SET NULL`). Por isso o spec só cria cópia em projeto "E2E …".
 - Só roda com DEBUG. Se a limpeza falhar, a execução só avisa. À mão: `docker compose exec app python manage.py limpar_e2e` (`--simular` lista o que sairia).
 
 ## Spec só edita o que criou (D-225)
@@ -61,3 +63,13 @@ O spec cria o próprio parceiro "E2E …", e a cascata gera o projeto e a revist
 - `revistaPropria`: o mesmo, com matriz, templates, infográfico e capa, pronta para validar (6 de 6).
 - `matrizPropria`: cópia "E2E …" da matriz Demonstração, para os specs que editam matriz.
 - `revistaDemo`: a revista LP da demonstração, só para os specs que leem.
+
+## Etapa do projeto (`etapa-projeto.spec.ts`)
+
+Cobre o fluxo da cópia local na aba Matriz do projeto. Cada teste cria a própria matriz (`matrizPropria`) e a própria revista com ela (`revistaPropria`); nunca a Demonstração, porque a cópia derivada dela faria o aviso do editor aparecer nos outros specs. A cópia se edita sempre pela tela B.
+
+1. **Cópia local, edição isolada e desfazer:** "Editar só neste projeto" abre o editor da cópia; o texto mudado aparece no preview da revista e não na etapa da matriz, cujo editor mostra "1 projeto(s) têm cópia a partir desta etapa: …"; "Desfazer a cópia", digitando a etapa e o componente, volta a linha a "usa a matriz".
+2. **A base mudou:** com a matriz mudada depois da cópia, a aba Matriz mostra "A base mudou" e o "Validado" é recusado (pendência `base`); "Revisar mudanças da base" → escolha → "Concluir revisão" tira o selo e a revista valida.
+3. **Modal de impacto e impresso:** com a revista validada e impressa, mudar a matriz abre o modal com "Abre revisão em 1 projeto(s) com cópia desta etapa: …"; depois da revisão e de um descritor novo na cópia, o Impresso vê os dois em "o que mudou".
+
+Fora do E2E, cobertos por teste Django: "Apontar" (pede etapa não canônica fixa no banco, que viraria coluna em todos os specs de cortes), item com imagem trocada e o modal de impacto ao concluir a revisão.

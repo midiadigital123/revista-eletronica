@@ -133,6 +133,8 @@ Fichas de cada tela: [`docs/telas/telas-b.md`](docs/telas/telas-b.md).
    Se a matriz muda depois que um projeto copiou a etapa ("Editar só neste projeto"), a revista dele
    ganha a pendência "base": na aba Matriz do projeto, a linha mostra "A base mudou" → **Revisar
    mudanças da base** (`/ui/revisao/<pk>/`) → **Concluir revisão** → validar a revista de novo.
+   Na mesma aba: **Apontar** liga a etapa não canônica (4EF, 8EF…) a uma etapa canônica, e **Desfazer** apaga a cópia (pede a etapa e o componente digitados).
+   No editor da etapa da matriz, um aviso lista os projetos com cópia: "Mudança aqui abre revisão neles."
 4. **Cortes** (hub **Projetos**, aba Cortes): digitar os cortes de cada parceiro cria o projeto e as
    revistas dele.
 5. **Em massa** (hub Projetos, aba Lista): "Atribuir matriz…" e "Atribuir template…".
