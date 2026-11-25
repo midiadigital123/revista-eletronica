@@ -157,9 +157,10 @@ def matriz(request, pk):
     })  # fmt: skip
 
 
-def _form_em_dialogo(request, m, chave, form, titulo, url, ano=None):
-    """Erro: HTMX devolve o form para dentro do modal; sem JS, a página do form. `ano` quando ainda não há matriz."""
-    contexto = {**_contexto_ano(ano or m.ano), "matriz": m, "form": _estilo(form), "titulo": titulo, "url": url, "chave": chave}
+def _form_em_dialogo(request, m, chave, form, titulo, url, ano=None, **extra):
+    """Erro: HTMX devolve o form para dentro do modal; sem JS, a página do form. `ano` quando ainda não há
+    matriz (matriz nova, etapa do projeto); `extra` vai para o contexto (o voltar da etapa do projeto)."""
+    contexto = {**_contexto_ano(ano or m.ano), "matriz": m, "form": _estilo(form), "titulo": titulo, "url": url, "chave": chave, **extra}
     if e_htmx(request):
         return TemplateResponse(request, "ui/parciais/matriz_form.html", contexto)
     return TemplateResponse(request, "ui/matriz/form.html", contexto)
@@ -493,7 +494,9 @@ def novo_descritor(request, pk):
         _avisar(request, m, form)
         return _redirecionar(request, _url_descritor(m, d))
     url = reverse("ui_matriz_novo", args=[m.pk])
-    return _form_em_dialogo(request, m.matriz, "novo", form, f"Novo descritor em {m.etapa.codigo} {m.componente.codigo}", url)
+    # Na etapa do projeto não há matriz (D-280): o ano vem da etapa e o voltar leva ao projeto.
+    titulo = f"Novo descritor em {m.etapa.codigo} {m.componente.codigo}"
+    return _form_em_dialogo(request, m.matriz, "novo", form, titulo, url, ano=m.ano, **_dono(m))
 
 
 @require_GET

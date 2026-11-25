@@ -725,6 +725,18 @@ class MecDeProjetoTest(BaseMundo):
         # Etapa da matriz não tem base: sem aviso (e sem quebrar).
         self.assertNotContains(self.client.get(reverse("ui_matriz_mec", args=[self.mec.base_id])), "A base desta etapa mudou")
 
+    def test_novo_descritor_com_erro_volta_ao_form_na_etapa_do_projeto(self):
+        """Etapa 10: o form que volta (código repetido) não quebra sem matriz; o voltar leva ao projeto."""
+        url = reverse("ui_matriz_mec", args=[self.mec.pk])
+        sessao = self.client.get(url).wsgi_request.bloqueio["sessao"]
+        dados = {CAMPO_SESSAO: sessao, "codigo": self.d.codigo, "descricao": "Repetido."}
+        novo = reverse("ui_matriz_novo", args=[self.mec.pk])
+        resp = self.client.post(novo, dados)
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, f'href="{self.url_projeto}"')
+        self.assertEqual(self.client.post(novo, dados, **HX).status_code, 200)
+        self.assertEqual(Descritor.objects.filter(matriz_etapa_cc=self.mec, codigo=self.d.codigo).count(), 1)
+
     def test_editor_da_base_avisa_quais_projetos_tem_copia(self):
         """Etapa 9: quem edita a etapa da matriz vê os projetos que a usam de base; a cópia não avisa."""
         resp = self.client.get(reverse("ui_matriz_mec", args=[self.mec.base_id]))
