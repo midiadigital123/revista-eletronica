@@ -464,6 +464,7 @@ def desfazer_etapa(request, pk, mec):
     codigo = f"{m.etapa.codigo} {m.componente.codigo}"
     form = ExcluirForm(request.POST or None, codigo=codigo)
     revistas = list(_revistas(projeto).filter(componente_id=m.componente_id))
+    volta_matriz = mecs_por_etapa(projeto, m.componente_id, [m.etapa_id])[m.etapa_id][0]  # cópia local (D-288)
     perdem = perdem_validado(lambda: desfazer(m, request.user), revistas)
     if request.method == "POST" and form.is_valid():
         outro = bloqueio.quem_bloqueia(m)
@@ -471,7 +472,7 @@ def desfazer_etapa(request, pk, mec):
             messages.error(request, f"Não desfeito: {outro.usuario} está editando esta etapa. Tente de novo quando a pessoa fechar o editor.")
             return redirect(request.path)
         desfazer(m, request.user)
-        messages.success(request, f"Apontamento de {codigo} desfeito.")
+        messages.success(request, f"Cópia de {codigo} desfeita." if volta_matriz else f"Apontamento de {codigo} desfeito.")
         if perdem:
             avisar_perdidos(request, perdem, projeto.ano.ano)
         return redirect(aba)
@@ -479,7 +480,7 @@ def desfazer_etapa(request, pk, mec):
     return TemplateResponse(request, "ui/projeto/desfazer_etapa.html", {
         "projeto": projeto, "mec": m, "codigo": codigo, "form": form, "voltar": aba, "ano": projeto.ano, "secao": "projetos",
         "revistas": [(r, r in perdem) for r in revistas], "validadas": len(perdem), "pode_gravar": request.pode_gravar,
-        "volta_matriz": mecs_por_etapa(projeto, m.componente_id, [m.etapa_id])[m.etapa_id][0],
+        "volta_matriz": volta_matriz,
         "descritores": m.descritor_set.count(), "tarefas": Tarefa.objects.filter(descritor__matriz_etapa_cc=m).count(),
     })  # fmt: skip
 

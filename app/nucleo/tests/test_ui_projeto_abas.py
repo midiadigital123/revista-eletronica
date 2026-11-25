@@ -455,3 +455,20 @@ class EditarSoNesteProjetoTest(EtapaNaoCanonica):
         from nucleo.servicos.resolver import resolver
 
         self.assertEqual(resolver(carregar(self.go["LP"].pk))["f1"]["dados"]["5ef"]["D01"]["description"], "Descritor 1 LP")
+
+    def test_desfazer_copia_local_diz_desfazer_a_copia(self):
+        """A página usa o mesmo nome do link da aba Matriz: "a cópia" na cópia local, "o apontamento" na apontada."""
+        mec = criar(self.projeto_go, self.e5, self.lp, self.ped)
+        url = reverse("ui_projeto_etapa_desfazer", args=[self.projeto_go.pk, mec.pk])
+        r = self.client.get(url)
+        self.assertContains(r, "Desfazer a cópia de 5EF LP")
+        self.assertContains(r, ">Desfazer a cópia</button>")
+        self.assertNotContains(r, "apontamento")
+        r = self.client.post(url, {"confirmacao": "5EF LP", CAMPO_SESSAO: r.wsgi_request.bloqueio["sessao"]}, follow=True)
+        self.assertContains(r, "Cópia de 5EF LP desfeita.")
+        self.assertNotContains(r, "Apontamento de 5EF LP desfeito")
+        apontada = criar(self.projeto_go, self.e4, self.lp, self.ped, base=self.mec5)
+        r = self.client.get(reverse("ui_projeto_etapa_desfazer", args=[self.projeto_go.pk, apontada.pk]))
+        self.assertContains(r, "Desfazer o apontamento de 4EF LP")
+        self.assertContains(r, ">Desfazer o apontamento</button>")
+        self.assertNotContains(r, "Desfazer a cópia")

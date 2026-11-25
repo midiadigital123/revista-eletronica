@@ -1,13 +1,13 @@
 {% extends "ui/base.html" %}
 {% load static %}
-{% comment %}Desfazer o apontamento de uma etapa não canônica (D-287): confirmação forte como a da exclusão de
+{% comment %}Desfazer o apontamento de uma etapa não canônica (D-287) ou a cópia local (D-288): confirmação forte como a da exclusão de
 descritor (D-181), com as revistas que perdem o "Validado". Bloqueio: o da ficha do projeto.{% endcomment %}
-{% block titulo %}Desfazer o apontamento de {{ codigo }}{% endblock %}
+{% block titulo %}Desfazer {% if volta_matriz %}a cópia{% else %}o apontamento{% endif %} de {{ codigo }}{% endblock %}
 {% block cabeca %}<link rel="stylesheet" href="{% static 'ui/telas/matriz.css' %}">{% endblock %}
 
 {% block conteudo %}
 <c-voltar href="{{ voltar }}">Voltar sem desfazer</c-voltar>
-<c-pagina-cab titulo="Desfazer o apontamento de {{ codigo }}">
+<c-pagina-cab titulo="Desfazer {% if volta_matriz %}a cópia{% else %}o apontamento{% endif %} de {{ codigo }}">
   <p class="mudo">{{ projeto.nome }}{% if mec.base %} · base: {{ mec.base.etapa.codigo }} da {{ mec.base.matriz }}{% endif %}. Desfazer apaga a cópia do projeto: {{ descritores }} descritor(es) e {{ tarefas }} tarefa(s), com tudo o que foi editado nela. A base não muda, e {% if volta_matriz %}a revista volta a usar a etapa da matriz{% else %}a etapa volta a ficar sem base, pronta para ser apontada de novo{% endif %}.</p>
 </c-pagina-cab>
 
@@ -31,7 +31,7 @@ descritor (D-181), com as revistas que perdem o "Validado". Bloqueio: o da ficha
   {% include "ui/_componentes/confirmar.html" with nome="confirmacao" codigo=codigo texto="Confira acima o que sai: desfazer não se desfaz pela tela." erro=form.confirmacao.errors.0 %}
   <div class="acoes matriz-fim">
     <c-botao variante="outline" href="{{ voltar }}">Voltar sem desfazer</c-botao>
-    <c-botao variante="destrutivo" type="submit" data-confirmado>Desfazer o apontamento</c-botao>
+    <c-botao variante="destrutivo" type="submit" data-confirmado>Desfazer {% if volta_matriz %}a cópia{% else %}o apontamento{% endif %}</c-botao>
   </div>
 </form>
 {% endif %}
