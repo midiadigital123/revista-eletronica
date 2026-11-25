@@ -36,6 +36,10 @@ todo pedido HTMX; os forms também a levam, para funcionar sem JS).
 {% include "ui/_componentes/so_leitura.html" with texto="Só leitura: o projeto desta etapa está arquivado." %}
 {% endif %}
 
+{% if abre_revisao %}
+<c-aviso tag="p" variante="alerta">{{ abre_revisao|length }} projeto(s) têm cópia a partir desta etapa: {{ abre_revisao|join:", " }}. Mudança aqui abre revisão neles.</c-aviso>
+{% endif %}
+
 {% if revisar %}
 <c-aviso tag="p" variante="alerta">A base desta etapa mudou depois que o projeto copiou. <a class="link" href="{% url 'ui_revisao' mec.pk %}">Revisar mudanças da base</a></c-aviso>
 {% endif %}

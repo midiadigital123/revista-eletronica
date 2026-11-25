@@ -333,7 +333,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 
 **Modal de impacto (D-202)**: nas telas B, a gravação que tira o Validado de alguma revista **não grava**; o servidor devolve a lista e a tela abre o modal. Gravação que só afeta revistas não validadas grava direto, sem modal. O cálculo simula a gravação num savepoint desfeito e compara o hash (`app/nucleo/servicos/impacto.py:23`, D-196, D-202). O admin mantém o checkbox "Confirmo: afeta N revista(s)" (`app/nucleo/matriz.py:130-155`).
 
-**Revisão da base da etapa do projeto (D-280, D-284)**: quando a etapa de matriz de onde a etapa do projeto foi clonada muda, a revista ganha a pendência `base` e perde o Validado. A saída é concluir a revisão na tela "Revisar mudanças da base" (`/ui/revisao/<pk>/`, rota `ui_revisao`, `app/nucleo/urls/ui_revisao.py`, D-292); a regra fica em `app/nucleo/servicos/etapa_projeto.py` (`pendente`, `revisao`, `concluir`).
+**Revisão da base da etapa do projeto (D-280, D-284)**: quando a etapa de matriz de onde a etapa do projeto foi clonada muda, a revista ganha a pendência `base` e perde o Validado. A saída é concluir a revisão na tela "Revisar mudanças da base" (`/ui/revisao/<pk>/`, rota `ui_revisao`, `app/nucleo/urls/ui_revisao.py`, D-292); a regra fica em `app/nucleo/servicos/etapa_projeto.py` (`pendente`, `revisao`, `concluir`). Quem edita a etapa da matriz é avisado antes (D-294): o editor mostra um aviso fixo com os projetos que têm cópia a partir dela ("N projeto(s) têm cópia a partir desta etapa: … Mudança aqui abre revisão neles."), e o modal de impacto, quando abre, ganha a linha "Abre revisão em N projeto(s) com cópia desta etapa: …" (`ui_matriz._abre_revisao`, sobre `etapa_projeto.derivadas`).
 
 | Regra | Fonte |
 |---|---|

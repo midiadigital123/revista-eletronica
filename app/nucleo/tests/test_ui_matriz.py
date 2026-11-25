@@ -392,6 +392,19 @@ class MecImpactoTest(BaseMundo):
         self.assertContains(resp, "1 revista(s) perderam o “Validado”")
         self.assertFalse(esta_validada(self.rev))
 
+    def test_modal_diz_onde_a_mudanca_abre_revisao(self):
+        """Etapa 9: com cópia da etapa num projeto, o modal de impacto nomeia o projeto."""
+        projeto = self.rev.projeto
+        criar(projeto, self.mec.etapa, self.mec.componente, self.usuario)
+        validar(self.rev)
+        resp = self.client.post(self.url, self.dados(self.sessao, descricao="Outra."), **HX)
+        self.assertModal(resp, "form-descritor", "Incluir tarefa")
+        self.assertContains(resp, f"Abre revisão em 1 projeto(s) com cópia desta etapa: {projeto.nome}.")
+        # O autosave (campo a campo, em JSON) monta o mesmo modal por outro caminho.
+        dados = {CAMPO_SESSAO: self.sessao, "campo": "passo", "valor": "40", "form_id": "form-intervalo"}
+        corpo = self.client.post(reverse("ui_matriz_intervalo", args=[self.mec.pk]), dados, HTTP_ACCEPT="application/json").json()
+        self.assertIn(f"Abre revisão em 1 projeto(s) com cópia desta etapa: {projeto.nome}.", corpo["impacto"]["html"])
+
     def test_descritor_sem_confirmar_abre_modal_e_nao_grava(self):
         resp = self.client.post(self.url, self.dados(self.sessao, descricao="Outra."), **HX)
         self.assertModal(resp, "form-descritor", "Incluir tarefa")
@@ -711,6 +724,15 @@ class MecDeProjetoTest(BaseMundo):
         self.assertContains(resp, f'<a class="link" href="{revisar}">Revisar mudanças da base</a>', html=True)
         # Etapa da matriz não tem base: sem aviso (e sem quebrar).
         self.assertNotContains(self.client.get(reverse("ui_matriz_mec", args=[self.mec.base_id])), "A base desta etapa mudou")
+
+    def test_editor_da_base_avisa_quais_projetos_tem_copia(self):
+        """Etapa 9: quem edita a etapa da matriz vê os projetos que a usam de base; a cópia não avisa."""
+        resp = self.client.get(reverse("ui_matriz_mec", args=[self.mec.base_id]))
+        self.assertContains(resp, f"1 projeto(s) têm cópia a partir desta etapa: {self.projeto.nome}.")
+        self.assertContains(resp, "Mudança aqui abre revisão neles.")
+        self.assertNotContains(self.client.get(reverse("ui_matriz_mec", args=[self.mec.pk])), "têm cópia a partir desta etapa")
+        outra = MatrizEtapaCC.objects.filter(matriz=self.matriz).exclude(pk=self.mec.base_id).first()
+        self.assertNotContains(self.client.get(reverse("ui_matriz_mec", args=[outra.pk])), "têm cópia a partir desta etapa")
 
     def test_campo_do_descritor_grava(self):
         sessao = self.client.get(reverse("ui_matriz_descritor", args=[self.mec.pk, self.d.pk])).wsgi_request.bloqueio["sessao"]

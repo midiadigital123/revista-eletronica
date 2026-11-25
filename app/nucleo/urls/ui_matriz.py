@@ -44,7 +44,7 @@ from nucleo.servicos.matriz import (
     impacto,
     revistas_afetadas,
 )
-from nucleo.servicos.etapa_projeto import pendente
+from nucleo.servicos.etapa_projeto import derivadas, pendente
 from nucleo.servicos.impacto import avisar_perdidos
 from nucleo.ui_autosave import erros, form_de_um_campo, proxima_ordem, quer_json, reordenar, responder_campo
 from nucleo.ui_bloqueio import com_bloqueio, e_htmx
@@ -265,10 +265,21 @@ def _alvo_mec(request, pk, **kwargs):
     return None if _congelada(m) else m
 
 
+def _abre_revisao(mec):
+    """{"abre_revisao": [nomes]}: os projetos com cópia a partir desta etapa da matriz; a mudança aqui abre
+    revisão neles (D-279). Vai para a página e para o modal de impacto. Vazio na etapa do projeto."""
+    if not mec.matriz_id:
+        return {}
+    return {"abre_revisao": list(derivadas(mec).order_by("projeto__nome").values_list("projeto__nome", flat=True).distinct())}
+
+
 def _dono(mec):
     """Rótulo e link de quem tem a etapa: a matriz ou, na etapa do projeto (D-280), o projeto."""
     if mec.matriz_id:
-        return {"dono": mec.matriz.nome, "voltar_dono": reverse("ui_matriz_detalhe", args=[mec.matriz_id]), "voltar_rotulo": str(mec.matriz)}
+        return {
+            "dono": mec.matriz.nome, "voltar_dono": reverse("ui_matriz_detalhe", args=[mec.matriz_id]),
+            "voltar_rotulo": str(mec.matriz), **_abre_revisao(mec),
+        }  # fmt: skip
     nome = mec.projeto.nome
     return {"dono": nome, "voltar_dono": reverse("ui_projeto", args=[mec.projeto_id]) + "?aba=matriz", "voltar_rotulo": nome}
 
@@ -454,7 +465,7 @@ def intervalo(request, pk):
             atual.save(update_fields=["passo"])
 
         revistas = lambda: [r for r, _ in impacto(m)]  # noqa: E731
-        return responder_campo(request, form=form, gravar=gravar, revistas=revistas, titulo="Salvar o intervalo mínimo")
+        return responder_campo(request, form=form, gravar=gravar, revistas=revistas, titulo="Salvar o intervalo mínimo", aviso=_abre_revisao(m))
     form = IntervaloForm(request.POST, instance=m)
     if form.is_valid() and not form.pedir_confirmacao(_perdem(m) if form.has_changed() else []):
         form.save()
@@ -552,7 +563,8 @@ def campo(request, pk, dpk):
         tarefa = get_object_or_404(Tarefa, pk=pk_tarefa, descritor=d)
         form = _tarefas(0).form(request.POST, instance=tarefa, prefix=prefixo)
         return responder_campo(
-            request, form=form, gravar=lambda _: form.save() and None, revistas=revistas, titulo=f"Salvar a tarefa {tarefa.codigo}"
+            request, form=form, gravar=lambda _: form.save() and None, revistas=revistas, titulo=f"Salvar a tarefa {tarefa.codigo}",
+            aviso=_abre_revisao(m),
         )
     form = form_de_um_campo(DescritorUiForm, nome, request.POST.get("valor", ""), instance=d)
 
@@ -562,7 +574,7 @@ def campo(request, pk, dpk):
         atual.save(update_fields=[nome])
 
     titulo = f"Salvar “{form.fields[nome].label}” de {d.codigo}" if form else "Salvar"
-    return responder_campo(request, form=form, gravar=gravar, revistas=revistas, titulo=titulo)
+    return responder_campo(request, form=form, gravar=gravar, revistas=revistas, titulo=titulo, aviso=_abre_revisao(m))
 
 
 @require_POST
@@ -578,7 +590,7 @@ def reordenar_view(request, pk, dpk=None):
     else:
         d = get_object_or_404(Descritor, pk=dpk, matriz_etapa_cc=m)
         qs, titulo = Tarefa.objects.filter(descritor=d), f"Reordenar as tarefas de {d.codigo}"
-    return reordenar(request, qs, revistas=revistas, titulo=titulo)
+    return reordenar(request, qs, revistas=revistas, titulo=titulo, aviso=_abre_revisao(m))
 
 
 # --- Exclusão com confirmação forte (D-181) -------------------------------------------------

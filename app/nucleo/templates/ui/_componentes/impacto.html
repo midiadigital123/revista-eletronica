@@ -7,10 +7,12 @@ que têm data-original e devolve o foco ao campo alterado. Componente `impacto` 
 Opcional: campo (nome do campo de confirmação; padrão confirmar_impacto).
 U8b: copias + frase + fasciculo (trocar template com cópias de seção, D-171): o modal pede a frase
 "descartar N cópia(s)" num campo `confirmacao`, que o autosave manda junto ao confirmar.
+Etapa 9: `abre_revisao` (nomes de projetos, do contexto do editor da matriz) acrescenta onde a mudança abre revisão.
 {% endcomment %}<c-modal titulo_id="{{ form_id }}-impacto-titulo" class="impacto" x-data="impacto" data-abrir-ao-carregar data-form="{{ form_id }}" data-campo="{{ campo|default:'confirmar_impacto' }}" aria-describedby="{{ form_id }}-impacto-texto" @cancel.prevent="cancelar">
   <c-slot name="titulo">{% if perdem %}{{ acao }} tira o “Validado” de {{ perdem|length }} revista(s){% else %}{{ acao }} apaga {{ copias }} cópia(s) de seção{% endif %}</c-slot>
   <c-slot name="descricao"><p class="mudo" id="{{ form_id }}-impacto-texto">Nada foi gravado ainda.{% if perdem %} Estas revistas mudam e voltam a precisar de validação no Painel:{% endif %}{% if copias %} O {{ fasciculo }} tem {{ copias }} seção(ões) com texto editado nesta revista; trocar o template apaga essas cópias.{% endif %}</p></c-slot>
   {% if perdem %}<ul class="impacto-lista">{% for r in perdem %}<li>{{ r }}</li>{% endfor %}</ul>{% endif %}
+  {% if abre_revisao %}<p class="mudo">Abre revisão em {{ abre_revisao|length }} projeto(s) com cópia desta etapa: {{ abre_revisao|join:", " }}.</p>{% endif %}
   {% if frase %}
   <c-campo para="{{ form_id }}-confirmacao">
     <c-slot name="rotulo">Para confirmar, digite <code>{{ frase }}</code></c-slot>

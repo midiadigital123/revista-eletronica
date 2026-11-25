@@ -77,13 +77,14 @@ def form_de_um_campo(Form, campo, valor, *, instance, prefix=None, **kwargs):
 
 def responder_campo(
     request, *, form, gravar: Callable[[dict], dict | None], revistas: Callable[[], Iterable[Revista]], titulo="Salvar",
-    simular: Callable[[dict], object] | None = None, modal: dict | None = None,
+    simular: Callable[[dict], object] | None = None, modal: dict | None = None, aviso: dict | None = None,
 ) -> JsonResponse:
     """Valida o `form` (um campo ou uma linha), simula `gravar` para achar quem perde o "Validado"
     (U2) e grava, ou devolve o impacto sem gravar. `gravar(cleaned_data)` pode devolver extras da
     resposta 200 e levantar `Conflito` (409). `simular`: o que roda na simulação, se não for o
     próprio `gravar` (ex.: só o sha256 de um arquivo). `modal`: contexto extra do modal, que passa a
-    ser obrigatório mesmo sem revista perdendo o "Validado" (ex.: a frase "descartar N cópia(s)")."""
+    ser obrigatório mesmo sem revista perdendo o "Validado" (ex.: a frase "descartar N cópia(s)"). `aviso`:
+    contexto extra que não torna o modal obrigatório (ex.: os projetos em que a mudança abre revisão)."""
     if form is None:
         return erros(["Este campo não pode ser alterado aqui. Recarregue a página."])
     if not form.is_valid():
@@ -94,7 +95,7 @@ def responder_campo(
         if (perdem or modal) and not request.POST.get(CONFIRMAR):
             html = render_to_string(
                 "ui/_componentes/impacto.html",
-                {"form_id": request.POST.get("form_id") or "autosave", "acao": titulo, "perdem": perdem, **(modal or {})},
+                {"form_id": request.POST.get("form_id") or "autosave", "acao": titulo, "perdem": perdem, **(aviso or {}), **(modal or {})},
                 request=request,
             )
             impacto = {"titulo": titulo, "perdem": [str(r) for r in perdem], "afetadas": len(candidatas), "html": html}
@@ -119,7 +120,7 @@ def proxima_ordem(qs) -> int:
     return (qs.aggregate(m=Max("ordem"))["m"] or 0) + 1
 
 
-def reordenar(request, qs, *, revistas: Callable[[], Iterable[Revista]], titulo="Reordenar") -> JsonResponse:
+def reordenar(request, qs, *, revistas: Callable[[], Iterable[Revista]], titulo="Reordenar", aviso=None) -> JsonResponse:
     """POST `ids=[pk,…]` (componente `ordenavel`): grava a ordem 1…N, pelo mesmo protocolo do
     autosave (impacto no "Validado", 409 do bloqueio). 422 se a lista não for exatamente `qs`."""
     ids = request.POST.getlist("ids")
@@ -134,4 +135,4 @@ def reordenar(request, qs, *, revistas: Callable[[], Iterable[Revista]], titulo=
                 obj.ordem = posicao[obj.pk]
                 obj.save(update_fields=["ordem"])  # save, não update(): o histórico registra
 
-    return responder_campo(request, form=forms.Form({}), gravar=gravar, revistas=revistas, titulo=titulo)
+    return responder_campo(request, form=forms.Form({}), gravar=gravar, revistas=revistas, titulo=titulo, aviso=aviso)
