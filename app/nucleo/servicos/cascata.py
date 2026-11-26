@@ -1,5 +1,8 @@
 """Cascata dos cortes: cortes -> projeto -> revistas (D-061, D-065, D-068, D-093, D-094, D-117)."""
 
+import logging
+
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
@@ -16,7 +19,10 @@ from nucleo.models import (
     RevistaInfografico,
 )
 from nucleo.models.revista import EtapaReferencial, Motivo, TipoInfografico
+from nucleo.servicos import seed_infografico
 from nucleo.servicos.foto import fotografar
+
+logger = logging.getLogger(__name__)
 
 
 def validar_linhas(linhas, ano_id):
@@ -116,7 +122,8 @@ def _sincronizar_infograficos(projeto, linhas, usuario, agora):
     etapas = {}
     for etapa, componente, _ in linhas:
         etapas.setdefault(componente.pk, set()).add(etapa.codigo.strip().upper())
-    for revista in Revista.objects.filter(projeto=projeto, arquivada_em__isnull=True):
+    seeds = None  # lidos só se algum infográfico nascer
+    for revista in Revista.objects.filter(projeto=projeto, arquivada_em__isnull=True).select_related("componente", "ano"):
         codigos = etapas.get(revista.componente_id, set())
         devem_existir = {
             TipoInfografico.ALFA: EtapaReferencial.EF2 in codigos,
@@ -127,14 +134,32 @@ def _sincronizar_infograficos(projeto, linhas, usuario, agora):
             inf = atuais.get(tipo)
             if inf is None:
                 if deve:
-                    _salvar(
+                    novo = _salvar(
                         RevistaInfografico(revista=revista, componente_id=revista.componente_id,
                                            ano_id=revista.ano_id, tipo=tipo),
                         usuario,
                     )
+                    if seeds is None:
+                        seeds = _seeds_validos(revista.ano.ano)
+                    if seed := seeds.get((revista.componente.codigo, tipo)):
+                        seed_infografico.preencher(novo, seed, usuario)  # D-298; desarquivar (abaixo) não preenche
             elif deve != (inf.arquivado_em is None):
                 inf.arquivado_em = None if deve else agora
                 _salvar(inf, usuario, update_fields=["arquivado_em"])
+
+
+def _seeds_validos(ano):
+    """Seeds do ano para o infográfico que a cascata cria (D-298). O inválido fica de fora com aviso no log:
+    um erro no seed não pode impedir ninguém de gravar cortes (o test_seed_infograficos barra no repositório)."""
+    if not settings.INFOGRAFICOS_DO_SEED:
+        return {}
+    bons = {}
+    for chave, seed in seed_infografico.seeds(ano).items():
+        if erros := seed_infografico.validar(seed):
+            logger.warning("seed %s inválido, o infográfico novo nasce vazio: %s", seed["_arquivo"], "; ".join(erros))
+        else:
+            bons[chave] = seed
+    return bons
 
 
 def _salvar(obj, usuario, **kwargs):

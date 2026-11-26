@@ -96,6 +96,9 @@ STORAGES = {
 STATIC_ROOT = BASE_DIR / "staticfiles"  # só produção: collectstatic do docker-compose.prod.yml (D-214)
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
+# D-298: a cascata preenche pelo seed (templates_seed/<ano>/infograficos) o infográfico que ela cria.
+# A suíte de testes desliga (nucleo/tests/__init__.py); quem testa isso religa com override_settings.
+INFOGRAFICOS_DO_SEED = os.environ.get("INFOGRAFICOS_DO_SEED", "1") == "1"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
