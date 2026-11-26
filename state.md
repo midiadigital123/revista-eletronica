@@ -8,7 +8,7 @@ Quebrado/pendente: cada revista de LP do E2E deixa 8 imagens no `media/` (limite
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Rodar `docker compose run --rm app python manage.py carregar_infograficos --ano 2026 --usuario admin` no dev (8000) e abrir o F2 de uma revista de LP.
+Abrir no dev (8000) o modal de um item do F2 de LP e conferir a largura (672px) sem rolagem lateral.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -3130,3 +3130,5 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - Passo 4 do D-298 feito: cascata preenche o infográfico novo pelo seed; chave `INFOGRAFICOS_DO_SEED`; 2 specs E2E ajustados ao LP pré-preenchido (3 specs: 28 passaram).
 - Passo 5 do D-298 feito: Django 1086 OK, E2E 176 passaram sem pulos (com `imp-e2e`), docs (CLAUDE.md, ficha da revista, plano) e learning da chave de testes. K-050 em Review.
 - "ok para a main" (usuário): `integ/infografico-lp` mesclada na `main` com push; K-050 em Done.
+- Ajuste pedido pelo usuário na `feat/f2-modal` (worktree de trabalho): modal do F2 de 560px para 672px (+20%) e `max-width: 100%` na imagem do item (`static/revista/f2/revista.css`); gabarito `app/e2e/fixtures/revista.zip` regerado; testes de preview, zip e F2 (61) e `zip.spec` OK; medido a 1280px: modal 672px, imagem de 892px em 609px, sem rolagem lateral.
+- "pode commitar e levar para a main" (usuário): `feat/f2-modal` mesclada na `main` com push.
