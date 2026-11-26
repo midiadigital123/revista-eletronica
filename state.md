@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Próximo trabalho, **antes da etapa 11 (redesenho pelo Figma)**: modelo de infográfico de LP pré-preenchido pelos dois Word da Pedagógica (D-297, K-050), plano aprovado em 25/11 em `docs/superpowers/plans/2026-11-25-infografico-modelo-lp.md` (passos 0 a 6, cerca de 2 dias). Não iniciado. Etapa 11 (K-048) pausada no passo 1: mapa de páginas em `docs/telas/mapa-de-paginas.md`, sem commit na `feat/redesenho-figma` (worktree de trabalho), junto com este `state.md` e o `kanban.md`.
+Próximo trabalho, **antes da etapa 11 (redesenho pelo Figma)**: infográficos de LP preenchidos por cópia do seed dos dois Word da Pedagógica (D-298, que substitui o modelo único da D-297; K-050), plano em `docs/superpowers/plans/2026-11-26-infografico-lp-copia.md` (passos 0 a 5, cerca de 6,5 h). Não iniciado. Etapa 11 (K-048) pausada no passo 1: mapa de páginas em `docs/telas/mapa-de-paginas.md`, sem commit na `feat/redesenho-figma` (worktree de trabalho), junto com este `state.md` e o `kanban.md`.
 Funcionando: tudo o que está na `main` em 25/11 (etapas 1 a 10, D-296).
-Quebrado/pendente: infográficos de LP nascem vazios em todas as revistas (resolvido pela D-297); comparar o mapa de páginas com o Figma; em aberto: "Duplicar matriz" sai junto com os botões de criar (D-277)? Para onde vai o Painel, que não está no menu do Figma?
+Quebrado/pendente: infográficos de LP nascem vazios em todas as revistas (resolvido pela D-298); comparar o mapa de páginas com o Figma; em aberto: "Duplicar matriz" sai junto com os botões de criar (D-277)? Para onde vai o Painel, que não está no menu do Figma?
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Pedir o ok para commitar o mapa de páginas na `feat/redesenho-figma` e começar o passo 0 do plano `docs/superpowers/plans/2026-11-25-infografico-modelo-lp.md`.
+Começar o passo 0 do plano `docs/superpowers/plans/2026-11-26-infografico-lp-copia.md`: criar `integ/infografico-lp` a partir da `main` na worktree de trabalho.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2412,12 +2412,20 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Arquivos afetados:** `app/nucleo/texto.py`, `app/nucleo/servicos/html.py`, `app/nucleo/templates/revista/f1.html`, `app/templates_seed/2026/f1-*.hbs`, `app/nucleo/migrations/0028_f1_sem_fechamento.py`, `app/e2e/fixtures/pagina/f1.html`, testes Django (`test_texto`, `test_templates_texto`, `test_admin_templates`, `test_resolver`) e specs E2E (`impacto`, `impresso`, `painel`, `revista-textos`, agora pela introdução).
 - **Status:** ativa
 
-### D-297 — Infográficos de LP vêm de um modelo único pré-preenchido pelos Word, e a revista pode sobrescrever qualquer campo (2026-11-25 17:30)
+### ~~D-297 — Infográficos de LP vêm de um modelo único pré-preenchido pelos Word, e a revista pode sobrescrever qualquer campo~~ (2026-11-25 17:30)
 - **Contexto:** a Pedagógica (Bortolucci) enviou dois Word (`AVALIAÇÃO E CURRÍCULO_LP_2026_ALFA_GERAL.docx` e `..._AF_EM_GERAL.docx`) com todo o conteúdo dos infográficos Alfa e Outras Etapas, igual para todas as revistas de LP. Hoje cada infográfico nasce vazio e é preenchido revista a revista. Anotações do usuário: as etapas são sempre 1EF a 3EM nas duas tabelas; várias etapas podem apontar para a mesma linha da descrição, com marcas diferentes; o nome do descritor pode mudar entre parceiros, mas os textos continuam os mesmos.
 - **Decisão:** (1) modelo único por ano × componente × tipo, editado num lugar só, com modal de impacto; (2) a revista pode sobrescrever qualquer campo (NULL = herda do modelo, "" = vazio de propósito), porque "é melhor ter e não precisar"; (3) a imagem do item do 5EF Alfa, que vem em duas partes (suporte e enunciado), é juntada numa só na carga (D-232); (4) só LP tem modelo; MT segue como hoje; (5) a dica "Consulte também o Referencial Curricular da Rede" vai para o template F2 de LP. Mapeamento Word → campos e passos no plano `docs/superpowers/plans/2026-11-25-infografico-modelo-lp.md`. Vem antes da etapa 11.
 - **Motivo:** uma correção no conteúdo vale para as 33 revistas de uma vez; a sobrescrita cobre o parceiro que pedir texto próprio.
 - **Descartadas:** copiar o conteúdo em cada revista na carga — cada correção teria de ser feita revista por revista; permitir sobrescrever só a habilidade destacada — a Pedagógica diz que só mudará o descritor, mas o usuário prefere não depender disso; pedir ao design a imagem do 5EF já montada — atrasa a carga.
 - **Arquivos afetados:** nenhum ainda (plano em `docs/superpowers/plans/2026-11-25-infografico-modelo-lp.md`)
+- **Status:** ~~substituída por D-298~~
+
+### D-298 — Infográficos de LP preenchidos por cópia do seed dos Word, sem modelo único (2026-11-26 09:00)
+- **Contexto:** o plano da D-297 (modelo único por ano × componente × tipo, com herança campo a campo) foi estimado em ~16 h, com 3 tabelas novas, 2 migrações, uma tela nova e a regra "NULL herda, \"\" é vazio de propósito" no resolver, nas pendências, no F2 e no impresso. O prazo é apertado (D-277).
+- **Decisão:** (1) os dois Word viram um seed JSON versionado com as imagens (`app/templates_seed/2026/infograficos/`); (2) o comando `carregar_infograficos` copia o conteúdo para cada infográfico ativo de LP, e a edição continua na ficha de cada revista, como hoje; (3) recarga com `--anterior`: troca só o campo ainda igual ao seed anterior, para corrigir em massa sem apagar o que a Pedagógica editou; (4) a cascata preenche o infográfico de LP criado depois da carga; (5) continuam valendo da D-297: imagem do 5EF Alfa juntada numa só, dica do Referencial no template F2 de LP, MT sem mudança. Estimativa ~6,5 h. Plano: `docs/superpowers/plans/2026-11-26-infografico-lp-copia.md`. Vem antes da etapa 11.
+- **Motivo:** cerca de 60% menos tempo, nenhuma tabela, migração ou tela nova, e o resolver, as pendências, o F2 e o impresso ficam intocados. Some o risco do NULL × "" e do modal de impacto sobre 33 revistas numa gravação só. A sobrescrita em qualquer campo, pedida na D-297, vem de graça: cada revista tem a sua cópia.
+- **Descartadas:** modelo único com herança (D-297) — fica para uma próxima versão do sistema, se as correções em massa ficarem frequentes; cópia sem recarga — cada correção da Pedagógica seria feita em até ~60 infográficos à mão.
+- **Arquivos afetados:** nenhum ainda (plano em `docs/superpowers/plans/2026-11-26-infografico-lp-copia.md`); o plano antigo `docs/superpowers/plans/2026-11-25-infografico-modelo-lp.md` fica como histórico.
 - **Status:** ativa
 
 ## Perguntas em aberto
@@ -3110,3 +3118,6 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 ### 2026-11-25 (etapa 11)
 - Etapa 11 iniciada (K-048 em Doing): branches `integ/redesenho-figma` e `feat/redesenho-figma` na worktree de trabalho; mapa de páginas e caminhos em `docs/telas/mapa-de-paginas.md`.
 - Word de LP dos infográficos analisados (D-297); plano do modelo de infográfico aprovado e gravado em `docs/superpowers/plans/2026-11-25-infografico-modelo-lp.md`; fica para a próxima sessão, antes da etapa 11.
+
+### 2026-11-26
+- Cópia por seed × modelo único estimadas (~6,5 h × ~16 h); o usuário escolheu a cópia (D-298, substitui D-297); plano novo em `docs/superpowers/plans/2026-11-26-infografico-lp-copia.md`. Código não mexido.

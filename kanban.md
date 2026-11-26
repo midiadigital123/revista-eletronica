@@ -1,7 +1,7 @@
 # Kanban — revista-express
 
 ## Backlog
-- **K-050** Modelo de infográfico de LP pré-preenchido pelos dois Word, com sobrescrita por revista: plano `docs/superpowers/plans/2026-11-25-infografico-modelo-lp.md`; vem antes da K-048 · D-297
+- **K-050** Infográficos de LP preenchidos por cópia do seed dos dois Word (comando + recarga + cascata): plano `docs/superpowers/plans/2026-11-26-infografico-lp-copia.md`; vem antes da K-048 · D-298
 - **K-031** Fase 5 do F2: animação por passo (desejável)
 - **K-033** S18 — E2E da temporada
 
