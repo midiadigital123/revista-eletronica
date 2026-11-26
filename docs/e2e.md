@@ -64,6 +64,8 @@ O spec cria o próprio parceiro "E2E …", e a cascata gera o projeto e a revist
 - `matrizPropria`: cópia "E2E …" da matriz Demonstração, para os specs que editam matriz.
 - `revistaDemo`: a revista LP da demonstração, só para os specs que leem.
 
+As revistas de LP nascem com os infográficos preenchidos pelo seed dos Word (D-298): o passo Infográficos já conta como pronto, e o spec que grava num campo do infográfico usa um valor diferente do seed, porque o autosave só grava o que muda. Cada revista de LP deixa no `media/` as 8 imagens do seed (cerca de 1,2 MB): o `limpar_e2e` apaga os registros, não os arquivos (limite conhecido em `servicos/exclusao.py`).
+
 ## Etapa do projeto (`etapa-projeto.spec.ts`)
 
 Cobre o fluxo da cópia local na aba Matriz do projeto. Cada teste cria a própria matriz (`matrizPropria`) e a própria revista com ela (`revistaPropria`); nunca a Demonstração, porque a cópia derivada dela faria o aviso do editor aparecer nos outros specs. A cópia se edita sempre pela tela B.
