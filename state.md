@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Plano D-298 (`docs/superpowers/plans/2026-11-26-infografico-lp-copia.md`) concluído em 26/11, passos 0 a 5, e mesclado na `main` com push em 26/11 com o "ok" do usuário; K-050 em Done. Infográficos de LP nascem pelo seed dos dois Word: `carregar_infograficos` (só o vazio; recarga `--anterior`) e a cascata para o infográfico novo; edição na ficha de cada revista. Dica do Referencial fora (usuário, 26/11).
-Funcionando: suíte Django 1086 OK (9 pulados), `makemigrations --check` limpo; E2E inteiro numa stack isolada (`e2e-inf`, já derrubada): 176 passaram, 0 falhas, 0 pulados. Na 8002: 60 infográficos de LP preenchidos, recarga simulada (31 atualizados, 2 mantidos do AC) e desfeita, Anchieta com 2EF pela cascata nasceu preenchido (desfeito).
-Quebrado/pendente: cada revista de LP do E2E deixa 8 imagens no `media/` (limite conhecido); comparar o mapa de páginas com o Figma (etapa 11, K-048); em aberto: "Duplicar matriz" sai junto com os botões de criar (D-277)? Para onde vai o Painel, que não está no menu do Figma?
+Títulos dos blocos Descrição e Progressão do F2 trocados para "… NA BASE NACIONAL COMUM CURRICULAR (BNCC)" (D-299), mesclados na `main` com push em 26/11 (K-051 em Done).
+Funcionando: zip gabarito `app/e2e/fixtures/revista.zip` regenerado; `test_empacotar` e `test_f2` 32 OK. O usuário conferiu o título no dev (8000).
+Quebrado/pendente: etapa 11 (K-048) e as perguntas dela seguem em aberto.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Abrir no dev (8000) o modal de um item do F2 de LP e conferir a largura (672px) sem rolagem lateral.
+Abrir `docs/telas/mapa-de-paginas.md` ao lado do Figma (página "Testes") e marcar em cada linha se a tela existe no desenho novo (K-048).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2429,6 +2429,14 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Acréscimo (2026-11-26 18:00), implementação:** (a) textos do seed em Markdown, não HTML (o editor recusa título `#`; os anos do ❸ em negrito); (b) a carga e a cascata ficam atrás da chave `INFOGRAFICOS_DO_SEED` (settings, padrão ligada), desligada na suíte Django em `nucleo/tests/__init__.py`, porque 22 arquivos de teste passam pela cascata com ano 2026 e só 9 usam mídia temporária; (c) a dica "Consulte também o Referencial Curricular da Rede." fica de fora por escolha do usuário em 26/11 (substitui o item 5 da decisão); (d) no E2E, cada revista de LP deixa as 8 imagens do seed no `media/` (o `limpar_e2e` apaga registros, não arquivos); (e) arquivos: `scripts/docx_infografico.py`, `app/templates_seed/2026/infograficos/`, `app/nucleo/servicos/seed_infografico.py`, `app/nucleo/management/commands/carregar_infograficos.py`, `app/nucleo/servicos/cascata.py`, `app/sistema/settings.py`, `app/e2e/tests/infografico.spec.ts`, `app/e2e/tests/revista-textos.spec.ts`.
 - **Status:** ativa
 
+### D-299 — Títulos do F2 citam a BNCC, não o referencial do estado (2026-11-26 19:00)
+- **Contexto:** os blocos "Descrição das habilidades" e "Progressão da habilidade" do infográfico diziam "no referencial curricular do estado", mas os textos dos Word de LP tratam das habilidades da BNCC.
+- **Decisão:** os dois títulos passam a "… NA / BASE NACIONAL COMUM CURRICULAR (BNCC)", fixos no desenho, para LP e MT.
+- **Motivo:** o título fica coerente com o conteúdo; o texto é igual em toda revista, então mora no `f2.svg`, não num campo editável.
+- **Descartadas:** campo editável por revista: ninguém pediu título diferente por revista.
+- **Arquivos afetados:** `app/nucleo/templates/revista/f2.svg`, `app/e2e/fixtures/revista.zip`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (24/11, Pedagógica via chat; respondida em 24/11 pela D-288: cópia da etapa × componente pelo botão "Editar só neste projeto", com vínculo e revisão) Requisito novo: descritores e outros elementos da Comunitária precisam ser editáveis **por projeto**, em qualquer projeto (não só CE, Joinville e ES). A Luciana respondeu que **todos** os elementos (descritor, tarefa, arquivo do item, BNCC, pré-requisitos) são editáveis localmente por projeto — depende de: Otavio
 - [x] (24/11, D-290; respondida em 24/11: segue a ordem do editor, D-291) A ordem dos descritores na revista é alfabética pelo código (D011 vem antes de D02), não a ordem arrastada no editor. É o que a Pedagógica quer? — depende de: Otavio
@@ -3132,3 +3140,4 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - "ok para a main" (usuário): `integ/infografico-lp` mesclada na `main` com push; K-050 em Done.
 - Ajuste pedido pelo usuário na `feat/f2-modal` (worktree de trabalho): modal do F2 de 560px para 672px (+20%) e `max-width: 100%` na imagem do item (`static/revista/f2/revista.css`); gabarito `app/e2e/fixtures/revista.zip` regerado; testes de preview, zip e F2 (61) e `zip.spec` OK; medido a 1280px: modal 672px, imagem de 892px em 609px, sem rolagem lateral.
 - "pode commitar e levar para a main" (usuário): `feat/f2-modal` mesclada na `main` com push.
+- 2026-11-26 19:00: títulos do F2 com a BNCC (D-299), zip gabarito regenerado na `feat/f2-titulos`.
