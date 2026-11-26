@@ -474,7 +474,7 @@ body {
 
 /* --- Modais: <style> de svg-tour/avaliacao-e-curriculo/revista-modais.html --- */
   dialog[id^="dlg-"] {
-    max-width: 560px;
+    max-width: 672px; /* 560px + 20%: a imagem do item cabe sem apertar a análise */
     width: calc(100% - 32px);
     border: 0;
     border-radius: 0.75rem;
@@ -512,6 +512,10 @@ body {
   }
   dialog[id^="dlg-"] .modal-body {
     padding: 0 24px 24px;
+  }
+  dialog[id^="dlg-"] .modal-body img {
+    max-width: 100%; /* a imagem do item (até 892px) não passa da largura do modal: sem rolagem lateral */
+    height: auto;
   }
   dialog[id^="dlg-"] .modal-body h3 {
     margin: 0 0 12px;
