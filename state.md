@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Próximo trabalho, **antes da etapa 11 (redesenho pelo Figma)**: infográficos de LP preenchidos por cópia do seed dos dois Word da Pedagógica (D-298, que substitui o modelo único da D-297; K-050), plano em `docs/superpowers/plans/2026-11-26-infografico-lp-copia.md` (passos 0 a 5, cerca de 6,5 h). Não iniciado. Etapa 11 (K-048) pausada no passo 1: mapa de páginas em `docs/telas/mapa-de-paginas.md`, sem commit na `feat/redesenho-figma` (worktree de trabalho), junto com este `state.md` e o `kanban.md`.
-Funcionando: tudo o que está na `main` em 25/11 (etapas 1 a 10, D-296).
-Quebrado/pendente: infográficos de LP nascem vazios em todas as revistas (resolvido pela D-298); comparar o mapa de páginas com o Figma; em aberto: "Duplicar matriz" sai junto com os botões de criar (D-277)? Para onde vai o Painel, que não está no menu do Figma?
+Plano D-298 (`docs/superpowers/plans/2026-11-26-infografico-lp-copia.md`) concluído em 26/11, passos 0 a 5, na `feat/infografico-lp` (worktree de trabalho), sem commit; K-050 em Review. Infográficos de LP nascem pelo seed dos dois Word: `carregar_infograficos` (só o vazio; recarga `--anterior`) e a cascata para o infográfico novo; edição na ficha de cada revista. Dica do Referencial fora (usuário, 26/11).
+Funcionando: suíte Django 1086 OK (9 pulados), `makemigrations --check` limpo; E2E inteiro numa stack isolada (`e2e-inf`, já derrubada): 176 passaram, 0 falhas, 0 pulados. Na 8002: 60 infográficos de LP preenchidos, recarga simulada (31 atualizados, 2 mantidos do AC) e desfeita, Anchieta com 2EF pela cascata nasceu preenchido (desfeito).
+Quebrado/pendente: cada revista de LP do E2E deixa 8 imagens no `media/` (limite conhecido); comparar o mapa de páginas com o Figma (etapa 11, K-048); em aberto: "Duplicar matriz" sai junto com os botões de criar (D-277)? Para onde vai o Painel, que não está no menu do Figma?
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Começar o passo 0 do plano `docs/superpowers/plans/2026-11-26-infografico-lp-copia.md`: criar `integ/infografico-lp` a partir da `main` na worktree de trabalho.
+Pedir o ok para commitar a `feat/infografico-lp` e mesclar na `integ/infografico-lp`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2426,6 +2426,7 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Motivo:** cerca de 60% menos tempo, nenhuma tabela, migração ou tela nova, e o resolver, as pendências, o F2 e o impresso ficam intocados. Some o risco do NULL × "" e do modal de impacto sobre 33 revistas numa gravação só. A sobrescrita em qualquer campo, pedida na D-297, vem de graça: cada revista tem a sua cópia.
 - **Descartadas:** modelo único com herança (D-297) — fica para uma próxima versão do sistema, se as correções em massa ficarem frequentes; cópia sem recarga — cada correção da Pedagógica seria feita em até ~60 infográficos à mão.
 - **Arquivos afetados:** nenhum ainda (plano em `docs/superpowers/plans/2026-11-26-infografico-lp-copia.md`); o plano antigo `docs/superpowers/plans/2026-11-25-infografico-modelo-lp.md` fica como histórico.
+- **Acréscimo (2026-11-26 18:00), implementação:** (a) textos do seed em Markdown, não HTML (o editor recusa título `#`; os anos do ❸ em negrito); (b) a carga e a cascata ficam atrás da chave `INFOGRAFICOS_DO_SEED` (settings, padrão ligada), desligada na suíte Django em `nucleo/tests/__init__.py`, porque 22 arquivos de teste passam pela cascata com ano 2026 e só 9 usam mídia temporária; (c) a dica "Consulte também o Referencial Curricular da Rede." fica de fora por escolha do usuário em 26/11 (substitui o item 5 da decisão); (d) no E2E, cada revista de LP deixa as 8 imagens do seed no `media/` (o `limpar_e2e` apaga registros, não arquivos); (e) arquivos: `scripts/docx_infografico.py`, `app/templates_seed/2026/infograficos/`, `app/nucleo/servicos/seed_infografico.py`, `app/nucleo/management/commands/carregar_infograficos.py`, `app/nucleo/servicos/cascata.py`, `app/sistema/settings.py`, `app/e2e/tests/infografico.spec.ts`, `app/e2e/tests/revista-textos.spec.ts`.
 - **Status:** ativa
 
 ## Perguntas em aberto
@@ -3121,3 +3122,10 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 
 ### 2026-11-26
 - Cópia por seed × modelo único estimadas (~6,5 h × ~16 h); o usuário escolheu a cópia (D-298, substitui D-297); plano novo em `docs/superpowers/plans/2026-11-26-infografico-lp-copia.md`. Código não mexido.
+- PR #13 (mapa de páginas + planos D-297/D-298) aberto para a `main`; passo 0 do plano D-298 feito: `integ/infografico-lp` e `feat/infografico-lp` criadas, K-050 em Doing, K-048 de volta ao Backlog.
+- PR #13 mergeado na `main` pelo usuário (merge `ee8a656`, sem squash): a `integ/infografico-lp` continua compatível com a `main`.
+- Passo 1 do D-298 feito: Word em `docs/fontes/2026/`, `scripts/docx_infografico.py`, seed em `app/templates_seed/2026/infograficos/` e `test_seed_infograficos` OK. Textos do infográfico são Markdown (o plano dizia HTML): anos do ❸ em `**negrito**`.
+- Passo 2 do D-298 feito: `seed_infografico.py` + `carregar_infograficos`; 8002 preenchida (60 infográficos de LP), 2ª rodada sem efeito, nenhuma pendência de infográfico nas 32 revistas de LP.
+- Passo 3 do D-298 feito: recarga com `--anterior`; simulação na 8002 (31 atualizados, 2 mantidos do AC) e desfeita.
+- Passo 4 do D-298 feito: cascata preenche o infográfico novo pelo seed; chave `INFOGRAFICOS_DO_SEED`; 2 specs E2E ajustados ao LP pré-preenchido (3 specs: 28 passaram).
+- Passo 5 do D-298 feito: Django 1086 OK, E2E 176 passaram sem pulos (com `imp-e2e`), docs (CLAUDE.md, ficha da revista, plano) e learning da chave de testes. K-050 em Review.
