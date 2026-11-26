@@ -65,6 +65,7 @@ usuário `admin`).
 | Parceiros, etapas criadas (1EF, 3EF, 4EF, 6EF, 7EF, 8EF, 2EM), cortes de LP e MT, projetos e revistas (pela cascata). Corte que falta na planilha entra como "100, 200, 300" e sai no relatório do comando (D-278); todo parceiro recebe a matriz Comunitária | 33, 7, 232 (148 da planilha + 84 arbitrários), 33, 66 | `docs/fontes/2026/Somativas 2026.xlsx` e `docs/fontes/2025/planilhas importantes/Cortes dos Padrões por Etapa e Parceiro.xlsx` (`importar_cortes`) |
 | Templates de texto "Padrão" (F1 e F2 × LP e MT) | 4 | `app/templates_seed/2026/` |
 | Matriz "Comunitária" | 198 descritores, 1093 tarefas | 3 PDFs em `docs/fontes/2025/PDFs Matriz Comunitária/` |
+| Infográficos de LP preenchidos (Alfa e Outras Etapas): textos, 12 etapas, 4 itens com imagem (D-298) | 1 por revista de LP e tipo | `app/templates_seed/2026/infograficos/` (`carregar_infograficos`) |
 
 **Atributos que controlam o script**
 
@@ -88,6 +89,33 @@ usuário `admin`).
   (ver `criar_usuarios`).
 - Para carregar sem tocar no dev: `COMPOSE_PROJECT_NAME=teste APP_PORT=8002 ./scripts/povoar-banco-2026.sh`
   e, ao terminar, `COMPOSE_PROJECT_NAME=teste docker compose down -v`.
+
+### Corrigir os infográficos de LP depois da carga
+
+Quando a Pedagógica manda um Word corrigido, a recarga (D-298) leva a correção a todas as revistas de LP sem
+apagar o que alguém editou na ficha: o campo que ainda é igual ao seed anterior recebe o texto novo; o editado fica.
+Na raiz da worktree, um tipo por vez (`alfa` ou `outras`):
+
+```bash
+cp -r app/templates_seed/2026/infograficos app/templates_seed/2026/infograficos-anterior
+```
+
+```bash
+python3 scripts/docx_infografico.py docs/fontes/2026/<Word corrigido>.docx alfa app/templates_seed/2026/infograficos
+```
+
+```bash
+docker compose run --rm app python manage.py carregar_infograficos --ano 2026 --usuario admin --anterior templates_seed/2026/infograficos-anterior
+```
+
+```bash
+rm -r app/templates_seed/2026/infograficos-anterior
+```
+
+O relatório separa preenchidos (estavam vazios), atualizados (iguais ao anterior) e mantidos (editados na
+revista); a revista atualizada perde o "Validado". Esqueceu o `cp` antes de gerar o seed novo? A cópia sai do git:
+`mkdir -p app/templates_seed/2026/infograficos-anterior && git archive HEAD app/templates_seed/2026/infograficos | tar -x --strip-components=4 -C app/templates_seed/2026/infograficos-anterior`.
+O script `docx_infografico.py` precisa de Python 3 com Pillow no host só quando um item tem duas imagens.
 
 ## 2. Como testar
 
@@ -157,7 +185,7 @@ o que resta só nele está na seção 2 de [`docs/telas/telas-b.md`](docs/telas/
 | `app/sistema/` | projeto Django (settings, urls) |
 | `app/nucleo/models/`, `admin/`, `urls/`, `servicos/` | um arquivo por área; `urls/ui_*.py` são as telas B |
 | `app/nucleo/templates/ui/`, `app/nucleo/static/ui/` | HTML (HTMX + Alpine) e CSS/JS das telas B |
-| `app/nucleo/management/commands/` | `carregar_cadastros`, `importar_matriz`, `carregar_templates`, `abrir_ano`, `criar_usuarios`, `tornar_superusuario`, `criar_demo`, `limpar_e2e` |
+| `app/nucleo/management/commands/` | `carregar_cadastros`, `importar_matriz`, `carregar_templates`, `carregar_infograficos`, `abrir_ano`, `criar_usuarios`, `tornar_superusuario`, `criar_demo`, `limpar_e2e` |
 | `app/nucleo/static/revista/` | JS e CSS da revista (F1 escalas, F2 svg-tour) |
 | `app/templates_seed/<ano>/` | textos iniciais dos templates |
 | `app/e2e/` | Playwright ([`docs/e2e.md`](docs/e2e.md)) |

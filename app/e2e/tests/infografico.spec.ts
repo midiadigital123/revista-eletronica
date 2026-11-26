@@ -4,7 +4,8 @@
 // prévia mostra o tour e a imagem da tarefa 1; desligar "Progressão" tira o bloco da prévia.
 // A matriz Demonstração não tem 2EF: a Situação fica em 5 de 6, só com essa pendência (o 6 de 6 está no
 // revistaPropria). Preparo de painel.spec.ts (criar_demo --ano 2026 e o superusuário e2e); o limpar.ts
-// apaga tudo no fim (D-224).
+// apaga tudo no fim (D-224). LP nasce preenchido pelo seed dos Word (D-298): cada valor gravado aqui difere do
+// seed, porque o autosave só grava o que muda.
 import { expect, test } from "@playwright/test";
 import { CAPA, alpinePronto, entrar, fichaComTemplates, infograficoMinimo, liberarBloqueio, preencher, salvarInfografico } from "./helpers";
 
@@ -45,7 +46,7 @@ test("infográficos: 2 cartões, Outras Etapas inteiro, prévia com tour e image
     const tarefa = outras.getByRole("group", { name: `Tarefa ${n}`, exact: true });
     await salvar(() => tarefa.locator("input[type=file]").setInputFiles({ ...CAPA, name: `item-${n}.png` }));
     await expect(tarefa.locator("img.inf-miniatura")).toBeVisible(); // a imagem troca o passo inteiro
-    await salvar(() => tarefa.getByLabel("Etapa", { exact: true }).selectOption("5EF"));
+    await salvar(() => tarefa.getByLabel("Etapa", { exact: true }).selectOption("1EF")); // o seed não usa 1EF: muda e grava
     await salvar(() => preencher(tarefa.getByLabel("Descritor", { exact: true }), `D0${n}`));
   }
   const tarefa1 = outras.getByRole("group", { name: "Tarefa 1", exact: true });

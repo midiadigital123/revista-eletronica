@@ -55,7 +55,7 @@ de importação: montar em `/pdfs` (`-v "<pasta>:/pdfs:ro"`); sem eles, 8 testes
 - `app/nucleo/permissoes.py`: tabela papel × ação, fonte única (4 grupos: Pedagógica, Mídias
   Digitais, Admin, Impresso). Mudou a tabela? Migração de dados nova que sincroniza os grupos.
 - `app/nucleo/variaveis.py`: lista fixa das variáveis `{{x}}` dos templates.
-- Comandos: `carregar_cadastros`, `importar_matriz`, `carregar_templates`, `abrir_ano`,
+- Comandos: `carregar_cadastros`, `importar_matriz`, `carregar_templates`, `carregar_infograficos`, `abrir_ano`,
   `criar_usuarios`, `tornar_superusuario`, `criar_demo`, `limpar_e2e` (o Playwright o roda no fim).
 
 ### Regras que o código garante
@@ -86,7 +86,10 @@ para 2 a 5 padrões (cores em `--color-padrao-k`, sobrescritas por projeto); `st
 F2 hoje (branch `integ/f2-gerado`, fases 1 a 4): gerado pelo servidor como SVG a partir dos
 infográficos da revista (até dois: Alfa e Outras Etapas), preenchidos no passo "Infográficos" da
 ficha da revista (regra em `nucleo/infografico.py`, D-254). O SVG enviado pelo design saiu (migração
-0024); o impresso vê os textos dos infográficos, sem a imagem dos itens (`f2.textos_impresso`, D-256). Specs em `docs/superpowers/specs/2026-11-06-*.md` (D-227 a D-232), planos das
+0024); o impresso vê os textos dos infográficos, sem a imagem dos itens (`f2.textos_impresso`, D-256).
+Os infográficos de LP nascem preenchidos pelo seed dos Word da Pedagógica (`templates_seed/<ano>/infograficos/`,
+`carregar_infograficos` e a cascata, D-298); cada revista edita a sua cópia na ficha. A suíte Django desliga isso
+(`INFOGRAFICOS_DO_SEED`, `nucleo/tests/__init__.py`). Specs em `docs/superpowers/specs/2026-11-06-*.md` (D-227 a D-232), planos das
 fases em `docs/superpowers/plans/`. `example/` guarda
 protótipos estáticos fora do sistema (`f2-gerado/` é a fase 0, D-228), cada um com `LEIA-ME.md`.
 

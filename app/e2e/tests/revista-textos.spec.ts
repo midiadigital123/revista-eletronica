@@ -115,7 +115,7 @@ test("revista: templates, arquivos por soltar e validar pela coluna Situação",
 
   await page.goto(`/ui/revista/2026/${revista}/`);
   const situacao = page.locator("#situacao");
-  await expect(situacao).toContainText("2 de 6 prontos");
+  await expect(situacao).toContainText("3 de 6 prontos"); // Infográficos já pronto: LP nasce com o seed (D-298)
   await expect(situacao.getByRole("link", { name: "Falta escolher o template do F1." })).toHaveAttribute("href", "#templates");
   await expect(page.locator("#botao-validado")).toBeDisabled();
   await expect(page.locator("#validar-motivo")).toHaveText("Resolva as pendências acima para validar.");
