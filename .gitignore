@@ -7,3 +7,4 @@ menu-funcionalidade/
 __pycache__/
 app/staticfiles/
 kanban.html
+app/templates_seed/*/infograficos-anterior/
