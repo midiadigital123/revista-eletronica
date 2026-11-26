@@ -1,3 +1,5 @@
+> **Substituído pela D-298 em 26/11:** ver [`2026-11-26-infografico-lp-copia.md`](2026-11-26-infografico-lp-copia.md). Fica como histórico do modelo único, que pode voltar numa próxima versão.
+
 # Plano — Modelo de infográfico de LP pré-preenchido pelos dois Word (antes da etapa 11)
 
 ## Contexto
