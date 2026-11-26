@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Plano D-298 (`docs/superpowers/plans/2026-11-26-infografico-lp-copia.md`) concluído em 26/11, passos 0 a 5, na `feat/infografico-lp` (worktree de trabalho), sem commit; K-050 em Review. Infográficos de LP nascem pelo seed dos dois Word: `carregar_infograficos` (só o vazio; recarga `--anterior`) e a cascata para o infográfico novo; edição na ficha de cada revista. Dica do Referencial fora (usuário, 26/11).
+Plano D-298 (`docs/superpowers/plans/2026-11-26-infografico-lp-copia.md`) concluído em 26/11, passos 0 a 5, e mesclado na `main` com push em 26/11 com o "ok" do usuário; K-050 em Done. Infográficos de LP nascem pelo seed dos dois Word: `carregar_infograficos` (só o vazio; recarga `--anterior`) e a cascata para o infográfico novo; edição na ficha de cada revista. Dica do Referencial fora (usuário, 26/11).
 Funcionando: suíte Django 1086 OK (9 pulados), `makemigrations --check` limpo; E2E inteiro numa stack isolada (`e2e-inf`, já derrubada): 176 passaram, 0 falhas, 0 pulados. Na 8002: 60 infográficos de LP preenchidos, recarga simulada (31 atualizados, 2 mantidos do AC) e desfeita, Anchieta com 2EF pela cascata nasceu preenchido (desfeito).
 Quebrado/pendente: cada revista de LP do E2E deixa 8 imagens no `media/` (limite conhecido); comparar o mapa de páginas com o Figma (etapa 11, K-048); em aberto: "Duplicar matriz" sai junto com os botões de criar (D-277)? Para onde vai o Painel, que não está no menu do Figma?
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Pedir o ok para commitar a `feat/infografico-lp` e mesclar na `integ/infografico-lp`.
+Rodar `docker compose run --rm app python manage.py carregar_infograficos --ano 2026 --usuario admin` no dev (8000) e abrir o F2 de uma revista de LP.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -3129,3 +3129,4 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - Passo 3 do D-298 feito: recarga com `--anterior`; simulação na 8002 (31 atualizados, 2 mantidos do AC) e desfeita.
 - Passo 4 do D-298 feito: cascata preenche o infográfico novo pelo seed; chave `INFOGRAFICOS_DO_SEED`; 2 specs E2E ajustados ao LP pré-preenchido (3 specs: 28 passaram).
 - Passo 5 do D-298 feito: Django 1086 OK, E2E 176 passaram sem pulos (com `imp-e2e`), docs (CLAUDE.md, ficha da revista, plano) e learning da chave de testes. K-050 em Review.
+- "ok para a main" (usuário): `integ/infografico-lp` mesclada na `main` com push; K-050 em Done.
