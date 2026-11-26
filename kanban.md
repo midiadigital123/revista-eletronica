@@ -1,11 +1,12 @@
 # Kanban — revista-express
 
 ## Backlog
-- **K-048** Etapa 11 — Redesenho das telas pelo Figma (menu Projetos · Modelos · Impresso) e retirada dos botões de criar matriz, template e parceiro · D-277
+- **K-050** Infográficos de LP preenchidos por cópia do seed dos dois Word (comando + recarga + cascata): plano `docs/superpowers/plans/2026-11-26-infografico-lp-copia.md`; vem antes da K-048 · D-298
 - **K-031** Fase 5 do F2: animação por passo (desejável)
 - **K-033** S18 — E2E da temporada
 
 ## Doing
+- **K-048** Etapa 11 — Redesenho das telas pelo Figma (menu Projetos · Modelos · Impresso) e retirada dos botões de criar matriz, template e parceiro · D-277 · mapa de páginas em `docs/telas/mapa-de-paginas.md` (25/11)
 
 ## Review
 ## Done

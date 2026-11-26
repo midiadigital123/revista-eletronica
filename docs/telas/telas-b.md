@@ -1,6 +1,6 @@
 # Telas B: o que já está fora do admin
 
-Telas do dia a dia como páginas próprias no Django, com o visual do editor React (D-183) e HTMX local (D-186). Tudo na `main` desde 05/11; as branches citadas na coluna "Revisão" são históricas. Convenções e componentes: [`design-system.md`](design-system.md). Requisitos de origem: [`inventario.md`](inventario.md) (ids T01–T28).
+Telas do dia a dia como páginas próprias no Django, com o visual do editor React (D-183) e HTMX local (D-186). Tudo na `main` desde 05/11; as branches citadas na coluna "Revisão" são históricas. Convenções e componentes: [`design-system.md`](design-system.md). Requisitos de origem: [`inventario.md`](inventario.md) (ids T01–T28). Caminho de cliques até cada página: [`mapa-de-paginas.md`](mapa-de-paginas.md).
 
 Todas: login obrigatório (anônimo vai ao login das telas B (`/conta/entrar/`)), mesmas permissões do admin equivalente, só leitura sem permissão de escrita (POST → 403), bloqueio de edição onde o admin usa `BloqueioAdminMixin` (`nucleo/ui_bloqueio.py`) e mensagens no padrão causa + correção. O admin continua funcionando para tudo.
 
