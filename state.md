@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Design system do Figma "Sistemas CAEd" extraído para HTML em `docs/design-system-figma/` (D-304, K-054 em Done), mesclado na `main` em 27/11, com push. Nada em `app/` mudou.
-Funcionando: `index.html` (visão geral, diferenças e pontos de atenção), `tokens.html` (cores, contraste, tipografia, espaçamento), `componentes.html` (componentes com medidas, node-id e equivalente de hoje), `telas.html` (23 telas e padrões de layout); `tokens.css` com todas as variáveis. Conferido no navegador, sem rolagem horizontal a 375 px.
-Quebrado/pendente: ícones são aproximações Lucide (SVG da biblioteca não exportados); Proxima Nova sem licença no repositório; estados hover/foco/erro não existem no Figma. Da K-053 (já na `main`, com push e migração 0029 no dev): E2E `infografico.spec.ts` ajustado e não rodado (faltam as credenciais E2E); etapa 11 (K-048) segue em aberto.
+F2 de MT por nível (D-305, K-055 em Review) na `feat/f2-mt` (worktree de trabalho), sem commit. Migração 0030 aplicada no banco da worktree.
+Funcionando: infográfico de MT com bolinha, número, barrinhas 1 a 4 e texto da habilidade no bloco Tarefas; texto longo faz a linha crescer; modal "Nível N"; ficha de MT com campo Habilidade no lugar de Etapa e Descritor; pendência do texto nos 4 itens; impresso confere a habilidade. LP sai byte a byte igual (hash e gabarito do zip). Suíte Django 1099 OK (o catálogo de CHECKs corrigido e rodado à parte). Conferido no navegador com dados de teste.
+Quebrado/pendente: spec E2E de MT (`infografico.spec.ts`) escrito e não rodado; `trail check` aponta 18 conflitos, todos por coincidência de palavras (justificar no commit).
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Abrir `docs/design-system-figma/index.html` e ler a seção "Pontos de atenção para a K-048".
+Dizer "commitar" para gravar a `feat/f2-mt` e mesclar na `integ/f2-mt`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2477,6 +2477,14 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Arquivos afetados:** `docs/design-system-figma/*`
 - **Status:** ativa
 
+### D-305 — F2 de MT: bloco Tarefas por nível, no mesmo SVG, decidido pelo componente (2026-11-27 19:00)
+- **Contexto:** chegou a informação de que, nas revistas de MT (Alfa e Outras Etapas), o bloco "Tarefas por nível de complexidade" não usa [Descritor · Etapa · Item] como LP: são sempre 4 linhas com ícone de barrinhas 1→4, o texto da habilidade e a coluna Itens (igual à de LP). O título continua "Tarefas por nível de complexidade". A ficha do item em MT troca Etapa + Descritor por um texto "Habilidade".
+- **Decisão:** um `f2.svg` só, com ramo `{% if por_nivel %}` nas linhas do bloco `f2-tarefas` (ramo LP byte a byte igual). Regra por componente: `TAREFAS_POR_NIVEL = {"MT"}` (`models/revista.py`). Campo novo `RevistaInfograficoItem.habilidade` (até 500). O resolvido ganha `por_nivel` e `habilidade` só nos infográficos de MT (hash de LP não muda). Em MT o texto longo faz a linha crescer (como D-300), o modal do item se chama "Nível N" e o texto da habilidade nos 4 itens é pendência para validar (escolhas do usuário em 27/11).
+- **Motivo:** a diferença está só nas linhas de um bloco; cabeçalho, descritor, habilidades, progressão, conectores, coluna Itens, tour e modais são iguais. Um SVG só evita corrigir tudo duas vezes.
+- **Descartadas:** SVG separado para MT — duplica ~200 linhas e cada correção futura; campo "modelo das tarefas" no infográfico — nenhum caso pede LP por nível (YAGNI); reaproveitar `descritor` para o texto — limite de 20 caracteres e sentido diferente; cortar com reticências — o texto inteiro sumiria da tela inicial; limite de caracteres — o usuário preferiu a linha crescer.
+- **Arquivos afetados:** `app/nucleo/models/revista.py`, migração 0030, `servicos/resolver.py`, `servicos/f2.py`, `servicos/pendencias.py`, `templates/revista/f2.svg`, `nucleo/infografico.py`, `urls/ui_revista.py`, `templates/ui/parciais/revista_infograficos.html`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (24/11, Pedagógica via chat; respondida em 24/11 pela D-288: cópia da etapa × componente pelo botão "Editar só neste projeto", com vínculo e revisão) Requisito novo: descritores e outros elementos da Comunitária precisam ser editáveis **por projeto**, em qualquer projeto (não só CE, Joinville e ES). A Luciana respondeu que **todos** os elementos (descritor, tarefa, arquivo do item, BNCC, pré-requisitos) são editáveis localmente por projeto — depende de: Otavio
 - [x] (24/11, D-290; respondida em 24/11: segue a ordem do editor, D-291) A ordem dos descritores na revista é alfabética pelo código (D011 vem antes de D02), não a ordem arrastada no editor. É o que a Pedagógica quer? — depende de: Otavio
@@ -3195,3 +3203,6 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - Suíte 1093 OK; commit na `feat/f2-mescla` e merge na `integ/f2-mescla`.
 - D-301 a D-303 mesclados na `main`, K-053 em Done; migração 0029 aplicada no dev pelo usuário; push da `main`.
 - E2E: o spec do infográfico clicava no checkbox oculto do elo; passou a clicar no elo (label). Suíte E2E 176 passaram, 0 pulados; na `main` com push.
+
+### 2026-11-27 19:00
+- D-305: F2 de MT por nível no mesmo SVG (decisões do usuário: linha cresce, modal "Nível N", habilidade obrigatória); suíte 1099 OK.
