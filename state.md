@@ -3194,3 +3194,4 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - Defeito da D-303: juntar deixava o status em "Salvando…" para sempre. Causa: `data-linha` na grade é o atributo que o autosave reserva para a linha nova; o checkbox virava uma "linha" sem campos e nunca saía da lista de envios. Correção: `data-ref-linha`, com teste que falha se `data-linha` voltar ao cartão.
 - Suíte 1093 OK; commit na `feat/f2-mescla` e merge na `integ/f2-mescla`.
 - D-301 a D-303 mesclados na `main`, K-053 em Done; migração 0029 aplicada no dev pelo usuário; push da `main`.
+- E2E: o spec do infográfico clicava no checkbox oculto do elo; passou a clicar no elo (label). Suíte E2E 176 passaram, 0 pulados; na `main` com push.
