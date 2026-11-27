@@ -8,6 +8,7 @@
 ## Doing
 
 ## Review
+- **K-054** Design system do Figma (Telas – v1 e Componentes) extraído para HTML em `docs/design-system-figma/` (`feat/design-system-figma`, na `integ/design-system-figma`): tokens, componentes, 23 telas, sem mexer em `app/`; conferido no navegador; falta o "ok" para a `main` · insumo da K-048 · 2026-11-27 · D-304
 ## Done
 - **K-053** Mescla explícita de marca e habilidade no referencial do F2 (`feat/f2-mescla`): toggles "Junta com a de cima" por coluna, vazio sem juntar fica vazio, marca juntada = uma letra centrada; UI com elo entre etapas e célula única (D-303) · suíte 1093 OK; na `main` (sem push) · 2026-11-27 · D-301 a D-303
 - **K-052** Linhas da tabela "Descrição das habilidades" do F2 crescem com o texto (`feat/f2-linhas-crescem`): alturas estimadas no servidor, Progressão e viewBox descem; `test_f2` e `test_empacotar` OK; na `main` (sem push) · 2026-11-27 · D-300
