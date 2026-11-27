@@ -2,8 +2,8 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-K-058 (D-313) na `main` (sem push): extração v2 do design system do Figma em `docs/design-system-figma/`, tokens por papel, Montserrat, propostas da revisão da biblioteca.
-Antes: K-056 e K-057 (D-306 a D-312) na `main` (sem push), via `feat/f2-mt-alfa` → `integ/f2-fechamento`; suíte Django 1126 OK (9 pulados). Migrações 0031 a 0034 e carga do seed aplicadas no banco da 8002; no dev (8000) também (MT Alfa 1276 campos). E2E inteiro na stack isolada: 178 passaram, 0 pulados.
+K-058 (D-313) na `main` com push (`c649a31`): extração v2 do design system do Figma em `docs/design-system-figma/`, tokens por papel, Montserrat, propostas da revisão da biblioteca.
+Antes: K-056 e K-057 (D-306 a D-312) na `main` com push, via `feat/f2-mt-alfa` → `integ/f2-fechamento`; suíte Django 1126 OK (9 pulados). Migrações 0031 a 0034 e carga do seed aplicadas no banco da 8002; no dev (8000) também (MT Alfa 1276 campos). E2E inteiro na stack isolada: 178 passaram, 0 pulados.
 Funcionando: MT Alfa preenchido pelo Word (29 revistas na 8002): habilidade, referencial 1EF–7EF, marcas até 3EM, 4 níveis com imagem e análise; "Agora é com você" por tipo (MT Alfa com os 2 parágrafos do 3º ano e o link); LP sem mudança visual. Conferido no navegador (preview 2 e 1). Antes: K-056 na `integ/f2-fechamento`, suíte 1121 OK.
 Quebrado/pendente: URL do template do infográfico (`#pendente`); Word de MT Outras; `tarefas-fechamento-alfa` de MT.
 
@@ -2671,6 +2671,7 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - Componentes e telas refeitos por 2 subagentes; capturas de 6 das 23 telas, as outras 17 conferidas pela estrutura do Figma.
 - Commit `5efc53e` (docs + learning l-9d870116, que substitui l-7e429e41) e merge na `integ/design-system-v2` com o "ok" do usuário; `trail check` só com falsos positivos de palavra.
 - A `main` tinha recebido K-056/K-057 e D-306 a D-312 de outra sessão: a extração foi renumerada para K-058 e D-313 ao trazer a `main` (`5eb125e`). Mesclada na `main` (`b3beefb`) com o "ok" do usuário, sem push; worktree `../revista-express-ds` apagada.
+- Push da `main` com o "ok" do usuário (`e30f2ad..c649a31`): levou também K-055, K-056 e K-057.
 
 ### 2026-11-27 18:00
 - Design system do Figma extraído para `docs/design-system-figma/` (D-304, K-054): 23 telas, 13 componentes da biblioteca "UI Fundação CAEd", ~90 variáveis; contraste do cinza terciário (#808080, 3,78:1) e da borda do campo (#ccc, 1,54:1) abaixo do WCAG. Mesclado na `main` com push; worktree extra apagada.
