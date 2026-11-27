@@ -2,9 +2,9 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Design system do Figma "Sistemas CAEd" extraído para HTML em `docs/design-system-figma/` (D-304, K-054 em Done), mesclado na `main` em 27/11 (sem push). Nada em `app/` mudou.
+Design system do Figma "Sistemas CAEd" extraído para HTML em `docs/design-system-figma/` (D-304, K-054 em Done), mesclado na `main` em 27/11, com push. Nada em `app/` mudou.
 Funcionando: `index.html` (visão geral, diferenças e pontos de atenção), `tokens.html` (cores, contraste, tipografia, espaçamento), `componentes.html` (componentes com medidas, node-id e equivalente de hoje), `telas.html` (23 telas e padrões de layout); `tokens.css` com todas as variáveis. Conferido no navegador, sem rolagem horizontal a 375 px.
-Quebrado/pendente: ícones são aproximações Lucide (SVG da biblioteca não exportados); Proxima Nova sem licença no repositório; estados hover/foco/erro não existem no Figma. Push da `main`. Da K-053 (já na `main`, com push e migração 0029 no dev): E2E `infografico.spec.ts` ajustado e não rodado (faltam as credenciais E2E); etapa 11 (K-048) segue em aberto.
+Quebrado/pendente: ícones são aproximações Lucide (SVG da biblioteca não exportados); Proxima Nova sem licença no repositório; estados hover/foco/erro não existem no Figma. Da K-053 (já na `main`, com push e migração 0029 no dev): E2E `infografico.spec.ts` ajustado e não rodado (faltam as credenciais E2E); etapa 11 (K-048) segue em aberto.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
@@ -2588,7 +2588,7 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 
 ## Sessões
 ### 2026-11-27 18:00
-- Design system do Figma extraído para `docs/design-system-figma/` (D-304, K-054): 23 telas, 13 componentes da biblioteca "UI Fundação CAEd", ~90 variáveis; contraste do cinza terciário (#808080, 3,78:1) e da borda do campo (#ccc, 1,54:1) abaixo do WCAG. Mesclado na `main` (sem push); worktree extra apagada.
+- Design system do Figma extraído para `docs/design-system-figma/` (D-304, K-054): 23 telas, 13 componentes da biblioteca "UI Fundação CAEd", ~90 variáveis; contraste do cinza terciário (#808080, 3,78:1) e da borda do campo (#ccc, 1,54:1) abaixo do WCAG. Mesclado na `main` com push; worktree extra apagada.
 
 ### 2026-11-12
 - Análise das duas planilhas: 33 parceiros únicos, 148 cortes casam, 40 faltam; a de cortes é a de 2025 (D-261).
