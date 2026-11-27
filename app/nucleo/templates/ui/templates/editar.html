@@ -36,7 +36,7 @@ View: nucleo/urls/ui_templates.py (editar). Ficha: docs/telas/fichas/templates.m
       <div data-secoes>
         {% for s in secoes %}{% include "ui/parciais/templates_secao.html" with n=forloop.counter0 %}{% endfor %}
       </div>
-      <p class="ajuda">Variáveis entre chaves duplas, como <code>{% templatetag openvariable %}ano{% templatetag closevariable %}</code>: use "{ } Variável". No texto valem negrito, itálico e listas; links, imagens, HTML e <code>#</code>, não. O título é texto puro.</p>
+      <p class="ajuda">Variáveis entre chaves duplas, como <code>{% templatetag openvariable %}ano{% templatetag closevariable %}</code>: use "{ } Variável". No texto valem negrito, itálico, listas e link <code>[texto](https://…)</code> (endereço ainda sem definição: <code>[texto](#pendente)</code>, que sai em vermelho); imagens, HTML e <code>#</code>, não. O título é texto puro.</p>
     </div>
 
     <section class="tpl-previa" aria-labelledby="previa-titulo">

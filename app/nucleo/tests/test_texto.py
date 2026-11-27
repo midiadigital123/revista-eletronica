@@ -10,10 +10,10 @@ from django.test import SimpleTestCase, TestCase
 
 from nucleo.management.commands.carregar_templates import AVISO
 from nucleo.models import Ano, Componente, Template, TemplateVersao
-from nucleo.texto import SECOES_F2, partes, renderizar, renderizar_texto_puro, secoes, validar, variaveis_usadas
+from nucleo.texto import SECOES_F2, html_para_texto, partes, renderizar, renderizar_texto_puro, secoes, validar, variaveis_usadas
 
 F1 = "## introducao\nTítulo\n\nCorpo da {{nome_parceiro}}.\n\n- um\n- dois\n"
-F2_NOVO = "".join(f"## {i}\n{'F' if i == 'fechamento' else 'T'}\n\nx\n\n" for i in SECOES_F2).rstrip("\n") + "\n"
+F2_NOVO = "".join(f"## {i}\n{'F' if i.startswith('fechamento') else 'T'}\n\nx\n\n" for i in SECOES_F2).rstrip("\n") + "\n"
 ORIGINAL = Path.read_text
 SEED = settings.BASE_DIR / "templates_seed" / "2026"
 
@@ -35,8 +35,8 @@ class ValidarTest(SimpleTestCase):
     def test_secao_faltando(self):
         self.assertIn("Seções obrigatórias faltando: introducao.", self.erros("## fechamento\nT\n\nx\n"))
         self.assertIn("Seções não previstas no F1: fechamento.", self.erros("## introducao\nT\n\nx\n\n## fechamento\nF\n\ny\n"))
-        sem = F2_NOVO.replace("## fechamento\nF\n\nx\n", "")
-        self.assertIn("Seções obrigatórias faltando: fechamento.", self.erros(sem, "F2"))
+        sem = F2_NOVO.replace("## fechamento-alfa\nF\n\nx\n\n", "")
+        self.assertIn("Seções obrigatórias faltando: fechamento-alfa.", self.erros(sem, "F2"))
 
     def test_f2_recusa_ids_antigos(self):
         antigo = F2_NOVO + "\n## passo1\nP\n\nx\n"
@@ -70,6 +70,13 @@ class ValidarTest(SimpleTestCase):
         ]:
             with self.subTest(trecho):
                 self.assertIn(nome, self.erros(F1.replace("- dois", f"- dois\n\n{trecho}")))
+
+    def test_link_so_https_ou_pendente(self):  # D-307
+        validar(F1 + "\n[**Acesse** o template](https://caed.example/t?a=1&b=2) e [atividades](#pendente).", "F1")
+        for href in ("http://x", "#outro", "/local", "mailto:a@b.c"):
+            with self.subTest(href):
+                self.assertIn(f"link só com https://… ou #pendente; tem {href}", self.erros(F1 + f"\n[a]({href})"))
+        self.assertIn("título é texto puro", self.erros(F1.replace("Título", "[T](https://x.y)")))
 
     def test_chaves_soltas_controle_bidi_e_referencia(self):
         self.assertIn("chaves soltas", self.erros(F1 + "{{{nome_parceiro}}}"))
@@ -133,6 +140,19 @@ class RenderizarTest(SimpleTestCase):
     def test_lista_e_variavel_vazia(self):
         html = renderizar("- {{nome_parceiro}}\n- b", {})
         self.assertIn('<li><span class="variavel-vazia">{{nome_parceiro}}</span></li>', html)
+
+    def test_link_https_abre_em_outra_aba_e_pendente_sai_como_variavel_vazia(self):  # D-307
+        html = renderizar("[**Acesse** já](https://a.b/c?d=1&e=2) [o modelo](#pendente)", {})
+        self.assertEqual(
+            html,
+            '<p><a href="https://a.b/c?d=1&amp;e=2" target="_blank" rel="noopener"><strong>Acesse</strong> já</a> '
+            '<span class="variavel-vazia">o modelo</span></p>\n',
+        )
+        self.assertEqual(html_para_texto(html), "[**Acesse** já](https://a.b/c?d=1&e=2) o modelo")
+
+    def test_link_fora_da_regra_nao_vira_link(self):  # escapou da validação
+        self.assertEqual(renderizar("[a](http://x)", {}), "<p><span>a</span></p>\n")
+        self.assertNotIn("<a", renderizar("[a](javascript:alert(1))", {}))
 
     def test_titulo_texto_puro(self):
         self.assertEqual(renderizar_texto_puro("**R&D** {{nome_parceiro}}", {"nome_parceiro": "<GO>"}), "**R&amp;D** &lt;GO&gt;")

@@ -10,6 +10,7 @@ from nucleo.models import (
 
 # Atualize junto com cada migração que criar FK composta, CHECK ou UNIQUE (D-124).
 FKS_COMPOSTAS = {
+    "fk_atividades_componente_ano": "FOREIGN KEY (componente_id, ano_id) REFERENCES componente(id, ano_id)",
     "fk_matriz_etapa_cc_matriz_ano": "FOREIGN KEY (matriz_id, ano_id) REFERENCES matriz(id, ano_id)",
     "fk_matriz_etapa_cc_etapa_ano": "FOREIGN KEY (etapa_id, ano_id) REFERENCES etapa(id, ano_id)",
     "fk_matriz_etapa_cc_componente_ano": "FOREIGN KEY (componente_id, ano_id) REFERENCES componente(id, ano_id)",
@@ -55,6 +56,9 @@ FKS_MANUAIS = {
     "fk_matriz_etapa_cc_base": "FOREIGN KEY (base_id) REFERENCES matriz_etapa_cc(id) ON DELETE SET NULL",
 }
 CHECKS = {
+    "atividades_arquivo_sha256_sha256",
+    "atividades_arquivo_tamanho",
+    "atividades_tipo",
     "componente_codigo_tamanho",
     "componente_nome_tamanho",
     "cor_padrao_cor_hex",
@@ -129,6 +133,7 @@ CHECKS = {
     "template_origem_tamanho",
 }
 UNIQUES = {
+    "atividades_uniq",
     "componente_ano_codigo_uniq",
     "componente_id_ano_uniq",
     "cor_padrao_ano_padrao_uniq",

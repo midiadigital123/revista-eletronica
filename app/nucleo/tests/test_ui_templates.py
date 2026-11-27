@@ -225,7 +225,7 @@ class EditorSecoesTest(UiBase):
         r = self.ped.get(self.editar)
         self.assertEqual(tuple(re.findall(r'name="secao-\d+-id" value="([^"]*)"', r.content.decode())), SECOES_F2)
         self.assertNotContains(r, "Adicionar passo")
-        self.assertNotContains(r, 'data-acao="remover"')  # nenhum botão de estrutura: as 9 seções são fixas
+        self.assertNotContains(r, 'data-acao="remover"')  # nenhum botão de estrutura: as 10 seções são fixas
         secoes = [*F2_SECOES, ("passo2", "Passo dois", "Novo.")]
         r = self.ped.post(self.editar, form_secoes(secoes, **{CAMPO_SESSAO: self.sessao()}))
         self.assertEqual(r.status_code, 422)

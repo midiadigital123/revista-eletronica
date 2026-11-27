@@ -240,11 +240,13 @@ def _contexto(request, revista, chave=None, form=None):
 
 # Seções do template F2 que cada passo do infográfico usa (servicos/f2.gerar e html.contexto_pagina),
 # mostradas só para leitura no cartão (D-258).
+# ponytail: o cartão de cada infográfico mostra os dois fechamentos das tarefas (rótulos Alfa e Outras Etapas,
+# D-306); filtrar pelo tipo do cartão pede _textos_template por tipo.
 SECOES_DO_PASSO = {
     "descritor": ("passo-descritor", "dlg-descritor"),
     "habilidades": ("passo-habilidades",),
     "progressao": ("passo-progressao",),
-    "tarefas": ("passo-tarefas", "dlg-tarefas", "tarefas-fechamento"),
+    "tarefas": ("passo-tarefas", "dlg-tarefas", "tarefas-fechamento-alfa", "tarefas-fechamento-outras"),
 }
 
 

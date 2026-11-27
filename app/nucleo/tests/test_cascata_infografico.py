@@ -44,7 +44,7 @@ class CascataInfograficoTest(MediaTemporaria, TestCase):
     def alfa(self, componente):
         return RevistaInfografico.objects.get(revista__componente=componente, tipo="alfa")
 
-    def test_alfa_de_lp_nasce_com_o_seed_e_a_de_mt_vazia(self):
+    def test_alfa_de_lp_e_de_mt_nascem_com_o_seed(self):
         self.cortes((self.e5, self.lp), (self.e2, self.lp), (self.e2, self.mt))
         inf, seed = self.alfa(self.lp), SEED["LP", "alfa"]
         self.assertEqual(inf.habilidade, seed["habilidade"])
@@ -57,8 +57,12 @@ class CascataInfograficoTest(MediaTemporaria, TestCase):
         self.assertEqual(inf.history.first().history_user, self.usuario)
         outras = RevistaInfografico.objects.get(revista__componente=self.lp, tipo="outras")
         self.assertEqual(outras.habilidade, SEED["LP", "outras"]["habilidade"])
-        self.assertEqual(self.alfa(self.mt).habilidade, "")
-        self.assertFalse(RevistaInfograficoItem.objects.filter(infografico__componente=self.mt).exists())
+        mt = self.alfa(self.mt)  # D-311: MT Alfa também tem seed; os itens levam a habilidade do nível (D-305)
+        self.assertEqual(mt.habilidade, SEED["MT", "alfa"]["habilidade"])
+        self.assertEqual(
+            list(RevistaInfograficoItem.objects.filter(infografico=mt).values_list("habilidade", flat=True)),
+            [i["habilidade"] for i in SEED["MT", "alfa"]["itens"]],
+        )
 
     def test_desarquivar_nao_preenche(self):
         self.cortes((self.e5, self.lp), (self.e2, self.lp))

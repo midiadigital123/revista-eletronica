@@ -3,12 +3,13 @@ from .controle import Bloqueio
 from .matriz import Descritor, Matriz, MatrizEtapaCC, Tarefa
 from .projeto import Corte, ParceiroAno, Projeto, ProjetoCor, ProjetoPasso
 from .revista import (
-    FotoRevista, Revista, RevistaFasciculo, RevistaInfografico, RevistaInfograficoEtapa, RevistaInfograficoItem,
+    Atividades, FotoRevista, Revista, RevistaFasciculo, RevistaInfografico, RevistaInfograficoEtapa, RevistaInfograficoItem,
     RevistaSecao,
 )  # fmt: skip
 from .texto import Fasciculo, Template, TemplateVersao
 
 __all__ = [
+    "Atividades",
     "Ano",
     "Bloqueio",
     "Componente",
