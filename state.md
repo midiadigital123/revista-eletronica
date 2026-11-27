@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Títulos dos blocos Descrição e Progressão do F2 trocados para "… NA BASE NACIONAL COMUM CURRICULAR (BNCC)" (D-299), mesclados na `main` com push em 26/11 (K-051 em Done).
-Funcionando: zip gabarito `app/e2e/fixtures/revista.zip` regenerado; `test_empacotar` e `test_f2` 32 OK. O usuário conferiu o título no dev (8000).
-Quebrado/pendente: etapa 11 (K-048) e as perguntas dela seguem em aberto.
+Linhas da tabela "Descrição das habilidades" do F2 crescem com o texto (D-300), na branch `feat/f2-linhas-crescem` (worktree de trabalho), mesclada na `integ/f2-linhas-crescem`; falta o "ok" para a `main` (K-052 em Review).
+Funcionando: na revista 3 (LP, Alfa) os 8 textos aparecem inteiros, a Progressão desce e o viewBox cresce para 987,9; texto que já cabia gera SVG idêntico ao anterior (zip gabarito sem mudança); `test_f2` e `test_empacotar` OK. O gabarito `app/e2e/fixtures/pagina/` estava velho desde a D-299 (títulos) e foi regerado.
+Quebrado/pendente: tour e minimapa não conferidos no navegador com o SVG mais alto; etapa 11 (K-048) segue em aberto.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Abrir `docs/telas/mapa-de-paginas.md` ao lado do Figma (página "Testes") e marcar em cada linha se a tela existe no desenho novo (K-048).
+Abrir a prévia do F2 Alfa de uma revista de LP na 8002 e rodar o tour até a Progressão.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2437,6 +2437,14 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Arquivos afetados:** `app/nucleo/templates/revista/f2.svg`, `app/e2e/fixtures/revista.zip`
 - **Status:** ativa
 
+### D-300 — Linhas da tabela de habilidades do F2 crescem com o texto (2026-11-27 10:00)
+- **Contexto:** os textos BNCC da tabela "Descrição das habilidades" saíam cortados com "…": a altura de cada linha era fixa (a do desenho de LP) e o `line-clamp` cortava o resto.
+- **Decisão:** a altura do desenho vira o mínimo; o servidor estima as linhas do texto (`textwrap`, 88 caracteres por linha, 12 px por linha + 6 de respiro) e, se faltar espaço, divide a diferença igualmente entre as linhas que a célula cobre. Fio final, legenda, bloco Progressão (e seu conector) e a altura do viewBox descem o quanto a tabela cresceu. O `line-clamp` fica só como proteção.
+- **Motivo:** o texto da BNCC aparece inteiro na tela inicial, sem depender do modal; texto que já cabia não muda nada no SVG.
+- **Descartadas:** texto completo só no modal — a tabela continuaria com reticências; medir o texto no navegador e reposicionar por JS — o SVG é gerado no servidor e o svg-tour mede o desenho, mais peças móveis para o mesmo resultado.
+- **Arquivos afetados:** `app/nucleo/servicos/f2.py`, `app/nucleo/templates/revista/f2.svg`, `app/nucleo/tests/test_f2.py`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (24/11, Pedagógica via chat; respondida em 24/11 pela D-288: cópia da etapa × componente pelo botão "Editar só neste projeto", com vínculo e revisão) Requisito novo: descritores e outros elementos da Comunitária precisam ser editáveis **por projeto**, em qualquer projeto (não só CE, Joinville e ES). A Luciana respondeu que **todos** os elementos (descritor, tarefa, arquivo do item, BNCC, pré-requisitos) são editáveis localmente por projeto — depende de: Otavio
 - [x] (24/11, D-290; respondida em 24/11: segue a ordem do editor, D-291) A ordem dos descritores na revista é alfabética pelo código (D011 vem antes de D02), não a ordem arrastada no editor. É o que a Pedagógica quer? — depende de: Otavio
@@ -3141,3 +3149,6 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - Ajuste pedido pelo usuário na `feat/f2-modal` (worktree de trabalho): modal do F2 de 560px para 672px (+20%) e `max-width: 100%` na imagem do item (`static/revista/f2/revista.css`); gabarito `app/e2e/fixtures/revista.zip` regerado; testes de preview, zip e F2 (61) e `zip.spec` OK; medido a 1280px: modal 672px, imagem de 892px em 609px, sem rolagem lateral.
 - "pode commitar e levar para a main" (usuário): `feat/f2-modal` mesclada na `main` com push.
 - 2026-11-26 19:00: títulos do F2 com a BNCC (D-299), zip gabarito regenerado na `feat/f2-titulos`.
+
+### 2026-11-27
+- D-300: linhas da tabela de habilidades do F2 crescem com o texto (`feat/f2-linhas-crescem`), K-052 em Review.
