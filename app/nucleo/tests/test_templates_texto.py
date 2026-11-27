@@ -1,4 +1,5 @@
-"""Regra dos templates de texto comum ao admin e à tela B: seções do F2, rótulos, impacto e as migrações 0023 e 0025."""
+"""Regra dos templates de texto comum ao admin e à tela B: seções do F2, rótulos, impacto e as migrações 0023, 0025,
+0028 e 0031."""
 
 import importlib
 
@@ -22,7 +23,7 @@ class SecoesF2Test(SimpleTestCase):
         self.assertEqual(rotulo("passo-descritor"), "Passo: descritor")
         self.assertEqual(rotulo("dlg-descritor"), "Diálogo do descritor")
         self.assertEqual(rotulo("dlg-tarefas"), "Diálogo das tarefas")
-        self.assertEqual(rotulo("tarefas-fechamento"), "Fechamento das tarefas")
+        self.assertEqual(rotulo("tarefas-fechamento-alfa"), "Fechamento das tarefas (Alfa)")
         self.assertEqual(rotulo("fechamento"), "Fechamento")
 
 
@@ -60,8 +61,9 @@ class Migracao0023Test(TestCase):
         for cc in ("LP", "MT"):
             versoes = TemplateVersao.objects.filter(template=self.templates[cc, "F2"]).order_by("numero")
             self.assertEqual([v.numero for v in versoes], [1, 2])
-            self.assertEqual(list(texto.secoes(versoes[1].texto)), list(texto.SECOES_F2))
-            texto.validar(versoes[1].texto, "F2")
+            self.assertEqual(list(texto.secoes(versoes[1].texto)), list(self.mod.SECOES_F2))  # as 9 da época
+            m31 = importlib.import_module("nucleo.migrations.0031_tarefas_fechamento_por_tipo")
+            texto.validar(m31.por_tipo(versoes[1].texto, cc == "LP"), "F2")  # válido depois da 0031 (D-306)
         self.assertEqual(TemplateVersao.objects.get(template=self.tpl, numero=1).texto, F2_LP)
 
     def test_f1_e_outro_componente_ficam(self):
@@ -105,8 +107,10 @@ class Migracao0023Test(TestCase):
     def test_texto_congelado_e_o_do_seed(self):
         seed = AVISO.sub("", (SEED / "f2-lp.hbs").read_text(encoding="utf-8-sig"))
         m25 = importlib.import_module("nucleo.migrations.0025_tarefas_fechamento_sem_lp")
+        m31 = importlib.import_module("nucleo.migrations.0031_tarefas_fechamento_por_tipo")
         self.assertEqual(
-            self.mod.TEXTO_F2.replace(m25.RETIRAR, ""), seed,  # a 0025 tirou um parágrafo do seed
+            # a 0025 tirou um parágrafo do seed; a 0031 dividiu o tarefas-fechamento e trouxe os textos de 27/11
+            m31.por_tipo(self.mod.TEXTO_F2.replace(m25.RETIRAR, ""), lp=True), seed,
             "A migração 0023 é histórica: não a altere. Se o seed do F2 mudou de propósito, ajuste este teste.",
         )
 
@@ -224,4 +228,64 @@ class Migracao0028Test(TestCase):
         self.mod.frente(apps, None)
         self.assertEqual(
             set(RevistaSecao.objects.values_list("pk", flat=True)), {intro.pk, f2.pk}
+        )
+
+
+class Migracao0031Test(TestCase):
+    """D-306: tarefas-fechamento vira -alfa e -outras; LP recebe os textos novos. Importa a função da migração."""
+
+    ANTES = (
+        "## abertura\nA\n\nOlá.\n\n## tarefas-fechamento\nFechamento das tarefas\n\nEditado na tela.\n\n"
+        "## fechamento\nAgora é com você\n\nFim antigo.\n"
+    )
+
+    def setUp(self):
+        self.mod = importlib.import_module("nucleo.migrations.0031_tarefas_fechamento_por_tipo")
+        Mundo.montar(self)
+        self.vs = {
+            cc: TemplateVersao.objects.create(template=self.templates[cc, "F2"], numero=2, texto=self.ANTES)
+            for cc in ("LP", "MT")
+        }
+
+    def migrar(self):
+        self.mod.frente(apps, None)
+
+    def test_mt_divide_com_o_mesmo_texto_e_mantem_o_resto(self):
+        self.migrar()
+        self.migrar()  # idempotente
+        v = versao_atual(self.templates["MT", "F2"].pk)
+        self.assertEqual(v.numero, 3)
+        self.assertEqual(
+            v.texto,
+            "## abertura\nA\n\nOlá.\n\n"
+            "## tarefas-fechamento-alfa\nFechamento das tarefas\n\nEditado na tela.\n\n"
+            "## tarefas-fechamento-outras\nFechamento das tarefas\n\nEditado na tela.\n\n"
+            "## fechamento\nAgora é com você\n\nFim antigo.\n",
+        )
+        self.assertEqual(TemplateVersao.objects.get(pk=self.vs["MT"].pk).texto, self.ANTES)  # a anterior fica
+
+    def test_lp_recebe_os_textos_novos_e_valida(self):
+        self.migrar()
+        s = texto.secoes(versao_atual(self.templates["LP", "F2"].pk).texto)
+        self.assertEqual(s["abertura"], ("A", "Olá."))
+        self.assertTrue(s["tarefas-fechamento-alfa"][1].startswith("Ao analisar todos os itens"))
+        self.assertTrue(s["tarefas-fechamento-outras"][1].startswith("Ao analisar conjuntamente"))
+        self.assertIn("[**Acesse aqui** o template do Infográfico.](#pendente)", s["fechamento"][1])
+        for _, corpo in s.values():
+            texto.validar_corpo(corpo)  # levanta se o corpo novo sair do formato
+
+    def test_seed_lp_inteiro_sai_valido(self):
+        seed = AVISO.sub("", (SEED / "f2-lp.hbs").read_text(encoding="utf-8-sig"))
+        texto.validar(seed, "F2")
+
+    def test_copia_vira_as_duas_novas_com_o_mesmo_texto(self):
+        rf = RevistaFasciculo.objects.get(revista=self.go["LP"], fasciculo="F2")
+        RevistaSecao.objects.create(
+            revista_fasciculo=rf, template=self.templates["LP", "F2"], secao="tarefas-fechamento", texto="Meu.",
+            template_versao=self.vs["LP"],
+        )
+        self.migrar()
+        self.assertEqual(
+            sorted(RevistaSecao.objects.filter(revista_fasciculo=rf).values_list("secao", "texto")),
+            [("tarefas-fechamento-alfa", "Meu."), ("tarefas-fechamento-outras", "Meu.")],
         )

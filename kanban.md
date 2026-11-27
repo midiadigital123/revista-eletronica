@@ -8,6 +8,7 @@
 ## Doing
 
 ## Review
+- **K-056** F2: `tarefas-fechamento` por tipo (Alfa/Outras) com os textos novos dos Word de LP, link no Markdown restrito ("Acesse aqui o template do Infográfico", URL pendente) e PDF das atividades por ano × componente × tipo, com link "Acesse aqui as atividades"; enviar, trocar, baixar e remover (lixeira com modal) em cartões com área de soltar e permissões próprias (`feat/f2-fechamento`) · D-306 a D-310 · suíte 1121 OK; na `integ/f2-fechamento`; falta E2E e o ok para a `main` · 2026-11-27
 ## Done
 - **K-055** F2 de MT: bloco "Tarefas por nível de complexidade" com barrinhas 1→4 e texto da habilidade, no mesmo `f2.svg` (`feat/f2-mt`); ficha do item de MT com campo Habilidade · D-305 · suíte 1099 OK; E2E 178 passaram; na `main` (sem push) · 2026-11-27
 - **K-054** Design system do Figma (Telas – v1 e Componentes) extraído para HTML em `docs/design-system-figma/` (`feat/design-system-figma`): tokens, componentes, 23 telas, sem mexer em `app/`; conferido no navegador; na `main` com push · insumo da K-048 · 2026-11-27 · D-304
