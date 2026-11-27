@@ -2670,6 +2670,7 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - 115 variáveis do Figma conferidas uma a uma contra o `tokens.css`; nenhum `var()` sem definição; 4 páginas abertas no navegador sem âncora nem ícone quebrado.
 - Componentes e telas refeitos por 2 subagentes; capturas de 6 das 23 telas, as outras 17 conferidas pela estrutura do Figma.
 - Commit `5efc53e` (docs + learning l-9d870116, que substitui l-7e429e41) e merge na `integ/design-system-v2` com o "ok" do usuário; `trail check` só com falsos positivos de palavra.
+- A `main` tinha recebido K-056/K-057 e D-306 a D-312 de outra sessão: a extração foi renumerada para K-058 e D-313 ao trazer a `main` (`5eb125e`). Mesclada na `main` (`b3beefb`) com o "ok" do usuário, sem push; worktree `../revista-express-ds` apagada.
 
 ### 2026-11-27 18:00
 - Design system do Figma extraído para `docs/design-system-figma/` (D-304, K-054): 23 telas, 13 componentes da biblioteca "UI Fundação CAEd", ~90 variáveis; contraste do cinza terciário (#808080, 3,78:1) e da borda do campo (#ccc, 1,54:1) abaixo do WCAG. Mesclado na `main` com push; worktree extra apagada.

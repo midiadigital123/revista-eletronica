@@ -9,7 +9,7 @@
 
 ## Review
 ## Done
-- **K-058** Refazer a extração do design system do Figma sobre a biblioteca nova (`feat/design-system-v2`, worktree `../revista-express-ds`): tokens renomeados, Montserrat, node-ids novos, propostas da "Revisão da biblioteca" · conferido contra o Figma e no navegador; na `main` (sem push) · insumo da K-048 · 2026-11-27 · D-313
+- **K-058** Refazer a extração do design system do Figma sobre a biblioteca nova (`feat/design-system-v2`, worktree `../revista-express-ds`): tokens renomeados, Montserrat, node-ids novos, propostas da "Revisão da biblioteca" · conferido contra o Figma e no navegador; na `main` (`b3beefb`, sem push); worktree extra apagada · insumo da K-048 · 2026-11-27 · D-313
 - **K-057** F2 de MT Alfa preenchido pelo Word da Pedagógica (conversor de MT, `mt-alfa.json`, carga) e "Agora é com você" por tipo (`fechamento-alfa`/`-outras`, migração 0034) (`feat/f2-mt-alfa`) · D-311, D-312 · suíte 1126 OK; na `main` (sem push), E2E pendente · 2026-11-27
 - **K-056** F2: `tarefas-fechamento` por tipo (Alfa/Outras) com os textos novos dos Word de LP, link no Markdown restrito ("Acesse aqui o template do Infográfico", URL pendente) e PDF das atividades por ano × componente × tipo, com link "Acesse aqui as atividades"; enviar, trocar, baixar e remover (lixeira com modal) em cartões com área de soltar e permissões próprias (`feat/f2-fechamento`) · D-306 a D-310 · suíte 1121 OK; na `integ/f2-fechamento` · suíte 1126 OK; na `main` (sem push), E2E pendente · 2026-11-27
 - **K-055** F2 de MT: bloco "Tarefas por nível de complexidade" com barrinhas 1→4 e texto da habilidade, no mesmo `f2.svg` (`feat/f2-mt`); ficha do item de MT com campo Habilidade · D-305 · suíte 1099 OK; E2E 178 passaram; na `main` (sem push) · 2026-11-27
