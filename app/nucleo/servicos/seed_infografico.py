@@ -13,13 +13,13 @@ from django.conf import settings
 
 from nucleo.infografico import EtapaForm, InfograficoForm, ItemForm
 from nucleo.models import RevistaInfograficoEtapa, RevistaInfograficoItem
-from nucleo.models.revista import EtapaReferencial
+from nucleo.models.revista import TAREFAS_POR_NIVEL, EtapaReferencial
 from nucleo.servicos import arquivos
 from nucleo.texto import TOKENS_BLOCO, TOKENS_INLINE, _proibidos
 
 CAMPOS_INF = ("habilidade", "texto_descritor", "texto_progressao", "texto_habilidades")
 CAMPOS_ETAPA = ("marca", "codigo", "texto", "junta_marca", "junta_habilidade")
-CAMPOS_ITEM = ("etapa", "descritor", "texto_alternativo", "analise")
+CAMPOS_ITEM = ("etapa", "descritor", "habilidade", "texto_alternativo", "analise")
 RICOS = ("texto_descritor", "texto_progressao", "texto_habilidades")
 
 
@@ -65,6 +65,8 @@ def validar(seed):
         for item in seed["itens"]:
             onde = f"item {item['posicao']}"
             form(ItemForm, {c: item[c] for c in CAMPOS_ITEM}, onde)
+            if seed["componente"] in TAREFAS_POR_NIVEL and not item["habilidade"].strip():
+                erros.append(f"{onde}: habilidade: vazia (obrigatória nas tarefas por nível, D-305)")
             if r := _proibidos(item["analise"], TOKENS_BLOCO | TOKENS_INLINE):
                 erros.append(f"{onde}: análise: recurso não permitido: {', '.join(r)}")
             imagem = seed["_pasta"] / item["imagem"]

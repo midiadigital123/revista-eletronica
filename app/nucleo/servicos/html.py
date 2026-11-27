@@ -107,7 +107,7 @@ def contexto_pagina(
         "abertura": por_id.get("abertura"),
         # Compara os itens: vem depois do infográfico e só com o passo Tarefas ligado (D-258).
         "tarefas_fechamento": por_id.get(f"tarefas-fechamento-{tipo}") if "tarefas" in inf["passos"] else None,
-        "fechamento": por_id.get("fechamento"),
+        "fechamento": por_id.get(f"fechamento-{tipo}"),  # "Agora é com você" por tipo (D-312)
         "atividades": (atividades or {}).get(tipo),
         "sem_template_f2": secoes_f2 is None,
         **gerado,  # svg (montado pelo f2.svg: vai com |safe), tour e modais

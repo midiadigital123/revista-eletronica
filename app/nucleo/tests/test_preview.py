@@ -43,7 +43,8 @@ F2 = (
     "## passo-progressao\nProgressão\n\nA progressão.\n\n## passo-tarefas\nTarefas\n\nAs tarefas.\n\n"
     "## dlg-descritor\nSobre o descritor\n\nDetalhe do descritor.\n\n## dlg-tarefas\nTarefas por nível\n\nOs itens.\n\n"
     "## tarefas-fechamento-alfa\nFechamento das tarefas\n\nCompare os itens.\n\n"
-    "## tarefas-fechamento-outras\nFechamento das tarefas\n\nCompare os itens.\n\n## fechamento\nAgora é com você\n\nUse o template.\n"
+    "## tarefas-fechamento-outras\nFechamento das tarefas\n\nCompare os itens.\n\n"
+    "## fechamento-alfa\nAgora é com você\n\nUse o template.\n\n## fechamento-outras\nAgora é com você\n\nUse o template.\n"
 )
 
 
