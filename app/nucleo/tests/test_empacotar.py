@@ -15,7 +15,7 @@ from django.urls import reverse
 
 from nucleo.management.commands.criar_demo import PNG
 from nucleo.models import Parceiro, Revista, RevistaFasciculo, RevistaInfografico, RevistaInfograficoItem, Tarefa, TemplateVersao
-from nucleo.servicos.arquivos import receber_capa
+from nucleo.servicos.arquivos import receber_atividades, receber_capa
 from nucleo.servicos.cascata import gravar_cortes
 from nucleo.servicos.empacotar import Pendente, nome_zip, zip_revista
 from nucleo.servicos.html import contexto_pagina, link_zip
@@ -65,6 +65,13 @@ class ZipTest(MediaTemporaria, TestCase):
         with self.assertRaises(Pendente) as erro:
             zip_revista(revista or carregar(self.rev.pk))
         return erro.exception
+
+    def test_pdf_das_atividades_entra_com_o_link_na_pagina_do_tipo(self):  # D-308
+        receber_atividades(self.ano, self.lp, "outras", SimpleUploadedFile("a.pdf", b"%PDF-1.7\nx"))
+        arquivos = conteudo(zip_revista(carregar(self.rev.pk))[1])
+        self.assertEqual(arquivos["arquivos/atividades-outras.pdf"], b"%PDF-1.7\nx")
+        pagina = arquivos["f2-outras-etapas.html"].decode()
+        self.assertIn('<a href="arquivos/atividades-outras.pdf" download>Acesse aqui as atividades</a>', pagina)
 
     def test_lista_de_arquivos(self):
         nome, dados = zip_revista(self.rev)

@@ -61,5 +61,69 @@
 {% include "ui/_componentes/vazio.html" with texto="Os templates chegam com o ano (Abrir ano copia os do ano anterior) ou pela carga inicial." %}
 {% endif %}{% endwith %}
 {% endif %}
+
+{% if atividades %}{# D-308, D-309: um PDF por componente × tipo do infográfico, o mesmo para todos os parceiros #}
+<section class="tpl-atividades" id="atividades" aria-labelledby="atividades-titulo">
+  <h2 class="secao-titulo" id="atividades-titulo">PDF das atividades</h2>
+  <p class="mudo">Um PDF por componente e infográfico, o mesmo para todos os parceiros. No F2 ele vira o link "Acesse aqui as atividades"; sem PDF, o link não aparece. Trocar ou remover não tira o Validado das revistas.</p>
+  {% for c, cartoes in atividades %}
+  <div class="tpl-atv-grupo">
+    <h3 class="tpl-atv-componente">{{ c.codigo }} <span class="mudo">{{ c.nome }}</span></h3>
+    <div class="tpl-atv-grade">
+    {% for k in cartoes %}{% with id="atividades-"|add:c.codigo|add:"-"|add:k.tipo %}
+      <c-card tag="article" class="tpl-atv" aria-labelledby="{{ id }}-titulo">
+        <header class="tpl-atv-cab">
+          <h4 id="{{ id }}-titulo">{{ k.rotulo }}</h4>
+          {% if not k.obj %}<c-badge variante="secundario">Sem PDF</c-badge>{% elif k.tamanho is None %}<c-badge variante="erro">Arquivo sumiu</c-badge>{% else %}<c-badge variante="contorno"><c-icone nome="check" /> Enviado</c-badge>{% endif %}
+        </header>
+
+        {% if k.obj and k.tamanho is not None %}
+        <div class="tpl-atv-arquivo">
+          <c-icone nome="clipe" />
+          <a class="link" href="{% url 'ui_templates_atividades_baixar' ano.ano c.codigo k.tipo %}">atividades-{{ c.codigo|lower }}-{{ k.tipo }}.pdf<span class="sr-only"> (baixar)</span></a>
+          <span class="mudo">{{ k.tamanho|filesizeformat }}</span>
+        </div>
+        {% elif k.obj %}
+        <p class="erro" role="alert">O PDF registrado não está no servidor. Envie de novo para a revista voltar a ter o link.</p>
+        {% endif %}
+
+        {% if pode_enviar_atividades %}
+        <form class="tpl-atv-envio" method="post" enctype="multipart/form-data" action="{% url 'ui_templates_atividades' ano.ano c.codigo k.tipo %}" x-data="envioArquivo">
+          {% csrf_token %}
+          <div class="soltar" x-data="arquivoSoltar" data-soltar data-max="{{ atividades_max }}" data-tipo="PDF das atividades" :data-sobre="sobre">
+            <label class="soltar-area{% if k.obj %} soltar-compacta{% endif %}" for="{{ id }}">
+              <input class="sr-only" type="file" id="{{ id }}" name="arquivo" accept="application/pdf" aria-describedby="{{ id }}-ajuda">
+              <c-icone nome="enviar" />
+              <span><strong>{% if k.obj %}Trocar o PDF{% else %}Enviar o PDF{% endif %}</strong>: solte aqui ou clique para escolher</span>
+              <span class="mudo" id="{{ id }}-ajuda">Só PDF, até {{ atividades_max|filesizeformat }}. Envia ao escolher.</span>
+            </label>
+            <p class="soltar-progresso" x-show="enviando" x-cloak><progress aria-label="Enviando o PDF"></progress><span>Enviando <span x-text="nome"></span>…</span></p>
+            <p class="erro" role="alert" x-show="erro" x-text="erro" x-cloak></p>
+          </div>
+        </form>
+        {% endif %}
+        {% if k.obj and pode_remover_atividades %}
+        <div class="tpl-atv-acoes">
+          <c-botao variante="ghost" tamanho="sm" class="tpl-atv-remover" data-abrir="dlg-{{ id }}"><c-icone nome="lixeira" /> Remover PDF<span class="sr-only"> de {{ c.codigo }} {{ k.rotulo }}</span></c-botao>
+        </div>
+        <c-modal id="dlg-{{ id }}" titulo="Remover o PDF das atividades?">
+          <c-slot name="descricao"><p class="mudo">{{ c.codigo }} – {{ k.rotulo }}. As revistas de {{ c.codigo }} deixam de mostrar "Acesse aqui as atividades" no infográfico {{ k.rotulo }}, e o próximo zip sai sem o PDF. Para voltar, envie o PDF de novo.</p></c-slot>
+          <c-slot name="rodape">
+            <c-botao variante="outline" data-fechar>Cancelar</c-botao>
+            <form method="post" action="{% url 'ui_templates_atividades_remover' ano.ano c.codigo k.tipo %}">
+              {% csrf_token %}
+              <c-botao variante="destrutivo" type="submit">Remover</c-botao>
+            </form>
+          </c-slot>
+        </c-modal>
+        {% endif %}
+        {% if not k.obj and not pode_enviar_atividades %}<p class="mudo">Ainda sem PDF.</p>{% endif %}
+      </c-card>
+    {% endwith %}{% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
 {% endif %}
 {% endblock %}

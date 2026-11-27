@@ -42,7 +42,8 @@ F2 = (
     "## passo-descritor\nDescritor\n\nO descritor.\n\n## passo-habilidades\nHabilidades\n\nAs habilidades.\n\n"
     "## passo-progressao\nProgressão\n\nA progressão.\n\n## passo-tarefas\nTarefas\n\nAs tarefas.\n\n"
     "## dlg-descritor\nSobre o descritor\n\nDetalhe do descritor.\n\n## dlg-tarefas\nTarefas por nível\n\nOs itens.\n\n"
-    "## tarefas-fechamento\nFechamento das tarefas\n\nCompare os itens.\n\n## fechamento\nAgora é com você\n\nUse o template.\n"
+    "## tarefas-fechamento-alfa\nFechamento das tarefas\n\nCompare os itens.\n\n"
+    "## tarefas-fechamento-outras\nFechamento das tarefas\n\nCompare os itens.\n\n## fechamento\nAgora é com você\n\nUse o template.\n"
 )
 
 
@@ -153,6 +154,18 @@ class PaginaTest(MediaTemporaria, TestCase):
         self.assertNotIn("dados-tour", html)
         self.assertNotIn("faixa-vermelha", html.split("<body>")[1])
         self.assertNotIn("fetch(", html)
+
+    def test_cada_pagina_mostra_o_fechamento_das_tarefas_do_seu_tipo(self):  # D-306
+        TemplateVersao.objects.create(
+            template=self.templates["LP", "F2"], numero=3,
+            texto=F2.replace("Compare os itens.", "Itens do Alfa.", 1),
+        )  # fmt: skip
+        dois_infograficos(self.rev)
+        alfa, outras = (self.get(self.rev, t).content.decode() for t in ("alfa", "outras"))
+        self.assertIn('f2-tarefas-fechamento"><p>Itens do Alfa.</p>', alfa)
+        self.assertNotIn("Compare os itens.", alfa)
+        self.assertIn('f2-tarefas-fechamento"><p>Compare os itens.</p>', outras)
+        self.assertNotIn("Itens do Alfa.", outras)
 
     def test_f2_svg_gerado_tour_e_modais(self):
         dois_infograficos(self.rev)

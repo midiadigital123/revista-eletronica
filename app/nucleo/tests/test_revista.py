@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from nucleo.models import (
     Ano,
+    Atividades,
     Bloqueio,
     Componente,
     Corte,
@@ -180,6 +181,9 @@ class RecusaRevistaTest(TestCase):
             "fk_projeto_passo_componente_ano": [passo(componente=lp27)],
             "fk_template_componente_ano": [lambda: Template.objects.create(
                 ano=a27, componente=lp, fasciculo="F1", nome="X"
+            )],
+            "fk_atividades_componente_ano": [lambda: Atividades.objects.create(
+                ano=a27, componente=lp, tipo="alfa", arquivo="atividades/x.pdf", arquivo_sha256="a" * 64
             )],
             "fk_revista_projeto_ano": [
                 lambda: Revista.objects.create(projeto=self.projeto27, componente=lp, ano=a26)

@@ -407,7 +407,7 @@ class RevistaUiTest(Base):
         self.assertNotContains(self.abrir(), f'name="inf-{inf.pk}-item-1-habilidade"')  # LP segue com etapa e descritor
 
     def template_f2(self):
-        """Versão nova do template F2 da revista com as 9 seções do test_preview."""
+        """Versão nova do template F2 da revista com as 10 seções do test_preview."""
         from nucleo.tests.test_preview import F2
 
         rf = RevistaFasciculo.objects.get(revista=self.rev, fasciculo="F2")

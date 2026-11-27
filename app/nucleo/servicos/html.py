@@ -63,11 +63,14 @@ def template(slug):
 CHAVES_DA_ETAPA = {"scaleRange", "cortes", "padroes", "ordem"}  # o resto das chaves são descritores
 
 
-def contexto_pagina(revista, pagina, *, preview, estaticos, capa, link, base_imagens, resolvido=None):
+def contexto_pagina(
+    revista, pagina, *, preview, estaticos, capa, link, base_imagens, resolvido=None, atividades=None
+):
     """Contexto de `template(pagina)` para a revista resolvida (arquivada: a foto, D-117).
 
     `pagina`: o slug de `paginas` ("index", "f1", "f2-alfa"...); None se o infográfico não existe (404).
     `resolvido`: um já montado (o zip passa o mesmo para todas as páginas); sem ele, resolve aqui.
+    `atividades`: {tipo: url} dos PDFs de atividades que existem (D-308); o F2 do tipo mostra o link.
     """
     r = resolvido or resolver(revista)
     f1, secoes_f2 = r["f1"], r["f2"]["secoes"]
@@ -103,8 +106,9 @@ def contexto_pagina(revista, pagina, *, preview, estaticos, capa, link, base_ima
         "titulo": inf["titulo"],
         "abertura": por_id.get("abertura"),
         # Compara os itens: vem depois do infográfico e só com o passo Tarefas ligado (D-258).
-        "tarefas_fechamento": por_id.get("tarefas-fechamento") if "tarefas" in inf["passos"] else None,
+        "tarefas_fechamento": por_id.get(f"tarefas-fechamento-{tipo}") if "tarefas" in inf["passos"] else None,
         "fechamento": por_id.get("fechamento"),
+        "atividades": (atividades or {}).get(tipo),
         "sem_template_f2": secoes_f2 is None,
         **gerado,  # svg (montado pelo f2.svg: vai com |safe), tour e modais
     }

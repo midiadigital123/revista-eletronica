@@ -1,6 +1,6 @@
 """Templates de texto: seções, validação e renderização (D-105, D-114, D-123, D-125).
 
-Formato: Markdown restrito (negrito, itálico, parágrafos e listas) com
+Formato: Markdown restrito (negrito, itálico, parágrafos, listas e link https, D-307) com
 `{{variavel}}` da lista fixa `VARIAVEIS`. Não há motor Handlebars: a variável
 é só um marcador trocado pelo valor escapado.
 
@@ -35,7 +35,7 @@ TEXTO_MAX = 100_000
 SECOES_F1 = ("introducao",)
 SECOES_F2 = (
     "abertura", "passo-descritor", "passo-habilidades", "passo-progressao", "passo-tarefas",
-    "dlg-descritor", "dlg-tarefas", "tarefas-fechamento", "fechamento",
+    "dlg-descritor", "dlg-tarefas", "tarefas-fechamento-alfa", "tarefas-fechamento-outras", "fechamento",
 )  # fmt: skip
 SECOES = {"F1": SECOES_F1, "F2": SECOES_F2}
 
@@ -45,9 +45,35 @@ SECOES = {"F1": SECOES_F1, "F2": SECOES_F2}
 # impede forjar o marcador (inclusive por entidade, como `&#xE000;`).
 INI, FIM = "\ue000", "\ue001"
 
-# Renderização: só as regras do formato; o resto (link, imagem, título, HTML,
-# código) sai como texto literal, mesmo que tenha escapado da validação.
-_md = MarkdownIt("zero", {"html": False}).enable(["emphasis", "list", "newline", "escape", "entity"])
+# Link (D-307): só `https://…`, aberto em outra aba, ou `#pendente` (endereço ainda não definido), que sai como
+# a variável vazia: vermelho no preview e sem link.
+PENDENTE = "#pendente"
+
+
+def _href_ok(href):
+    return href == PENDENTE or href.startswith("https://")
+
+
+def _links(state):
+    """Regra do markdown-it: dá a cada link o destino da revista; link fora da regra vira <span> sem destino."""
+    for tok in state.tokens:
+        aberto = None
+        for t in tok.children or []:
+            if t.type == "link_open":
+                href = t.attrGet("href") or ""
+                if href.startswith("https://"):
+                    t.attrs = {"href": href, "target": "_blank", "rel": "noopener"}
+                else:
+                    t.tag, t.attrs = "span", ({"class": "variavel-vazia"} if href == PENDENTE else {})
+                aberto = t
+            elif t.type == "link_close" and aberto is not None:
+                t.tag, aberto = aberto.tag, None
+
+
+# Renderização: só as regras do formato; o resto (imagem, título, HTML, código) sai como texto literal,
+# mesmo que tenha escapado da validação.
+_md = MarkdownIt("zero", {"html": False}).enable(["emphasis", "list", "newline", "escape", "entity", "link"])
+_md.core.ruler.push("links_revista", _links)
 
 # Validação: CommonMark completo com HTML ligado, para enxergar o que é recusado.
 _md_validacao = MarkdownIt("commonmark")
@@ -56,7 +82,10 @@ TOKENS_BLOCO = {
     "bullet_list_open", "bullet_list_close", "ordered_list_open", "ordered_list_close",
     "list_item_open", "list_item_close",
 }  # fmt: skip
-TOKENS_INLINE = {"text", "text_special", "softbreak", "hardbreak", "strong_open", "strong_close", "em_open", "em_close"}
+TOKENS_INLINE = {
+    "text", "text_special", "softbreak", "hardbreak", "strong_open", "strong_close", "em_open", "em_close",
+    "link_open", "link_close",  # o destino passa por _erros_links
+}  # fmt: skip
 NOMES_TOKEN = {
     "heading_open": "título (#)",
     "link_open": "link",
@@ -139,6 +168,18 @@ def _erros_corpo(corpo, prefixo=""):
         return [f"{prefixo}corpo vazio."]
     if ruins := _proibidos(corpo, TOKENS_BLOCO | TOKENS_INLINE):
         return [f"{prefixo}recurso não permitido: {', '.join(ruins)}."]
+    return _erros_links(corpo, prefixo)
+
+
+def _erros_links(corpo, prefixo):
+    ruins = [
+        t.attrGet("href") or "(vazio)"
+        for tok in _md_validacao.parse(corpo)
+        for t in tok.children or []
+        if t.type == "link_open" and not _href_ok(t.attrGet("href") or "")
+    ]
+    if ruins:
+        return [f"{prefixo}link só com https://… ou {PENDENTE}; tem {', '.join(dict.fromkeys(ruins))}."]
     return []
 
 
@@ -195,10 +236,11 @@ def _lista(m):
 
 def html_para_texto(html):
     """HTML renderizado -> texto para o impresso (S13): volta a marcação do Markdown restrito
-    (**negrito**, *itálico*, "1." e "-" nas listas), para que mudar só a formatação apareça no diff
-    e o texto copiado a mantenha; fim de parágrafo e <br> viram quebra."""
+    (**negrito**, *itálico*, "1." e "-" nas listas, [link](https://…)), para que mudar só a formatação ou o
+    endereço apareça no diff e o texto copiado a mantenha; fim de parágrafo e <br> viram quebra."""
     html = re.sub(r"<strong>(.*?)</strong>", r"**\1**", html or "", flags=re.S)
     html = re.sub(r"<em>(.*?)</em>", r"*\1*", html, flags=re.S)
+    html = re.sub(r'<a href="([^"]*)"[^>]*>(.*?)</a>', r"[\2](\1)", html, flags=re.S)
     html = re.sub(r"<(ol|ul)[^>]*>(.*?)</\1>", _lista, html, flags=re.S)
     html = re.sub(r"</p>|<br\s*/?>", "\n", html)
     return re.sub(r"\n{3,}", "\n\n", unescape(strip_tags(html))).strip()

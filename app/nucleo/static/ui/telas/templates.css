@@ -288,3 +288,19 @@ td.tpl-acoes { padding-block: 0.375rem; vertical-align: middle; }
 .tpl-novo-texto {
   font-family: var(--font-mono);
 }
+
+/* PDF das atividades (D-308, D-309), na aba F2: um cartão por componente × tipo */
+.tpl-atividades { margin-top: 2rem; display: flex; flex-direction: column; gap: 1rem; }
+.tpl-atividades > .mudo { max-width: 48rem; }
+.tpl-atv-grupo { display: flex; flex-direction: column; gap: 0.5rem; }
+.tpl-atv-componente { font-size: 0.9375rem; font-weight: 600; }
+.tpl-atv-grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1rem; }
+.tpl-atv { display: flex; flex-direction: column; gap: 0.75rem; }
+.tpl-atv-cab { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.tpl-atv-cab h4 { font-size: 0.875rem; font-weight: 600; }
+.tpl-atv-cab .badge svg { width: 0.75rem; height: 0.75rem; }
+.tpl-atv-arquivo { display: flex; align-items: center; gap: 0.5rem; min-width: 0; font-size: 0.875rem; }
+.tpl-atv-arquivo > svg { flex: none; width: 1rem; height: 1rem; color: var(--muted-foreground); }
+.tpl-atv-arquivo .link { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tpl-atv-acoes { display: flex; justify-content: flex-end; }
+.tpl-atv-remover { color: var(--destructive); }

@@ -33,7 +33,8 @@ ROTULOS = {
     "passo-descritor": "Passo: descritor", "passo-habilidades": "Passo: habilidades",
     "passo-progressao": "Passo: progressão", "passo-tarefas": "Passo: tarefas",
     "dlg-descritor": "Diálogo do descritor", "dlg-tarefas": "Diálogo das tarefas",
-    "tarefas-fechamento": "Fechamento das tarefas",
+    "tarefas-fechamento-alfa": "Fechamento das tarefas (Alfa)",
+    "tarefas-fechamento-outras": "Fechamento das tarefas (Outras Etapas)",
 }  # fmt: skip
 
 
