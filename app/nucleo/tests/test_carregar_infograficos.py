@@ -1,4 +1,4 @@
-"""carregar_infograficos (D-298): copia o seed dos Word para os infográficos de LP, só onde está vazio."""
+"""carregar_infograficos (D-298, D-311): copia o seed dos Word para os infográficos de LP e de MT Alfa, só onde está vazio."""
 
 import hashlib
 import json
@@ -93,7 +93,7 @@ class CarregarInfograficosTest(MediaTemporaria, TestCase):
         saida = self.carregar()
         self.assertEqual(arquivos_no_storage(), arquivos)
         self.assertEqual(RevistaInfografico.history.count(), historicos)
-        self.assertEqual(saida.count("0 preenchidos, 0 atualizados, 0 mantidos"), 2)
+        self.assertEqual(saida.count("0 preenchidos, 0 atualizados, 0 mantidos"), len(SEED))  # uma linha por seed
 
     def test_conta_quem_perdeu_o_validado(self):
         revista = Revista.objects.get(pk=self.lp_go.pk)

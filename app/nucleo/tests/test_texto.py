@@ -13,7 +13,7 @@ from nucleo.models import Ano, Componente, Template, TemplateVersao
 from nucleo.texto import SECOES_F2, html_para_texto, partes, renderizar, renderizar_texto_puro, secoes, validar, variaveis_usadas
 
 F1 = "## introducao\nTítulo\n\nCorpo da {{nome_parceiro}}.\n\n- um\n- dois\n"
-F2_NOVO = "".join(f"## {i}\n{'F' if i == 'fechamento' else 'T'}\n\nx\n\n" for i in SECOES_F2).rstrip("\n") + "\n"
+F2_NOVO = "".join(f"## {i}\n{'F' if i.startswith('fechamento') else 'T'}\n\nx\n\n" for i in SECOES_F2).rstrip("\n") + "\n"
 ORIGINAL = Path.read_text
 SEED = settings.BASE_DIR / "templates_seed" / "2026"
 
@@ -35,8 +35,8 @@ class ValidarTest(SimpleTestCase):
     def test_secao_faltando(self):
         self.assertIn("Seções obrigatórias faltando: introducao.", self.erros("## fechamento\nT\n\nx\n"))
         self.assertIn("Seções não previstas no F1: fechamento.", self.erros("## introducao\nT\n\nx\n\n## fechamento\nF\n\ny\n"))
-        sem = F2_NOVO.replace("## fechamento\nF\n\nx\n", "")
-        self.assertIn("Seções obrigatórias faltando: fechamento.", self.erros(sem, "F2"))
+        sem = F2_NOVO.replace("## fechamento-alfa\nF\n\nx\n\n", "")
+        self.assertIn("Seções obrigatórias faltando: fechamento-alfa.", self.erros(sem, "F2"))
 
     def test_f2_recusa_ids_antigos(self):
         antigo = F2_NOVO + "\n## passo1\nP\n\nx\n"

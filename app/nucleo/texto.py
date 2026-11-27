@@ -35,7 +35,8 @@ TEXTO_MAX = 100_000
 SECOES_F1 = ("introducao",)
 SECOES_F2 = (
     "abertura", "passo-descritor", "passo-habilidades", "passo-progressao", "passo-tarefas",
-    "dlg-descritor", "dlg-tarefas", "tarefas-fechamento-alfa", "tarefas-fechamento-outras", "fechamento",
+    "dlg-descritor", "dlg-tarefas", "tarefas-fechamento-alfa", "tarefas-fechamento-outras",
+    "fechamento-alfa", "fechamento-outras",  # "Agora é com você" por tipo (D-312)
 )  # fmt: skip
 SECOES = {"F1": SECOES_F1, "F2": SECOES_F2}
 

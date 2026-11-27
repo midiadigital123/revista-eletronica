@@ -8,8 +8,9 @@
 ## Doing
 
 ## Review
-- **K-056** F2: `tarefas-fechamento` por tipo (Alfa/Outras) com os textos novos dos Word de LP, link no Markdown restrito ("Acesse aqui o template do Infográfico", URL pendente) e PDF das atividades por ano × componente × tipo, com link "Acesse aqui as atividades"; enviar, trocar, baixar e remover (lixeira com modal) em cartões com área de soltar e permissões próprias (`feat/f2-fechamento`) · D-306 a D-310 · suíte 1121 OK; na `integ/f2-fechamento`; falta E2E e o ok para a `main` · 2026-11-27
 ## Done
+- **K-057** F2 de MT Alfa preenchido pelo Word da Pedagógica (conversor de MT, `mt-alfa.json`, carga) e "Agora é com você" por tipo (`fechamento-alfa`/`-outras`, migração 0034) (`feat/f2-mt-alfa`) · D-311, D-312 · suíte 1126 OK; na `main` (sem push), E2E pendente · 2026-11-27
+- **K-056** F2: `tarefas-fechamento` por tipo (Alfa/Outras) com os textos novos dos Word de LP, link no Markdown restrito ("Acesse aqui o template do Infográfico", URL pendente) e PDF das atividades por ano × componente × tipo, com link "Acesse aqui as atividades"; enviar, trocar, baixar e remover (lixeira com modal) em cartões com área de soltar e permissões próprias (`feat/f2-fechamento`) · D-306 a D-310 · suíte 1121 OK; na `integ/f2-fechamento` · suíte 1126 OK; na `main` (sem push), E2E pendente · 2026-11-27
 - **K-055** F2 de MT: bloco "Tarefas por nível de complexidade" com barrinhas 1→4 e texto da habilidade, no mesmo `f2.svg` (`feat/f2-mt`); ficha do item de MT com campo Habilidade · D-305 · suíte 1099 OK; E2E 178 passaram; na `main` (sem push) · 2026-11-27
 - **K-054** Design system do Figma (Telas – v1 e Componentes) extraído para HTML em `docs/design-system-figma/` (`feat/design-system-figma`): tokens, componentes, 23 telas, sem mexer em `app/`; conferido no navegador; na `main` com push · insumo da K-048 · 2026-11-27 · D-304
 - **K-053** Mescla explícita de marca e habilidade no referencial do F2 (`feat/f2-mescla`): toggles "Junta com a de cima" por coluna, vazio sem juntar fica vazio, marca juntada = uma letra centrada; UI com elo entre etapas e célula única (D-303) · suíte 1093 OK; na `main` com push · 2026-11-27 · D-301 a D-303

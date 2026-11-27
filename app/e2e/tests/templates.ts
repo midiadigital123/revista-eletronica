@@ -2,14 +2,14 @@
 // fim, o exclui pela tela B. Sem revista, ele sai com as versões. Nenhum spec grava em template que não criou.
 import { expect, type Page } from "@playwright/test";
 
-/** F2 válido: as 10 seções fixas (nucleo/texto.py::SECOES), como o F2 de test_preview.py. */
+/** F2 válido: as 11 seções fixas (nucleo/texto.py::SECOES), como o F2 de test_preview.py. */
 export const TEXTO_F2 =
   "## abertura\nAbertura\n\nOlá.\n\n## passo-descritor\nDescritor\n\nO descritor.\n\n" +
   "## passo-habilidades\nHabilidades\n\nAs habilidades.\n\n## passo-progressao\nProgressão\n\nA progressão.\n\n" +
   "## passo-tarefas\nTarefas\n\nAs tarefas.\n\n## dlg-descritor\nSobre o descritor\n\nDetalhe do descritor.\n\n" +
   "## dlg-tarefas\nTarefas por nível\n\nOs itens.\n\n## tarefas-fechamento-alfa\nFechamento das tarefas\n\nCompare os itens.\n\n" +
   "## tarefas-fechamento-outras\nFechamento das tarefas\n\nCompare os itens.\n\n" +
-  "## fechamento\nAgora é com você\n\nUse o template.\n";
+  "## fechamento-alfa\nAgora é com você\n\nUse o template.\n\n## fechamento-outras\nAgora é com você\n\nUse o template.\n";
 
 /** Cria o template pelo admin e devolve o id. */
 export async function criarTemplate(page: Page, nome: string, fasciculo: "F1" | "F2", texto: string) {
