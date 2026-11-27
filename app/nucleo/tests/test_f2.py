@@ -192,6 +192,39 @@ class GerarTest(SimpleTestCase):
         self.assertAlmostEqual(altura_svg, 793.7 + cresceu, places=1)
         self.assertIn('viewBox="0 0 1190.6 793.7"', curto["svg"])  # texto curto: desenho sem mudança
 
+    def test_mt_por_nivel_troca_descritor_e_etapa_por_barras_e_habilidade(self):  # D-305
+        info = infografico() | {"por_nivel": True}
+        for i in info["itens"]:
+            i["habilidade"] = f"Habilidade do nível {i['posicao']}."
+        r, lp = gerar(info), gerar()
+        raiz = ET.fromstring(r["svg"])
+        textos = [fo for fo in raiz.iter("{http://www.w3.org/2000/svg}foreignObject") if fo.get("width") == "207"]
+        self.assertEqual(["".join(fo.itertext()) for fo in textos], [f"Habilidade do nível {n}." for n in range(1, 5)])
+        self.assertNotIn("D05", r["svg"])
+        self.assertNotIn("rótulo", r["svg"])
+        self.assertIn(".f2-niv{", r["svg"])
+        self.assertNotIn("f2-niv", lp["svg"])
+        # nível 1 acende 1 barra; nível 4, as 4 (as apagadas são cinza, fill inline)
+        self.assertEqual(r["svg"].count('fill="#ececec"'), 3 + 2 + 1 + 0)
+        titulos = {m["id"]: str(m["titulo"]) for m in r["modais"]}
+        self.assertEqual(titulos["dlg-tarefa-1"], "Nível 1")
+        self.assertEqual(titulos["dlg-tarefa-4"], "Nível 4")
+        self.assertIn('viewBox="0 0 1190.6 793.7"', r["svg"])  # texto curto: altura do desenho
+        self.assertEqual(ids(r["svg"]), ids(lp["svg"]))  # o tour acha os mesmos alvos
+
+    def test_mt_texto_longo_cresce_a_linha(self):
+        info = infografico() | {"por_nivel": True}
+        for i in info["itens"]:
+            i["habilidade"] = "Curto."
+        info["itens"][2]["habilidade"] = "Determinar a área de figuras formadas pela composição " * 3  # posição 1
+        r = gerar(info)
+        raiz = ET.fromstring(r["svg"])
+        textos = [fo for fo in raiz.iter("{http://www.w3.org/2000/svg}foreignObject") if fo.get("width") == "207"]
+        extra = float(textos[0].get("height")) - f2.TEXTO_TAREFA_ALTURA
+        self.assertGreater(extra, 0)
+        self.assertEqual(textos[1].get("height"), f"{f2.TEXTO_TAREFA_ALTURA:g}")
+        self.assertIn(f'transform="translate(0,{round(f2.PASSO_TAREFA + extra, 1):g})"', r["svg"])  # 2ª linha desce
+
     def test_sem_secoes_e_sem_etapas(self):
         info = infografico()
         info["etapas"] = []

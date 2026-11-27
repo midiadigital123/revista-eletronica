@@ -108,6 +108,11 @@ class FormDoCampoTest(MediaTemporaria, TestCase):
             (3, self.inf.ano_id, "9EF", "D05", "Um gráfico.", "A análise."),
         )
 
+    def test_item_grava_a_habilidade(self):  # D-305: texto das tarefas por nível (MT)
+        self.gravar("item-2-habilidade", "Determinar a área de um terreno retangular.")
+        item = RevistaInfograficoItem.objects.get(infografico=self.inf, posicao=2)
+        self.assertEqual(item.habilidade, "Determinar a área de um terreno retangular.")
+
     def test_passo_desliga_e_religa_so_ele(self):
         RevistaInfografico.objects.filter(pk=self.inf.pk).update(passos_desligados=["tarefas"])
         self.gravar("passo-habilidades", "")
@@ -142,6 +147,7 @@ class FormDoCampoTest(MediaTemporaria, TestCase):
         self.assertIn("codigo", self.erros("etapa-5EF-codigo", "x" * 51))
         self.assertIn("etapa", self.erros("item-1-etapa", "X"))
         self.assertIn("descritor", self.erros("item-1-descritor", "x" * 21))
+        self.assertIn("habilidade", self.erros("item-1-habilidade", "x" * 501))
         self.assertIn("texto_alternativo", self.erros("item-1-texto_alternativo", "x" * 1001))
         self.assertFalse(RevistaInfograficoEtapa.objects.exists() or RevistaInfograficoItem.objects.exists())
 

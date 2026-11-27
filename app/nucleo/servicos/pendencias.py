@@ -96,6 +96,8 @@ def pendencias_f2(resolvido):
         ]
         if "tarefas" in passos and sum(bool(i["imagem"]) for i in inf["itens"]) < 4:  # posições 1 a 4, únicas
             faltas.append("o passo Tarefas precisa dos 4 itens com imagem.")
+        if "tarefas" in passos and inf.get("por_nivel") and sum(bool(i["habilidade"].strip()) for i in inf["itens"]) < 4:
+            faltas.append("o passo Tarefas precisa do texto da habilidade nos 4 itens.")  # D-305
         saida += [Pendencia("infografico", f"{inf['titulo']}: {f}") for f in faltas]
     return saida
 

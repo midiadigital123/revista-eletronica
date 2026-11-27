@@ -23,8 +23,10 @@ Cada infográfico (o que `servicos/f2.gerar` consome):
      "etapas": [{"etapa", "rotulo", "marca", "codigo", "texto"[, "junta_marca", "junta_habilidade"]}],
                                           # ordem do referencial, só as gravadas; mescla já aplicada (D-301)
                                           # habilidades desligado: codigo e texto ""; com progressao também: []
-     "itens": [{"posicao", "etapa", "rotulo", "descritor", "imagem", "imagem_sha256", "texto_alternativo", "analise"}]}
-                                          # passo tarefas desligado: [] (D-243)
+     "itens": [{"posicao", "etapa", "rotulo", "descritor"[, "habilidade"], "imagem", "imagem_sha256", "texto_alternativo", "analise"}]
+     [, "por_nivel": True]}               # passo tarefas desligado: [] (D-243)
+                                          # por_nivel e habilidade só nos componentes de TAREFAS_POR_NIVEL
+                                          # (D-305): o hash de LP não muda; foto antiga não tem a chave
 
 Só `textos.*` e `itens[].analise` são HTML (`texto.renderizar`, variáveis contadas em `usadas`); o resto
 é texto cru (o f2.svg faz o autoescape). `imagem`/`imagem_sha256` nulos saem "" (o hash não varia
@@ -67,7 +69,7 @@ from nucleo.models import (
     Tarefa,
     TemplateVersao,
 )
-from nucleo.models.revista import PASSOS, EtapaReferencial, Motivo, TipoInfografico
+from nucleo.models.revista import PASSOS, TAREFAS_POR_NIVEL, EtapaReferencial, Motivo, TipoInfografico
 from nucleo.variaveis import VARIAVEIS
 
 VAZIO = "---"  # linha sem habilidade (CONTEUDO_VAZIO do contrato)
@@ -280,6 +282,7 @@ def _infograficos(revista, renderizado):
     for inf in (
         RevistaInfografico.objects.filter(revista=revista, arquivado_em__isnull=True)
         .order_by("tipo")
+        .select_related("componente")  # TAREFAS_POR_NIVEL sem consulta a mais
         .prefetch_related(
             "revistainfograficoetapa_set",
             Prefetch("revistainfograficoitem_set", queryset=RevistaInfograficoItem.objects.order_by("posicao")),
@@ -291,7 +294,9 @@ def _infograficos(revista, renderizado):
         tabela = "habilidades" not in inf.passos_desligados
         if not tabela and "progressao" in inf.passos_desligados:
             etapas = []
+        por_nivel = inf.componente.codigo in TAREFAS_POR_NIVEL
         saida.append({
+            **({"por_nivel": True} if por_nivel else {}),
             "tipo": inf.tipo,
             "titulo": TipoInfografico(inf.tipo).label,
             "passos": [p for p in PASSOS if p not in inf.passos_desligados],
@@ -305,6 +310,7 @@ def _infograficos(revista, renderizado):
             "itens": [
                 {
                     "posicao": i.posicao, "etapa": i.etapa, "rotulo": rotulos.get(i.etapa, ""), "descritor": i.descritor,
+                    **({"habilidade": i.habilidade} if por_nivel else {}),
                     "imagem": i.imagem or "", "imagem_sha256": i.imagem_sha256 or "",
                     "texto_alternativo": i.texto_alternativo, "analise": renderizado(i.analise),
                 }

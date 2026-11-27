@@ -102,6 +102,9 @@ class TipoInfografico(models.TextChoices):  # D-230
 
 PASSOS_DESLIGAVEIS = ("habilidades", "progressao", "tarefas")  # D-227: abertura e descritor são fixos
 PASSOS = ("descritor", *PASSOS_DESLIGAVEIS)  # ordem do tour; descritor sempre ligado
+# D-305: componentes cujo bloco "Tarefas por nível de complexidade" é por nível (barrinhas 1 a 4 e texto da
+# habilidade), não por descritor e etapa.
+TAREFAS_POR_NIVEL = frozenset({"MT"})
 
 
 class EtapaReferencial(models.TextChoices):  # D-233
@@ -200,6 +203,7 @@ class RevistaInfograficoItem(models.Model):
     posicao = models.SmallIntegerField()  # 1 a 4
     etapa = models.TextField(choices=EtapaReferencial.choices, blank=True, default="")  # vazio = ainda não escolhida
     descritor = models.TextField(blank=True, default="")  # código na matriz de referência, ex.: D05 (texto livre)
+    habilidade = models.TextField(blank=True, default="")  # só em MT (D-305): texto ao lado das barrinhas
     imagem = models.TextField(null=True, blank=True)  # caminho no storage; item + suporte numa imagem só (D-232)
     imagem_sha256 = models.TextField(null=True, blank=True)
     texto_alternativo = models.TextField("Texto alternativo", blank=True, default="")  # D-180
@@ -220,6 +224,7 @@ class RevistaInfograficoItem(models.Model):
             sha256("revista_infografico_item", "imagem_sha256"),
             max_len("revista_infografico_item", "imagem", 500),
             max_len("revista_infografico_item", "descritor", 20),
+            max_len("revista_infografico_item", "habilidade", 500),
             max_len("revista_infografico_item", "texto_alternativo", 1000),
         ]
 

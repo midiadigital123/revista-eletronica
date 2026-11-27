@@ -94,6 +94,11 @@ Sem permissão ou revista arquivada: os mesmos campos, `disabled`.
           </div>
         </div>
         <div class="inf-item-campos">
+          {% if inf.por_nivel %}
+          <c-campo rotulo="Habilidade" para="{{ c }}-habilidade">
+            <c-textarea id="{{ c }}-habilidade" name="{{ c }}-habilidade" rows="3" maxlength="500" :editavel="pode_infograficos">{{ item.habilidade }}</c-textarea>
+          </c-campo>
+          {% else %}
           <div class="inf-item-linha">
             <c-campo rotulo="Etapa" para="{{ c }}-etapa">
               <c-select id="{{ c }}-etapa" name="{{ c }}-etapa" :editavel="pode_infograficos">
@@ -105,6 +110,7 @@ Sem permissão ou revista arquivada: os mesmos campos, `disabled`.
               <c-input type="text" id="{{ c }}-descritor" name="{{ c }}-descritor" maxlength="20" value="{{ item.descritor }}" :editavel="pode_infograficos" />
             </c-campo>
           </div>
+          {% endif %}
           <c-campo rotulo="Texto alternativo" para="{{ c }}-texto_alternativo">
             <c-input type="text" id="{{ c }}-texto_alternativo" name="{{ c }}-texto_alternativo" maxlength="1000" value="{{ item.texto_alternativo }}" :editavel="pode_infograficos" />
           </c-campo>

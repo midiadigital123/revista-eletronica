@@ -25,6 +25,10 @@ os floats de posição chegam arredondados a 1 casa):
               quando a marca está vazia.
   itens       [{"posicao", "descritor", "rotulo"}]: os 4 itens, do mais fácil ao mais difícil; a cor
               do cabeçalho da miniatura e a linha vêm da ordem.
+  por_nivel   bool (D-305, MT): as linhas do bloco tarefas trocam descritor e etapa por bolinha, número,
+              barrinhas 1 a 4 e o texto da habilidade; os itens trazem ainda "habilidade", "y", "meio",
+              "classe", "barras" [{"x", "y", "altura", "classe"}], "clamp", "texto_altura" e "fio"
+              (f2._tarefas). Desligado, a saída de LP é a mesma de antes, byte a byte.
 
 CSS dentro do <svg> (é o que chega ao minimapa): sem seletor pela classe da raiz, sem ">" nem "&".
 {% endcomment %}{% localize off %}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1190.6 {{ altura_svg }}">
@@ -68,7 +72,9 @@ CSS dentro do <svg> (é o que chega ao minimapa): sem seletor pela classe da rai
 .f2-hab{font:600 11.2px/14.4px "Proxima Nova",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#000;text-align:center;user-select:text;height:72px;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
 .f2-cel{font:300 7.6px/12px "Proxima Nova",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#000;user-select:text;display:flex;align-items:center}
 .f2-cel div{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-.f2-cel b{font-weight:700}
+.f2-cel b{font-weight:700}{% if por_nivel %}
+.f2-niv{font:400 10px/12.5px "Proxima Nova",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#000;user-select:text;display:flex;align-items:center}
+.f2-niv div{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}{% endif %}
 </style>
 <defs>
 <linearGradient id="f2-grad-1" x1="0" y1="793.4" x2="1" y2="793.4" gradientTransform="translate(393608.2 882.4) rotate(-90) scale(495.9 -495.9)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>
@@ -176,7 +182,34 @@ CSS dentro do <svg> (é o que chega ao minimapa): sem seletor pela classe da rai
 <line class="f2-st6" x1="141.8" y1="21.1" x2="349.1" y2="21.1"/>
 <rect class="f2-st46" x="363.4" y="17.4" width="6" height="6"/>
 <text class="f2-tx f2-tx-bloco" x="383.5" y="24.5">ITENS</text>
-{% for i in itens %}<g transform="translate(0,{% cycle '0' '52.3' '104.5' '156.8' %})">
+{% for i in itens %}{% if por_nivel %}<g transform="translate(0,{{ i.y }})">
+<g transform="translate(0,{{ i.meio }})">
+<circle class="{{ i.classe }}" cx="24.5" cy="71.8" r="2.6"/>
+<text class="f2-tx f2-tx-num" x="31" y="75.6">{{ i.posicao }}.</text>
+{% for b in i.barras %}<rect {% if b.classe %}class="{{ b.classe }}"{% else %}fill="#ececec"{% endif %} x="{{ b.x }}" y="{{ b.y }}" width="6" height="{{ b.altura }}"/>
+{% endfor %}<rect fill="#dadada" x="45.5" y="81.2" width="35" height="1.2"/>
+<line class="f2-st1" x1="90.6" y1="71.8" x2="119" y2="71.8"/>
+<text class="f2-tx f2-tx-num" x="364.9" y="75.3">{{ i.posicao }}.</text>
+<g transform="translate(390.7,54.4)">
+<rect class="f2-st24" width="40.6" height="33.4"/>
+<rect class="f2-st10" width="40.6" height="33.4"/>
+<rect class="{{ i.classe }}" x=".5" y=".5" width="39.5" height="5.8"/>
+<g class="{% if i.posicao > 2 %}f2-st24{% endif %}"><rect x="15.2" y="1.6" width=".7" height="3.1"/><polygon points="17.2 4.7 17.2 2.2 16.3 2.2 16.3 1.6 18.8 1.6 18.8 2.2 17.9 2.2 17.9 4.7"/><polygon points="19.2 4.7 19.2 1.6 21.4 1.6 21.4 2.2 19.9 2.2 19.9 2.8 21.4 2.8 21.4 3.4 19.9 3.4 19.9 4.1 21.4 4.1 21.4 4.7"/><polygon points="24.7 4.7 24.7 2.5 23.8 4.7 23.5 4.7 22.6 2.5 22.6 4.7 22 4.7 22 1.6 22.9 1.6 23.7 3.5 24.4 1.6 25.4 1.6 25.4 4.7"/></g>
+<rect class="f2-st41" x="7.2" y="12.7" width="30.3" height="5.1"/>
+<rect x="3.5" y="8.4" width=".7" height="3.4"/>
+<line class="f2-st6" x1="7.2" y1="11.4" x2="37.5" y2="11.4"/>
+<line class="f2-st6" x1="10.3" y1="20.5" x2="31.9" y2="20.5"/>
+<line class="f2-st6" x1="10.3" y1="23.8" x2="27.6" y2="23.8"/>
+<line class="f2-st6" x1="10.3" y1="27.1" x2="29.7" y2="27.1"/>
+<line class="f2-st6" x1="10.3" y1="30.2" x2="24.8" y2="30.2"/>
+</g>
+<g id="f2-btn-action-tarefa-{{ forloop.counter }}" transform="translate(431.2,87.7)"><circle class="f2-st20" r="5.6"/><path d="M-.2,2.4h.4v-2.2h2.2v-.4h-2.2v-2.2h-.4v2.2h-2.2v.4h2.2z"/></g>
+</g>
+<foreignObject x="141.7" y="50.6" width="207" height="{{ i.texto_altura }}"><div xmlns="http://www.w3.org/1999/xhtml" class="f2-niv" style="height:{{ i.texto_altura }}px"><div style="-webkit-line-clamp:{{ i.clamp }}">{{ i.habilidade }}</div></div></foreignObject>
+<line class="f2-st3" x1="141.1" y1="{{ i.fio }}" x2="349.4" y2="{{ i.fio }}"/>
+<line class="f2-st3" x1="358.7" y1="{{ i.fio }}" x2="436.1" y2="{{ i.fio }}"/>
+</g>
+{% else %}<g transform="translate(0,{% cycle '0' '52.3' '104.5' '156.8' %})">
 <text class="f2-tx f2-tx-cod" x="46" y="77.5">{{ i.descritor }}</text>
 <line class="f2-st1" x1="90.6" y1="71.8" x2="119" y2="71.8"/>
 <text class="f2-tx f2-tx-ano" x="141.7" y="76.9">{{ i.rotulo }}</text>
@@ -198,7 +231,7 @@ CSS dentro do <svg> (é o que chega ao minimapa): sem seletor pela classe da rai
 </g>
 <g id="f2-btn-action-tarefa-{{ forloop.counter }}" transform="translate(431.2,87.7)"><circle class="f2-st20" r="5.6"/><path d="M-.2,2.4h.4v-2.2h2.2v-.4h-2.2v-2.2h-.4v2.2h-2.2v.4h2.2z"/></g>
 </g>
-{% endfor %}</g>
+{% endif %}{% endfor %}</g>
 {% endif %}<g id="f2-linhas">
 {% for l in linhas %}<polyline class="f2-st6" points="{{ l.pontos }}"/>
 <rect x="-1.5" y="-1.5" width="3" height="3" transform="translate({{ l.fim.x }},{{ l.fim.y }})"/>
