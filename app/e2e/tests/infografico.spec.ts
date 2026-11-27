@@ -39,8 +39,13 @@ test("infográficos: 2 cartões, Outras Etapas inteiro, prévia com tour e image
     await salvar(() => preencher(outras.getByLabel(rotulo, { exact: true }), valor));
   }
   // D-301/D-303: o seed junta a habilidade do 5º ano e a marca do 9º ano à de cima; soltar o elo mostra os campos.
-  await salvar(() => outras.getByLabel("Juntar a habilidade de 4EF e 5EF").uncheck());
-  await salvar(() => outras.getByLabel("Juntar a marca de 8EF e 9EF").uncheck());
+  // O checkbox do elo é sr-only: clica-se no elo (o label pai), como a pessoa faz.
+  for (const rotulo of ["Juntar a habilidade de 4EF e 5EF", "Juntar a marca de 8EF e 9EF"]) {
+    const elo = outras.getByLabel(rotulo, { exact: true });
+    await expect(elo).toBeChecked();
+    await salvar(() => elo.locator("..").click());
+    await expect(elo).not.toBeChecked();
+  }
   await salvar(() => outras.getByLabel(`Marca: ${QUINTO}`).selectOption("I"));
   await salvar(() => outras.getByLabel("Marca: 9º ano do Ensino Fundamental").selectOption("C"));
   await salvar(() => preencher(outras.getByLabel(`Código: ${QUINTO}`), "EF05LP01"));
