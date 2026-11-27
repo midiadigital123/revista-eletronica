@@ -33,7 +33,7 @@ MODELOS_NUCLEO = (
     "ano", "parceiro", "etapa", "componente", "corpadrao",
     "matriz", "matrizetapacc", "descritor", "tarefa",
     "parceiroano", "corte", "projeto", "projetopasso", "projetocor",
-    "template", "templateversao",
+    "template", "templateversao", "atividades",
     "revista", "revistafasciculo", "revistasecao", "fotorevista",
     "revistainfografico", "revistainfograficoetapa", "revistainfograficoitem",
     "bloqueio",
@@ -58,7 +58,10 @@ ACOES = {
         },
     ),
     "preencher_cortes": _perms("nucleo", {"corte": EDITA}),
-    "editar_templates": _perms("nucleo", {"template": EDITA, "templateversao": ("add", "view")}),
+    # D-308, D-309: o PDF das atividades se envia, troca e remove na aba F2 da tela Templates.
+    "editar_templates": _perms(
+        "nucleo", {"template": EDITA, "templateversao": ("add", "view"), "atividades": (*EDITA, "delete")}
+    ),
     "editar_paleta": _perms("nucleo", {"corpadrao": EDITA}),
     # Variáveis são colunas de Projeto (D-100). Revista e fascículo nascem por
     # serviço (só `change`); a seção copiada nasce ao salvar (`add`).

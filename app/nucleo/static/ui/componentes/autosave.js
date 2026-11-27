@@ -471,6 +471,16 @@ document.addEventListener("alpine:init", () => {
     },
   }));
 
+  // <form x-data="envioArquivo"> nativo (POST e redirect) com um arquivoSoltar dentro: envia ao escolher o arquivo.
+  // O arquivoSoltar ouve no input e para o evento quando o arquivo passa do limite; aqui chega só o que pode ir.
+  Alpine.data("envioArquivo", () => ({
+    init() {
+      this.$root.addEventListener("change", (e) => {
+        if (e.target.type === "file" && e.target.files.length) this.$root.requestSubmit();
+      });
+    },
+  }));
+
   // <div x-data="saida"> (_componentes/status_salvo.html): mostra o status e só avisa ao sair da
   // página com envio pendente ou com erro (nunca com tudo salvo).
   Alpine.data("saida", () => ({

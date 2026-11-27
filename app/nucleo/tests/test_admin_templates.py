@@ -20,7 +20,7 @@ from nucleo.servicos.resolver import versao_atual
 from nucleo.tests.test_resolver import F1, Mundo, usuario
 from nucleo.texto import TEXTO_MAX
 
-# F2 no formato do D-238 (9 seções fixas): é a versão 1 dos templates F2 destes testes.
+# F2 no formato do D-238 (10 seções fixas desde o D-306): é a versão 1 dos templates F2 destes testes.
 F2_9 = (
     "## abertura\nAbertura\n\nBem-vindo.\n\n"
     "## passo-descritor\nDescritor\n\nPara os {{adjetivo_patrio_plural_masculino}}.\n\n"
@@ -29,8 +29,10 @@ F2_9 = (
     "## passo-tarefas\nTarefas\n\nTexto.\n\n"
     "## dlg-descritor\nDescritor\n\nDetalhe.\n\n"
     "## dlg-tarefas\nTarefas por nível de complexidade\n\nAbertura das tarefas.\n\n"
-    "## tarefas-fechamento\nFechamento das tarefas\n\nTexto.\n\n"
-    "## fechamento\nFechamento\n\nFim.\n"
+    "## tarefas-fechamento-alfa\nFechamento das tarefas\n\nTexto.\n\n"
+    "## tarefas-fechamento-outras\nFechamento das tarefas\n\nTexto.\n\n"
+    "## fechamento-alfa\nFechamento\n\nFim.\n\n"
+    "## fechamento-outras\nFechamento\n\nFim.\n"
 )
 F2_NOVO = F2_9.replace("Fim.", "Novo {{ano}}.")
 IMPACTO = "nucleo/template_impacto.html"
@@ -213,7 +215,7 @@ class PreviewTest(Base):
         self.assertIn('<span class="variavel-vazia">{{ano}}</span>', json["html"])
         self.assertIn(
             "Seções obrigatórias faltando: passo-descritor, passo-habilidades, passo-progressao, passo-tarefas, "
-            "dlg-descritor, dlg-tarefas, tarefas-fechamento, fechamento.",
+            "dlg-descritor, dlg-tarefas, tarefas-fechamento-alfa, tarefas-fechamento-outras, fechamento-alfa, fechamento-outras.",
             json["erros"],
         )
 
