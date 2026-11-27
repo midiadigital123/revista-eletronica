@@ -4,6 +4,7 @@ O desenho está em templates/revista/f2.svg (o comentário do topo é o contrato
 ficam os números medidos no desenho em uso (example/f2-gerado/desenho-original.svg), no viewBox 0 0 1190.6 793.7.
 """
 
+import textwrap
 from html import unescape
 from pathlib import PurePosixPath
 
@@ -32,11 +33,20 @@ CORES_MARCA = {"I": "#e6f6fb", "A": "#a9ffff", "C": "#08b4d7", "R": "#006991"}
 # Marca vazia: o cinza do desenho (f2-st41).
 COR_SEM_MARCA = "#dadada"
 
-# Tabela do referencial (bloco habilidades, coordenadas locais): y da 1ª linha e a altura de cada
-# etapa, 1EF a 3EM. ponytail: alturas do desenho de LP; texto mais longo é cortado pelo line-clamp.
+# Tabela do referencial (bloco habilidades, coordenadas locais): y da 1ª linha e a altura mínima de
+# cada etapa, 1EF a 3EM (as do desenho de LP). A célula cujo texto não cabe cresce (D-300).
 TABELA_Y = 64.8
 ALTURAS_LINHAS = (22.7, 22.6, 22.7, 22.7, 22.7, 39.7, 39.6, 25.6, 25.5, 39.7, 39.6, 39.7)
 assert len(EtapaReferencial.values) == len(ALTURAS_LINHAS)  # o zip abaixo cortaria etapas em silêncio
+FIM_TABELA_Y = 427.6  # fio final da tabela
+LEGENDA_Y = 450.6
+LINHA_CEL = 12  # line-height de .f2-cel
+RESPIRO_CEL = 6
+# ponytail: estimativa de linhas por caracteres (cabem ~95 na célula de 351 px; 88 dá folga); texto com
+# muita letra larga ainda pode ser cortado pelo line-clamp. Medir no navegador se isso aparecer.
+CARACTERES_LINHA = 88
+MARGEM_INFERIOR = 42.7  # do bloco mais baixo do desenho (progressão, base em 751) até o fim do viewBox
+ALTURA_SVG = 793.7
 # Progressão (bloco progressao, local): x da 1ª coluna e largura de cada etapa.
 PROGRESSAO_X = 19.3
 PROGRESSAO_PASSO = 37.3
@@ -79,16 +89,22 @@ def textos_impresso(inf):
     return [(rotulo, texto.strip()) for rotulo, texto in pares if texto and texto.strip()]
 
 
-def _layout(ligados):
-    """Posição de cada bloco ligado: empilha por coluna mantendo o gap do desenho."""
-    pos = {"cabecalho": CAIXA["cabecalho"][:2]}
+def _layout(ligados, cresceu=0):
+    """Posição de cada bloco ligado (empilha por coluna com o gap do desenho) e a altura do SVG.
+
+    `cresceu`: quanto a tabela do bloco habilidades passou da altura do desenho.
+    """
+    pos, base = {"cabecalho": CAIXA["cabecalho"][:2]}, 0
     for nomes, gap in COLUNAS.values():
         y = CAIXA[nomes[0]][1]
         for nome in nomes:
             if nome in ligados:
                 pos[nome] = (CAIXA[nome][0], y)
-                y += CAIXA[nome][3] + gap
-    return {nome: {"x": round(x, 1), "y": round(y, 1)} for nome, (x, y) in pos.items()}
+                y += CAIXA[nome][3] + (cresceu if nome == "habilidades" else 0)
+                base = max(base, y)
+                y += gap
+    altura_svg = round(max(ALTURA_SVG, base + MARGEM_INFERIOR), 1)
+    return {nome: {"x": round(x, 1), "y": round(y, 1)} for nome, (x, y) in pos.items()}, altura_svg
 
 
 def _conector(nome, y_bloco):
@@ -103,25 +119,43 @@ def _conector(nome, y_bloco):
             "fim": {"x": round(pontos[-1][0], 1), "y": round(pontos[-1][1], 1)}}
 
 
+def _linhas_texto(codigo, texto):
+    """Linhas estimadas que o texto da célula ocupa (o código entra na frente, como no SVG)."""
+    return len(textwrap.wrap(f"({codigo}) {texto}" if codigo else texto, CARACTERES_LINHA))
+
+
 def _tabela(etapas):
-    """As 12 linhas do referencial (etapa não gravada sai vazia) e as células mescladas (rowspan)."""
+    """As 12 linhas do referencial (etapa não gravada sai vazia), as células mescladas (rowspan) e
+    quanto a tabela cresceu além do desenho.
+
+    Célula cujo texto não cabe nas linhas que cobre divide o que falta igualmente entre elas.
+    """
     gravadas = {e["etapa"]: e for e in etapas}
-    tabela, celulas, y = [], [], TABELA_Y
-    for etapa, altura in zip(EtapaReferencial.values, ALTURAS_LINHAS):
+    tabela, celulas, alturas = [], [], list(ALTURAS_LINHAS)
+    for i, etapa in enumerate(EtapaReferencial.values):
         g = gravadas.get(etapa, {})
         marca, codigo, texto = (g.get(c) or "" for c in ("marca", "codigo", "texto"))
-        tabela.append({"etapa": etapa, "marca": marca, "cor": CORES_MARCA.get(marca, COR_SEM_MARCA),
-                       "y": round(y, 1), "altura": altura, "meio": round(altura / 2, 1)})
+        tabela.append({"etapa": etapa, "marca": marca, "cor": CORES_MARCA.get(marca, COR_SEM_MARCA)})
         acima = celulas[-1] if celulas else None
         if codigo or texto or not (acima and (acima["codigo"] or acima["texto"])):
-            celulas.append({"codigo": codigo, "texto": texto, "y": round(y, 1), "altura": altura})
+            celulas.append({"codigo": codigo, "texto": texto, "linhas": [i]})
         else:
-            acima["altura"] += altura
+            acima["linhas"].append(i)
+    for c in celulas:
+        falta = _linhas_texto(c["codigo"], c["texto"]) * LINHA_CEL + RESPIRO_CEL - sum(alturas[i] for i in c["linhas"])
+        if falta > 0:
+            for i in c["linhas"]:
+                alturas[i] += falta / len(c["linhas"])
+    y, topo = TABELA_Y, []
+    for linha, altura in zip(tabela, alturas):
+        linha.update(y=round(y, 1), altura=round(altura, 1), meio=round(altura / 2, 1))
+        topo.append(y)
         y += altura
     for c in celulas:
-        c["altura"] = round(c["altura"], 1)
-        c["clamp"] = max(1, int(c["altura"] // 12))  # line-height de .f2-cel
-    return tabela, celulas
+        linhas = c.pop("linhas")
+        altura = sum(alturas[i] for i in linhas)
+        c.update(y=round(topo[linhas[0]], 1), altura=round(altura, 1), clamp=max(1, int(altura // LINHA_CEL)))
+    return tabela, celulas, round(sum(alturas) - sum(ALTURAS_LINHAS), 1) or 0  # 0.0 sairia "589.0" no translate
 
 
 def gerar(infografico, secoes, base_imagens, componente):
@@ -139,8 +173,8 @@ def gerar(infografico, secoes, base_imagens, componente):
         return secoes.get(id_, {"titulo": "", "corpo": ""})
 
     textos = infografico["textos"]
-    pos = _layout(ligados)
-    tabela, celulas = _tabela(infografico["etapas"])
+    tabela, celulas, cresceu = _tabela(infografico["etapas"])
+    pos, altura_svg = _layout(ligados, cresceu if "habilidades" in ligados else 0)
     itens = sorted(infografico["itens"], key=lambda i: i["posicao"]) if "tarefas" in ligados else []
 
     modais = [{"id": "dlg-descritor", "titulo": mark_safe(secao("dlg-descritor")["titulo"]),
@@ -170,6 +204,9 @@ def gerar(infografico, secoes, base_imagens, componente):
         "linhas": [_conector(p, pos[p]["y"]) for p in ligados if p in CONECTORES],
         "tabela": tabela,
         "celulas": celulas,
+        "fim_tabela": round(FIM_TABELA_Y + cresceu, 1),
+        "legenda_y": round(LEGENDA_Y + cresceu, 1),
+        "altura_svg": altura_svg,
         "pontos": [{"etapa": l["etapa"], "marca": l["marca"], "cor": l["cor"],
                     "x": round(PROGRESSAO_X + i * PROGRESSAO_PASSO, 1)} for i, l in enumerate(tabela)],
         "itens": itens,

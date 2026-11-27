@@ -8,6 +8,7 @@
 ## Doing
 
 ## Review
+- **K-052** Linhas da tabela "Descrição das habilidades" do F2 crescem com o texto (`feat/f2-linhas-crescem`): alturas estimadas no servidor, Progressão e viewBox descem; `test_f2` e `test_empacotar` OK; esperando o "ok" para a `main` · 2026-11-27 · D-300
 ## Done
 - **K-051** Títulos dos blocos Descrição e Progressão do F2 citam a BNCC (`feat/f2-titulos`): `f2.svg` e zip gabarito regenerado; `test_empacotar` e `test_f2` 32 OK; na `main` com push · 2026-11-26 · D-299
 - **K-050** Infográficos de LP preenchidos por cópia do seed dos dois Word (`feat/infografico-lp`): seed (`scripts/docx_infografico.py`), `carregar_infograficos` (só o vazio; recarga `--anterior`) e cascata para o infográfico novo; Django 1086 OK, E2E 176 passaram sem pulos; na `main` com push · 2026-11-26 · D-298
