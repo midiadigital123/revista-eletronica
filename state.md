@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Linhas da tabela "Descrição das habilidades" do F2 crescem com o texto (D-300), na branch `feat/f2-linhas-crescem` (worktree de trabalho), mesclada na `integ/f2-linhas-crescem`; falta o "ok" para a `main` (K-052 em Review).
-Funcionando: na revista 3 (LP, Alfa) os 8 textos aparecem inteiros, a Progressão desce e o viewBox cresce para 987,9; texto que já cabia gera SVG idêntico ao anterior (zip gabarito sem mudança); `test_f2` e `test_empacotar` OK. O gabarito `app/e2e/fixtures/pagina/` estava velho desde a D-299 (títulos) e foi regerado.
-Quebrado/pendente: tour e minimapa não conferidos no navegador com o SVG mais alto; etapa 11 (K-048) segue em aberto.
+Linhas da tabela "Descrição das habilidades" do F2 crescem com o texto (D-300), mescladas na `main` em 27/11, sem push (K-052 em Done).
+Funcionando: na revista 3 (LP, Alfa) os 8 textos aparecem inteiros, a Progressão desce e o viewBox cresce; texto que já cabia gera SVG idêntico ao anterior; suíte Django 1087 OK. Gabarito `app/e2e/fixtures/pagina/` regerado (estava velho desde a D-299).
+Quebrado/pendente: tour e minimapa não conferidos no navegador com o SVG mais alto; push da `main`; etapa 11 (K-048) segue em aberto.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Abrir a prévia do F2 Alfa de uma revista de LP na 8002 e rodar o tour até a Progressão.
+Abrir a prévia do F2 Alfa de uma revista de LP no dev e rodar o tour até a Progressão.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -3152,3 +3152,4 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 
 ### 2026-11-27
 - D-300: linhas da tabela de habilidades do F2 crescem com o texto (`feat/f2-linhas-crescem`), K-052 em Review.
+- D-300 mesclada na `main` (sem push), K-052 em Done.
