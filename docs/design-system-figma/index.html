@@ -12,16 +12,16 @@
 <main>
 <h1>Design system do Figma</h1>
 <p class="lead">O que o Figma <a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=266-5193">Sistemas CAEd · Telas – v1</a> define para a Revista eletrônica: tokens, componentes e telas. Referência para a etapa 11 (K-048, redesenho das telas). Nada daqui está no sistema ainda.</p>
-<p class="mudo">Extraído em 27/11/2026 das páginas Telas – v1 (266:5193) e Componentes (11:33), com a biblioteca de time "UI Fundação CAEd". Decisão D-304.</p>
+<p class="mudo">Extraído de novo em 27/11/2026 (v2, D-306) das páginas Telas – v1 (266:5193), Componentes (11:33) e Revisão da biblioteca (264:4255), depois que o arquivo foi religado à biblioteca nova "UI Fundação CAEd". A primeira extração (D-304) usava nomes de token e fonte que não existem mais. A página "Backup – Telas v1 (antes da biblioteca nova)" (285:3216) é só cópia antiga e ficou de fora.</p>
 
 <ul class="sumario">
- <li><a href="tokens.html"><b>Tokens</b><span>Cores, contraste, tipografia Proxima Nova, espaçamento, raios e sombra, com o equivalente de hoje no <code>ui.css</code>.</span></a></li>
+ <li><a href="tokens.html"><b>Tokens</b><span>Cores por papel (texto, superfície, borda, ícone, situação), contraste, tipografia Montserrat, espaçamento, tamanhos, raios, sombra e o legado ainda presente, com o equivalente de hoje no <code>ui.css</code>.</span></a></li>
  <li><a href="componentes.html"><b>Componentes</b><span>Botões, menu, abas, campos, status tag, progresso, tabela, paginação, card, modal, tooltip, aviso, diff e ícones.</span></a></li>
- <li><a href="telas.html"><b>Telas</b><span>As 23 telas por seção (Projetos, Revista, Modelos, Impresso), com link para o Figma e os padrões de layout.</span></a></li>
+ <li><a href="telas.html"><b>Telas</b><span>As 23 telas por seção (Projetos, Revista, Modelos, Impresso), com link para o Figma e os padrões de layout, e as <a href="telas.html#propostas">propostas da revisão da biblioteca</a>.</span></a></li>
 </ul>
 
 <h2>Em uma frase</h2>
-<p>Fundo cinza muito claro (#fafafa), texto quase preto, <b>amarelo CAEd (#ffff00) como única cor de ação</b>, azul/verde/vermelho só para situação, Proxima Nova, dois raios (8 nos controles, 20 nas superfícies) e uma sombra difusa nas camadas que flutuam.</p>
+<p>Fundo cinza muito claro (#fafafa), texto quase preto, <b>amarelo CAEd (#ffff00) como única cor de ação</b>, azul/verde/vermelho só para situação, Montserrat, dois raios (8 nos controles, 20 nas superfícies) e uma sombra difusa nas camadas que flutuam.</p>
 
 <h2>Arquivos</h2>
 <div class="rolavel"><table class="doc">
@@ -36,14 +36,15 @@
 <div class="rolavel"><table class="doc">
 <thead><tr><th>Assunto</th><th>Hoje (<code>ui.css</code>, <code>docs/telas/design-system.md</code>)</th><th>Figma</th></tr></thead>
 <tbody>
-<tr><td>Fonte</td><td>Inter, local</td><td>Proxima Nova (paga; precisa de licença e dos arquivos)</td></tr>
+<tr><td>Fonte</td><td>Inter, local</td><td>Montserrat (livre, OFL; os arquivos ainda não estão no repositório)</td></tr>
+<tr><td>Nomes dos tokens</td><td>Estilo shadcn (<code>--primary</code>, <code>--muted</code>, <code>--border</code>)</td><td>Por papel: <code>--color-text-*</code>, <code>--color-surface-*</code>, <code>--color-border-*</code>, <code>--color-icon-*</code>, <code>--color-feedback-*</code>, <code>--size-*</code></td></tr>
 <tr><td>Cor de ação</td><td>Botão principal quase preto (<code>--primary</code>)</td><td>Amarelo #ffff00 com texto #141414</td></tr>
 <tr><td>Fundo</td><td>Branco</td><td>#fafafa, com tabelas e cartões brancos</td></tr>
 <tr><td>Situação</td><td>Badges, <code>.tag-azul</code>/<code>.tag-lilas</code> apagadas, contagem âmbar</td><td>Uma pílula com 4 cores (azul, verde, vermelho, cinza), saturadas</td></tr>
-<tr><td>Raio</td><td><code>--radius</code> 10 px, 8 nos campos (<code>--radius-md</code>), 14 no maior (<code>--radius-xl</code>)</td><td>8 nos controles, 20 em card, tabela, modal e tag</td></tr>
-<tr><td>Sombra</td><td>Só <code>--shadow-xs</code> (regra "Flat")</td><td>Sombra FG (0 2 10, 10%) em modal, dropdown, menu e tooltip; card sem sombra, só fio</td></tr>
+<tr><td>Raio</td><td><code>--radius</code> 10 px, 8 nos campos (<code>--radius-md</code>), 14 no maior (<code>--radius-xl</code>)</td><td>8 nos controles, no modal e no tooltip; 20 em card, tabela, dropdown e tag</td></tr>
+<tr><td>Sombra</td><td>Só <code>--shadow-xs</code> (regra "Flat")</td><td>Sombra FG (0 2 10, 10%) em modal, dropdown e menu; tooltip e card sem sombra</td></tr>
 <tr><td>Campo</td><td>Rótulo acima, borda #808080</td><td>Rótulo flutuante sobre a borda, borda #ccc</td></tr>
-<tr><td>Menu</td><td>5 itens, seletor de ano, links Usuários/Sair</td><td>3 itens em caixa alta com sublinhado amarelo; perfil num botão amarelo com menu</td></tr>
+<tr><td>Menu</td><td>5 itens, seletor de ano, links Usuários/Sair</td><td>NavBar com 3 itens (Medium 12) e sublinhado amarelo; perfil num botão amarelo com menu de ícones</td></tr>
 <tr><td>Botão-ícone</td><td>Quadrado de 32</td><td>Redondo de 36</td></tr>
 <tr><td>Novos</td><td>—</td><td>Paginação, agrupamento por parceiro, anel e barra de progresso, número do passo, cartão de revista, tooltip escuro, botão com menu, diff por bloco com "copiar"</td></tr>
 </tbody></table></div>
@@ -55,6 +56,8 @@
  <li><b>Item ativo só pelo amarelo.</b> O sublinhado #fdea00 dá 1,19:1 sobre branco. O menu e as abas precisam de outro sinal (peso, cor do texto) além do <code>aria-current</code>.</li>
  <li><b>Estados que o Figma não desenha:</b> hover, foco, desligado (fora da paginação), erro de campo, carregando, estado vazio e modo escuro. As regras de hoje (<code>docs/telas/design-system.md</code>, seção "Estados dos controles") continuam valendo até o design definir.</li>
  <li><b>Cores dos padrões.</b> As 5 amostras da tela "Padrões e etapas" têm todas o rótulo #F72628 (texto de exemplo); as cores desenhadas são as <code>--padrao-1..4</code> de hoje.</li>
+ <li><b>Escala de espaçamento.</b> <code>spacing/4xl</code> e <code>spacing/5xl</code> valem os dois 32 px no Figma. Confirmar com o design antes de adotar a escala.</li>
+ <li><b>Componentes novos da biblioteca.</b> A <a href="telas.html#propostas">revisão da biblioteca</a> propôs 11 componentes; 10 já existem e as telas usam (Modal, Tooltip, ProgressRing, ProgressSteps, SaveStatus, ColorSwatch, FileUpload, StepBadge, Table, SectionNavItem). Só o indicador "Texto validado / não validado" segue sem componente. Na K-048, cada um tem um par nas telas B (ex.: <code>&lt;c-modal&gt;</code>, <code>status_salvo.html</code>); a tabela das propostas diz qual.</li>
  <li><b>Ícones.</b> A biblioteca tem um conjunto próprio ("Icons", <code>Content=&lt;nome&gt;</code>). Estas páginas usam aproximações Lucide; os SVG reais precisam ser exportados do Figma.</li>
 </ol>
 </main>
