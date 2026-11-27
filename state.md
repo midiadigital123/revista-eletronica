@@ -2,15 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Mescla explícita no referencial do F2 (D-301) com a UI de elo entre etapas (D-303, substitui a da D-302), mesclada na `main` em 27/11, com push; migração 0029 aplicada no banco do dev.
-Funcionando: elo sobre a linha entre duas etapas, por coluna; clicar junta e a célula de cima cobre o grupo na hora (referencial.js), grava pelo autosave (mouse e teclado); 375 px rola dentro da caixa; testes da tela OK.
-Corrigido: "Salvando…" eterno ao juntar (atributo `data-linha` reservado do autosave, trocado por `data-ref-linha`).
-Suíte Django 1093 OK (9 pulados), regressão do data-linha OK, makemigrations sem mudanças.
-Quebrado/pendente: E2E `infografico.spec.ts` ajustado e não rodado (faltam as credenciais E2E); etapa 11 (K-048) segue em aberto.
+Design system do Figma "Sistemas CAEd" extraído para HTML em `docs/design-system-figma/` (D-304, K-054 em Review), commitado na `feat/design-system-figma` e mesclado na `integ/design-system-figma`; falta o "ok" para a `main`. Nada em `app/` mudou.
+Funcionando: `index.html` (visão geral, diferenças e pontos de atenção), `tokens.html` (cores, contraste, tipografia, espaçamento), `componentes.html` (componentes com medidas, node-id e equivalente de hoje), `telas.html` (23 telas e padrões de layout); `tokens.css` com todas as variáveis. Conferido no navegador, sem rolagem horizontal a 375 px.
+Quebrado/pendente: ícones são aproximações Lucide (SVG da biblioteca não exportados); Proxima Nova sem licença no repositório; estados hover/foco/erro não existem no Figma. Apagar a worktree `../revista-express-ds` depois da mescla na `main`. Da K-053 (já na `main`, com push e migração 0029 no dev): E2E `infografico.spec.ts` ajustado e não rodado (faltam as credenciais E2E); etapa 11 (K-048) segue em aberto.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Rodar o E2E `infografico.spec.ts` com as credenciais E2E (`cd app/e2e && npx playwright test tests/infografico.spec.ts`).
+Abrir `docs/design-system-figma/index.html` e dar o "ok" (ou não) para mesclar a `integ/design-system-figma` na `main`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2471,6 +2469,14 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Arquivos afetados:** `app/nucleo/infografico.py` (`grade_referencial`), `app/nucleo/urls/ui_revista.py`, `app/nucleo/templates/ui/parciais/revista_infograficos.html`, `app/nucleo/static/ui/componentes/referencial.js`, `app/nucleo/templates/ui/base.html`, `app/nucleo/static/ui/telas/revista.css`, `app/nucleo/templates/cotton/icone.html`, `docs/telas/design-system.md`, testes `test_infografico`, `test_ui_revista`, `test_componentes_cotton`, `app/e2e/tests/infografico.spec.ts`
 - **Status:** ativa
 
+### D-304 — Design system do Figma extraído para HTML estático em docs/design-system-figma/ (2026-11-27 18:00)
+- **Contexto:** a etapa 11 (K-048) vai redesenhar as telas pelo Figma "Sistemas CAEd" (página Telas – v1, `266:5193`). O usuário pediu o design system extraído em HTML antes de mexer em `app/`.
+- **Decisão:** 4 páginas estáticas (`index`, `tokens`, `componentes`, `telas`) e um `tokens.css` em `docs/design-system-figma/`, a partir das páginas Telas – v1 e Componentes (`11:33`) e da biblioteca "UI Fundação CAEd". Cada valor sai de variável do Figma ou do `get_design_context`; cada componente aponta o node-id e o equivalente atual do `ui.css`/cotton. Sem PNG no repositório: as telas levam link para o Figma. Fonte Proxima Nova com fallback Inter. Trabalho numa worktree extra (`../revista-express-ds`) porque a de trabalho estava com a `feat/f2-mescla` sem commit; a branch foi refeita sobre a `main` depois da mescla da K-053.
+- **Motivo:** HTML abre direto no navegador, sem build, e serve de referência para a K-048; o mapeamento para o `ui.css` mostra o que é novo.
+- **Descartadas:** Artifact no claude.ai — o usuário escolheu versionar em `docs/`; só a página Telas – v1 — as telas mostram só os estados usados, a página Componentes tem as variantes; imagens das telas no repositório — peso e envelhecem, o link do Figma basta.
+- **Arquivos afetados:** `docs/design-system-figma/*`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (24/11, Pedagógica via chat; respondida em 24/11 pela D-288: cópia da etapa × componente pelo botão "Editar só neste projeto", com vínculo e revisão) Requisito novo: descritores e outros elementos da Comunitária precisam ser editáveis **por projeto**, em qualquer projeto (não só CE, Joinville e ES). A Luciana respondeu que **todos** os elementos (descritor, tarefa, arquivo do item, BNCC, pré-requisitos) são editáveis localmente por projeto — depende de: Otavio
 - [x] (24/11, D-290; respondida em 24/11: segue a ordem do editor, D-291) A ordem dos descritores na revista é alfabética pelo código (D011 vem antes de D02), não a ordem arrastada no editor. É o que a Pedagógica quer? — depende de: Otavio
@@ -2581,6 +2587,9 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - [ ] (18/11, D-273) Unificar os dois jeitos de "voltar" (link simples em 13 telas × trilha em `<nav>` em 2, a mais acessível)? Muda o visual das 13 — depende de: Otavio
 
 ## Sessões
+### 2026-11-27 18:00
+- Design system do Figma extraído para `docs/design-system-figma/` (D-304, K-054): 23 telas, 13 componentes da biblioteca "UI Fundação CAEd", ~90 variáveis; contraste do cinza terciário (#808080, 3,78:1) e da borda do campo (#ccc, 1,54:1) abaixo do WCAG. Commitado e mesclado na `integ/design-system-figma`.
+
 ### 2026-11-12
 - Análise das duas planilhas: 33 parceiros únicos, 148 cortes casam, 40 faltam; a de cortes é a de 2025 (D-261).
 - Worktree `revista-express-carga-2026` (`feat/carga-2026` ← `integ/carga-2026` ← `main`); comando `importar_cortes` e teste (2 OK); carga real conferida num banco isolado.
