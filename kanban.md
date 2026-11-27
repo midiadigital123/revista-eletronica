@@ -8,6 +8,7 @@
 ## Doing
 
 ## Review
+- **K-053** Mescla explícita de marca e habilidade no referencial do F2 (`feat/f2-mescla`): toggles "Junta com a de cima" por coluna, vazio sem juntar fica vazio, marca juntada = uma letra centrada; UI com elo entre etapas e célula única (D-303) · suíte 1093 OK; na `integ/f2-mescla`, falta o ok para a `main` · 2026-11-27 · D-301 a D-303
 ## Done
 - **K-052** Linhas da tabela "Descrição das habilidades" do F2 crescem com o texto (`feat/f2-linhas-crescem`): alturas estimadas no servidor, Progressão e viewBox descem; `test_f2` e `test_empacotar` OK; na `main` (sem push) · 2026-11-27 · D-300
 - **K-051** Títulos dos blocos Descrição e Progressão do F2 citam a BNCC (`feat/f2-titulos`): `f2.svg` e zip gabarito regenerado; `test_empacotar` e `test_f2` 32 OK; na `main` com push · 2026-11-26 · D-299

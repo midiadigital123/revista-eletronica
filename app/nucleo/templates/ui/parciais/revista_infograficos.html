@@ -46,24 +46,25 @@ Sem permissão ou revista arquivada: os mesmos campos, `disabled`.
     {# Junto do ❷ (D-258); irmã dos blocos: só some com Habilidades e Progressão desligados. #}
     <div class="inf-grade" data-bloco="grade">
       <h4 class="rotulo" id="{{ n }}-grade-titulo">Referencial por etapa</h4>
-      <p class="ajuda">As Habilidades usam o código e o texto (vazios: a célula de cima se estende); a Progressão usa a marca.</p>
+      <c-aviso tag="p" class="inf-ref-aviso"><c-icone nome="link" /><span>Clique no elo entre duas etapas para juntar as células delas, na marca ou na habilidade. Vazio sem juntar fica vazio no infográfico.</span></c-aviso>
+      {% comment %}D-303: grade em CSS grid. O elo entre a etapa de cima e esta é o checkbox junta_* desta (o autosave grava "on" ou vazio);
+         a célula juntada é coberta pela de cima (span). O servidor entrega as spans (infografico.grade_referencial) e o
+         referencial.js as refaz a cada clique, com a mesma regra.{% endcomment %}
       <div class="tabela-caixa">
-        <table class="tabela inf-tabela" aria-labelledby="{{ n }}-grade-titulo">
-          <thead><tr><th scope="col">Etapa</th><th scope="col">Marca</th><th scope="col">Código</th><th scope="col">Texto</th></tr></thead>
-          <tbody>
-            {% for etapa, rotulo, linha in inf.grade %}{% with c=n|add:"-etapa-"|add:etapa %}
-            <tr>
-              <th scope="row">{{ rotulo }}</th>
-              <td><c-select id="{{ c }}-marca" name="{{ c }}-marca" aria-label="Marca: {{ rotulo }}" :editavel="pode_infograficos">
-                <option value="">—</option>
-                {% for valor, nome in marcas %}<option value="{{ valor }}"{% if linha.marca == valor %} selected{% endif %}>{{ nome }}</option>{% endfor %}
-              </c-select></td>
-              <td><c-input type="text" id="{{ c }}-codigo" name="{{ c }}-codigo" maxlength="50" value="{{ linha.codigo }}" aria-label="Código: {{ rotulo }}" :editavel="pode_infograficos" /></td>
-              <td><c-textarea class="inf-texto-curto" id="{{ c }}-texto" name="{{ c }}-texto" rows="1" aria-label="Texto: {{ rotulo }}" :editavel="pode_infograficos">{{ linha.texto }}</c-textarea></td>
-            </tr>
-            {% endwith %}{% endfor %}
-          </tbody>
-        </table>
+        <div class="inf-ref" role="table" aria-labelledby="{{ n }}-grade-titulo" x-data="referencial">
+          <div role="row" class="inf-ref-linha"><span role="columnheader" class="inf-ref-cab">Etapa</span><span role="columnheader" class="inf-ref-cab">Marca</span><span role="columnheader" class="inf-ref-cab">Habilidade (código e texto)</span></div>
+          {% for l in inf.grade %}{% with c=n|add:"-etapa-"|add:l.etapa linha=l.linha r=forloop.counter|add:1 %}
+          <div role="row" class="inf-ref-linha">
+            <span role="rowheader" class="inf-ref-etapa" style="grid-row: {{ r }}">{{ l.rotulo }}</span>
+            <div role="cell" class="inf-ref-cel" data-coluna="marca" data-ref-linha="{{ r }}" data-span="{{ l.span_marca }}" style="grid-row: {{ r }} / span {{ l.span_marca|default:1 }}"{% if not l.span_marca %} hidden{% endif %}><c-select id="{{ c }}-marca" name="{{ c }}-marca" aria-label="Marca: {{ l.rotulo }}" :editavel="pode_infograficos">
+              <option value="">—</option>
+              {% for valor, nome in marcas %}<option value="{{ valor }}"{% if linha.marca == valor %} selected{% endif %}>{{ nome }}</option>{% endfor %}
+            </c-select></div>
+            <div role="cell" class="inf-ref-cel inf-ref-habilidade" data-coluna="habilidade" data-ref-linha="{{ r }}" data-span="{{ l.span_habilidade }}" style="grid-row: {{ r }} / span {{ l.span_habilidade|default:1 }}"{% if not l.span_habilidade %} hidden{% endif %}><c-input type="text" id="{{ c }}-codigo" name="{{ c }}-codigo" maxlength="50" value="{{ linha.codigo }}" aria-label="Código: {{ l.rotulo }}" placeholder="Código" :editavel="pode_infograficos" /><c-textarea class="inf-texto-curto" id="{{ c }}-texto" name="{{ c }}-texto" rows="1" aria-label="Texto: {{ l.rotulo }}" placeholder="Texto da habilidade" :editavel="pode_infograficos">{{ linha.texto }}</c-textarea></div>
+            {% if l.acima %}{% for col, nome in colunas_referencial %}<label class="inf-elo" data-dica="Juntar {{ l.acima }} e {{ l.etapa }}" data-dica-junto="Separar {{ l.acima }} e {{ l.etapa }}" style="grid-row: {{ r }}; grid-column: {{ forloop.counter|add:1 }}"><input class="sr-only" type="checkbox" id="{{ c }}-junta_{{ col }}" name="{{ c }}-junta_{{ col }}" data-junta="{{ col }}" data-ref-linha="{{ r }}" aria-label="Juntar {{ nome }} de {{ l.acima }} e {{ l.etapa }}"{% if col == "marca" and l.junta_marca or col == "habilidade" and l.junta_habilidade %} checked{% endif %}{% if not pode_infograficos %} disabled{% endif %}><c-icone nome="desligar-link" /><c-icone nome="link" /></label>{% endfor %}{% endif %}
+          </div>
+          {% endwith %}{% endfor %}
+        </div>
       </div>
     </div>
 

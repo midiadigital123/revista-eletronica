@@ -18,7 +18,7 @@ from nucleo.servicos import arquivos
 from nucleo.texto import TOKENS_BLOCO, TOKENS_INLINE, _proibidos
 
 CAMPOS_INF = ("habilidade", "texto_descritor", "texto_progressao", "texto_habilidades")
-CAMPOS_ETAPA = ("marca", "codigo", "texto")
+CAMPOS_ETAPA = ("marca", "codigo", "texto", "junta_marca", "junta_habilidade")
 CAMPOS_ITEM = ("etapa", "descritor", "texto_alternativo", "analise")
 RICOS = ("texto_descritor", "texto_progressao", "texto_habilidades")
 
@@ -81,7 +81,7 @@ def _decidir(atual, novo, velho):
     texto que a carga pôs e ninguém mexeu); outro valor é edição da revista e fica."""
     if atual == novo:
         return None
-    if atual in ("", None):
+    if atual in ("", None) or atual is False:  # flag desligada (junta_*) é o vazio do booleano
         return "preenchidos"
     if velho is not None and atual == velho:
         return "atualizados"
@@ -92,7 +92,7 @@ def _copiar(obj, novo, velho, campos, conta):
     """Aplica `_decidir` aos `campos` de `obj`; devolve os que mudaram."""
     mudou = []
     for c in campos:
-        destino = _decidir(getattr(obj, c), novo[c], velho[c] if velho else None)
+        destino = _decidir(getattr(obj, c), novo[c], velho.get(c) if velho else None)  # seed antigo: sem junta_*
         if destino:
             conta[destino] += 1
         if destino in ("preenchidos", "atualizados"):  # atualizado pode ir para "" (célula mesclada nova)

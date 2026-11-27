@@ -2,13 +2,15 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Linhas da tabela "Descrição das habilidades" do F2 crescem com o texto (D-300), mescladas na `main` em 27/11, sem push (K-052 em Done).
-Funcionando: na revista 3 (LP, Alfa) os 8 textos aparecem inteiros, a Progressão desce e o viewBox cresce; texto que já cabia gera SVG idêntico ao anterior; suíte Django 1087 OK. Gabarito `app/e2e/fixtures/pagina/` regerado (estava velho desde a D-299).
-Quebrado/pendente: tour e minimapa não conferidos no navegador com o SVG mais alto; push da `main`; etapa 11 (K-048) segue em aberto.
+Mescla explícita no referencial do F2 (D-301) com a UI de elo entre etapas (D-303, substitui a da D-302), commitada na `feat/f2-mescla` e mesclada na `integ/f2-mescla` (worktree de trabalho); fora da `main`.
+Funcionando: elo sobre a linha entre duas etapas, por coluna; clicar junta e a célula de cima cobre o grupo na hora (referencial.js), grava pelo autosave (mouse e teclado); 375 px rola dentro da caixa; testes da tela OK.
+Corrigido: "Salvando…" eterno ao juntar (atributo `data-linha` reservado do autosave, trocado por `data-ref-linha`).
+Suíte Django 1093 OK (9 pulados), regressão do data-linha OK, makemigrations sem mudanças.
+Quebrado/pendente: E2E `infografico.spec.ts` ajustado e não rodado (faltam as credenciais E2E); merge na `main` espera o "ok" do usuário.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Abrir a prévia do F2 Alfa de uma revista de LP no dev e rodar o tour até a Progressão.
+Dar o "ok" (ou não) para mesclar a `integ/f2-mescla` na `main`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2445,6 +2447,30 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Arquivos afetados:** `app/nucleo/servicos/f2.py`, `app/nucleo/templates/revista/f2.svg`, `app/nucleo/tests/test_f2.py`
 - **Status:** ativa
 
+### D-301 — Mescla explícita de marca e habilidade no referencial do F2 (2026-11-27 14:00)
+- **Contexto:** no referencial do infográfico, código e texto vazios estendiam a célula de cima. Etapa sem habilidade avaliada virava mescla falsa: no exemplo do usuário, "Habilidade 8º ano" aparecia na frente de 9EF a 3EM. A marca nunca mesclava, e a Pedagógica precisa mesclar marca e habilidade de forma independente (ex.: 1EM a 3EM com a mesma marca A e a mesma habilidade EM13LP44).
+- **Decisão:** `RevistaInfograficoEtapa` ganha `junta_marca` e `junta_habilidade` (migração 0029). Na tela, cada etapa (menos a 1EF) tem "Junta com a de cima" na coluna Marca e na coluna Código; ligado, os campos da coluna somem. O resolver (`_etapas`) aplica a mescla: marca juntada herda a de cima, habilidade juntada sai sem código e texto; as chaves `junta_*` só entram quando ligadas. No SVG, a habilidade junta só por flag, e a marca juntada vira uma letra só no meio do grupo, sem fios na coluna e com a barra contínua. A migração liga `junta_habilidade` onde o vazio estendia (o desenho não muda); o seed lê o `vMerge` dos Word.
+- **Motivo:** vazio passa a significar vazio; a mescla é uma decisão explícita da Pedagógica, por coluna. Sem toggle, o SVG sai idêntico.
+- **Descartadas:** grupos por intervalo ("mesclar de X até Y") — mais cliques e validação de sobreposição; letra repetida por etapa na marca juntada — o usuário quer uma letra só, centrada.
+- **Arquivos afetados:** `app/nucleo/models/revista.py`, `app/nucleo/migrations/0029_infografico_junta.py`, `app/nucleo/servicos/resolver.py`, `app/nucleo/servicos/f2.py`, `app/nucleo/templates/revista/f2.svg`, `app/nucleo/infografico.py`, `app/nucleo/templates/ui/parciais/revista_infograficos.html`, `app/nucleo/static/ui/telas/revista.css`, `app/nucleo/servicos/seed_infografico.py`, `scripts/docx_infografico.py`, `app/templates_seed/2026/infograficos/*.json`, `app/nucleo/dados/infografico-docx.json`
+- **Status:** ativa
+
+### D-302 — UI da mescla no referencial: botão ⤒ por célula e célula que cola na de cima (2026-11-27 16:00)
+- **Contexto:** as caixas "Junta com a de cima" da D-301 funcionavam, mas a grade ficou confusa: 22 rótulos repetidos, linhas de alturas diferentes e nenhum sinal visual dos grupos. O usuário mandou um exemplo com um botão-ícone por linha e um aviso no topo, sem a mescla da marca.
+- **Decisão:** cada célula (Marca e Habilidade, menos na 1EF) tem um botão-ícone ⤒ (ícone novo `juntar`, lucide arrow-up-to-line), à esquerda do campo. É um checkbox nativo oculto dentro de um label `.btn-icone`, então o autosave, o teclado e o aria-label continuam. Código e texto viram uma coluna só, "Habilidade (código e texto)". Ligado, o campo dá lugar a "igual à de cima" com um traço vertical que liga a célula à de cima, como o rowspan do SVG. Um aviso neutro com o ícone substitui o parágrafo de ajuda. Sem JS novo.
+- **Motivo:** a grade passa a se parecer com o infográfico; a ação é um ícone conhecido; as linhas ficam com altura estável.
+- **Descartadas:** um botão só por linha (exemplo do usuário) — não separa marca e habilidade; mostrar o valor herdado ("Aprofundar, do 1EM") — exigiria recalcular os grupos no navegador a cada clique, e o traço já mostra de onde vem; aviso que fecha — exigiria guardar o estado.
+- **Arquivos afetados:** `app/nucleo/templates/ui/parciais/revista_infograficos.html`, `app/nucleo/static/ui/telas/revista.css`, `app/nucleo/templates/cotton/icone.html`, `docs/telas/design-system.md`, `app/nucleo/tests/test_ui_revista.py`, `app/nucleo/tests/test_componentes_cotton.py` (exceção da catraca: o ⤒ é label com checkbox), `app/e2e/tests/infografico.spec.ts`
+- **Status:** ~~substituída por D-303~~
+
+### D-303 — Mescla no referencial por elo entre etapas, com célula única (2026-11-27 17:30)
+- **Contexto:** a UI da D-302 (botão ⤒ em cada célula) ainda ficou confusa para o usuário: 22 botões iguais, o ⤒ não dizia com quem junta, e a célula juntada virava uma lista de "igual à de cima". Pelo /find-skills o usuário escolheu a skill `ui-ux-pro-max` (instalada global) para propor a UI; ela confirmou: rótulo e estado no controle só de ícone, estado visível sem hover, tabela larga rolando dentro da caixa.
+- **Decisão:** a mescla é uma relação entre duas etapas vizinhas, então o controle é um **elo** redondo sobre a linha que as separa, no trilho à esquerda de cada coluna (Marca e Habilidade). Solto: ícone `desligar-link` cinza; juntado: `link` preenchido, e a dica troca para "Separar 8EF e 9EF". A célula juntada vira **uma célula só**: a grade passou de `<table>` para CSS grid (`role="table"`), e a célula de cima cobre o grupo (`grid-row: span n`) com um traço no trilho. O servidor entrega as spans (`infografico.grade_referencial`) e o `static/ui/componentes/referencial.js` (Alpine) as refaz a cada clique, com a mesma regra. Dados e autosave não mudam: o elo é o checkbox `junta_*` da etapa de baixo. Substitui a UI da D-302.
+- **Motivo:** a grade passa a ter a mesma forma do infográfico (rowspan), e o controle fica onde a relação está.
+- **Descartadas:** botão por célula (D-302) — repetido e ambíguo; recarregar o cartão pelo servidor a cada clique — o autosave devolve só o status, e o JS de 30 linhas resolve sem ida ao servidor.
+- **Arquivos afetados:** `app/nucleo/infografico.py` (`grade_referencial`), `app/nucleo/urls/ui_revista.py`, `app/nucleo/templates/ui/parciais/revista_infograficos.html`, `app/nucleo/static/ui/componentes/referencial.js`, `app/nucleo/templates/ui/base.html`, `app/nucleo/static/ui/telas/revista.css`, `app/nucleo/templates/cotton/icone.html`, `docs/telas/design-system.md`, testes `test_infografico`, `test_ui_revista`, `test_componentes_cotton`, `app/e2e/tests/infografico.spec.ts`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [x] (24/11, Pedagógica via chat; respondida em 24/11 pela D-288: cópia da etapa × componente pelo botão "Editar só neste projeto", com vínculo e revisão) Requisito novo: descritores e outros elementos da Comunitária precisam ser editáveis **por projeto**, em qualquer projeto (não só CE, Joinville e ES). A Luciana respondeu que **todos** os elementos (descritor, tarefa, arquivo do item, BNCC, pré-requisitos) são editáveis localmente por projeto — depende de: Otavio
 - [x] (24/11, D-290; respondida em 24/11: segue a ordem do editor, D-291) A ordem dos descritores na revista é alfabética pelo código (D011 vem antes de D02), não a ordem arrastada no editor. É o que a Pedagógica quer? — depende de: Otavio
@@ -3153,3 +3179,8 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 ### 2026-11-27
 - D-300: linhas da tabela de habilidades do F2 crescem com o texto (`feat/f2-linhas-crescem`), K-052 em Review.
 - D-300 mesclada na `main` (sem push), K-052 em Done.
+- D-301: mescla explícita de marca e habilidade no referencial do F2 (`feat/f2-mescla`), suíte 1092 OK, K-053 em Review.
+- D-302: UI da mescla com botão ⤒ por célula e célula que cola na de cima; testes da tela OK, conferido no navegador (desktop, 375 px, teclado).
+- D-303: UI refeita com elo entre etapas e célula única (CSS grid + referencial.js), skill ui-ux-pro-max instalada; conferido no navegador.
+- Defeito da D-303: juntar deixava o status em "Salvando…" para sempre. Causa: `data-linha` na grade é o atributo que o autosave reserva para a linha nova; o checkbox virava uma "linha" sem campos e nunca saía da lista de envios. Correção: `data-ref-linha`, com teste que falha se `data-linha` voltar ao cartão.
+- Suíte 1093 OK; commit na `feat/f2-mescla` e merge na `integ/f2-mescla`.

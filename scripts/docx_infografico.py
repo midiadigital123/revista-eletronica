@@ -102,7 +102,7 @@ def converter(docx, tipo):
         erro(f"tabela de progressão com etapas {cab}")
     marca = dict(zip(cab, marcas))
 
-    # Descrição: etapa | marca | (código) texto; continuação de mescla = vazio.
+    # Descrição: etapa | marca | (código) texto; continuação de mescla do Word = junta com a de cima (D-301).
     etapas = {}
     for linha in tabelas[0]:
         if len(linha) != 3:
@@ -118,7 +118,8 @@ def converter(docx, tipo):
             if not achado:
                 erro(f"{etapa}: célula sem '(código) texto': {ct[:40]!r}")
             codigo, texto = achado[1], achado[2].strip()
-        etapas[etapa] = {"marca": marca[etapa], "codigo": codigo, "texto": texto}
+        etapas[etapa] = {"marca": marca[etapa], "codigo": codigo, "texto": texto,
+                         "junta_marca": bool(etapas and m_cont), "junta_habilidade": bool(etapas and ct_cont)}
     if list(etapas) != list(ETAPAS):
         erro(f"tabela de descrição com etapas {list(etapas)}")
 

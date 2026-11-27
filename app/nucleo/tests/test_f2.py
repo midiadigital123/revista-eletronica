@@ -91,6 +91,12 @@ def gerar(info=None, secs=None):
     return f2.gerar(info or infografico(), secs or secoes(), "arquivos/", "Língua Portuguesa")
 
 
+def celulas(r):
+    """(altura, texto) de cada célula de habilidade da tabela, de cima para baixo."""
+    return [(fo.get("height"), "".join(fo.itertext())) for fo in ET.fromstring(r["svg"]).iter("{http://www.w3.org/2000/svg}foreignObject")
+            if fo.get("width") == "351"]
+
+
 def ids(svg):
     return {el.get("id") for el in ET.fromstring(svg).iter()} - {None}
 
@@ -137,19 +143,37 @@ class GerarTest(SimpleTestCase):
         self.assertIn(f'alt="{escape(ESCAPE)}"', r["modais"][-1]["corpo"])
 
     def test_celula_mesclada_e_marca_vazia(self):
-        etapas = [  # 1EF não gravada (vazia no topo); 3EF e 5EF.. 3EM vazias entram na de cima
+        etapas = [  # 1EF não gravada (vazia no topo); 3EF e 5EF juntam com a de cima (D-301)
             {"etapa": "2EF", "rotulo": "", "marca": "", "codigo": "EF15LP18", "texto": "Relacionar."},
-            {"etapa": "3EF", "rotulo": "", "marca": "I", "codigo": "", "texto": ""},
+            {"etapa": "3EF", "rotulo": "", "marca": "I", "codigo": "", "texto": "", "junta_habilidade": True},
             {"etapa": "4EF", "rotulo": "", "marca": "A", "codigo": "", "texto": "Só texto."},
+            {"etapa": "5EF", "rotulo": "", "marca": "", "codigo": "", "texto": "", "junta_habilidade": True},
         ]
         r = gerar(infografico(etapas=etapas))
 
-        celulas = [(fo.get("height"), "".join(fo.itertext())) for fo in ET.fromstring(r["svg"]).iter("{http://www.w3.org/2000/svg}foreignObject")
-                   if fo.get("width") == "351"]
-        self.assertEqual(celulas, [("22.7", ""), ("45.3", "(EF15LP18) Relacionar."), ("294.8", "Só texto.")])
+        self.assertEqual(celulas(r)[:3], [("22.7", ""), ("45.3", "(EF15LP18) Relacionar."), ("45.4", "Só texto.")])
+        self.assertEqual(len(celulas(r)), 3 + 7)  # 6EF a 3EM: vazias sem juntar, uma célula cada
         self.assertEqual(r["svg"].count(f'fill="{f2.COR_SEM_MARCA}"'), 2 * 10)  # tabela e progressão
         self.assertEqual(r["svg"].count(f'fill="{f2.CORES_MARCA["I"]}"'), 2)
         self.assertEqual(r["svg"].count(f'fill="{f2.CORES_MARCA["A"]}"'), 2)
+
+    def test_vazio_sem_juntar_nao_herda_a_habilidade_de_cima(self):
+        """O caso que motivou a D-301: 9EF a 3EM sem habilidade não mostram a do 8EF."""
+        etapas = [{"etapa": "8EF", "rotulo": "", "marca": "A", "codigo": "C8", "texto": "Habilidade 8º ano."},
+                  *({"etapa": e, "rotulo": "", "marca": "R", "codigo": "", "texto": ""} for e in ("9EF", "1EM", "2EM", "3EM"))]
+        cel = celulas(gerar(infografico(etapas=etapas)))
+        self.assertIn(("25.6", "(C8) Habilidade 8º ano."), cel)  # só a linha do 8EF
+        self.assertEqual([t for _, t in cel[-4:]], [""] * 4)
+
+    def test_marca_junta_vira_uma_letra_no_meio_do_grupo(self):
+        etapas = [{"etapa": "1EM", "rotulo": "", "marca": "A", "codigo": "", "texto": ""},
+                  *({"etapa": e, "rotulo": "", "marca": "A", "codigo": "", "texto": "", "junta_marca": True} for e in ("2EM", "3EM"))]
+        svg = gerar(infografico(etapas=etapas))["svg"]
+        marcas = [t for t in ET.fromstring(svg).iter("{http://www.w3.org/2000/svg}text") if t.get("x") == "85.5"]  # coluna da marca na tabela
+        self.assertEqual([t.text for t in marcas].count("A"), 1)
+        letra = next(t for t in marcas if t.text == "A")
+        self.assertEqual(letra.get("y"), str(round((39.7 + 39.6 + 39.7) / 2, 1)))  # 3 linhas do EM
+        self.assertEqual(svg.count('<line class="f2-st4"'), 12 - 2)  # sem o fio branco entre as juntas
 
     def test_texto_longo_cresce_a_linha_e_empurra_a_progressao(self):
         longo = "Ler e compreender, em colaboração com os colegas e com a ajuda do professor, " * 4  # ~4 linhas

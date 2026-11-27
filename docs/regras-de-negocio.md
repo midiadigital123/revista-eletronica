@@ -404,6 +404,7 @@ Direção aprovada em 06/11; fases 1 a 4 feitas na `integ/f2-gerado` (fase 0: o 
 | O cartão do tour (antes do 1º passo) mostra só o título da `abertura`: os parágrafos dela já estão na página, logo acima. | D-258 |
 | O `tarefas-fechamento` aparece na web, sem título, logo depois do infográfico, e some com o passo Tarefas desligado (antes, só no impresso). | D-258 |
 | O modal ❶ é o `dlg-descritor` do template seguido do texto ❶ da revista: o campo guarda só a parte da revista (no docx de LP 2026, o 4º parágrafo). | D-242, D-258 |
+| Referencial: a mescla com a etapa de cima é explícita, por coluna ("Junta com a de cima" na marca e na habilidade, independentes; 1EF não junta). Marca juntada herda a da etapa de cima e vira uma letra só, no meio do grupo; habilidade juntada estende a célula de cima. Vazio sem juntar fica vazio no infográfico (antes, código e texto vazios estendiam a célula de cima e criavam mescla falsa). | D-301, `app/nucleo/servicos/resolver.py::_etapas`, `app/nucleo/servicos/f2.py::_tabela` |
 
 ---
 
