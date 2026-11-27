@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-K-056 (D-306 a D-310) commitada na `feat/f2-fechamento` (641f3f2) e mesclada na `integ/f2-fechamento`; suíte Django 1121 OK (9 pulados). Migrações 0031 a 0033 aplicadas no banco da 8002.
-Funcionando: F2 com `tarefas-fechamento-alfa` e `-outras` (textos novos dos Word de LP; MT com o texto atual nas duas); link no Markdown restrito (https em outra aba, `#pendente` em vermelho); PDF das atividades por ano × componente × tipo na aba F2 da tela Templates, em cartões com área de soltar: enviar, trocar, baixar e remover (com modal), permissões próprias (migração 0033); link "Acesse aqui as atividades" no F2 do tipo, no preview e no zip. Ciclo conferido no navegador.
-Quebrado/pendente: URL do template do infográfico (`#pendente`); Word de MT; E2E não rodado; merge na `main` espera o "ok". `trail check`: 17 conflitos, todos falsos positivos (registrado na mensagem do commit).
+K-056 e K-057 (D-306 a D-312) na `main` (sem push), via `feat/f2-mt-alfa` → `integ/f2-fechamento`; suíte Django 1126 OK (9 pulados). Migrações 0031 a 0034 e carga do seed aplicadas no banco da 8002; o dev (8000) ainda não.
+Funcionando: MT Alfa preenchido pelo Word (29 revistas na 8002): habilidade, referencial 1EF–7EF, marcas até 3EM, 4 níveis com imagem e análise; "Agora é com você" por tipo (MT Alfa com os 2 parágrafos do 3º ano e o link); LP sem mudança visual. Conferido no navegador (preview 2 e 1). Antes: K-056 na `integ/f2-fechamento`, suíte 1121 OK.
+Quebrado/pendente: E2E da K-056 e da K-057 não rodado (merge na `main` com o ok do usuário antes dele); no dev (8000): `migrate` e `carregar_infograficos --ano 2026 --usuario admin`; URL do template do infográfico (`#pendente`); Word de MT Outras; `tarefas-fechamento-alfa` de MT.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Rodar o E2E na stack isolada (`docs/e2e.md`) antes do merge na `main`.
+Rodar o E2E na stack isolada (`docs/e2e.md`) sobre a `main`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2525,9 +2525,26 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Arquivos afetados:** `app/nucleo/templates/ui/templates/lista.html`, `app/nucleo/urls/ui_templates.py`, `app/nucleo/permissoes.py`, migração 0033, `app/nucleo/static/ui/ui.css`, `app/nucleo/static/ui/telas/revista.css`, `app/nucleo/static/ui/telas/templates.css`, `app/nucleo/static/ui/componentes/autosave.js`, testes `test_atividades`, `test_permissoes`, `test_revista`
 - **Status:** ativa
 
+### D-311 — MT Alfa nasce preenchido pelo Word da Pedagógica (2026-11-27 23:30)
+- **Contexto:** a Pedagógica mandou `CURRÍCULO E AVALIAÇÃO_ALFA.docx` (Matemática, Alfa). Só LP nascia preenchido pelo seed (D-298); o MT Alfa estava vazio em toda revista. O Word de MT tem formato próprio: um "TEXTO DO CLIQUE:" por passo, progressão antes da descrição, descrição só de 1EF a 7EF (4EF sem habilidade), lista do ❹ por nível ("1 – <habilidade>") e itens "N (M…)".
+- **Decisão:** o conversor `scripts/docx_infografico.py` ganha `converter_mt` (argumento `mt`; sem ele continua LP) e gera `templates_seed/2026/infograficos/mt-alfa.json` + 4 PNG. 8EF–3EM ficam só com a marca da progressão (código e texto vazios, sem junta). Célula com dois códigos BNCC (6EF): o 1º vai para `codigo` e o 2º fica no texto, como no Word. O código M… do item é rótulo do design e é ignorado; `etapa` e `descritor` do item ficam vazios; `texto_alternativo` = "Item do nível N: <habilidade>". O seed copia a `habilidade` do item (`CAMPOS_ITEM`); os JSON de LP levam `"habilidade": ""`; `validar` exige habilidade nos 4 itens só em `TAREFAS_POR_NIVEL`. Carga na 8002: 29 infográficos MT Alfa, 1261 campos preenchidos; 2ª rodada sem efeito.
+- **Motivo:** o mecanismo de LP já é por (componente, tipo): um JSON a mais basta para a carga e a cascata preencherem todas as revistas de MT com Alfa.
+- **Descartadas:** preencher MT à mão na ficha de cada revista — 29 revistas, erro de cópia; um conversor separado para MT — duplica `ler`, `tabela`, `paragrafo` e `png`.
+- **Arquivos afetados:** `scripts/docx_infografico.py`, `app/nucleo/servicos/seed_infografico.py`, `app/templates_seed/2026/infograficos/{lp-alfa,lp-outras,mt-alfa}.json` e `mt-alfa-item-{1..4}.png`, `docs/fontes/2026/curriculo-e-avaliacao-mt-2026-alfa.docx`, testes `test_seed_infograficos`, `test_carregar_infograficos`, `test_cascata_infografico`
+- **Status:** ativa
+
+### D-312 — "Agora é com você" por tipo: `fechamento-alfa` e `fechamento-outras` (2026-11-27 23:30)
+- **Contexto:** o "Agora é com você" do Word de MT Alfa termina com 2 parágrafos próprios do Alfa ("estudantes do 3º ano") e com o link do template do infográfico; a seção `fechamento` era uma só para as duas páginas F2.
+- **Decisão (escolha do usuário em 27/11):** `SECOES_F2` troca `fechamento` por `fechamento-alfa` e `fechamento-outras`; a página F2 usa `fechamento-<tipo>` (`servicos/html.py`). Migração 0034 no padrão da 0031: TemplateVersao nova por template F2 (MT Alfa = texto do Word com `[**Acesse aqui** o template do Infográfico.](#pendente)`; as outras = corpo atual) e cada cópia `RevistaSecao` "fechamento" do F2 vira as duas (a do F1 fica). Os seeds `f2-lp.hbs` e `f2-mt.hbs` saem da mesma função da migração.
+- **Motivo:** mesmo caminho da D-306; o MT Outras fica com o texto atual até chegar o Word de MT Outras.
+- **Descartadas:** condicional no template pelo tipo — o Markdown restrito não tem lógica; texto do Alfa nas duas páginas — o 3º ano não cabe em Outras Etapas.
+- **Arquivos afetados:** `app/nucleo/texto.py`, `app/nucleo/templates_texto.py`, `app/nucleo/servicos/html.py`, `app/nucleo/migrations/0034_fechamento_por_tipo.py`, `app/templates_seed/2026/f2-{lp,mt}.hbs`, `app/nucleo/tests/test_templates_texto.py`
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [ ] (27/11, D-307) URL do "template do Infográfico" (link sai `#pendente` até lá) — depende de: Pedagógica
-- [ ] (27/11, D-306) Word de MT (Alfa e Outras Etapas) com os textos novos: o usuário confirmou que MT também difere por tipo; até chegarem, `tarefas-fechamento-alfa` e `-outras` de MT repetem o texto atual — depende de: Pedagógica
+- [ ] (27/11, D-312) `tarefas-fechamento-alfa` de MT repete o texto de LP (escolha do usuário: fica assim até a Pedagógica dizer qual é) — depende de: Pedagógica
+- [ ] (27/11, D-306; Alfa chegou em 27/11, D-311) Word de MT Outras Etapas com os textos novos: o usuário confirmou que MT também difere por tipo; até chegarem, `tarefas-fechamento-alfa` e `-outras` de MT repetem o texto atual — depende de: Pedagógica
 - [x] (24/11, Pedagógica via chat; respondida em 24/11 pela D-288: cópia da etapa × componente pelo botão "Editar só neste projeto", com vínculo e revisão) Requisito novo: descritores e outros elementos da Comunitária precisam ser editáveis **por projeto**, em qualquer projeto (não só CE, Joinville e ES). A Luciana respondeu que **todos** os elementos (descritor, tarefa, arquivo do item, BNCC, pré-requisitos) são editáveis localmente por projeto — depende de: Otavio
 - [x] (24/11, D-290; respondida em 24/11: segue a ordem do editor, D-291) A ordem dos descritores na revista é alfabética pelo código (D011 vem antes de D02), não a ordem arrastada no editor. É o que a Pedagógica quer? — depende de: Otavio
 - [x] (18/11, D-270) A demo do django-cotton convence? Se sim, adotar tela por tela (ordem sugerida: ícones, botão, campo, cabeçalho, card, modal) ou parar na demo — depende de: Otavio — respondida em 18/11: convence, adotar (D-271)
@@ -3253,3 +3270,8 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 
 ### 2026-11-27 22:30
 - K-056: suíte Django 1121 OK (9 pulados; a 1ª rodada deu 221 erros com o banco de teste antigo e não se repetiu); commit `641f3f2` na `feat/f2-fechamento`, mesclada na `integ/f2-fechamento`. E2E ainda não rodado.
+
+### 2026-11-27 23:30
+- E2E da K-056 interrompido a pedido do usuário para fazer antes o plano do MT Alfa; stack `e2e-fech` derrubada.
+- K-057: conversor de MT, seed `mt-alfa.json`, `fechamento-alfa`/`-outras` (migração 0034); carga na 8002 (MT Alfa 1261 preenchidos; LP recebeu 236 flags junta_* do seed da D-303 que faltavam no banco); conferido no navegador.
+- Suíte: 1ª rodada 25 falhas e 2 erros (textos F2 de exemplo dos testes com `## fechamento`); corrigidos, 1126 OK. Merge `feat/f2-mt-alfa` → `integ/f2-fechamento` → `main` com o ok do usuário, sem E2E.
