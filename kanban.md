@@ -8,6 +8,7 @@
 ## Doing
 
 ## Review
+- **K-056** Refazer a extração do design system do Figma sobre a biblioteca nova (`feat/design-system-v2`, worktree `../revista-express-ds`): tokens renomeados, Montserrat, node-ids novos, propostas da "Revisão da biblioteca" · conferido contra o Figma e no navegador; commit `5efc53e`, na `integ/design-system-v2` (sem push) · insumo da K-048 · 2026-11-27 · D-306
 ## Done
 - **K-055** F2 de MT: bloco "Tarefas por nível de complexidade" com barrinhas 1→4 e texto da habilidade, no mesmo `f2.svg` (`feat/f2-mt`); ficha do item de MT com campo Habilidade · D-305 · suíte 1099 OK; E2E 178 passaram; na `main` (sem push) · 2026-11-27
 - **K-054** Design system do Figma (Telas – v1 e Componentes) extraído para HTML em `docs/design-system-figma/` (`feat/design-system-figma`): tokens, componentes, 23 telas, sem mexer em `app/`; conferido no navegador; na `main` com push · insumo da K-048 · 2026-11-27 · D-304
