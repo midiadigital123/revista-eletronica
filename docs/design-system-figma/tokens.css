@@ -1,0 +1,122 @@
+/*
+  Tokens do Figma "Sistemas CAEd" (biblioteca UI Fundação CAEd), extraídos em 27/11/2026
+  com get_variable_defs nas 4 seções da página Telas – v1 (266:5193).
+  Nome do token = nome da variável no Figma, com "/" e "." trocados por "-" e em minúsculas.
+  Nada aqui é usado pelo sistema ainda: é referência para a etapa 11 (K-048).
+*/
+:root {
+  /* ── Cinzas globais (Global.Color.*) ── */
+  --global-color-black: #000000;
+  --global-color-grey-10: #141414;
+  --global-color-grey-20: #4d4d4d;
+  --global-color-grey-40: #666666;
+  --global-color-grey-50: #808080;
+  --global-color-grey-60: #cccccc;
+  --global-color-grey-80: #f0f0f0;
+  --global-color-grey-96: #fafafa;
+  --global-color-white: #ffffff;
+  --colors-gray-10: #333333;
+  --colors-gray-90: #f7f7f7;
+
+  /* ── Marca ── */
+  --colors-brand-amarelo-caed: #ffff00;
+  --color-surface-brand-secondary: #fdea00;
+
+  /* ── Situação (texto sobre fundo claro) ── */
+  --colors-blue: #0731a8;
+  --colors-light-blue: #e0ecff;
+  --colors-green: #095e06;
+  --colors-light-green: #d4f8d3;
+  --colors-red: #9a0000;
+  --colors-light-red: #fbe5e5;
+
+  /* ── Semânticos de texto ── */
+  --color-text-primary: #141414;    /* = grey-10 */
+  --color-text-secondary: #4d4d4d;  /* = grey-20 */
+  --color-text-tertiary: #808080;   /* = grey-50 */
+  --color-text-invert: #fafafa;
+
+  /* ── Semânticos de superfície ── */
+  --color-surface-main: #fafafa;    /* fundo da página */
+  --color-surface-10: #141414;      /* tooltip */
+  --color-surface-30: #666666;
+  --color-surface-60: #f0f0f0;      /* trilho da barra de progresso */
+
+  /* ── Semânticos de borda ── */
+  --color-border-subtle: #cccccc;   /* cards, upload */
+  --color-border-medium: #666666;
+  --color-border-bd-10: #fdea00;    /* marca da seção ativa */
+
+  /* ── Botão e menu ── */
+  --button-bg-color: #ffff00;        /* botão principal e botão-ícone do perfil */
+  --button-text-color: #141414;
+  --button-b2-border-color: #141414; /* botão de contorno */
+  --button-b3-border-color: #fdea00; /* sublinhado do item ativo do menu */
+  --menu-bg-color: #fafafa;
+  --menu-bg-color-hover: #f0f0f0;    /* também a borda da tabela */
+
+  /* ── Espaçamento (spacing/*) ── */
+  --spacing-none: 0px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-2xl: 24px;
+  --spacing-3xl: 32px;
+  --spacing-4xl: 56px;
+  --spacing-5xl: 80px;
+  --spacing-320: 320px;              /* largura máxima do tooltip */
+
+  /* ── Dimensões (dimension/*): escala de tamanhos fixos ── */
+  --dimension-1: 4px;
+  --dimension-2: 8px;
+  --dimension-3: 12px;
+  --dimension-4: 16px;
+  --dimension-5: 20px;
+  --dimension-6: 24px;
+  --dimension-7: 28px;
+  --dimension-9: 36px;               /* altura do botão e do botão-ícone */
+  --dimension-10: 40px;
+  --dimension-12: 48px;              /* respiro lateral do menu */
+  --dimension-17: 88px;              /* largura dos botões do modal */
+  --dimension-23: 144px;             /* filtro curto */
+  --dimension-24: 160px;
+  --dimension-25: 184px;             /* respiro lateral da página (1440 − 2×184 = 1072) */
+  --dimension-26: 224px;             /* coluna de lista (Impresso) */
+  --dimension-27: 344px;
+  --dimension-28: 364px;             /* filtro longo, select de template */
+  --dimension-29: 448px;             /* largura do modal */
+
+  /* ── Raios (radius/*) ── */
+  --radius-minimal: 8px;             /* botão, campo, caixa de aviso */
+  --radius-rounded: 20px;            /* card, tabela, modal, dropdown, status tag */
+  --radius-full: 999px;              /* botão-ícone, página da paginação, barra */
+
+  /* ── Sombra (efeito FG) ── */
+  --fg: 0 2px 10px 0 rgba(82, 82, 82, 0.1);
+
+  /* ── Tipografia ── */
+  /* ponytail: Proxima Nova é paga e não está no repositório; até o time decidir a licença, cai na Inter. */
+  --font-family: "Proxima Nova", "Inter Variable", Inter, ui-sans-serif, system-ui, sans-serif;
+  --typography-size-sm: 13px;
+  --typography-size-body: 16px;
+  --typography-size-h6: 16px;
+  --typography-size-h4: 24px;
+  --typography-size-h3: 32px;
+  --typography-size-h1: 48px;
+}
+
+/* Estilos de texto do Figma, um por classe (nome do estilo em kebab-case) */
+.t-title-page    { font: 600 var(--typography-size-h1)/1.1 var(--font-family); }
+.t-subtitle-page { font: 500 var(--typography-size-h3)/1.2 var(--font-family); }
+.t-heading       { font: 700 var(--typography-size-h4)/1.2 var(--font-family); letter-spacing: 0.01em; }
+.t-body-lg       { font: 400 20px/1.2 var(--font-family); }
+.t-body          { font: 400 16px/1.4 var(--font-family); }
+.t-body-semibold { font: 600 var(--typography-size-h6)/1.4 var(--font-family); }
+.t-body-bold     { font: 700 var(--typography-size-h6)/1.4 var(--font-family); }
+.t-body-highlight{ font: 500 var(--typography-size-h6)/1.2 var(--font-family); }
+.t-text-button   { font: 500 var(--typography-size-body)/1.4 var(--font-family); }
+.t-body-sm       { font: 400 14px/1.2 var(--font-family); }
+.t-label         { font: 600 var(--typography-size-sm)/1 var(--font-family); }
+.t-text-button-sm{ font: 500 12px/1 var(--font-family); }
