@@ -32,6 +32,7 @@ def contexto_cheio():
                    for i, (etapa, marca) in enumerate(zip(ETAPAS, MARCAS))],
         "itens": [{"posicao": i, "descritor": "D05", "rotulo": "2º ano do Ensino Fundamental"}
                   for i in range(1, 5)],
+        "fim_tabela": 427.6, "legenda_y": 450.6, "altura_svg": 793.7,
     }
 
 
@@ -149,6 +150,23 @@ class GerarTest(SimpleTestCase):
         self.assertEqual(r["svg"].count(f'fill="{f2.COR_SEM_MARCA}"'), 2 * 10)  # tabela e progressão
         self.assertEqual(r["svg"].count(f'fill="{f2.CORES_MARCA["I"]}"'), 2)
         self.assertEqual(r["svg"].count(f'fill="{f2.CORES_MARCA["A"]}"'), 2)
+
+    def test_texto_longo_cresce_a_linha_e_empurra_a_progressao(self):
+        longo = "Ler e compreender, em colaboração com os colegas e com a ajuda do professor, " * 4  # ~4 linhas
+        curto, info = gerar(), infografico()
+        info["etapas"][0]["texto"] = longo  # só a 1EF muda; as outras 11 ficam com texto curto
+        r = gerar(info)
+
+        raiz = ET.fromstring(r["svg"])
+        celula = next(fo for fo in raiz.iter("{http://www.w3.org/2000/svg}foreignObject") if fo.get("width") == "351")
+        altura = float(celula.get("height"))
+        self.assertGreaterEqual(altura, 4 * 12)  # 4 linhas de texto cabem
+        cresceu = round(altura - f2.ALTURAS_LINHAS[0], 1)
+        self.assertIn(f'id="f2-progressao" transform="translate(661,{round(589 + cresceu, 1):g})"', r["svg"])
+        self.assertIn(f'y1="{round(427.6 + cresceu, 1):g}"', r["svg"])  # fio final da tabela
+        altura_svg = float(raiz.get("viewBox").split()[3])
+        self.assertAlmostEqual(altura_svg, 793.7 + cresceu, places=1)
+        self.assertIn('viewBox="0 0 1190.6 793.7"', curto["svg"])  # texto curto: desenho sem mudança
 
     def test_sem_secoes_e_sem_etapas(self):
         info = infografico()
