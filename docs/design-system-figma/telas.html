@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Telas · Design system Figma</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="doc.css">
+<style>
+ .esquema { display:grid; gap:8px; padding:16px; border:1px solid var(--global-color-grey-80); border-radius:8px; background:var(--color-surface-main); font-size:13px; line-height:1.3; }
+ .esquema div { padding:8px 10px; border:1px dashed var(--global-color-grey-60); border-radius:6px; background:#fff; }
+ .esquema .menu { background:#fff; border-style:solid; display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+ .esquema .amarelo { background:var(--colors-brand-amarelo-caed); border-color:#141414; }
+ .esquema .duas { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,3fr); gap:8px; border:0; padding:0; background:none; }
+ @media (max-width:560px) { .esquema .duas { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<nav class="doc-topo" aria-label="Páginas do design system"><b>Design system · Figma Sistemas CAEd</b><a href="index.html">Visão geral</a><a href="tokens.html">Tokens</a><a href="componentes.html">Componentes</a><a href="telas.html" aria-current="page">Telas</a></nav>
+<main>
+<h1>Telas</h1>
+<p class="lead">As 23 telas da página <a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=266-5193">Telas – v1</a>, por seção, e os padrões de layout que se repetem nelas. Cada nome abre o frame no Figma (pede acesso ao arquivo).</p>
+
+<h2 id="layout">Padrões de layout</h2>
+<h3>Página</h3>
+<div class="esquema" aria-hidden="true">
+ <div class="menu"><span>▤ Revista eletrônica</span><span>PROJETOS · MODELOS · IMPRESSO</span><span class="amarelo" style="padding:0 6px;border-radius:999px">●</span></div>
+ <div>Trilha (Body sm, sublinhada) · só em página de detalhe</div>
+ <div>Título (Title page 48) + tag neutra ao lado · ação à direita ("Editar", contorno) · ou "Configurações gerais" (texto) acima</div>
+ <div>Linha de metadados: "Progresso:" com a barra, "Situação:" com tag, "Escala:" / "Template:" com tag neutra · status do salvamento à direita</div>
+ <div>Linha de ações: botões de contorno + botões de texto à esquerda</div>
+ <div>Abas (quando há partes da mesma tela)</div>
+ <div>Cards de seção numerados (1 Capa, 2 Template, 3 Textos…) ou tabela</div>
+</div>
+<div class="rolavel" style="margin-top:12px"><table class="doc"><tbody>
+<tr><th>Largura</th><td>Frame de 1440. Conteúdo com 1072 de largura: respiro lateral de 184 (<code>dimension/25</code>).</td></tr>
+<tr><th>Fundo</th><td>Página em <code>color/surface/main</code> #fafafa; menu branco, 80 de altura.</td></tr>
+<tr><th>Topo</th><td>80 de respiro em cima (<code>spacing/5xl</code>) abaixo do menu; 40 (<code>dimension/10</code>) entre o bloco do título e o conteúdo.</td></tr>
+<tr><th>Título</th><td>Title page 48 e, abaixo, a descrição em Body com 28 de distância (<code>dimension/7</code>). Na página do item, o nome vem com a tag do parceiro ao lado (24 de gap, alinhada à base).</td></tr>
+<tr><th>Separação</th><td>Um fio de 1 px #ccc separa cabeçalho e filtros (lista de projetos) e abre cada seção do Impresso, com 24 de respiro.</td></tr>
+<tr><th>Ritmo</th><td>32 entre blocos de um card ou do cabeçalho (<code>spacing/3xl</code>); 24 entre campos, botões e cards (<code>spacing/2xl</code>).</td></tr>
+</tbody></table></div>
+
+<h3>Lista com filtros (Projetos / Lista)</h3>
+<div class="esquema" aria-hidden="true">
+ <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span>Filtros ˅ · Limpar ✕</span><span>[Atribuir template]</span></div>
+ <div style="display:flex;gap:8px;flex-wrap:wrap"><span>[Parceiro ˅ 364]</span><span>[Revista ˅ 144]</span><span>[Ano ˅]</span><span>[Situação ˅]</span><span>[Etapas ˅]</span></div>
+ <div>Tabela: ☐ Projeto/revista · Situação · Andamento · Última atualização · Ações<br>▸ linha do parceiro (#fafafa) com UF · ▸ revistas filhas recuadas, com tag, anel e ações</div>
+ <div>Rodapé: "1 - 3 de 40 projeto" · ← Anterior 1 2 3 … 7 8 Próxima →</div>
+</div>
+
+<h3>Lista + detalhe (Editor da etapa, Impresso)</h3>
+<div class="esquema" aria-hidden="true">
+ <div class="duas"><div>Coluna de 224:<br>[Novo descritor ✕]<br>[Código ou descrição ⌕]<br>"8 de 8 descritores"<br>⋮⋮ D01 Relacionar…<br>⋮⋮ D02 …</div><div>Detalhe: título (D01) · blocos com Heading 24 separados por fio · campos com rótulo flutuante · lista de tarefas com faixa ≥/&lt;, régua e texto, ✕ e clipe à direita · linha nova com Criar/Descartar · [Nova tarefa +]</div></div>
+</div>
+<p class="legenda">As duas colunas ficam dentro de um card grande (fio #ccc, raio 20). No Impresso, a coluna da esquerda é uma tabela de revistas com tag de situação e barra de rolagem própria.</p>
+
+<h3>Página da revista (Componente LP)</h3>
+<div class="esquema" aria-hidden="true">
+ <div>Trilha: Projetos › Revistas Juiz de Fora › Língua Portuguesa</div>
+ <div>Língua Portuguesa [Revistas Juiz de Fora] ................ [Editar ✎]</div>
+ <div>Progresso: ▬▬▬▬▭▭ 4/6 completas</div>
+ <div>[Baixar HTML ⤓] [Baixar planilha ⤓] Abrir preview ↗ ........ ☁ Salvando...</div>
+ <div>① Capa · upload tracejado</div>
+ <div>Abas: Seção 1 · Seção 2</div>
+ <div>② Template da primeira seção · select 364</div>
+ <div class="duas"><div>│ Introdução</div><div>③ Textos · título (vem do template) · "Texto da seção" · textarea #f7f7f7 com ajuda</div></div>
+</div>
+
+<h2 id="inventario">Inventário</h2>
+<p class="mudo">Contagem de instâncias visíveis da biblioteca por tela, tirada do metadata da página (get_metadata 266:5193).</p>
+<h3 id="s-266-5194">Projetos <a class="mudo t-body-sm" href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=266-5194">266:5194</a></h3><div class="rolavel"><table class="doc"><thead><tr><th>Tela</th><th>Tamanho</th><th>O que mostra</th><th>Componentes da biblioteca</th></tr></thead><tbody><tr><td><a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=180-10494">Projetos / Lista</a><br><code>180:10494</code></td><td>1440 × 1097</td><td>Lista de projetos agrupada por parceiro, com filtros, ação em lote e paginação.</td><td>Table-lines (35), Buttons (19), Icons (12), Status tag (7), Input (5), Table-header (5), Ellipse 2 (4), Footer (1), Pagination (1)</td></tr><tr><td><a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=109-4217">Projetos / Tooltip – Pendências</a><br><code>109:4217</code></td><td>151 × 129</td><td>Tooltip das pendências de uma revista (aparece sobre a situação).</td><td>—</td></tr><tr><td><a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=109-4095">Global / Menu do perfil</a><br><code>109:4095</code></td><td>140 × 80</td><td>Menu atrás do botão de perfil: Alterar senha, Sair.</td><td>Icons (2)</td></tr><tr><td><a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=174-22153">Projetos / Modal – Atribuir template</a><br><code>174:22153</code></td><td>448 × 418</td><td>Modal de atribuir template às revistas marcadas.</td><td>Buttons (3), Input (3)</td></tr></tbody></table></div><h3 id="s-266-5196">Revista <a class="mudo t-body-sm" href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=266-5196">266:5196</a></h3><div class="rolavel"><table class="doc"><thead><tr><th>Tela</th><th>Tamanho</th><th>O que mostra</th><th>Componentes da biblioteca</th></tr></thead><tbody><tr><td><a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=180-10495">Revista / Variáveis</a><br><code>180:10495</code></td><td>1440 × 1950</td><td>Revista (projeto do parceiro), aba Variáveis.</td><td>Input (24), Buttons (14), Status tag (5), Icons (2), Dropdown (2), Breadcrumb (1)</td></tr><tr><td><a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=180-10496">Revista / Cortes</a><br><code>180:10496</code></td><td>1440 × 1336</td><td>Revista, aba Cortes.</td><td>Buttons (14), Input (8), Status tag (5), Icons (2), Dropdown (2), Breadcrumb (1)</td></tr><tr><td><a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=204-3619">Revista / Padrões e etapas</a><br><code>204:3619</code></td><td>1440 × 1524</td><td>Projeto do parceiro, aba Herdados: cores dos padrões e etapas do projeto (apontar, cópia, desfazer).</td><td>Buttons (19), Status tag (9), Icons (2), Dropdown (2), Input (2), Breadcrumb (1)</td></tr><tr><td><a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=213-8447">Revista / Padrões e etapas – variação</a><br><code>213:8447</code></td><td>1440 × 1524</td><td>Variação da tela anterior.</td><td>Buttons (19), Status tag (9), Icons (2), Dropdown (2), Input (2), Breadcrumb (1)</td></tr><tr><td><a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=180-10498">Revista / Componente LP – em andamento (4 de 6)</a><br><code>180:10498</code></td><td>1440 × 1746</td><td>Revista de um componente em andamento (4 de 6): capa, template, textos, abas de seção.</td><td>Buttons (12), Status tag (4), Icons (3), Breadcrumb (1), Input (1)</td></tr><tr><td><a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=240-3330">Revista / Componente LP – completo (6 de 6)</a><br><code>240:3330</code></td><td>1440 × 4530</td><td>Revista de LP completa (6 de 6).</td><td>Input (55), Buttons (27), Icons (11), Status tag (8), Checkbox Field (6), Breadcrumb (1), Single line (1)</td></tr><tr><td><a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=260-4402">Revista / Componente MAT – completo (6 de 6)</a><br><code>260:4402</code></td><td>1440 × 4530</td><td>Revista de MT completa (6 de 6).</td><td>Input (51), Buttons (27), Icons (11), Status tag (8), Checkbox Field (6), Breadcrumb (1), Single line (1)</td></tr><tr><td><a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=213-3984">Modelos / Matriz 2EF LP – edição (variação)</a><br><code>213:3984</code></td><td>1440 × 1930</td><td>Editor da etapa da matriz, variação (no grupo Revista do Figma).</td><td>Input (23), Buttons (22), Icons (9), Status tag (2), Breadcrumb (1), Single line (1)</td></tr><tr><td><a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=223-4068">Modelos / Desfazer cópia</a><br><code>223:4068</code></td><td>1440 × 1031</td><td>Confirmação de desfazer a cópia local da etapa.</td><td>Icons (6), Buttons (6), Status tag (4), Single line (1), Input (1)</td></tr></tbody></table></div><h3 id="s-266-5198">Modelos <a class="mudo t-body-sm" href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=266-5198">266:5198</a></h3><div class="rolavel"><table class="doc"><thead><tr><th>Tela</th><th>Tamanho</th><th>O que mostra</th><th>Componentes da biblioteca</th></tr></thead><tbody><tr><td><a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=180-10490">Modelos / Lista</a><br><code>180:10490</code></td><td>1440 × 1053</td><td>Lista de modelos (matrizes e templates).</td><td>Table-lines (36), Buttons (16), Table-header (12), Icons (4)</td></tr><tr><td><a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=180-10491">Modelos / Matriz – Comunitária</a><br><code>180:10491</code></td><td>1440 × 980</td><td>Matriz Comunitária: etapas e componentes.</td><td>Table-lines (15), Buttons (8), Table-header (5), Breadcrumb (1), Icons (1)</td></tr><tr><td><a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=180-10492">Modelos / Matriz 2EF LP – edição</a><br><code>180:10492</code></td><td>1440 × 1840</td><td>Editor de uma etapa da matriz (2EF LP): descritores à esquerda, identificação, pré-requisitos, BNCC e tarefas.</td><td>Input (23), Buttons (22), Icons (9), Status tag (2), Breadcrumb (1)</td></tr><tr><td><a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=174-22204">Modelos / Modal – Novo descritor</a><br><code>174:22204</code></td><td>448 × 386</td><td>Modal de novo descritor.</td><td>Buttons (3), Input (2)</td></tr><tr><td><a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=174-22550">Modelos / Modal – Item da tarefa</a><br><code>174:22550</code></td><td>448 × 451</td><td>Modal de item da tarefa.</td><td>Buttons (3), Icons (1), Input (1)</td></tr><tr><td><a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=174-22540">Modelos / Dropdown – Intervalo mínimo</a><br><code>174:22540</code></td><td>184 × 113</td><td>Dropdown do intervalo mínimo da escala.</td><td>Input (1)</td></tr><tr><td><a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=180-10493">Modelos / Template – Global</a><br><code>180:10493</code></td><td>1440 × 1020</td><td>Template Global.</td><td>Buttons (8), Icons (7), Status tag (3), Input (2), Breadcrumb (1), Table-header (1)</td></tr></tbody></table></div><h3 id="s-266-5200">Impresso <a class="mudo t-body-sm" href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=266-5200">266:5200</a></h3><div class="rolavel"><table class="doc"><thead><tr><th>Tela</th><th>Tamanho</th><th>O que mostra</th><th>Componentes da biblioteca</th></tr></thead><tbody><tr><td><a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=180-10511">Impresso / Aguardando validação</a><br><code>180:10511</code></td><td>1440 × 3022</td><td>Impresso: revistas aguardando a validação.</td><td>Icons (8), Status tag (7), Buttons (6), Table-header (4)</td></tr><tr><td><a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=190-2996">Impresso / Com mudanças</a><br><code>190:2996</code></td><td>1440 × 2307</td><td>Impresso: revista com mudanças (diff por bloco, copiar trecho).</td><td>Buttons (11), Status tag (9), Table-header (2), Single line (1), Icons (1)</td></tr><tr><td><a href="https://www.figma.com/design/aMiF7hiCBPNc1X9yYFuZO6/Sistemas-CAEd?node-id=204-2808">Impresso / Em dia</a><br><code>204:2808</code></td><td>1440 × 1141</td><td>Impresso: tudo em dia.</td><td>Status tag (7), Buttons (6), Icons (2), Table-header (1)</td></tr></tbody></table></div>
+
+<h2 id="mudancas">O que as telas mudam em relação às telas B de hoje</h2>
+<ul>
+ <li><b>Menu de 3 itens</b> (Projetos · Modelos · Impresso) no lugar de 5; Painel, Matrizes e Templates somem do menu. "Modelos" junta matrizes e templates. É a K-048 (D-277).</li>
+ <li><b>Sem seletor de ano no cabeçalho</b>: o ano vira filtro da lista de projetos.</li>
+ <li><b>Lista de projetos agrupada por parceiro</b>, com recolher, anel de andamento e paginação.</li>
+ <li><b>Página da revista em passos numerados</b> (Capa, Template, Textos) com barra de progresso, no lugar da coluna Situação.</li>
+ <li><b>Impresso em lista + detalhe</b>, com diff por bloco e botões de copiar.</li>
+</ul>
+</main>
+</body>
+</html>
