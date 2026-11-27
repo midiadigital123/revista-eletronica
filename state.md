@@ -2,15 +2,15 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Mescla explícita no referencial do F2 (D-301) com a UI de elo entre etapas (D-303, substitui a da D-302), mesclada na `main` em 27/11 (sem push).
+Mescla explícita no referencial do F2 (D-301) com a UI de elo entre etapas (D-303, substitui a da D-302), mesclada na `main` em 27/11, com push; migração 0029 aplicada no banco do dev.
 Funcionando: elo sobre a linha entre duas etapas, por coluna; clicar junta e a célula de cima cobre o grupo na hora (referencial.js), grava pelo autosave (mouse e teclado); 375 px rola dentro da caixa; testes da tela OK.
 Corrigido: "Salvando…" eterno ao juntar (atributo `data-linha` reservado do autosave, trocado por `data-ref-linha`).
 Suíte Django 1093 OK (9 pulados), regressão do data-linha OK, makemigrations sem mudanças.
-Quebrado/pendente: E2E `infografico.spec.ts` ajustado e não rodado (faltam as credenciais E2E); push da `main`; aplicar a migração 0029 no banco do dev (porta 8000).
+Quebrado/pendente: E2E `infografico.spec.ts` ajustado e não rodado (faltam as credenciais E2E); etapa 11 (K-048) segue em aberto.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Rodar `docker compose run --rm app python manage.py migrate` na raiz, para a 0029 chegar ao banco do dev.
+Rodar o E2E `infografico.spec.ts` com as credenciais E2E (`cd app/e2e && npx playwright test tests/infografico.spec.ts`).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -3184,4 +3184,4 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - D-303: UI refeita com elo entre etapas e célula única (CSS grid + referencial.js), skill ui-ux-pro-max instalada; conferido no navegador.
 - Defeito da D-303: juntar deixava o status em "Salvando…" para sempre. Causa: `data-linha` na grade é o atributo que o autosave reserva para a linha nova; o checkbox virava uma "linha" sem campos e nunca saía da lista de envios. Correção: `data-ref-linha`, com teste que falha se `data-linha` voltar ao cartão.
 - Suíte 1093 OK; commit na `feat/f2-mescla` e merge na `integ/f2-mescla`.
-- D-301 a D-303 mesclados na `main` (sem push), K-053 em Done.
+- D-301 a D-303 mesclados na `main`, K-053 em Done; migração 0029 aplicada no dev pelo usuário; push da `main`.
