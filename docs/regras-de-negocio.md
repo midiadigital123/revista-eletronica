@@ -287,6 +287,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | O F2 não tem arquivo enviado: o servidor gera o SVG a partir dos infográficos (seção 6.6). O upload do SVG, o sanitizador, a conferência de ids e o gabarito saíram na fase 4 do F2 (migração 0024). | D-239, D-256 |
 | Capa: PNG, JPG ou WebP até 5 MB, tipo pela assinatura dos bytes. É campo da revista, fora do template. | D-109, D-137, `app/nucleo/servicos/arquivos.py:64` |
 | Imagem do item do infográfico (passo Tarefas): PNG, JPG ou WebP até 5 MB, tipo pela assinatura dos bytes. | D-232, D-254, `app/nucleo/servicos/arquivos.py:75` |
+| Bloco "Tarefas por nível de complexidade" de MT (todo parceiro, Alfa e Outras Etapas): por nível, não por descritor e etapa. As 4 linhas têm bolinha, número, barrinhas 1 a 4 (a barra k acende com a cor do nível k até o nível da linha) e o texto da habilidade do item (até 500 caracteres; texto longo faz a linha crescer). A coluna Itens é a de LP; o modal do item se chama "Nível N". Na ficha, o item de MT tem Habilidade no lugar de Etapa e Descritor. Um SVG só para LP e MT; a regra é o componente (`TAREFAS_POR_NIVEL`). | D-305, `app/nucleo/servicos/f2.py`, `app/nucleo/templates/revista/f2.svg` |
 | Trocar a capa ou a imagem de um item muda o hash (derruba o Validado); reenviar o mesmo arquivo não muda. | D-118, D-151, D-237 |
 | Arquivo antigo é apagado do disco só depois do commit e só se o caminho mudou. | D-137 |
 
@@ -310,7 +311,7 @@ Fontes: D-119, D-106, D-085, D-150, D-175, `app/nucleo/servicos/abrir_ano.py:85-
 | `etapa_sem_base` | etapa **não canônica** com corte e sem etapa do projeto; corrige-se apontando para uma etapa canônica (aba Matriz do projeto) | D-276 |
 | `corte_invalido` | cortes fora de ordem ou da escala (defensivo) | D-154 |
 | `template_f1`, `template_f2` | fascículo sem template | D-112 |
-| `infografico` | habilidade vazia; passo ligado sem dado (Habilidades: código ou texto e o texto do clique; Progressão: 2 marcas e o texto do clique; Tarefas: 4 imagens); passo desligado não gera pendência. Resolve-se no passo "Infográficos" da ficha da revista | D-237, D-243, D-250, D-254 |
+| `infografico` | habilidade vazia; passo ligado sem dado (Habilidades: código ou texto e o texto do clique; Progressão: 2 marcas e o texto do clique; Tarefas: 4 imagens e, em MT, o texto da habilidade nos 4 itens); passo desligado não gera pendência. Resolve-se no passo "Infográficos" da ficha da revista | D-237, D-243, D-250, D-254, D-305 |
 | `capa` | falta capa | D-112 |
 | `variaveis` | variável usada nos textos efetivos sem valor | D-100 |
 | `nome_projeto` | nome ainda termina em " - NOME DO PROJETO" | D-093 |
@@ -371,7 +372,7 @@ Quando existem a etapa da matriz e a cópia do projeto, **a cópia sempre vale**
 | O clique grava uma foto `impresso` com o resolvido inteiro; se o hash da foto diferir do visto, desfaz. Roda com o bloqueio do projeto. | D-151, D-178, `app/nucleo/urls/impresso.py:202-211` |
 | "O que mudou" = diferença entre a última foto `impresso` e a revista atual, nunca contra a última validação. Primeira vez: sem foto anterior. | D-077, learning "O que mudou para o impresso vem de um botão" |
 | O impresso compara escalas (com fim e item), cores e textos do F1, seções do F2 e os textos dos infográficos; capa e imagem dos itens ficam fora do diff. | D-112, D-118, D-153, D-178, D-256, `app/nucleo/servicos/resolver.py:368` |
-| Textos de cada infográfico que o impresso confere: habilidade, textos dos passos ❶ ❷ ❸ (descritor, habilidades, progressão: a ordem do tour), referencial (uma linha por etapa) e tarefas (descritor, rótulo, texto alternativo, análise). Fonte única do "o que mudou" e da planilha. | D-256, `app/nucleo/servicos/f2.py:58` |
+| Textos de cada infográfico que o impresso confere: habilidade, textos dos passos ❶ ❷ ❸ (descritor, habilidades, progressão: a ordem do tour), referencial (uma linha por etapa) e tarefas (descritor e rótulo, ou a habilidade em MT; texto alternativo, análise). Fonte única do "o que mudou" e da planilha. | D-256, D-305, `app/nucleo/servicos/f2.py:58` |
 | "O que mudou" tem um grupo por infográfico, com o título completo (ex.: "Avaliação e Currículo – Outras Etapas"); a planilha F2 ganha uma aba por infográfico ("Alfa", "Outras Etapas"; colunas Campo e Texto). | D-256, `app/nucleo/urls/impresso.py:61`, `app/nucleo/servicos/planilhas.py:148` |
 | Trocar só a imagem de um item não deixa o impresso pendente. | D-118, D-256 |
 | Foto do impresso anterior à fase 4 do F2 não tem os infográficos: a revista com infográfico preenchido fica pendente uma vez, com os textos do infográfico como novos. | D-256 |

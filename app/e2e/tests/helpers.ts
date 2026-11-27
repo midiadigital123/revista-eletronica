@@ -79,11 +79,11 @@ export async function revistaPropria(page: Page, prefixo: string, matriz = "Demo
 
 /** Parceiro "E2E …" com cortes em `colunas`, `matriz` pelo lote e nome do projeto; termina na ficha da
  * revista LP com os templates Padrão do F1 e do F2 (sem infográfico nem capa). Devolve o nome e o id. */
-export async function fichaComTemplates(page: Page, prefixo: string, colunas: string[], matriz = "Demonstração") {
+export async function fichaComTemplates(page: Page, prefixo: string, colunas: string[], matriz = "Demonstração", componente = "LP") {
   const nome = await parceiroComProjeto(page, prefixo, colunas);
   await atribuirEmMassa(page, nome, { matriz });
   await expect(page.locator("#mensagens")).toContainText("escolhida para 1 parceiro(s)");
-  const revista = await revistaDaLista(page, nome, "LP");
+  const revista = await revistaDaLista(page, nome, componente);
   const salvo = page.locator("[data-status-salvo]").getByText(/Salvo às \d/);
   await page.getByRole("link", { name: nome }).first().click();
   await alpinePronto(page);

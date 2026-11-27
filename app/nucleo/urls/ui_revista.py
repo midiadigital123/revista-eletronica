@@ -35,7 +35,7 @@ from django.views.decorators.http import require_GET, require_http_methods
 from nucleo.contexto import ano_da_sessao
 from nucleo.infografico import familia, form_do_campo, grade_referencial
 from nucleo.models import Ano, Revista, RevistaFasciculo, RevistaInfografico
-from nucleo.models.revista import EtapaReferencial, Marca
+from nucleo.models.revista import TAREFAS_POR_NIVEL, EtapaReferencial, Marca
 from nucleo.revista import (
     FasciculoForm,
     RevistaForm,
@@ -260,7 +260,9 @@ def _infograficos(revista):
     # ponytail: "alfa" < "outras" na ordem alfabética, que é a ordem dos cartões; um tipo novo pede ordem explícita.
     infos = RevistaInfografico.objects.filter(revista=revista, arquivado_em__isnull=True).order_by("tipo")
     infos = list(infos.prefetch_related("revistainfograficoetapa_set", "revistainfograficoitem_set"))
+    por_nivel = revista.componente.codigo in TAREFAS_POR_NIVEL  # D-305: MT troca etapa e descritor pela habilidade
     for inf in infos:
+        inf.por_nivel = por_nivel
         etapas = {e.etapa: e for e in inf.revistainfograficoetapa_set.all()}
         itens = {i.posicao: i for i in inf.revistainfograficoitem_set.all()}
         for i in itens.values():

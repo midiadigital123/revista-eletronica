@@ -7,7 +7,8 @@ a validação e a gravação ficam aqui, como em `nucleo/revista.py`. `<pk>` é 
 - `inf-<pk>-passo-<habilidades|progressao|tarefas>`, valor `on` (ligado) ou vazio → `passos_desligados`;
 - `inf-<pk>-etapa-<1EF…3EM>-<marca|codigo|texto>` → `RevistaInfograficoEtapa`;
 - `inf-<pk>-etapa-<2EF…3EM>-<junta_marca|junta_habilidade>`, valor `on` ou vazio → a mescla com a de cima (D-301);
-- `inf-<pk>-item-<1..4>-<etapa|descritor|texto_alternativo|analise>` → `RevistaInfograficoItem`;
+- `inf-<pk>-item-<1..4>-<etapa|descritor|habilidade|texto_alternativo|analise>` → `RevistaInfograficoItem`
+  (`habilidade` só nos componentes por nível, D-305; etapa e descritor só nos outros);
 - `inf-<pk>-item-<1..4>-imagem`, o arquivo em `arquivo` → `arquivos.receber_imagem_item`.
 
 A linha de etapa ou item que falta é criada na 1ª gravação, com o `ano` do infográfico.
@@ -45,11 +46,12 @@ class EtapaForm(forms.ModelForm):
 
 class ItemForm(forms.ModelForm):
     descritor = forms.CharField(max_length=20, required=False)
+    habilidade = forms.CharField(max_length=500, required=False)
     texto_alternativo = forms.CharField(label="Texto alternativo", max_length=1000, required=False)
 
     class Meta:
         model = RevistaInfograficoItem
-        fields = ["etapa", "descritor", "texto_alternativo", "analise"]
+        fields = ["etapa", "descritor", "habilidade", "texto_alternativo", "analise"]
 
 
 class PassoForm(forms.Form):
@@ -71,7 +73,7 @@ CAMPO = re.compile(
     r"(?P<inf>habilidade|texto_descritor|texto_habilidades|texto_progressao)"
     rf"|passo-(?P<passo>{'|'.join(PASSOS_DESLIGAVEIS)})"
     rf"|etapa-(?P<etapa>{'|'.join(EtapaReferencial.values)})-(?P<etapa_campo>marca|codigo|texto|junta_marca|junta_habilidade)"
-    r"|item-(?P<posicao>[1-4])-(?P<item_campo>etapa|descritor|texto_alternativo|analise|imagem))"
+    r"|item-(?P<posicao>[1-4])-(?P<item_campo>etapa|descritor|habilidade|texto_alternativo|analise|imagem))"
 )
 
 

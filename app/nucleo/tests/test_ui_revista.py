@@ -1,6 +1,8 @@
 """Revistas e revista fora do admin (/ui/revista/<ano>/, T20/T21): critérios de aceite de
 docs/telas/fichas/revista.md, pelo client. A regra é a de nucleo/revista.py (testada também pelo admin)."""
 
+from unittest import mock
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.core.files.storage import default_storage
@@ -393,6 +395,16 @@ class RevistaUiTest(Base):
         self.assertNotContains(r, "arquivo-svg")
         self.assertNotContains(r, "arquivo_svg")
         self.assertNotContains(r, "gabarito-ids")
+
+    def test_infografico_por_nivel_troca_etapa_e_descritor_pela_habilidade(self):  # D-305 (MT)
+        inf = self.outras()
+        with mock.patch("nucleo.urls.ui_revista.TAREFAS_POR_NIVEL", {self.lp.codigo}):
+            r = self.abrir()
+        self.assertContains(r, f'name="inf-{inf.pk}-item-1-habilidade"')
+        self.assertContains(r, f'name="inf-{inf.pk}-item-', count=16)  # 4 itens × habilidade, imagem, alt, análise
+        self.assertNotContains(r, f'name="inf-{inf.pk}-item-1-etapa"')
+        self.assertNotContains(r, f'name="inf-{inf.pk}-item-1-descritor"')
+        self.assertNotContains(self.abrir(), f'name="inf-{inf.pk}-item-1-habilidade"')  # LP segue com etapa e descritor
 
     def template_f2(self):
         """Versão nova do template F2 da revista com as 9 seções do test_preview."""
