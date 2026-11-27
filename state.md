@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-F2 de MT por nível (D-305, K-055 em Review) na `feat/f2-mt` (worktree de trabalho), sem commit. Migração 0030 aplicada no banco da worktree.
-Funcionando: infográfico de MT com bolinha, número, barrinhas 1 a 4 e texto da habilidade no bloco Tarefas; texto longo faz a linha crescer; modal "Nível N"; ficha de MT com campo Habilidade no lugar de Etapa e Descritor; pendência do texto nos 4 itens; impresso confere a habilidade. LP sai byte a byte igual (hash e gabarito do zip). Suíte Django 1099 OK (o catálogo de CHECKs corrigido e rodado à parte). Conferido no navegador com dados de teste.
-Quebrado/pendente: spec E2E de MT (`infografico.spec.ts`) escrito e não rodado; `trail check` aponta 18 conflitos, todos por coincidência de palavras (justificar no commit).
+F2 de MT por nível (D-305, K-055 em Review) commitado na `feat/f2-mt` e mesclado na `integ/f2-mt`. Migração 0030 aplicada no banco da worktree.
+Funcionando: E2E inteiro 178 passaram, 0 pulados (stack isolada `e2e-mt`, desfeita); infográfico de MT com bolinha, número, barrinhas 1 a 4 e texto da habilidade no bloco Tarefas; texto longo faz a linha crescer; modal "Nível N"; ficha de MT com campo Habilidade no lugar de Etapa e Descritor; pendência do texto nos 4 itens; impresso confere a habilidade. LP sai byte a byte igual (hash e gabarito do zip). Suíte Django 1099 OK (o catálogo de CHECKs corrigido e rodado à parte). Conferido no navegador com dados de teste.
+Quebrado/pendente: mesclar a `integ/f2-mt` na `main` (falta o ok do usuário).
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Dizer "commitar" para gravar a `feat/f2-mt` e mesclar na `integ/f2-mt`.
+Dizer "ok" para mesclar a `integ/f2-mt` na `main`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -3206,3 +3206,4 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 
 ### 2026-11-27 19:00
 - D-305: F2 de MT por nível no mesmo SVG (decisões do usuário: linha cresce, modal "Nível N", habilidade obrigatória); suíte 1099 OK.
+- E2E inteiro na stack isolada `e2e-mt`: 178 passaram, 0 pulados (inclui o spec novo de MT).
