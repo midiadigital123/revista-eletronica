@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-F2 de MT por nível (D-305, K-055 em Review) commitado na `feat/f2-mt` e mesclado na `integ/f2-mt`. Migração 0030 aplicada no banco da worktree.
-Funcionando: E2E inteiro 178 passaram, 0 pulados (stack isolada `e2e-mt`, desfeita); infográfico de MT com bolinha, número, barrinhas 1 a 4 e texto da habilidade no bloco Tarefas; texto longo faz a linha crescer; modal "Nível N"; ficha de MT com campo Habilidade no lugar de Etapa e Descritor; pendência do texto nos 4 itens; impresso confere a habilidade. LP sai byte a byte igual (hash e gabarito do zip). Suíte Django 1099 OK (o catálogo de CHECKs corrigido e rodado à parte). Conferido no navegador com dados de teste.
-Quebrado/pendente: mesclar a `integ/f2-mt` na `main` (falta o ok do usuário).
+F2 de MT por nível (D-305, K-055 em Done) mesclado na `main` (`f825455`), sem push.
+Funcionando: infográfico de MT com bolinha, número, barrinhas 1 a 4 e texto da habilidade no bloco Tarefas; texto longo faz a linha crescer; modal "Nível N"; ficha de MT com campo Habilidade no lugar de Etapa e Descritor; pendência do texto nos 4 itens; impresso confere a habilidade. LP sai byte a byte igual. Suíte Django 1099 OK; E2E 178 passaram.
+Quebrado/pendente: aplicar a migração 0030 no banco de dev da `main`; push não feito.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Dizer "ok" para mesclar a `integ/f2-mt` na `main`.
+Rodar `docker compose run --rm app python manage.py migrate` na `main` (aplica a 0030).
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -3207,3 +3207,4 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 ### 2026-11-27 19:00
 - D-305: F2 de MT por nível no mesmo SVG (decisões do usuário: linha cresce, modal "Nível N", habilidade obrigatória); suíte 1099 OK.
 - E2E inteiro na stack isolada `e2e-mt`: 178 passaram, 0 pulados (inclui o spec novo de MT).
+- `integ/f2-mt` mesclada na `main` com o ok do usuário (`f825455`); K-055 em Done.
