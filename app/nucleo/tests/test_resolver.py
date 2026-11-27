@@ -35,7 +35,7 @@ from nucleo.models import (
     Template,
     TemplateVersao,
 )
-from nucleo.models.revista import Motivo
+from nucleo.models.revista import Motivo, TipoInfografico
 from nucleo.servicos.cascata import gravar_cortes
 from nucleo.servicos.foto import fotografar
 from nucleo.servicos.pendencias import pendencias
@@ -152,7 +152,8 @@ def recarregar(revista):
 
 
 def preencher_infograficos(revista, sha="a" * 64):
-    """Infográficos ativos da revista sem pendência: habilidade, 2 etapas com código e marca, 4 itens com imagem."""
+    """Infográficos ativos da revista sem pendência: habilidade, 2 etapas com código e marca, 4 itens com imagem
+    (e com o texto da habilidade, que só MT usa, D-305)."""
     for inf in RevistaInfografico.objects.filter(revista=revista, arquivado_em__isnull=True):
         RevistaInfografico.objects.filter(pk=inf.pk).update(
             habilidade="Inferir informação.", texto_habilidades="As habilidades.", texto_progressao="A progressão."
@@ -164,7 +165,7 @@ def preencher_infograficos(revista, sha="a" * 64):
         for posicao in range(1, 5):
             RevistaInfograficoItem.objects.update_or_create(
                 infografico=inf, posicao=posicao,
-                defaults={"ano_id": inf.ano_id, "etapa": "5EF", "descritor": "D05",
+                defaults={"ano_id": inf.ano_id, "etapa": "5EF", "descritor": "D05", "habilidade": "Determinar a área.",
                           "imagem": f"infograficos/{inf.pk}-{posicao}.png", "imagem_sha256": sha},
             )
 
@@ -573,6 +574,28 @@ class ResolverTest(TestCase):
         ])
         RevistaInfografico.objects.filter(pk=inf.pk).update(passos_desligados=["habilidades", "progressao"])
         self.assertEqual(self.mensagens(lp), [])
+
+    def test_mt_por_nivel_so_no_resolvido_de_mt(self):
+        """D-305: `por_nivel` e `habilidade` só entram no resolvido de MT; o de LP não muda (nem o hash)."""
+        lp, mt = self.go["LP"], self.go["MT"]
+        preencher_infograficos(lp)
+        preencher_infograficos(mt)
+        inf_lp, inf_mt = resolver(lp)["f2"]["infograficos"][0], resolver(mt)["f2"]["infograficos"][0]
+        self.assertNotIn("por_nivel", inf_lp)
+        self.assertNotIn("habilidade", inf_lp["itens"][0])
+        self.assertIs(inf_mt["por_nivel"], True)
+        self.assertEqual(inf_mt["itens"][0]["habilidade"], "Determinar a área.")
+
+    def test_mt_pendencia_do_texto_da_habilidade(self):
+        mt = self.go["MT"]
+        preencher_infograficos(mt)
+        inf = RevistaInfografico.objects.get(revista=mt)
+        titulo = TipoInfografico(inf.tipo).label
+        self.assertEqual(self.mensagens(mt), [])
+        RevistaInfograficoItem.objects.filter(infografico=inf, posicao=1).update(habilidade=" ")
+        self.assertEqual(self.mensagens(mt), [f"{titulo}: o passo Tarefas precisa do texto da habilidade nos 4 itens."])
+        RevistaInfografico.objects.filter(pk=inf.pk).update(passos_desligados=["tarefas"])
+        self.assertEqual(self.mensagens(mt), [])
 
     def test_passo_desligado_nao_gera_pendencia(self):
         lp, inf = self.infografico()

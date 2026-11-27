@@ -27,6 +27,7 @@ DICA_INFOGRAFICO = " ".join(
         "o passo Habilidades está ligado e falta o texto do clique.",
         "o passo Progressão está ligado e falta o texto do clique.",
         "o passo Tarefas precisa dos 4 itens com imagem.",
+        "o passo Tarefas precisa do texto da habilidade nos 4 itens.",  # GO · MT é por nível (D-305)
     )
 )
 

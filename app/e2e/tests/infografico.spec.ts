@@ -108,3 +108,27 @@ test("infográficos: 2 cartões, Outras Etapas inteiro, prévia com tour e image
   }
   expect(erros).toEqual([]);
 });
+
+// D-305: em MT o bloco Tarefas é por nível. Parceiro "E2E Infográfico MT …" próprio, com corte de 5EF MT (só o
+// cartão Outras Etapas). A ficha troca Etapa e Descritor pela Habilidade; a prévia mostra o texto ao lado das
+// barrinhas e o + abre o modal "Nível 1".
+test("infográfico de MT: tarefas por nível com o texto da habilidade", async ({ page }) => {
+  const erros: string[] = [];
+  page.on("pageerror", (e) => erros.push(e.message));
+  await entrar(page);
+  const { revista } = await fichaComTemplates(page, "Infográfico MT", ["5EF MT"], "Demonstração", "MT");
+  const cartao = page.locator(".inf-card").first();
+  await expect(cartao.locator("h3")).toHaveText("Avaliação e Currículo – Outras Etapas");
+  const tarefa1 = cartao.getByRole("group", { name: "Tarefa 1", exact: true });
+  await expect(tarefa1.getByLabel("Etapa", { exact: true })).toHaveCount(0);
+  await expect(tarefa1.getByLabel("Descritor", { exact: true })).toHaveCount(0);
+  await salvarInfografico(page, () => preencher(tarefa1.getByLabel("Habilidade", { exact: true }), "Habilidade E2E de MT."));
+  await liberarBloqueio(page);
+
+  await page.goto(`/preview/${revista}/f2/outras/`);
+  await expect(page.locator("#f2-tarefas")).toContainText("Habilidade E2E de MT.");
+  await page.locator("#f2-btn-action-tarefa-1").focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#dlg-tarefa-1")).toContainText("Nível 1");
+  expect(erros).toEqual([]);
+});

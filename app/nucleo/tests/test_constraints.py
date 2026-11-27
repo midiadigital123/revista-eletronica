@@ -116,6 +116,7 @@ CHECKS = {
     "revista_infografico_etapa_etapa",
     "revista_infografico_etapa_marca",
     "revista_infografico_item_descritor_tamanho",
+    "revista_infografico_item_habilidade_tamanho",
     "revista_infografico_item_etapa",
     "revista_infografico_item_imagem_com_hash",
     "revista_infografico_item_imagem_sha256_sha256",

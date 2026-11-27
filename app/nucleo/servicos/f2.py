@@ -47,6 +47,21 @@ RESPIRO_CEL = 6
 CARACTERES_LINHA = 88
 MARGEM_INFERIOR = 42.7  # do bloco mais baixo do desenho (progressão, base em 751) até o fim do viewBox
 ALTURA_SVG = 793.7
+# Tarefas por nível (D-305, só MT; bloco tarefas, local): passo entre as 4 linhas do desenho e o texto da
+# habilidade em .f2-niv. A linha cresce quando o texto passa de LINHAS_TAREFA linhas.
+PASSO_TAREFA = 52.25
+LINHA_TAREFA = 12.5  # line-height de .f2-niv
+LINHAS_TAREFA = 3
+# ponytail: estimativa por caracteres (cabem ~42 em 207 px a 10 px; 38 dá folga), como CARACTERES_LINHA.
+CARACTERES_TAREFA = 38
+# Cor de cada nível (as do cabeçalho da miniatura do item, f2-st38/33/17/31) e as barrinhas 1 a 4:
+# x, altura; a base de todas em BARRA_BASE. A barra k acende com a cor do nível k quando k ≤ o nível da linha.
+CLASSES_NIVEL = ("f2-st38", "f2-st33", "f2-st17", "f2-st31")
+BARRAS = ((47, 7), (56, 11), (65, 15), (74, 20))
+BARRA_LARGURA = 6
+BARRA_BASE = 80
+TEXTO_TAREFA_ALTURA = 41.7  # caixa do texto, de 50.6 a 92.3 (o meio no traço, y 71.8)
+FIO_TAREFA_Y = 97.2  # fio de baixo da linha (o do desenho de LP)
 # Progressão (bloco progressao, local): x da 1ª coluna e largura de cada etapa.
 PROGRESSAO_X = 19.3
 PROGRESSAO_PASSO = 37.3
@@ -83,24 +98,26 @@ def textos_impresso(inf):
             juntar(" · ", (e["rotulo"] or e["etapa"], e["marca"], e["codigo"], e["texto"])) for e in inf["etapas"]
         ))),
         *((f"Tarefa {i['posicao']}", juntar("\n", (
-            juntar(" – ", (i["descritor"], i["rotulo"])), i["texto_alternativo"], html_para_texto(i["analise"]),
+            i["habilidade"] if inf.get("por_nivel") else juntar(" – ", (i["descritor"], i["rotulo"])),
+            i["texto_alternativo"], html_para_texto(i["analise"]),
         ))) for i in inf["itens"]),
     ]  # fmt: skip
     return [(rotulo, texto.strip()) for rotulo, texto in pares if texto and texto.strip()]
 
 
-def _layout(ligados, cresceu=0):
+def _layout(ligados, cresceu=None):
     """Posição de cada bloco ligado (empilha por coluna com o gap do desenho) e a altura do SVG.
 
-    `cresceu`: quanto a tabela do bloco habilidades passou da altura do desenho.
+    `cresceu`: {bloco: quanto passou da altura do desenho} (a tabela de habilidades, as tarefas por nível).
     """
+    cresceu = cresceu or {}
     pos, base = {"cabecalho": CAIXA["cabecalho"][:2]}, 0
     for nomes, gap in COLUNAS.values():
         y = CAIXA[nomes[0]][1]
         for nome in nomes:
             if nome in ligados:
                 pos[nome] = (CAIXA[nome][0], y)
-                y += CAIXA[nome][3] + (cresceu if nome == "habilidades" else 0)
+                y += CAIXA[nome][3] + cresceu.get(nome, 0)
                 base = max(base, y)
                 y += gap
     altura_svg = round(max(ALTURA_SVG, base + MARGEM_INFERIOR), 1)
@@ -164,6 +181,26 @@ def _tabela(etapas):
     return tabela, celulas, round(sum(alturas) - sum(ALTURAS_LINHAS), 1) or 0  # 0.0 sairia "589.0" no translate
 
 
+def _tarefas(itens):
+    """Itens por nível (D-305) com `y` (deslocamento da linha), `extra` (quanto a linha cresceu), `meio`
+    (extra / 2: o ícone e a miniatura descem para ficar no meio), `classe` (cor do nível), `barras`
+    [{"x", "y", "altura", "classe"}] (classe "" = barra apagada) e `clamp`; e quanto o bloco cresceu."""
+    saida, y = [], 0
+    for item in itens:
+        linhas = len(textwrap.wrap(item["habilidade"], CARACTERES_TAREFA))
+        extra = max(0, linhas - LINHAS_TAREFA) * LINHA_TAREFA
+        n = item["posicao"]
+        saida.append(item | {"y": round(y, 1), "extra": extra, "meio": round(extra / 2, 1),
+                             "classe": CLASSES_NIVEL[n - 1],
+                             "barras": [{"x": x, "y": BARRA_BASE - h, "altura": h,
+                                         "classe": CLASSES_NIVEL[k] if k < n else ""}
+                                        for k, (x, h) in enumerate(BARRAS)],
+                             "clamp": max(LINHAS_TAREFA, linhas),
+                             "texto_altura": round(TEXTO_TAREFA_ALTURA + extra, 1), "fio": round(FIO_TAREFA_Y + extra, 1)})
+        y += PASSO_TAREFA + extra
+    return saida, round(sum(i["extra"] for i in saida), 1) or 0  # 0.0 sairia "463.0" no translate
+
+
 def gerar(infografico, secoes, base_imagens, componente):
     """Um infográfico de resolvido["f2"]["infograficos"] -> {"svg", "tour", "modais"}.
 
@@ -179,9 +216,12 @@ def gerar(infografico, secoes, base_imagens, componente):
         return secoes.get(id_, {"titulo": "", "corpo": ""})
 
     textos = infografico["textos"]
+    por_nivel = infografico.get("por_nivel", False)
     tabela, celulas, cresceu = _tabela(infografico["etapas"])
-    pos, altura_svg = _layout(ligados, cresceu if "habilidades" in ligados else 0)
     itens = sorted(infografico["itens"], key=lambda i: i["posicao"]) if "tarefas" in ligados else []
+    itens, cresceu_tarefas = _tarefas(itens) if por_nivel else (itens, 0)
+    pos, altura_svg = _layout(ligados, {"habilidades": cresceu if "habilidades" in ligados else 0,
+                                        "tarefas": cresceu_tarefas})
 
     modais = [{"id": "dlg-descritor", "titulo": mark_safe(secao("dlg-descritor")["titulo"]),
                "corpo": mark_safe(secao("dlg-descritor")["corpo"] + textos["descritor"])}]
@@ -192,7 +232,8 @@ def gerar(infografico, secoes, base_imagens, componente):
                            "corpo": mark_safe(corpo)})
     for n, item in enumerate(itens, 1):
         img = format_html('<img src="{}{}" alt="{}">', base_imagens, PurePosixPath(item["imagem"]).name, item["texto_alternativo"]) if item["imagem"] else ""
-        modais.append({"id": f"dlg-tarefa-{n}", "titulo": format_html("{} – {}", item["descritor"], item["rotulo"]),
+        titulo = f"Nível {n}" if por_nivel else format_html("{} – {}", item["descritor"], item["rotulo"])
+        modais.append({"id": f"dlg-tarefa-{n}", "titulo": titulo,
                        "corpo": mark_safe(img + item["analise"])})
 
     tour = {
@@ -216,5 +257,6 @@ def gerar(infografico, secoes, base_imagens, componente):
         "pontos": [{"etapa": l["etapa"], "marca": l["marca"], "cor": l["cor"],
                     "x": round(PROGRESSAO_X + i * PROGRESSAO_PASSO, 1)} for i, l in enumerate(tabela)],
         "itens": itens,
+        "por_nivel": por_nivel,
     })
     return {"svg": mark_safe(svg), "tour": tour, "modais": modais}
