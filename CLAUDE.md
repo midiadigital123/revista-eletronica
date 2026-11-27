@@ -87,7 +87,7 @@ F2 hoje (branch `integ/f2-gerado`, fases 1 a 4): gerado pelo servidor como SVG a
 infográficos da revista (até dois: Alfa e Outras Etapas), preenchidos no passo "Infográficos" da
 ficha da revista (regra em `nucleo/infografico.py`, D-254). O SVG enviado pelo design saiu (migração
 0024); o impresso vê os textos dos infográficos, sem a imagem dos itens (`f2.textos_impresso`, D-256).
-Os infográficos de LP nascem preenchidos pelo seed dos Word da Pedagógica (`templates_seed/<ano>/infograficos/`,
+Os infográficos de LP e o de MT Alfa (D-311) nascem preenchidos pelo seed dos Word da Pedagógica (`templates_seed/<ano>/infograficos/`,
 `carregar_infograficos` e a cascata, D-298); cada revista edita a sua cópia na ficha. A suíte Django desliga isso
 (`INFOGRAFICOS_DO_SEED`, `nucleo/tests/__init__.py`). Specs em `docs/superpowers/specs/2026-11-06-*.md` (D-227 a D-232), planos das
 fases em `docs/superpowers/plans/`. `example/` guarda

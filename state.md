@@ -2,13 +2,13 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-F2 de MT por nível (D-305, K-055 em Done) mesclado na `main` (`f825455`), sem push.
-Funcionando: infográfico de MT com bolinha, número, barrinhas 1 a 4 e texto da habilidade no bloco Tarefas; texto longo faz a linha crescer; modal "Nível N"; ficha de MT com campo Habilidade no lugar de Etapa e Descritor; pendência do texto nos 4 itens; impresso confere a habilidade. LP sai byte a byte igual. Suíte Django 1099 OK; E2E 178 passaram.
-Quebrado/pendente: aplicar a migração 0030 no banco de dev da `main`; push não feito.
+K-056 e K-057 (D-306 a D-312) na `main` (sem push), via `feat/f2-mt-alfa` → `integ/f2-fechamento`; suíte Django 1126 OK (9 pulados). Migrações 0031 a 0034 e carga do seed aplicadas no banco da 8002; o dev (8000) ainda não.
+Funcionando: MT Alfa preenchido pelo Word (29 revistas na 8002): habilidade, referencial 1EF–7EF, marcas até 3EM, 4 níveis com imagem e análise; "Agora é com você" por tipo (MT Alfa com os 2 parágrafos do 3º ano e o link); LP sem mudança visual. Conferido no navegador (preview 2 e 1). Antes: K-056 na `integ/f2-fechamento`, suíte 1121 OK.
+Quebrado/pendente: E2E da K-056 e da K-057 não rodado (merge na `main` com o ok do usuário antes dele); no dev (8000): `migrate` e `carregar_infograficos --ano 2026 --usuario admin`; URL do template do infográfico (`#pendente`); Word de MT Outras; `tarefas-fechamento-alfa` de MT.
 
 ## Próxima ação
 <!-- sobrescrever: UMA ação concreta -->
-Rodar `docker compose run --rm app python manage.py migrate` na `main` (aplica a 0030).
+Rodar o E2E na stack isolada (`docs/e2e.md`) sobre a `main`.
 
 ## Plano
 <!-- plano completo: plans/revista-express-django.md -->
@@ -2485,7 +2485,66 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Arquivos afetados:** `app/nucleo/models/revista.py`, migração 0030, `servicos/resolver.py`, `servicos/f2.py`, `servicos/pendencias.py`, `templates/revista/f2.svg`, `nucleo/infografico.py`, `urls/ui_revista.py`, `templates/ui/parciais/revista_infograficos.html`
 - **Status:** ativa
 
+### D-306 — F2: seção `tarefas-fechamento` por tipo, com os textos novos dos Word de LP (2026-11-27 20:00)
+- **Contexto:** a Pedagógica mandou os Word novos de LP (`AVALIAÇÃO E CURRÍCULO_LP_2026_ALFA_GERAL` e `..._AF_EM_GERAL`). O texto de "Ao analisar…" até antes de "ATIVIDADES" entra no template de texto. Comparados os dois, só os parágrafos "Ao analisar…" diferem (Alfa 4 parágrafos, AF_EM 2); "Agora é com você" e os 2 parágrafos que antecedem as atividades são iguais nos dois.
+- **Decisão:** `SECOES_F2` troca `tarefas-fechamento` por `tarefas-fechamento-alfa` e `tarefas-fechamento-outras` (lista fixa); a página de cada infográfico usa a do seu tipo. Migração de dados (padrão da 0023): cada Template F2 ganha versão nova, seção por seção a partir da última (não perde edição); LP recebe os textos novos em `tarefas-fechamento-*` e `fechamento`; MT duplica o corpo atual nas duas e mantém o `fechamento` (Word de MT não chegou). Cópias `tarefas-fechamento` das revistas viram as duas novas.
+- **Motivo:** só uma seção difere entre os tipos; lista fixa é o que o editor, a validação e o impresso já tratam.
+- **Descartadas:** sobrescrita genérica `<seção>@alfa|@outras` — mecanismo novo para um caso só; um template por infográfico (FK no RevistaInfografico) — ~3 dias, migração, cascata e tela de escolha, sem pedido de trocar template por tipo; texto no infográfico (como `texto_descritor`) — o usuário pediu template de texto.
+- **Arquivos afetados:** `app/nucleo/texto.py`, `servicos/html.py`, migração 0031, `templates_seed/2026/f2-lp.hbs`, `f2-mt.hbs`
+- **Status:** ativa
+
+### D-307 — Link no Markdown restrito dos templates: só https, ou `#pendente` (2026-11-27 20:00)
+- **Contexto:** "Acesse aqui o template do Infográfico." deve ser link clicável para uma URL externa, ainda desconhecida.
+- **Decisão:** o render habilita a regra `link` do markdown-it, com `target="_blank" rel="noopener"`; a validação aceita `link_open` só com `https://…` ou `#pendente`. `#pendente` sai como `<span class="variavel-vazia">` (vermelho no preview, sem link). No impresso o link vira `[texto](url)`, para a troca de URL aparecer no diff. Seed e migração usam `#pendente`; a Pedagógica troca pela tela Templates.
+- **Motivo:** o texto do link fica no template, onde a Pedagógica já edita, e a URL muda sem código.
+- **Descartadas:** URL em configuração/constante — sem tela para trocar; variável `{{x}}` — as variáveis são colunas do projeto, e a URL é geral; endereço provisório inventado — sairia como link falso.
+- **Arquivos afetados:** `app/nucleo/texto.py`, ajuda do editor de templates
+- **Status:** ativa
+
+### D-308 — PDF das atividades por ano × componente × tipo, fora do hash (2026-11-27 20:00)
+- **Contexto:** o conteúdo depois de "ATIVIDADES" já está num PDF editorado, um para LP Alfa e um para LP Outras, geral para todos os parceiros (resposta do usuário em 27/11). A revista mostra "Acesse aqui as atividades", que baixa o PDF.
+- **Decisão:** modelo novo `Atividades(ano, componente, tipo, arquivo, arquivo_sha256)`, único por (ano, componente, tipo); upload na tela Templates com a permissão `editar_templates`; só PDF, até 20 MB. A página F2 do tipo mostra o link depois do fechamento quando o PDF existe (sem PDF, sem link e sem pendência: MT não tem). Zip: `arquivos/atividades-<tipo>.pdf`. O PDF fica fora do hash: trocar não tira o Validado.
+- **Motivo:** o PDF chega pronto e aprovado; prender no hash tiraria o Validado de todas as revistas do componente a cada troca.
+- **Descartadas:** PDF por revista na ficha — o usuário respondeu que é geral; cópia do seed por revista (como a imagem do item, D-298) — trocar o PDF exigiria recarregar todas as revistas; pendência sem PDF — bloquearia MT, que não tem PDF.
+- **Arquivos afetados:** `app/nucleo/models/texto.py`, migração 0032, `servicos/arquivos.py`, `servicos/html.py`, `servicos/empacotar.py`, `urls/preview.py`, `urls/ui_templates.py`, `templates/revista/f2.html`
+- **Status:** ativa
+
+### D-309 — Remover o PDF das atividades: lixeira com modal ao lado de "Trocar" (2026-11-27 21:00) · ~~tela substituída pela D-310~~
+- **Contexto:** a D-308 entregou enviar, trocar e baixar o PDF das atividades sem a operação inversa. O usuário apontou o erro (funcionalidade pela metade) e pediu o remover com o design system atual; o CLAUDE.md global ganhou as regras "toda ação tem a sua inversa" e "Clean Code e design patterns obrigatórios".
+- **Decisão:** `remover_atividades(obj)` ao lado de `receber_atividades` (`servicos/arquivos.py`): apaga o registro e o arquivo sai do storage no commit. Rota `POST /ui/templates/<ano>/atividades/<cc>/<tipo>/remover/` no mesmo bloco das outras (`pode_gravar`; 403, 404 sem PDF, 405 em GET). Na tela, `c-botao-icone` lixeira junto do "Trocar" (agrupados em `.tpl-atividades-acoes`) abre um `c-modal` com Cancelar e "Remover" (`destrutivo`). Teste do ciclo inteiro: vazio → enviar → trocar → baixar → remover → vazio. Correção de raiz no componente: `.dialogo` com `white-space: normal` (o modal dentro de célula herdava o `nowrap` da tabela).
+- **Motivo:** é um arquivo, e um novo envio o repõe: segue o "Remover arquivo" do item da matriz, sem a confirmação digitada do `/ui/excluir/` (D-205), que é para cadastro.
+- **Descartadas:** remover pelo `/ui/excluir/atividades/<pk>/` — exige digitar código para algo que um novo envio desfaz; botão de texto "Remover" — o design system usa a lixeira nas ações de linha.
+- **Arquivos afetados:** `app/nucleo/servicos/arquivos.py`, `app/nucleo/urls/ui_templates.py`, `app/nucleo/templates/ui/templates/lista.html`, `app/nucleo/static/ui/telas/templates.css`, `app/nucleo/static/ui/ui.css`, `app/nucleo/tests/test_atividades.py`
+- **Status:** ativa
+
+### D-310 — PDF das atividades em cartões com área de soltar e permissões próprias (2026-11-27 21:40)
+- **Contexto:** o usuário pediu, via /ui-ux-pro-max, melhorar a UI/UX do bloco: a tabela tinha input de arquivo nativo ("Browse… No file selected") mais um botão Enviar separado, estado vazio fraco e a ajuda longe. A suíte inteira também apontou que o modelo `Atividades` não estava na tabela de permissões. Substitui a parte de tela da D-309 (lixeira só de ícone ao lado de "Trocar").
+- **Decisão:** um cartão por componente × tipo (grade de 2 colunas que vira 1 em tela estreita), com badge de estado (Sem PDF, Enviado, Arquivo sumiu), nome e tamanho do arquivo como link de download, e a área de soltar do componente `arquivoSoltar` (a mesma da capa): arrastar ou clicar, envia ao escolher (componente novo `envioArquivo` no form nativo), limite de 20 MB checado no navegador antes de enviar, barra de envio. Com PDF, a área fica compacta ("Trocar o PDF") e o "Remover PDF" (botão ghost com lixeira e texto, em vermelho) abre o mesmo modal. O CSS `.soltar*` sai do `revista.css` para o `ui.css` (componente global). Permissões próprias: `atividades` em `MODELOS_NUCLEO` e em `editar_templates` (add, change, delete, view), migração 0033 sincroniza os grupos (Impresso só vê); as views checam `add/change/delete/view_atividades`, não as do template.
+- **Motivo:** um passo só (escolher = enviar) em vez de dois; o estado de cada slot fica legível de longe; remover com texto é mais claro que só o ícone num cartão; permissão do recurso, não emprestada de outro modelo.
+- **Descartadas:** manter a tabela com o input nativo estilizado — continua em dois passos; drag-and-drop próprio — o `arquivoSoltar` já faz e é o padrão da capa; checar `change_template` para o PDF — mistura dois recursos (regra "Clean Code e design patterns" do CLAUDE.md global).
+- **Arquivos afetados:** `app/nucleo/templates/ui/templates/lista.html`, `app/nucleo/urls/ui_templates.py`, `app/nucleo/permissoes.py`, migração 0033, `app/nucleo/static/ui/ui.css`, `app/nucleo/static/ui/telas/revista.css`, `app/nucleo/static/ui/telas/templates.css`, `app/nucleo/static/ui/componentes/autosave.js`, testes `test_atividades`, `test_permissoes`, `test_revista`
+- **Status:** ativa
+
+### D-311 — MT Alfa nasce preenchido pelo Word da Pedagógica (2026-11-27 23:30)
+- **Contexto:** a Pedagógica mandou `CURRÍCULO E AVALIAÇÃO_ALFA.docx` (Matemática, Alfa). Só LP nascia preenchido pelo seed (D-298); o MT Alfa estava vazio em toda revista. O Word de MT tem formato próprio: um "TEXTO DO CLIQUE:" por passo, progressão antes da descrição, descrição só de 1EF a 7EF (4EF sem habilidade), lista do ❹ por nível ("1 – <habilidade>") e itens "N (M…)".
+- **Decisão:** o conversor `scripts/docx_infografico.py` ganha `converter_mt` (argumento `mt`; sem ele continua LP) e gera `templates_seed/2026/infograficos/mt-alfa.json` + 4 PNG. 8EF–3EM ficam só com a marca da progressão (código e texto vazios, sem junta). Célula com dois códigos BNCC (6EF): o 1º vai para `codigo` e o 2º fica no texto, como no Word. O código M… do item é rótulo do design e é ignorado; `etapa` e `descritor` do item ficam vazios; `texto_alternativo` = "Item do nível N: <habilidade>". O seed copia a `habilidade` do item (`CAMPOS_ITEM`); os JSON de LP levam `"habilidade": ""`; `validar` exige habilidade nos 4 itens só em `TAREFAS_POR_NIVEL`. Carga na 8002: 29 infográficos MT Alfa, 1261 campos preenchidos; 2ª rodada sem efeito.
+- **Motivo:** o mecanismo de LP já é por (componente, tipo): um JSON a mais basta para a carga e a cascata preencherem todas as revistas de MT com Alfa.
+- **Descartadas:** preencher MT à mão na ficha de cada revista — 29 revistas, erro de cópia; um conversor separado para MT — duplica `ler`, `tabela`, `paragrafo` e `png`.
+- **Arquivos afetados:** `scripts/docx_infografico.py`, `app/nucleo/servicos/seed_infografico.py`, `app/templates_seed/2026/infograficos/{lp-alfa,lp-outras,mt-alfa}.json` e `mt-alfa-item-{1..4}.png`, `docs/fontes/2026/curriculo-e-avaliacao-mt-2026-alfa.docx`, testes `test_seed_infograficos`, `test_carregar_infograficos`, `test_cascata_infografico`
+- **Status:** ativa
+
+### D-312 — "Agora é com você" por tipo: `fechamento-alfa` e `fechamento-outras` (2026-11-27 23:30)
+- **Contexto:** o "Agora é com você" do Word de MT Alfa termina com 2 parágrafos próprios do Alfa ("estudantes do 3º ano") e com o link do template do infográfico; a seção `fechamento` era uma só para as duas páginas F2.
+- **Decisão (escolha do usuário em 27/11):** `SECOES_F2` troca `fechamento` por `fechamento-alfa` e `fechamento-outras`; a página F2 usa `fechamento-<tipo>` (`servicos/html.py`). Migração 0034 no padrão da 0031: TemplateVersao nova por template F2 (MT Alfa = texto do Word com `[**Acesse aqui** o template do Infográfico.](#pendente)`; as outras = corpo atual) e cada cópia `RevistaSecao` "fechamento" do F2 vira as duas (a do F1 fica). Os seeds `f2-lp.hbs` e `f2-mt.hbs` saem da mesma função da migração.
+- **Motivo:** mesmo caminho da D-306; o MT Outras fica com o texto atual até chegar o Word de MT Outras.
+- **Descartadas:** condicional no template pelo tipo — o Markdown restrito não tem lógica; texto do Alfa nas duas páginas — o 3º ano não cabe em Outras Etapas.
+- **Arquivos afetados:** `app/nucleo/texto.py`, `app/nucleo/templates_texto.py`, `app/nucleo/servicos/html.py`, `app/nucleo/migrations/0034_fechamento_por_tipo.py`, `app/templates_seed/2026/f2-{lp,mt}.hbs`, `app/nucleo/tests/test_templates_texto.py`
+- **Status:** ativa
+
 ## Perguntas em aberto
+- [ ] (27/11, D-307) URL do "template do Infográfico" (link sai `#pendente` até lá) — depende de: Pedagógica
+- [ ] (27/11, D-312) `tarefas-fechamento-alfa` de MT repete o texto de LP (escolha do usuário: fica assim até a Pedagógica dizer qual é) — depende de: Pedagógica
+- [ ] (27/11, D-306; Alfa chegou em 27/11, D-311) Word de MT Outras Etapas com os textos novos: o usuário confirmou que MT também difere por tipo; até chegarem, `tarefas-fechamento-alfa` e `-outras` de MT repetem o texto atual — depende de: Pedagógica
 - [x] (24/11, Pedagógica via chat; respondida em 24/11 pela D-288: cópia da etapa × componente pelo botão "Editar só neste projeto", com vínculo e revisão) Requisito novo: descritores e outros elementos da Comunitária precisam ser editáveis **por projeto**, em qualquer projeto (não só CE, Joinville e ES). A Luciana respondeu que **todos** os elementos (descritor, tarefa, arquivo do item, BNCC, pré-requisitos) são editáveis localmente por projeto — depende de: Otavio
 - [x] (24/11, D-290; respondida em 24/11: segue a ordem do editor, D-291) A ordem dos descritores na revista é alfabética pelo código (D011 vem antes de D02), não a ordem arrastada no editor. É o que a Pedagógica quer? — depende de: Otavio
 - [x] (18/11, D-270) A demo do django-cotton convence? Se sim, adotar tela por tela (ordem sugerida: ícones, botão, campo, cabeçalho, card, modal) ou parar na demo — depende de: Otavio — respondida em 18/11: convence, adotar (D-271)
@@ -3208,3 +3267,11 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - D-305: F2 de MT por nível no mesmo SVG (decisões do usuário: linha cresce, modal "Nível N", habilidade obrigatória); suíte 1099 OK.
 - E2E inteiro na stack isolada `e2e-mt`: 178 passaram, 0 pulados (inclui o spec novo de MT).
 - `integ/f2-mt` mesclada na `main` com o ok do usuário (`f825455`); K-055 em Done.
+
+### 2026-11-27 22:30
+- K-056: suíte Django 1121 OK (9 pulados; a 1ª rodada deu 221 erros com o banco de teste antigo e não se repetiu); commit `641f3f2` na `feat/f2-fechamento`, mesclada na `integ/f2-fechamento`. E2E ainda não rodado.
+
+### 2026-11-27 23:30
+- E2E da K-056 interrompido a pedido do usuário para fazer antes o plano do MT Alfa; stack `e2e-fech` derrubada.
+- K-057: conversor de MT, seed `mt-alfa.json`, `fechamento-alfa`/`-outras` (migração 0034); carga na 8002 (MT Alfa 1261 preenchidos; LP recebeu 236 flags junta_* do seed da D-303 que faltavam no banco); conferido no navegador.
+- Suíte: 1ª rodada 25 falhas e 2 erros (textos F2 de exemplo dos testes com `## fechamento`); corrigidos, 1126 OK. Merge `feat/f2-mt-alfa` → `integ/f2-fechamento` → `main` com o ok do usuário, sem E2E.

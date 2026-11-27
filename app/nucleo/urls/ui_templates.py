@@ -12,26 +12,33 @@ URL, nada gravado); "Confirmar e criar versão" com a assinatura da tela cria a 
 Editor por seção (U9b): o POST manda `secao-N-id` (hidden, conferido contra o fascículo; fora dele é
 422), `secao-N-titulo` e `secao-N-corpo`; a view monta o mesmo markdown `## id` com `form_para_corpo`
 e segue o fluxo acima. A tela de impacto e o "Voltar" continuam mandando o `texto` montado.
+
+PDF das atividades (D-308, D-309): na aba F2, um por componente × tipo do infográfico (Alfa, Outras Etapas).
+Permissões próprias (`editar_templates` em permissoes.py): enviar e trocar exigem add e change de `atividades`;
+remover, delete; baixar, view. Fica fora do hash do Validado: não passa pelo modal de impacto.
 """
 
 import re
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
+from django.core.files.storage import default_storage
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import Count
 from django.forms import modelform_factory
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
-from django.urls import path
+from django.urls import path, reverse
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from nucleo.contexto import ano_da_sessao
 from nucleo.admin.templates import TemplateForm
-from nucleo.models import Ano, Componente, Template
+from nucleo.models import Ano, Atividades, Componente, Template
+from nucleo.models.revista import TipoInfografico
 from nucleo.models.texto import Fasciculo
+from nucleo.servicos.arquivos import ATIVIDADES_MAX, receber_atividades, remover_atividades
 from nucleo.servicos.resolver import versao_atual
 from nucleo.templates_texto import (
     assinar, assinatura, com_uso, criar_versao, form_para_corpo, id_permitido, impacto, ler_assinatura,
@@ -39,6 +46,7 @@ from nucleo.templates_texto import (
 )  # fmt: skip
 from nucleo.texto import SECOES, TEXTO_MAX
 from nucleo.ui_bloqueio import com_bloqueio
+from nucleo.urls.preview import servir
 from nucleo.variaveis import VARIAVEIS
 
 FormTemplate = modelform_factory(Template, form=TemplateForm, fields=["nome"])  # ano/CC/fascículo não mudam (D-098)
@@ -55,6 +63,10 @@ def pode_ver(user):
 
 def pode_gravar(user):
     return user.has_perms(["nucleo.change_template", "nucleo.add_templateversao"])
+
+
+def pode_enviar_atividades(user):
+    return user.has_perms(["nucleo.add_atividades", "nucleo.change_atividades"])
 
 
 def pode_criar(user):  # criar grava o template e a versão 1 (D-115)
@@ -87,8 +99,104 @@ def lista(request, ano=None):
         "abas": [(f, contagem.get(f, 0)) for f in Fasciculo.values],
         "templates": templates,
         "pode_criar": pode_criar(request.user),
+        "pode_enviar_atividades": pode_enviar_atividades(request.user),
+        "pode_remover_atividades": request.user.has_perm("nucleo.delete_atividades"),
+        "atividades": _atividades(ano) if aba == Fasciculo.F2 else None,
+        "atividades_max": ATIVIDADES_MAX,
     }
     return TemplateResponse(request, "ui/templates/lista.html", contexto)
+
+
+def _atividades(ano):
+    """[(componente, [cartão])] da aba F2 (D-308, D-309). Cartão: tipo, rótulo, obj (Atividades ou None) e
+    tamanho em bytes (None com o arquivo sumido do storage: o cartão mostra o erro e pede novo envio)."""
+    feitos = {(a.componente_id, a.tipo): a for a in Atividades.objects.filter(ano=ano)}
+    grupos = []
+    for c in Componente.objects.filter(ano=ano).order_by("codigo"):
+        cartoes = []
+        for t in TipoInfografico.values:
+            obj = feitos.get((c.pk, t))
+            cartoes.append({"tipo": t, "rotulo": _nome_tipo(t), "obj": obj, "tamanho": obj and _tamanho(obj.arquivo)})
+        grupos.append((c, cartoes))
+    return grupos
+
+
+def _tamanho(caminho):
+    try:
+        return default_storage.size(caminho)
+    except FileNotFoundError:
+        return None
+
+
+def _nome_tipo(tipo):
+    return TipoInfografico(tipo).label.split(" – ")[-1]  # "Alfa", "Outras Etapas"
+
+
+def _rotulo(componente, tipo):
+    return f"{componente.codigo} – {_nome_tipo(tipo)}"
+
+
+def _voltar_atividades(ano):
+    return redirect(f"{reverse('ui_templates', args=[ano.ano])}?aba=F2#atividades")
+
+
+def _alvo(ano, cc, tipo):
+    if tipo not in TipoInfografico.values:
+        raise Http404
+    ano = get_object_or_404(Ano, ano=ano)
+    return ano, get_object_or_404(Componente, ano=ano, codigo=cc)
+
+
+@require_POST
+@login_required
+def atividades_enviar(request, ano, cc, tipo):
+    if not pode_enviar_atividades(request.user):
+        raise PermissionDenied
+    ano, componente = _alvo(ano, cc, tipo)
+    rotulo_alvo = _rotulo(componente, tipo)
+    arquivo = request.FILES.get("arquivo")
+    if arquivo is None:
+        messages.error(request, f"Escolha o PDF das atividades de {rotulo_alvo}.")
+    else:
+        try:
+            with transaction.atomic():
+                receber_atividades(ano, componente, tipo, arquivo)
+        except ValidationError as e:
+            messages.error(request, f"{rotulo_alvo}: {' '.join(e.messages)}")
+        else:
+            messages.success(request, f"PDF das atividades de {rotulo_alvo} gravado. Vale para todas as revistas de {componente.codigo}.")
+    return _voltar_atividades(ano)
+
+
+@require_POST
+@login_required
+def atividades_remover(request, ano, cc, tipo):
+    if not request.user.has_perm("nucleo.delete_atividades"):
+        raise PermissionDenied
+    ano, componente = _alvo(ano, cc, tipo)
+    obj = get_object_or_404(Atividades, ano=ano, componente=componente, tipo=tipo)
+    with transaction.atomic():
+        remover_atividades(obj)
+    messages.success(
+        request,
+        f"PDF das atividades de {_rotulo(componente, tipo)} removido. "
+        f"As revistas de {componente.codigo} deixam de mostrar o link.",
+    )
+    return _voltar_atividades(ano)
+
+
+@require_GET
+@login_required
+def atividades_baixar(request, ano, cc, tipo):
+    if not request.user.has_perm("nucleo.view_atividades"):
+        raise PermissionDenied
+    ano, componente = _alvo(ano, cc, tipo)
+    obj = get_object_or_404(Atividades, ano=ano, componente=componente, tipo=tipo)
+    try:
+        arquivo = default_storage.open(obj.arquivo)
+    except FileNotFoundError:
+        raise Http404
+    return servir(arquivo, "application/pdf", sandbox=False, as_attachment=True, filename=f"atividades-{cc.lower()}-{tipo}.pdf")
 
 
 def esqueleto(fasciculo):
@@ -271,4 +379,7 @@ urlpatterns = [
     path("<int:ano>/novo/", novo, name="ui_templates_novo"),
     path("editar/<int:pk>/", editar, name="ui_templates_editar"),
     path("editar/<int:pk>/previa/", previa_ao_vivo, name="ui_templates_previa"),
+    path("<int:ano>/atividades/<str:cc>/<str:tipo>/", atividades_enviar, name="ui_templates_atividades"),
+    path("<int:ano>/atividades/<str:cc>/<str:tipo>/baixar/", atividades_baixar, name="ui_templates_atividades_baixar"),
+    path("<int:ano>/atividades/<str:cc>/<str:tipo>/remover/", atividades_remover, name="ui_templates_atividades_remover"),
 ]

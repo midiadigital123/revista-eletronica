@@ -7,7 +7,8 @@ sandbox (D-145). Capa sumida do storage = 404. Infográfico inexistente = 404.
 O item da tarefa sai em `arquivos/itens/<nome>` (o caminho relativo que o JS do F1 abre, como
 no zip; também sob `f1/`, onde a página do F1 está): só um item de tarefa da matriz e do
 componente da revista (D-180). A imagem do item do infográfico sai em `arquivos/infograficos/<nome>`:
-só de um item da própria revista, png, jpg ou webp (D-245).
+só de um item da própria revista, png, jpg ou webp (D-245). O PDF das atividades do F2 (D-308) sai em
+`arquivos/atividades-<tipo>.pdf`, como download: o do ano × componente da revista.
 """
 
 from pathlib import PurePosixPath
@@ -23,6 +24,7 @@ from django.views.decorators.http import require_GET
 
 from nucleo.models import Revista, RevistaInfograficoItem
 from nucleo.servicos import resolver
+from nucleo.servicos.arquivos import atividades_da_revista
 from nucleo.servicos.etapa_projeto import tarefas_da_revista
 from nucleo.servicos.html import PAGINAS_F2, TIPO_DA_PAGINA, contexto_pagina, template
 
@@ -54,6 +56,7 @@ def _pagina(request, revista_id, slug):
         revista, slug, preview=True, estaticos=static("revista/"),
         capa=reverse("preview_capa", args=[pk]) if revista.capa else None,
         link=link, base_imagens=f"{raiz}arquivos/infograficos/",
+        atividades={t: f"{raiz}arquivos/atividades-{t}.pdf" for t in atividades_da_revista(revista)},
     )  # fmt: skip
     if contexto is None:
         raise Http404
@@ -90,8 +93,8 @@ def capa(request, revista_id):
     return servir(arquivo, tipo)
 
 
-def servir(arquivo, tipo, sandbox=True, as_attachment=False):
-    resposta = FileResponse(arquivo, content_type=tipo, as_attachment=as_attachment)
+def servir(arquivo, tipo, sandbox=True, as_attachment=False, filename=""):
+    resposta = FileResponse(arquivo, content_type=tipo, as_attachment=as_attachment, filename=filename)
     resposta["X-Content-Type-Options"] = "nosniff"
     resposta["Cache-Control"] = "private, no-store"
     # sandbox no PDF impede o visualizador do Chrome de abrir; o PDF só pode ir num frame da origem.
@@ -142,6 +145,18 @@ def imagem_infografico(request, revista_id, nome):
     return servir(arquivo, tipo)
 
 
+@protegida
+def atividades(request, revista_id, tipo):
+    caminho = atividades_da_revista(get_object_or_404(Revista, pk=revista_id)).get(tipo)
+    if caminho is None:
+        raise Http404
+    try:
+        arquivo = default_storage.open(caminho)
+    except FileNotFoundError:
+        raise Http404
+    return servir(arquivo, "application/pdf", sandbox=False, as_attachment=True, filename=f"atividades-{tipo}.pdf")
+
+
 urlpatterns = [
     path("<int:revista_id>/", pagina, name="preview"),
     path("<int:revista_id>/f1/", pagina_f1, name="preview_f1"),
@@ -150,4 +165,5 @@ urlpatterns = [
     path("<int:revista_id>/arquivos/itens/<str:nome>", item, name="preview_item"),
     path("<int:revista_id>/f1/arquivos/itens/<str:nome>", item),  # o caminho relativo visto de f1/
     path("<int:revista_id>/arquivos/infograficos/<str:nome>", imagem_infografico, name="preview_imagem_infografico"),
+    path("<int:revista_id>/arquivos/atividades-<str:tipo>.pdf", atividades, name="preview_atividades"),
 ]

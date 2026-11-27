@@ -36,12 +36,13 @@ class GruposNoBancoTest(TestCase):
 
     def test_so_apaga_o_previsto(self):
         """ProjetoPasso e ProjetoCor (0008), Tarefa e Descritor (D-181, 0014), o sem uso (D-205/D-207, 0016)
-        e o ano inteiro só no Admin (D-206); Impresso nada."""
+        o PDF das atividades (D-309) e o ano inteiro só no Admin (D-206); Impresso nada."""
         so_esses = {
             "nucleo.delete_projetopasso", "nucleo.delete_projetocor",
             "nucleo.delete_tarefa", "nucleo.delete_descritor",
             "nucleo.delete_parceiro", "nucleo.delete_etapa", "nucleo.delete_componente",
             "nucleo.delete_matriz", "nucleo.delete_template",
+            "nucleo.delete_atividades",  # D-309: remover o PDF (um novo envio repõe)
         }  # fmt: skip
         esperado = {"Impresso": set(), "Admin": so_esses | {"nucleo.delete_ano"}}
         for papel in PAPEIS:

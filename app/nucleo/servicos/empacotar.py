@@ -21,6 +21,7 @@ from django.core.files.storage import default_storage
 from django.template.loader import render_to_string
 
 from nucleo.models import RevistaInfograficoItem
+from nucleo.servicos.arquivos import atividades_da_revista
 from nucleo.servicos.etapa_projeto import tarefas_da_revista
 from nucleo.servicos.html import contexto_pagina, link_zip, paginas, template
 from nucleo.servicos.pendencias import Pendencia, pendencias
@@ -132,7 +133,10 @@ def zip_revista(revista):
         erros.append(Pendencia("zip_foto", "A capa mudou depois da foto de arquivamento; o zip não bateria com o texto."))
     itens = _itens(revista, resolvido, erros)
     imagens = _imagens(revista, resolvido, erros)
-    ausentes = [c for c in (revista.capa, *itens.values(), *imagens.values()) if not default_storage.exists(c)]
+    atividades = atividades_da_revista(revista)
+    ausentes = [
+        c for c in (revista.capa, *itens.values(), *imagens.values(), *atividades.values()) if not default_storage.exists(c)
+    ]
     erros.extend(Pendencia("zip_arquivo", f"Arquivo ausente no storage: {c}.") for c in ausentes)
     if erros:
         raise Pendente(erros)
@@ -142,7 +146,8 @@ def zip_revista(revista):
     for slug, _ in paginas(resolvido):
         # O mesmo `resolvido` das pendências: resolver de novo por página misturaria estados (revista editada no meio).
         ctx = contexto_pagina(revista, slug, preview=False, estaticos="revista/", capa=capa, link=link_zip,
-                              base_imagens="arquivos/infograficos/", resolvido=resolvido)  # fmt: skip
+                              base_imagens="arquivos/infograficos/", resolvido=resolvido,
+                              atividades={t: f"arquivos/atividades-{t}.pdf" for t in atividades})  # fmt: skip
         if ctx is None:
             raise Pendente([Pendencia("zip_pagina", f"A página {slug} não tem infográfico.")])
         html[link_zip(slug)] = render_to_string(template(slug), ctx)
@@ -160,4 +165,6 @@ def zip_revista(revista):
             _copiar(z, f"arquivos/itens/{nome}", default_storage.open(caminho))
         for nome, caminho in sorted(imagens.items()):
             _copiar(z, f"arquivos/infograficos/{nome}", default_storage.open(caminho))
+        for tipo, caminho in sorted(atividades.items()):
+            _copiar(z, f"arquivos/atividades-{tipo}.pdf", default_storage.open(caminho))
     return nome_zip(revista), saida.getvalue()

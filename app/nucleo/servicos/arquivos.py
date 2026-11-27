@@ -1,5 +1,5 @@
-"""Upload da capa da revista (S09; D-118, D-125), da imagem do item do infográfico e do arquivo
-do item da tarefa (D-180, D-181)."""
+"""Upload da capa da revista (S09; D-118, D-125), da imagem do item do infográfico, do arquivo
+do item da tarefa (D-180, D-181) e do PDF das atividades do F2 (D-308)."""
 
 import hashlib
 import uuid
@@ -11,11 +11,12 @@ from django.db import transaction
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 
-from nucleo.models import Tarefa
+from nucleo.models import Atividades, Tarefa
 
 MB = 1024 * 1024
 CAPA_MAX = 5 * MB
 ITEM_MAX = 5 * MB
+ATIVIDADES_MAX = 20 * MB  # PDF editorado, com imagens
 ITEM_MIMES = {"pdf": "application/pdf", "png": "image/png", "jpg": "image/jpeg"}  # contrato/schemas.ts
 
 
@@ -133,3 +134,38 @@ def apagar_item_orfao(caminho):
 def _tarefa_excluida(sender, instance, **kwargs):
     """Qualquer exclusão de tarefa (pela tela, em cascata do descritor, na reimportação)."""
     apagar_item_orfao(instance.arquivo)
+
+
+# --- PDF das atividades do F2 (D-308) ---------------------------------------------
+
+
+def receber_atividades(ano, componente, tipo, arquivo):
+    """Grava o PDF das atividades de ano × componente × tipo (só PDF, até 20 MB, tipo pelos bytes) e o sha256.
+    Já existindo, troca o arquivo; o antigo sai no commit."""
+    dados = _ler(arquivo, ATIVIDADES_MAX, "PDF das atividades")
+    if not dados.startswith(b"%PDF-"):
+        _erro("As atividades precisam ser um arquivo PDF.")
+    obj = Atividades.objects.filter(ano=ano, componente=componente, tipo=tipo).first()
+    obj = obj or Atividades(ano=ano, componente=componente, tipo=tipo)
+    antigo = obj.arquivo
+    obj.arquivo = _gravar("atividades", "pdf", dados)
+    obj.arquivo_sha256 = hashlib.sha256(dados).hexdigest()
+    _salvar(obj, ["arquivo", "arquivo_sha256"], obj.arquivo, antigo)
+    return obj
+
+
+def remover_atividades(obj):
+    """Inversa de receber_atividades: apaga o registro; o arquivo sai do storage no commit."""
+    caminho = obj.arquivo
+    obj.delete()
+    transaction.on_commit(lambda: default_storage.delete(caminho))
+
+
+def atividades_da_revista(revista):
+    """{tipo: caminho no storage} dos PDFs de atividades do ano × componente da revista."""
+    # ponytail: lê o PDF vigente, também na revista arquivada (fora da foto, D-308); guardar o sha na foto se precisar.
+    return dict(
+        Atividades.objects.filter(ano_id=revista.ano_id, componente_id=revista.componente_id).values_list(
+            "tipo", "arquivo"
+        )
+    )

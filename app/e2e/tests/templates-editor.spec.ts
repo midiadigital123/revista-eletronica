@@ -1,5 +1,5 @@
 // Editor de template por seção (U9b) na tela B: o id da seção não é campo, uma seção por vez (o índice
-// troca), "{ } Variável" insere no campo focado, Salvar -> impacto -> versão nova. O F2 tem 9 seções fixas:
+// troca), "{ } Variável" insere no campo focado, Salvar -> impacto -> versão nova. O F2 tem 10 seções fixas:
 // sem "+ Adicionar passo" nem "Remover seção" (test_ui_templates.py::test_f2_nao_tem_secao_repetivel).
 // Cada execução cria o seu template ("E2E editor <sufixo>", F2 de LP de 2026) e, no fim, o exclui pelo
 // "Excluir template…" do editor (E4, D-207). O "Padrão" da demonstração só é aberto na página de excluir,

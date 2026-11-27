@@ -1,7 +1,7 @@
 """Converte o Word "Avaliação e Currículo" da Pedagógica no seed de um infográfico do F2 (D-298).
 
-Uso: python3 scripts/docx_infografico.py <docx> <alfa|outras> <pasta_saida>
-Gera <pasta_saida>/lp-<tipo>.json e lp-<tipo>-item-<n>.png. Os nomes dos campos são os de
+Uso: python3 scripts/docx_infografico.py <docx> [lp|mt] <alfa|outras> <pasta_saida>   (componente padrão: lp)
+Gera <pasta_saida>/<cc>-<tipo>.json e <cc>-<tipo>-item-<n>.png. Os nomes dos campos são os de
 `nucleo/infografico.py`; os textos ricos saem em Markdown (parágrafo e negrito, sem título #).
 Para com erro se o Word fugir do formato esperado (12 etapas, marcas iguais nas duas tabelas,
 4 itens com imagem e análise, 3 textos de clique). Pillow só para empilhar item com 2 imagens.
@@ -135,7 +135,7 @@ def converter(docx, tipo):
         achado = re.match(r"^(\S+)\s*[–-]\s*(.+)$", p)
         if not achado or achado[2] not in POR_ROTULO:
             break
-        itens.append({"posicao": len(itens) + 1, "etapa": POR_ROTULO[achado[2]], "descritor": achado[1]})
+        itens.append({"posicao": len(itens) + 1, "etapa": POR_ROTULO[achado[2]], "descritor": achado[1], "habilidade": ""})
     if len(itens) != 4:
         erro(f"esperava 4 itens na lista do ❹, achei {len(itens)}")
 
@@ -192,6 +192,99 @@ def converter(docx, tipo):
     return seed, imagens
 
 
+def converter_mt(docx, tipo):
+    """Word "Currículo e Avaliação" de MT (D-311): um "TEXTO DO CLIQUE:" por passo, descrição só até onde a
+    BNCC tem habilidade (as etapas seguintes ficam só com a marca da progressão) e itens por nível (D-305)."""
+    z, blocos = ler(docx)
+    tabelas = [b[1] for b in blocos if b[0] == "tbl"]
+    paras = [b[1:] for b in blocos if b[0] == "p"]
+    puros = [p[0] for p in paras]
+    if len(tabelas) != 2:
+        erro(f"esperava 2 tabelas (progressão e descrição), achei {len(tabelas)}")
+
+    # Progressão (1ª tabela): linha 1 = etapas, linha 2 = marcas.
+    cab, marcas = [c[0] for c in tabelas[0][0]], [c[0] for c in tabelas[0][1]]
+    if cab != list(ETAPAS):
+        erro(f"tabela de progressão com etapas {cab}")
+    etapas = {e: {"marca": m, "codigo": "", "texto": "", "junta_marca": False, "junta_habilidade": False}
+              for e, m in zip(cab, marcas)}  # fmt: skip
+
+    # Descrição (2ª tabela): etapa | marca | (código) texto; pode parar antes do 3EM e ter célula vazia.
+    for linha in tabelas[1]:
+        if len(linha) != 3:
+            erro(f"linha da tabela de descrição com {len(linha)} células: {linha}")
+        (etapa, _), (m, _), (ct, _) = linha
+        if etapa not in ETAPAS:
+            erro(f"etapa desconhecida na tabela de descrição: {etapa!r}")
+        if m != etapas[etapa]["marca"]:
+            erro(f"{etapa}: marca {m} na descrição e {etapas[etapa]['marca']} na progressão")
+        if ct:
+            achado = CODIGO.match(ct)
+            if not achado:
+                erro(f"{etapa}: célula sem '(código) texto': {ct[:40]!r}")
+            # Dois códigos na célula (6EF): o 1º vai para o campo, o 2º fica no texto como no Word.
+            etapas[etapa].update(codigo=achado[1], texto=re.sub(r"\.\(", ". (", achado[2].strip()))
+
+    habilidade = next((p.split(":", 1)[1].strip() for p in puros if re.match(r"^❶\s*Descritor:", p)), "")
+    if not habilidade:
+        erro("falta '❶ Descritor: …' (habilidade destacada)")
+
+    # Textos dos cliques: cada "TEXTO DO CLIQUE:" vai até o próximo título numerado (❷ ❸ ❹) ou "LEGENDA:".
+    cliques = [i for i, p in enumerate(puros) if p.endswith("TEXTO DO CLIQUE:")]
+    textos = {}
+    for i, campo in zip(cliques, ("texto_descritor", "texto_progressao", "texto_habilidades")):
+        fim = next(j for j in range(i + 1, len(puros)) if puros[j][:1] in "❶❷❸❹" or puros[j] == "LEGENDA:")
+        textos[campo] = "\n\n".join(paras[j][1] for j in range(i + 1, fim))
+        if not textos[campo]:
+            erro(f"texto do clique vazio: {campo}")
+    if len(textos) != 3:
+        erro(f"esperava 3 textos de clique antes do ❹, achei {len(textos)}")
+
+    # Lista do ❹ (1º "❹ TAREFAS"): "1 – <habilidade do item>".
+    tarefas = [i for i, p in enumerate(puros) if re.match(r"^❹\s*TAREFAS", p)]
+    if len(tarefas) != 2:
+        erro(f"esperava 2 títulos '❹ TAREFAS', achei {len(tarefas)}")
+    itens = []
+    for p in puros[tarefas[0] + 1 :]:
+        achado = re.match(r"^(\d)\s*[–-]\s*(.+)$", p)
+        if not achado:
+            break
+        n = int(achado[1])
+        itens.append({"posicao": n, "etapa": "", "descritor": "", "habilidade": achado[2],
+                      "texto_alternativo": f"Item do nível {n}: {achado[2]}"})  # fmt: skip
+    if [i["posicao"] for i in itens] != [1, 2, 3, 4]:
+        erro(f"esperava os níveis 1 a 4 na lista do ❹, achei {[i['posicao'] for i in itens]}")
+
+    # Itens (2º "❹ TAREFAS"): "N (M…)" (código do design, ignorado), imagem, análise; até "AGORA É COM VOCÊ".
+    blocos_item, atual = {}, None
+    for puro, md, imgs in paras[tarefas[1] + 1 :]:
+        if puro.replace(" ", "").upper().startswith("AGORAÉCOMVOCÊ"):
+            break  # fechamento: é texto do template F2
+        if achado := re.match(r"^(\d)\s*\(M\w+\)$", puro):
+            atual = blocos_item.setdefault(int(achado[1]), {"imgs": [], "analise": []})
+            atual["imgs"] += imgs
+        elif atual is None:
+            continue
+        elif imgs:
+            atual["imgs"] += imgs
+        elif puro:
+            atual["analise"].append(md)
+    imagens = {}
+    for item in itens:
+        bloco = blocos_item.get(item["posicao"])
+        if not bloco or not bloco["imgs"] or not bloco["analise"]:
+            erro(f"item {item['posicao']} sem imagem ou sem análise")
+        item["analise"] = "\n\n".join(bloco["analise"])
+        item["imagem"] = f"mt-{tipo}-item-{item['posicao']}.png"
+        imagens[item["imagem"]] = [z.read(n) for n in bloco["imgs"]]
+
+    seed = {
+        "fonte": Path(docx).name, "componente": "MT", "tipo": tipo, "habilidade": habilidade,
+        **textos, "etapas": etapas, "itens": itens,
+    }  # fmt: skip
+    return seed, imagens
+
+
 def png(partes):
     """Uma imagem PNG; com mais de uma parte, empilhadas na ordem do Word, fundo branco (D-232)."""
     if len(partes) == 1 and partes[0][:8] == b"\x89PNG\r\n\x1a\n":
@@ -210,16 +303,19 @@ def png(partes):
 
 
 def main():
-    if len(sys.argv) != 4 or sys.argv[2] not in ("alfa", "outras"):
+    args = sys.argv[1:]
+    if len(args) == 3:
+        args.insert(1, "lp")
+    if len(args) != 4 or args[1] not in ("lp", "mt") or args[2] not in ("alfa", "outras"):
         sys.exit(__doc__)
-    docx, tipo, pasta = sys.argv[1], sys.argv[2], Path(sys.argv[3])
-    seed, imagens = converter(docx, tipo)
+    docx, cc, tipo, pasta = args[0], args[1], args[2], Path(args[3])
+    seed, imagens = (converter_mt if cc == "mt" else converter)(docx, tipo)
     pasta.mkdir(parents=True, exist_ok=True)
     for nome, partes in imagens.items():
         (pasta / nome).write_bytes(png(partes))
-    (pasta / f"lp-{tipo}.json").write_text(json.dumps(seed, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    (pasta / f"{cc}-{tipo}.json").write_text(json.dumps(seed, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     juntadas = [n for n, p in imagens.items() if len(p) > 1]
-    print(f"lp-{tipo}.json: {len(seed['etapas'])} etapas, {len(seed['itens'])} itens; imagens juntadas: {juntadas or 'nenhuma'}")
+    print(f"{cc}-{tipo}.json: {len(seed['etapas'])} etapas, {len(seed['itens'])} itens; imagens juntadas: {juntadas or 'nenhuma'}")
 
 
 if __name__ == "__main__":

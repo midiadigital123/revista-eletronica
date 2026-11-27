@@ -38,6 +38,7 @@ erDiagram
 
     componente ||--o{ template : ""
     template ||--|{ template_versao : "versões"
+    componente ||--o{ atividades : "PDF por tipo"
 
     parceiro_ano ||--o{ projeto : "gera em cascata"
     projeto ||--o{ projeto_passo : sobrescreve
@@ -132,6 +133,13 @@ erDiagram
         text texto "Markdown restrito + variáveis, com seções ##"
         timestamptz criada_em
         bigint criada_por FK "nulo no seed e no comando abrir_ano"
+    }
+    atividades {
+        bigint ano_id FK
+        bigint componente_id FK
+        text tipo "CHECK alfa ou outras"
+        text arquivo "caminho do PDF no storage"
+        text arquivo_sha256
     }
     corte {
         bigint parceiro_ano_id FK
@@ -253,6 +261,7 @@ Fonte: `Meta.constraints` de cada modelo em `app/nucleo/models/` e `app/nucleo/d
 | revista_secao | UNIQUE (revista_fasciculo_id, secao); FK composta (revista_fasciculo_id, template_id) → revista_fasciculo (id, template_id); FK composta (template_versao_id, template_id) → template_versao (id, template_id); secao <= 100 | D-104, D-115 |
 | foto_revista | CHECK motivo IN ('impresso','arquivamento'); sha256 em hash; índice `foto_revista_ultima_idx` (revista_id, motivo, criada_em DESC) | D-077, D-097 |
 | bloqueio | CHECK num_nonnulls(matriz_etapa_cc_id, projeto_id, template_id) = 1; UNIQUE parcial em cada alvo (WHERE alvo IS NOT NULL); sessao_edicao <= 100 | D-081, D-109 |
+| atividades | UNIQUE (ano_id, componente_id, tipo); CHECK tipo em (alfa, outras); arquivo_sha256 com 64 hex; arquivo <= 500; FK composta (componente_id, ano_id) → componente (id, ano_id). PDF das atividades do F2, fora do hash do Validado | D-308 |
 | histórico | `django-simple-history` em todos os modelos, **exceto** `bloqueio` (efêmero) e `template_versao` (já é histórico) | D-082, D-125 |
 
 **Por que a FK composta de revista_secao resolve a troca de template:** a cópia carrega o `template_id`. Trocar o template de um revista_fasciculo com cópias é recusado pelo banco (NO ACTION) até o serviço apagar as cópias, e esse é exatamente o passo que pede "confirmação forte" (D-104). A cópia também não consegue apontar para a versão de outro template.
@@ -269,6 +278,7 @@ O ORM não as declara. Cada uma entra por `migrations.RunSQL` com `reverse_sql`,
 | projeto | `fk_projeto_parceiro_ano_ano` |
 | projeto_passo | `fk_projeto_passo_projeto_ano`, `_etapa_ano`, `_componente_ano` |
 | template | `fk_template_componente_ano` |
+| atividades | `fk_atividades_componente_ano` |
 | revista | `fk_revista_projeto_ano`, `fk_revista_componente_ano` |
 | revista_fasciculo | `fk_revista_fasciculo_revista_ano` (revista, ano, componente); `fk_revista_fasciculo_template_ano` (template, ano, componente, fascículo) |
 | revista_secao | `fk_revista_secao_fasciculo_template`; `fk_revista_secao_versao_template` |

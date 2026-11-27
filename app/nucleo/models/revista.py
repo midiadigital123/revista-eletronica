@@ -229,6 +229,29 @@ class RevistaInfograficoItem(models.Model):
         ]
 
 
+class Atividades(models.Model):
+    """PDF das atividades do F2 (D-308): um por ano × componente × tipo do infográfico, o mesmo para todos os
+    parceiros. A página do infográfico desse tipo mostra "Acesse aqui as atividades" quando ele existe.
+    Fora do hash do Validado: o PDF chega editorado e aprovado."""
+
+    ano = models.ForeignKey(Ano, on_delete=models.PROTECT)
+    componente = models.ForeignKey(Componente, on_delete=models.PROTECT)
+    tipo = models.TextField(choices=TipoInfografico.choices)
+    arquivo = models.TextField()  # caminho no storage
+    arquivo_sha256 = models.TextField()
+    history = HistoricalRecords()
+
+    class Meta:
+        db_table = "atividades"
+        verbose_name_plural = "atividades"
+        constraints = [
+            models.UniqueConstraint(fields=["ano", "componente", "tipo"], name="atividades_uniq"),
+            models.CheckConstraint(condition=Q(tipo__in=TipoInfografico.values), name="atividades_tipo"),
+            sha256("atividades", "arquivo_sha256"),
+            max_len("atividades", "arquivo", 500),
+        ]
+
+
 class Motivo(models.TextChoices):
     IMPRESSO = "impresso"
     ARQUIVAMENTO = "arquivamento"
