@@ -379,7 +379,12 @@ class RevistaUiTest(Base):
         self.assertContains(r, f'name="inf-{inf.pk}-habilidade"')
         for passo in ("habilidades", "progressao", "tarefas"):
             self.assertContains(r, f'name="inf-{inf.pk}-passo-{passo}" checked')
-        self.assertContains(r, f'name="inf-{inf.pk}-etapa-', count=36)  # 12 etapas × marca, código, texto
+        self.assertContains(r, f'name="inf-{inf.pk}-etapa-', count=36 + 22)  # 12 × marca, código, texto; 11 × 2 junta (1EF não)
+        self.assertNotContains(r, f'name="inf-{inf.pk}-etapa-1EF-junta_marca"')
+        self.assertContains(r, 'aria-label="Juntar a marca de 1EF e 2EF"')  # D-303: elo entre as etapas
+        # data-linha é do autosave (linha nova): na grade, o checkbox vira "linha" sem campos e o status fica em "Salvando…".
+        cartao = r.content.decode().split('id="infograficos"')[1].split("</section>")[0]
+        self.assertNotIn("data-linha=", cartao)
         self.assertContains(r, f'name="inf-{inf.pk}-etapa-1EF-marca" aria-label="Marca: 1º ano do Ensino Fundamental"')
         self.assertContains(r, '<option value="A" selected>Aprofundar</option>', count=1)
         self.assertContains(r, 'value="EF15LP18"')

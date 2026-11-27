@@ -33,7 +33,7 @@ from django.urls import path, reverse
 from django.views.decorators.http import require_GET, require_http_methods
 
 from nucleo.contexto import ano_da_sessao
-from nucleo.infografico import familia, form_do_campo
+from nucleo.infografico import familia, form_do_campo, grade_referencial
 from nucleo.models import Ano, Revista, RevistaFasciculo, RevistaInfografico
 from nucleo.models.revista import EtapaReferencial, Marca
 from nucleo.revista import (
@@ -221,6 +221,7 @@ def _contexto(request, revista, chave=None, form=None):
         "capa_tamanho": _tamanho(revista.capa), "capa_max": arquivos.CAPA_MAX,
         "infograficos": _infograficos(revista), "item_max": arquivos.ITEM_MAX, "passos_infografico": PASSOS_INFOGRAFICO,
         "marcas": Marca.choices, "etapas_referencial": EtapaReferencial.choices,
+        "colunas_referencial": (("marca", "a marca"), ("habilidade", "a habilidade")),  # elos da grade (D-303)
         "pode_infograficos": request.pode_gravar and request.user.has_perms(PERMS_INFOGRAFICO_TODAS),
         # U5: o nome do projeto se edita só no Projeto; aqui fica o link "Editar no projeto".
         "pode_nome": request.pode_gravar and request.user.has_perm("nucleo.change_projeto"),
@@ -264,7 +265,7 @@ def _infograficos(revista):
         itens = {i.posicao: i for i in inf.revistainfograficoitem_set.all()}
         for i in itens.values():
             i.nome_imagem = PurePosixPath(i.imagem).name if i.imagem else ""
-        inf.grade = [(valor, rotulo, etapas.get(valor)) for valor, rotulo in EtapaReferencial.choices]
+        inf.grade = grade_referencial(etapas)
         inf.itens = [(p, itens.get(p)) for p in range(1, 5)]
     return infos
 

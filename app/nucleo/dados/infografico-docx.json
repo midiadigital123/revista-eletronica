@@ -8,73 +8,97 @@
       "etapa": "1EF",
       "marca": "I",
       "codigo": "EF15LP18",
-      "texto": "Relacionar texto com ilustrações e outros recursos gráficos."
+      "texto": "Relacionar texto com ilustrações e outros recursos gráficos.",
+      "junta_marca": false,
+      "junta_habilidade": false
     },
     {
       "etapa": "2EF",
       "marca": "I",
       "codigo": "",
-      "texto": ""
+      "texto": "",
+      "junta_marca": false,
+      "junta_habilidade": true
     },
     {
       "etapa": "3EF",
       "marca": "A",
       "codigo": "EF15LP04",
-      "texto": "Identificar o efeito de sentido produzido pelo uso de recursos expressivos gráfico-visuais em textos multissemióticos."
+      "texto": "Identificar o efeito de sentido produzido pelo uso de recursos expressivos gráfico-visuais em textos multissemióticos.",
+      "junta_marca": false,
+      "junta_habilidade": false
     },
     {
       "etapa": "4EF",
       "marca": "A",
       "codigo": "",
-      "texto": ""
+      "texto": "",
+      "junta_marca": false,
+      "junta_habilidade": true
     },
     {
       "etapa": "5EF",
       "marca": "C",
       "codigo": "",
-      "texto": ""
+      "texto": "",
+      "junta_marca": false,
+      "junta_habilidade": true
     },
     {
       "etapa": "6EF",
       "marca": "A",
       "codigo": "EF69LP03",
-      "texto": "Identificar, em notícias, o fato central, suas principais circunstâncias e eventuais decorrências; em reportagens e fotorreportagens o fato ou a temática retratada e a perspectiva de abordagem, em entrevistas os principais temas/subtemas abordados, explicações dadas ou teses defendidas em relação a esses subtemas; em tirinhas, memes, charge, a crítica, ironia ou humor presente."
+      "texto": "Identificar, em notícias, o fato central, suas principais circunstâncias e eventuais decorrências; em reportagens e fotorreportagens o fato ou a temática retratada e a perspectiva de abordagem, em entrevistas os principais temas/subtemas abordados, explicações dadas ou teses defendidas em relação a esses subtemas; em tirinhas, memes, charge, a crítica, ironia ou humor presente.",
+      "junta_marca": false,
+      "junta_habilidade": false
     },
     {
       "etapa": "7EF",
       "marca": "A",
       "codigo": "",
-      "texto": ""
+      "texto": "",
+      "junta_marca": true,
+      "junta_habilidade": true
     },
     {
       "etapa": "8EF",
       "marca": "A",
       "codigo": "EF69LP05",
-      "texto": "Inferir e justificar, em textos multissemióticos – tirinhas, charges, memes, gifs etc. –, o efeito de humor, ironia e/ou crítica pelo uso ambíguo de palavras, expressões ou imagens ambíguas, de clichês, de recursos iconográficos, de pontuação etc."
+      "texto": "Inferir e justificar, em textos multissemióticos – tirinhas, charges, memes, gifs etc. –, o efeito de humor, ironia e/ou crítica pelo uso ambíguo de palavras, expressões ou imagens ambíguas, de clichês, de recursos iconográficos, de pontuação etc.",
+      "junta_marca": false,
+      "junta_habilidade": false
     },
     {
       "etapa": "9EF",
       "marca": "A",
       "codigo": "",
-      "texto": ""
+      "texto": "",
+      "junta_marca": true,
+      "junta_habilidade": true
     },
     {
       "etapa": "1EM",
       "marca": "A",
       "codigo": "EM13LP44",
-      "texto": "Analisar formas contemporâneas de publicidade em contexto digital (advergame, anúncios em vídeos, social advertising, unboxing, narrativa mercadológica, entre outras), e peças de campanhas publicitárias e políticas (cartazes, folhetos, anúncios, propagandas em diferentes mídias, spots, jingles etc.), identificando valores e representações de situações, grupos e configurações sociais veiculadas, desconstruindo estereótipos, destacando estratégias de engajamento e viralização e explicando os mecanismos de persuasão utilizados e os efeitos de sentido provocados pelas escolhas feitas em termos de elementos e recursos linguístico-discursivos, imagéticos, sonoros, gestuais e espaciais, entre outros."
+      "texto": "Analisar formas contemporâneas de publicidade em contexto digital (advergame, anúncios em vídeos, social advertising, unboxing, narrativa mercadológica, entre outras), e peças de campanhas publicitárias e políticas (cartazes, folhetos, anúncios, propagandas em diferentes mídias, spots, jingles etc.), identificando valores e representações de situações, grupos e configurações sociais veiculadas, desconstruindo estereótipos, destacando estratégias de engajamento e viralização e explicando os mecanismos de persuasão utilizados e os efeitos de sentido provocados pelas escolhas feitas em termos de elementos e recursos linguístico-discursivos, imagéticos, sonoros, gestuais e espaciais, entre outros.",
+      "junta_marca": false,
+      "junta_habilidade": false
     },
     {
       "etapa": "2EM",
       "marca": "A",
       "codigo": "",
-      "texto": ""
+      "texto": "",
+      "junta_marca": true,
+      "junta_habilidade": true
     },
     {
       "etapa": "3EM",
       "marca": "A",
       "codigo": "",
-      "texto": ""
+      "texto": "",
+      "junta_marca": true,
+      "junta_habilidade": true
     }
   ],
   "itens": [

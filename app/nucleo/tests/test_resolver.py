@@ -512,6 +512,24 @@ class ResolverTest(TestCase):
         RevistaInfografico.objects.filter(pk=inf.pk).update(passos_desligados=["habilidades", "progressao"])
         self.assertEqual(resolver(recarregar(lp))["f2"]["infograficos"][0]["etapas"], [])
 
+    def test_junta_herda_a_marca_e_esvazia_a_habilidade(self):  # D-301
+        lp = self.go["LP"]
+        preencher_infograficos(lp)  # 5EF (I) e 9EF (A), com código e texto
+        inf = RevistaInfografico.objects.filter(revista=lp).first()
+        antes = resolver(recarregar(lp))["f2"]["infograficos"][0]["etapas"]
+        self.assertTrue(all("junta_marca" not in e and "junta_habilidade" not in e for e in antes))  # o hash de antes fica
+        novas = {"1EF": {"marca": "C", "junta_marca": True},  # 1EF não junta
+                 "6EF": {"marca": "R", "codigo": "X", "junta_marca": True, "junta_habilidade": True},
+                 "1EM": {"junta_marca": True}}
+        for etapa, campos in novas.items():
+            RevistaInfograficoEtapa.objects.create(infografico=inf, ano_id=inf.ano_id, etapa=etapa, **campos)
+        etapas = {e["etapa"]: e for e in resolver(recarregar(lp))["f2"]["infograficos"][0]["etapas"]}
+        self.assertEqual(etapas["1EF"]["marca"], "C")
+        self.assertNotIn("junta_marca", etapas["1EF"])
+        self.assertEqual(etapas["6EF"], {"etapa": "6EF", "rotulo": "6º ano do Ensino Fundamental", "marca": "I",
+                                         "codigo": "", "texto": "", "junta_marca": True, "junta_habilidade": True})
+        self.assertEqual(etapas["1EM"]["marca"], "A")  # a do 9EF, logo acima
+
     def test_infografico_arquivado_fica_de_fora(self):
         lp = self.go["LP"]
         RevistaInfografico.objects.create(revista=lp, componente=self.lp, ano=self.ano, tipo="alfa", arquivado_em="2026-10-29T12:00:00Z")

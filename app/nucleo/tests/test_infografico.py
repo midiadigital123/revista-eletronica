@@ -1,11 +1,12 @@
 import hashlib
+from importlib import import_module
 
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils import timezone
 
-from nucleo.infografico import form_do_campo
+from nucleo.infografico import form_do_campo, grade_referencial
 from nucleo.models import (
     Ano,
     Componente,
@@ -71,6 +72,30 @@ class FormDoCampoTest(MediaTemporaria, TestCase):
         self.gravar("etapa-5EF-marca", "")  # vazio = sem marca
         linha.refresh_from_db()
         self.assertEqual((linha.marca, linha.codigo), ("", "EF15LP18"))
+
+    def test_junta_com_a_de_cima(self):  # D-301: checkbox do autosave, "on" ou vazio
+        self.gravar("etapa-2EM-junta_marca", "on")
+        self.gravar("etapa-2EM-junta_habilidade", "on")
+        linha = RevistaInfograficoEtapa.objects.get(infografico=self.inf, etapa="2EM")
+        self.assertEqual((linha.junta_marca, linha.junta_habilidade), (True, True))
+        self.gravar("etapa-2EM-junta_marca", "")
+        linha.refresh_from_db()
+        self.assertEqual((linha.junta_marca, linha.junta_habilidade), (False, True))
+
+    def test_grade_referencial_spans(self):  # D-303: a mesma regra do referencial.js
+        from types import SimpleNamespace as L
+        etapas = {e: L(junta_marca=m, junta_habilidade=h) for e, m, h in
+                  (("1EF", True, True), ("2EF", True, False), ("3EF", True, True), ("1EM", False, True))}
+        grade = {l["etapa"]: l for l in grade_referencial(etapas)}
+        self.assertEqual([grade[e]["span_marca"] for e in ("1EF", "2EF", "3EF", "4EF")], [3, 0, 0, 1])  # 1EF não junta
+        self.assertEqual([grade[e]["span_habilidade"] for e in ("1EF", "2EF", "3EF", "9EF", "1EM")], [1, 2, 0, 2, 0])
+        self.assertEqual((grade["1EF"]["acima"], grade["2EF"]["acima"]), ("", "1EF"))
+
+    def test_migracao_liga_junta_onde_o_vazio_estendia(self):
+        juntas = import_module("nucleo.migrations.0029_infografico_junta").juntas
+        linhas = {"1EF": ("", ""), "2EF": ("C2", "T"), "3EF": ("", ""), "5EF": ("", "Só texto.")}
+        self.assertEqual(juntas(linhas), ["3EF", "4EF", "6EF", "7EF", "8EF", "9EF", "1EM", "2EM", "3EM"])
+        self.assertEqual(juntas({}), [])
 
     def test_item_cria_a_linha_e_grava(self):
         self.gravar("item-3-etapa", "9EF")
