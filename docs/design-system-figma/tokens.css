@@ -1,61 +1,59 @@
 /*
-  Tokens do Figma "Sistemas CAEd" (biblioteca UI Fundação CAEd), extraídos em 27/11/2026
-  com get_variable_defs nas 4 seções da página Telas – v1 (266:5193).
+  Tokens do Figma "Sistemas CAEd" sobre a biblioteca nova, extraídos em 27/11/2026 (v2, D-313)
+  com get_variable_defs nas 4 seções da página Telas – v1 (266:5193) e nos componentes da página Componentes (11:33).
   Nome do token = nome da variável no Figma, com "/" e "." trocados por "-" e em minúsculas.
   Nada aqui é usado pelo sistema ainda: é referência para a etapa 11 (K-048).
 */
 :root {
-  /* ── Cinzas globais (Global.Color.*) ── */
-  --global-color-black: #000000;
-  --global-color-grey-10: #141414;
-  --global-color-grey-20: #4d4d4d;
-  --global-color-grey-40: #666666;
-  --global-color-grey-50: #808080;
-  --global-color-grey-60: #cccccc;
-  --global-color-grey-80: #f0f0f0;
-  --global-color-grey-96: #fafafa;
-  --global-color-white: #ffffff;
-  --colors-gray-10: #333333;
-  --colors-gray-90: #f7f7f7;
+  /* ── Texto ── */
+  --color-text-primary: #141414;
+  --color-text-body: #333333;
+  --color-text-secondary: #4d4d4d;
+  --color-text-muted: #666666;
+  --color-text-tertiary: #808080;
+  --color-text-inverse: #fafafa;
 
-  /* ── Marca ── */
-  --colors-brand-amarelo-caed: #ffff00;
+  /* ── Superfície ── */
+  --color-surface-default: #fafafa;
+  --color-surface-raised: #ffffff;
+  --color-surface-muted: #f7f7f7;
+  --color-surface-subtle: #f0f0f0;
+  --color-surface-strong: #666666;
+  --color-surface-inverse: #141414;
+  --color-surface-brand-primary: #ffff00;
   --color-surface-brand-secondary: #fdea00;
 
-  /* ── Situação (texto sobre fundo claro) ── */
-  --colors-blue: #0731a8;
-  --colors-light-blue: #e0ecff;
-  --colors-green: #095e06;
-  --colors-light-green: #d4f8d3;
-  --colors-red: #9a0000;
-  --colors-light-red: #fbe5e5;
-
-  /* ── Semânticos de texto ── */
-  --color-text-primary: #141414;    /* = grey-10 */
-  --color-text-secondary: #4d4d4d;  /* = grey-20 */
-  --color-text-tertiary: #808080;   /* = grey-50 */
-  --color-text-invert: #fafafa;
-
-  /* ── Semânticos de superfície ── */
-  --color-surface-main: #fafafa;    /* fundo da página */
-  --color-surface-10: #141414;      /* tooltip */
-  --color-surface-30: #666666;
-  --color-surface-60: #f0f0f0;      /* trilho da barra de progresso */
-
-  /* ── Semânticos de borda ── */
-  --color-border-subtle: #cccccc;   /* cards, upload */
+  /* ── Borda ── */
+  --color-border-default: #cccccc;
+  --color-border-subtle: #cccccc;
   --color-border-medium: #666666;
-  --color-border-bd-10: #fdea00;    /* marca da seção ativa */
+  --color-border-bold: #141414;
+  --color-border-divider: #f0f0f0;
+
+  /* ── Ícone ── */
+  --color-icon-default: #000000;
+  --color-icon-body: #333333;
+  --color-icon-secondary: #4d4d4d;
+  --color-icon-subtle: #808080;
+  --color-icon-inverse: #ffffff;
+
+  /* ── Situação ── */
+  --color-feedback-info: #0731a8;
+  --color-feedback-info-subtle: #e0ecff;
+  --color-feedback-success: #095e06;
+  --color-feedback-success-subtle: #d4f8d3;
+  --color-feedback-danger: #9a0000;
+  --color-feedback-danger-subtle: #fbe5e5;
 
   /* ── Botão e menu ── */
-  --button-bg-color: #ffff00;        /* botão principal e botão-ícone do perfil */
-  --button-text-color: #141414;
-  --button-b2-border-color: #141414; /* botão de contorno */
-  --button-b3-border-color: #fdea00; /* sublinhado do item ativo do menu */
-  --menu-bg-color: #fafafa;
-  --menu-bg-color-hover: #f0f0f0;    /* também a borda da tabela */
+  --button-primary-bg: #ffff00;
+  --button-primary-text: #141414;
+  --button-tertiary-border: #fdea00;
+  --menu-bg: #fafafa;
+  --menu-bg-hover: #f0f0f0;
+  --menu-text: #141414;
 
-  /* ── Espaçamento (spacing/*) ── */
+  /* ── Espaçamento (spacing/*). 4xl e 5xl valem 32 no Figma: um dos dois deve estar errado ── */
   --spacing-none: 0px;
   --spacing-xs: 4px;
   --spacing-sm: 8px;
@@ -63,60 +61,97 @@
   --spacing-lg: 16px;
   --spacing-xl: 20px;
   --spacing-2xl: 24px;
-  --spacing-3xl: 32px;
-  --spacing-4xl: 56px;
-  --spacing-5xl: 80px;
-  --spacing-320: 320px;              /* largura máxima do tooltip */
+  --spacing-3xl: 28px;
+  --spacing-4xl: 32px;
+  --spacing-5xl: 32px;
+  --spacing-8xl: 56px;
+  --spacing-9xl: 80px;
 
-  /* ── Dimensões (dimension/*): escala de tamanhos fixos ── */
-  --dimension-1: 4px;
-  --dimension-2: 8px;
-  --dimension-3: 12px;
-  --dimension-4: 16px;
-  --dimension-5: 20px;
-  --dimension-6: 24px;
-  --dimension-7: 28px;
-  --dimension-9: 36px;               /* altura do botão e do botão-ícone */
-  --dimension-10: 40px;
-  --dimension-12: 48px;              /* respiro lateral do menu */
-  --dimension-17: 88px;              /* largura dos botões do modal */
-  --dimension-23: 144px;             /* filtro curto */
-  --dimension-24: 160px;
-  --dimension-25: 184px;             /* respiro lateral da página (1440 − 2×184 = 1072) */
-  --dimension-26: 224px;             /* coluna de lista (Impresso) */
-  --dimension-27: 344px;
-  --dimension-28: 364px;             /* filtro longo, select de template */
-  --dimension-29: 448px;             /* largura do modal */
+  /* ── Tamanhos (size/*) ── */
+  --size-icon-xs: 12px;
+  --size-icon-sm: 16px;
+  --size-icon-md: 20px;
+  --size-icon-lg: 24px;
+  --size-control-md: 36px;
+  --size-control-lg: 48px;
+  --size-field-sm: 144px;
+  --size-field-md: 224px;
+  --size-field-lg: 364px;
+  --size-field-xl: 448px;
 
-  /* ── Raios (radius/*) ── */
-  --radius-minimal: 8px;             /* botão, campo, caixa de aviso */
-  --radius-rounded: 20px;            /* card, tabela, modal, dropdown, status tag */
-  --radius-full: 999px;              /* botão-ícone, página da paginação, barra */
+  /* ── Raios ── */
+  --radius-minimal: 8px;
+  --radius-rounded: 20px;
+  --radius-full: 999px;
 
-  /* ── Sombra (efeito FG) ── */
+  /* ── Sombra (efeito FG): modal, dropdown, menu ── */
   --fg: 0 2px 10px 0 rgba(82, 82, 82, 0.1);
 
   /* ── Tipografia ── */
-  /* ponytail: Proxima Nova é paga e não está no repositório; até o time decidir a licença, cai na Inter. */
-  --font-family: "Proxima Nova", "Inter Variable", Inter, ui-sans-serif, system-ui, sans-serif;
-  --typography-size-sm: 13px;
+  /* Montserrat é livre (OFL), mas não está no repositório: estas páginas caem na Inter. Baixar é decisão da K-048. */
+  --typography-family-heading: Montserrat, "Inter Variable", Inter, ui-sans-serif, system-ui, sans-serif;
+  --typography-family-body: Montserrat, "Inter Variable", Inter, ui-sans-serif, system-ui, sans-serif;
+  --typography-size-caption: 12px;
+  --typography-size-label: 13px;
+  --typography-size-body-sm: 14px;
   --typography-size-body: 16px;
-  --typography-size-h6: 16px;
-  --typography-size-h4: 24px;
-  --typography-size-h3: 32px;
-  --typography-size-h1: 48px;
+  --typography-size-body-lg: 20px;
+  --typography-size-heading-4: 24px;
+  --typography-size-heading-3: 32px;
+  --typography-size-heading-1: 48px;
+  --typography-weight-regular: 400;
+  --typography-weight-medium: 500;
+  --typography-weight-semibold: 600;
+  --typography-weight-bold: 700;
+
+  /* ── Legado: variáveis da biblioteca antiga que ainda aparecem dentro de componentes.
+     Cada uma aponta para a nova equivalente; não use em código novo. ── */
+  --global-color-black: var(--color-icon-default); /* #000000 */
+  --black-100: var(--color-icon-default); /* #000000 */
+  --global-color-grey-10: var(--color-text-primary); /* #141414 */
+  --global-color-grey-20: var(--color-text-secondary); /* #4d4d4d */
+  --global-color-grey-40: var(--color-text-muted); /* #666666 */
+  --global-color-grey-50: var(--color-text-tertiary); /* #808080 */
+  --global-color-grey-60: var(--color-border-default); /* #cccccc */
+  --global-color-grey-80: var(--color-surface-subtle); /* #f0f0f0 */
+  --global-color-white: var(--color-surface-raised); /* #ffffff */
+  --colors-gray-10: var(--color-text-body); /* #333333 */
+  --colors-gray-90: var(--color-surface-muted); /* #f7f7f7 */
+  --colors-blue: var(--color-feedback-info); /* #0731a8 */
+  --colors-green: var(--color-feedback-success); /* #095e06 */
+  --colors-red: var(--color-feedback-danger); /* #9a0000 */
+  --colors-light-red: var(--color-feedback-danger-subtle); /* #fbe5e5 */
+  --button-bg-color: var(--button-primary-bg); /* #ffff00 */
+  --button-text-color: var(--button-primary-text); /* #141414 */
+  --button-b2-border-color: var(--color-border-bold); /* #141414 */
+  --spacing-320: 320px; /* 320px */
+  --sds-size-radius-200: var(--radius-minimal); /* 8px */
+  --dimension-2: var(--spacing-sm); /* 8px */
+  --dimension-3: var(--spacing-md); /* 12px */
+  --dimension-4: var(--spacing-lg); /* 16px */
+  --dimension-5: var(--spacing-xl); /* 20px */
+  --dimension-6: var(--spacing-2xl); /* 24px */
+  --dimension-7: var(--spacing-3xl); /* 28px */
+  --dimension-9: var(--size-control-md); /* 36px */
+  --dimension-10: 40px; /* 40px */
+  --dimension-17: 88px; /* 88px */
+  --dimension-23: var(--size-field-sm); /* 144px */
+  --dimension-24: 160px; /* 160px */
+  --dimension-25: 184px; /* 184px */
+  --dimension-26: var(--size-field-md); /* 224px */
+  --dimension-27: 344px; /* 344px */
+  --typography-size-h6: var(--typography-size-body); /* 16px */
 }
 
-/* Estilos de texto do Figma, um por classe (nome do estilo em kebab-case) */
-.t-title-page    { font: 600 var(--typography-size-h1)/1.1 var(--font-family); }
-.t-subtitle-page { font: 500 var(--typography-size-h3)/1.2 var(--font-family); }
-.t-heading       { font: 700 var(--typography-size-h4)/1.2 var(--font-family); letter-spacing: 0.01em; }
-.t-body-lg       { font: 400 20px/1.2 var(--font-family); }
-.t-body          { font: 400 16px/1.4 var(--font-family); }
-.t-body-semibold { font: 600 var(--typography-size-h6)/1.4 var(--font-family); }
-.t-body-bold     { font: 700 var(--typography-size-h6)/1.4 var(--font-family); }
-.t-body-highlight{ font: 500 var(--typography-size-h6)/1.2 var(--font-family); }
-.t-text-button   { font: 500 var(--typography-size-body)/1.4 var(--font-family); }
-.t-body-sm       { font: 400 14px/1.2 var(--font-family); }
-.t-label         { font: 600 var(--typography-size-sm)/1 var(--font-family); }
-.t-text-button-sm{ font: 500 12px/1 var(--font-family); }
+/* Estilos de texto do Figma, um por classe (nome do estilo com "/" trocado por "-") */
+.t-heading-page { font: var(--typography-weight-semibold) var(--typography-size-heading-1)/1.1 var(--typography-family-heading); }
+.t-heading-subtitle { font: var(--typography-weight-medium) var(--typography-size-heading-3)/1.2 var(--typography-family-heading); }
+.t-heading-section { font: var(--typography-weight-bold) var(--typography-size-heading-4)/1.2 var(--typography-family-heading); letter-spacing: 0.01em; }
+.t-body-lg { font: var(--typography-weight-regular) var(--typography-size-body-lg)/1.2 var(--typography-family-body); }
+.t-body-md { font: var(--typography-weight-regular) var(--typography-size-body)/1.4 var(--typography-family-body); }
+.t-body-md-medium { font: var(--typography-weight-medium) var(--typography-size-body)/1.2 var(--typography-family-body); }
+.t-body-md-semibold { font: var(--typography-weight-semibold) var(--typography-size-body)/1.4 var(--typography-family-body); }
+.t-body-md-bold { font: var(--typography-weight-bold) var(--typography-size-body)/1.4 var(--typography-family-body); }
+.t-body-sm { font: var(--typography-weight-regular) var(--typography-size-body-sm)/1.2 var(--typography-family-body); }
+.t-label-field { font: var(--typography-weight-semibold) var(--typography-size-label)/1 var(--typography-family-body); }
+.t-label-button-sm { font: var(--typography-weight-medium) var(--typography-size-caption)/1 var(--typography-family-body); }

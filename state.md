@@ -2,7 +2,8 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-K-056 e K-057 (D-306 a D-312) na `main` (sem push), via `feat/f2-mt-alfa` → `integ/f2-fechamento`; suíte Django 1126 OK (9 pulados). Migrações 0031 a 0034 e carga do seed aplicadas no banco da 8002; o dev (8000) ainda não.
+K-058 (D-313) na `main` (sem push): extração v2 do design system do Figma em `docs/design-system-figma/`, tokens por papel, Montserrat, propostas da revisão da biblioteca.
+Antes: K-056 e K-057 (D-306 a D-312) na `main` (sem push), via `feat/f2-mt-alfa` → `integ/f2-fechamento`; suíte Django 1126 OK (9 pulados). Migrações 0031 a 0034 e carga do seed aplicadas no banco da 8002; o dev (8000) ainda não.
 Funcionando: MT Alfa preenchido pelo Word (29 revistas na 8002): habilidade, referencial 1EF–7EF, marcas até 3EM, 4 níveis com imagem e análise; "Agora é com você" por tipo (MT Alfa com os 2 parágrafos do 3º ano e o link); LP sem mudança visual. Conferido no navegador (preview 2 e 1). Antes: K-056 na `integ/f2-fechamento`, suíte 1121 OK.
 Quebrado/pendente: E2E da K-056 e da K-057 não rodado (merge na `main` com o ok do usuário antes dele); no dev (8000): `migrate` e `carregar_infograficos --ano 2026 --usuario admin`; URL do template do infográfico (`#pendente`); Word de MT Outras; `tarefas-fechamento-alfa` de MT.
 
@@ -2541,10 +2542,20 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - **Arquivos afetados:** `app/nucleo/texto.py`, `app/nucleo/templates_texto.py`, `app/nucleo/servicos/html.py`, `app/nucleo/migrations/0034_fechamento_por_tipo.py`, `app/templates_seed/2026/f2-{lp,mt}.hbs`, `app/nucleo/tests/test_templates_texto.py`
 - **Status:** ativa
 
+### D-313 — Extração v2 do design system do Figma, sobre a biblioteca nova (2026-11-27 21:00)
+- **Contexto:** o usuário avisou que o Figma "Sistemas CAEd" mudou e pediu a extração de novo, para a K-048 não partir de nada desatualizado. O arquivo foi religado à biblioteca nova "UI Fundação CAEd" (há uma página "Backup – Telas v1 (antes da biblioteca nova)", 285:3216) e ganhou a página "Revisão da biblioteca" (264:4255).
+- **Decisão:** refazer as 4 páginas e o `tokens.css` de `docs/design-system-figma/` no mesmo formato da D-304, que segue ativa. Mudanças: tokens por papel (`--color-text|surface|border|icon|feedback-*`, `--size-icon|control|field-*`, `--typography-family|size|weight-*`); fonte Montserrat (livre, sem arquivo no repositório); escala de espaçamento nova (3xl 28, 4xl 32, 5xl 32, 8xl 56, 9xl 80); bloco "Legado" no `tokens.css` com as variáveis antigas que componentes ainda usam, cada uma apontando para a nova; 7 node-ids de telas trocados; seção `telas.html#propostas` com os 11 candidatos e os 10 casos da revisão e o par de cada um nas telas B. 10 dos 11 candidatos já foram publicados na biblioteca no mesmo dia (Modal, Tooltip, ProgressRing, ProgressSteps, SaveStatus, ColorSwatch, FileUpload, StepBadge, Table, SectionNavItem); só "Texto validado" segue sem componente. Modal e tooltip passaram a raio 8, e o tooltip perdeu a sombra.
+- **Motivo:** os nomes antigos não existem mais no Figma; adaptar a K-048 por eles copiaria tokens mortos. Manter o formato da D-304 evita reaprender a pasta.
+- **Descartadas:** só trocar os nomes no `tokens.css` — medidas de modal, tooltip, menu e upload também mudaram; apagar o legado — componentes da biblioteca ainda usam `Global.Color.*`, `dimension/*` e estilos em Proxima Nova; baixar a Montserrat agora — é decisão da K-048, junto da troca da fonte do sistema.
+- **Arquivos afetados:** `docs/design-system-figma/*`
+- **Nota:** nasceu na branch como D-306 e K-056; renumerada para D-313 e K-058 ao trazer a `main`, que já usava esses números. O commit `5efc53e` e o learning l-9d870116 citam "D-306": é esta decisão (learning não se edita).
+- **Status:** ativa
+
 ## Perguntas em aberto
 - [ ] (27/11, D-307) URL do "template do Infográfico" (link sai `#pendente` até lá) — depende de: Pedagógica
 - [ ] (27/11, D-312) `tarefas-fechamento-alfa` de MT repete o texto de LP (escolha do usuário: fica assim até a Pedagógica dizer qual é) — depende de: Pedagógica
 - [ ] (27/11, D-306; Alfa chegou em 27/11, D-311) Word de MT Outras Etapas com os textos novos: o usuário confirmou que MT também difere por tipo; até chegarem, `tarefas-fechamento-alfa` e `-outras` de MT repetem o texto atual — depende de: Pedagógica
+- [ ] `spacing/4xl` e `spacing/5xl` valem os dois 32 px no Figma: qual é o certo? — depende de: time de design (antes de adotar a escala na K-048)
 - [x] (24/11, Pedagógica via chat; respondida em 24/11 pela D-288: cópia da etapa × componente pelo botão "Editar só neste projeto", com vínculo e revisão) Requisito novo: descritores e outros elementos da Comunitária precisam ser editáveis **por projeto**, em qualquer projeto (não só CE, Joinville e ES). A Luciana respondeu que **todos** os elementos (descritor, tarefa, arquivo do item, BNCC, pré-requisitos) são editáveis localmente por projeto — depende de: Otavio
 - [x] (24/11, D-290; respondida em 24/11: segue a ordem do editor, D-291) A ordem dos descritores na revista é alfabética pelo código (D011 vem antes de D02), não a ordem arrastada no editor. É o que a Pedagógica quer? — depende de: Otavio
 - [x] (18/11, D-270) A demo do django-cotton convence? Se sim, adotar tela por tela (ordem sugerida: ícones, botão, campo, cabeçalho, card, modal) ou parar na demo — depende de: Otavio — respondida em 18/11: convence, adotar (D-271)
@@ -2654,6 +2665,12 @@ Ver `kanban.md` (skill `kanban`; S01–S18 e fases do F2 migrados para cards em 
 - [ ] (18/11, D-273) Unificar os dois jeitos de "voltar" (link simples em 13 telas × trilha em `<nav>` em 2, a mais acessível)? Muda o visual das 13 — depende de: Otavio
 
 ## Sessões
+### 2026-11-27 21:00
+- Extração do design system refeita (D-313, K-058) na worktree extra `../revista-express-ds` (`feat/design-system-v2` ← `integ/design-system-v2` ← `main`), porque a worktree de trabalho está com a `feat/f2-mt-alfa` sem commit.
+- 115 variáveis do Figma conferidas uma a uma contra o `tokens.css`; nenhum `var()` sem definição; 4 páginas abertas no navegador sem âncora nem ícone quebrado.
+- Componentes e telas refeitos por 2 subagentes; capturas de 6 das 23 telas, as outras 17 conferidas pela estrutura do Figma.
+- Commit `5efc53e` (docs + learning l-9d870116, que substitui l-7e429e41) e merge na `integ/design-system-v2` com o "ok" do usuário; `trail check` só com falsos positivos de palavra.
+
 ### 2026-11-27 18:00
 - Design system do Figma extraído para `docs/design-system-figma/` (D-304, K-054): 23 telas, 13 componentes da biblioteca "UI Fundação CAEd", ~90 variáveis; contraste do cinza terciário (#808080, 3,78:1) e da borda do campo (#ccc, 1,54:1) abaixo do WCAG. Mesclado na `main` com push; worktree extra apagada.
 
