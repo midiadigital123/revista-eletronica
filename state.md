@@ -2,7 +2,7 @@
 
 ## Estado atual
 <!-- sobrescrever a cada atualização -->
-Design system do Figma "Sistemas CAEd" extraído para HTML em `docs/design-system-figma/` (D-304, K-054 em Review), mesclado na `main` em 27/11 (sem push). Nada em `app/` mudou.
+Design system do Figma "Sistemas CAEd" extraído para HTML em `docs/design-system-figma/` (D-304, K-054 em Done), mesclado na `main` em 27/11 (sem push). Nada em `app/` mudou.
 Funcionando: `index.html` (visão geral, diferenças e pontos de atenção), `tokens.html` (cores, contraste, tipografia, espaçamento), `componentes.html` (componentes com medidas, node-id e equivalente de hoje), `telas.html` (23 telas e padrões de layout); `tokens.css` com todas as variáveis. Conferido no navegador, sem rolagem horizontal a 375 px.
 Quebrado/pendente: ícones são aproximações Lucide (SVG da biblioteca não exportados); Proxima Nova sem licença no repositório; estados hover/foco/erro não existem no Figma. Push da `main`. Da K-053 (já na `main`, com push e migração 0029 no dev): E2E `infografico.spec.ts` ajustado e não rodado (faltam as credenciais E2E); etapa 11 (K-048) segue em aberto.
 
