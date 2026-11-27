@@ -8,7 +8,7 @@
 ## Doing
 
 ## Review
-- **K-055** F2 de MT: bloco "Tarefas por nível de complexidade" com barrinhas 1→4 e texto da habilidade, no mesmo `f2.svg` (`feat/f2-mt`); ficha do item de MT com campo Habilidade · D-305 · suíte 1099 OK; E2E não rodado
+- **K-055** F2 de MT: bloco "Tarefas por nível de complexidade" com barrinhas 1→4 e texto da habilidade, no mesmo `f2.svg` (`feat/f2-mt`); ficha do item de MT com campo Habilidade · D-305 · suíte 1099 OK; E2E 178 passaram; na `integ/f2-mt`
 ## Done
 - **K-054** Design system do Figma (Telas – v1 e Componentes) extraído para HTML em `docs/design-system-figma/` (`feat/design-system-figma`): tokens, componentes, 23 telas, sem mexer em `app/`; conferido no navegador; na `main` com push · insumo da K-048 · 2026-11-27 · D-304
 - **K-053** Mescla explícita de marca e habilidade no referencial do F2 (`feat/f2-mescla`): toggles "Junta com a de cima" por coluna, vazio sem juntar fica vazio, marca juntada = uma letra centrada; UI com elo entre etapas e célula única (D-303) · suíte 1093 OK; na `main` com push · 2026-11-27 · D-301 a D-303
