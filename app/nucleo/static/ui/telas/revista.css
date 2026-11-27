@@ -66,6 +66,46 @@
 .inf-card:has([data-passo=progressao]:not(:checked)) [data-bloco=progressao],
 .inf-card:has([data-passo=tarefas]:not(:checked)) [data-bloco=tarefas],
 .inf-card:has([data-passo=habilidades]:not(:checked)):has([data-passo=progressao]:not(:checked)) [data-bloco=grade] { display: none; }
+/* Referencial (D-303): grade com um elo sobre a linha entre duas etapas, por coluna. O elo é um checkbox
+   (junta_* da etapa de baixo) num label; juntado, a célula da etapa de cima cobre as duas (grid-row span,
+   referencial.js) e um traço no trilho do elo marca o grupo. */
+.inf-ref-aviso svg { flex-shrink: 0; }
+.inf-ref { display: grid; grid-template-columns: 14.5rem 13rem minmax(24rem, 1fr); font-size: 0.875rem; }
+.inf-ref-linha { display: contents; }
+.inf-ref-cab { grid-row: 1; padding: 0.5rem; font-weight: 500; color: var(--muted-foreground); }
+.inf-ref-etapa { grid-column: 1; padding: 0.875rem 0.5rem 0.5rem; border-top: 1px solid var(--border); }
+.inf-ref-cel { position: relative; padding: 0.5rem 0.5rem 0.5rem 2.25rem; border-top: 1px solid var(--border); }
+.inf-ref-cel[data-coluna="marca"] { grid-column: 2; }
+.inf-ref-cel[data-coluna="habilidade"] { grid-column: 3; display: flex; align-items: flex-start; gap: 0.5rem; }
+.inf-ref-cel[hidden] { display: none; }
+.inf-ref-habilidade .input { flex: 0 0 8rem; }
+.inf-ref-habilidade .textarea { flex: 1; min-width: 0; }
+.inf-ref-cel:not([data-span="1"])::before {
+  content: ""; position: absolute; left: calc(0.5rem + 11px); top: 0.75rem; bottom: 0.75rem; width: 2px;
+  border-radius: 1px; background: color-mix(in oklch, var(--foreground) 35%, var(--border));
+}
+.inf-elo {
+  position: relative; z-index: 1; align-self: start; justify-self: start; margin-left: 0.5rem; translate: 0 -50%;
+  display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 999px;
+  border: 1px solid color-mix(in oklch, var(--foreground) 25%, var(--border)); background: var(--background); color: var(--muted-foreground); cursor: pointer;
+  transition: background-color 120ms var(--ease-saida), color 120ms var(--ease-saida), border-color 120ms var(--ease-saida);
+}
+.inf-elo::after { content: ""; position: absolute; inset: -5px; }
+.inf-elo svg { width: 14px; height: 14px; stroke-width: 2; }
+.inf-elo svg + svg, .inf-elo:has(:checked) svg:first-of-type { display: none; }
+.inf-elo:has(:checked) svg + svg { display: block; }
+.inf-elo:hover { color: var(--foreground); border-color: color-mix(in oklch, var(--foreground) 35%, var(--border)); }
+.inf-elo:has(:checked) { background: var(--foreground); border-color: var(--foreground); color: var(--background); }
+.inf-elo:has(:focus-visible) { outline: 2px solid var(--ring); outline-offset: 2px; }
+.inf-elo:has(:disabled) { opacity: 0.5; cursor: not-allowed; }
+.inf-elo::before {
+  content: attr(data-dica); display: none; position: absolute; bottom: calc(100% + 0.375rem); left: 0; z-index: 5;
+  padding: 0.25rem 0.5rem; border-radius: var(--radius-md); background: var(--foreground); color: var(--background);
+  font-size: 0.75rem; line-height: 1rem; white-space: nowrap; pointer-events: none;
+}
+.inf-elo:has(:checked)::before { content: attr(data-dica-junto); }
+.inf-elo:hover::before, .inf-elo:has(:focus-visible)::before { display: block; }
+@media (prefers-reduced-motion: reduce) { .inf-elo { transition: none; } }
 .inf-card .textarea:disabled { background-color: var(--muted); border-color: var(--border); box-shadow: none; }
 /* Caixas do cartão: 4 linhas (rows); com foco, o texto todo pelo field-sizing do ui.css (D-258). */
 .inf-card .textarea:not(.inf-texto-curto):not(:focus) { field-sizing: fixed; }
@@ -78,12 +118,7 @@
 .inf-template-titulo { font-weight: 500; }
 .inf-template-corpo { white-space: pre-wrap; max-height: 12rem; overflow-y: auto; }
 .inf-grade { display: flex; flex-direction: column; gap: 0.375rem; }
-.inf-tabela th, .inf-tabela td { padding: 0.25rem 0.5rem; vertical-align: top; text-align: left; }
-.inf-tabela thead th { font-weight: 500; color: var(--muted-foreground); }
-.inf-tabela tbody th { width: 11rem; padding-top: 0.5rem; font-weight: 400; }
-.inf-tabela td:nth-child(2) { width: 9.5rem; }
-.inf-tabela td:nth-child(3) { width: 8rem; }
-.inf-tabela .textarea { min-height: 2.25rem; }
+.inf-ref .textarea { min-height: 2.25rem; }
 .inf-itens { display: grid; gap: 1rem; }
 .inf-item { display: grid; grid-template-columns: 13rem minmax(0, 1fr); gap: 1rem; padding-top: 1rem; border-top-width: 1px; }
 .inf-item legend { float: left; grid-column: 1 / -1; }

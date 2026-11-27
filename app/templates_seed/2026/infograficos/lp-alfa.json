@@ -10,62 +10,86 @@
     "1EF": {
       "marca": "I",
       "codigo": "EF01LP16",
-      "texto": "Ler e compreender, em colaboração com os colegas e com a ajuda do professor, quadras, quadrinhas, parlendas, trava-línguas, dentre outros gêneros do campo da vida cotidiana, considerando a situação comunicativa e o tema/assunto do texto e relacionando sua forma de organização à sua finalidade."
+      "texto": "Ler e compreender, em colaboração com os colegas e com a ajuda do professor, quadras, quadrinhas, parlendas, trava-línguas, dentre outros gêneros do campo da vida cotidiana, considerando a situação comunicativa e o tema/assunto do texto e relacionando sua forma de organização à sua finalidade.",
+      "junta_marca": false,
+      "junta_habilidade": false
     },
     "2EF": {
       "marca": "I",
       "codigo": "EF02LP12",
-      "texto": "Ler e compreender com certa autonomia cantigas, letras de canção, dentre outros gêneros do campo da vida cotidiana, considerando a situação comunicativa e o tema/assunto do texto e relacionando sua forma de organização à sua finalidade."
+      "texto": "Ler e compreender com certa autonomia cantigas, letras de canção, dentre outros gêneros do campo da vida cotidiana, considerando a situação comunicativa e o tema/assunto do texto e relacionando sua forma de organização à sua finalidade.",
+      "junta_marca": false,
+      "junta_habilidade": false
     },
     "3EF": {
       "marca": "A",
       "codigo": "EF03LP11",
-      "texto": "Ler e compreender, com autonomia, textos injuntivos instrucionais (receitas, instruções de montagem etc.), com a estrutura própria desses textos (verbos imperativos, indicação de passos a ser seguidos) e mesclando palavras, imagens e recursos gráfico-visuais, considerando a situação comunicativa e o tema/assunto do texto."
+      "texto": "Ler e compreender, com autonomia, textos injuntivos instrucionais (receitas, instruções de montagem etc.), com a estrutura própria desses textos (verbos imperativos, indicação de passos a ser seguidos) e mesclando palavras, imagens e recursos gráfico-visuais, considerando a situação comunicativa e o tema/assunto do texto.",
+      "junta_marca": false,
+      "junta_habilidade": false
     },
     "4EF": {
       "marca": "A",
       "codigo": "EF04LP09",
-      "texto": "Ler e compreender, com autonomia, boletos, faturas e carnês, dentre outros gêneros do campo da vida cotidiana, de acordo com as convenções do gênero (campos, itens elencados, medidas de consumo, código de barras) e considerando a situação comunicativa e a finalidade do texto."
+      "texto": "Ler e compreender, com autonomia, boletos, faturas e carnês, dentre outros gêneros do campo da vida cotidiana, de acordo com as convenções do gênero (campos, itens elencados, medidas de consumo, código de barras) e considerando a situação comunicativa e a finalidade do texto.",
+      "junta_marca": false,
+      "junta_habilidade": false
     },
     "5EF": {
       "marca": "C",
       "codigo": "EF05LP09",
-      "texto": "Ler e compreender, com autonomia, textos instrucional de regras de jogo, dentre outros gêneros do campo da vida cotidiana, de acordo com as convenções do gênero e considerando a situação comunicativa e a finalidade do texto."
+      "texto": "Ler e compreender, com autonomia, textos instrucional de regras de jogo, dentre outros gêneros do campo da vida cotidiana, de acordo com as convenções do gênero e considerando a situação comunicativa e a finalidade do texto.",
+      "junta_marca": false,
+      "junta_habilidade": false
     },
     "6EF": {
       "marca": "A",
       "codigo": "EF67LP28",
-      "texto": "Ler, de forma autônoma, e compreender – selecionando procedimentos e estratégias de leitura adequados a diferentes objetivos e levando em conta características dos gêneros e suportes –, romances infantojuvenis, contos populares, contos de terror, lendas brasileiras, indígenas e africanas, narrativas de aventuras, narrativas de enigma, mitos, crônicas, autobiografias, histórias em quadrinhos, mangás, poemas de forma livre e fixa (como sonetos e cordéis), vídeo-poemas, poemas visuais, dentre outros, expressando avaliação sobre o texto lido e estabelecendo preferências por gêneros, temas, autores."
+      "texto": "Ler, de forma autônoma, e compreender – selecionando procedimentos e estratégias de leitura adequados a diferentes objetivos e levando em conta características dos gêneros e suportes –, romances infantojuvenis, contos populares, contos de terror, lendas brasileiras, indígenas e africanas, narrativas de aventuras, narrativas de enigma, mitos, crônicas, autobiografias, histórias em quadrinhos, mangás, poemas de forma livre e fixa (como sonetos e cordéis), vídeo-poemas, poemas visuais, dentre outros, expressando avaliação sobre o texto lido e estabelecendo preferências por gêneros, temas, autores.",
+      "junta_marca": false,
+      "junta_habilidade": false
     },
     "7EF": {
       "marca": "A",
       "codigo": "",
-      "texto": ""
+      "texto": "",
+      "junta_marca": true,
+      "junta_habilidade": true
     },
     "8EF": {
       "marca": "A",
       "codigo": "EF89LP33",
-      "texto": "Ler, de forma autônoma, e compreender – selecionando procedimentos e estratégias de leitura adequados a diferentes objetivos e levando em conta características dos gêneros e suportes – romances, contos contemporâneos, minicontos, fábulas contemporâneas, romances juvenis, biografias romanceadas, novelas, crônicas visuais, narrativas de ficção científica, narrativas de suspense, poemas de forma livre e fixa (como haicai), poema concreto, ciberpoema, dentre outros, expressando avaliação sobre o texto lido e estabelecendo preferências por gêneros, temas, autores."
+      "texto": "Ler, de forma autônoma, e compreender – selecionando procedimentos e estratégias de leitura adequados a diferentes objetivos e levando em conta características dos gêneros e suportes – romances, contos contemporâneos, minicontos, fábulas contemporâneas, romances juvenis, biografias romanceadas, novelas, crônicas visuais, narrativas de ficção científica, narrativas de suspense, poemas de forma livre e fixa (como haicai), poema concreto, ciberpoema, dentre outros, expressando avaliação sobre o texto lido e estabelecendo preferências por gêneros, temas, autores.",
+      "junta_marca": false,
+      "junta_habilidade": false
     },
     "9EF": {
       "marca": "A",
       "codigo": "",
-      "texto": ""
+      "texto": "",
+      "junta_marca": true,
+      "junta_habilidade": true
     },
     "1EM": {
       "marca": "A",
       "codigo": "EM13LP26",
-      "texto": "Relacionar textos e documentos legais e normativos de âmbito universal, nacional, local ou escolar que envolvam a definição de direitos e deveres – em especial, os voltados a adolescentes e jovens – aos seus contextos de produção, identificando ou inferindo possíveis motivações e finalidades, como forma de ampliar a compreensão desses direitos e deveres."
+      "texto": "Relacionar textos e documentos legais e normativos de âmbito universal, nacional, local ou escolar que envolvam a definição de direitos e deveres – em especial, os voltados a adolescentes e jovens – aos seus contextos de produção, identificando ou inferindo possíveis motivações e finalidades, como forma de ampliar a compreensão desses direitos e deveres.",
+      "junta_marca": false,
+      "junta_habilidade": false
     },
     "2EM": {
       "marca": "A",
       "codigo": "",
-      "texto": ""
+      "texto": "",
+      "junta_marca": true,
+      "junta_habilidade": true
     },
     "3EM": {
       "marca": "A",
       "codigo": "",
-      "texto": ""
+      "texto": "",
+      "junta_marca": true,
+      "junta_habilidade": true
     }
   },
   "itens": [

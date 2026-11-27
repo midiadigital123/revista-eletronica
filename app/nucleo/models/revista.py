@@ -164,7 +164,9 @@ class RevistaInfografico(models.Model):
 
 
 class RevistaInfograficoEtapa(models.Model):
-    """Linha da tabela do referencial, uma por etapa. Código e texto vazios = célula mesclada (fase 2)."""
+    """Linha da tabela do referencial, uma por etapa. A mescla com a linha de cima é explícita e
+    independente por coluna (D-301): `junta_marca` herda a marca, `junta_habilidade` estende a célula
+    de código e texto. Vazio sem `junta_*` é vazio de verdade. Em 1EF as flags não valem."""
 
     infografico = models.ForeignKey(RevistaInfografico, on_delete=models.CASCADE)
     ano = models.ForeignKey(Ano, on_delete=models.PROTECT)  # só para FK composta
@@ -172,6 +174,8 @@ class RevistaInfograficoEtapa(models.Model):
     marca = models.TextField(choices=Marca.choices, blank=True, default="")  # vazio = sem marca
     codigo = models.TextField(blank=True, default="")  # código BNCC, ex.: EF15LP18
     texto = models.TextField(blank=True, default="")
+    junta_marca = models.BooleanField(default=False)
+    junta_habilidade = models.BooleanField(default=False)
     history = HistoricalRecords()
 
     class Meta:

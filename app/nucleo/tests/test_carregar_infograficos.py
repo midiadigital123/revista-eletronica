@@ -51,7 +51,7 @@ class CarregarInfograficosTest(MediaTemporaria, TestCase):
             self.assertEqual(
                 [getattr(inf, c) for c in seed_infografico.CAMPOS_INF], [seed[c] for c in seed_infografico.CAMPOS_INF]
             )
-            etapas = {e.etapa: {c: getattr(e, c) for c in ("marca", "codigo", "texto")}
+            etapas = {e.etapa: {c: getattr(e, c) for c in seed_infografico.CAMPOS_ETAPA}
                       for e in RevistaInfograficoEtapa.objects.filter(infografico=inf)}  # fmt: skip
             self.assertEqual(etapas, seed["etapas"])
             itens = RevistaInfograficoItem.objects.filter(infografico=inf).order_by("posicao")

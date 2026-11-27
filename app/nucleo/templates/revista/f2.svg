@@ -11,8 +11,10 @@ os floats de posição chegam arredondados a 1 casa):
               só quando o passo está ligado (bloco ausente = passo desligado).
   linhas      [{"pontos": "x y x y …", "fim": {"x", "y"}}]: conector do descritor até um bloco;
               "fim" é a ponta no cartão, onde sai o quadradinho preto.
-  tabela      [{"etapa", "marca", "cor", "y", "altura", "meio"}]: sempre as 12 linhas, 1EF a 3EM
-              (bloco habilidades); "meio" = altura / 2. A linha cresce quando o texto não cabe.
+  tabela      [{"etapa", "marca", "cor", "y", "altura", "meio", "junta"[, "marca_meio"]}]: sempre as
+              12 linhas, 1EF a 3EM (bloco habilidades); "meio" = altura / 2. A linha cresce quando o
+              texto não cabe. "junta": a marca mescla com a de cima (sem letra nem fios na coluna da
+              marca); a linha que não junta leva "marca_meio", o meio do seu grupo de marca (D-301).
   celulas     [{"codigo", "texto", "y", "altura", "clamp"}]: célula de código e texto, que pode
               cobrir várias linhas da tabela (rowspan); "clamp" = linhas de texto que cabem (proteção:
               a altura já vem estimada para o texto inteiro).
@@ -115,12 +117,12 @@ CSS dentro do <svg> (é o que chega ao minimapa): sem seletor pela classe da rai
 <g id="f2-btn-action-habilidades" transform="translate(27.3,39.2)"><circle class="f2-st20" r="7.8"/><path d="M-.3,3.4h.6v-3.1h3.1v-.6h-3.1v-3.1h-.6v3.1h-3.1v.6h3.1z"/></g>
 {% for l in tabela %}<g transform="translate(0,{{ l.y }})">
 <rect fill="{{ l.cor }}" x="57.9" width="5.7" height="{{ l.altura }}"/>
-<line class="f2-st4" x1="57.9" x2="69.2"/>
-<line class="f2-st3" x1="19.5" x2="53.5"/>
-<line class="f2-st3" x1="69.2" x2="101.9"/>
-<text class="f2-tx f2-tx-etapa" x="19.5" y="{{ l.meio }}" dy=".36em">{{ l.etapa }}</text>
-<text class="f2-tx f2-tx-marca" x="85.5" y="{{ l.meio }}" dy=".36em" text-anchor="middle">{{ l.marca }}</text>
-</g>
+{% if not l.junta %}<line class="f2-st4" x1="57.9" x2="69.2"/>
+{% endif %}<line class="f2-st3" x1="19.5" x2="53.5"/>
+{% if not l.junta %}<line class="f2-st3" x1="69.2" x2="101.9"/>
+{% endif %}<text class="f2-tx f2-tx-etapa" x="19.5" y="{{ l.meio }}" dy=".36em">{{ l.etapa }}</text>
+{% if not l.junta %}<text class="f2-tx f2-tx-marca" x="85.5" y="{{ l.marca_meio }}" dy=".36em" text-anchor="middle">{{ l.marca }}</text>
+{% endif %}</g>
 {% endfor %}{% for c in celulas %}<g transform="translate(101.9,{{ c.y }})">
 <line class="f2-st3" x2="365.5"/>
 <foreignObject x="14.6" width="351" height="{{ c.altura }}"><div xmlns="http://www.w3.org/1999/xhtml" class="f2-cel" style="height:{{ c.altura }}px"><div style="-webkit-line-clamp:{{ c.clamp }}">{% if c.codigo %}<b>({{ c.codigo }})</b> {% endif %}{{ c.texto }}</div></div></foreignObject>

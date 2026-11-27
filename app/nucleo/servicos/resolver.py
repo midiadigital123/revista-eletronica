@@ -20,7 +20,8 @@ Cada infográfico (o que `servicos/f2.gerar` consome):
      "passos": [ligados, na ordem de PASSOS (models/revista.py)],
      "habilidade": str,
      "textos": {"descritor", "progressao", "habilidades"},  # passo desligado: ""
-     "etapas": [{"etapa", "rotulo", "marca", "codigo", "texto"}],     # ordem do referencial, só as gravadas
+     "etapas": [{"etapa", "rotulo", "marca", "codigo", "texto"[, "junta_marca", "junta_habilidade"]}],
+                                          # ordem do referencial, só as gravadas; mescla já aplicada (D-301)
                                           # habilidades desligado: codigo e texto ""; com progressao também: []
      "itens": [{"posicao", "etapa", "rotulo", "descritor", "imagem", "imagem_sha256", "texto_alternativo", "analise"}]}
                                           # passo tarefas desligado: [] (D-243)
@@ -250,6 +251,24 @@ def valores_das_variaveis(projeto):
     return valores
 
 
+def _etapas(etapas, tabela):
+    """Linhas do referencial no resolvido, já com a mescla aplicada (D-301): `junta_marca` herda a marca
+    da etapa de cima (não gravada: sem marca); `junta_habilidade` sai sem código e texto. 1EF não junta.
+    As chaves `junta_*` só entram quando ligadas e com a tabela visível: quem não mescla mantém o hash."""
+    valores, rotulos = EtapaReferencial.values, dict(EtapaReferencial.choices)
+    marcas, saida = {}, []
+    for e in etapas:
+        i = valores.index(e.etapa)
+        jm, jh = i > 0 and e.junta_marca, i > 0 and e.junta_habilidade
+        marcas[e.etapa] = marcas.get(valores[i - 1], "") if jm else e.marca
+        linha = {"etapa": e.etapa, "rotulo": rotulos[e.etapa], "marca": marcas[e.etapa],
+                 "codigo": e.codigo if tabela and not jh else "", "texto": e.texto if tabela and not jh else ""}
+        if tabela:
+            linha.update({k: True for k, v in (("junta_marca", jm), ("junta_habilidade", jh)) if v})
+        saida.append(linha)
+    return saida
+
+
 def _infograficos(revista, renderizado):
     """Infográficos ativos no formato do topo. `renderizado(texto)`: HTML, contando as variáveis.
 
@@ -282,11 +301,7 @@ def _infograficos(revista, renderizado):
                 **{p: "" if p in inf.passos_desligados else renderizado(getattr(inf, f"texto_{p}"))
                    for p in ("progressao", "habilidades")},
             },
-            "etapas": [
-                {"etapa": e.etapa, "rotulo": rotulos[e.etapa], "marca": e.marca,
-                 "codigo": e.codigo if tabela else "", "texto": e.texto if tabela else ""}
-                for e in etapas
-            ],
+            "etapas": _etapas(etapas, tabela),
             "itens": [
                 {
                     "posicao": i.posicao, "etapa": i.etapa, "rotulo": rotulos.get(i.etapa, ""), "descritor": i.descritor,

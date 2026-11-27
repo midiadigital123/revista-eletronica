@@ -129,18 +129,20 @@ def _tabela(etapas):
     quanto a tabela cresceu além do desenho.
 
     Célula cujo texto não cabe nas linhas que cobre divide o que falta igualmente entre elas.
+    A mescla vem explícita do resolvido (D-301): `junta_habilidade` estende a célula de cima;
+    `junta_marca` tira a letra e os fios da coluna da marca, e o topo do grupo centra a letra nele.
     """
     gravadas = {e["etapa"]: e for e in etapas}
     tabela, celulas, alturas = [], [], list(ALTURAS_LINHAS)
     for i, etapa in enumerate(EtapaReferencial.values):
         g = gravadas.get(etapa, {})
         marca, codigo, texto = (g.get(c) or "" for c in ("marca", "codigo", "texto"))
-        tabela.append({"etapa": etapa, "marca": marca, "cor": CORES_MARCA.get(marca, COR_SEM_MARCA)})
-        acima = celulas[-1] if celulas else None
-        if codigo or texto or not (acima and (acima["codigo"] or acima["texto"])):
-            celulas.append({"codigo": codigo, "texto": texto, "linhas": [i]})
+        tabela.append({"etapa": etapa, "marca": marca, "cor": CORES_MARCA.get(marca, COR_SEM_MARCA),
+                       "junta": bool(i and g.get("junta_marca"))})
+        if i and g.get("junta_habilidade"):
+            celulas[-1]["linhas"].append(i)
         else:
-            acima["linhas"].append(i)
+            celulas.append({"codigo": codigo, "texto": texto, "linhas": [i]})
     for c in celulas:
         falta = _linhas_texto(c["codigo"], c["texto"]) * LINHA_CEL + RESPIRO_CEL - sum(alturas[i] for i in c["linhas"])
         if falta > 0:
@@ -151,6 +153,10 @@ def _tabela(etapas):
         linha.update(y=round(y, 1), altura=round(altura, 1), meio=round(altura / 2, 1))
         topo.append(y)
         y += altura
+    for i, linha in enumerate(tabela):  # letra da marca no meio do grupo (sem mescla: o meio da linha)
+        if not linha["junta"]:
+            fim = next((j for j in range(i + 1, len(tabela)) if not tabela[j]["junta"]), len(tabela))
+            linha["marca_meio"] = round(sum(alturas[i:fim]) / 2, 1)
     for c in celulas:
         linhas = c.pop("linhas")
         altura = sum(alturas[i] for i in linhas)

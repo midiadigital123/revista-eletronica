@@ -149,6 +149,7 @@ nomeadas no teste, com o motivo) e trava o HTML de cada componente.
 | `abrir-fora` | abre em nova aba | `imagem` | arquivo de imagem |
 | `ajustes` | configurações | `info` | recado neutro |
 | `alerta` | aviso (triângulo) | `lapis` | renomear |
+| | | `desligar-link` | elo solto entre duas etapas (referencial do F2) |
 | `alerta-circulo` | erro ou atenção | `link` | link de acesso |
 | `baixar` | download | `lista` | lista (editor) |
 | `busca` | procurar | `lixeira` | excluir |
